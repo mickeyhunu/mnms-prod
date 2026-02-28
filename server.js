@@ -402,6 +402,44 @@ app.get('/api/posts/:postId/comments', async (req, res, next) => {
   }
 });
 
+
+app.get('/api/users/me/comments', authMiddleware, async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT c.id, c.post_id AS postId, c.content, c.created_at AS createdAt
+       FROM comments c
+       WHERE c.user_id = ?
+       ORDER BY c.created_at DESC`,
+      [req.user.id]
+    );
+    res.json({ content: rows, totalElements: rows.length });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/api/users/me/stats', authMiddleware, async (req, res, next) => {
+  try {
+    const [[posts]] = await pool.query('SELECT COUNT(*) AS postCount FROM posts WHERE user_id = ?', [req.user.id]);
+    const [[comments]] = await pool.query('SELECT COUNT(*) AS commentCount FROM comments WHERE user_id = ?', [req.user.id]);
+    const [[likes]] = await pool.query(
+      `SELECT COUNT(*) AS likeCount
+       FROM likes l
+       JOIN posts p ON p.id = l.post_id
+       WHERE p.user_id = ?`,
+      [req.user.id]
+    );
+
+    res.json({
+      postCount: Number(posts.postCount),
+      commentCount: Number(comments.commentCount),
+      likeCount: Number(likes.likeCount)
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.post('/api/posts/:postId/comments', authMiddleware, async (req, res, next) => {
   try {
     const postId = Number(req.params.postId);
@@ -593,7 +631,15 @@ app.get('/api/search/posts', async (req, res, next) => {
 
 app.get('/api/admin/posts', authMiddleware, adminMiddleware, async (req, res, next) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM posts ORDER BY created_at DESC');
+    const [rows] = await pool.query(
+      `SELECT p.id, p.title, p.content, p.user_id AS userId, p.created_at AS createdAt,
+              u.nickname AS authorNickname,
+              (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likeCount,
+              (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS commentCount
+       FROM posts p
+       JOIN users u ON u.id = p.user_id
+       ORDER BY p.created_at DESC`
+    );
     res.json({ content: rows, totalElements: rows.length });
   } catch (error) {
     next(error);
@@ -611,7 +657,13 @@ app.get('/api/admin/users', authMiddleware, adminMiddleware, async (req, res, ne
 
 app.get('/api/admin/comments', authMiddleware, adminMiddleware, async (req, res, next) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM comments ORDER BY created_at DESC');
+    const [rows] = await pool.query(
+      `SELECT c.id, c.content, c.post_id AS postId, c.user_id AS userId, c.created_at AS createdAt,
+              u.nickname AS authorNickname
+       FROM comments c
+       JOIN users u ON u.id = c.user_id
+       ORDER BY c.created_at DESC`
+    );
     res.json({ content: rows, totalElements: rows.length });
   } catch (error) {
     next(error);
@@ -629,8 +681,8 @@ app.get('/api/admin/stats/posts', authMiddleware, adminMiddleware, async (req, r
 
 app.get('/api/admin/stats/users', authMiddleware, adminMiddleware, async (req, res, next) => {
   try {
-    const [rows] = await pool.query('SELECT COUNT(*) AS totalUsers FROM users');
-    res.json({ totalUsers: Number(rows[0].totalUsers) });
+    const [rows] = await pool.query("SELECT COUNT(*) AS totalUsers, SUM(CASE WHEN role = 'ADMIN' THEN 1 ELSE 0 END) AS totalAdmins FROM users");
+    res.json({ totalUsers: Number(rows[0].totalUsers), totalAdmins: Number(rows[0].totalAdmins || 0) });
   } catch (error) {
     next(error);
   }
