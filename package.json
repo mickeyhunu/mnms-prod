@@ -1,7 +1,7 @@
 {
   "name": "midnigthmans-node",
-  "version": "1.0.0",
-  "description": "Anonymous community board migrated to Node.js",
+  "version": "1.1.0",
+  "description": "Anonymous community board on Node.js + MySQL",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -9,5 +9,10 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "mysql2": "^3.11.5"
   }
 }

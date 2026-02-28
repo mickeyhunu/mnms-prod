@@ -1,32 +1,42 @@
-# 🌐 익명 커뮤니티 게시판 (Node.js 버전)
+# 🌐 익명 커뮤니티 게시판 (Node.js + MySQL)
 
-기존 Spring Boot 기반 프로젝트를 **Node.js(Express)** 로 전환했습니다.
+Spring Boot 런타임 대신 **Node.js(Express) + MySQL** 기반으로 실행되도록 변경했습니다.
 
 ## 기술 스택
-- Backend: Node.js + Express
-- Frontend: 기존 정적 자원(HTML/CSS/JS) 재사용
-- DB: 파일 기반 JSON(`data.json`)
+- Backend: Node.js, Express
+- Database: MySQL 8+
+- Frontend: 기존 정적 HTML/CSS/JS 그대로 사용
 
-## 실행 방법
+## 1) MySQL 준비 (root 계정)
+아래 환경변수 기본값으로 서버가 동작합니다.
+- `MYSQL_HOST=127.0.0.1`
+- `MYSQL_PORT=3306`
+- `MYSQL_USER=root`
+- `MYSQL_PASSWORD=` (빈 값)
+- `MYSQL_DATABASE=midnigthmans`
+
+서버 시작 시 DB/테이블을 자동 생성합니다.
+
+## 2) 실행 방법
 ```bash
 npm install
 npm run start
 ```
 
-실행 후 접속:
+실행 후 접속
 - http://localhost:8080
 
-## 기본 관리자 계정
+## 3) 기본 관리자 계정
 - email: `admin@company.com`
 - password: `admin1234`
 
 ## 주요 API
 - 인증: `/api/auth/register`, `/api/auth/login`, `/api/auth/me`, `/api/auth/logout`
-- 게시글: `/api/posts` (목록/상세/작성/수정/삭제), `/api/posts/:id/like`, `/api/posts/:id/bookmark`
+- 게시글: `/api/posts`, `/api/posts/:id`, `/api/posts/:id/like`, `/api/posts/:id/bookmark`
 - 댓글: `/api/posts/:postId/comments`, `/api/comments/:id`
+- 북마크: `/api/bookmarks/my`, `/api/bookmarks/check/:postId`, `/api/bookmarks/:postId/toggle`
 - 쪽지: `/api/posts/messages/*`
 - 관리자: `/api/admin/*`
 
-## 참고
-- 데이터는 `data.json`에 저장됩니다.
-- 기존 Java/Spring 소스는 레포에 보존되어 있으며, 런타임은 `server.js` 기준으로 동작합니다.
+## 주의
+- 현재 비밀번호는 평문 저장 방식입니다. 운영 전에는 반드시 해시 암호화(예: bcrypt)를 적용하세요.
