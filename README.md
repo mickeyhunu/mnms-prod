@@ -12,7 +12,7 @@ Spring Boot 런타임 대신 **Node.js(Express) + MySQL** 기반으로 실행되
 - `MYSQL_HOST=127.0.0.1`
 - `MYSQL_PORT=3306`
 - `MYSQL_USER=root`
-- `MYSQL_PASSWORD=` (빈 값)
+- `MYSQL_PASSWORD=root` 
 - `MYSQL_DATABASE=midnigthmans`
 
 서버 시작 시 DB/테이블을 자동 생성합니다.
