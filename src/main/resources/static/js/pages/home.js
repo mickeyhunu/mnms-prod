@@ -3,8 +3,22 @@ let totalPages = 1;
 
 function initHomePage() {
     console.log("=== initHomePage() 시작 ===");
+    Auth.updateHeaderUI();
+    bindLogoutButton();
     loadPosts(currentPage);
     setupEventListeners();
+}
+
+function bindLogoutButton() {
+    const logoutBtn = document.getElementById('logout-btn');
+    if (!logoutBtn) {
+        return;
+    }
+
+    logoutBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await AuthAPI.logout();
+    });
 }
 
 function setupEventListeners() {
