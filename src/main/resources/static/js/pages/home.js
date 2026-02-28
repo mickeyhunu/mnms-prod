@@ -38,7 +38,7 @@ async function loadPosts(page = 1) {
         hideElement(emptyState);
 
         console.log("PostAPI.getPosts() 호출 시작...");
-        const response = await PostAPI.getPosts(page, 10);
+        const response = await PostAPI.getPosts({ page: page - 1, size: 10 });
         console.log("PostAPI 응답 타입:", typeof response);
         console.log("PostAPI 응답 데이터:", response);
         console.log("응답이 배열인가:", Array.isArray(response));
