@@ -500,17 +500,39 @@ app.delete('/api/comments/:id', authMiddleware, async (req, res, next) => {
 
 app.get('/api/bookmarks/my', authMiddleware, async (req, res, next) => {
   try {
+    const page = Number(req.query.page || 0);
+    const size = Number(req.query.size || 10);
+    const offset = page * size;
+
+    const [[countRow]] = await pool.query('SELECT COUNT(*) AS total FROM bookmarks WHERE user_id = ?', [req.user.id]);
+
     const [rows] = await pool.query(
       `SELECT p.id, p.title, p.content, p.image_url AS imageUrl, p.created_at AS createdAt, p.updated_at AS updatedAt,
-              p.user_id AS userId, u.nickname AS authorNickname
+              p.user_id AS userId, u.nickname AS authorNickname,
+              (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likeCount,
+              (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS commentCount
        FROM bookmarks b
        JOIN posts p ON p.id = b.post_id
        JOIN users u ON u.id = p.user_id
        WHERE b.user_id = ?
-       ORDER BY b.created_at DESC`,
-      [req.user.id]
+       ORDER BY b.created_at DESC
+       LIMIT ? OFFSET ?`,
+      [req.user.id, size, offset]
     );
-    res.json(rows);
+
+    const totalElements = Number(countRow.total || 0);
+    const totalPages = Math.ceil(totalElements / size);
+
+    res.json({
+      posts: rows,
+      content: rows,
+      currentPage: page,
+      page,
+      size,
+      totalElements,
+      totalCount: totalElements,
+      totalPages
+    });
   } catch (error) {
     next(error);
   }
@@ -614,16 +636,46 @@ app.get('/api/posts/messages/unread-count', authMiddleware, async (req, res, nex
 
 app.get('/api/search/posts', async (req, res, next) => {
   try {
+    const page = Number(req.query.page || 0);
+    const size = Number(req.query.size || 20);
+    const offset = page * size;
     const keyword = (req.query.keyword || '').trim();
+
+    const [countRows] = await pool.query(
+      `SELECT COUNT(*) AS total
+       FROM posts p
+       WHERE p.title LIKE ? OR p.content LIKE ?`,
+      [`%${keyword}%`, `%${keyword}%`]
+    );
+
     const [rows] = await pool.query(
-      `SELECT p.id, p.title, p.content, p.created_at AS createdAt, p.user_id AS userId, u.nickname AS authorNickname
+      `SELECT p.id, p.title, p.content, p.created_at AS createdAt, p.user_id AS userId, u.nickname AS authorNickname,
+              (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likeCount,
+              (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS commentCount
        FROM posts p
        JOIN users u ON u.id = p.user_id
        WHERE p.title LIKE ? OR p.content LIKE ?
-       ORDER BY p.created_at DESC`,
-      [`%${keyword}%`, `%${keyword}%`]
+       ORDER BY p.created_at DESC
+       LIMIT ? OFFSET ?`,
+      [`%${keyword}%`, `%${keyword}%`, size, offset]
     );
-    res.json({ content: rows, totalElements: rows.length });
+
+    const totalElements = Number(countRows[0].total || 0);
+    const totalPages = Math.ceil(totalElements / size);
+
+    res.json({
+      posts: rows,
+      content: rows,
+      currentPage: page,
+      page,
+      size,
+      totalElements,
+      totalCount: totalElements,
+      totalPages,
+      hasNext: page < totalPages - 1,
+      first: page === 0,
+      last: page >= totalPages - 1
+    });
   } catch (error) {
     next(error);
   }
