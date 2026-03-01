@@ -237,9 +237,11 @@
 
 .notification-container {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     z-index: 9999;
+    width: min(90vw, 420px);
 }
 
 .notification {
@@ -248,15 +250,14 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     margin-bottom: 10px;
     opacity: 0;
-    transform: translateX(100%);
+    transform: translateY(16px);
     transition: all 0.3s ease;
-    max-width: 400px;
-    min-width: 300px;
+    width: 100%;
 }
 
 .notification.show {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0);
 }
 
 .notification-content {
