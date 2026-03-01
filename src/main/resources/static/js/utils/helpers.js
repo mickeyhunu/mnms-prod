@@ -54,13 +54,13 @@ function createNotificationElement(message, type) {
    notification.style.cssText = `
        position: fixed !important;
        top: 20px !important;
-       right: 20px !important;
+       right: 16px !important;
        z-index: 99999 !important;
-       min-width: 300px !important;
+       width: min(360px, calc(100vw - 32px)) !important;
        padding: 16px !important;
        border-radius: 8px !important;
        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-       transform: translateX(100%) !important;
+       transform: translateX(calc(100% + 16px)) !important;
        transition: transform 0.3s ease-in-out !important;
        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
    `;
