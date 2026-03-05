@@ -30,7 +30,7 @@ async function handleLogin(e) {
     const errorBanner = document.getElementById('error-banner');
     const errorMessage = document.getElementById('error-message');
     const formData = {
-        email: form.email.value.trim(),
+        loginId: form.loginId.value.trim(),
         password: form.password.value
     };
     

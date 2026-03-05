@@ -5,7 +5,8 @@ const ENDPOINTS = {
         LOGIN: '/auth/login',
         REGISTER: '/auth/register',
         LOGOUT: '/auth/logout',
-        ME: '/auth/me'
+        ME: '/auth/me',
+        CHECK_NICKNAME: '/auth/check-nickname'
     },
     POSTS: {
         LIST: '/posts',
