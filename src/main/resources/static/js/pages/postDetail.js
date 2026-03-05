@@ -253,7 +253,7 @@ function renderPostDetail(post) {
         console.log('작성자임 - 수정/삭제 버튼 표시');
         if (messageBtn) messageBtn.style.display = 'none';
         if (ownerActions) ownerActions.classList.remove('hidden');
-        if (editBtn) editBtn.href = `/edit-post?id=${post.id}`;
+        if (editBtn) editBtn.href = `edit-post.html?id=${post.id}`;
     } else {
         console.log('작성자 아님 - 쪽지 버튼 표시');
         if (ownerActions) ownerActions.classList.add('hidden');

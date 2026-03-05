@@ -81,7 +81,7 @@ async function loadMyPosts() {
         }
 
         container.innerHTML = posts.map(post => `
-            <div class="my-post-card" onclick="location.href='/post-detail?id=${post.id}'" style="cursor:pointer;padding:12px;border:1px solid #eee;border-radius:8px;margin-bottom:10px;">
+            <div class="my-post-card" onclick="location.href='post-detail.html?id=${post.id}'" style="cursor:pointer;padding:12px;border:1px solid #eee;border-radius:8px;margin-bottom:10px;">
                 <div class="post-title"><strong>${sanitizeHTML(post.title)}</strong></div>
                 <div class="post-meta" style="margin-top:6px;color:#666;font-size:13px;">${formatDate(post.createdAt)} · 좋아요 ${post.likeCount || 0} · 댓글 ${post.commentCount || 0}</div>
                 <div class="post-content" style="margin-top:8px;">${sanitizeHTML((post.content || '').slice(0, 120))}${(post.content || '').length > 120 ? '...' : ''}</div>
@@ -108,7 +108,7 @@ async function loadMyComments() {
         container.innerHTML = comments.map(comment => `
             <div style="padding:12px;border:1px solid #eee;border-radius:8px;margin-bottom:10px;">
                 <div style="margin-bottom:8px;">${sanitizeHTML(comment.content)}</div>
-                <div style="font-size:13px;color:#666;">${formatDate(comment.createdAt)} · <a href="/post-detail?id=${comment.postId}">원문 보기</a></div>
+                <div style="font-size:13px;color:#666;">${formatDate(comment.createdAt)} · <a href="post-detail.html?id=${comment.postId}">원문 보기</a></div>
             </div>
         `).join('');
     } catch (error) {
