@@ -1,8 +1,8 @@
 function validateRegisterForm(data) {
     const errors = {};
 
-    if (!data.email || !VALIDATION.EMAIL_REGEX.test(data.email)) {
-        errors.email = '올바른 이메일 주소를 입력해주세요.';
+    if (!data.loginId || data.loginId.trim().length < 3) {
+        errors.loginId = '아이디는 3글자 이상 입력해주세요.';
     }
 
     if (!data.password || data.password.length < VALIDATION.MIN_PASSWORD_LENGTH) {
@@ -26,11 +26,6 @@ function validateRegisterForm(data) {
     } else if (Number(data.genderDigit) % 2 === 0) {
         errors.genderDigit = '남성만 가입 가능합니다. 홀수 번호를 입력해주세요.';
     }
-
-    if (!data.company || data.company.trim().length < 2) {
-        errors.company = '회사명을 2글자 이상 입력해주세요.';
-    }
-
     if (!data.department || data.department.length < 2) {
         errors.department = '부서를 선택해주세요.';
     }
@@ -39,14 +34,22 @@ function validateRegisterForm(data) {
         errors.jobRole = '직책을 선택해주세요.';
     }
 
+    if (!data.nickname || data.nickname.trim().length < 2) {
+        errors.nickname = '닉네임은 2글자 이상 입력해주세요.';
+    }
+
+    if (data.nicknameChecked !== 'true') {
+        errors.nickname = '닉네임 중복 확인을 완료해주세요.';
+    }
+
     return errors;
 }
 
 function validateLoginForm(data) {
     const errors = {};
 
-    if (!data.email || !VALIDATION.EMAIL_REGEX.test(data.email)) {
-        errors.email = '올바른 이메일 주소를 입력해주세요.';
+    if (!data.loginId || data.loginId.trim().length < 1) {
+        errors.loginId = '아이디를 입력해주세요.';
     }
 
     if (!data.password || data.password.length < 1) {

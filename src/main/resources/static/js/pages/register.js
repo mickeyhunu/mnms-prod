@@ -9,8 +9,8 @@ function initRegisterPage() {
     }
 
     setupRegisterForm();
-    setupNicknamePreview();
     setupPhoneVerification();
+    setupNicknameCheck();
 }
 
 function setupRegisterForm() {
@@ -30,6 +30,10 @@ function setupRegisterForm() {
                 markPhoneAsUnverified();
             }
 
+            if (input.name === 'nickname') {
+                markNicknameAsUnchecked();
+            }
+
             if (input.classList.contains('error')) {
                 validateFormField(input);
             }
@@ -47,6 +51,14 @@ function setupPhoneVerification() {
 
     if (verifyCodeBtn) {
         verifyCodeBtn.addEventListener('click', verifyPhoneCode);
+    }
+}
+
+function setupNicknameCheck() {
+    const checkNicknameBtn = document.getElementById('check-nickname-btn');
+
+    if (checkNicknameBtn) {
+        checkNicknameBtn.addEventListener('click', checkNicknameAvailability);
     }
 }
 
@@ -117,19 +129,51 @@ function markPhoneAsUnverified() {
     }
 }
 
-function setupNicknamePreview() {
-    const companyInput = document.getElementById('company');
-    const nicknamePreview = document.getElementById('nickname-preview');
+function setNicknameChecked(isChecked, isAvailable = false) {
+    const nicknameCheckedInput = document.getElementById('nicknameChecked');
+    const statusElement = document.getElementById('nickname-status');
 
-    if (companyInput && nicknamePreview) {
-        companyInput.addEventListener('input', () => {
-            const company = companyInput.value.trim();
-            if (company) {
-                nicknamePreview.textContent = `${company}-###`;
-            } else {
-                nicknamePreview.textContent = '회사명-###';
-            }
-        });
+    if (nicknameCheckedInput) {
+        nicknameCheckedInput.value = isChecked ? 'true' : 'false';
+    }
+
+    if (statusElement) {
+        if (!isChecked) {
+            statusElement.textContent = '닉네임 중복 확인이 필요합니다.';
+        } else if (isAvailable) {
+            statusElement.textContent = '사용 가능한 닉네임입니다.';
+        } else {
+            statusElement.textContent = '이미 사용 중인 닉네임입니다.';
+        }
+    }
+}
+
+function markNicknameAsUnchecked() {
+    setNicknameChecked(false);
+}
+
+async function checkNicknameAvailability() {
+    const nicknameInput = document.getElementById('nickname');
+    const nickname = nicknameInput?.value.trim() || '';
+
+    if (nickname.length < 2) {
+        showNotification('닉네임은 2글자 이상 입력해주세요.', 'warning');
+        setNicknameChecked(false);
+        return;
+    }
+
+    try {
+        const result = await AuthAPI.checkNickname(nickname);
+        if (result.available) {
+            setNicknameChecked(true, true);
+            showNotification('사용 가능한 닉네임입니다.', 'success');
+        } else {
+            setNicknameChecked(false, false);
+            showNotification('이미 사용 중인 닉네임입니다.', 'error');
+        }
+    } catch (error) {
+        setNicknameChecked(false);
+        showNotification(error.message || '닉네임 확인 중 오류가 발생했습니다.', 'error');
     }
 }
 
@@ -143,16 +187,17 @@ async function handleRegister(e) {
     const errorMessage = document.getElementById('error-message');
 
     const formData = {
-        email: form.email.value.trim(),
+        loginId: form.loginId.value.trim(),
         password: form.password.value,
         confirmPassword: form.confirmPassword.value,
         phone: form.phone.value.trim(),
         verificationCode: form.verificationCode.value.trim(),
         phoneVerified: form.phoneVerified.value,
         genderDigit: form.genderDigit.value.trim(),
-        company: form.company.value.trim(),
         department: form.department.value,
-        jobRole: form.jobRole.value
+        jobRole: form.jobRole.value,
+        nickname: form.nickname.value.trim(),
+        nicknameChecked: form.nicknameChecked.value
     };
 
     const errors = validateRegisterForm(formData);
@@ -167,13 +212,13 @@ async function handleRegister(e) {
         hideElement(errorBanner);
 
         const response = await AuthAPI.register({
-            email: formData.email,
+            loginId: formData.loginId,
             password: formData.password,
             phone: formData.phone,
             genderDigit: formData.genderDigit,
-            company: formData.company,
             department: formData.department,
-            jobPosition: formData.jobRole
+            jobPosition: formData.jobRole,
+            nickname: formData.nickname
         });
         console.log('회원가입 응답:', response);
 
