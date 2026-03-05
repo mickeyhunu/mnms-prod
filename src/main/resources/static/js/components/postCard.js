@@ -95,7 +95,7 @@ function attachPostCardEvents(container) {
             titleLink.addEventListener('click', (e) => {
                 e.preventDefault();
                 const postId = card.dataset.postId;
-                window.location.href = `/post/${postId}`;
+                window.location.href = `/post-detail?id=${postId}`;
             });
         }
     });
@@ -191,7 +191,7 @@ async function handlePostDelete(postId) {
 }
 
 function navigateToPost(postId) {
-    window.location.href = `/post/${postId}`;
+    window.location.href = `/post-detail?id=${postId}`;
 }
 
 async function toggleLike(postId, event) {

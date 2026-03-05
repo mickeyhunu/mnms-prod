@@ -17,7 +17,13 @@ function bindLogoutButton() {
 
     logoutBtn.addEventListener('click', async (e) => {
         e.preventDefault();
-        await AuthAPI.logout();
+
+        if (typeof AuthAPI !== 'undefined' && AuthAPI.logout) {
+            await AuthAPI.logout();
+            return;
+        }
+
+        Auth.logout();
     });
 }
 
