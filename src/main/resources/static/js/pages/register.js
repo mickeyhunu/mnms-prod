@@ -194,8 +194,6 @@ async function handleRegister(e) {
         verificationCode: form.verificationCode.value.trim(),
         phoneVerified: form.phoneVerified.value,
         genderDigit: form.genderDigit.value.trim(),
-        department: form.department.value,
-        jobRole: form.jobRole.value,
         nickname: form.nickname.value.trim(),
         nicknameChecked: form.nicknameChecked.value
     };
@@ -216,8 +214,6 @@ async function handleRegister(e) {
             password: formData.password,
             phone: formData.phone,
             genderDigit: formData.genderDigit,
-            department: formData.department,
-            jobPosition: formData.jobRole,
             nickname: formData.nickname
         });
         console.log('회원가입 응답:', response);

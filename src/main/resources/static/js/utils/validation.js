@@ -26,14 +26,6 @@ function validateRegisterForm(data) {
     } else if (Number(data.genderDigit) % 2 === 0) {
         errors.genderDigit = '남성만 가입 가능합니다. 홀수 번호를 입력해주세요.';
     }
-    if (!data.department || data.department.length < 2) {
-        errors.department = '부서를 선택해주세요.';
-    }
-
-    if (!data.jobRole || data.jobRole.length < 2) {
-        errors.jobRole = '직책을 선택해주세요.';
-    }
-
     if (!data.nickname || data.nickname.trim().length < 2) {
         errors.nickname = '닉네임은 2글자 이상 입력해주세요.';
     }

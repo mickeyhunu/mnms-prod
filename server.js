@@ -25,9 +25,6 @@ function pickUserRow(userRow) {
     id: userRow.id,
     email: userRow.email,
     nickname: userRow.nickname,
-    company: userRow.company,
-    department: userRow.department,
-    jobPosition: userRow.job_position,
     role: userRow.role,
     isAdmin: userRow.role === 'ADMIN'
   };
@@ -179,8 +176,8 @@ app.use(express.static(STATIC_DIR));
 
 app.post('/api/auth/register', async (req, res, next) => {
   try {
-    const { loginId, email, password, company, department, jobPosition, nickname } = req.body;
-    const resolvedCompany = (company || '개인').trim();
+    const { loginId, email, password, nickname } = req.body;
+    const resolvedCompany = '개인';
 
     if (!(loginId || email) || !password || !nickname) {
       return res.status(400).json({ message: '아이디, 비밀번호, 닉네임은 필수입니다.' });
@@ -196,7 +193,7 @@ app.post('/api/auth/register', async (req, res, next) => {
     const [result] = await pool.query(
       `INSERT INTO users (email, password, nickname, company, department, job_position, role)
        VALUES (?, ?, ?, ?, ?, ?, 'USER')`,
-      [resolvedLoginId, password, nickname.trim(), resolvedCompany, department || null, jobPosition || null]
+      [resolvedLoginId, password, nickname.trim(), resolvedCompany, null, null]
     );
 
     const [users] = await pool.query('SELECT * FROM users WHERE id = ?', [result.insertId]);
@@ -719,7 +716,7 @@ app.get('/api/admin/posts', authMiddleware, adminMiddleware, async (req, res, ne
 
 app.get('/api/admin/users', authMiddleware, adminMiddleware, async (req, res, next) => {
   try {
-    const [rows] = await pool.query('SELECT id, email, nickname, company, department, job_position AS jobPosition, role, created_at AS createdAt FROM users ORDER BY id DESC');
+    const [rows] = await pool.query('SELECT id, email, nickname, role, created_at AS createdAt FROM users ORDER BY id DESC');
     res.json(rows);
   } catch (error) {
     next(error);
