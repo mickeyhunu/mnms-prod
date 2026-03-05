@@ -203,8 +203,9 @@ async function loadPost() {
         if (errorBanner) errorBanner.classList.add('hidden');
 
         const response = await PostAPI.getPost(postId);
-        
-        renderPostDetail(response);
+        const normalizedPost = normalizePostDetailResponse(response);
+
+        renderPostDetail(normalizedPost);
 
         if (loading) loading.classList.add('hidden');
         if (postDetail) postDetail.classList.remove('hidden');
@@ -222,6 +223,24 @@ async function loadPost() {
         if (loading) loading.classList.add('hidden');
         showError('게시글을 불러오는 중 오류가 발생했습니다.');
     }
+}
+
+function normalizePostDetailResponse(post) {
+    const normalizedImageUrls = Array.isArray(post.imageUrls)
+        ? post.imageUrls
+        : post.imageUrl
+            ? [post.imageUrl]
+            : [];
+
+    return {
+        ...post,
+        id: post.id,
+        authorId: post.authorId ?? post.userId,
+        imageUrls: normalizedImageUrls,
+        isAuthor: Boolean(post.isAuthor),
+        isLiked: Boolean(post.isLiked),
+        isBookmarked: Boolean(post.isBookmarked)
+    };
 }
 
 function renderPostDetail(post) {
@@ -326,13 +345,15 @@ function renderPostImages(imageUrls) {
 async function loadComments() {
     try {
         const response = await CommentAPI.getComments(postId, currentCommentsPage);
+        const comments = response.comments || response.content || [];
+        const totalElements = response.totalElements ?? comments.length;
         
         const commentCount = document.getElementById('comment-count');
         if (commentCount) {
-            commentCount.textContent = response.totalElements || 0;
+            commentCount.textContent = totalElements;
         }
         
-        renderComments(response.comments || []);
+        renderComments(comments);
         
     } catch (error) {
         console.error('댓글 로드 실패:', error);
