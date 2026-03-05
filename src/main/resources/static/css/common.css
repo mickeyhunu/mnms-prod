@@ -205,6 +205,65 @@ a:hover {
 
 .auth-container { max-width: 500px; }
 .auth-container.auth-login { max-width: 420px; }
+
+.age-notice-banner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #eeeeee;
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    margin-bottom: 20px;
+}
+
+.age-notice-icon {
+    width: 76px;
+    height: 76px;
+    border: 6px solid #e70063;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #333333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 54px;
+    line-height: 1;
+    font-style: italic;
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+.age-notice-text p {
+    margin: 0;
+    color: #2b2b2b;
+    font-size: 24px;
+    line-height: 1.2;
+    letter-spacing: -0.2px;
+}
+
+.age-notice-text .age-notice-warning {
+    color: #e70063;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .age-notice-banner {
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .age-notice-icon {
+        width: 58px;
+        height: 58px;
+        border-width: 4px;
+        font-size: 38px;
+    }
+
+    .age-notice-text p {
+        font-size: 16px;
+    }
+}
+
 .nickname-preview-card {
     background: var(--surface-muted) !important;
     padding: 15px !important;
