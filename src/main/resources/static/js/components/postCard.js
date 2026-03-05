@@ -26,7 +26,7 @@ function createPostCard(post) {
             <div class="post-header">
                 <div class="post-header-left">
                     <h3 class="post-title">
-                        <a href="/post-detail?id=${post.id}" onclick="handlePostClick(${post.id}); return false;">${titlePrefix}${sanitizeHTML(post.title)}</a>
+                        <a href="post-detail.html?id=${post.id}" onclick="handlePostClick(${post.id}); return false;">${titlePrefix}${sanitizeHTML(post.title)}</a>
                     </h3>
                     <div class="post-meta">
                         <span class="post-author">${sanitizeHTML(post.authorNickname || '작성자 #' + post.authorId)}</span>
@@ -62,7 +62,7 @@ function createPostCard(post) {
 
 function handlePostClick(postId) {
     console.log("게시글 클릭:", postId);
-    window.location.href = `/post-detail?id=${postId}`;
+    window.location.href = `post-detail.html?id=${postId}`;
 }
 
 function createImagePreview(imageUrls) {
@@ -95,7 +95,7 @@ function attachPostCardEvents(container) {
             titleLink.addEventListener('click', (e) => {
                 e.preventDefault();
                 const postId = card.dataset.postId;
-                window.location.href = `/post-detail?id=${postId}`;
+                window.location.href = `post-detail.html?id=${postId}`;
             });
         }
     });
@@ -191,7 +191,7 @@ async function handlePostDelete(postId) {
 }
 
 function navigateToPost(postId) {
-    window.location.href = `/post-detail?id=${postId}`;
+    window.location.href = `post-detail.html?id=${postId}`;
 }
 
 async function toggleLike(postId, event) {
