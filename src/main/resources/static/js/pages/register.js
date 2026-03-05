@@ -1,6 +1,3 @@
-let generatedVerificationCode = null;
-let verifiedPhoneNumber = null;
-
 function initRegisterPage() {
     console.log('Register page 초기화');
 
@@ -9,8 +6,8 @@ function initRegisterPage() {
     }
 
     setupRegisterForm();
-    setupPhoneVerification();
     setupNicknameCheck();
+    setupNiceIdentityBridge();
 }
 
 function setupRegisterForm() {
@@ -26,10 +23,6 @@ function setupRegisterForm() {
     inputs.forEach(input => {
         input.addEventListener('blur', () => validateFormField(input));
         input.addEventListener('input', () => {
-            if (input.name === 'phone') {
-                markPhoneAsUnverified();
-            }
-
             if (input.name === 'nickname') {
                 markNicknameAsUnchecked();
             }
@@ -41,17 +34,30 @@ function setupRegisterForm() {
     });
 }
 
-function setupPhoneVerification() {
-    const sendCodeBtn = document.getElementById('send-code-btn');
-    const verifyCodeBtn = document.getElementById('verify-code-btn');
+function setupNiceIdentityBridge() {
+    // NICE 연동 완료 후 외부 스크립트에서 window.applyNiceVerificationData(payload) 호출 가능
+    window.applyNiceVerificationData = applyNiceVerificationData;
+}
 
-    if (sendCodeBtn) {
-        sendCodeBtn.addEventListener('click', sendVerificationCode);
-    }
+function applyNiceVerificationData(identityData) {
+    const mapping = {
+        name: 'name',
+        birthDate: 'birthDate',
+        gender: 'gender',
+        nationalInfo: 'nationalInfo',
+        telecom: 'telecom',
+        phone: 'phone',
+        ci: 'ci',
+        di: 'di'
+    };
 
-    if (verifyCodeBtn) {
-        verifyCodeBtn.addEventListener('click', verifyPhoneCode);
-    }
+    Object.entries(mapping).forEach(([key, fieldId]) => {
+        const field = document.getElementById(fieldId);
+        if (field && identityData[key] !== undefined && identityData[key] !== null) {
+            field.value = String(identityData[key]);
+            validateFormField(field);
+        }
+    });
 }
 
 function setupNicknameCheck() {
@@ -59,73 +65,6 @@ function setupNicknameCheck() {
 
     if (checkNicknameBtn) {
         checkNicknameBtn.addEventListener('click', checkNicknameAvailability);
-    }
-}
-
-function sendVerificationCode() {
-    const phoneInput = document.getElementById('phone');
-    const statusElement = document.getElementById('verification-status');
-
-    const phone = phoneInput.value.trim();
-    if (!/^01[016789]\d{7,8}$/.test(phone)) {
-        showNotification('유효한 휴대폰 번호를 입력해주세요.', 'error');
-        return;
-    }
-
-    generatedVerificationCode = String(Math.floor(100000 + Math.random() * 900000));
-    verifiedPhoneNumber = null;
-    setPhoneVerified(false);
-
-    if (statusElement) {
-        statusElement.textContent = `인증번호가 발송되었습니다. (데모 코드: ${generatedVerificationCode})`;
-    }
-
-    showNotification('인증번호를 발송했습니다.', 'success');
-}
-
-function verifyPhoneCode() {
-    const codeInput = document.getElementById('verificationCode');
-    const phoneInput = document.getElementById('phone');
-    const statusElement = document.getElementById('verification-status');
-
-    if (!generatedVerificationCode) {
-        showNotification('먼저 인증번호를 발송해주세요.', 'warning');
-        return;
-    }
-
-    const code = codeInput.value.trim();
-    if (code !== generatedVerificationCode) {
-        setPhoneVerified(false);
-        showNotification('인증번호가 일치하지 않습니다.', 'error');
-        return;
-    }
-
-    verifiedPhoneNumber = phoneInput.value.trim();
-    setPhoneVerified(true);
-
-    if (statusElement) {
-        statusElement.textContent = '휴대폰 인증이 완료되었습니다.';
-    }
-
-    showNotification('휴대폰 인증이 완료되었습니다.', 'success');
-}
-
-function setPhoneVerified(isVerified) {
-    const phoneVerifiedInput = document.getElementById('phoneVerified');
-    if (phoneVerifiedInput) {
-        phoneVerifiedInput.value = isVerified ? 'true' : 'false';
-    }
-}
-
-function markPhoneAsUnverified() {
-    const currentPhone = document.getElementById('phone')?.value.trim();
-
-    if (verifiedPhoneNumber && verifiedPhoneNumber !== currentPhone) {
-        setPhoneVerified(false);
-        const statusElement = document.getElementById('verification-status');
-        if (statusElement) {
-            statusElement.textContent = '휴대폰 번호가 변경되어 재인증이 필요합니다.';
-        }
     }
 }
 
@@ -191,9 +130,13 @@ async function handleRegister(e) {
         password: form.password.value,
         confirmPassword: form.confirmPassword.value,
         phone: form.phone.value.trim(),
-        verificationCode: form.verificationCode.value.trim(),
-        phoneVerified: form.phoneVerified.value,
-        genderDigit: form.genderDigit.value.trim(),
+        name: form.name.value.trim(),
+        birthDate: form.birthDate.value,
+        gender: form.gender.value,
+        nationalInfo: form.nationalInfo.value,
+        telecom: form.telecom.value,
+        ci: form.ci.value,
+        di: form.di.value,
         nickname: form.nickname.value.trim(),
         nicknameChecked: form.nicknameChecked.value
     };
@@ -213,7 +156,13 @@ async function handleRegister(e) {
             loginId: formData.loginId,
             password: formData.password,
             phone: formData.phone,
-            genderDigit: formData.genderDigit,
+            name: formData.name,
+            birthDate: formData.birthDate,
+            gender: formData.gender,
+            nationalInfo: formData.nationalInfo,
+            telecom: formData.telecom,
+            ci: formData.ci,
+            di: formData.di,
             nickname: formData.nickname
         });
         console.log('회원가입 응답:', response);

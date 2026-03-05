@@ -17,14 +17,9 @@ function validateRegisterForm(data) {
         errors.phone = '유효한 휴대폰 번호를 입력해주세요.';
     }
 
-    if (data.phoneVerified !== 'true') {
-        errors.verificationCode = '휴대폰 인증을 완료해주세요.';
-    }
 
-    if (!data.genderDigit || !/^\d$/.test(data.genderDigit)) {
-        errors.genderDigit = '성별 식별 번호를 입력해주세요.';
-    } else if (Number(data.genderDigit) % 2 === 0) {
-        errors.genderDigit = '남성만 가입 가능합니다. 홀수 번호를 입력해주세요.';
+    if (!data.name || data.name.trim().length < 2) {
+        errors.name = '이름을 입력해주세요.';
     }
     if (!data.nickname || data.nickname.trim().length < 2) {
         errors.nickname = '닉네임은 2글자 이상 입력해주세요.';

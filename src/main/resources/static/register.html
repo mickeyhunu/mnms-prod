@@ -54,31 +54,24 @@
 
                     <div class="form-group">
                         <label for="phone" class="form-label">휴대폰 번호</label>
-                        <div class="grid grid-2">
-                            <input type="tel" id="phone" name="phone" class="form-control" placeholder="숫자만 입력 (예: 01012345678)" required>
-                            <button type="button" class="btn btn-outline" id="send-code-btn">인증번호 발송</button>
-                        </div>
+                        <input type="tel" id="phone" name="phone" class="form-control" placeholder="본인인증 시 자동 입력" readonly required>
+                        <small class="text-muted">NICE 본인인증 연동 시 전달받은 휴대폰 번호로 자동 채워집니다.</small>
                         <div class="error-message hidden" id="phone-error"></div>
                     </div>
 
                     <div class="form-group">
-                        <label for="verificationCode" class="form-label">인증번호</label>
-                        <div class="grid grid-2">
-                            <input type="text" id="verificationCode" name="verificationCode" class="form-control" placeholder="6자리 인증번호" maxlength="6" required>
-                            <button type="button" class="btn btn-outline" id="verify-code-btn">인증 확인</button>
-                        </div>
-                        <small class="text-muted" id="verification-status">휴대폰 인증이 필요합니다.</small>
-                        <div class="error-message hidden" id="verificationCode-error"></div>
+                        <label for="name" class="form-label">이름</label>
+                        <input type="text" id="name" name="name" class="form-control" placeholder="본인인증 시 자동 입력" required>
+                        <small class="text-muted">NICE 본인인증 연동 시 전달받은 이름으로 자동 채워집니다.</small>
+                        <div class="error-message hidden" id="name-error"></div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="genderDigit" class="form-label">성별 식별 번호</label>
-                        <input type="number" id="genderDigit" name="genderDigit" class="form-control" placeholder="주민번호 뒷자리 첫 숫자" min="0" max="9" required>
-                        <small class="text-muted">남성만 가입 가능 (홀수 번호만 통과)</small>
-                        <div class="error-message hidden" id="genderDigit-error"></div>
-                    </div>
-
-                    <input type="hidden" id="phoneVerified" name="phoneVerified" value="false">
+                    <input type="hidden" id="birthDate" name="birthDate" value="">
+                    <input type="hidden" id="gender" name="gender" value="">
+                    <input type="hidden" id="nationalInfo" name="nationalInfo" value="">
+                    <input type="hidden" id="telecom" name="telecom" value="">
+                    <input type="hidden" id="ci" name="ci" value="">
+                    <input type="hidden" id="di" name="di" value="">
 
                     <div class="form-group">
                         <label for="nickname" class="form-label">닉네임</label>
