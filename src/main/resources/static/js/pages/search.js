@@ -182,7 +182,7 @@ function updateSearchUI(keyword, resultCount) {
         clearBtn.style.display = 'inline-block';
     }
     
-    document.title = `"${keyword}" 검색 결과 - 커뮤니티`;
+    document.title = `"${keyword}" 검색 결과 - 미드나잇 맨즈`;
 }
 
 function clearSearch() {
@@ -200,7 +200,7 @@ function clearSearch() {
         clearBtn.style.display = 'none';
     }
     
-    document.title = '커뮤니티';
+    document.title = '미드나잇 맨즈';
     
     if (typeof loadPosts === 'function') {
         loadPosts(0);
