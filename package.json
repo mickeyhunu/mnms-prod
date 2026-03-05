@@ -1,5 +1,5 @@
 {
-  "name": "midnigthmans-node",
+  "name": "midnightmens-node",
   "version": "1.1.0",
   "description": "Anonymous community board on Node.js + MySQL",
   "main": "server.js",
