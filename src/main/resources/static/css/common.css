@@ -213,7 +213,8 @@ a:hover {
     background: #eeeeee;
     border-radius: var(--radius-md);
     padding: 14px 18px;
-    margin-bottom: 20px;
+    margin: 0 auto 20px;
+    max-width: 420px;
 }
 
 .age-notice-icon {
@@ -231,6 +232,11 @@ a:hover {
     line-height: 1;
     font-style: italic;
     font-family: Georgia, "Times New Roman", serif;
+}
+
+.age-notice-number {
+    display: block;
+    transform: translateY(-3px);
 }
 
 .age-notice-text p {
