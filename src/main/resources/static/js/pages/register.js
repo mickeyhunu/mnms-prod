@@ -1,12 +1,16 @@
+let generatedVerificationCode = null;
+let verifiedPhoneNumber = null;
+
 function initRegisterPage() {
     console.log('Register page 초기화');
-    
+
     if (Auth.redirectIfAuthenticated()) {
         return;
     }
-    
+
     setupRegisterForm();
     setupNicknamePreview();
+    setupPhoneVerification();
 }
 
 function setupRegisterForm() {
@@ -15,13 +19,17 @@ function setupRegisterForm() {
         console.error('Register form not found');
         return;
     }
-    
+
     form.addEventListener('submit', handleRegister);
-    
+
     const inputs = form.querySelectorAll('input, select');
     inputs.forEach(input => {
         input.addEventListener('blur', () => validateFormField(input));
         input.addEventListener('input', () => {
+            if (input.name === 'phone') {
+                markPhoneAsUnverified();
+            }
+
             if (input.classList.contains('error')) {
                 validateFormField(input);
             }
@@ -29,10 +37,90 @@ function setupRegisterForm() {
     });
 }
 
+function setupPhoneVerification() {
+    const sendCodeBtn = document.getElementById('send-code-btn');
+    const verifyCodeBtn = document.getElementById('verify-code-btn');
+
+    if (sendCodeBtn) {
+        sendCodeBtn.addEventListener('click', sendVerificationCode);
+    }
+
+    if (verifyCodeBtn) {
+        verifyCodeBtn.addEventListener('click', verifyPhoneCode);
+    }
+}
+
+function sendVerificationCode() {
+    const phoneInput = document.getElementById('phone');
+    const statusElement = document.getElementById('verification-status');
+
+    const phone = phoneInput.value.trim();
+    if (!/^01[016789]\d{7,8}$/.test(phone)) {
+        showNotification('유효한 휴대폰 번호를 입력해주세요.', 'error');
+        return;
+    }
+
+    generatedVerificationCode = String(Math.floor(100000 + Math.random() * 900000));
+    verifiedPhoneNumber = null;
+    setPhoneVerified(false);
+
+    if (statusElement) {
+        statusElement.textContent = `인증번호가 발송되었습니다. (데모 코드: ${generatedVerificationCode})`;
+    }
+
+    showNotification('인증번호를 발송했습니다.', 'success');
+}
+
+function verifyPhoneCode() {
+    const codeInput = document.getElementById('verificationCode');
+    const phoneInput = document.getElementById('phone');
+    const statusElement = document.getElementById('verification-status');
+
+    if (!generatedVerificationCode) {
+        showNotification('먼저 인증번호를 발송해주세요.', 'warning');
+        return;
+    }
+
+    const code = codeInput.value.trim();
+    if (code !== generatedVerificationCode) {
+        setPhoneVerified(false);
+        showNotification('인증번호가 일치하지 않습니다.', 'error');
+        return;
+    }
+
+    verifiedPhoneNumber = phoneInput.value.trim();
+    setPhoneVerified(true);
+
+    if (statusElement) {
+        statusElement.textContent = '휴대폰 인증이 완료되었습니다.';
+    }
+
+    showNotification('휴대폰 인증이 완료되었습니다.', 'success');
+}
+
+function setPhoneVerified(isVerified) {
+    const phoneVerifiedInput = document.getElementById('phoneVerified');
+    if (phoneVerifiedInput) {
+        phoneVerifiedInput.value = isVerified ? 'true' : 'false';
+    }
+}
+
+function markPhoneAsUnverified() {
+    const currentPhone = document.getElementById('phone')?.value.trim();
+
+    if (verifiedPhoneNumber && verifiedPhoneNumber !== currentPhone) {
+        setPhoneVerified(false);
+        const statusElement = document.getElementById('verification-status');
+        if (statusElement) {
+            statusElement.textContent = '휴대폰 번호가 변경되어 재인증이 필요합니다.';
+        }
+    }
+}
+
 function setupNicknamePreview() {
     const companyInput = document.getElementById('company');
     const nicknamePreview = document.getElementById('nickname-preview');
-    
+
     if (companyInput && nicknamePreview) {
         companyInput.addEventListener('input', () => {
             const company = companyInput.value.trim();
@@ -48,63 +136,61 @@ function setupNicknamePreview() {
 async function handleRegister(e) {
     e.preventDefault();
     console.log('회원가입 시도');
-    
+
     const form = e.target;
     const submitBtn = document.getElementById('submit-btn');
     const errorBanner = document.getElementById('error-banner');
     const errorMessage = document.getElementById('error-message');
-    
+
     const formData = {
         email: form.email.value.trim(),
         password: form.password.value,
         confirmPassword: form.confirmPassword.value,
+        phone: form.phone.value.trim(),
+        verificationCode: form.verificationCode.value.trim(),
+        phoneVerified: form.phoneVerified.value,
+        genderDigit: form.genderDigit.value.trim(),
         company: form.company.value.trim(),
         department: form.department.value,
-        jobPosition: form.jobRole.value
+        jobRole: form.jobRole.value
     };
-    
-    console.log('회원가입 데이터:', {
-        email: formData.email,
-        company: formData.company,
-        department: formData.department,
-        jobPosition: formData.jobPosition
-    });
-    
+
     const errors = validateRegisterForm(formData);
-    
+
     if (hasValidationErrors(errors)) {
         showValidationErrors(errors, form);
         return;
     }
-    
+
     try {
         setLoading(submitBtn, true);
         hideElement(errorBanner);
-        
-        console.log('AuthAPI.register() 호출');
+
         const response = await AuthAPI.register({
             email: formData.email,
             password: formData.password,
+            phone: formData.phone,
+            genderDigit: formData.genderDigit,
             company: formData.company,
             department: formData.department,
-            jobPosition: formData.jobPosition
+            jobPosition: formData.jobRole
         });
         console.log('회원가입 응답:', response);
-        
+
         showNotification('회원가입이 완료되었습니다!', 'success');
-        
+
         setTimeout(() => {
             window.location.href = '/login';
         }, 1500);
-        
+
     } catch (error) {
         console.error('회원가입 에러:', error);
-        
+
         if (errorMessage) {
             errorMessage.textContent = error.message || '회원가입 중 오류가 발생했습니다.';
         }
         showElement(errorBanner);
-        
+
     } finally {
         setLoading(submitBtn, false);
     }

@@ -53,6 +53,34 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="phone" class="form-label">휴대폰 번호</label>
+                        <div class="grid grid-2">
+                            <input type="tel" id="phone" name="phone" class="form-control" placeholder="숫자만 입력 (예: 01012345678)" required>
+                            <button type="button" class="btn btn-outline" id="send-code-btn">인증번호 발송</button>
+                        </div>
+                        <div class="error-message hidden" id="phone-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="verificationCode" class="form-label">인증번호</label>
+                        <div class="grid grid-2">
+                            <input type="text" id="verificationCode" name="verificationCode" class="form-control" placeholder="6자리 인증번호" maxlength="6" required>
+                            <button type="button" class="btn btn-outline" id="verify-code-btn">인증 확인</button>
+                        </div>
+                        <small class="text-muted" id="verification-status">휴대폰 인증이 필요합니다.</small>
+                        <div class="error-message hidden" id="verificationCode-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="genderDigit" class="form-label">성별 식별 번호</label>
+                        <input type="number" id="genderDigit" name="genderDigit" class="form-control" placeholder="주민번호 뒷자리 첫 숫자" min="0" max="9" required>
+                        <small class="text-muted">남성만 가입 가능 (홀수 번호만 통과)</small>
+                        <div class="error-message hidden" id="genderDigit-error"></div>
+                    </div>
+
+                    <input type="hidden" id="phoneVerified" name="phoneVerified" value="false">
+
+                    <div class="form-group">
                         <label for="company" class="form-label">회사명</label>
                         <input type="text" id="company" name="company" class="form-control" placeholder="회사명을 입력하세요" required>
                         <div class="error-message hidden" id="company-error"></div>
