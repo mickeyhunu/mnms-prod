@@ -138,7 +138,8 @@ async function handleRegister(e) {
         ci: form.ci.value,
         di: form.di.value,
         nickname: form.nickname.value.trim(),
-        nicknameChecked: form.nicknameChecked.value
+        nicknameChecked: form.nicknameChecked.value,
+        smsConsent: form.smsConsent.checked
     };
 
     const errors = validateRegisterForm(formData);
@@ -163,7 +164,8 @@ async function handleRegister(e) {
             telecom: formData.telecom,
             ci: formData.ci,
             di: formData.di,
-            nickname: formData.nickname
+            nickname: formData.nickname,
+            smsConsent: formData.smsConsent
         });
         console.log('회원가입 응답:', response);
 
