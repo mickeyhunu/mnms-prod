@@ -64,6 +64,8 @@ function createPostCard(post) {
     const cardClass = isAdmin ? 'post-card admin-notice' : 'post-card';
     const titlePrefix = isAdmin ? '📌 [공지] ' : '';
     
+    const isLikedByMe = Boolean(post.isLiked || post.liked || post.likedByMe);
+
     return `
         <div class="${cardClass}" data-post-id="${post.id}">
             <div class="post-header">
@@ -87,8 +89,9 @@ function createPostCard(post) {
             ${post.imageUrls && post.imageUrls.length > 0 ? createImagePreview(post.imageUrls) : ''}
             <div class="post-actions">
                 ${isLoggedIn ? `
-                    <button class="btn btn-sm btn-outline like-btn" onclick="handlePostLike(${post.id})" ${post.isLiked ? 'data-liked="true"' : ''}>
-                        ${post.isLiked ? '❤️' : '🤍'} ${post.likeCount || 0}
+                    <button class="btn btn-sm btn-outline like-btn ${isLikedByMe ? 'liked' : ''}" onclick="handlePostLike(${post.id})" ${isLikedByMe ? 'data-liked="true"' : ''}>
+                        <span class="like-icon">${isLikedByMe ? '❤️' : '🤍'}</span>
+                        <span class="like-count-value">${post.likeCount || 0}</span>
                     </button>
                 ` : ''}
             </div>
@@ -152,10 +155,12 @@ async function handlePostLike(postId) {
         if (likeBtn && response) {
             if (response.isLiked) {
                 likeBtn.setAttribute('data-liked', 'true');
-                likeBtn.innerHTML = `❤️ ${response.likeCount}`;
+                likeBtn.classList.add('liked');
+                likeBtn.innerHTML = `<span class="like-icon">❤️</span><span class="like-count-value">${response.likeCount}</span>`;
             } else {
                 likeBtn.removeAttribute('data-liked');
-                likeBtn.innerHTML = `🤍 ${response.likeCount}`;
+                likeBtn.classList.remove('liked');
+                likeBtn.innerHTML = `<span class="like-icon">🤍</span><span class="like-count-value">${response.likeCount}</span>`;
             }
             
             if (likeCountSpan) {
