@@ -4,7 +4,7 @@
 
 .bbs-view {
     border: 1px solid #e6e8eb;
-    border-radius: 14px;
+    border-radius: 0;
     background: #fff;
     overflow: hidden;
     margin-bottom: 16px;
