@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/community-board.css">
 </head>
 <body>
     <header class="header">
@@ -33,10 +34,56 @@
 
     <main class="main-content">
         <div class="container">
-            <div class="page-header">
-                <h1>미드나잇 맨즈 게시판</h1>
-                <p>어두운 밤, 더 솔직한 이야기들을 나눠보세요.</p>
+            <div id="sub_center" class="community-board">
+                <div class="board-head-line"></div>
+                <div class="board-title-wrap">
+                    <h2>
+                        <span>밤문화이야기</span>
+                    </h2>
+                </div>
+                <div class="board-intro">
+                    <p>
+                        지금 <span>유흥업소에 관한 핫이슈나 꼭 알아두어야할 정보</span>들을 올리는곳입니다.<br>
+                        다른곳에서 말할수 없는 정보들을 우리 미드나잇 맨즈에서 많이 얻어갈수 있도록 서로서로 공유합시다.
+                    </p>
+                </div>
             </div>
+
+            <div class="board-toolbar">
+                <button id="filter-btn" class="filter-btn" type="button">필터</button>
+                <a href="create-post.html" class="btn btn-primary btn-sm">글쓰기</a>
+            </div>
+
+            <div id="filter-modal" class="filter-modal hidden">
+                <div class="filter-modal-content">
+                    <button id="filter-close" class="filter-close" type="button">×</button>
+                    <h3>필터 설정</h3>
+                    <div class="filter-item">
+                        <span>광고 글 보기</span>
+                        <input type="checkbox" id="ad-switch">
+                    </div>
+                    <div class="filter-item">
+                        <span>추천 글 우선 보기</span>
+                        <input type="checkbox" id="hot-switch" checked>
+                    </div>
+                </div>
+            </div>
+
+            <table class="board-table-header" cellspacing="0">
+                <tr>
+                    <th>번호</th>
+                    <th>제목</th>
+                    <th>등록인</th>
+                    <th>등록일</th>
+                    <th>추천</th>
+                    <th>조회수</th>
+                </tr>
+            </table>
+
+            <table class="board-table" cellspacing="0">
+                <tbody id="notice-list"></tbody>
+                <tbody id="post-list"></tbody>
+            </table>
 
             <div class="loading hidden" id="loading">
                 <div class="spinner"></div>
@@ -53,8 +100,6 @@
                 <p>첫 번째 글을 작성해보세요!</p>
                 <a href="create-post.html" class="btn btn-primary">글쓰기</a>
             </div>
-
-            <div id="post-list"></div>
 
             <div class="pagination hidden" id="pagination">
                 <button class="btn btn-outline btn-sm" id="prev-btn" disabled>이전</button>
