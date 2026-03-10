@@ -21,8 +21,6 @@
                 <div class="nav-user hidden" id="nav-user">
                     <span class="user-nickname" id="user-nickname"></span>
                     <a href="my-page.html" class="btn btn-outline btn-sm">마이페이지</a>
-                    <a href="bookmarks.html" class="btn btn-outline btn-sm">북마크</a>
-                    <a href="create-post.html" class="btn btn-primary btn-sm">글쓰기</a>
                     <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
                     <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
                 </div>
@@ -33,6 +31,9 @@
     <main class="main-content">
         <div class="container community-container">
             <h2 class="section-title">커뮤니티 게시글</h2>
+            <div class="community-actions hidden" id="community-actions">
+                <a href="create-post.html" class="btn btn-primary btn-sm">글쓰기</a>
+            </div>
 
             <div class="loading" id="loading">게시글을 불러오는 중...</div>
 

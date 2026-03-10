@@ -340,3 +340,9 @@
     padding: 7px 10px;
     cursor: pointer;
 }
+
+.community-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+}
