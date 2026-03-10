@@ -835,6 +835,19 @@
     color: #7e8792;
 }
 
+.post-sub-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #7e8792;
+    font-size: 14px;
+}
+
+.post-sub-meta #view-count::before {
+    content: "·";
+    margin-right: 8px;
+}
+
 #message-btn {
     background: #f2fff6;
     border-color: #bdeacb;
@@ -1059,9 +1072,7 @@
 .view-count {
     color: #7e8792;
     font-size: 14px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
+    font-weight: 500;
 }
 
 .comment-item {
