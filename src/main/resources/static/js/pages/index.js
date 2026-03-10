@@ -41,18 +41,33 @@ async function loadPosts(page = 0, size = 10) {
         const response = await PostAPI.getPosts({ page: page, size: size });
         console.log('API 응답:', response);
         
-        if (response && response.posts) {
-            console.log(`게시글 수: ${response.posts.length}`);
-            console.log(`현재페이지: ${response.currentPage}, 전체페이지: ${response.totalPages}`);
+        const posts = Array.isArray(response?.posts)
+            ? response.posts
+            : Array.isArray(response?.content)
+                ? response.content
+                : null;
+
+        if (response && posts) {
+            const resolvedCurrentPage = Number.isFinite(Number(response.currentPage))
+                ? Number(response.currentPage)
+                : Number(response.page ?? page);
+            const resolvedTotalPages = Number.isFinite(Number(response.totalPages))
+                ? Number(response.totalPages)
+                : Number(response.totalElements)
+                    ? Math.ceil(Number(response.totalElements) / size)
+                    : 0;
+
+            console.log(`게시글 수: ${posts.length}`);
+            console.log(`현재페이지: ${resolvedCurrentPage}, 전체페이지: ${resolvedTotalPages}`);
             
-            if (response.posts.length > 0) {
-                renderPostList(response.posts, postListContainer);
+            if (posts.length > 0) {
+                renderPostList(posts, postListContainer);
                 
                 const oldPage = currentPage;
                 const oldTotalPages = totalPages;
                 
-                currentPage = parseInt(response.currentPage);
-                totalPages = parseInt(response.totalPages);
+                currentPage = resolvedCurrentPage;
+                totalPages = resolvedTotalPages;
                 
                 console.log(`페이지 업데이트: ${oldPage} -> ${currentPage}, 전체: ${oldTotalPages} -> ${totalPages}`);
                 
