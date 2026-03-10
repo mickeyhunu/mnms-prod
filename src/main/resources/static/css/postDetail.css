@@ -767,3 +767,290 @@
     from { transform: translateX(0); opacity: 1; }
     to { transform: translateX(100%); opacity: 0; }
 }
+/* ===== 네이버 카페 스타일 오버라이드 ===== */
+.post-detail-page {
+    max-width: 860px;
+}
+
+.post-card {
+    background: #fff;
+    border: 1px solid #e6e8eb;
+    border-radius: 0;
+}
+
+.post-header {
+    padding: 20px 18px 14px;
+    border-bottom: 1px solid #eef0f2;
+    margin-bottom: 0;
+}
+
+.board-path {
+    color: #1fb56d;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+#post-title {
+    font-size: 35px;
+    line-height: 1.28;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #222;
+}
+
+.post-meta {
+    gap: 10px;
+}
+
+.author-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #e8eaed;
+    border: 1px solid #d7dce0;
+    flex-shrink: 0;
+}
+
+.post-meta-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.post-author-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#post-author {
+    font-size: 16px;
+    font-weight: 700;
+    color: #222;
+}
+
+#post-date {
+    font-size: 14px;
+    color: #7e8792;
+}
+
+#message-btn {
+    background: #f2fff6;
+    border-color: #bdeacb;
+    color: #0da85d;
+    font-weight: 700;
+}
+
+.post-right-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.subscribe-btn {
+    border: 1px solid #c8edd6;
+    background: #f4fff8;
+    color: #0aa356;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 8px;
+}
+
+.post-content {
+    font-size: 33px;
+    line-height: 1.7;
+    color: #222;
+    padding: 20px 18px 24px;
+    margin-bottom: 0;
+}
+
+.post-images {
+    padding: 0 18px 20px;
+    margin: 0;
+}
+
+.images-grid.two-images,
+.images-grid.three-images,
+.images-grid.many-images {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.image-item {
+    border-radius: 8px;
+    border: 1px solid #e8eaed;
+}
+
+.image-item img {
+    height: 240px;
+}
+
+.image-item.single img {
+    max-height: 500px;
+}
+
+.image-overlay {
+    display: none;
+}
+
+.post-actions {
+    padding: 14px 18px;
+    border-top: 1px solid #eef0f2;
+    background: #fafbfc;
+}
+
+.like-btn,
+.bookmark-btn {
+    border: none;
+    background: transparent;
+    color: #49515a;
+    padding: 0;
+    font-size: 18px;
+}
+
+.like-btn.liked,
+.bookmark-btn.bookmarked {
+    color: #f04f4f;
+    background: transparent;
+}
+
+.list-btn {
+    border-radius: 18px;
+    border-color: #d9dde2;
+    background: #fff;
+    color: #48515d;
+    font-weight: 600;
+}
+
+.comments-section .card {
+    border: 1px solid #e6e8eb;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.comments-header {
+    border-bottom: 1px solid #eef0f2;
+}
+
+@media (max-width: 768px) {
+    .post-header {
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .post-right-actions {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    #post-title {
+        font-size: 28px;
+    }
+
+    .post-content {
+        font-size: 28px;
+    }
+}
+
+/* ===== 피드백 반영: 박스 제거 + 심플 네이버 카페형 ===== */
+.post-detail-page {
+    background: #fff;
+    max-width: 860px;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.post-detail {
+    border: none;
+    background: #fff;
+    margin-bottom: 0;
+}
+
+.post-card {
+    border: none;
+}
+
+.post-header {
+    border-bottom: 1px solid #eceff2;
+    padding: 18px 12px 12px;
+}
+
+.post-owner-actions {
+    margin-top: 4px;
+}
+
+.post-content {
+    padding: 18px 12px 20px;
+    font-size: 33px;
+    line-height: 1.7;
+}
+
+.post-images {
+    padding: 0 12px 18px;
+}
+
+.post-actions {
+    background: transparent;
+    border-top: 1px solid #eceff2;
+    padding: 12px;
+}
+
+.comments-section {
+    margin-top: 0;
+    border-top: 8px solid #f3f4f6;
+    padding: 12px;
+    background: #fff;
+}
+
+.comments-section .card {
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+.comments-header {
+    margin-bottom: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eceff2;
+}
+
+.comment-form {
+    border: none;
+    background: transparent;
+    border-bottom: 1px solid #f0f2f4;
+    border-radius: 0;
+    padding: 14px 0;
+    margin-bottom: 0;
+}
+
+.comments-list {
+    padding-top: 4px;
+}
+
+.comment-item {
+    border: none;
+    border-bottom: 1px solid #f1f3f5;
+    border-radius: 0;
+    padding: 14px 0;
+    margin-bottom: 0;
+    box-shadow: none;
+    background: transparent;
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 768px) {
+    .post-detail-page {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .post-content {
+        font-size: 28px;
+    }
+}
