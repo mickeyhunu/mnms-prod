@@ -1,16 +1,59 @@
 function renderPostList(posts, container) {
     if (!container) return;
-    
-    let html = '<div class="post-list">';
-    
-    posts.forEach(post => {
-        html += createPostCard(post);
+
+    const noticeList = document.getElementById('notice-list');
+    const includeAds = window.boardFilters ? window.boardFilters.includeAds : false;
+    const hotFirst = window.boardFilters ? window.boardFilters.hotFirst : true;
+
+    const visiblePosts = includeAds
+        ? posts
+        : posts.filter((post) => {
+            const normalized = `${post.title || ''} ${post.content || ''}`.toLowerCase();
+            return !normalized.includes('광고');
+        });
+
+    const sortedPosts = [...visiblePosts].sort((a, b) => {
+        if (!hotFirst) {
+            return (b.id || 0) - (a.id || 0);
+        }
+
+        const likeDiff = (b.likeCount || 0) - (a.likeCount || 0);
+        if (likeDiff !== 0) {
+            return likeDiff;
+        }
+
+        return (b.id || 0) - (a.id || 0);
     });
-    
-    html += '</div>';
-    container.innerHTML = html;
-    
-    attachPostCardEvents(container);
+
+    const notices = sortedPosts.slice(0, 3);
+    const normalPosts = sortedPosts.slice(3);
+
+    if (noticeList) {
+        noticeList.innerHTML = notices.map((post) => createBoardRow(post, true)).join('');
+    }
+
+    container.innerHTML = normalPosts.map((post, index) => createBoardRow(post, false, index)).join('');
+}
+
+function createBoardRow(post, isNotice = false, index = 0) {
+    const noticeBadge = isNotice ? '<span class="badge-notice">[공지]</span>' : '';
+    const hotBadge = !isNotice && (post.likeCount || 0) >= 5 ? '<span class="badge-hot">추천</span>' : '';
+    const numberLabel = isNotice ? '공지' : post.id || index + 1;
+
+    return `
+        <tr class="${isNotice ? 'notice-row' : 'post-row'}" data-post-id="${post.id}">
+            <td class="col-num">${numberLabel}</td>
+            <td class="col-title">
+                ${noticeBadge}${hotBadge}
+                <a href="post-detail.html?id=${post.id}">${sanitizeHTML(post.title || '제목 없음')}</a>
+                ${post.commentCount > 0 ? `<small>[${post.commentCount}]</small>` : ''}
+            </td>
+            <td class="col-author">${sanitizeHTML(post.authorNickname || `작성자 #${post.authorId || ''}`)}</td>
+            <td class="col-date">${formatDate(post.createdAt)}</td>
+            <td class="col-like">${post.likeCount || 0}</td>
+            <td class="col-view">${post.viewCount || 0}</td>
+        </tr>
+    `;
 }
 
 function createPostCard(post) {
