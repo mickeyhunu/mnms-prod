@@ -16,11 +16,26 @@ function validateRegisterForm(data) {
     if (!data.department || data.department.length < 2) {
         errors.department = '부서를 선택해주세요.';
     }
-    
+
     if (!data.jobPosition || data.jobPosition.length < 2) {
         errors.jobPosition = '직책을 선택해주세요.';
     }
-    
+
+    if (!data.verifiedName || data.verifiedName.trim().length < 2) {
+        errors.verifiedName = '명의자 이름을 2자 이상 입력해주세요.';
+    }
+
+    const identityNumber = (data.identityNumber || '').replace(/[^0-9]/g, '');
+    if (identityNumber.length !== 13) {
+        errors.identityNumber = '주민등록번호 13자리를 입력해주세요.';
+    } else {
+        const genderDigit = identityNumber.charAt(6);
+        const maleDigits = ['1', '3', '5', '7', '9'];
+        if (!maleDigits.includes(genderDigit)) {
+            errors.identityNumber = '남성 사용자만 가입할 수 있습니다.';
+        }
+    }
+
     return errors;
 }
 
