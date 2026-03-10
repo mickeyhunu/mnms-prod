@@ -223,6 +223,13 @@
     color: #1f2630;
 }
 
+.comment-reply-prefix {
+    display: inline-block;
+    margin-right: 6px;
+    color: #7a8491;
+    font-weight: 700;
+}
+
 .comment-date,
 .comment-reply-link {
     color: #8993a0;
