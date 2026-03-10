@@ -29,8 +29,29 @@ function pickUserRow(userRow) {
     department: userRow.department,
     jobPosition: userRow.job_position,
     role: userRow.role,
+    verifiedName: userRow.verified_name,
+    gender: userRow.gender,
     isAdmin: userRow.role === 'ADMIN'
   };
+}
+
+function normalizeIdentityNumber(rawValue) {
+  return String(rawValue || '').replace(/[^0-9]/g, '');
+}
+
+function resolveGenderFromIdentityNumber(identityNumber) {
+  if (identityNumber.length !== 13) {
+    return null;
+  }
+
+  const genderDigit = identityNumber[6];
+  if (['1', '3', '5', '7', '9'].includes(genderDigit)) return 'MALE';
+  if (['0', '2', '4', '6', '8'].includes(genderDigit)) return 'FEMALE';
+  return null;
+}
+
+function hashIdentityNumber(identityNumber) {
+  return crypto.createHash('sha256').update(identityNumber).digest('hex');
 }
 
 async function initDatabase() {
@@ -56,10 +77,28 @@ async function initDatabase() {
       company VARCHAR(255) NOT NULL,
       department VARCHAR(255),
       job_position VARCHAR(255),
+      verified_name VARCHAR(255),
+      identity_hash CHAR(64) UNIQUE,
+      gender ENUM('MALE','FEMALE') NOT NULL DEFAULT 'MALE',
       role ENUM('USER','ADMIN') NOT NULL DEFAULT 'USER',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  const [userColumns] = await pool.query('SHOW COLUMNS FROM users');
+  const userColumnMap = new Set(userColumns.map((column) => column.Field));
+
+  if (!userColumnMap.has('verified_name')) {
+    await pool.query('ALTER TABLE users ADD COLUMN verified_name VARCHAR(255) NULL AFTER job_position');
+  }
+
+  if (!userColumnMap.has('identity_hash')) {
+    await pool.query('ALTER TABLE users ADD COLUMN identity_hash CHAR(64) NULL UNIQUE AFTER verified_name');
+  }
+
+  if (!userColumnMap.has('gender')) {
+    await pool.query("ALTER TABLE users ADD COLUMN gender ENUM('MALE','FEMALE') NOT NULL DEFAULT 'MALE' AFTER identity_hash");
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS sessions (
@@ -158,6 +197,9 @@ async function authMiddleware(req, res, next) {
     );
 
     if (!rows.length) return res.status(401).json({ message: '세션이 유효하지 않습니다.' });
+    if (rows[0].gender && rows[0].gender !== 'MALE') {
+      return res.status(403).json({ message: '남성 인증 사용자만 접근할 수 있습니다.' });
+    }
 
     req.user = rows[0];
     req.token = token;
@@ -179,21 +221,37 @@ app.use(express.static(STATIC_DIR));
 
 app.post('/api/auth/register', async (req, res, next) => {
   try {
-    const { email, password, company, companyName, department, jobPosition } = req.body;
+    const { email, password, company, companyName, department, jobPosition, verifiedName, identityNumber } = req.body;
     const resolvedCompany = company || companyName;
+    const normalizedIdentityNumber = normalizeIdentityNumber(identityNumber);
+    const gender = resolveGenderFromIdentityNumber(normalizedIdentityNumber);
 
-    if (!email || !password || !resolvedCompany) {
-      return res.status(400).json({ message: '이메일, 비밀번호, 회사명은 필수입니다.' });
+    if (!email || !password || !resolvedCompany || !verifiedName || !identityNumber) {
+      return res.status(400).json({ message: '이메일, 비밀번호, 회사명, 명의 인증 정보는 필수입니다.' });
+    }
+
+    if (!gender) {
+      return res.status(400).json({ message: '유효한 주민등록번호 13자리를 입력해주세요.' });
+    }
+
+    if (gender !== 'MALE') {
+      return res.status(403).json({ message: '이 커뮤니티는 남성 사용자만 가입할 수 있습니다.' });
     }
 
     const [exists] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
     if (exists.length) return res.status(400).json({ message: '이미 사용 중인 이메일입니다.' });
 
+    const identityHash = hashIdentityNumber(normalizedIdentityNumber);
+    const [duplicateIdentityRows] = await pool.query('SELECT id FROM users WHERE identity_hash = ?', [identityHash]);
+    if (duplicateIdentityRows.length) {
+      return res.status(400).json({ message: '이미 가입된 명의 정보입니다.' });
+    }
+
     const nickname = `${resolvedCompany}${Math.floor(Math.random() * 900 + 100)}`;
     const [result] = await pool.query(
-      `INSERT INTO users (email, password, nickname, company, department, job_position, role)
-       VALUES (?, ?, ?, ?, ?, ?, 'USER')`,
-      [email, password, nickname, resolvedCompany, department || null, jobPosition || null]
+      `INSERT INTO users (email, password, nickname, company, department, job_position, verified_name, identity_hash, gender, role)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'USER')`,
+      [email, password, nickname, resolvedCompany, department || null, jobPosition || null, verifiedName.trim(), identityHash, gender]
     );
 
     const [users] = await pool.query('SELECT * FROM users WHERE id = ?', [result.insertId]);
@@ -210,6 +268,10 @@ app.post('/api/auth/login', async (req, res, next) => {
     if (!rows.length) return res.status(401).json({ message: '이메일 또는 비밀번호가 올바르지 않습니다.' });
 
     const user = rows[0];
+    if (user.gender && user.gender !== 'MALE') {
+      return res.status(403).json({ message: '남성 인증 사용자만 로그인할 수 있습니다.' });
+    }
+
     const token = crypto.randomBytes(32).toString('hex');
     await pool.query('INSERT INTO sessions (token, user_id) VALUES (?, ?)', [token, user.id]);
 

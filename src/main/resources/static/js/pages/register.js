@@ -7,6 +7,7 @@ function initRegisterPage() {
     
     setupRegisterForm();
     setupNicknamePreview();
+    setupIdentityNumberFormatting();
 }
 
 function setupRegisterForm() {
@@ -45,6 +46,17 @@ function setupNicknamePreview() {
     }
 }
 
+
+function setupIdentityNumberFormatting() {
+    const identityNumberInput = document.getElementById('identityNumber');
+    if (!identityNumberInput) return;
+
+    identityNumberInput.addEventListener('input', () => {
+        const value = identityNumberInput.value.replace(/[^0-9]/g, '').slice(0, 13);
+        identityNumberInput.value = value;
+    });
+}
+
 async function handleRegister(e) {
     e.preventDefault();
     console.log('회원가입 시도');
@@ -60,14 +72,17 @@ async function handleRegister(e) {
         confirmPassword: form.confirmPassword.value,
         company: form.company.value.trim(),
         department: form.department.value,
-        jobPosition: form.jobRole.value
+        jobPosition: form.jobRole.value,
+        verifiedName: form.verifiedName.value.trim(),
+        identityNumber: form.identityNumber.value.trim()
     };
     
     console.log('회원가입 데이터:', {
         email: formData.email,
         company: formData.company,
         department: formData.department,
-        jobPosition: formData.jobPosition
+        jobPosition: formData.jobPosition,
+        verifiedName: formData.verifiedName
     });
     
     const errors = validateRegisterForm(formData);
@@ -87,7 +102,9 @@ async function handleRegister(e) {
             password: formData.password,
             company: formData.company,
             department: formData.department,
-            jobPosition: formData.jobPosition
+            jobPosition: formData.jobPosition,
+            verifiedName: formData.verifiedName,
+            identityNumber: formData.identityNumber
         });
         console.log('회원가입 응답:', response);
         

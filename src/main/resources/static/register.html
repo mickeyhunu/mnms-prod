@@ -24,7 +24,7 @@
         <div class="container" style="max-width: 500px;">
             <div class="page-header">
                 <h1>회원가입</h1>
-                <p>커뮤니티에 가입하여 다양한 사람들과 소통하세요</p>
+                <p>남성 직장인 인증 후 커뮤니티에 가입할 수 있습니다.</p>
             </div>
 
             <div class="card">
@@ -56,6 +56,19 @@
                         <label for="company" class="form-label">회사명</label>
                         <input type="text" id="company" name="company" class="form-control" placeholder="회사명을 입력하세요" required>
                         <div class="error-message hidden" id="company-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="verifiedName" class="form-label">명의자 이름</label>
+                        <input type="text" id="verifiedName" name="verifiedName" class="form-control" placeholder="실명으로 입력하세요" required>
+                        <div class="error-message hidden" id="verifiedName-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="identityNumber" class="form-label">주민등록번호 (13자리)</label>
+                        <input type="text" id="identityNumber" name="identityNumber" class="form-control" placeholder="예: 9001011234567" maxlength="14" required>
+                        <div class="error-message hidden" id="identityNumber-error"></div>
+                        <small class="text-muted">성별 판별용으로 사용되며, 남성(7번째 자리 1/3/5/7/9)만 가입 가능합니다.</small>
                     </div>
 
                     <div class="grid grid-2">
