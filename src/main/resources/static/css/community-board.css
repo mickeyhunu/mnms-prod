@@ -159,37 +159,10 @@
 }
 
 
-.service-category-tabs {
+.service-category-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-bottom: 14px;
-}
-
-.service-tab {
-    border: 1px solid #b98cd0;
-    background: #fff;
-    color: #6c0391;
-    font-weight: 700;
-    border-radius: 10px;
-    padding: 10px 8px;
-    cursor: pointer;
-}
-
-.service-tab.active {
-    background: #6c0391;
-    border-color: #6c0391;
-    color: #fff;
-}
-
-.service-grid {
-    display: none;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
-}
-
-.service-grid.active {
-    display: grid;
 }
 
 .service-item {
@@ -215,4 +188,13 @@
     line-height: 1;
     font-weight: 700;
     text-align: center;
+}
+
+.service-item-disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.service-item-disabled .service-label {
+    color: #666;
 }
