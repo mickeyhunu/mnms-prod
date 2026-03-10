@@ -34,55 +34,19 @@
 
     <main class="main-content">
         <div class="container home-service-wrap">
-            <div class="service-category-tabs" role="tablist" aria-label="홈 카테고리">
-                <button type="button" class="service-tab active" data-category="live" role="tab" aria-selected="true">LIVE</button>
-                <button type="button" class="service-tab" data-category="community" role="tab" aria-selected="false">커뮤니티</button>
-                <button type="button" class="service-tab" data-category="business" role="tab" aria-selected="false">업체정보</button>
-            </div>
-
-            <section class="service-grid active" data-panel="live" role="tabpanel">
-                <a class="service-item" href="post-detail.html?id=1">
+            <section class="service-category-grid" aria-label="홈 카테고리">
+                <div class="service-item service-item-disabled" aria-disabled="true" title="준비 중인 카테고리입니다.">
                     <span class="service-icon">🔴</span>
-                    <span class="service-label">실시간 이슈</span>
-                </a>
-                <a class="service-item" href="post-detail.html?id=2">
-                    <span class="service-icon">🎥</span>
-                    <span class="service-label">LIVE 영상</span>
-                </a>
-                <a class="service-item" href="my-page.html">
-                    <span class="service-icon">💬</span>
-                    <span class="service-label">실시간 상담</span>
-                </a>
-            </section>
-
-            <section class="service-grid" data-panel="community" role="tabpanel" hidden>
-                <a class="service-item" href="index.html">
+                    <span class="service-label">LIVE</span>
+                </div>
+                <a class="service-item" href="community.html">
                     <span class="service-icon">📝</span>
-                    <span class="service-label">자유게시판</span>
+                    <span class="service-label">커뮤니티</span>
                 </a>
-                <a class="service-item" href="create-post.html">
-                    <span class="service-icon">✍️</span>
-                    <span class="service-label">커뮤니티 글쓰기</span>
-                </a>
-                <a class="service-item" href="bookmarks.html">
-                    <span class="service-icon">⭐</span>
-                    <span class="service-label">인기글</span>
-                </a>
-            </section>
-
-            <section class="service-grid" data-panel="business" role="tabpanel" hidden>
-                <a class="service-item" href="my-page.html">
+                <div class="service-item service-item-disabled" aria-disabled="true" title="준비 중인 카테고리입니다.">
                     <span class="service-icon">🏢</span>
                     <span class="service-label">업체정보</span>
-                </a>
-                <a class="service-item" href="register.html">
-                    <span class="service-icon">📌</span>
-                    <span class="service-label">업체등록</span>
-                </a>
-                <a class="service-item" href="admin.html">
-                    <span class="service-icon">📞</span>
-                    <span class="service-label">문의하기</span>
-                </a>
+                </div>
             </section>
         </div>
     </main>
