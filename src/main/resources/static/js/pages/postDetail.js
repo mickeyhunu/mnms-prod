@@ -39,12 +39,7 @@ function setupEventListeners() {
     if (likeBtn) {
         likeBtn.addEventListener('click', handleToggleLike);
     }
-    
-    const bookmarkBtn = document.getElementById('bookmark-btn');
-    if (bookmarkBtn) {
-        bookmarkBtn.addEventListener('click', handleToggleBookmark);
-    }
-    
+        
     const commentForm = document.getElementById('comment-create-form');
     if (commentForm) {
         commentForm.addEventListener('submit', handleCreateComment);
@@ -238,8 +233,7 @@ function normalizePostDetailResponse(post) {
         authorId: post.authorId ?? post.userId,
         imageUrls: normalizedImageUrls,
         isAuthor: Boolean(post.isAuthor),
-        isLiked: Boolean(post.isLiked),
-        isBookmarked: Boolean(post.isBookmarked)
+        isLiked: Boolean(post.isLiked)
     };
 }
 
@@ -295,12 +289,9 @@ function renderPostDetail(post) {
         likeCount.textContent = post.likeCount;
     }
 
-    const bookmarkBtn = document.getElementById('bookmark-btn');
-    const bookmarkIcon = document.getElementById('bookmark-icon');
-    
-    if (bookmarkBtn && bookmarkIcon) {
-        bookmarkBtn.className = post.isBookmarked ? 'bookmark-btn bookmarked' : 'bookmark-btn';
-        bookmarkIcon.textContent = post.isBookmarked ? '🔖' : '📑';
+    const viewCount = document.getElementById('view-count');
+    if (viewCount) {
+        viewCount.textContent = `조회수 ${post.viewCount || 0}`;
     }
 }
 
@@ -422,24 +413,22 @@ function createCommentItem(comment, depth = 0) {
     
     div.innerHTML = `
         <div class="comment-meta">
-            <div>
+            <div class="comment-meta-main">
                 <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${sanitizeHTML(comment.authorNickname)}</span>
                 <span class="comment-date">${formatDateTime(comment.createdAt)}</span>
+                ${canReply ? `<button class="comment-reply-link" onclick="showReplyForm(${comment.id}, '${sanitizeHTML(comment.authorNickname)}')">답글쓰기</button>` : ''}
             </div>
             <div class="comment-meta-actions">
                 ${isOtherUser ? 
                     `<button class="btn btn-sm btn-outline-primary comment-message-btn" onclick="openCommentMessageModal(${comment.authorId}, '${sanitizeHTML(comment.authorNickname)}')">쪽지</button>` 
                     : ''
                 }
-                ${canReply ? 
-                    `<button class="btn btn-sm btn-outline-secondary reply-btn" onclick="showReplyForm(${comment.id}, '${sanitizeHTML(comment.authorNickname)}')">답글</button>`
-                    : ''
-                }
+                ${isAuthor ? `<button class="comment-more-btn" onclick="toggleCommentActions(${comment.id})">⋯</button>` : ''}
             </div>
         </div>
         <div class="comment-content ${isAdminComment ? 'admin-comment-content' : ''}">${sanitizeHTML(comment.content).replace(/\n/g, '<br>')}</div>
         ${isAuthor ? `
-            <div class="comment-actions">
+            <div class="comment-actions hidden" id="comment-actions-${comment.id}">
                 <button class="btn btn-sm btn-warning" onclick="editComment(${comment.id})">수정</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteComment(${comment.id})">삭제</button>
             </div>
@@ -467,6 +456,14 @@ function createCommentItem(comment, depth = 0) {
     }
     
     return div;
+}
+
+
+function toggleCommentActions(commentId) {
+    const actions = document.getElementById(`comment-actions-${commentId}`);
+    if (actions) {
+        actions.classList.toggle('hidden');
+    }
 }
 
 function showReplyForm(parentId, parentAuthor) {
@@ -594,30 +591,6 @@ async function handleToggleLike() {
         
     } catch (error) {
         console.error('좋아요 토글 실패:', error);
-        Auth.handleAuthError(error);
-    }
-}
-
-async function handleToggleBookmark() {
-    if (!Auth.requireAuth()) return;
-    
-    try {
-        const response = await PostAPI.toggleBookmark(postId);
-        
-        const bookmarkBtn = document.getElementById('bookmark-btn');
-        const bookmarkIcon = document.getElementById('bookmark-icon');
-        
-        if (bookmarkBtn && bookmarkIcon) {
-            bookmarkBtn.className = response.isBookmarked ? 'bookmark-btn bookmarked' : 'bookmark-btn';
-            bookmarkIcon.textContent = response.isBookmarked ? '🔖' : '📑';
-        }
-        
-        const message = response.isBookmarked ? '북마크에 추가되었습니다.' : '북마크에서 제거되었습니다.';
-        showNotification(message, 'success');
-        
-    } catch (error) {
-        console.error('북마크 토글 실패:', error);
-        showNotification('북마크 처리에 실패했습니다.', 'error');
         Auth.handleAuthError(error);
     }
 }
@@ -793,30 +766,17 @@ function sanitizeHTML(str) {
 
 function formatDateTime(dateStr) {
     if (!dateStr) return '';
-    
-    try {
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return dateStr;
-        
-        const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffMins = Math.floor(diffMs / (1000 * 60));
-        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        
-        if (diffMins < 1) return '방금 전';
-        if (diffMins < 60) return `${diffMins}분 전`;
-        if (diffHours < 24) return `${diffHours}시간 전`;
-        if (diffDays < 30) return `${diffDays}일 전`;
-        
-        return date.toLocaleDateString('ko-KR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    } catch (e) {
-        return dateStr;
-    }
+
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+
+    return `${year}.${month}.${day}. ${hour}:${minute}`;
 }
 
 function getURLParams() {

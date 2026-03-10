@@ -1054,3 +1054,72 @@
         font-size: 28px;
     }
 }
+
+/* ===== 요청 반영: 조회수/댓글 스타일 ===== */
+.view-count {
+    color: #7e8792;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.comment-item {
+    padding: 16px 0;
+}
+
+.comment-meta {
+    margin-bottom: 6px;
+    align-items: flex-start;
+}
+
+.comment-meta-main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.comment-author {
+    background: transparent;
+    padding: 0;
+    font-size: 15px;
+    color: #1f2328;
+}
+
+.comment-content {
+    margin: 4px 0 8px;
+    padding: 0;
+    font-size: 16px;
+    color: #1f2328;
+}
+
+.comment-date {
+    margin-left: 0;
+    font-size: 14px;
+    color: #8a949e;
+}
+
+.comment-reply-link {
+    border: none;
+    background: transparent;
+    color: #8a949e;
+    font-size: 14px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.comment-more-btn {
+    border: none;
+    background: transparent;
+    color: #8a949e;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.comment-actions {
+    margin-top: 8px;
+    padding-top: 8px;
+}

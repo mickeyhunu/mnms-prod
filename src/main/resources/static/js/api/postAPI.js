@@ -48,14 +48,6 @@ const PostAPI = {
             throw error;
         }
     },
-
-    async toggleBookmark(postId) {
-        try {
-            return await APIClient.post(`/api/posts/${postId}/bookmark`);
-        } catch (error) {
-            throw error;
-        }
-    }
 };
 
 console.log('PostAPI loaded');

@@ -80,13 +80,6 @@ function createPostCard(post) {
                         </span>
                     </div>
                 </div>
-                ${isLoggedIn ? `
-                    <div class="post-header-right">
-                        <button class="bookmark-btn-mini ${post.isBookmarked ? 'bookmarked' : ''}" onclick="handlePostBookmark(${post.id})" data-post-id="${post.id}" title="${post.isBookmarked ? '북마크 해제' : '북마크 추가'}">
-                            <span class="bookmark-icon">${post.isBookmarked ? '★' : '☆'}</span>
-                        </button>
-                    </div>
-                ` : ''}
             </div>
             <div class="post-content">
                 ${sanitizeHTML(truncateText(post.content, 150))}
@@ -176,43 +169,6 @@ async function handlePostLike(postId) {
     }
 }
 
-async function handlePostBookmark(postId) {
-    if (!Auth.isAuthenticated()) {
-        showNotification('로그인이 필요합니다.', 'warning');
-        return;
-    }
-    
-    const bookmarkBtn = document.querySelector(`[data-post-id="${postId}"] .bookmark-btn-mini`);
-    if (!bookmarkBtn) return;
-    
-    const isBookmarked = bookmarkBtn.classList.contains('bookmarked');
-    const icon = bookmarkBtn.querySelector('.bookmark-icon');
-    
-    bookmarkBtn.classList.add('loading');
-    
-    try {
-        const response = await APIClient.post(`/posts/${postId}/bookmark`);
-        
-        if (response.isBookmarked) {
-            bookmarkBtn.classList.add('bookmarked');
-            bookmarkBtn.setAttribute('title', '북마크 해제');
-            icon.textContent = '★';
-            showNotification('북마크에 추가되었습니다.', 'success');
-        } else {
-            bookmarkBtn.classList.remove('bookmarked');
-            bookmarkBtn.setAttribute('title', '북마크 추가');
-            icon.textContent = '☆';
-            showNotification('북마크가 해제되었습니다.', 'info');
-        }
-        
-    } catch (error) {
-        console.error('Bookmark toggle error:', error);
-        showNotification('북마크 처리 중 오류가 발생했습니다.', 'error');
-    } finally {
-        bookmarkBtn.classList.remove('loading');
-    }
-}
-
 async function handlePostDelete(postId) {
     if (!confirm('이 게시글을 삭제하시겠습니까?')) {
         return;
@@ -267,35 +223,6 @@ async function toggleLike(postId, event) {
         
     } catch (error) {
         console.error('좋아요 토글 실패:', error);
-        Auth.handleAuthError(error);
-    }
-}
-
-async function toggleBookmark(postId, event) {
-    event.stopPropagation();
-    
-    if (!Auth.requireAuth()) return;
-    
-    try {
-        const response = await APIClient.post(`/bookmarks/${postId}/toggle`);
-        
-        const button = event.currentTarget;
-        const icon = button.querySelector('.action-icon');
-        
-        if (response.isBookmarked) {
-            button.classList.remove('btn-outline');
-            button.classList.add('btn-warning');
-            icon.textContent = '⭐';
-            showNotification('북마크에 추가되었습니다.', 'success');
-        } else {
-            button.classList.remove('btn-warning');
-            button.classList.add('btn-outline');
-            icon.textContent = '☆';
-            showNotification('북마크가 해제되었습니다.', 'info');
-        }
-        
-    } catch (error) {
-        console.error('북마크 토글 실패:', error);
         Auth.handleAuthError(error);
     }
 }
