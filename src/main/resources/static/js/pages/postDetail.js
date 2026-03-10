@@ -231,11 +231,15 @@ function normalizePostDetailResponse(post) {
             ? [post.imageUrl]
             : [];
 
+    const authorLevelRaw = post.authorLevel ?? post.level ?? post.authorRank ?? post.rank ?? post.authorGrade ?? post.grade;
+    const authorLevel = Number(authorLevelRaw);
+
     return {
         ...post,
         id: post.id,
         authorId: post.authorId ?? post.userId,
         imageUrls: normalizedImageUrls,
+        authorLevel: Number.isFinite(authorLevel) && authorLevel > 0 ? authorLevel : null,
         isAuthor: Boolean(post.isAuthor),
         isLiked: Boolean(post.isLiked)
     };
@@ -253,6 +257,18 @@ function renderPostDetail(post) {
     }
     if (authorElement) authorElement.textContent = post.authorNickname || '';
     if (dateElement) dateElement.textContent = formatDateTime(post.createdAt) || '';
+
+    const levelElement = document.getElementById('post-author-level');
+    if (levelElement) {
+        const hasLevel = Number.isFinite(post.authorLevel) && post.authorLevel > 0;
+        if (hasLevel) {
+            levelElement.textContent = post.authorLevel;
+            levelElement.classList.remove('hidden');
+        } else {
+            levelElement.textContent = '';
+            levelElement.classList.add('hidden');
+        }
+    }
 
     currentPostAuthor = {
         id: post.authorId,
