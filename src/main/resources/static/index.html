@@ -33,79 +33,57 @@
     </header>
 
     <main class="main-content">
-        <div class="container">
-            <div id="sub_center" class="community-board">
-                <div class="board-head-line"></div>
-                <div class="board-title-wrap">
-                    <h2>
-                        <span>밤문화이야기</span>
-                    </h2>
-                </div>
-                <div class="board-intro">
-                    <p>
-                        지금 <span>유흥업소에 관한 핫이슈나 꼭 알아두어야할 정보</span>들을 올리는곳입니다.<br>
-                        다른곳에서 말할수 없는 정보들을 우리 미드나잇 맨즈에서 많이 얻어갈수 있도록 서로서로 공유합시다.
-                    </p>
-                </div>
+        <div class="container home-service-wrap">
+            <div class="service-category-tabs" role="tablist" aria-label="홈 카테고리">
+                <button type="button" class="service-tab active" data-category="live" role="tab" aria-selected="true">LIVE</button>
+                <button type="button" class="service-tab" data-category="community" role="tab" aria-selected="false">커뮤니티</button>
+                <button type="button" class="service-tab" data-category="business" role="tab" aria-selected="false">업체정보</button>
             </div>
 
-            <div class="board-toolbar">
-                <button id="filter-btn" class="filter-btn" type="button">필터</button>
-                <a href="create-post.html" class="btn btn-primary btn-sm">글쓰기</a>
-            </div>
+            <section class="service-grid active" data-panel="live" role="tabpanel">
+                <a class="service-item" href="post-detail.html?id=1">
+                    <span class="service-icon">🔴</span>
+                    <span class="service-label">실시간 이슈</span>
+                </a>
+                <a class="service-item" href="post-detail.html?id=2">
+                    <span class="service-icon">🎥</span>
+                    <span class="service-label">LIVE 영상</span>
+                </a>
+                <a class="service-item" href="my-page.html">
+                    <span class="service-icon">💬</span>
+                    <span class="service-label">실시간 상담</span>
+                </a>
+            </section>
 
-            <div id="filter-modal" class="filter-modal hidden">
-                <div class="filter-modal-content">
-                    <button id="filter-close" class="filter-close" type="button">×</button>
-                    <h3>필터 설정</h3>
-                    <div class="filter-item">
-                        <span>광고 글 보기</span>
-                        <input type="checkbox" id="ad-switch">
-                    </div>
-                    <div class="filter-item">
-                        <span>추천 글 우선 보기</span>
-                        <input type="checkbox" id="hot-switch" checked>
-                    </div>
-                </div>
-            </div>
+            <section class="service-grid" data-panel="community" role="tabpanel" hidden>
+                <a class="service-item" href="index.html">
+                    <span class="service-icon">📝</span>
+                    <span class="service-label">자유게시판</span>
+                </a>
+                <a class="service-item" href="create-post.html">
+                    <span class="service-icon">✍️</span>
+                    <span class="service-label">커뮤니티 글쓰기</span>
+                </a>
+                <a class="service-item" href="bookmarks.html">
+                    <span class="service-icon">⭐</span>
+                    <span class="service-label">인기글</span>
+                </a>
+            </section>
 
-            <table class="board-table-header" cellspacing="0">
-                <tr>
-                    <th>번호</th>
-                    <th>제목</th>
-                    <th>등록인</th>
-                    <th>등록일</th>
-                    <th>추천</th>
-                    <th>조회수</th>
-                </tr>
-            </table>
-
-            <table class="board-table" cellspacing="0">
-                <tbody id="notice-list"></tbody>
-                <tbody id="post-list"></tbody>
-            </table>
-
-            <div class="loading hidden" id="loading">
-                <div class="spinner"></div>
-                <p>게시글을 불러오는 중...</p>
-            </div>
-
-            <div class="error-banner hidden" id="error-banner">
-                <p id="error-message"></p>
-                <button class="btn btn-sm btn-primary" id="retry-btn">다시 시도</button>
-            </div>
-
-            <div class="empty-state hidden" id="empty-state">
-                <h3>아직 게시글이 없습니다</h3>
-                <p>첫 번째 글을 작성해보세요!</p>
-                <a href="create-post.html" class="btn btn-primary">글쓰기</a>
-            </div>
-
-            <div class="pagination hidden" id="pagination">
-                <button class="btn btn-outline btn-sm" id="prev-btn" disabled>이전</button>
-                <div class="page-numbers" id="page-numbers"></div>
-                <button class="btn btn-outline btn-sm" id="next-btn">다음</button>
-            </div>
+            <section class="service-grid" data-panel="business" role="tabpanel" hidden>
+                <a class="service-item" href="my-page.html">
+                    <span class="service-icon">🏢</span>
+                    <span class="service-label">업체정보</span>
+                </a>
+                <a class="service-item" href="register.html">
+                    <span class="service-icon">📌</span>
+                    <span class="service-label">업체등록</span>
+                </a>
+                <a class="service-item" href="admin.html">
+                    <span class="service-icon">📞</span>
+                    <span class="service-label">문의하기</span>
+                </a>
+            </section>
         </div>
     </main>
 
@@ -114,9 +92,6 @@
     <script src="js/utils/auth.js"></script>
     <script src="js/api/apiClient.js"></script>
     <script src="js/api/authAPI.js"></script>
-    <script src="js/api/postAPI.js"></script>
-    <script src="js/components/postCard.js"></script>
-    <script src="js/components/pagination.js"></script>
     <script src="js/pages/home.js"></script>
 </body>
 </html>
