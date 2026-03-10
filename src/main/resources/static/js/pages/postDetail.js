@@ -5,6 +5,10 @@ let selectedMessageRecipient = null;
 let replyingTo = null;
 
 function initPostDetailPage() {
+    if (typeof Auth !== 'undefined') {
+        Auth.updateHeaderUI();
+    }
+
     const urlParams = getURLParams();
     postId = urlParams.id;
     if (!postId) {
