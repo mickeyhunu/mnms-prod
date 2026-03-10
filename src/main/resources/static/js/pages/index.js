@@ -14,6 +14,7 @@ async function initIndexPage() {
         initHeader();
     }
 
+    setupCommunityActions();
     initSearchEvents();
     await loadPosts(0);
     initCommonEvents();
@@ -147,6 +148,18 @@ function updatePagination() {
     });
 }
 
+
+function setupCommunityActions() {
+    const communityActions = document.getElementById('community-actions');
+    if (!communityActions) return;
+
+    const user = Auth.getUser();
+    if (user) {
+        showElement(communityActions);
+    } else {
+        hideElement(communityActions);
+    }
+}
 function initSearchEvents() {
     const searchForm = document.getElementById('search_frm');
     const searchTypeEl = document.getElementById('search-type');
