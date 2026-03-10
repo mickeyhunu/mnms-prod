@@ -140,11 +140,13 @@ function createCommentElement(comment, isReply = false) {
     ` : '';
     
     const replyClass = isReply ? 'reply-item' : '';
+    const replyPrefix = isReply ? '<span class="comment-reply-prefix" aria-label="답글">ㄴ</span>' : '';
     
     return `
         <div class="comment-item ${replyClass}" id="comment-${comment.id}">
             <div class="comment-meta">
                 <div>
+                    ${replyPrefix}
                     <span class="comment-author">${sanitizeHTML(comment.authorNickname)}</span>
                     <span class="comment-date">${formatDate(comment.createdAt)}</span>
                 </div>
