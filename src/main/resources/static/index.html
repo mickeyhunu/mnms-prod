@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>커뮤니티</title>
+    <title>미드나잇 맨즈</title>
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/community-board.css">
 </head>
 <body>
     <header class="header">
         <div class="header-container">
             <a href="index.html" class="logo">
-                <h1>커뮤니티</h1>
+                <h1>미드나잇 맨즈</h1>
             </a>
             <nav class="nav" id="navigation">
                 <div class="nav-guest" id="nav-guest">
@@ -32,35 +33,21 @@
     </header>
 
     <main class="main-content">
-        <div class="container">
-            <div class="page-header">
-                <h1>커뮤니티 게시판</h1>
-                <p>자유롭게 소통해보세요!</p>
-            </div>
-
-            <div class="loading hidden" id="loading">
-                <div class="spinner"></div>
-                <p>게시글을 불러오는 중...</p>
-            </div>
-
-            <div class="error-banner hidden" id="error-banner">
-                <p id="error-message"></p>
-                <button class="btn btn-sm btn-primary" id="retry-btn">다시 시도</button>
-            </div>
-
-            <div class="empty-state hidden" id="empty-state">
-                <h3>아직 게시글이 없습니다</h3>
-                <p>첫 번째 글을 작성해보세요!</p>
-                <a href="create-post.html" class="btn btn-primary">글쓰기</a>
-            </div>
-
-            <div id="post-list"></div>
-
-            <div class="pagination hidden" id="pagination">
-                <button class="btn btn-outline btn-sm" id="prev-btn" disabled>이전</button>
-                <div class="page-numbers" id="page-numbers"></div>
-                <button class="btn btn-outline btn-sm" id="next-btn">다음</button>
-            </div>
+        <div class="container home-service-wrap">
+            <section class="service-category-grid" aria-label="홈 카테고리">
+                <div class="service-item service-item-disabled" aria-disabled="true" title="준비 중인 카테고리입니다.">
+                    <span class="service-icon">🔴</span>
+                    <span class="service-label">LIVE</span>
+                </div>
+                <a class="service-item" href="community.html">
+                    <span class="service-icon">📝</span>
+                    <span class="service-label">커뮤니티</span>
+                </a>
+                <div class="service-item service-item-disabled" aria-disabled="true" title="준비 중인 카테고리입니다.">
+                    <span class="service-icon">🏢</span>
+                    <span class="service-label">업체정보</span>
+                </div>
+            </section>
         </div>
     </main>
 
@@ -68,9 +55,7 @@
     <script src="js/utils/helpers.js"></script>
     <script src="js/utils/auth.js"></script>
     <script src="js/api/apiClient.js"></script>
-    <script src="js/api/postAPI.js"></script>
-    <script src="js/components/postCard.js"></script>
-    <script src="js/components/pagination.js"></script>
+    <script src="js/api/authAPI.js"></script>
     <script src="js/pages/home.js"></script>
 </body>
 </html>

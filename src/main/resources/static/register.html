@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>회원가입 - 커뮤니티</title>
+    <title>회원가입 - 미드나잇 맨즈</title>
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
@@ -12,7 +12,7 @@
     <header class="header">
         <div class="header-container">
             <a href="index.html" class="logo">
-                <h1>커뮤니티</h1>
+                <h1>미드나잇 맨즈</h1>
             </a>
             <nav class="nav">
                 <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
@@ -21,10 +21,10 @@
     </header>
 
     <main class="main-content">
-        <div class="container" style="max-width: 500px;">
+        <div class="container auth-container">
             <div class="page-header">
                 <h1>회원가입</h1>
-                <p>커뮤니티에 가입하여 다양한 사람들과 소통하세요</p>
+                <p>미드나잇 맨즈에 가입하여 다양한 사람들과 소통하세요</p>
             </div>
 
             <div class="card">
@@ -34,9 +34,9 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="email" class="form-label">이메일</label>
-                        <input type="email" id="email" name="email" class="form-control" placeholder="이메일을 입력하세요" required>
-                        <div class="error-message hidden" id="email-error"></div>
+                        <label for="loginId" class="form-label">아이디</label>
+                        <input type="text" id="loginId" name="loginId" class="form-control" placeholder="아이디를 입력하세요" required>
+                        <div class="error-message hidden" id="loginId-error"></div>
                     </div>
 
                     <div class="form-group">
@@ -53,54 +53,44 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="company" class="form-label">회사명</label>
-                        <input type="text" id="company" name="company" class="form-control" placeholder="회사명을 입력하세요" required>
-                        <div class="error-message hidden" id="company-error"></div>
-                    </div>
-
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label for="department" class="form-label">부서</label>
-                            <select id="department" name="department" class="form-control" required>
-                                <option value="">부서를 선택하세요</option>
-                                <option value="개발팀">개발팀</option>
-                                <option value="기획팀">기획팀</option>
-                                <option value="디자인팀">디자인팀</option>
-                                <option value="마케팅팀">마케팅팀</option>
-                                <option value="영업팀">영업팀</option>
-                                <option value="인사팀">인사팀</option>
-                                <option value="재무팀">재무팀</option>
-                                <option value="운영팀">운영팀</option>
-                            </select>
-                            <div class="error-message hidden" id="department-error"></div>
+                        <label for="phone" class="form-label">휴대폰 번호</label>
+                        <div class="grid grid-2">
+                            <input type="tel" id="phone" name="phone" class="form-control" placeholder="숫자만 입력 (예: 01012345678)" required>
+                            <button type="button" class="btn btn-outline" id="send-code-btn">인증번호 발송</button>
                         </div>
-
-                        <div class="form-group">
-                            <label for="jobRole" class="form-label">직급</label>
-                            <select id="jobRole" name="jobRole" class="form-control" required>
-                                <option value="">직급을 선택하세요</option>
-                                <option value="신입">신입</option>
-                                <option value="주니어">주니어</option>
-                                <option value="시니어">시니어</option>
-                                <option value="리드">리드</option>
-                                <option value="매니저">매니저</option>
-                                <option value="디렉터">디렉터</option>
-                                <option value="임원">임원</option>
-                                <option value="기타">기타</option>
-                            </select>
-                            <div class="error-message hidden" id="jobRole-error"></div>
-                        </div>
+                        <div class="error-message hidden" id="phone-error"></div>
                     </div>
 
                     <div class="form-group">
-                        <div class="card" style="background: #f8f9fa; padding: 15px;">
-                            <p class="text-muted text-sm">
-                                생성될 닉네임: <strong id="nickname-preview">회사명-###</strong>
-                                <br>
-                                <small>(숫자는 자동으로 생성됩니다)</small>
-                            </p>
+                        <label for="verificationCode" class="form-label">인증번호</label>
+                        <div class="grid grid-2">
+                            <input type="text" id="verificationCode" name="verificationCode" class="form-control" placeholder="6자리 인증번호" maxlength="6" required>
+                            <button type="button" class="btn btn-outline" id="verify-code-btn">인증 확인</button>
                         </div>
+                        <small class="text-muted" id="verification-status">휴대폰 인증이 필요합니다.</small>
+                        <div class="error-message hidden" id="verificationCode-error"></div>
                     </div>
+
+                    <div class="form-group">
+                        <label for="genderDigit" class="form-label">성별 식별 번호</label>
+                        <input type="number" id="genderDigit" name="genderDigit" class="form-control" placeholder="주민번호 뒷자리 첫 숫자" min="0" max="9" required>
+                        <small class="text-muted">남성만 가입 가능 (홀수 번호만 통과)</small>
+                        <div class="error-message hidden" id="genderDigit-error"></div>
+                    </div>
+
+                    <input type="hidden" id="phoneVerified" name="phoneVerified" value="false">
+
+                    <div class="form-group">
+                        <label for="nickname" class="form-label">닉네임</label>
+                        <div class="grid grid-2">
+                            <input type="text" id="nickname" name="nickname" class="form-control" placeholder="사용할 닉네임을 입력하세요" required>
+                            <button type="button" class="btn btn-outline" id="check-nickname-btn">중복 확인</button>
+                        </div>
+                        <small class="text-muted" id="nickname-status">닉네임 중복 확인이 필요합니다.</small>
+                        <div class="error-message hidden" id="nickname-error"></div>
+                    </div>
+
+                    <input type="hidden" id="nicknameChecked" name="nicknameChecked" value="false">
 
                     <button type="submit" class="btn btn-primary w-full" id="submit-btn">회원가입</button>
                 </form>

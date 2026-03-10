@@ -42,6 +42,15 @@ const AuthAPI = {
         }
     },
 
+
+    async checkNickname(nickname) {
+        try {
+            return await APIClient.get(`${ENDPOINTS.AUTH.CHECK_NICKNAME}?nickname=${encodeURIComponent(nickname)}`);
+        } catch (error) {
+            throw error;
+        }
+    },
+
     async logout() {
         try {
             await APIClient.post('/auth/logout');

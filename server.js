@@ -13,7 +13,7 @@ const dbConfig = {
   port: Number(process.env.MYSQL_PORT || 3306),
   user: process.env.MYSQL_USER || 'root',
   password: process.env.MYSQL_PASSWORD || 'root',
-  database: process.env.MYSQL_DATABASE || 'midnigthmans',
+  database: process.env.MYSQL_DATABASE || 'midnightmens',
   connectionLimit: 10,
   charset: 'utf8mb4'
 };
@@ -25,9 +25,6 @@ function pickUserRow(userRow) {
     id: userRow.id,
     email: userRow.email,
     nickname: userRow.nickname,
-    company: userRow.company,
-    department: userRow.department,
-    jobPosition: userRow.job_position,
     role: userRow.role,
     isAdmin: userRow.role === 'ADMIN'
   };
@@ -179,21 +176,24 @@ app.use(express.static(STATIC_DIR));
 
 app.post('/api/auth/register', async (req, res, next) => {
   try {
-    const { email, password, company, companyName, department, jobPosition } = req.body;
-    const resolvedCompany = company || companyName;
+    const { loginId, email, password, nickname } = req.body;
+    const resolvedCompany = '개인';
 
-    if (!email || !password || !resolvedCompany) {
-      return res.status(400).json({ message: '이메일, 비밀번호, 회사명은 필수입니다.' });
+    if (!(loginId || email) || !password || !nickname) {
+      return res.status(400).json({ message: '아이디, 비밀번호, 닉네임은 필수입니다.' });
     }
 
-    const [exists] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
-    if (exists.length) return res.status(400).json({ message: '이미 사용 중인 이메일입니다.' });
+    const resolvedLoginId = (loginId || email).trim();
 
-    const nickname = `${resolvedCompany}${Math.floor(Math.random() * 900 + 100)}`;
+    const [exists] = await pool.query('SELECT id FROM users WHERE email = ?', [resolvedLoginId]);
+    if (exists.length) return res.status(400).json({ message: '이미 사용 중인 아이디입니다.' });
+
+    const [nicknameExists] = await pool.query('SELECT id FROM users WHERE nickname = ?', [nickname]);
+    if (nicknameExists.length) return res.status(400).json({ message: '이미 사용 중인 닉네임입니다.' });
     const [result] = await pool.query(
       `INSERT INTO users (email, password, nickname, company, department, job_position, role)
        VALUES (?, ?, ?, ?, ?, ?, 'USER')`,
-      [email, password, nickname, resolvedCompany, department || null, jobPosition || null]
+      [resolvedLoginId, password, nickname.trim(), resolvedCompany, null, null]
     );
 
     const [users] = await pool.query('SELECT * FROM users WHERE id = ?', [result.insertId]);
@@ -205,9 +205,10 @@ app.post('/api/auth/register', async (req, res, next) => {
 
 app.post('/api/auth/login', async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-    const [rows] = await pool.query('SELECT * FROM users WHERE email = ? AND password = ?', [email, password]);
-    if (!rows.length) return res.status(401).json({ message: '이메일 또는 비밀번호가 올바르지 않습니다.' });
+    const { loginId, email, password } = req.body;
+    const resolvedLoginId = (loginId || email || '').trim();
+    const [rows] = await pool.query('SELECT * FROM users WHERE email = ? AND password = ?', [resolvedLoginId, password]);
+    if (!rows.length) return res.status(401).json({ message: '아이디 또는 비밀번호가 올바르지 않습니다.' });
 
     const user = rows[0];
     const token = crypto.randomBytes(32).toString('hex');
@@ -215,6 +216,21 @@ app.post('/api/auth/login', async (req, res, next) => {
 
     const userPayload = pickUserRow(user);
     res.json({ success: true, token, ...userPayload });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
+app.get('/api/auth/check-nickname', async (req, res, next) => {
+  try {
+    const nickname = (req.query.nickname || '').trim();
+    if (nickname.length < 2) {
+      return res.status(400).json({ message: '닉네임은 2글자 이상이어야 합니다.' });
+    }
+
+    const [rows] = await pool.query('SELECT id FROM users WHERE nickname = ?', [nickname]);
+    res.json({ available: rows.length === 0 });
   } catch (error) {
     next(error);
   }
@@ -700,7 +716,7 @@ app.get('/api/admin/posts', authMiddleware, adminMiddleware, async (req, res, ne
 
 app.get('/api/admin/users', authMiddleware, adminMiddleware, async (req, res, next) => {
   try {
-    const [rows] = await pool.query('SELECT id, email, nickname, company, department, job_position AS jobPosition, role, created_at AS createdAt FROM users ORDER BY id DESC');
+    const [rows] = await pool.query('SELECT id, email, nickname, role, created_at AS createdAt FROM users ORDER BY id DESC');
     res.json(rows);
   } catch (error) {
     next(error);

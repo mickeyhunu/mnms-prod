@@ -100,7 +100,7 @@ function createSearchPostCard(post) {
             <div class="post-header">
                 <div class="post-title-container">
                     <h3 class="post-title">
-                        <a href="/post-detail?id=${post.id}">${highlightedTitle}</a>
+                        <a href="post-detail.html?id=${post.id}">${highlightedTitle}</a>
                     </h3>
                     ${isAdminPost}
                 </div>
@@ -182,7 +182,7 @@ function updateSearchUI(keyword, resultCount) {
         clearBtn.style.display = 'inline-block';
     }
     
-    document.title = `"${keyword}" 검색 결과 - 커뮤니티`;
+    document.title = `"${keyword}" 검색 결과 - 미드나잇 맨즈`;
 }
 
 function clearSearch() {
@@ -200,7 +200,7 @@ function clearSearch() {
         clearBtn.style.display = 'none';
     }
     
-    document.title = '커뮤니티';
+    document.title = '미드나잇 맨즈';
     
     if (typeof loadPosts === 'function') {
         loadPosts(0);

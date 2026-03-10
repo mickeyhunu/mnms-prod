@@ -28,11 +28,11 @@ const Auth = {
         localStorage.removeItem(STORAGE_KEYS.TOKEN);
         localStorage.removeItem(STORAGE_KEYS.USER);
         this.updateHeaderUI();
-        window.location.href = '/index';
+        window.location.href = '/index.html';
     },
     redirectIfAuthenticated() {
         if (this.isAuthenticated()) {
-            window.location.href = '/index';
+            window.location.href = '/index.html';
             return true;
         }
         return false;
