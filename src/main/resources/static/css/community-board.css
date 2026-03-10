@@ -198,3 +198,145 @@
 .service-item-disabled .service-label {
     color: #666;
 }
+
+.community-container {
+    max-width: 760px;
+}
+
+.notice-area {
+    margin-bottom: 12px;
+}
+
+.notice-item {
+    border: 1px solid #e7e7e7;
+    border-radius: 10px;
+    background: #fff6f6;
+    margin-bottom: 8px;
+}
+
+.notice-item a {
+    display: block;
+    padding: 12px;
+    color: #222;
+    text-decoration: none;
+}
+
+.notice-item .badge {
+    display: inline-block;
+    margin-right: 8px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    color: #fff;
+    background: #ff5a5a;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.article-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid #ececec;
+}
+
+.article-item {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.article-main {
+    display: flex;
+    gap: 12px;
+    padding: 12px 8px;
+    text-decoration: none;
+    color: #222;
+}
+
+.article-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.article-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e1e1e;
+}
+
+.article-meta {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #757575;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.article-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid #e6e6e6;
+}
+
+.article-comment {
+    margin: 0 8px 10px;
+    display: inline-flex;
+    border: 1px solid #ececec;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: #666;
+}
+
+.board-pagination {
+    text-align: center;
+    padding: 10px;
+}
+
+.board-pagination .page {
+    display: inline-block;
+    margin: 0 4px;
+    color: #333;
+    text-decoration: none;
+}
+
+.board-pagination .page.active {
+    color: red;
+    font-weight: 700;
+}
+
+.board-pagination .page-nav {
+    margin-left: 8px;
+    color: #555;
+    text-decoration: none;
+}
+
+.board-search-wrap {
+    margin: 10px 0 90px;
+    display: flex;
+    justify-content: center;
+}
+
+.board-search-form {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.board-search-form select,
+.board-search-form input {
+    border: 1px solid #dbdbdb;
+    padding: 7px 8px;
+    border-radius: 4px;
+}
+
+.board-search-btn,
+.board-search-reset {
+    border: 1px solid #9f9f9f;
+    background: #f7f7f7;
+    border-radius: 4px;
+    padding: 7px 10px;
+    cursor: pointer;
+}

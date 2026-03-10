@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/pages.css">
+    <link rel="stylesheet" href="css/community-board.css">
 </head>
 <body>
     <header class="header">
@@ -31,7 +31,7 @@
     </header>
 
     <main class="main-content">
-        <div class="container">
+        <div class="container community-container">
             <h2 class="section-title">커뮤니티 게시글</h2>
 
             <div class="loading" id="loading">게시글을 불러오는 중...</div>
@@ -41,16 +41,26 @@
                 <button id="retry-btn" class="btn btn-sm btn-outline">재시도</button>
             </div>
 
-            <div id="post-list"></div>
+            <div class="notice-area" id="notice-area"></div>
+            <ul class="article-list" id="post-list"></ul>
 
             <div class="empty-state hidden" id="empty-state">
                 등록된 게시글이 없습니다.
             </div>
 
-            <div class="pagination hidden" id="pagination">
-                <button class="btn btn-outline btn-sm" id="prev-btn">이전</button>
-                <div id="page-numbers"></div>
-                <button class="btn btn-outline btn-sm" id="next-btn">다음</button>
+            <div class="board-pagination hidden" id="pagination"></div>
+
+            <div class="board-search-wrap">
+                <form method="get" action="#" name="search_frm" id="search_frm" class="board-search-form">
+                    <select name="search" id="search-type">
+                        <option value="bbs_title">제목</option>
+                        <option value="bbs_review">내용</option>
+                        <option value="bbs_title_review">제목+내용</option>
+                    </select>
+                    <input type="text" name="keyword" id="search-keyword" placeholder="검색어를 입력하세요">
+                    <button type="submit" id="search-btn" class="board-search-btn">검색</button>
+                    <button type="button" id="search-reset-btn" class="board-search-reset">초기화</button>
+                </form>
             </div>
         </div>
     </main>
