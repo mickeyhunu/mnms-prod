@@ -4,7 +4,7 @@
 
 .bbs-view {
     border: 1px solid #e6e8eb;
-    border-radius: 14px;
+    border-radius: 0px;
     background: #fff;
     overflow: hidden;
     margin-bottom: 16px;
@@ -162,8 +162,7 @@
 }
 
 .reply {
-    border: 1px solid #e6e8eb;
-    border-radius: 14px;
+    border-radius: 0px;
     background: #fff;
     padding: 14px 20px 8px;
 }
