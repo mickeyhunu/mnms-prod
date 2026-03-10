@@ -656,24 +656,36 @@ app.get('/api/search/posts', async (req, res, next) => {
     const size = Number(req.query.size || 20);
     const offset = page * size;
     const keyword = (req.query.keyword || '').trim();
+    const search = (req.query.search || 'bbs_title_review').trim();
+
+    const whereMap = {
+      bbs_title: 'p.title LIKE ?',
+      bbs_review: 'p.content LIKE ?',
+      bbs_title_review: '(p.title LIKE ? OR p.content LIKE ?)'
+    };
+
+    const selectedWhere = whereMap[search] || whereMap.bbs_title_review;
+    const keywordParams = search === 'bbs_title_review'
+      ? [`%${keyword}%`, `%${keyword}%`]
+      : [`%${keyword}%`];
 
     const [countRows] = await pool.query(
       `SELECT COUNT(*) AS total
        FROM posts p
-       WHERE p.title LIKE ? OR p.content LIKE ?`,
-      [`%${keyword}%`, `%${keyword}%`]
+       WHERE ${selectedWhere}`,
+      keywordParams
     );
 
     const [rows] = await pool.query(
-      `SELECT p.id, p.title, p.content, p.created_at AS createdAt, p.user_id AS userId, u.nickname AS authorNickname,
+      `SELECT p.id, p.title, p.content, p.created_at AS createdAt, p.image_url AS imageUrl, p.user_id AS userId, u.nickname AS authorNickname,
               (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likeCount,
               (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS commentCount
        FROM posts p
        JOIN users u ON u.id = p.user_id
-       WHERE p.title LIKE ? OR p.content LIKE ?
+       WHERE ${selectedWhere}
        ORDER BY p.created_at DESC
        LIMIT ? OFFSET ?`,
-      [`%${keyword}%`, `%${keyword}%`, size, offset]
+      [...keywordParams, size, offset]
     );
 
     const totalElements = Number(countRows[0].total || 0);
