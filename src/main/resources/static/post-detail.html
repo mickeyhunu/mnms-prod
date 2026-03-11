@@ -95,6 +95,10 @@
                     <form id="comment-create-form">
                         <div class="form-group">
                             <textarea id="comment-content" name="content" class="form-control" placeholder="댓글을 입력하세요" rows="3" required></textarea>
+                            <label style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:14px;color:#555;">
+                                <input type="checkbox" id="comment-secret" name="isSecret">
+                                비밀댓글
+                            </label>
                             <div class="error-message hidden" id="content-error"></div>
                         </div>
                         <div class="form-actions">
