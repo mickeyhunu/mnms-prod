@@ -44,7 +44,29 @@ async function getPost(req, res, next) {
 
     const postDetail = await postModel.findPostDetailById(postId);
     const comments = await postModel.listComments(postId);
-    res.json({ ...postDetail, comments });
+
+    const isLiked = req.user
+      ? await postModel.isPostLikedByUser(postId, req.user.id)
+      : false;
+
+    res.json({ ...postDetail, isLiked, comments });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function toggleLike(req, res, next) {
+  try {
+    if (!req.user) return res.status(401).json({ message: '인증이 필요합니다.' });
+
+    const postId = parseId(req.params.id);
+    if (!postId) return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' });
+
+    const post = await postModel.findPostById(postId);
+    if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
+
+    const result = await postModel.togglePostLike(postId, req.user.id);
+    res.json(result);
   } catch (error) {
     next(error);
   }
@@ -148,6 +170,7 @@ module.exports = {
   createPost,
   updatePost,
   deletePost,
+  toggleLike,
   listComments,
   createComment
 };
