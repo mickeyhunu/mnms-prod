@@ -86,6 +86,7 @@ async function initDatabase() {
       post_id BIGINT NOT NULL,
       user_id BIGINT NOT NULL,
       content TEXT NOT NULL,
+      is_secret BOOLEAN NOT NULL DEFAULT FALSE,
       parent_id BIGINT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
@@ -93,6 +94,12 @@ async function initDatabase() {
       FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+
+  const [commentSecretColumnRows] = await pool.query("SHOW COLUMNS FROM comments LIKE 'is_secret'");
+  if (!commentSecretColumnRows.length) {
+    await pool.query('ALTER TABLE comments ADD COLUMN is_secret BOOLEAN NOT NULL DEFAULT FALSE');
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS likes (
@@ -158,6 +165,30 @@ async function authMiddleware(req, res, next) {
 
     req.user = rows[0];
     req.token = token;
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function optionalAuthMiddleware(req, _res, next) {
+  try {
+    const auth = req.headers.authorization || '';
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+    if (!token) {
+      req.user = null;
+      return next();
+    }
+
+    const [rows] = await pool.query(
+      `SELECT u.*
+       FROM sessions s
+       JOIN users u ON u.id = s.user_id
+       WHERE s.token = ?`,
+      [token]
+    );
+
+    req.user = rows.length ? rows[0] : null;
     next();
   } catch (error) {
     next(error);
@@ -276,7 +307,7 @@ app.get('/api/posts', async (req, res, next) => {
   }
 });
 
-app.get('/api/posts/:id', async (req, res, next) => {
+app.get('/api/posts/:id', optionalAuthMiddleware, async (req, res, next) => {
   try {
     const postId = Number(req.params.id);
     const [rows] = await pool.query(
@@ -293,13 +324,22 @@ app.get('/api/posts/:id', async (req, res, next) => {
     if (!rows.length) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
 
     const [comments] = await pool.query(
-      `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.content, c.parent_id AS parentId, c.created_at AS createdAt,
+      `SELECT c.id, c.post_id AS postId, c.user_id AS userId,
+              CASE
+                WHEN c.is_secret = FALSE OR c.user_id = ? OR p.user_id = ?
+                  THEN c.content
+                ELSE '비밀댓글입니다.'
+              END AS content,
+              c.is_secret AS isSecret,
+              (c.is_secret = TRUE AND c.user_id <> ? AND p.user_id <> ?) AS isMasked,
+              c.parent_id AS parentId, c.created_at AS createdAt,
               u.nickname AS authorNickname
        FROM comments c
+       JOIN posts p ON p.id = c.post_id
        JOIN users u ON u.id = c.user_id
        WHERE c.post_id = ?
        ORDER BY c.created_at ASC`,
-      [postId]
+      [req.user?.id || 0, req.user?.id || 0, req.user?.id || 0, req.user?.id || 0, postId]
     );
 
     res.json({ ...rows[0], comments });
@@ -399,17 +439,26 @@ app.post('/api/posts/:id/bookmark', authMiddleware, async (req, res, next) => {
   }
 });
 
-app.get('/api/posts/:postId/comments', async (req, res, next) => {
+app.get('/api/posts/:postId/comments', optionalAuthMiddleware, async (req, res, next) => {
   try {
     const postId = Number(req.params.postId);
     const [rows] = await pool.query(
-      `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.content, c.parent_id AS parentId, c.created_at AS createdAt,
+      `SELECT c.id, c.post_id AS postId, c.user_id AS userId,
+              CASE
+                WHEN c.is_secret = FALSE OR c.user_id = ? OR p.user_id = ?
+                  THEN c.content
+                ELSE '비밀댓글입니다.'
+              END AS content,
+              c.is_secret AS isSecret,
+              (c.is_secret = TRUE AND c.user_id <> ? AND p.user_id <> ?) AS isMasked,
+              c.parent_id AS parentId, c.created_at AS createdAt,
               u.nickname AS authorNickname
        FROM comments c
+       JOIN posts p ON p.id = c.post_id
        JOIN users u ON u.id = c.user_id
        WHERE c.post_id = ?
        ORDER BY c.created_at ASC`,
-      [postId]
+      [req.user?.id || 0, req.user?.id || 0, req.user?.id || 0, req.user?.id || 0, postId]
     );
 
     res.json({ content: rows });
@@ -461,11 +510,12 @@ app.post('/api/posts/:postId/comments', authMiddleware, async (req, res, next) =
     const postId = Number(req.params.postId);
     const content = typeof req.body === 'string' ? req.body : req.body.content;
     const parentId = req.body.parentId || null;
+    const isSecret = Boolean(req.body.isSecret);
     if (!content) return res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
 
     const [result] = await pool.query(
-      'INSERT INTO comments (post_id, user_id, content, parent_id) VALUES (?, ?, ?, ?)',
-      [postId, req.user.id, content, parentId]
+      'INSERT INTO comments (post_id, user_id, content, parent_id, is_secret) VALUES (?, ?, ?, ?, ?)',
+      [postId, req.user.id, content, parentId, isSecret]
     );
 
     const [rows] = await pool.query('SELECT * FROM comments WHERE id = ?', [result.insertId]);

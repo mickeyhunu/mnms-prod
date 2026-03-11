@@ -430,6 +430,7 @@ function createCommentItem(comment, depth = 0) {
     const canReply = Auth.isAuthenticated() && depth < 3;
     const isOtherUser = Auth.isAuthenticated() && currentUser && !isAuthor;
     const isCommentLiked = likedCommentIds.has(comment.id);
+    const isSecretComment = Boolean(comment.isSecret);
     
     console.log(`댓글 ${comment.id}: user=${currentUser?.id}, author=${comment.authorId}, isAuthor=${isAuthor}, isAdmin=${isAdminComment}`);
     
@@ -440,6 +441,7 @@ function createCommentItem(comment, depth = 0) {
                 <div class="comment-meta">
                     <div class="comment-meta-main">
                         <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${sanitizeHTML(comment.authorNickname)}</span>
+                        ${isSecretComment ? '<span style="margin-left:6px;font-size:12px;color:#7a5;">🔒 비밀댓글</span>' : ''}
                     </div>
                     <div class="comment-meta-actions">
                         ${isOtherUser ? 
@@ -668,6 +670,7 @@ async function handleCreateComment(e) {
     const contentTextarea = document.getElementById('comment-content');
     
     const content = contentTextarea.value.trim();
+    const secretCheckbox = document.getElementById('comment-secret');
     
     if (!content) {
         addInputError(contentTextarea, '댓글 내용을 입력해주세요');
@@ -677,7 +680,10 @@ async function handleCreateComment(e) {
     try {
         setLoading(submitBtn, true);
         
-        await CommentAPI.createComment(postId, { content });
+        await CommentAPI.createComment(postId, {
+            content,
+            isSecret: Boolean(secretCheckbox && secretCheckbox.checked)
+        });
         
         if (typeof NotificationSettings !== 'undefined' && NotificationSettings.isCommentNotificationEnabled()) {
             showNotification('댓글이 작성되었습니다.', 'comment');
@@ -686,6 +692,7 @@ async function handleCreateComment(e) {
         }
         
         form.reset();
+        if (secretCheckbox) secretCheckbox.checked = false;
         removeInputError(contentTextarea);
         
         loadComments();
