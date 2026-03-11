@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'https://unpkg.com/vue-router@4/dist/vue-router.esm-browser.prod.js';
+import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.js';
 import LoginView from '../views/LoginView.js';
 import RegisterView from '../views/RegisterView.js';

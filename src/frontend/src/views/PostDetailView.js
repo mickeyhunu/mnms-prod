@@ -1,5 +1,5 @@
-import { ref, onMounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js';
-import { useRoute } from 'https://unpkg.com/vue-router@4/dist/vue-router.esm-browser.prod.js';
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { createComment, fetchPost } from '../services/postService.js';
 
 export default {

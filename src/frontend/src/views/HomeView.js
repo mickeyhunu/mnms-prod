@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js';
+import { ref, onMounted } from 'vue';
 import { fetchPosts } from '../services/postService.js';
 
 export default {
