@@ -2,15 +2,26 @@
 @media (max-width: 768px) {
     .header-container {
         padding: 10px 15px;
-        flex-direction: column;
-        gap: 10px;
+        flex-direction: row;
+        gap: 12px;
+        flex-wrap: nowrap;
     }
 
     .nav {
-        width: 100%;
-        justify-content: center;
-        flex-wrap: wrap;
+        width: auto;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
         gap: 8px;
+    }
+
+    .nav-guest {
+        display: flex;
+        gap: 8px;
+        flex-wrap: nowrap;
+    }
+
+    .logo h1 {
+        font-size: 20px;
     }
 
     .container {
