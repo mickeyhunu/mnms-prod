@@ -114,34 +114,43 @@ function createArticleItem(post) {
     const createdAt = formatDate(post.createdAt);
     const commentCount = Number(post.commentCount || 0);
     const viewCount = Number(post.viewCount || 0);
+    const recommendCount = Number(post.likeCount || post.recommendCount || 0);
+    const previewText = sanitizeHTML(getPreviewText(post));
     const authorName = sanitizeHTML(post.authorNickname || '익명');
-    const authorBadge = post.authorRole === 'ADMIN' ? '관리자' : authorName;
+    const authorBadge = sanitizeHTML(post.authorRole === 'ADMIN' ? '관리자' : authorName);
     const categoryTag = post.category && !isNoticePost(post)
         ? `<span class="article-tag">${sanitizeHTML(post.category)}</span>`
         : '';
-    const thumb = post.imageUrl
-        ? `<img class="article-thumb" src="${sanitizeHTML(post.imageUrl)}" alt="썸네일" loading="lazy">`
-        : '';
+    const isNewPost = post.isNew || post.newPost;
 
     return `
         <li class="article-item">
             <a class="article-main" href="post-detail.html?id=${post.id}">
-                <div class="article-content">
+                <div class="article-title-row">
+                    <span class="article-inline-icon" aria-hidden="true">💬</span>
                     <h3 class="article-title">${sanitizeHTML(post.title || '제목 없음')}</h3>
-                    <div class="article-meta">
-                        <span>${authorBadge}</span>
-                        <span>${createdAt}</span>
-                        <span>조회 ${viewCount}</span>
-                    </div>
+                    ${isNewPost ? '<span class="article-new-badge">NEW</span>' : ''}
+                    <span class="article-comment-inline">[${commentCount}]</span>
+                    <span class="article-mobile-badge">M</span>
                 </div>
-                ${thumb}
+                <p class="article-preview">${previewText}</p>
+                <div class="article-meta">
+                    <span>${authorBadge}</span>
+                    <span>${createdAt}</span>
+                    <span>조회수 : ${viewCount}</span>
+                    <span class="article-recommend">추천수 : ${recommendCount}</span>
+                </div>
             </a>
             <div class="article-side">
-                <div class="article-comment">${commentCount}<span>댓글</span></div>
                 ${categoryTag}
             </div>
         </li>
     `;
+}
+
+function getPreviewText(post) {
+    const source = post.preview || post.content || post.body || '';
+    return String(source).replace(/\s+/g, ' ').trim().slice(0, 140) || '내용 미리보기가 없습니다.';
 }
 
 function updatePagination() {
