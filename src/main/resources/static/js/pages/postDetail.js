@@ -55,6 +55,41 @@ function setupEventListeners() {
         commentForm.addEventListener('submit', handleCreateComment);
     }
 
+    const backBtn = document.getElementById('back-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            if (window.history.length > 1) {
+                window.history.back();
+                return;
+            }
+            window.location.href = 'index.html';
+        });
+    }
+
+    const shareBtn = document.getElementById('share-btn');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', handleSharePost);
+    }
+
+    const moreBtn = document.getElementById('post-more-btn');
+    if (moreBtn) {
+        moreBtn.addEventListener('click', togglePostMoreMenu);
+    }
+
+    const reportBtn = document.getElementById('report-btn');
+    if (reportBtn) {
+        reportBtn.addEventListener('click', reportPost);
+    }
+
+    document.addEventListener('click', (e) => {
+        const moreWrapper = document.querySelector('.post-more-wrapper');
+        const menu = document.getElementById('post-more-menu');
+        if (!moreWrapper || !menu) return;
+        if (!moreWrapper.contains(e.target)) {
+            menu.classList.add('hidden');
+        }
+    });
+
     setupMessageModal();
     updateGuestCommentField();
 }
@@ -293,6 +328,13 @@ function renderPostDetail(post) {
     const messageBtn = document.getElementById('message-btn');
     const ownerActions = document.getElementById('post-owner-actions');
     const editBtn = document.getElementById('edit-btn');
+    const deleteBtn = document.getElementById('delete-btn');
+    const reportBtn = document.getElementById('report-btn');
+    const boardName = document.getElementById('post-board-name');
+
+    if (boardName) {
+        boardName.textContent = post.boardName || post.categoryName || '자유수다';
+    }
 
     const isGuestPost = !post.authorId && !post.userId;
 
@@ -300,13 +342,18 @@ function renderPostDetail(post) {
         console.log('작성자임 - 수정/삭제 버튼 표시');
         if (messageBtn) messageBtn.style.display = 'none';
         if (ownerActions) ownerActions.classList.remove('hidden');
-        if (editBtn) editBtn.href = '#';
+        if (editBtn) editBtn.classList.remove('hidden');
+        if (deleteBtn) deleteBtn.classList.remove('hidden');
+        if (reportBtn) reportBtn.classList.add('hidden');
     } else {
         console.log('작성자 아님 - 쪽지 버튼 표시');
         if (ownerActions) ownerActions.classList.add('hidden');
         if (messageBtn && Auth.isAuthenticated()) {
             messageBtn.style.display = 'inline-block';
         }
+        if (editBtn) editBtn.classList.add('hidden');
+        if (deleteBtn) deleteBtn.classList.add('hidden');
+        if (reportBtn) reportBtn.classList.remove('hidden');
     }
 
     if (post.imageUrls && post.imageUrls.length > 0) {
@@ -326,6 +373,50 @@ function renderPostDetail(post) {
     const viewCount = document.getElementById('view-count');
     if (viewCount) {
         viewCount.textContent = `조회수 ${post.viewCount || 0}`;
+    }
+}
+
+function togglePostMoreMenu() {
+    const menu = document.getElementById('post-more-menu');
+    if (!menu) return;
+    menu.classList.toggle('hidden');
+}
+
+async function handleSharePost() {
+    const shareData = {
+        title: document.getElementById('post-title')?.textContent || '게시글',
+        text: '게시글을 공유합니다.',
+        url: window.location.href
+    };
+
+    try {
+        if (navigator.share) {
+            await navigator.share(shareData);
+            return;
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(window.location.href);
+            alert('게시글 링크가 복사되었습니다.');
+            return;
+        }
+    } catch (error) {
+        console.error('공유 실패:', error);
+    }
+
+    prompt('아래 링크를 복사하세요.', window.location.href);
+}
+
+function reportPost() {
+    if (!Auth.requireAuth()) return;
+
+    const confirmed = confirm('이 게시글을 신고하시겠습니까?');
+    if (!confirmed) return;
+
+    showNotification('게시글 신고가 접수되었습니다.', 'success');
+    const menu = document.getElementById('post-more-menu');
+    if (menu) {
+        menu.classList.add('hidden');
     }
 }
 
