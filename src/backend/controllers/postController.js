@@ -153,10 +153,22 @@ async function createComment(req, res, next) {
     const post = await postModel.findPostById(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
 
-    const { content } = req.body;
+    const { content, parentId: rawParentId } = req.body;
     if (!content) return res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
 
-    await postModel.createComment({ postId, userId: req.user.id, content });
+    const parentId = rawParentId == null ? null : parseId(rawParentId);
+    if (rawParentId != null && !parentId) {
+      return res.status(400).json({ message: '유효하지 않은 부모 댓글 ID입니다.' });
+    }
+
+    if (parentId) {
+      const parentComment = await postModel.findCommentById(parentId);
+      if (!parentComment || Number(parentComment.post_id) !== Number(postId)) {
+        return res.status(400).json({ message: '같은 게시글의 댓글에만 답글을 작성할 수 있습니다.' });
+      }
+    }
+
+    await postModel.createComment({ postId, userId: req.user.id, content, parentId });
     const comments = await postModel.listComments(postId);
     res.status(201).json({ success: true, comments });
   } catch (error) {

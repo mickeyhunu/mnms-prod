@@ -68,7 +68,7 @@ async function deletePost(id) {
 async function listComments(postId) {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.content, c.created_at AS createdAt,
+    `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.parent_id AS parentId, c.content, c.created_at AS createdAt,
             COALESCE(u.nickname, '비회원') AS authorNickname
      FROM comments c
      LEFT JOIN users u ON u.id = c.user_id
@@ -85,11 +85,11 @@ async function findCommentById(id) {
   return rows[0] || null;
 }
 
-async function createComment({ postId, userId, content }) {
+async function createComment({ postId, userId, content, parentId = null }) {
   const pool = getPool();
   const [result] = await pool.query(
-    'INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)',
-    [postId, userId, content]
+    'INSERT INTO comments (post_id, user_id, parent_id, content) VALUES (?, ?, ?, ?)',
+    [postId, userId, parentId, content]
   );
   return result.insertId;
 }
