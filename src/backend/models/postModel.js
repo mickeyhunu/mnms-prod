@@ -79,6 +79,12 @@ async function listComments(postId) {
   return rows;
 }
 
+async function findCommentById(id) {
+  const pool = getPool();
+  const [rows] = await pool.query('SELECT * FROM comments WHERE id = ?', [id]);
+  return rows[0] || null;
+}
+
 async function createComment({ postId, userId, content }) {
   const pool = getPool();
   const [result] = await pool.query(
@@ -86,6 +92,16 @@ async function createComment({ postId, userId, content }) {
     [postId, userId, content]
   );
   return result.insertId;
+}
+
+async function updateComment(id, content) {
+  const pool = getPool();
+  await pool.query('UPDATE comments SET content = ? WHERE id = ?', [content, id]);
+}
+
+async function deleteComment(id) {
+  const pool = getPool();
+  await pool.query('DELETE FROM comments WHERE id = ?', [id]);
 }
 
 async function isPostLikedByUser(postId, userId) {
@@ -123,7 +139,10 @@ module.exports = {
   updatePost,
   deletePost,
   listComments,
+  findCommentById,
   createComment,
+  updateComment,
+  deleteComment,
   isPostLikedByUser,
   togglePostLike
 };

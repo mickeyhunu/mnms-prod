@@ -25,7 +25,7 @@ const CommentAPI = {
 
     async updateComment(commentId, commentData) {
         try {
-            const response = await APIClient.put(`/comments/${commentId}`, commentData);
+            const response = await APIClient.put(`/posts/comments/${commentId}`, commentData);
             return response;
         } catch (error) {
             throw error;
@@ -34,7 +34,7 @@ const CommentAPI = {
 
     async deleteComment(commentId) {
         try {
-            const response = await APIClient.delete(`/comments/${commentId}`);
+            const response = await APIClient.delete(`/posts/comments/${commentId}`);
             return response;
         } catch (error) {
             throw error;
