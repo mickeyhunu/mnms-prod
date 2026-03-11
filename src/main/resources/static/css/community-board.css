@@ -5,7 +5,7 @@
 .board-head-line {
     border: 1px solid #787878;
     height: 1px;
-    background: linear-gradient(90deg, #5a3a6b, #9d66b6, #5a3a6b);
+    background: #dcdcdc;
 }
 
 .board-title-wrap {
@@ -100,7 +100,7 @@
 
 .board-table-header th {
     height: 33px;
-    background: linear-gradient(#faf7fd, #efe5f8);
+    background: #ffffff;
     color: #797979;
     font-size: 13px;
     border-top: 1px solid #ddd;
@@ -148,7 +148,7 @@
     margin-right: 6px;
     text-align: center;
     border-radius: 999px;
-    background: linear-gradient(-50deg, rgb(222 142 223), rgb(201 95 255), rgb(251 164 236));
+    background: #f4f4f4;
     color: #fff;
     font-size: 11px;
     font-weight: 700;
@@ -174,7 +174,7 @@
     border-radius: 16px;
     border: 1px solid #dcc5ee;
     text-decoration: none;
-    background: #f3f3f3;
+    background: #ffffff;
 }
 
 .service-icon {
@@ -202,7 +202,6 @@
 .community-container {
     max-width: 640px;
     background: #ffffff;
-    border-radius: 14px;
     padding: 14px 0 24px;
 }
 
@@ -211,7 +210,6 @@
 }
 
 .notice-item {
-    border-radius: 8px;
     background: #fff;
     margin-bottom: 8px;
 }
