@@ -170,6 +170,8 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    aspect-ratio: 1 / 1;
+    width: 100%;
     min-height: 118px;
     border-radius: 16px;
     border: 1px solid #dcc5ee;
