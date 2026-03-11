@@ -40,8 +40,17 @@ function canViewSecretComment(comment, post, currentUser) {
 function sanitizeCommentForViewer(comment, post, currentUser) {
   const normalized = {
     ...comment,
-    isSecret: Boolean(comment.isSecret)
+    isSecret: Boolean(comment.isSecret),
+    isDeleted: Boolean(comment.isDeleted)
   };
+
+  if (normalized.isDeleted) {
+    return {
+      ...normalized,
+      content: '삭제된 댓글입니다.',
+      authorNickname: '알 수 없음'
+    };
+  }
 
   if (canViewSecretComment(normalized, post, currentUser)) {
     return normalized;
@@ -232,6 +241,10 @@ async function updateComment(req, res, next) {
       return res.status(403).json({ message: '수정 권한이 없습니다.' });
     }
 
+    if (comment.is_deleted) {
+      return res.status(400).json({ message: '삭제된 댓글은 수정할 수 없습니다.' });
+    }
+
     const content = (req.body.content || '').trim();
     if (!content) return res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
 
@@ -257,6 +270,10 @@ async function deleteComment(req, res, next) {
 
     if (comment.user_id !== req.user.id && req.user.role !== 'ADMIN') {
       return res.status(403).json({ message: '삭제 권한이 없습니다.' });
+    }
+
+    if (comment.is_deleted) {
+      return res.status(400).json({ message: '이미 삭제된 댓글입니다.' });
     }
 
     await postModel.deleteComment(commentId);

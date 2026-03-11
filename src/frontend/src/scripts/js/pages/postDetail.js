@@ -568,12 +568,13 @@ function createCommentItem(comment, depth = 0) {
                           comment.authorRole === 'ADMIN' || 
                           comment.role === 'admin' || 
                           comment.role === 'ADMIN';
-    const canReply = Auth.isAuthenticated() && depth < 3;
+    const isSecretComment = Boolean(comment.isSecret);
+    const isDeletedComment = Boolean(comment.isDeleted);
+    const canReply = Auth.isAuthenticated() && depth < 3 && !isDeletedComment;
     const canGuestEdit = !Auth.isAuthenticated() && !comment.userId;
     const isOtherUser = Auth.isAuthenticated() && currentUser && !isAuthor;
-    const hasActionMenu = isAuthor || canGuestEdit || isOtherUser;
+    const hasActionMenu = !isDeletedComment && (isAuthor || canGuestEdit || isOtherUser);
     const isCommentLiked = likedCommentIds.has(comment.id);
-    const isSecretComment = Boolean(comment.isSecret);
     const replyMarker = depth > 0 ? '<span class="comment-reply-marker" aria-hidden="true"></span>' : '';
     
     console.log(`댓글 ${comment.id}: user=${currentUser?.id}, author=${comment.authorId}, isAuthor=${isAuthor}, isAdmin=${isAdminComment}`);
@@ -587,6 +588,7 @@ function createCommentItem(comment, depth = 0) {
                     <div class="comment-meta-main">
                         <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${sanitizeHTML(comment.authorNickname)}</span>
                         ${isSecretComment ? '<span style="margin-left:6px;font-size:12px;color:#7a5;">🔒 비밀댓글</span>' : ''}
+                        ${isDeletedComment ? '<span style="margin-left:6px;font-size:12px;color:#999;">삭제됨</span>' : ''}
                     </div>
                     <div class="comment-meta-actions">
                         ${isOtherUser ? `<button class="comment-action-icon-btn comment-like-toggle ${isCommentLiked ? 'liked' : ''}" type="button" title="댓글 좋아요" aria-label="댓글 좋아요" onclick="toggleCommentLike(${comment.id}, this)">${isCommentLiked ? '♥' : '♡'}</button>` : ''}
