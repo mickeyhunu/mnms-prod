@@ -1,32 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import HomeView from '../pages/HomeView.js';
-import LoginView from '../pages/LoginView.js';
-import RegisterView from '../pages/RegisterView.js';
-import CreatePostView from '../pages/CreatePostView.js';
-import PostDetailView from '../pages/PostDetailView.js';
-import BookmarksView from '../pages/BookmarksView.js';
-import CommunityView from '../pages/CommunityView.js';
-import MyPageView from '../pages/MyPageView.js';
-import EditPostView from '../pages/EditPostView.js';
-import AdminView from '../pages/AdminView.js';
-import FindAccountView from '../pages/FindAccountView.js';
-import BusinessInfoView from '../pages/BusinessInfoView.js';
-import LiveView from '../pages/LiveView.js';
+import LegacyView from '../views/LegacyView.js';
 
 const routes = [
-  { path: '/', component: HomeView },
-  { path: '/login', component: LoginView },
-  { path: '/register', component: RegisterView },
-  { path: '/create', component: CreatePostView },
-  { path: '/post-detail', component: PostDetailView },
-  { path: '/bookmarks', component: BookmarksView },
-  { path: '/community', component: CommunityView },
-  { path: '/my-page', component: MyPageView },
-  { path: '/edit-post', component: EditPostView },
-  { path: '/admin', component: AdminView },
-  { path: '/find-account', component: FindAccountView },
-  { path: '/business-info', component: BusinessInfoView },
-  { path: '/live', component: LiveView }
+  { path: '/', component: LegacyView, meta: { pageKey: 'index' } },
+  { path: '/login', component: LegacyView, meta: { pageKey: 'login' } },
+  { path: '/register', component: LegacyView, meta: { pageKey: 'register' } },
+  { path: '/create', component: LegacyView, meta: { pageKey: 'create-post' } },
+  { path: '/post-detail', component: LegacyView, meta: { pageKey: 'post-detail' } },
+  { path: '/bookmarks', component: LegacyView, meta: { pageKey: 'bookmarks' } },
+  { path: '/community', component: LegacyView, meta: { pageKey: 'community' } },
+  { path: '/my-page', component: LegacyView, meta: { pageKey: 'my-page' } },
+  { path: '/edit-post', component: LegacyView, meta: { pageKey: 'edit-post' } },
+  { path: '/admin', component: LegacyView, meta: { pageKey: 'admin' } },
+  { path: '/find-account', component: LegacyView, meta: { pageKey: 'find-account' } },
+  { path: '/business-info', component: LegacyView, meta: { pageKey: 'business-info' } },
+  { path: '/live', component: LegacyView, meta: { pageKey: 'live' } }
 ];
 
 const router = createRouter({
