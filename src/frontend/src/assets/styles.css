@@ -1,8 +1,8 @@
-@import '../legacy/styles/common.css';
-@import '../legacy/styles/layout.css';
-@import '../legacy/styles/components.css';
-@import '../legacy/styles/pages.css';
-@import '../legacy/styles/postDetail.css';
-@import '../legacy/styles/community-board.css';
-@import '../legacy/styles/home-dark.css';
-@import '../legacy/styles/responsive.css';
+@import '../styles/common.css';
+@import '../styles/layout.css';
+@import '../styles/components.css';
+@import '../styles/pages.css';
+@import '../styles/postDetail.css';
+@import '../styles/community-board.css';
+@import '../styles/home-dark.css';
+@import '../styles/responsive.css';
