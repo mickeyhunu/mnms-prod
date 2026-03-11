@@ -1,20 +1,32 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import LegacyPageView from '../legacy/LegacyPageView.js';
+import HomeView from '../views/pages/HomeView.js';
+import LoginView from '../views/pages/LoginView.js';
+import RegisterView from '../views/pages/RegisterView.js';
+import CreatePostView from '../views/pages/CreatePostView.js';
+import PostDetailView from '../views/pages/PostDetailView.js';
+import BookmarksView from '../views/pages/BookmarksView.js';
+import CommunityView from '../views/pages/CommunityView.js';
+import MyPageView from '../views/pages/MyPageView.js';
+import EditPostView from '../views/pages/EditPostView.js';
+import AdminView from '../views/pages/AdminView.js';
+import FindAccountView from '../views/pages/FindAccountView.js';
+import BusinessInfoView from '../views/pages/BusinessInfoView.js';
+import LiveView from '../views/pages/LiveView.js';
 
 const routes = [
-  { path: '/', component: LegacyPageView, props: { page: 'index' } },
-  { path: '/login', component: LegacyPageView, props: { page: 'login' } },
-  { path: '/register', component: LegacyPageView, props: { page: 'register' } },
-  { path: '/create', component: LegacyPageView, props: { page: 'create-post' } },
-  { path: '/post-detail', component: LegacyPageView, props: { page: 'post-detail' } },
-  { path: '/bookmarks', component: LegacyPageView, props: { page: 'bookmarks' } },
-  { path: '/community', component: LegacyPageView, props: { page: 'community' } },
-  { path: '/my-page', component: LegacyPageView, props: { page: 'my-page' } },
-  { path: '/edit-post', component: LegacyPageView, props: { page: 'edit-post' } },
-  { path: '/admin', component: LegacyPageView, props: { page: 'admin' } },
-  { path: '/find-account', component: LegacyPageView, props: { page: 'find-account' } },
-  { path: '/business-info', component: LegacyPageView, props: { page: 'business-info' } },
-  { path: '/live', component: LegacyPageView, props: { page: 'live' } }
+  { path: '/', component: HomeView },
+  { path: '/login', component: LoginView },
+  { path: '/register', component: RegisterView },
+  { path: '/create', component: CreatePostView },
+  { path: '/post-detail', component: PostDetailView },
+  { path: '/bookmarks', component: BookmarksView },
+  { path: '/community', component: CommunityView },
+  { path: '/my-page', component: MyPageView },
+  { path: '/edit-post', component: EditPostView },
+  { path: '/admin', component: AdminView },
+  { path: '/find-account', component: FindAccountView },
+  { path: '/business-info', component: BusinessInfoView },
+  { path: '/live', component: LiveView }
 ];
 
 const router = createRouter({

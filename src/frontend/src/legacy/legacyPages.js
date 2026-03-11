@@ -1,4 +1,4 @@
-// Auto-generated from src/static/*.html
+// Auto-generated legacy templates (migrated from former static/*.html)
 export const legacyPages = {
   'admin': {
     template: `<header class="header">
@@ -120,14 +120,14 @@ export const legacyPages = {
         </div>
     </div>
 
-    <script src="js/utils/constants.js"></script>
-    <script src="js/utils/helpers.js"></script>
-    <script src="js/utils/auth.js"></script>
-    <script src="js/api/apiClient.js"></script>
-    <script src="js/pages/admin.js"></script>
-    <script src="js/components/footerNav.js"></script>`,
-    styles: ["css/common.css", "css/layout.css", "css/components.css"],
-    scripts: ["js/utils/constants.js", "js/utils/helpers.js", "js/utils/auth.js", "js/api/apiClient.js", "js/pages/admin.js", "js/components/footerNav.js"]
+    <script src="legacy/scripts/js/utils/constants.js"></script>
+    <script src="legacy/scripts/js/utils/helpers.js"></script>
+    <script src="legacy/scripts/js/utils/auth.js"></script>
+    <script src="legacy/scripts/js/api/apiClient.js"></script>
+    <script src="legacy/scripts/js/pages/admin.js"></script>
+    <script src="legacy/scripts/js/components/footerNav.js"></script>`,
+    styles: ["legacy/styles/common.css", "legacy/styles/layout.css", "legacy/styles/components.css"],
+    scripts: ["legacy/scripts/js/utils/constants.js", "legacy/scripts/js/utils/helpers.js", "legacy/scripts/js/utils/auth.js", "legacy/scripts/js/api/apiClient.js", "legacy/scripts/js/pages/admin.js", "legacy/scripts/js/components/footerNav.js"]
   },
   'bookmarks': {
     template: `<header class="header">
@@ -178,14 +178,14 @@ export const legacyPages = {
         </div>
     </main>
 
-    <script src="js/utils/constants.js"></script>
-    <script src="js/utils/helpers.js"></script>
-    <script src="js/utils/auth.js"></script>
-    <script src="js/api/apiClient.js"></script>
-    <script src="js/pages/bookmarks.js"></script>
-    <script src="js/components/footerNav.js"></script>`,
-    styles: ["css/common.css", "css/layout.css", "css/components.css"],
-    scripts: ["js/utils/constants.js", "js/utils/helpers.js", "js/utils/auth.js", "js/api/apiClient.js", "js/pages/bookmarks.js", "js/components/footerNav.js"]
+    <script src="legacy/scripts/js/utils/constants.js"></script>
+    <script src="legacy/scripts/js/utils/helpers.js"></script>
+    <script src="legacy/scripts/js/utils/auth.js"></script>
+    <script src="legacy/scripts/js/api/apiClient.js"></script>
+    <script src="legacy/scripts/js/pages/bookmarks.js"></script>
+    <script src="legacy/scripts/js/components/footerNav.js"></script>`,
+    styles: ["legacy/styles/common.css", "legacy/styles/layout.css", "legacy/styles/components.css"],
+    scripts: ["legacy/scripts/js/utils/constants.js", "legacy/scripts/js/utils/helpers.js", "legacy/scripts/js/utils/auth.js", "legacy/scripts/js/api/apiClient.js", "legacy/scripts/js/pages/bookmarks.js", "legacy/scripts/js/components/footerNav.js"]
   },
   'business-info': {
     template: `<header class="header">
@@ -203,9 +203,9 @@ export const legacyPages = {
         </div>
     </main>
 
-    <script src="js/components/footerNav.js"></script>`,
-    styles: ["css/common.css", "css/layout.css", "css/components.css"],
-    scripts: ["js/components/footerNav.js"]
+    <script src="legacy/scripts/js/components/footerNav.js"></script>`,
+    styles: ["legacy/styles/common.css", "legacy/styles/layout.css", "legacy/styles/components.css"],
+    scripts: ["legacy/scripts/js/components/footerNav.js"]
   },
   'community': {
     template: `<header class="header">
@@ -267,19 +267,19 @@ export const legacyPages = {
         </div>
     </main>
 
-    <script src="js/utils/constants.js"></script>
-    <script src="js/utils/helpers.js"></script>
-    <script src="js/utils/auth.js"></script>
-    <script src="js/utils/notifications.js"></script>
-    <script src="js/api/apiClient.js"></script>
-    <script src="js/api/authAPI.js"></script>
-    <script src="js/api/postAPI.js"></script>
-    <script src="js/components/postCard.js"></script>
-    <script src="js/components/header.js"></script>
-    <script src="js/pages/index.js"></script>
-    <script src="js/components/footerNav.js"></script>`,
-    styles: ["css/common.css", "css/layout.css", "css/components.css", "css/community-board.css"],
-    scripts: ["js/utils/constants.js", "js/utils/helpers.js", "js/utils/auth.js", "js/utils/notifications.js", "js/api/apiClient.js", "js/api/authAPI.js", "js/api/postAPI.js", "js/components/postCard.js", "js/components/header.js", "js/pages/index.js", "js/components/footerNav.js"]
+    <script src="legacy/scripts/js/utils/constants.js"></script>
+    <script src="legacy/scripts/js/utils/helpers.js"></script>
+    <script src="legacy/scripts/js/utils/auth.js"></script>
+    <script src="legacy/scripts/js/utils/notifications.js"></script>
+    <script src="legacy/scripts/js/api/apiClient.js"></script>
+    <script src="legacy/scripts/js/api/authAPI.js"></script>
+    <script src="legacy/scripts/js/api/postAPI.js"></script>
+    <script src="legacy/scripts/js/components/postCard.js"></script>
+    <script src="legacy/scripts/js/components/header.js"></script>
+    <script src="legacy/scripts/js/pages/index.js"></script>
+    <script src="legacy/scripts/js/components/footerNav.js"></script>`,
+    styles: ["legacy/styles/common.css", "legacy/styles/layout.css", "legacy/styles/components.css", "legacy/styles/community-board.css"],
+    scripts: ["legacy/scripts/js/utils/constants.js", "legacy/scripts/js/utils/helpers.js", "legacy/scripts/js/utils/auth.js", "legacy/scripts/js/utils/notifications.js", "legacy/scripts/js/api/apiClient.js", "legacy/scripts/js/api/authAPI.js", "legacy/scripts/js/api/postAPI.js", "legacy/scripts/js/components/postCard.js", "legacy/scripts/js/components/header.js", "legacy/scripts/js/pages/index.js", "legacy/scripts/js/components/footerNav.js"]
   },
   'create-post': {
     template: `<header class="header">
@@ -346,14 +346,14 @@ export const legacyPages = {
         </div>
     </main>
 
-    <script src="js/utils/constants.js"></script>
-    <script src="js/utils/helpers.js"></script>
-    <script src="js/utils/auth.js"></script>
-    <script src="js/api/apiClient.js"></script>
-    <script src="js/pages/createPost.js"></script>
-    <script src="js/components/footerNav.js"></script>`,
-    styles: ["css/common.css", "css/layout.css", "css/components.css"],
-    scripts: ["js/utils/constants.js", "js/utils/helpers.js", "js/utils/auth.js", "js/api/apiClient.js", "js/pages/createPost.js", "js/components/footerNav.js"]
+    <script src="legacy/scripts/js/utils/constants.js"></script>
+    <script src="legacy/scripts/js/utils/helpers.js"></script>
+    <script src="legacy/scripts/js/utils/auth.js"></script>
+    <script src="legacy/scripts/js/api/apiClient.js"></script>
+    <script src="legacy/scripts/js/pages/createPost.js"></script>
+    <script src="legacy/scripts/js/components/footerNav.js"></script>`,
+    styles: ["legacy/styles/common.css", "legacy/styles/layout.css", "legacy/styles/components.css"],
+    scripts: ["legacy/scripts/js/utils/constants.js", "legacy/scripts/js/utils/helpers.js", "legacy/scripts/js/utils/auth.js", "legacy/scripts/js/api/apiClient.js", "legacy/scripts/js/pages/createPost.js", "legacy/scripts/js/components/footerNav.js"]
   },
   'edit-post': {
     template: `<header class="header">
@@ -418,14 +418,14 @@ export const legacyPages = {
         </div>
     </main>
 
-    <script src="js/utils/constants.js"></script>
-    <script src="js/utils/helpers.js"></script>
-    <script src="js/utils/auth.js"></script>
-    <script src="js/api/apiClient.js"></script>
-    <script src="js/pages/editPost.js"></script>
-    <script src="js/components/footerNav.js"></script>`,
-    styles: ["css/common.css", "css/layout.css", "css/components.css"],
-    scripts: ["js/utils/constants.js", "js/utils/helpers.js", "js/utils/auth.js", "js/api/apiClient.js", "js/pages/editPost.js", "js/components/footerNav.js"]
+    <script src="legacy/scripts/js/utils/constants.js"></script>
+    <script src="legacy/scripts/js/utils/helpers.js"></script>
+    <script src="legacy/scripts/js/utils/auth.js"></script>
+    <script src="legacy/scripts/js/api/apiClient.js"></script>
+    <script src="legacy/scripts/js/pages/editPost.js"></script>
+    <script src="legacy/scripts/js/components/footerNav.js"></script>`,
+    styles: ["legacy/styles/common.css", "legacy/styles/layout.css", "legacy/styles/components.css"],
+    scripts: ["legacy/scripts/js/utils/constants.js", "legacy/scripts/js/utils/helpers.js", "legacy/scripts/js/utils/auth.js", "legacy/scripts/js/api/apiClient.js", "legacy/scripts/js/pages/editPost.js", "legacy/scripts/js/components/footerNav.js"]
   },
   'find-account': {
     template: `<header class="header">
@@ -457,9 +457,9 @@ export const legacyPages = {
         </div>
     </div>
 </main>
-    <script src="js/components/footerNav.js"></script>`,
-    styles: ["css/common.css", "css/layout.css", "css/components.css"],
-    scripts: ["js/components/footerNav.js"]
+    <script src="legacy/scripts/js/components/footerNav.js"></script>`,
+    styles: ["legacy/styles/common.css", "legacy/styles/layout.css", "legacy/styles/components.css"],
+    scripts: ["legacy/scripts/js/components/footerNav.js"]
   },
   'index': {
     template: `<header class="header">
@@ -500,15 +500,15 @@ export const legacyPages = {
         </div>
     </main>
 
-    <script src="js/utils/constants.js"></script>
-    <script src="js/utils/helpers.js"></script>
-    <script src="js/utils/auth.js"></script>
-    <script src="js/api/apiClient.js"></script>
-    <script src="js/api/authAPI.js"></script>
-    <script src="js/pages/home.js"></script>
-    <script src="js/components/footerNav.js"></script>`,
-    styles: ["css/common.css", "css/layout.css", "css/components.css", "css/community-board.css"],
-    scripts: ["js/utils/constants.js", "js/utils/helpers.js", "js/utils/auth.js", "js/api/apiClient.js", "js/api/authAPI.js", "js/pages/home.js", "js/components/footerNav.js"]
+    <script src="legacy/scripts/js/utils/constants.js"></script>
+    <script src="legacy/scripts/js/utils/helpers.js"></script>
+    <script src="legacy/scripts/js/utils/auth.js"></script>
+    <script src="legacy/scripts/js/api/apiClient.js"></script>
+    <script src="legacy/scripts/js/api/authAPI.js"></script>
+    <script src="legacy/scripts/js/pages/home.js"></script>
+    <script src="legacy/scripts/js/components/footerNav.js"></script>`,
+    styles: ["legacy/styles/common.css", "legacy/styles/layout.css", "legacy/styles/components.css", "legacy/styles/community-board.css"],
+    scripts: ["legacy/scripts/js/utils/constants.js", "legacy/scripts/js/utils/helpers.js", "legacy/scripts/js/utils/auth.js", "legacy/scripts/js/api/apiClient.js", "legacy/scripts/js/api/authAPI.js", "legacy/scripts/js/pages/home.js", "legacy/scripts/js/components/footerNav.js"]
   },
   'live': {
     template: `<header class="header">
@@ -526,9 +526,9 @@ export const legacyPages = {
         </div>
     </main>
 
-    <script src="js/components/footerNav.js"></script>`,
-    styles: ["css/common.css", "css/layout.css", "css/components.css"],
-    scripts: ["js/components/footerNav.js"]
+    <script src="legacy/scripts/js/components/footerNav.js"></script>`,
+    styles: ["legacy/styles/common.css", "legacy/styles/layout.css", "legacy/styles/components.css"],
+    scripts: ["legacy/scripts/js/components/footerNav.js"]
   },
   'login': {
     template: `<header class="header">
@@ -592,16 +592,16 @@ export const legacyPages = {
         </div>
     </main>
 
-    <script src="js/utils/constants.js"></script>
-    <script src="js/utils/helpers.js"></script>
-    <script src="js/utils/validation.js"></script>
-    <script src="js/utils/auth.js"></script>
-    <script src="js/api/apiClient.js"></script>
-    <script src="js/api/authAPI.js"></script>
-    <script src="js/pages/login.js"></script>
-    <script src="js/components/footerNav.js"></script>`,
-    styles: ["css/common.css", "css/layout.css", "css/components.css"],
-    scripts: ["js/utils/constants.js", "js/utils/helpers.js", "js/utils/validation.js", "js/utils/auth.js", "js/api/apiClient.js", "js/api/authAPI.js", "js/pages/login.js", "js/components/footerNav.js"]
+    <script src="legacy/scripts/js/utils/constants.js"></script>
+    <script src="legacy/scripts/js/utils/helpers.js"></script>
+    <script src="legacy/scripts/js/utils/validation.js"></script>
+    <script src="legacy/scripts/js/utils/auth.js"></script>
+    <script src="legacy/scripts/js/api/apiClient.js"></script>
+    <script src="legacy/scripts/js/api/authAPI.js"></script>
+    <script src="legacy/scripts/js/pages/login.js"></script>
+    <script src="legacy/scripts/js/components/footerNav.js"></script>`,
+    styles: ["legacy/styles/common.css", "legacy/styles/layout.css", "legacy/styles/components.css"],
+    scripts: ["legacy/scripts/js/utils/constants.js", "legacy/scripts/js/utils/helpers.js", "legacy/scripts/js/utils/validation.js", "legacy/scripts/js/utils/auth.js", "legacy/scripts/js/api/apiClient.js", "legacy/scripts/js/api/authAPI.js", "legacy/scripts/js/pages/login.js", "legacy/scripts/js/components/footerNav.js"]
   },
   'my-page': {
     template: `<header class="header">
@@ -683,14 +683,14 @@ export const legacyPages = {
         </div>
     </main>
 
-    <script src="js/utils/constants.js"></script>
-    <script src="js/utils/helpers.js"></script>
-    <script src="js/utils/auth.js"></script>
-    <script src="js/api/apiClient.js"></script>
-    <script src="js/pages/myPage.js"></script>
-    <script src="js/components/footerNav.js"></script>`,
-    styles: ["css/common.css", "css/layout.css", "css/components.css"],
-    scripts: ["js/utils/constants.js", "js/utils/helpers.js", "js/utils/auth.js", "js/api/apiClient.js", "js/pages/myPage.js", "js/components/footerNav.js"]
+    <script src="legacy/scripts/js/utils/constants.js"></script>
+    <script src="legacy/scripts/js/utils/helpers.js"></script>
+    <script src="legacy/scripts/js/utils/auth.js"></script>
+    <script src="legacy/scripts/js/api/apiClient.js"></script>
+    <script src="legacy/scripts/js/pages/myPage.js"></script>
+    <script src="legacy/scripts/js/components/footerNav.js"></script>`,
+    styles: ["legacy/styles/common.css", "legacy/styles/layout.css", "legacy/styles/components.css"],
+    scripts: ["legacy/scripts/js/utils/constants.js", "legacy/scripts/js/utils/helpers.js", "legacy/scripts/js/utils/auth.js", "legacy/scripts/js/api/apiClient.js", "legacy/scripts/js/pages/myPage.js", "legacy/scripts/js/components/footerNav.js"]
   },
   'post-detail': {
     template: `<header class="header">
@@ -821,17 +821,17 @@ export const legacyPages = {
         </div>
     </main>
 
-    <script src="js/utils/constants.js"></script>
-    <script src="js/utils/helpers.js"></script>
-    <script src="js/utils/auth.js"></script>
-    <script src="js/api/apiClient.js"></script>
-    <script src="js/api/authAPI.js"></script>
-    <script src="js/api/postAPI.js"></script>
-    <script src="js/api/commentAPI.js"></script>
-    <script src="js/pages/postDetail.js"></script>
-    <script src="js/components/footerNav.js"></script>`,
-    styles: ["css/common.css", "css/layout.css", "css/components.css", "css/postDetail.css"],
-    scripts: ["js/utils/constants.js", "js/utils/helpers.js", "js/utils/auth.js", "js/api/apiClient.js", "js/api/authAPI.js", "js/api/postAPI.js", "js/api/commentAPI.js", "js/pages/postDetail.js", "js/components/footerNav.js"]
+    <script src="legacy/scripts/js/utils/constants.js"></script>
+    <script src="legacy/scripts/js/utils/helpers.js"></script>
+    <script src="legacy/scripts/js/utils/auth.js"></script>
+    <script src="legacy/scripts/js/api/apiClient.js"></script>
+    <script src="legacy/scripts/js/api/authAPI.js"></script>
+    <script src="legacy/scripts/js/api/postAPI.js"></script>
+    <script src="legacy/scripts/js/api/commentAPI.js"></script>
+    <script src="legacy/scripts/js/pages/postDetail.js"></script>
+    <script src="legacy/scripts/js/components/footerNav.js"></script>`,
+    styles: ["legacy/styles/common.css", "legacy/styles/layout.css", "legacy/styles/components.css", "legacy/styles/postDetail.css"],
+    scripts: ["legacy/scripts/js/utils/constants.js", "legacy/scripts/js/utils/helpers.js", "legacy/scripts/js/utils/auth.js", "legacy/scripts/js/api/apiClient.js", "legacy/scripts/js/api/authAPI.js", "legacy/scripts/js/api/postAPI.js", "legacy/scripts/js/api/commentAPI.js", "legacy/scripts/js/pages/postDetail.js", "legacy/scripts/js/components/footerNav.js"]
   },
   'register': {
     template: `<header class="header">
@@ -927,15 +927,15 @@ export const legacyPages = {
         </div>
     </main>
 
-    <script src="js/utils/constants.js"></script>
-    <script src="js/utils/helpers.js"></script>
-    <script src="js/utils/validation.js"></script>
-    <script src="js/utils/auth.js"></script>
-    <script src="js/api/apiClient.js"></script>
-    <script src="js/api/authAPI.js"></script>
-    <script src="js/pages/register.js"></script>
-    <script src="js/components/footerNav.js"></script>`,
-    styles: ["css/common.css", "css/layout.css", "css/components.css"],
-    scripts: ["js/utils/constants.js", "js/utils/helpers.js", "js/utils/validation.js", "js/utils/auth.js", "js/api/apiClient.js", "js/api/authAPI.js", "js/pages/register.js", "js/components/footerNav.js"]
+    <script src="legacy/scripts/js/utils/constants.js"></script>
+    <script src="legacy/scripts/js/utils/helpers.js"></script>
+    <script src="legacy/scripts/js/utils/validation.js"></script>
+    <script src="legacy/scripts/js/utils/auth.js"></script>
+    <script src="legacy/scripts/js/api/apiClient.js"></script>
+    <script src="legacy/scripts/js/api/authAPI.js"></script>
+    <script src="legacy/scripts/js/pages/register.js"></script>
+    <script src="legacy/scripts/js/components/footerNav.js"></script>`,
+    styles: ["legacy/styles/common.css", "legacy/styles/layout.css", "legacy/styles/components.css"],
+    scripts: ["legacy/scripts/js/utils/constants.js", "legacy/scripts/js/utils/helpers.js", "legacy/scripts/js/utils/validation.js", "legacy/scripts/js/utils/auth.js", "legacy/scripts/js/api/apiClient.js", "legacy/scripts/js/api/authAPI.js", "legacy/scripts/js/pages/register.js", "legacy/scripts/js/components/footerNav.js"]
   },
 };
