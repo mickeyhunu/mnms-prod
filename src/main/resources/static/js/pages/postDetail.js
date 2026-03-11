@@ -333,7 +333,7 @@ function renderPostDetail(post) {
     const boardName = document.getElementById('post-board-name');
 
     if (boardName) {
-        boardName.textContent = post.boardName || post.categoryName || '자유수다';
+        boardName.textContent = post.boardName || post.categoryName;
     }
 
     const isGuestPost = !post.authorId && !post.userId;
