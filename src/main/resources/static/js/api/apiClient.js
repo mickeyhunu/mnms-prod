@@ -154,7 +154,7 @@ const APIClient = {
         }
     },
 
-    async delete(endpoint) {
+    async delete(endpoint, data = null) {
         const url = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
         console.log('API DELETE Request:', url);
         
@@ -172,6 +172,8 @@ const APIClient = {
                 method: 'DELETE',
                 headers: headers,
                 credentials: 'include'
+                ,
+                body: data ? JSON.stringify(data) : undefined
             });
             
             console.log('API Response status:', response.status);

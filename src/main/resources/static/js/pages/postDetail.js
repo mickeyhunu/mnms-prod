@@ -39,6 +39,11 @@ function setupEventListeners() {
     if (deleteBtn) {
         deleteBtn.addEventListener('click', handleDeletePost);
     }
+
+    const editBtn = document.getElementById('edit-btn');
+    if (editBtn) {
+        editBtn.addEventListener('click', handleEditPost);
+    }
     
     const likeBtn = document.getElementById('like-btn');
     if (likeBtn) {
@@ -51,6 +56,13 @@ function setupEventListeners() {
     }
 
     setupMessageModal();
+    updateGuestCommentField();
+}
+
+function updateGuestCommentField() {
+    const input = document.getElementById('comment-guest-password');
+    if (!input) return;
+    input.style.display = Auth.isAuthenticated() ? 'none' : 'block';
 }
 
 function setupMessageModal() {
@@ -154,6 +166,7 @@ async function handleSendMessage() {
         return;
     }
 
+
     try {
         sendBtn.disabled = true;
         sendBtn.textContent = '전송중...';
@@ -211,10 +224,8 @@ async function loadPost() {
         if (postDetail) postDetail.classList.remove('hidden');
         if (commentsSection) commentsSection.classList.remove('hidden');
 
-        if (Auth.isAuthenticated()) {
-            const commentForm = document.getElementById('comment-form');
-            if (commentForm) commentForm.classList.remove('hidden');
-        }
+        const commentForm = document.getElementById('comment-form');
+        if (commentForm) commentForm.classList.remove('hidden');
 
         loadComments();
 
@@ -272,7 +283,7 @@ function renderPostDetail(post) {
     }
 
     currentPostAuthor = {
-        id: post.authorId,
+        id: post.authorId ?? post.userId,
         nickname: post.authorNickname
     };
 
@@ -283,11 +294,13 @@ function renderPostDetail(post) {
     const ownerActions = document.getElementById('post-owner-actions');
     const editBtn = document.getElementById('edit-btn');
 
-    if (post.isAuthor) {
+    const isGuestPost = !post.authorId && !post.userId;
+
+    if (post.isAuthor || isGuestPost) {
         console.log('작성자임 - 수정/삭제 버튼 표시');
         if (messageBtn) messageBtn.style.display = 'none';
         if (ownerActions) ownerActions.classList.remove('hidden');
-        if (editBtn) editBtn.href = `edit-post.html?id=${post.id}`;
+        if (editBtn) editBtn.href = '#';
     } else {
         console.log('작성자 아님 - 쪽지 버튼 표시');
         if (ownerActions) ownerActions.classList.add('hidden');
@@ -418,9 +431,9 @@ function createCommentItem(comment, depth = 0) {
     const currentUser = Auth.getUser();
     
     const isAuthor = currentUser && (
-        currentUser.id == comment.authorId ||
-        String(currentUser.id) === String(comment.authorId) || 
-        Number(currentUser.id) === Number(comment.authorId)
+        currentUser.id == (comment.authorId ?? comment.userId) ||
+        String(currentUser.id) === String(comment.authorId ?? comment.userId) || 
+        Number(currentUser.id) === Number(comment.authorId ?? comment.userId)
     );
     
     const isAdminComment = comment.authorRole === 'admin' || 
@@ -428,6 +441,7 @@ function createCommentItem(comment, depth = 0) {
                           comment.role === 'admin' || 
                           comment.role === 'ADMIN';
     const canReply = Auth.isAuthenticated() && depth < 3;
+    const canGuestEdit = !Auth.isAuthenticated() && !comment.userId;
     const isOtherUser = Auth.isAuthenticated() && currentUser && !isAuthor;
     const isCommentLiked = likedCommentIds.has(comment.id);
     const isSecretComment = Boolean(comment.isSecret);
@@ -449,7 +463,7 @@ function createCommentItem(comment, depth = 0) {
                              <button class="comment-action-icon-btn comment-like-toggle ${isCommentLiked ? 'liked' : ''}" type="button" title="댓글 좋아요" aria-label="댓글 좋아요" onclick="toggleCommentLike(${comment.id}, this)">${isCommentLiked ? '♥' : '♡'}</button>` 
                             : ''
                         }
-                        ${isAuthor ? `<button class="comment-more-btn" onclick="toggleCommentActions(${comment.id})">⋯</button>` : ''}
+                        ${(isAuthor || canGuestEdit) ? `<button class="comment-more-btn" onclick="toggleCommentActions(${comment.id})">⋯</button>` : ''}
                     </div>
                 </div>
                 <div class="comment-content ${isAdminComment ? 'admin-comment-content' : ''}">${sanitizeHTML(comment.content).replace(/\n/g, '<br>')}</div>
@@ -459,7 +473,7 @@ function createCommentItem(comment, depth = 0) {
                 </div>
             </div>
         </div>
-        ${isAuthor ? `
+        ${(isAuthor || canGuestEdit) ? `
             <div class="comment-actions hidden" id="comment-actions-${comment.id}">
                 <button class="btn btn-sm btn-warning" onclick="editComment(${comment.id})">수정</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteComment(${comment.id})">삭제</button>
@@ -663,17 +677,22 @@ async function handleToggleLike() {
 async function handleCreateComment(e) {
     e.preventDefault();
     
-    if (!Auth.requireAuth()) return;
-    
     const form = e.target;
     const submitBtn = document.getElementById('comment-submit-btn');
     const contentTextarea = document.getElementById('comment-content');
     
     const content = contentTextarea.value.trim();
     const secretCheckbox = document.getElementById('comment-secret');
+    const guestPasswordInput = document.getElementById('comment-guest-password');
     
     if (!content) {
         addInputError(contentTextarea, '댓글 내용을 입력해주세요');
+        return;
+    }
+
+    const guestPassword = guestPasswordInput?.value?.trim() || '';
+    if (!Auth.isAuthenticated() && guestPassword.length < 4) {
+        addInputError(guestPasswordInput, '비회원은 4자 이상의 비밀번호를 입력해주세요');
         return;
     }
     
@@ -682,7 +701,8 @@ async function handleCreateComment(e) {
         
         await CommentAPI.createComment(postId, {
             content,
-            isSecret: Boolean(secretCheckbox && secretCheckbox.checked)
+            isSecret: Boolean(secretCheckbox && secretCheckbox.checked),
+            guestPassword: Auth.isAuthenticated() ? undefined : guestPassword
         });
         
         if (typeof NotificationSettings !== 'undefined' && NotificationSettings.isCommentNotificationEnabled()) {
@@ -692,6 +712,7 @@ async function handleCreateComment(e) {
         }
         
         form.reset();
+        if (guestPasswordInput) guestPasswordInput.value = '';
         if (secretCheckbox) secretCheckbox.checked = false;
         removeInputError(contentTextarea);
         
@@ -707,13 +728,42 @@ async function handleCreateComment(e) {
     }
 }
 
+async function handleEditPost(e) {
+    e.preventDefault();
+    const title = prompt('수정할 제목을 입력하세요.', document.getElementById('post-title')?.textContent || '');
+    if (!title) return;
+    const content = prompt('수정할 내용을 입력하세요.', (document.getElementById('post-content')?.textContent || '').trim());
+    if (!content) return;
+
+    try {
+        const payload = { title, content };
+        if (!Auth.isAuthenticated()) {
+            const guestPassword = prompt('비밀번호를 입력하세요.');
+            if (!guestPassword) return;
+            payload.guestPassword = guestPassword;
+        }
+        await APIClient.put(`/posts/${postId}`, payload);
+        showNotification('게시글이 수정되었습니다.', 'success');
+        loadPost();
+    } catch (error) {
+        console.error('게시글 수정 실패:', error);
+        Auth.handleAuthError(error);
+    }
+}
+
 async function handleDeletePost() {
     if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
         return;
     }
     
     try {
-        await PostAPI.deletePost(postId);
+        const payload = {};
+        if (!Auth.isAuthenticated()) {
+            const guestPassword = prompt('비밀번호를 입력하세요.');
+            if (!guestPassword) return;
+            payload.guestPassword = guestPassword;
+        }
+        await APIClient.delete(`/posts/${postId}`, payload);
         
         showNotification('게시글이 삭제되었습니다.', 'success');
         
@@ -733,7 +783,13 @@ async function deleteComment(commentId) {
     }
     
     try {
-        await CommentAPI.deleteComment(commentId);
+        if (!Auth.isAuthenticated()) {
+            const guestPassword = prompt('비밀번호를 입력하세요.');
+            if (!guestPassword) return;
+            await APIClient.delete(`/comments/${commentId}`, { guestPassword });
+        } else {
+            await CommentAPI.deleteComment(commentId);
+        }
         
         showNotification('댓글이 삭제되었습니다.', 'success');
         
@@ -746,8 +802,23 @@ async function deleteComment(commentId) {
 }
 
 async function editComment(commentId) {
-    console.log('댓글 수정 기능 - 구현 예정:', commentId);
-    showNotification('댓글 수정 기능은 아직 구현되지 않았습니다.', 'info');
+    const content = prompt('수정할 댓글 내용을 입력하세요.');
+    if (!content) return;
+
+    try {
+        if (!Auth.isAuthenticated()) {
+            const guestPassword = prompt('비밀번호를 입력하세요.');
+            if (!guestPassword) return;
+            await APIClient.put(`/comments/${commentId}`, { content, guestPassword });
+        } else {
+            await CommentAPI.updateComment(commentId, { content });
+        }
+        showNotification('댓글이 수정되었습니다.', 'success');
+        loadComments();
+    } catch (error) {
+        console.error('댓글 수정 실패:', error);
+        Auth.handleAuthError(error);
+    }
 }
 
 function addInputError(element, message) {
