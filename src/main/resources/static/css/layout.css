@@ -46,7 +46,7 @@
 
 .main-content {
     min-height: calc(100vh - 80px);
-    padding: 28px 0;
+    padding: 0 0;
 }
 
 .main-content > .container:not(.auth-container):not(.age-notice-banner) {
@@ -56,7 +56,6 @@
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
 }
 
 .page-header {
