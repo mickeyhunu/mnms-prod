@@ -1,9 +1,27 @@
 const postModel = require('../models/postModel');
 
+const DEFAULT_PAGE = 0;
+const DEFAULT_SIZE = 10;
+const MAX_SIZE = 100;
+
+function parsePagination(rawPage, rawSize) {
+  const page = Number.parseInt(rawPage, 10);
+  const size = Number.parseInt(rawSize, 10);
+
+  return {
+    page: Number.isInteger(page) && page >= 0 ? page : DEFAULT_PAGE,
+    size: Number.isInteger(size) && size > 0 ? Math.min(size, MAX_SIZE) : DEFAULT_SIZE
+  };
+}
+
+function parseId(value) {
+  const id = Number.parseInt(value, 10);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
 async function listPosts(req, res, next) {
   try {
-    const page = Number(req.query.page || 0);
-    const size = Number(req.query.size || 10);
+    const { page, size } = parsePagination(req.query.page, req.query.size);
     const { rows, total } = await postModel.listPosts(page, size);
     res.json({ content: rows, totalElements: total, page, size, totalPages: Math.ceil(total / size) });
   } catch (error) {
@@ -13,7 +31,9 @@ async function listPosts(req, res, next) {
 
 async function getPost(req, res, next) {
   try {
-    const postId = Number(req.params.id);
+    const postId = parseId(req.params.id);
+    if (!postId) return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' });
+
     const post = await postModel.findPostById(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
     const comments = await postModel.listComments(postId);
@@ -25,10 +45,12 @@ async function getPost(req, res, next) {
 
 async function createPost(req, res, next) {
   try {
+    if (!req.user) return res.status(401).json({ message: '인증이 필요합니다.' });
+
     const { title, content } = req.body;
     if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
 
-    const postId = await postModel.createPost({ userId: req.user?.id, title, content });
+    const postId = await postModel.createPost({ userId: req.user.id, title, content });
     const post = await postModel.findPostById(postId);
     res.status(201).json({ success: true, post });
   } catch (error) {
@@ -38,7 +60,9 @@ async function createPost(req, res, next) {
 
 async function updatePost(req, res, next) {
   try {
-    const postId = Number(req.params.id);
+    const postId = parseId(req.params.id);
+    if (!postId) return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' });
+
     const post = await postModel.findPostById(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
     if (!req.user || (post.user_id !== req.user.id && req.user.role !== 'ADMIN')) {
@@ -59,7 +83,9 @@ async function updatePost(req, res, next) {
 
 async function deletePost(req, res, next) {
   try {
-    const postId = Number(req.params.id);
+    const postId = parseId(req.params.id);
+    if (!postId) return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' });
+
     const post = await postModel.findPostById(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
     if (!req.user || (post.user_id !== req.user.id && req.user.role !== 'ADMIN')) {
@@ -75,7 +101,12 @@ async function deletePost(req, res, next) {
 
 async function listComments(req, res, next) {
   try {
-    const postId = Number(req.params.postId);
+    const postId = parseId(req.params.postId);
+    if (!postId) return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' });
+
+    const post = await postModel.findPostById(postId);
+    if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
+
     const comments = await postModel.listComments(postId);
     res.json(comments);
   } catch (error) {
@@ -86,7 +117,13 @@ async function listComments(req, res, next) {
 async function createComment(req, res, next) {
   try {
     if (!req.user) return res.status(401).json({ message: '인증이 필요합니다.' });
-    const postId = Number(req.params.postId);
+
+    const postId = parseId(req.params.postId);
+    if (!postId) return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' });
+
+    const post = await postModel.findPostById(postId);
+    if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
+
     const { content } = req.body;
     if (!content) return res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
 
