@@ -43,13 +43,27 @@
             </div>
 
             <div class="bbs-view max-contents post-detail hidden" id="post-detail">
+                <header class="post-detail-header">
+                    <div class="post-header-left">
+                        <button type="button" class="icon-btn" id="back-btn" aria-label="뒤로가기">←</button>
+                        <span class="post-board-name" id="post-board-name">게시판</span>
+                    </div>
+                    <div class="post-header-right">
+                        <button type="button" class="icon-btn" id="share-btn" aria-label="공유하기">⤴</button>
+                        <div class="post-more-wrapper">
+                            <button type="button" class="icon-btn" id="post-more-btn" aria-label="더보기">⋮</button>
+                            <div class="post-more-menu hidden" id="post-more-menu">
+                                <button type="button" class="menu-item" id="report-btn">신고하기</button>
+                                <button type="button" class="menu-item hidden" id="edit-btn">수정</button>
+                                <button type="button" class="menu-item danger hidden" id="delete-btn">삭제</button>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
                 <div class="top">
                     <div class="tit">
                         <h1 id="post-title"></h1>
-                        <div class="post-owner-actions hidden" id="post-owner-actions">
-                            <a href="#" class="btn btn-sm btn-secondary" id="edit-btn">수정</a>
-                            <button class="btn btn-sm btn-danger" id="delete-btn">삭제</button>
-                        </div>
                     </div>
 
                     <div class="grid">
