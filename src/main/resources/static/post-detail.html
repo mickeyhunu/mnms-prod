@@ -91,7 +91,7 @@
 
                 <div class="comments-list" id="comments-list"></div>
 
-                <div class="new hidden" id="comment-form">
+                <div class="new" id="comment-form">
                     <form id="comment-create-form">
                         <div class="form-group">
                             <textarea id="comment-content" name="content" class="form-control" placeholder="댓글을 입력하세요" rows="3" required></textarea>
@@ -100,6 +100,7 @@
                                 비밀댓글
                             </label>
                             <div class="error-message hidden" id="content-error"></div>
+                            <input type="password" id="comment-guest-password" class="form-control" placeholder="비회원 댓글 비밀번호 (수정/삭제용)" style="margin-top:8px;display:none;">
                         </div>
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary btn-sm" id="comment-submit-btn">등록</button>
