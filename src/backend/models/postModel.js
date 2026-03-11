@@ -10,7 +10,8 @@ async function listPosts(page = 0, size = 10) {
   const [rows] = await pool.query(
     `SELECT p.id, p.title, p.content, p.user_id AS userId, p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
-            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS commentCount
+            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS commentCount,
+            (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
      ORDER BY p.created_at DESC
@@ -40,7 +41,8 @@ async function findPostDetailById(id) {
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT p.id, p.title, p.content, p.user_id AS userId, p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
-            COALESCE(u.nickname, '비회원') AS authorNickname
+            COALESCE(u.nickname, '비회원') AS authorNickname,
+            (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
      WHERE p.id = ?`,
@@ -86,6 +88,32 @@ async function createComment({ postId, userId, content }) {
   return result.insertId;
 }
 
+async function isPostLikedByUser(postId, userId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    'SELECT 1 FROM post_likes WHERE post_id = ? AND user_id = ? LIMIT 1',
+    [postId, userId]
+  );
+  return rows.length > 0;
+}
+
+async function togglePostLike(postId, userId) {
+  const pool = getPool();
+  const liked = await isPostLikedByUser(postId, userId);
+
+  if (liked) {
+    await pool.query('DELETE FROM post_likes WHERE post_id = ? AND user_id = ?', [postId, userId]);
+  } else {
+    await pool.query('INSERT INTO post_likes (post_id, user_id) VALUES (?, ?)', [postId, userId]);
+  }
+
+  const [countRows] = await pool.query('SELECT COUNT(*) AS likeCount FROM post_likes WHERE post_id = ?', [postId]);
+  return {
+    isLiked: !liked,
+    likeCount: Number(countRows[0].likeCount)
+  };
+}
+
 module.exports = {
   listPosts,
   createPost,
@@ -95,5 +123,7 @@ module.exports = {
   updatePost,
   deletePost,
   listComments,
-  createComment
+  createComment,
+  isPostLikedByUser,
+  togglePostLike
 };
