@@ -81,12 +81,29 @@ async function initDatabase() {
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       post_id BIGINT NOT NULL,
       user_id BIGINT NOT NULL,
+      parent_id BIGINT NULL,
       content TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  const [parentIdColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'comments'
+       AND COLUMN_NAME = 'parent_id'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!parentIdColumn.length) {
+    await pool.query('ALTER TABLE comments ADD COLUMN parent_id BIGINT NULL AFTER user_id');
+    await pool.query('ALTER TABLE comments ADD CONSTRAINT fk_comments_parent FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE');
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS post_likes (
