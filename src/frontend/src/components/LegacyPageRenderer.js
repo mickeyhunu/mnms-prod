@@ -17,10 +17,16 @@ const LINK_MAP = {
   'live.html': '/live'
 };
 
+function mapLegacyHtmlPath(rawPath) {
+  const normalizedPath = rawPath.replace(/^\.\//, '');
+  const [file, suffix = ''] = normalizedPath.split(/(?=[?#])/);
+  const mapped = LINK_MAP[file.toLowerCase()] || `/${file.replace(/\.html$/i, '')}`;
+  return `${mapped}${suffix}`;
+}
+
 function normalizeTemplateLinks(template) {
-  return template.replace(/href="([^\"]+\.html)"/gi, (_, file) => {
-    const mapped = LINK_MAP[file.toLowerCase()] || `/${file.replace(/\.html$/i, '')}`;
-    return `href="${mapped}"`;
+  return template.replace(/href=(['"])([^'"]+\.html(?:[?#][^'"]*)?)\1/gi, (_, quote, fileWithSuffix) => {
+    return `href=${quote}${mapLegacyHtmlPath(fileWithSuffix)}${quote}`;
   });
 }
 

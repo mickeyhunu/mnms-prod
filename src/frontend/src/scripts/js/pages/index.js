@@ -81,7 +81,7 @@ function renderPostList(posts, container, noticeArea) {
     noticeArea.innerHTML = notices
         .map((post) => `
             <div class="notice-item">
-                <a href="post-detail.html?id=${post.id}">
+                <a href="/post-detail?id=${post.id}">
                     <span class="badge">공지</span>
                     <span>${sanitizeHTML(post.title || '제목 없음')}</span>
                 </a>
@@ -132,7 +132,7 @@ function createArticleItem(post) {
 
     return `
         <li class="article-item">
-            <a class="article-main" href="post-detail.html?id=${post.id}">
+            <a class="article-main" href="/post-detail?id=${post.id}">
                 <div class="article-title-row">
                     <span class="article-inline-icon" aria-hidden="true">💬</span>
                     <h3 class="article-title">${sanitizeHTML(post.title || '제목 없음')}</h3>

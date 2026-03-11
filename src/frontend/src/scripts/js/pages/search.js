@@ -100,7 +100,7 @@ function createSearchPostCard(post) {
             <div class="post-header">
                 <div class="post-title-container">
                     <h3 class="post-title">
-                        <a href="post-detail.html?id=${post.id}">${highlightedTitle}</a>
+                        <a href="/post-detail?id=${post.id}">${highlightedTitle}</a>
                     </h3>
                     ${isAdminPost}
                 </div>

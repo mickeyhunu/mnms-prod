@@ -161,7 +161,7 @@ function createImagePreview(imageUrls) {
 }
 
 function goToPost(postId) {
-    window.location.href = `post-detail.html?id=${postId}`;
+    window.location.href = `/post-detail?id=${postId}`;
 }
 
 async function removeBookmark(postId, event) {
