@@ -27,7 +27,7 @@ function normalizeTemplateLinks(template) {
 function toPublicAssetPath(assetPath) {
   if (!assetPath) return assetPath;
   if (assetPath.startsWith('http') || assetPath.startsWith('/')) return assetPath;
-  return `/src/static/${assetPath.replace(/^\.\//, '')}`;
+  return `/src/${assetPath.replace(/^\.\//, '')}`;
 }
 
 export default {
