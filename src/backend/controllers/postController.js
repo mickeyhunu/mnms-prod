@@ -39,8 +39,12 @@ async function getPost(req, res, next) {
 
     const post = await postModel.findPostById(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
+
+    await postModel.incrementPostViewCount(postId);
+
+    const postDetail = await postModel.findPostDetailById(postId);
     const comments = await postModel.listComments(postId);
-    res.json({ ...post, comments });
+    res.json({ ...postDetail, comments });
   } catch (error) {
     next(error);
   }
