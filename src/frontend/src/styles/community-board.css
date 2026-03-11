@@ -156,8 +156,8 @@
 }
 
 .home-service-wrap {
-    max-width: 460px;
-    padding-top: 12px;
+    max-width: 100px;
+    padding-top: 24px;
 }
 
 
@@ -177,7 +177,7 @@
     min-height: 108px;
     justify-self: center;
     border-radius: 16px;
-    border: 1px solid #dcc5ee;
+    border: 2px solid #dcc5ee;
     text-decoration: none;
     background: #ffffff;
 }
