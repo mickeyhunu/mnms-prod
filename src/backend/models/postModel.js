@@ -1,3 +1,6 @@
+/**
+ * 파일 역할: postModel 도메인 데이터의 DB 조회/저장 쿼리를 담당하는 모델 파일.
+ */
 const { getPool } = require('../config/database');
 
 async function listPosts(page = 0, size = 10) {

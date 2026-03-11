@@ -1,3 +1,6 @@
+/**
+ * 파일 역할: 기존 스크립트 기반 프론트엔드의 앱 초기 실행 흐름을 제어하는 파일.
+ */
 document.addEventListener('DOMContentLoaded', function() {
     initApp();
 });

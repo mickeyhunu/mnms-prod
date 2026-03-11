@@ -1,3 +1,4 @@
+/* 파일 역할: pages 화면 스타일(레이아웃/컴포넌트/반응형 등)을 정의하는 스타일시트 파일. */
 .my-page-tabs {
     display: flex;
     border-bottom: 1px solid #e0e0e0;

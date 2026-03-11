@@ -1,3 +1,6 @@
+/**
+ * 파일 역할: notifications에서 사용하는 공통 보조 함수/상수를 제공하는 유틸리티 파일.
+ */
 class NotificationSettings {
     static getSettings() {
         const settings = localStorage.getItem('notificationSettings');

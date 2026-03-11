@@ -1,3 +1,6 @@
+/**
+ * 파일 역할: authMiddleware 요청 전처리/인증 검증을 수행하는 미들웨어 파일.
+ */
 const { findUserByToken } = require('../models/sessionModel');
 
 async function authMiddleware(req, res, next) {

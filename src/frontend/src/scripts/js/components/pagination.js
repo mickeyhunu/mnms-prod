@@ -1,3 +1,6 @@
+/**
+ * 파일 역할: pagination UI 상호작용을 담당하는 재사용 컴포넌트 스크립트 파일.
+ */
 function createPagination(currentPage, totalPages, onPageChange, containerSelector) {
     const container = document.querySelector(containerSelector);
     if (!container || totalPages <= 1) {
