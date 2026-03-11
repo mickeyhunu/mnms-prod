@@ -10,6 +10,83 @@
     margin-bottom: 16px;
 }
 
+.post-detail-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    height: 56px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #171a1f;
+    color: #f8fafc;
+}
+
+.post-header-left,
+.post-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.post-board-name {
+    font-size: 16px;
+    font-weight: 600;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.icon-btn {
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 22px;
+    line-height: 1;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.post-more-wrapper {
+    position: relative;
+}
+
+.post-more-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 120px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+}
+
+.post-more-menu .menu-item {
+    width: 100%;
+    border: none;
+    text-align: left;
+    padding: 10px 12px;
+    background: #fff;
+    cursor: pointer;
+    color: #1f2937;
+}
+
+.post-more-menu .menu-item:hover {
+    background: #f3f4f6;
+}
+
+.post-more-menu .menu-item.danger {
+    color: #dc2626;
+}
+
 .bbs-view .top {
     padding: 18px 20px 14px;
     border-bottom: 1px solid #eef1f4;
@@ -28,11 +105,6 @@
     font-size: 28px;
     line-height: 1.35;
     color: #20242a;
-}
-
-.post-owner-actions {
-    display: flex;
-    gap: 6px;
 }
 
 .bbs-view .grid {
