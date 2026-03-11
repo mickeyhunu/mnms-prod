@@ -574,6 +574,7 @@ function createCommentItem(comment, depth = 0) {
     const hasActionMenu = isAuthor || canGuestEdit || isOtherUser;
     const isCommentLiked = likedCommentIds.has(comment.id);
     const isSecretComment = Boolean(comment.isSecret);
+    const replyPrefix = depth > 0 ? '<span class="comment-reply-prefix" aria-label="답글">ㄴ </span>' : '';
     
     console.log(`댓글 ${comment.id}: user=${currentUser?.id}, author=${comment.authorId}, isAuthor=${isAuthor}, isAdmin=${isAdminComment}`);
     
@@ -583,7 +584,7 @@ function createCommentItem(comment, depth = 0) {
             <div class="comment-body">
                 <div class="comment-meta">
                     <div class="comment-meta-main">
-                        <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${sanitizeHTML(comment.authorNickname)}</span>
+                        ${replyPrefix}<span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${sanitizeHTML(comment.authorNickname)}</span>
                         ${isSecretComment ? '<span style="margin-left:6px;font-size:12px;color:#7a5;">🔒 비밀댓글</span>' : ''}
                     </div>
                     <div class="comment-meta-actions">
@@ -929,25 +930,7 @@ async function handleCreateComment(e) {
 
 async function handleEditPost(e) {
     e.preventDefault();
-    const title = prompt('수정할 제목을 입력하세요.', document.getElementById('post-title')?.textContent || '');
-    if (!title) return;
-    const content = prompt('수정할 내용을 입력하세요.', (document.getElementById('post-content')?.textContent || '').trim());
-    if (!content) return;
-
-    try {
-        const payload = { title, content };
-        if (!Auth.isAuthenticated()) {
-            const guestPassword = prompt('비밀번호를 입력하세요.');
-            if (!guestPassword) return;
-            payload.guestPassword = guestPassword;
-        }
-        await APIClient.put(`/posts/${postId}`, payload);
-        showNotification('게시글이 수정되었습니다.', 'success');
-        loadPost();
-    } catch (error) {
-        console.error('게시글 수정 실패:', error);
-        Auth.handleAuthError(error);
-    }
+    window.location.href = `/create-post?mode=edit&postId=${postId}`;
 }
 
 async function handleDeletePost() {

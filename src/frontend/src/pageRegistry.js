@@ -341,7 +341,7 @@ const pageRegistry = {
 
                     <div class="form-actions" style="justify-content: space-between;">
                         <a href="index.html" class="btn btn-secondary">취소</a>
-                        <button type="submit" class="btn btn-primary" id="submit-btn">작성하기</button>
+                        <button type="submit" class="btn btn-primary" id="submit-btn">등록</button>
                     </div>
                 </form>
             </div>

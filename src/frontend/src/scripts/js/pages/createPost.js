@@ -2,12 +2,37 @@
  * 파일 역할: createPost 페이지의 이벤트/데이터 흐름을 초기화하는 페이지 스크립트 파일.
  */
 let isSubmitting = false;
+let isEditMode = false;
+let editingPostId = null;
+let existingImageUrl = null;
+
+function getModeFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode');
+    const postId = params.get('postId') || params.get('id');
+
+    isEditMode = mode === 'edit' && Boolean(postId);
+    editingPostId = isEditMode ? postId : null;
+}
 
 function initCreatePost() {
+    getModeFromQuery();
     setupEventListeners();
     toggleGuestPasswordField();
     setupImageUpload();
+    setupModeUI();
     validateForm();
+
+    if (isEditMode) {
+        loadPostForEdit();
+    }
+}
+
+function setupModeUI() {
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) {
+        submitBtn.textContent = '등록';
+    }
 }
 
 function toggleGuestPasswordField() {
@@ -93,6 +118,18 @@ function displayImagePreview(files) {
     });
 }
 
+function displayExistingImagePreview(imageUrl) {
+    const previewContainer = document.getElementById('image-preview');
+    if (!previewContainer || !imageUrl) return;
+
+    previewContainer.innerHTML = `
+        <div class="image-preview-item" style="position: relative; display:inline-block; margin:5px;">
+            <img src="${sanitizeHTML(imageUrl)}" alt="기존 이미지" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid #ddd;">
+            <small style="display:block;text-align:center;margin-top:4px;color:#666;">기존 이미지</small>
+        </div>
+    `;
+}
+
 function removeImage(index) {
     const imageInput = document.getElementById('image-files');
     if (!imageInput || !imageInput.files) return;
@@ -153,6 +190,32 @@ function readFirstImageAsDataUrl() {
     });
 }
 
+async function loadPostForEdit() {
+    try {
+        const response = await APIClient.get(`/posts/${editingPostId}`);
+        const post = response.post || response;
+
+        const titleInput = document.getElementById('title');
+        const contentInput = document.getElementById('content');
+
+        if (titleInput) titleInput.value = post.title || '';
+        if (contentInput) contentInput.value = post.content || '';
+
+        existingImageUrl = post.imageUrl || (post.images && post.images[0]) || null;
+        if (existingImageUrl) {
+            displayExistingImagePreview(existingImageUrl);
+        }
+
+        updateCharCount('title', 255);
+        updateCharCount('content', 1000);
+        validateForm();
+    } catch (error) {
+        console.error('수정할 게시글 로드 실패:', error);
+        alert('수정할 게시글을 불러오지 못했습니다.');
+        window.location.href = '/';
+    }
+}
+
 async function handleSubmit(event) {
     event.preventDefault();
 
@@ -183,20 +246,26 @@ async function handleSubmit(event) {
     isSubmitting = true;
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = '작성 중...';
+        submitBtn.textContent = '등록 중...';
     }
 
     try {
-        const imageUrl = await readFirstImageAsDataUrl();
-        await APIClient.post('/posts', {
+        const newImageUrl = await readFirstImageAsDataUrl();
+        const payload = {
             title: titleValue,
             content: contentValue,
-            imageUrl,
+            imageUrl: newImageUrl || existingImageUrl,
             guestPassword: Auth.isAuthenticated() ? undefined : guestPassword
-        });
+        };
 
-        alert('글이 작성되었습니다!');
-        window.location.href = '/';
+        if (isEditMode) {
+            await APIClient.put(`/posts/${editingPostId}`, payload);
+        } else {
+            await APIClient.post('/posts', payload);
+        }
+
+        alert(isEditMode ? '글이 수정되었습니다!' : '글이 작성되었습니다!');
+        window.location.href = isEditMode ? `/post-detail?id=${editingPostId}` : '/';
     } catch (error) {
         console.error('글 작성 에러:', error);
         if (error.status === 401) {
@@ -210,7 +279,7 @@ async function handleSubmit(event) {
         isSubmitting = false;
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.textContent = '작성하기';
+            submitBtn.textContent = '등록';
         }
         validateForm();
     }
