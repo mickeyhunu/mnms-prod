@@ -784,7 +784,7 @@ const pageRegistry = {
 
                 <div class="post-actions">
                     <button class="like-btn" id="like-btn">
-                        <span id="like-icon">❤️</span>
+                        <span id="like-icon">🤍</span>
                         <span id="like-count">0</span>
                     </button>
                 </div>
