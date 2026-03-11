@@ -410,6 +410,13 @@
     margin-top: 8px;
 }
 
+.reply-form-actions {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
 .reply-form textarea,
 #comment-content {
     width: 100%;

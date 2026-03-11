@@ -589,8 +589,8 @@ function createCommentItem(comment, depth = 0) {
                     <textarea id="reply-content-${comment.id}" placeholder="답글을 작성하세요..." required rows="3"></textarea>
                 </div>
                 <div class="reply-form-actions">
+                    <button type="submit" class="btn btn-sm btn-primary">등록</button>
                     <button type="button" class="btn btn-sm btn-secondary" onclick="hideReplyForm(${comment.id})">취소</button>
-                    <button type="submit" class="btn btn-sm btn-primary">답글 작성</button>
                 </div>
             </form>
         </div>
