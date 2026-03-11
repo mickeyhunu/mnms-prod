@@ -257,9 +257,17 @@
     font-size: 18px;
     display: inline-flex;
     align-items: center;
+    justify-content: flex-start;
     gap: 6px;
     color: #55606d;
     cursor: pointer;
+}
+
+#like-icon {
+    width: 1.1em;
+    display: inline-flex;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .like-btn.liked {
