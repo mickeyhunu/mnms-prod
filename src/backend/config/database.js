@@ -83,6 +83,7 @@ async function initDatabase() {
       user_id BIGINT NOT NULL,
       parent_id BIGINT NULL,
       is_secret TINYINT(1) NOT NULL DEFAULT 0,
+      is_deleted TINYINT(1) NOT NULL DEFAULT 0,
       content TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
@@ -118,6 +119,20 @@ async function initDatabase() {
 
   if (!isSecretColumn.length) {
     await pool.query('ALTER TABLE comments ADD COLUMN is_secret TINYINT(1) NOT NULL DEFAULT 0 AFTER parent_id');
+  }
+
+  const [isDeletedColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'comments'
+       AND COLUMN_NAME = 'is_deleted'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!isDeletedColumn.length) {
+    await pool.query('ALTER TABLE comments ADD COLUMN is_deleted TINYINT(1) NOT NULL DEFAULT 0 AFTER is_secret');
   }
 
   await pool.query(`

@@ -68,7 +68,7 @@ async function deletePost(id) {
 async function listComments(postId) {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.parent_id AS parentId, c.is_secret AS isSecret, c.content, c.created_at AS createdAt,
+    `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.parent_id AS parentId, c.is_secret AS isSecret, c.is_deleted AS isDeleted, c.content, c.created_at AS createdAt,
             COALESCE(u.nickname, '비회원') AS authorNickname
      FROM comments c
      LEFT JOIN users u ON u.id = c.user_id
@@ -101,7 +101,7 @@ async function updateComment(id, content) {
 
 async function deleteComment(id) {
   const pool = getPool();
-  await pool.query('DELETE FROM comments WHERE id = ?', [id]);
+  await pool.query("UPDATE comments SET is_deleted = 1, content = '삭제된 댓글입니다.' WHERE id = ?", [id]);
 }
 
 async function isPostLikedByUser(postId, userId) {
