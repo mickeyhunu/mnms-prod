@@ -242,6 +242,28 @@
     padding: 0;
 }
 
+
+.comment-meta-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.comment-action-icon-btn {
+    border: none;
+    background: transparent;
+    color: #8a94a3;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px 4px;
+}
+
+.comment-action-icon-btn.comment-like-toggle.liked {
+    color: #ff6b81;
+}
+
 .comment-content {
     font-size: 15px;
     color: #2b3440;

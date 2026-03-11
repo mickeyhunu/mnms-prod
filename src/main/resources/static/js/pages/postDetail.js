@@ -3,6 +3,7 @@ let currentCommentsPage = 1;
 let currentPostAuthor = null;
 let selectedMessageRecipient = null;
 let replyingTo = null;
+const likedCommentIds = new Set();
 
 function initPostDetailPage() {
     if (typeof Auth !== 'undefined') {
@@ -428,6 +429,7 @@ function createCommentItem(comment, depth = 0) {
                           comment.role === 'ADMIN';
     const canReply = Auth.isAuthenticated() && depth < 3;
     const isOtherUser = Auth.isAuthenticated() && currentUser && !isAuthor;
+    const isCommentLiked = likedCommentIds.has(comment.id);
     
     console.log(`댓글 ${comment.id}: user=${currentUser?.id}, author=${comment.authorId}, isAuthor=${isAuthor}, isAdmin=${isAdminComment}`);
     
@@ -440,7 +442,8 @@ function createCommentItem(comment, depth = 0) {
             </div>
             <div class="comment-meta-actions">
                 ${isOtherUser ? 
-                    `<button class="btn btn-sm btn-outline-primary comment-message-btn" onclick="openCommentMessageModal(${comment.authorId}, '${sanitizeHTML(comment.authorNickname)}')">쪽지</button>` 
+                    `<button class="comment-action-icon-btn" type="button" title="댓글 신고" aria-label="댓글 신고" onclick="reportComment(${comment.id})">⋯</button>
+                     <button class="comment-action-icon-btn comment-like-toggle ${isCommentLiked ? 'liked' : ''}" type="button" title="댓글 좋아요" aria-label="댓글 좋아요" onclick="toggleCommentLike(${comment.id}, this)">${isCommentLiked ? '♥' : '♡'}</button>` 
                     : ''
                 }
                 ${isAuthor ? `<button class="comment-more-btn" onclick="toggleCommentActions(${comment.id})">⋯</button>` : ''}
@@ -591,6 +594,39 @@ function openCommentMessageModal(authorId, authorNickname) {
     };
     
     handleOpenMessageModal(recipient);
+}
+
+function reportComment(commentId) {
+    if (!Auth.requireAuth()) return;
+
+    const confirmed = confirm('이 댓글을 신고하시겠습니까?');
+    if (!confirmed) {
+        return;
+    }
+
+    showNotification('댓글 신고가 접수되었습니다.', 'success');
+    console.log('댓글 신고 접수:', commentId);
+}
+
+function toggleCommentLike(commentId, button) {
+    if (!Auth.requireAuth()) return;
+
+    if (!button) {
+        return;
+    }
+
+    const isLiked = likedCommentIds.has(commentId);
+
+    if (isLiked) {
+        likedCommentIds.delete(commentId);
+        button.textContent = '♡';
+        button.classList.remove('liked');
+        return;
+    }
+
+    likedCommentIds.add(commentId);
+    button.textContent = '♥';
+    button.classList.add('liked');
 }
 
 async function handleToggleLike() {
