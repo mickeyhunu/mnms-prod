@@ -544,7 +544,7 @@
 }
 
 .has-bottom-nav {
-    padding-bottom: 84px;
+    padding-bottom: 74px;
 }
 
 .bottom-nav-footer {
@@ -553,8 +553,8 @@
     left: 0;
     width: 100%;
     z-index: 110;
-    background: #131217;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: #ffffff;
+    border-top: 1px solid #e7e7e7;
 }
 
 .bottom-nav {
@@ -566,7 +566,7 @@
     list-style: none;
     display: flex;
     justify-content: space-between;
-    padding: 0 8px;
+    padding: 0;
 }
 
 .bottom-nav-item {
@@ -577,26 +577,37 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 4px;
-    padding: 10px 4px;
-    color: #a5a5a5;
-    font-size: 12px;
+    padding: 8px 2px 10px;
+    min-height: 68px;
+    color: #8e8e8e;
+    font-size: 11px;
     font-weight: 500;
     text-decoration: none;
 }
 
 .bottom-nav-link:hover {
-    color: #ffffff;
+    color: #1f1f1f;
     text-decoration: none;
 }
 
 .bottom-nav-link.is-active {
-    color: #ffffff;
+    color: #2d8cff;
 }
 
 .bottom-nav-icon {
-    font-size: 18px;
-    line-height: 1;
+    width: 23px;
+    height: 23px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bottom-nav-icon svg {
+    width: 21px;
+    height: 21px;
+    display: block;
 }
 
 .bottom-nav-label {
