@@ -627,16 +627,6 @@ function showReplyForm(parentId, parentAuthor) {
         textarea.focus();
         replyingTo = { id: parentId, author: parentAuthor };
         
-        const replyIndicator = document.createElement('div');
-        replyIndicator.className = 'reply-indicator';
-        replyIndicator.innerHTML = `
-            <small class="text-muted">
-                ${parentAuthor}님에게 답글 작성 중
-                <button type="button" onclick="hideReplyForm(${parentId})" class="btn-close-small">×</button>
-            </small>
-        `;
-        
-        replyForm.insertBefore(replyIndicator, replyForm.firstChild);
     }
 }
 
