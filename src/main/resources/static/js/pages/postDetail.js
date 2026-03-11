@@ -436,13 +436,12 @@ function createCommentItem(comment, depth = 0) {
     div.innerHTML = `
         <div class="comment-meta">
             <div class="comment-meta-main">
+                <span class="comment-avatar" aria-hidden="true"></span>
                 <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${sanitizeHTML(comment.authorNickname)}</span>
-                <span class="comment-date">${formatDateTime(comment.createdAt)}</span>
-                ${canReply ? `<button class="comment-reply-link" onclick="showReplyForm(${comment.id}, '${sanitizeHTML(comment.authorNickname)}')">답글쓰기</button>` : ''}
             </div>
             <div class="comment-meta-actions">
                 ${isOtherUser ? 
-                    `<button class="comment-action-icon-btn" type="button" title="댓글 신고" aria-label="댓글 신고" onclick="reportComment(${comment.id})">⋯</button>
+                    `<button class="comment-action-icon-btn comment-report-btn" type="button" title="댓글 신고" aria-label="댓글 신고" onclick="reportComment(${comment.id})">신고</button>
                      <button class="comment-action-icon-btn comment-like-toggle ${isCommentLiked ? 'liked' : ''}" type="button" title="댓글 좋아요" aria-label="댓글 좋아요" onclick="toggleCommentLike(${comment.id}, this)">${isCommentLiked ? '♥' : '♡'}</button>` 
                     : ''
                 }
@@ -450,6 +449,10 @@ function createCommentItem(comment, depth = 0) {
             </div>
         </div>
         <div class="comment-content ${isAdminComment ? 'admin-comment-content' : ''}">${sanitizeHTML(comment.content).replace(/\n/g, '<br>')}</div>
+        <div class="comment-footer">
+            <span class="comment-date">${formatDateTime(comment.createdAt)}</span>
+            ${canReply ? `<button class="comment-reply-link" onclick="showReplyForm(${comment.id}, '${sanitizeHTML(comment.authorNickname)}')">답글쓰기</button>` : ''}
+        </div>
         ${isAuthor ? `
             <div class="comment-actions hidden" id="comment-actions-${comment.id}">
                 <button class="btn btn-sm btn-warning" onclick="editComment(${comment.id})">수정</button>
