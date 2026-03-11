@@ -933,7 +933,7 @@ async function handleCreateComment(e) {
 
 async function handleEditPost(e) {
     e.preventDefault();
-    window.location.href = `/create-post?mode=edit&postId=${postId}`;
+    window.location.href = `/create?mode=edit&postId=${postId}`;
 }
 
 async function handleDeletePost() {
