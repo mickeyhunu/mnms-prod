@@ -1,3 +1,6 @@
+/**
+ * 파일 역할: postAPI 관련 서버 API 호출 로직을 캡슐화한 클라이언트 API 모듈.
+ */
 const PostAPI = {
     async getPosts(params = {}) {
         try {

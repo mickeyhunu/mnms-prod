@@ -1,3 +1,6 @@
+/**
+ * 파일 역할: userModel 도메인 데이터의 DB 조회/저장 쿼리를 담당하는 모델 파일.
+ */
 const { getPool } = require('../config/database');
 
 async function createUser({ email, password, nickname }) {

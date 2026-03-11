@@ -1,3 +1,6 @@
+/**
+ * 파일 역할: URL 경로를 페이지 렌더러와 연결하는 클라이언트 라우터 파일.
+ */
 import { createRouter, createWebHistory } from 'vue-router';
 import PageView from '../views/PageView.js';
 

@@ -1,3 +1,6 @@
+/**
+ * 파일 역할: 페이지 키와 실제 페이지 렌더링 모듈을 매핑하는 레지스트리 파일.
+ */
 // Auto-generated legacy templates (migrated from former static/*.html)
 const pageRegistry = {
   'admin': {

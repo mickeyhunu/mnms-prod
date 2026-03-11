@@ -1,3 +1,6 @@
+/**
+ * 파일 역할: postDetail 페이지의 이벤트/데이터 흐름을 초기화하는 페이지 스크립트 파일.
+ */
 let postId = null;
 let currentCommentsPage = 1;
 let currentPostAuthor = null;

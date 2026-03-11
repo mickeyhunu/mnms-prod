@@ -1,3 +1,6 @@
+/**
+ * 파일 역할: helpers에서 사용하는 공통 보조 함수/상수를 제공하는 유틸리티 파일.
+ */
 function showElement(element) {
    if (element) {
        element.classList.remove('hidden');

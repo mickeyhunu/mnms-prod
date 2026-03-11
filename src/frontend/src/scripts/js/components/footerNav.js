@@ -1,3 +1,6 @@
+/**
+ * 파일 역할: footerNav UI 상호작용을 담당하는 재사용 컴포넌트 스크립트 파일.
+ */
 (function () {
     function createIcon(type) {
         const icons = {
