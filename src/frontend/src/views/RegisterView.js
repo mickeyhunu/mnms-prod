@@ -1,5 +1,5 @@
-import { ref } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js';
-import { useRouter } from 'https://unpkg.com/vue-router@4/dist/vue-router.esm-browser.prod.js';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { register } from '../services/authService.js';
 
 export default {
