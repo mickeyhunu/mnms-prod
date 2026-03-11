@@ -1,15 +1,23 @@
 let isSubmitting = false;
 
 function initCreatePost() {
-    if (!Auth.isAuthenticated()) {
-        alert('로그인이 필요합니다.');
-        window.location.href = '/login';
-        return;
-    }
-
     setupEventListeners();
+    toggleGuestPasswordField();
     setupImageUpload();
     validateForm();
+}
+
+function toggleGuestPasswordField() {
+    const group = document.getElementById('guest-password-group');
+    const input = document.getElementById('guest-password');
+    if (!group || !input) return;
+
+    if (Auth.isAuthenticated()) {
+        group.classList.add('hidden');
+        input.value = '';
+    } else {
+        group.classList.remove('hidden');
+    }
 }
 
 function setupEventListeners() {
@@ -33,6 +41,11 @@ function setupEventListeners() {
             updateCharCount('content', 1000);
             validateForm();
         });
+    }
+
+    const guestPasswordInput = document.getElementById('guest-password');
+    if (guestPasswordInput) {
+        guestPasswordInput.addEventListener('input', validateForm);
     }
 }
 
@@ -105,13 +118,15 @@ function validateForm() {
     const title = document.getElementById('title');
     const content = document.getElementById('content');
     const submitBtn = document.getElementById('submit-btn');
+    const guestPasswordInput = document.getElementById('guest-password');
 
     if (!title || !content || !submitBtn) return;
 
     const isValid = title.value.trim().length > 0 &&
         content.value.trim().length >= 10 &&
         title.value.length <= 255 &&
-        content.value.length <= 1000;
+        content.value.length <= 1000 &&
+        (Auth.isAuthenticated() || (guestPasswordInput && guestPasswordInput.value.trim().length >= 4));
 
     submitBtn.disabled = !isValid || isSubmitting;
 }
@@ -143,9 +158,17 @@ async function handleSubmit(event) {
     const titleValue = document.getElementById('title')?.value.trim() || '';
     const contentValue = document.getElementById('content')?.value.trim() || '';
     const submitBtn = document.getElementById('submit-btn');
+    const guestPasswordInput = document.getElementById('guest-password');
+
+    const guestPassword = guestPasswordInput?.value?.trim() || '';
 
     if (!titleValue || !contentValue) {
         alert('제목과 내용을 모두 입력해주세요.');
+        return;
+    }
+
+    if (!Auth.isAuthenticated() && guestPassword.length < 4) {
+        alert('비회원은 4자 이상의 비밀번호를 입력해주세요.');
         return;
     }
 
@@ -165,7 +188,8 @@ async function handleSubmit(event) {
         await APIClient.post('/posts', {
             title: titleValue,
             content: contentValue,
-            imageUrl
+            imageUrl,
+            guestPassword: Auth.isAuthenticated() ? undefined : guestPassword
         });
 
         alert('글이 작성되었습니다!');
