@@ -45,7 +45,7 @@ function createBoardRow(post, isNotice = false, index = 0) {
             <td class="col-num">${numberLabel}</td>
             <td class="col-title">
                 ${noticeBadge}${hotBadge}
-                <a href="post-detail.html?id=${post.id}">${sanitizeHTML(post.title || '제목 없음')}</a>
+                <a href="/post-detail?id=${post.id}">${sanitizeHTML(post.title || '제목 없음')}</a>
                 ${post.commentCount > 0 ? `<small>[${post.commentCount}]</small>` : ''}
             </td>
             <td class="col-author">${sanitizeHTML(post.authorNickname || `작성자 #${post.authorId || ''}`)}</td>
@@ -71,7 +71,7 @@ function createPostCard(post) {
             <div class="post-header">
                 <div class="post-header-left">
                     <h3 class="post-title">
-                        <a href="post-detail.html?id=${post.id}" onclick="handlePostClick(${post.id}); return false;">${titlePrefix}${sanitizeHTML(post.title)}</a>
+                        <a href="/post-detail?id=${post.id}" onclick="handlePostClick(${post.id}); return false;">${titlePrefix}${sanitizeHTML(post.title)}</a>
                     </h3>
                     <div class="post-meta">
                         <span class="post-author">${sanitizeHTML(post.authorNickname || '작성자 #' + post.authorId)}</span>
@@ -101,7 +101,7 @@ function createPostCard(post) {
 
 function handlePostClick(postId) {
     console.log("게시글 클릭:", postId);
-    window.location.href = `post-detail.html?id=${postId}`;
+    window.location.href = `/post-detail?id=${postId}`;
 }
 
 function createImagePreview(imageUrls) {

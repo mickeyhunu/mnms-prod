@@ -70,7 +70,7 @@ async function loadPosts() {
             tbody.innerHTML = posts.map(post => `
                 <tr>
                     <td>${post.id}</td>
-                    <td><a href="post-detail.html?id=${post.id}" target="_blank">${sanitizeHTML(post.title || '')}</a></td>
+                    <td><a href="/post-detail?id=${post.id}" target="_blank">${sanitizeHTML(post.title || '')}</a></td>
                     <td>${sanitizeHTML(post.authorNickname || `사용자#${post.user_id || post.userId}`)}</td>
                     <td>${formatDate(post.createdAt || post.created_at)}</td>
                     <td>${post.likeCount || 0}</td>
@@ -101,7 +101,7 @@ async function loadComments() {
                 <tr>
                     <td>${comment.id}</td>
                     <td>${sanitizeHTML((comment.content || '').slice(0, 100))}</td>
-                    <td><a href="post-detail.html?id=${comment.postId || comment.post_id}" target="_blank">게시글 보기</a></td>
+                    <td><a href="/post-detail?id=${comment.postId || comment.post_id}" target="_blank">게시글 보기</a></td>
                     <td>${sanitizeHTML(comment.authorNickname || `사용자#${comment.user_id || comment.userId}`)}</td>
                     <td>${formatDate(comment.createdAt || comment.created_at)}</td>
                     <td><button class="btn btn-sm btn-danger" onclick="openDeleteModal('comment', ${comment.id})">삭제</button></td>
