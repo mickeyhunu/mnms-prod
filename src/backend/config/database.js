@@ -82,6 +82,7 @@ async function initDatabase() {
       post_id BIGINT NOT NULL,
       user_id BIGINT NOT NULL,
       parent_id BIGINT NULL,
+      is_secret TINYINT(1) NOT NULL DEFAULT 0,
       content TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
@@ -103,6 +104,20 @@ async function initDatabase() {
   if (!parentIdColumn.length) {
     await pool.query('ALTER TABLE comments ADD COLUMN parent_id BIGINT NULL AFTER user_id');
     await pool.query('ALTER TABLE comments ADD CONSTRAINT fk_comments_parent FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE');
+  }
+
+  const [isSecretColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'comments'
+       AND COLUMN_NAME = 'is_secret'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!isSecretColumn.length) {
+    await pool.query('ALTER TABLE comments ADD COLUMN is_secret TINYINT(1) NOT NULL DEFAULT 0 AFTER parent_id');
   }
 
   await pool.query(`

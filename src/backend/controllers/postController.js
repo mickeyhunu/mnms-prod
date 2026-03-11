@@ -22,6 +22,38 @@ function parseId(value) {
   return Number.isInteger(id) && id > 0 ? id : null;
 }
 
+
+function canViewSecretComment(comment, post, currentUser) {
+  if (!comment.isSecret) {
+    return true;
+  }
+
+  if (!currentUser) {
+    return false;
+  }
+
+  return Number(currentUser.id) === Number(comment.userId)
+    || Number(currentUser.id) === Number(post.user_id)
+    || currentUser.role === 'ADMIN';
+}
+
+function sanitizeCommentForViewer(comment, post, currentUser) {
+  const normalized = {
+    ...comment,
+    isSecret: Boolean(comment.isSecret)
+  };
+
+  if (canViewSecretComment(normalized, post, currentUser)) {
+    return normalized;
+  }
+
+  return {
+    ...normalized,
+    content: '비밀댓글입니다.',
+    authorNickname: '비공개'
+  };
+}
+
 async function listPosts(req, res, next) {
   try {
     const { page, size } = parsePagination(req.query.page, req.query.size);
@@ -44,12 +76,13 @@ async function getPost(req, res, next) {
 
     const postDetail = await postModel.findPostDetailById(postId);
     const comments = await postModel.listComments(postId);
+    const visibleComments = comments.map((comment) => sanitizeCommentForViewer(comment, post, req.user));
 
     const isLiked = req.user
       ? await postModel.isPostLikedByUser(postId, req.user.id)
       : false;
 
-    res.json({ ...postDetail, isLiked, comments });
+    res.json({ ...postDetail, isLiked, comments: visibleComments });
   } catch (error) {
     next(error);
   }
@@ -137,7 +170,8 @@ async function listComments(req, res, next) {
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
 
     const comments = await postModel.listComments(postId);
-    res.json(comments);
+    const visibleComments = comments.map((comment) => sanitizeCommentForViewer(comment, post, req.user));
+    res.json(visibleComments);
   } catch (error) {
     next(error);
   }
@@ -153,7 +187,7 @@ async function createComment(req, res, next) {
     const post = await postModel.findPostById(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
 
-    const { content, parentId: rawParentId } = req.body;
+    const { content, parentId: rawParentId, isSecret } = req.body;
     if (!content) return res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
 
     const parentId = rawParentId == null ? null : parseId(rawParentId);
@@ -168,9 +202,16 @@ async function createComment(req, res, next) {
       }
     }
 
-    await postModel.createComment({ postId, userId: req.user.id, content, parentId });
+    await postModel.createComment({
+      postId,
+      userId: req.user.id,
+      content,
+      parentId,
+      isSecret: Boolean(isSecret)
+    });
     const comments = await postModel.listComments(postId);
-    res.status(201).json({ success: true, comments });
+    const visibleComments = comments.map((comment) => sanitizeCommentForViewer(comment, post, req.user));
+    res.status(201).json({ success: true, comments: visibleComments });
   } catch (error) {
     next(error);
   }
@@ -195,8 +236,10 @@ async function updateComment(req, res, next) {
     if (!content) return res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
 
     await postModel.updateComment(commentId, content);
+    const post = await postModel.findPostById(comment.post_id);
     const comments = await postModel.listComments(comment.post_id);
-    res.json({ success: true, comments });
+    const visibleComments = comments.map((item) => sanitizeCommentForViewer(item, post, req.user));
+    res.json({ success: true, comments: visibleComments });
   } catch (error) {
     next(error);
   }
@@ -217,8 +260,10 @@ async function deleteComment(req, res, next) {
     }
 
     await postModel.deleteComment(commentId);
+    const post = await postModel.findPostById(comment.post_id);
     const comments = await postModel.listComments(comment.post_id);
-    res.json({ success: true, comments });
+    const visibleComments = comments.map((item) => sanitizeCommentForViewer(item, post, req.user));
+    res.json({ success: true, comments: visibleComments });
   } catch (error) {
     next(error);
   }
