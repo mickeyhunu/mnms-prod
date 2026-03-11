@@ -1,7 +1,7 @@
 /**
  * 파일 역할: PageRenderer UI 조합 및 페이지 렌더링을 담당하는 프론트엔드 컴포넌트 파일.
  */
-import { computed, onBeforeUnmount, onMounted } from 'vue';
+import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { pageRegistry } from '../pageRegistry.js';
 
 const LINK_MAP = {
@@ -52,6 +52,11 @@ export default {
     const pageConfig = computed(() => pageRegistry[props.page] || { template: '<div>페이지를 찾을 수 없습니다.</div>', styles: [], scripts: [] });
     const content = computed(() => normalizeTemplateLinks(pageConfig.value.template || ''));
 
+    const clearInjectedNodes = () => {
+      injectedNodes.forEach((node) => node.remove());
+      injectedNodes.length = 0;
+    };
+
     const injectStyles = () => {
       (pageConfig.value.styles || []).forEach((href) => {
         const link = document.createElement('link');
@@ -78,13 +83,25 @@ export default {
       }
     };
 
-    onMounted(async () => {
+    const loadPageAssets = async () => {
+      clearInjectedNodes();
       injectStyles();
       await injectScripts();
+    };
+
+    onMounted(async () => {
+      await loadPageAssets();
     });
 
+    watch(
+      () => props.page,
+      async () => {
+        await loadPageAssets();
+      }
+    );
+
     onBeforeUnmount(() => {
-      injectedNodes.forEach((node) => node.remove());
+      clearInjectedNodes();
     });
 
     return { content };
