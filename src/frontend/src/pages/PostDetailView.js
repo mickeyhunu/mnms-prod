@@ -1,4 +1,4 @@
-import LegacyPageView from '../../legacy/LegacyPageView.js';
+import LegacyPageView from '../legacy/LegacyPageView.js';
 
 export default {
   components: { LegacyPageView },

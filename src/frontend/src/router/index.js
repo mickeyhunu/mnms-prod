@@ -1,17 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import HomeView from '../views/pages/HomeView.js';
-import LoginView from '../views/pages/LoginView.js';
-import RegisterView from '../views/pages/RegisterView.js';
-import CreatePostView from '../views/pages/CreatePostView.js';
-import PostDetailView from '../views/pages/PostDetailView.js';
-import BookmarksView from '../views/pages/BookmarksView.js';
-import CommunityView from '../views/pages/CommunityView.js';
-import MyPageView from '../views/pages/MyPageView.js';
-import EditPostView from '../views/pages/EditPostView.js';
-import AdminView from '../views/pages/AdminView.js';
-import FindAccountView from '../views/pages/FindAccountView.js';
-import BusinessInfoView from '../views/pages/BusinessInfoView.js';
-import LiveView from '../views/pages/LiveView.js';
+import HomeView from '../pages/HomeView.js';
+import LoginView from '../pages/LoginView.js';
+import RegisterView from '../pages/RegisterView.js';
+import CreatePostView from '../pages/CreatePostView.js';
+import PostDetailView from '../pages/PostDetailView.js';
+import BookmarksView from '../pages/BookmarksView.js';
+import CommunityView from '../pages/CommunityView.js';
+import MyPageView from '../pages/MyPageView.js';
+import EditPostView from '../pages/EditPostView.js';
+import AdminView from '../pages/AdminView.js';
+import FindAccountView from '../pages/FindAccountView.js';
+import BusinessInfoView from '../pages/BusinessInfoView.js';
+import LiveView from '../pages/LiveView.js';
 
 const routes = [
   { path: '/', component: HomeView },
