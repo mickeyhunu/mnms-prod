@@ -75,14 +75,14 @@ async function loadPosts(page = 0) {
 function renderPostList(posts, container, noticeArea) {
     if (!container) return;
 
-    const notices = posts.slice(0, 2);
-    const normalPosts = posts.slice(2);
+    const notices = posts.filter((post) => isNoticePost(post));
+    const normalPosts = posts.filter((post) => !isNoticePost(post));
 
     noticeArea.innerHTML = notices
         .map((post) => `
             <div class="notice-item">
                 <a href="post-detail.html?id=${post.id}">
-                    <span class="badge">필독</span>
+                    <span class="badge">공지</span>
                     <span>${sanitizeHTML(post.title || '제목 없음')}</span>
                 </a>
             </div>
@@ -94,10 +94,31 @@ function renderPostList(posts, container, noticeArea) {
         .join('');
 }
 
+function isNoticePost(post) {
+    const title = String(post?.title || '').toLowerCase();
+    const category = String(post?.category || post?.type || '').toLowerCase();
+    const authorRole = String(post?.authorRole || '').toUpperCase();
+
+    return Boolean(
+        post?.isAdminPost
+        || post?.adminPost
+        || authorRole === 'ADMIN'
+        || category.includes('공지')
+        || category.includes('필독')
+        || title.includes('[공지]')
+        || title.includes('[필독]')
+    );
+}
+
 function createArticleItem(post) {
     const createdAt = formatDate(post.createdAt);
     const commentCount = Number(post.commentCount || 0);
-    const likeCount = Number(post.likeCount || 0);
+    const viewCount = Number(post.viewCount || 0);
+    const authorName = sanitizeHTML(post.authorNickname || '익명');
+    const authorBadge = post.authorRole === 'ADMIN' ? '관리자' : authorName;
+    const categoryTag = post.category && !isNoticePost(post)
+        ? `<span class="article-tag">${sanitizeHTML(post.category)}</span>`
+        : '';
     const thumb = post.imageUrl
         ? `<img class="article-thumb" src="${sanitizeHTML(post.imageUrl)}" alt="썸네일" loading="lazy">`
         : '';
@@ -108,14 +129,17 @@ function createArticleItem(post) {
                 <div class="article-content">
                     <h3 class="article-title">${sanitizeHTML(post.title || '제목 없음')}</h3>
                     <div class="article-meta">
-                        <span>${sanitizeHTML(post.authorNickname || '익명')}</span>
+                        <span>${authorBadge}</span>
                         <span>${createdAt}</span>
-                        <span>좋아요 ${likeCount}</span>
+                        <span>조회 ${viewCount}</span>
                     </div>
                 </div>
                 ${thumb}
             </a>
-            <div class="article-comment">댓글 ${commentCount}</div>
+            <div class="article-side">
+                <div class="article-comment">${commentCount}<span>댓글</span></div>
+                ${categoryTag}
+            </div>
         </li>
     `;
 }
