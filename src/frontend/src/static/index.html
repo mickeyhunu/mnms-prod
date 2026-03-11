@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미드나잇 맨즈</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/community-board.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <h1>미드나잇 맨즈</h1>
+            </a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="register.html" class="btn btn-primary btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container home-service-wrap">
+            <section class="service-category-grid" aria-label="홈 카테고리">
+                <a class="service-item" href="live.html">
+                    <span class="service-icon">🔴</span>
+                    <span class="service-label">LIVE</span>
+                </a>
+                <a class="service-item" href="community.html">
+                    <span class="service-icon">📝</span>
+                    <span class="service-label">커뮤니티</span>
+                </a>
+                <a class="service-item" href="business-info.html">
+                    <span class="service-icon">🏢</span>
+                    <span class="service-label">업체정보</span>
+                </a>
+            </section>
+        </div>
+    </main>
+
+    <script src="js/utils/constants.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/auth.js"></script>
+    <script src="js/api/apiClient.js"></script>
+    <script src="js/api/authAPI.js"></script>
+    <script src="js/pages/home.js"></script>
+    <script src="js/components/footerNav.js"></script>
+</body>
+</html>

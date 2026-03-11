@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 - 미드나잇 맨즈</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <h1>미드나잇 맨즈</h1>
+            </a>
+            <nav class="nav">
+                <a href="register.html" class="btn btn-primary btn-sm">회원가입</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container age-notice-banner" aria-label="청소년 이용 제한 안내">
+            <div class="age-notice-icon" aria-hidden="true"><span class="age-notice-number">19</span></div>
+            <div class="age-notice-text">
+                <p>본 정보내용은 청소년 유해매체물로서</p>
+                <p>정보통신망 이용촉진 및 정보보호 등에 관한 법률 및 청소년 보호법의 규정에 의하여</p>
+                <p class="age-notice-warning">만 19세 미만의 청소년이 이용할 수 없습니다.</p>
+            </div>
+        </div>
+
+        <div class="container auth-container auth-login">
+            <div class="page-header">
+                <h1>로그인</h1>
+                <p>미드나잇 맨즈에 로그인하여 다양한 사람들과 소통하세요</p>
+            </div>
+
+            <div class="card">
+                <form id="login-form">
+                    <div class="error-banner hidden" id="error-banner">
+                        <p id="error-message"></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="loginId" class="form-label">아이디</label>
+                        <input type="text" id="loginId" name="loginId" class="form-control" placeholder="아이디를 입력하세요" required>
+                        <div class="error-message hidden" id="loginId-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password" class="form-label">비밀번호</label>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="비밀번호를 입력하세요" required>
+                        <div class="error-message hidden" id="password-error"></div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-full" id="submit-btn">로그인</button>
+                </form>
+
+                <div class="text-center mt-3">
+                    <p>아직 계정이 없으신가요? <a href="register.html">회원가입</a></p>
+                </div>
+
+                <div class="grid grid-3 mt-3">
+                    <a href="index.html" class="btn btn-outline btn-sm">비회원 입장</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
+                    <a href="find-account.html" class="btn btn-outline btn-sm">계정 찾기</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/utils/constants.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/validation.js"></script>
+    <script src="js/utils/auth.js"></script>
+    <script src="js/api/apiClient.js"></script>
+    <script src="js/api/authAPI.js"></script>
+    <script src="js/pages/login.js"></script>
+    <script src="js/components/footerNav.js"></script>
+</body>
+</html>
