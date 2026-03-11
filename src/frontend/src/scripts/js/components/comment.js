@@ -49,7 +49,7 @@ async function handleCommentSubmit(event) {
         setLoading(submitBtn, true);
         
         // API 호출
-        await CommentAPI.createComment(currentPostId, content);
+        await CommentAPI.createComment(currentPostId, { content });
         
         // 폼 초기화
         contentInput.value = '';
@@ -231,7 +231,10 @@ async function handleReplySubmit(event, parentCommentId) {
         setLoading(submitBtn, true);
         
         // 대댓글 작성 (parentId 포함)
-        await CommentAPI.createComment(currentPostId, content, parentCommentId);
+        await CommentAPI.createComment(currentPostId, {
+            content,
+            parentId: parentCommentId
+        });
         
         // 답글 폼 숨기기
         hideReplyForm(parentCommentId);
