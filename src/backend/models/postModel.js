@@ -8,7 +8,7 @@ async function listPosts(page = 0, size = 10) {
   const offset = page * size;
   const [countRows] = await pool.query('SELECT COUNT(*) AS total FROM posts');
   const [rows] = await pool.query(
-    `SELECT p.id, p.title, p.content, p.user_id AS userId, p.created_at AS createdAt, p.updated_at AS updatedAt,
+    `SELECT p.id, p.title, p.content, p.user_id AS userId, p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
             (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS commentCount
      FROM posts p
@@ -35,6 +35,24 @@ async function findPostById(id) {
   return rows[0] || null;
 }
 
+
+async function findPostDetailById(id) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT p.id, p.title, p.content, p.user_id AS userId, p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
+            COALESCE(u.nickname, '비회원') AS authorNickname
+     FROM posts p
+     LEFT JOIN users u ON u.id = p.user_id
+     WHERE p.id = ?`,
+    [id]
+  );
+  return rows[0] || null;
+}
+
+async function incrementPostViewCount(id) {
+  const pool = getPool();
+  await pool.query('UPDATE posts SET view_count = view_count + 1 WHERE id = ?', [id]);
+}
 async function updatePost(id, { title, content }) {
   const pool = getPool();
   await pool.query('UPDATE posts SET title = ?, content = ? WHERE id = ?', [title, content, id]);
@@ -72,6 +90,8 @@ module.exports = {
   listPosts,
   createPost,
   findPostById,
+  findPostDetailById,
+  incrementPostViewCount,
   updatePost,
   deletePost,
   listComments,
