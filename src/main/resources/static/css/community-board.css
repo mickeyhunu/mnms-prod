@@ -170,6 +170,8 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    aspect-ratio: 1 / 1;
+    width: 100%;
     min-height: 118px;
     border-radius: 16px;
     border: 1px solid #dcc5ee;
@@ -416,8 +418,32 @@
     cursor: pointer;
 }
 
+.community-section-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    height: 56px;
+    padding: 0 12px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #171a1f;
+    color: #f8fafc;
+}
+
+.community-header-left,
 .community-actions {
     display: flex;
-    justify-content: flex-end;
-    margin-bottom: 12px;
+    align-items: center;
+    gap: 8px;
+}
+
+.community-board-name {
+    font-size: 16px;
+    font-weight: 600;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
