@@ -339,9 +339,9 @@ const pageRegistry = {
                         <div id="image-preview" class="image-preview mt-2"></div>
                     </div>
 
-                    <div class="form-actions" style="justify-content: flex-end;">
-                        <button type="submit" class="btn btn-primary" id="submit-btn">등록</button>
+                    <div class="form-actions" style="justify-content: space-between;">
                         <a href="index.html" class="btn btn-secondary">취소</a>
+                        <button type="submit" class="btn btn-primary" id="submit-btn">등록</button>
                     </div>
                 </form>
             </div>
