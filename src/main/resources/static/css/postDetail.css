@@ -203,12 +203,23 @@
     padding: 14px 0;
 }
 
+.comment-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.comment-body {
+    flex: 1;
+    min-width: 0;
+}
+
 .comment-meta {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 10px;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .comment-meta-main {
@@ -223,6 +234,7 @@
     border-radius: 50%;
     background: #e5e8ed;
     flex-shrink: 0;
+    margin-top: 2px;
 }
 
 .comment-author {
@@ -248,7 +260,6 @@
     align-items: center;
     gap: 12px;
     margin-top: 6px;
-    margin-left: 36px;
 }
 
 .comment-meta-actions {
@@ -281,7 +292,6 @@
     font-size: 15px;
     color: #2b3440;
     line-height: 1.55;
-    margin-left: 36px;
 }
 
 .comment-item.reply,
@@ -314,6 +324,4 @@
     #post-title { font-size: 22px; }
     .comment-meta { flex-direction: row; align-items: flex-start; }
     .comment-meta-actions { margin-left: 8px; }
-    .comment-content,
-    .comment-footer { margin-left: 0; }
 }
