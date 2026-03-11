@@ -157,6 +157,7 @@
 
 .home-service-wrap {
     max-width: 460px;
+    padding-top: 12px;
 }
 
 
@@ -172,8 +173,9 @@
     justify-content: center;
     align-items: center;
     aspect-ratio: 1 / 1;
-    width: 100%;
-    min-height: 118px;
+    width: 94%;
+    min-height: 108px;
+    justify-self: center;
     border-radius: 16px;
     border: 1px solid #dcc5ee;
     text-decoration: none;
