@@ -12,16 +12,19 @@
     }
 
     const footerItems = [
-        { label: '홈', href: 'index.html', icon: createIcon('home') },
-        { label: 'LIVE', href: 'live.html', icon: createIcon('live') },
-        { label: '커뮤니티', href: 'community.html', icon: createIcon('community') },
-        { label: '업체정보', href: 'business-info.html', icon: createIcon('business') },
-        { label: '내 정보', href: 'my-page.html', icon: createIcon('me') }
+        { label: '홈', href: '/', icon: createIcon('home') },
+        { label: 'LIVE', href: '/live', icon: createIcon('live') },
+        { label: '커뮤니티', href: '/community', icon: createIcon('community') },
+        { label: '업체정보', href: '/business-info', icon: createIcon('business') },
+        { label: '내 정보', href: '/my-page', icon: createIcon('me') }
     ];
 
     function normalizePath(pathname) {
-        const path = pathname.split('/').pop();
-        return path || 'index.html';
+        if (!pathname || pathname === '/') {
+            return '/';
+        }
+
+        return pathname.replace(/\/$/, '');
     }
 
     function createFooterNav() {
