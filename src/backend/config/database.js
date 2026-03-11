@@ -55,11 +55,26 @@ async function initDatabase() {
       user_id BIGINT NULL,
       title VARCHAR(255) NOT NULL,
       content TEXT NOT NULL,
+      view_count BIGINT NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  const [viewCountColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'posts'
+       AND COLUMN_NAME = 'view_count'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!viewCountColumn.length) {
+    await pool.query('ALTER TABLE posts ADD COLUMN view_count BIGINT NOT NULL DEFAULT 0');
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS comments (

@@ -787,7 +787,6 @@ const pageRegistry = {
                         <span id="like-icon">❤️</span>
                         <span id="like-count">0</span>
                     </button>
-                    <a href="index.html" class="btn btn-outline btn-sm list-btn">목록으로</a>
                 </div>
             </div>
 
