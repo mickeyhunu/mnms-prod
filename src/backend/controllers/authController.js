@@ -1,3 +1,6 @@
+/**
+ * 파일 역할: authController 관련 HTTP 요청을 처리하고 모델/응답 로직을 조합하는 컨트롤러 파일.
+ */
 const crypto = require('crypto');
 const { createUser, findByEmail, findByNickname } = require('../models/userModel');
 const { createSession, deleteSession } = require('../models/sessionModel');

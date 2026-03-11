@@ -1,3 +1,6 @@
+/**
+ * 파일 역할: 애플리케이션의 데이터베이스 연결 설정을 담당하는 구성 파일.
+ */
 const mysql = require('mysql2/promise');
 
 const dbConfig = {

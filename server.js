@@ -1,3 +1,6 @@
+/**
+ * 파일 역할: Node/Express 서버를 초기화하고 백엔드 라우트를 연결하는 진입점 파일.
+ */
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
