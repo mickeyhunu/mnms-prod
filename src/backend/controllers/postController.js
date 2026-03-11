@@ -164,6 +164,54 @@ async function createComment(req, res, next) {
   }
 }
 
+
+async function updateComment(req, res, next) {
+  try {
+    if (!req.user) return res.status(401).json({ message: '인증이 필요합니다.' });
+
+    const commentId = parseId(req.params.commentId);
+    if (!commentId) return res.status(400).json({ message: '유효하지 않은 댓글 ID입니다.' });
+
+    const comment = await postModel.findCommentById(commentId);
+    if (!comment) return res.status(404).json({ message: '댓글을 찾을 수 없습니다.' });
+
+    if (comment.user_id !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ message: '수정 권한이 없습니다.' });
+    }
+
+    const content = (req.body.content || '').trim();
+    if (!content) return res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
+
+    await postModel.updateComment(commentId, content);
+    const comments = await postModel.listComments(comment.post_id);
+    res.json({ success: true, comments });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function deleteComment(req, res, next) {
+  try {
+    if (!req.user) return res.status(401).json({ message: '인증이 필요합니다.' });
+
+    const commentId = parseId(req.params.commentId);
+    if (!commentId) return res.status(400).json({ message: '유효하지 않은 댓글 ID입니다.' });
+
+    const comment = await postModel.findCommentById(commentId);
+    if (!comment) return res.status(404).json({ message: '댓글을 찾을 수 없습니다.' });
+
+    if (comment.user_id !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ message: '삭제 권한이 없습니다.' });
+    }
+
+    await postModel.deleteComment(commentId);
+    const comments = await postModel.listComments(comment.post_id);
+    res.json({ success: true, comments });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   listPosts,
   getPost,
@@ -172,5 +220,7 @@ module.exports = {
   deletePost,
   toggleLike,
   listComments,
-  createComment
+  createComment,
+  updateComment,
+  deleteComment
 };

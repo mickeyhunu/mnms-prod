@@ -303,6 +303,21 @@ function normalizePostDetailResponse(post) {
     };
 }
 
+function isCurrentUserPostAuthor(post) {
+    const currentUser = Auth.getUser();
+    if (!currentUser) {
+        return false;
+    }
+
+    const postAuthorId = post.authorId ?? post.userId;
+    if (!postAuthorId) {
+        return false;
+    }
+
+    return String(currentUser.id) === String(postAuthorId);
+}
+
+
 function renderPostDetail(post) {
     const titleElement = document.getElementById('post-title');
     const contentElement = document.getElementById('post-content');
@@ -348,8 +363,9 @@ function renderPostDetail(post) {
     }
 
     const isGuestPost = !post.authorId && !post.userId;
+    const isCurrentAuthor = post.isAuthor || isCurrentUserPostAuthor(post);
 
-    if (post.isAuthor || isGuestPost) {
+    if (isCurrentAuthor || isGuestPost) {
         console.log('작성자임 - 수정/삭제 버튼 표시');
         if (messageBtn) messageBtn.style.display = 'none';
         if (ownerActions) ownerActions.classList.remove('hidden');
@@ -570,7 +586,7 @@ function createCommentItem(comment, depth = 0) {
                         ${(isAuthor || canGuestEdit) ? `<button class="comment-more-btn" onclick="toggleCommentActions(${comment.id})">⋯</button>` : ''}
                     </div>
                 </div>
-                <div class="comment-content ${isAdminComment ? 'admin-comment-content' : ''}">${sanitizeHTML(comment.content).replace(/\n/g, '<br>')}</div>
+                <div class="comment-content ${isAdminComment ? 'admin-comment-content' : ''}" id="comment-content-${comment.id}">${sanitizeHTML(comment.content).replace(/\n/g, '<br>')}</div>
                 <div class="comment-footer">
                     <span class="comment-date">${formatDateTime(comment.createdAt)}</span>
                     ${canReply ? `<button class="comment-reply-link" onclick="showReplyForm(${comment.id}, '${sanitizeHTML(comment.authorNickname)}')">답글쓰기</button>` : ''}
@@ -579,7 +595,7 @@ function createCommentItem(comment, depth = 0) {
         </div>
         ${(isAuthor || canGuestEdit) ? `
             <div class="comment-actions hidden" id="comment-actions-${comment.id}">
-                <button class="btn btn-sm btn-warning" onclick="editComment(${comment.id})">수정</button>
+                <button class="btn btn-sm btn-warning" onclick="showCommentEditForm(${comment.id})">수정</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteComment(${comment.id})">삭제</button>
             </div>
         ` : ''}
@@ -609,6 +625,60 @@ function createCommentItem(comment, depth = 0) {
 }
 
 
+function showCommentEditForm(commentId) {
+    hideAllReplyForms();
+
+    const container = document.getElementById(`reply-form-${commentId}`);
+    const contentElement = document.getElementById(`comment-content-${commentId}`);
+    if (!container || !contentElement) return;
+
+    const currentContent = (contentElement.textContent || '').trim();
+
+    container.innerHTML = `
+        <form class="reply-form" onsubmit="handleCommentEditSubmit(event, ${commentId})">
+            <div class="reply-input-container">
+                <textarea id="comment-edit-content-${commentId}" placeholder="댓글을 수정하세요..." required rows="3">${sanitizeHTML(currentContent)}</textarea>
+            </div>
+            <div class="reply-form-actions">
+                <button type="submit" class="btn btn-sm btn-primary">수정</button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="hideReplyForm(${commentId})">취소</button>
+            </div>
+        </form>
+    `;
+
+    container.style.display = 'block';
+
+    const textarea = document.getElementById(`comment-edit-content-${commentId}`);
+    if (textarea) {
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    }
+}
+
+async function handleCommentEditSubmit(e, commentId) {
+    e.preventDefault();
+
+    const textarea = document.getElementById(`comment-edit-content-${commentId}`);
+    if (!textarea) return;
+
+    const content = textarea.value.trim();
+    if (!content) {
+        addInputError(textarea, '댓글 내용을 입력해주세요');
+        return;
+    }
+
+    try {
+        await CommentAPI.updateComment(commentId, { content });
+        showNotification('댓글이 수정되었습니다.', 'success');
+        hideReplyForm(commentId);
+        loadComments();
+    } catch (error) {
+        console.error('댓글 수정 실패:', error);
+        Auth.handleAuthError(error);
+    }
+}
+
+
 function toggleCommentActions(commentId) {
     const actions = document.getElementById(`comment-actions-${commentId}`);
     if (actions) {
@@ -618,16 +688,29 @@ function toggleCommentActions(commentId) {
 
 function showReplyForm(parentId, parentAuthor) {
     hideAllReplyForms();
-    
+
     const replyForm = document.getElementById(`reply-form-${parentId}`);
+    if (!replyForm) return;
+
+    replyForm.innerHTML = `
+        <form class="reply-form" onsubmit="handleReplySubmit(event, ${parentId})">
+            <div class="reply-input-container">
+                <textarea id="reply-content-${parentId}" placeholder="답글을 작성하세요..." required rows="3"></textarea>
+            </div>
+            <div class="reply-form-actions">
+                <button type="submit" class="btn btn-sm btn-primary">등록</button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="hideReplyForm(${parentId})">취소</button>
+            </div>
+        </form>
+    `;
+
     const textarea = document.getElementById(`reply-content-${parentId}`);
-    
-    if (replyForm && textarea) {
-        replyForm.style.display = 'block';
+
+    replyForm.style.display = 'block';
+    if (textarea) {
         textarea.focus();
-        replyingTo = { id: parentId, author: parentAuthor };
-        
     }
+    replyingTo = { id: parentId, author: parentAuthor };
 }
 
 function hideReplyForm(parentId) {
@@ -638,10 +721,7 @@ function hideReplyForm(parentId) {
         if (textarea) {
             textarea.value = '';
         }
-        const indicator = replyForm.querySelector('.reply-indicator');
-        if (indicator) {
-            indicator.remove();
-        }
+        replyForm.innerHTML = '';
     }
     replyingTo = null;
 }
@@ -654,10 +734,7 @@ function hideAllReplyForms() {
         if (textarea) {
             textarea.value = '';
         }
-        const indicator = form.querySelector('.reply-indicator');
-        if (indicator) {
-            indicator.remove();
-        }
+        form.innerHTML = '';
     });
     replyingTo = null;
 }
@@ -891,26 +968,6 @@ async function deleteComment(commentId) {
         
     } catch (error) {
         console.error('댓글 삭제 실패:', error);
-        Auth.handleAuthError(error);
-    }
-}
-
-async function editComment(commentId) {
-    const content = prompt('수정할 댓글 내용을 입력하세요.');
-    if (!content) return;
-
-    try {
-        if (!Auth.isAuthenticated()) {
-            const guestPassword = prompt('비밀번호를 입력하세요.');
-            if (!guestPassword) return;
-            await APIClient.put(`/comments/${commentId}`, { content, guestPassword });
-        } else {
-            await CommentAPI.updateComment(commentId, { content });
-        }
-        showNotification('댓글이 수정되었습니다.', 'success');
-        loadComments();
-    } catch (error) {
-        console.error('댓글 수정 실패:', error);
         Auth.handleAuthError(error);
     }
 }
