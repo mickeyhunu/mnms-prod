@@ -574,17 +574,18 @@ function createCommentItem(comment, depth = 0) {
     const hasActionMenu = isAuthor || canGuestEdit || isOtherUser;
     const isCommentLiked = likedCommentIds.has(comment.id);
     const isSecretComment = Boolean(comment.isSecret);
-    const replyPrefix = depth > 0 ? '<span class="comment-reply-prefix" aria-label="답글">ㄴ </span>' : '';
+    const replyMarker = depth > 0 ? '<span class="comment-reply-marker" aria-hidden="true"></span>' : '';
     
     console.log(`댓글 ${comment.id}: user=${currentUser?.id}, author=${comment.authorId}, isAuthor=${isAuthor}, isAdmin=${isAdminComment}`);
     
     div.innerHTML = `
         <div class="comment-layout">
+            ${replyMarker}
             <span class="comment-avatar" aria-hidden="true"></span>
             <div class="comment-body">
                 <div class="comment-meta">
                     <div class="comment-meta-main">
-                        ${replyPrefix}<span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${sanitizeHTML(comment.authorNickname)}</span>
+                        <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${sanitizeHTML(comment.authorNickname)}</span>
                         ${isSecretComment ? '<span style="margin-left:6px;font-size:12px;color:#7a5;">🔒 비밀댓글</span>' : ''}
                     </div>
                     <div class="comment-meta-actions">

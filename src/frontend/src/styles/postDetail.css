@@ -322,6 +322,16 @@
     gap: 8px;
 }
 
+.comment-reply-marker {
+    width: 10px;
+    height: 10px;
+    border-left: 1px solid #bac3cf;
+    border-bottom: 1px solid #bac3cf;
+    margin-top: 10px;
+    margin-right: 2px;
+    flex-shrink: 0;
+}
+
 .comment-body {
     flex: 1;
     min-width: 0;
