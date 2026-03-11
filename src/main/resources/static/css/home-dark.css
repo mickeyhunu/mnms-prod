@@ -1,54 +1,53 @@
 body.home-dark {
-    background: radial-gradient(circle at top, #1b1b2f 0%, #0e0e17 45%, #06060b 100%);
-    color: #d6d7e0;
+    background: #ffffff;
+    color: var(--text-color);
 }
 
 .home-dark .header {
-    background: rgba(8, 8, 14, 0.92);
-    border-bottom: 1px solid #2c2c3a;
-    backdrop-filter: blur(6px);
+    background: #ffffff;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .home-dark .logo h1 {
-    color: #c084fc;
-    letter-spacing: 0.5px;
+    color: var(--primary-color);
+    letter-spacing: -0.2px;
 }
 
 .home-dark .main-content {
-    background: transparent;
+    background: #ffffff;
 }
 
 .home-dark .page-header h1 {
-    color: #f5f3ff;
+    color: var(--text-color);
 }
 
 .home-dark .page-header p,
 .home-dark .user-nickname {
-    color: #9aa0b7;
+    color: var(--text-subtle);
 }
 
 .home-dark .post-card {
-    background: #12131d;
-    border: 1px solid #2d2f43;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    box-shadow: none;
 }
 
 .home-dark .post-card:hover {
-    border-color: #8b5cf6;
-    box-shadow: 0 12px 28px rgba(79, 70, 229, 0.3);
+    border-color: var(--primary-color);
+    box-shadow: none;
 }
 
 .home-dark .post-title,
 .home-dark .post-title a {
-    color: #ecebff;
+    color: var(--text-color);
 }
 
 .home-dark .post-title a:hover {
-    color: #c4b5fd;
+    color: var(--primary-color);
 }
 
 .home-dark .post-meta,
 .home-dark .post-stats,
 .home-dark .post-content {
-    color: #9fa5bf;
+    color: var(--text-subtle);
 }

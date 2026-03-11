@@ -3,13 +3,9 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 20px;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s ease;
+    transition: border-color 0.2s ease;
 }
 
-.card:hover {
-    box-shadow: var(--shadow-md);
-}
 
 .post-card {
     background: var(--surface-color);
@@ -18,12 +14,11 @@
     padding: 20px;
     margin-bottom: 15px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: border-color 0.2s ease;
 }
 
 .post-card:hover {
     border-color: var(--primary-color);
-    box-shadow: 0 2px 8px rgba(0,123,255,0.1);
 }
 
 .post-header {
@@ -145,12 +140,12 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    transition: all 0.2s ease;
+    transition: border-color 0.2s ease;
     font-size: 14px;
 }
 
 .like-btn:hover {
-    background: #f8f9fa;
+    background: #ffffff;
 }
 
 .like-btn.liked {
@@ -219,7 +214,7 @@
     margin-left: 40px;
     border-left: 3px solid #e9ecef;
     padding-left: 16px;
-    background: #f8f9fa;
+    background: #ffffff;
     border-radius: 0 4px 4px 0;
 }
 
@@ -249,7 +244,6 @@
 .notification {
     background: var(--surface-color);
     border-radius: var(--radius-md);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     margin-bottom: 10px;
     opacity: 0;
     transform: translateY(16px);
@@ -366,12 +360,11 @@
 }
 
 .admin-notice {
-    background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+    background: #ffffff;
     border: 1px solid #fc8181;
     border-left: 4px solid #e53e3e;
     border-radius: var(--radius-md);
     position: relative;
-    box-shadow: 0 2px 8px rgba(229, 62, 62, 0.1);
     overflow: hidden;
 }
 
@@ -416,9 +409,7 @@
 }
 
 .admin-notice:hover {
-    background: linear-gradient(135deg, #fed7d7 0%, #fbb6ce 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(229, 62, 62, 0.2);
+    background: #ffffff;
     border-color: #e53e3e;
 }
 
@@ -436,7 +427,6 @@
     height: auto;
     margin-bottom: 10px;
     border-radius: var(--radius-md);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .post-header {
@@ -473,25 +463,22 @@
 }
 
 .bookmark-btn-mini:hover {
-    background: #f8f9fa;
+    background: #ffffff;
     border-color: #adb5bd;
     transform: scale(1.1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .bookmark-btn-mini.bookmarked {
-    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    background: #ffffff;
     border-color: #f39c12;
     color: #d68910;
-    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.2);
 }
 
 .bookmark-btn-mini.bookmarked:hover {
-    background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+    background: #ffffff;
     border-color: #e67e22;
     color: #c0392b;
     transform: scale(1.1);
-    box-shadow: 0 3px 12px rgba(243, 156, 18, 0.3);
 }
 
 .bookmark-btn-mini.bookmarked .bookmark-icon {
