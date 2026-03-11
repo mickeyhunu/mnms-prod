@@ -381,6 +381,10 @@
     gap: 6px;
 }
 
+.comment-actions-wrapper {
+    position: relative;
+}
+
 .comment-action-icon-btn,
 .comment-more-btn {
     border: none;
@@ -395,6 +399,39 @@
 .comment-report-btn {
     font-size: 13px;
     color: #7b8491;
+}
+
+.comment-actions-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 92px;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid #e0e5ec;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(20, 29, 39, 0.12);
+    z-index: 4;
+    overflow: hidden;
+}
+
+.comment-action-menu-btn {
+    border: none;
+    background: #fff;
+    text-align: left;
+    padding: 9px 12px;
+    font-size: 13px;
+    color: #2b3440;
+    cursor: pointer;
+}
+
+.comment-action-menu-btn:hover {
+    background: #f5f8fc;
+}
+
+.comment-action-menu-btn.danger {
+    color: #d64545;
 }
 
 .comment-action-icon-btn.comment-like-toggle.liked {

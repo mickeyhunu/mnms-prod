@@ -6,6 +6,7 @@ let currentCommentsPage = 1;
 let currentPostAuthor = null;
 let selectedMessageRecipient = null;
 let replyingTo = null;
+let activeCommentActionId = null;
 const likedCommentIds = new Set();
 
 function initPostDetailPage() {
@@ -91,6 +92,13 @@ function setupEventListeners() {
         if (!moreWrapper.contains(e.target)) {
             menu.classList.add('hidden');
         }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.comment-actions-wrapper')) {
+            return;
+        }
+        hideActiveCommentActionMenu();
     });
 
     setupMessageModal();
@@ -563,6 +571,7 @@ function createCommentItem(comment, depth = 0) {
     const canReply = Auth.isAuthenticated() && depth < 3;
     const canGuestEdit = !Auth.isAuthenticated() && !comment.userId;
     const isOtherUser = Auth.isAuthenticated() && currentUser && !isAuthor;
+    const hasActionMenu = isAuthor || canGuestEdit || isOtherUser;
     const isCommentLiked = likedCommentIds.has(comment.id);
     const isSecretComment = Boolean(comment.isSecret);
     
@@ -578,12 +587,19 @@ function createCommentItem(comment, depth = 0) {
                         ${isSecretComment ? '<span style="margin-left:6px;font-size:12px;color:#7a5;">🔒 비밀댓글</span>' : ''}
                     </div>
                     <div class="comment-meta-actions">
-                        ${isOtherUser ? 
-                            `<button class="comment-action-icon-btn comment-report-btn" type="button" title="댓글 신고" aria-label="댓글 신고" onclick="reportComment(${comment.id})">신고</button>
-                             <button class="comment-action-icon-btn comment-like-toggle ${isCommentLiked ? 'liked' : ''}" type="button" title="댓글 좋아요" aria-label="댓글 좋아요" onclick="toggleCommentLike(${comment.id}, this)">${isCommentLiked ? '♥' : '♡'}</button>` 
-                            : ''
-                        }
-                        ${(isAuthor || canGuestEdit) ? `<button class="comment-more-btn" onclick="toggleCommentActions(${comment.id})">⋯</button>` : ''}
+                        ${isOtherUser ? `<button class="comment-action-icon-btn comment-like-toggle ${isCommentLiked ? 'liked' : ''}" type="button" title="댓글 좋아요" aria-label="댓글 좋아요" onclick="toggleCommentLike(${comment.id}, this)">${isCommentLiked ? '♥' : '♡'}</button>` : ''}
+                        ${hasActionMenu ? `
+                            <div class="comment-actions-wrapper">
+                                <button class="comment-more-btn" type="button" aria-label="댓글 더보기" onclick="toggleCommentActions(${comment.id})">⋯</button>
+                                <div class="comment-actions-menu hidden" id="comment-actions-${comment.id}">
+                                    ${(isAuthor || canGuestEdit) ? `
+                                        <button class="comment-action-menu-btn" type="button" onclick="showCommentEditForm(${comment.id})">수정</button>
+                                        <button class="comment-action-menu-btn danger" type="button" onclick="deleteComment(${comment.id})">삭제</button>
+                                    ` : ''}
+                                    ${isOtherUser ? `<button class="comment-action-menu-btn danger" type="button" onclick="reportComment(${comment.id})">신고</button>` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
                 <div class="comment-content ${isAdminComment ? 'admin-comment-content' : ''}" id="comment-content-${comment.id}">${sanitizeHTML(comment.content).replace(/\n/g, '<br>')}</div>
@@ -593,12 +609,6 @@ function createCommentItem(comment, depth = 0) {
                 </div>
             </div>
         </div>
-        ${(isAuthor || canGuestEdit) ? `
-            <div class="comment-actions hidden" id="comment-actions-${comment.id}">
-                <button class="btn btn-sm btn-warning" onclick="showCommentEditForm(${comment.id})">수정</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteComment(${comment.id})">삭제</button>
-            </div>
-        ` : ''}
         <div id="reply-form-${comment.id}" class="reply-form-container" style="display: none;">
             <form class="reply-form" onsubmit="handleReplySubmit(event, ${comment.id})">
                 <div class="reply-input-container">
@@ -681,9 +691,27 @@ async function handleCommentEditSubmit(e, commentId) {
 
 function toggleCommentActions(commentId) {
     const actions = document.getElementById(`comment-actions-${commentId}`);
-    if (actions) {
-        actions.classList.toggle('hidden');
+    if (!actions) return;
+
+    if (activeCommentActionId && activeCommentActionId !== commentId) {
+        hideCommentActionMenu(activeCommentActionId);
     }
+
+    const shouldOpen = actions.classList.contains('hidden');
+    actions.classList.toggle('hidden', !shouldOpen);
+    activeCommentActionId = shouldOpen ? commentId : null;
+}
+
+function hideCommentActionMenu(commentId) {
+    const actions = document.getElementById(`comment-actions-${commentId}`);
+    if (!actions) return;
+    actions.classList.add('hidden');
+}
+
+function hideActiveCommentActionMenu() {
+    if (!activeCommentActionId) return;
+    hideCommentActionMenu(activeCommentActionId);
+    activeCommentActionId = null;
 }
 
 function showReplyForm(parentId, parentAuthor) {
