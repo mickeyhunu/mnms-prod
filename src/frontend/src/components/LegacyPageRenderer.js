@@ -1,5 +1,5 @@
 import { computed, onBeforeUnmount, onMounted } from 'vue';
-import { legacyPages } from '../legacyPages.js';
+import { legacyPages } from '../legacyPageRegistry.js';
 
 const LINK_MAP = {
   'index.html': '/',

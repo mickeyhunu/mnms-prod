@@ -23,7 +23,7 @@ src
         ├── assets
         ├── components
         ├── router
-        ├── services
+        ├── scripts
         └── views
 ```
 
