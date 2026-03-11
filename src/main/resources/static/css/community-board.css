@@ -156,6 +156,7 @@
 
 .home-service-wrap {
     max-width: 460px;
+    padding-top: 24px;
 }
 
 
@@ -204,7 +205,7 @@
 .community-container {
     max-width: 640px;
     background: #ffffff;
-    padding: 14px 0 24px;
+    padding: 0 0 24px;
 }
 
 .notice-area {
