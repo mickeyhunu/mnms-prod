@@ -100,7 +100,15 @@ function setupEventListeners() {
 function updateGuestCommentField() {
     const input = document.getElementById('comment-guest-password');
     if (!input) return;
-    input.style.display = Auth.isAuthenticated() ? 'none' : 'block';
+
+    const isGuest = !Auth.isAuthenticated();
+    input.style.display = isGuest ? 'block' : 'none';
+    input.required = isGuest;
+
+    if (!isGuest) {
+        input.value = '';
+        removeInputError(input);
+    }
 }
 
 function setupMessageModal() {
@@ -464,7 +472,9 @@ function renderPostImages(imageUrls) {
 async function loadComments() {
     try {
         const response = await CommentAPI.getComments(postId, currentCommentsPage);
-        const comments = response.comments || response.content || [];
+        const comments = Array.isArray(response)
+            ? response
+            : response.comments || response.content || [];
         const totalElements = response.totalElements ?? comments.length;
         
         const commentCount = document.getElementById('comment-count');
