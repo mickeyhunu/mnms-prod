@@ -41,8 +41,16 @@
 }
 
 .main-content {
+    --main-content-unified-max-width: 920px;
+}
+
+.main-content {
     min-height: calc(100vh - 80px);
     padding: 28px 0;
+}
+
+.main-content > .container:not(.auth-container):not(.age-notice-banner) {
+    max-width: var(--main-content-unified-max-width);
 }
 
 .container {
