@@ -44,7 +44,9 @@ function sanitizeCommentForViewer(comment, post, currentUser) {
     isDeleted: Boolean(comment.isDeleted)
   };
 
-  if (normalized.isDeleted) {
+  const isAdminViewer = currentUser?.role === 'ADMIN';
+
+  if (normalized.isDeleted && !isAdminViewer) {
     return {
       ...normalized,
       content: '삭제된 댓글입니다.',

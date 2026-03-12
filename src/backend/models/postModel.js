@@ -133,7 +133,7 @@ async function updateComment(id, content) {
 
 async function deleteComment(id) {
   const pool = getPool();
-  await pool.query("UPDATE comments SET is_deleted = 1, content = '삭제된 댓글입니다.' WHERE id = ?", [id]);
+  await pool.query('UPDATE comments SET is_deleted = 1 WHERE id = ?', [id]);
 }
 
 async function isPostLikedByUser(postId, userId) {
