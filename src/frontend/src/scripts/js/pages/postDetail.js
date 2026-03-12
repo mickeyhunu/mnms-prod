@@ -570,7 +570,8 @@ function createCommentItem(comment, depth = 0) {
                           comment.role === 'ADMIN';
     const isSecretComment = Boolean(comment.isSecret);
     const isDeletedComment = Boolean(comment.isDeleted);
-    const canReply = Auth.isAuthenticated() && depth < 3 && !isDeletedComment;
+    const canReplyByServer = comment.canReply !== false;
+    const canReply = Auth.isAuthenticated() && depth < 3 && !isDeletedComment && canReplyByServer;
     const canGuestEdit = !Auth.isAuthenticated() && !comment.userId;
     const isOtherUser = Auth.isAuthenticated() && currentUser && !isAuthor;
     const hasActionMenu = !isDeletedComment && (isAuthor || canGuestEdit || isOtherUser);
