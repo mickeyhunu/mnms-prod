@@ -41,6 +41,9 @@ function renderPostList(posts, container) {
 function createBoardRow(post, isNotice = false, index = 0) {
     const noticeBadge = isNotice ? '<span class="badge-notice">[공지]</span>' : '';
     const hotBadge = !isNotice && (post.likeCount || 0) >= 5 ? '<span class="badge-hot">추천</span>' : '';
+    const newBadge = isPostWithin24Hours(post.createdAt)
+        ? '<span class="badge-new" aria-label="24시간 이내 새 글">N</span>'
+        : '';
     const numberLabel = isNotice ? '공지' : post.id || index + 1;
 
     return `
@@ -49,6 +52,7 @@ function createBoardRow(post, isNotice = false, index = 0) {
             <td class="col-title">
                 ${noticeBadge}${hotBadge}
                 <a href="/post-detail?id=${post.id}">${sanitizeHTML(post.title || '제목 없음')}</a>
+                ${newBadge}
                 ${post.commentCount > 0 ? `<small>[${post.commentCount}]</small>` : ''}
             </td>
             <td class="col-author">${sanitizeHTML(post.authorNickname || `작성자 #${post.authorId || ''}`)}</td>
@@ -57,6 +61,16 @@ function createBoardRow(post, isNotice = false, index = 0) {
             <td class="col-view">${post.viewCount || 0}</td>
         </tr>
     `;
+}
+
+function isPostWithin24Hours(createdAt) {
+    if (!createdAt) return false;
+
+    const createdTime = new Date(createdAt).getTime();
+    if (Number.isNaN(createdTime)) return false;
+
+    const DAY_IN_MS = 24 * 60 * 60 * 1000;
+    return (Date.now() - createdTime) < DAY_IN_MS;
 }
 
 function createPostCard(post) {
