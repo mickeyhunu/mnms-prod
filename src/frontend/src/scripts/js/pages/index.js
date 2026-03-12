@@ -139,9 +139,8 @@ function createArticleItem(post) {
                 <div class="article-title-row">
                     <span class="article-inline-icon" aria-hidden="true">💬</span>
                     <h3 class="article-title">${sanitizeHTML(post.title || '제목 없음')}</h3>
-                    ${shouldShowNewBadge ? '<span class="article-new-badge">NEW</span>' : ''}
                     <span class="article-comment-inline">[${commentCount}]</span>
-                    ${shouldShowNewBadge ? '<span class="article-mobile-badge">N</span>' : ''}
+                    ${shouldShowNewBadge ? '<span class="article-new-badge">NEW</span>' : ''}
                 </div>
                 <p class="article-preview">${previewText}</p>
                 <div class="article-meta">
