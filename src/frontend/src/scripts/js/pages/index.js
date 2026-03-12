@@ -41,9 +41,12 @@ async function loadPosts(page = 0) {
         hideElement(emptyState);
         hideElement(pagination);
 
-        const response = searchState.keyword
-            ? await APIClient.get(`/search/posts?keyword=${encodeURIComponent(searchState.keyword)}&search=${encodeURIComponent(searchState.searchType)}&page=${page}&size=${pageSize}`)
-            : await PostAPI.getPosts({ page, size: pageSize });
+        const response = await PostAPI.getPosts({
+            page,
+            size: pageSize,
+            keyword: searchState.keyword,
+            search: searchState.searchType
+        });
 
         const posts = Array.isArray(response?.posts)
             ? response.posts
