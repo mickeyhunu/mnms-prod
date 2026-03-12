@@ -66,7 +66,9 @@ function sanitizeCommentForViewer(comment, post, currentUser) {
 async function listPosts(req, res, next) {
   try {
     const { page, size } = parsePagination(req.query.page, req.query.size);
-    const { rows, total } = await postModel.listPosts(page, size);
+    const keyword = typeof req.query.keyword === 'string' ? req.query.keyword.trim() : '';
+    const searchType = typeof req.query.search === 'string' ? req.query.search : 'bbs_title';
+    const { rows, total } = await postModel.listPosts(page, size, { keyword, searchType });
     res.json({ content: rows, totalElements: total, page, size, totalPages: Math.ceil(total / size) });
   } catch (error) {
     next(error);

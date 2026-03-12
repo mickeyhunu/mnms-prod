@@ -3,10 +3,41 @@
  */
 const { getPool } = require('../config/database');
 
-async function listPosts(page = 0, size = 10) {
+async function listPosts(page = 0, size = 10, options = {}) {
   const pool = getPool();
   const offset = page * size;
-  const [countRows] = await pool.query('SELECT COUNT(*) AS total FROM posts');
+  const keyword = typeof options.keyword === 'string' ? options.keyword.trim() : '';
+  const searchType = options.searchType || 'bbs_title';
+
+  const whereConditions = [];
+  const whereParams = [];
+
+  if (keyword) {
+    const likeKeyword = `%${keyword}%`;
+
+    if (searchType === 'bbs_review') {
+      whereConditions.push('p.content LIKE ?');
+      whereParams.push(likeKeyword);
+    } else if (searchType === 'bbs_title_review') {
+      whereConditions.push('(p.title LIKE ? OR p.content LIKE ?)');
+      whereParams.push(likeKeyword, likeKeyword);
+    } else {
+      whereConditions.push('p.title LIKE ?');
+      whereParams.push(likeKeyword);
+    }
+  }
+
+  const whereClause = whereConditions.length > 0
+    ? `WHERE ${whereConditions.join(' AND ')}`
+    : '';
+
+  const [countRows] = await pool.query(
+    `SELECT COUNT(*) AS total
+     FROM posts p
+     ${whereClause}`,
+    whereParams
+  );
+
   const [rows] = await pool.query(
     `SELECT p.id, p.title, p.content, p.user_id AS userId, p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
@@ -14,9 +45,10 @@ async function listPosts(page = 0, size = 10) {
             (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
+     ${whereClause}
      ORDER BY p.created_at DESC
      LIMIT ? OFFSET ?`,
-    [size, offset]
+    [...whereParams, size, offset]
   );
   return { rows, total: Number(countRows[0].total) };
 }

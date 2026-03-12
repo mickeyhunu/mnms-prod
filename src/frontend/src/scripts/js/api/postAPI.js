@@ -6,7 +6,17 @@ const PostAPI = {
         try {
             const page = params.page !== undefined ? params.page : 0;
             const size = params.size || 10;
-            return await APIClient.get(`/api/posts?page=${page}&size=${size}`);
+            const query = {
+                page,
+                size
+            };
+
+            if (params.keyword) {
+                query.keyword = params.keyword;
+                query.search = params.search || 'bbs_title';
+            }
+
+            return await APIClient.get('/api/posts', query);
         } catch (error) {
             throw error;
         }
