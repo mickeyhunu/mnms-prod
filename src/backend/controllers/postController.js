@@ -37,12 +37,27 @@ function canViewSecretComment(comment, post, currentUser) {
     || currentUser.role === 'ADMIN';
 }
 
+function canReplyToComment(comment, post, currentUser) {
+  if (!currentUser || comment.isDeleted) {
+    return false;
+  }
+
+  if (!comment.isSecret) {
+    return true;
+  }
+
+  return Number(currentUser.id) === Number(comment.userId)
+    || Number(currentUser.id) === Number(post.user_id);
+}
+
 function sanitizeCommentForViewer(comment, post, currentUser) {
   const normalized = {
     ...comment,
     isSecret: Boolean(comment.isSecret),
     isDeleted: Boolean(comment.isDeleted)
   };
+
+  normalized.canReply = canReplyToComment(normalized, post, currentUser);
 
   const isAdminViewer = currentUser?.role === 'ADMIN';
 
@@ -212,6 +227,16 @@ async function createComment(req, res, next) {
       const parentComment = await postModel.findCommentById(parentId);
       if (!parentComment || Number(parentComment.post_id) !== Number(postId)) {
         return res.status(400).json({ message: '같은 게시글의 댓글에만 답글을 작성할 수 있습니다.' });
+      }
+
+      const normalizedParent = {
+        userId: parentComment.user_id,
+        isSecret: Boolean(parentComment.is_secret),
+        isDeleted: Boolean(parentComment.is_deleted)
+      };
+
+      if (!canReplyToComment(normalizedParent, post, req.user)) {
+        return res.status(403).json({ message: '답글 작성 권한이 없습니다.' });
       }
     }
 
