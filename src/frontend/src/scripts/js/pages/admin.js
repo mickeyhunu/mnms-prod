@@ -100,9 +100,14 @@ async function loadComments() {
             tbody.innerHTML = '<tr><td colspan="6">댓글이 없습니다.</td></tr>';
         } else {
             tbody.innerHTML = comments.map(comment => `
-                <tr>
+                <tr class="${getAdminCommentRowClass(comment)}">
                     <td>${comment.id}</td>
-                    <td>${sanitizeHTML((comment.content || '').slice(0, 100))}</td>
+                    <td>
+                        <div class="admin-comment-cell">
+                            <div class="admin-comment-flags">${renderAdminCommentFlags(comment)}</div>
+                            <div class="admin-comment-text">${sanitizeHTML((comment.content || '').slice(0, 100))}</div>
+                        </div>
+                    </td>
                     <td><a href="/post-detail?id=${comment.postId || comment.post_id}" target="_blank">게시글 보기</a></td>
                     <td>${sanitizeHTML(comment.authorNickname || `사용자#${comment.user_id || comment.userId}`)}</td>
                     <td>${formatDate(comment.createdAt || comment.created_at)}</td>
@@ -115,6 +120,32 @@ async function loadComments() {
     } catch (error) {
         showError('comments', error.message || '댓글을 불러오지 못했습니다.');
     }
+}
+
+function renderAdminCommentFlags(comment) {
+    const flags = [];
+    if (isDeletedComment(comment)) {
+        flags.push('<span class="admin-comment-flag deleted">삭제됨</span>');
+    }
+    if (isSecretComment(comment)) {
+        flags.push('<span class="admin-comment-flag secret">비밀댓글</span>');
+    }
+    return flags.join('');
+}
+
+function getAdminCommentRowClass(comment) {
+    const classes = [];
+    if (isDeletedComment(comment)) classes.push('admin-comment-row-deleted');
+    if (isSecretComment(comment)) classes.push('admin-comment-row-secret');
+    return classes.join(' ');
+}
+
+function isDeletedComment(comment) {
+    return Boolean(comment.isDeleted || comment.is_deleted);
+}
+
+function isSecretComment(comment) {
+    return Boolean(comment.isSecret || comment.is_secret);
 }
 
 function toggleLoading(prefix, isLoading) {
