@@ -53,10 +53,7 @@ function bindTabs() {
         });
     });
 
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => Auth.logout());
-    }
+    Auth.bindLogoutButton();
 }
 
 function renderHeaderUser(user) {

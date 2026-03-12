@@ -9,12 +9,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    initHeader();
+    initBookmarksHeader();
     loadBookmarks(currentPage);
     setupEventListeners();
 });
 
-function initHeader() {
+function initBookmarksHeader() {
     const user = Auth.getUser();
     const userNickname = document.getElementById('user-nickname');
     const adminLink = document.getElementById('admin-link');
@@ -29,16 +29,8 @@ function initHeader() {
 }
 
 function setupEventListeners() {
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (confirm('로그아웃 하시겠습니까?')) {
-                Auth.logout();
-            }
-        });
-    }
-    
+    Auth.bindLogoutButton();
+
     const retryBtn = document.getElementById('retry-btn');
     if (retryBtn) {
         retryBtn.addEventListener('click', () => loadBookmarks(currentPage));
