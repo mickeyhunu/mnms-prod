@@ -200,6 +200,23 @@ function formatDateTime(dateString) {
    });
 }
 
+function isWithin24Hours(dateValue) {
+   if (!dateValue) return false;
+
+   const date = new Date(dateValue);
+   if (Number.isNaN(date.getTime())) return false;
+
+   const diffInMs = Date.now() - date.getTime();
+   const twentyFourHoursInMs = 24 * 60 * 60 * 1000;
+   return diffInMs >= 0 && diffInMs < twentyFourHoursInMs;
+}
+
+function getNewBadgeHTML(dateValue) {
+   return isWithin24Hours(dateValue)
+      ? '<span class="new-badge" aria-label="24시간 이내 작성">N</span>'
+      : '';
+}
+
 function getURLParams() {
    const params = {};
    const urlParams = new URLSearchParams(window.location.search);

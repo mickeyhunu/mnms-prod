@@ -124,8 +124,8 @@ function createArticleItem(post) {
     const categoryTag = post.category && !isNoticePost(post)
         ? `<span class="article-tag">${sanitizeHTML(post.category)}</span>`
         : '';
-    const isNewPost = isWithin12Hours(post.createdAt);
-    const isNewComment = isWithin12Hours(
+    const isNewPost = isWithin24Hours(post.createdAt);
+    const isNewComment = isWithin24Hours(
         post.lastCommentCreatedAt
         || post.latestCommentCreatedAt
         || post.commentCreatedAt
@@ -139,9 +139,9 @@ function createArticleItem(post) {
                 <div class="article-title-row">
                     <span class="article-inline-icon" aria-hidden="true">💬</span>
                     <h3 class="article-title">${sanitizeHTML(post.title || '제목 없음')}</h3>
-                    ${shouldShowNewBadge ? '<span class="article-new-badge">NEW</span>' : ''}
+                    ${shouldShowNewBadge ? '<span class="new-badge article-new-badge">N</span>' : ''}
                     <span class="article-comment-inline">[${commentCount}]</span>
-                    ${shouldShowNewBadge ? '<span class="article-mobile-badge">N</span>' : ''}
+                    ${shouldShowNewBadge ? '<span class="new-badge article-mobile-badge">N</span>' : ''}
                 </div>
                 <p class="article-preview">${previewText}</p>
                 <div class="article-meta">
@@ -158,16 +158,6 @@ function createArticleItem(post) {
     `;
 }
 
-function isWithin12Hours(dateValue) {
-    if (!dateValue) return false;
-
-    const date = new Date(dateValue);
-    if (Number.isNaN(date.getTime())) return false;
-
-    const diffInMs = Date.now() - date.getTime();
-    const twelveHoursInMs = 12 * 60 * 60 * 1000;
-    return diffInMs >= 0 && diffInMs < twelveHoursInMs;
-}
 
 function getPreviewText(post) {
     const source = post.preview || post.content || post.body || '';
