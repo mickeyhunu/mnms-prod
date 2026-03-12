@@ -73,6 +73,16 @@
         gap: 10px;
     }
 
+    .form-actions.form-actions-inline {
+        flex-direction: row;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+    }
+
+    .form-actions.form-actions-inline .btn {
+        width: auto;
+    }
+
     .btn {
         width: 100%;
         text-align: center;
