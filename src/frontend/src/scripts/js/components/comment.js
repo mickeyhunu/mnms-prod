@@ -179,7 +179,7 @@ function showReplyForm(parentCommentId) {
             <div class="form-group">
                 <textarea id="reply-content-${parentCommentId}" class="form-control" placeholder="답글을 입력하세요" rows="3" required></textarea>
             </div>
-            <div class="form-actions form-actions-inline" style="justify-content: flex-end; gap: 8px;">
+            <div class="form-actions form-actions-inline" style="display: flex; style="justify-content: flex-end; gap: 8px;">
                 <button type="submit" class="btn btn-sm btn-primary">등록</button>
                 <button type="button" onclick="hideReplyForm(${parentCommentId})" class="btn btn-sm btn-secondary">취소</button>
             </div>

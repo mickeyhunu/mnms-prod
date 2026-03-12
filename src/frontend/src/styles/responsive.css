@@ -73,16 +73,6 @@
         gap: 10px;
     }
 
-    .form-actions.form-actions-inline {
-        flex-direction: row;
-        justify-content: flex-end;
-        flex-wrap: nowrap;
-    }
-
-    .form-actions.form-actions-inline .btn {
-        width: auto;
-    }
-
     .btn {
         width: 100%;
         text-align: center;
@@ -237,4 +227,19 @@
     .image-gallery {
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     }
+}
+
+.form-actions {
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-actions.form-actions-inline {
+    flex-direction: row;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+}
+
+.form-actions.form-actions-inline .btn {
+    width: auto;
 }
