@@ -137,8 +137,9 @@ function createCommentElement(comment, isReply = false) {
         <button class="btn btn-sm btn-danger" onclick="deleteComment(${comment.id})">삭제</button>
     ` : '';
     
-    // 답글 버튼 (대댓글이 아니고 로그인한 경우만)
-    const replyButton = (!isReply && Auth.isAuthenticated()) ? `
+    // 답글 버튼 (대댓글이 아니고 권한이 있는 경우만)
+    const canReply = Auth.isAuthenticated() && comment.canReply !== false;
+    const replyButton = (!isReply && canReply) ? `
         <button class="btn btn-sm btn-outline" onclick="showReplyForm(${comment.id})">답글</button>
     ` : '';
     
