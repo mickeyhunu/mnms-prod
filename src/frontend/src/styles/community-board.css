@@ -288,7 +288,9 @@
 }
 
 .article-new-badge {
-    font-size: 12px;
+    font-size: 10px;
+    color: #db3a35;
+    font-weight: 700;
     flex-shrink: 0;
 }
 
@@ -299,7 +301,16 @@
 }
 
 .article-mobile-badge {
-    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    color: #6d6d6d;
+    font-size: 10px;
+    font-weight: 700;
     flex-shrink: 0;
 }
 

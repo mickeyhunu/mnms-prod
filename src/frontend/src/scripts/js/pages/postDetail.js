@@ -608,7 +608,7 @@ function createCommentItem(comment, depth = 0) {
                 </div>
                 <div class="comment-content ${isAdminComment ? 'admin-comment-content' : ''}" id="comment-content-${comment.id}">${sanitizeHTML(comment.content).replace(/\n/g, '<br>')}</div>
                 <div class="comment-footer">
-                    <span class="comment-date">${formatDateTime(comment.createdAt)}</span>${getNewBadgeHTML(comment.createdAt)}
+                    <span class="comment-date">${formatDateTime(comment.createdAt)}</span>
                     ${canReply ? `<button class="comment-reply-link" onclick="showReplyForm(${comment.id}, '${sanitizeHTML(comment.authorNickname)}')">답글쓰기</button>` : ''}
                 </div>
             </div>

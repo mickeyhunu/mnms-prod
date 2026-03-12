@@ -571,9 +571,3 @@ body,
     box-shadow: none;
     transform: none;
 }
-
-.new-badge {
-    color: #ff0000;
-    font-weight: 700;
-    margin-left: 4px;
-}

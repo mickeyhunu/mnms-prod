@@ -151,7 +151,7 @@ function createCommentElement(comment, isReply = false) {
                 <div>
                     ${replyPrefix}
                     <span class="comment-author">${sanitizeHTML(comment.authorNickname)}</span>
-                    <span class="comment-date">${formatDate(comment.createdAt)}</span>${getNewBadgeHTML(comment.createdAt)}
+                    <span class="comment-date">${formatDate(comment.createdAt)}</span>
                 </div>
                 <div class="comment-actions">
                     ${replyButton}
