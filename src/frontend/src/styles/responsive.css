@@ -64,8 +64,8 @@
     }
 
     .post-actions {
-        flex-direction: column;
-        gap: 10px;
+        flex-direction: row;
+        gap: 0px;
     }
 
     .form-actions {
