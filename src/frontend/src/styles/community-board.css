@@ -155,6 +155,16 @@
     font-weight: 700;
 }
 
+.board-table .badge-new {
+    display: inline-block;
+    margin-left: 6px;
+    color: #e60012;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    vertical-align: middle;
+}
+
 .home-service-wrap {
     max-width: 100px;
     padding-top: 24px;
