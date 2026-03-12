@@ -4,19 +4,7 @@
 function initHeader() {
     Auth.updateHeaderUI();
     
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', handleLogout);
-    }
-}
-
-function handleLogout(e) {
-    e.preventDefault();
-    
-    if (confirm('로그아웃 하시겠습니까?')) {
-        AuthAPI.logout();
-        window.location.href = '/';
-    }
+    Auth.bindLogoutButton();
 }
 
 function updateHeaderForUser(user) {

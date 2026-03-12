@@ -32,8 +32,7 @@ async function initAdminPage() {
 }
 
 function bindCommonEvents() {
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) logoutBtn.addEventListener('click', () => Auth.logout());
+    Auth.bindLogoutButton();
 
     const tabs = document.querySelectorAll('.admin-tab');
     tabs.forEach(tab => {

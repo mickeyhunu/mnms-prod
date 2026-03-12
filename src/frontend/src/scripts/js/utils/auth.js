@@ -79,6 +79,30 @@ const Auth = {
             if (navGuest) navGuest.classList.remove('hidden');
             if (navUser) navUser.classList.add('hidden');
         }
+
+        this.bindLogoutButton();
+    },
+    bindLogoutButton() {
+        const logoutBtn = document.getElementById('logout-btn');
+        if (!logoutBtn || logoutBtn.dataset.boundLogout === 'true') {
+            return;
+        }
+
+        logoutBtn.dataset.boundLogout = 'true';
+        logoutBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            if (!confirm('로그아웃 하시겠습니까?')) {
+                return;
+            }
+
+            if (typeof AuthAPI !== 'undefined' && AuthAPI.logout) {
+                await AuthAPI.logout();
+                return;
+            }
+
+            Auth.logout();
+        });
     }
 };
 
