@@ -332,11 +332,18 @@ function renderPostDetail(post) {
     const authorElement = document.getElementById('post-author');
     const dateElement = document.getElementById('post-date');
 
-    if (titleElement) titleElement.textContent = post.title || '';
+    const boardNameMap = { FREE: '자유게시판', ANON: '익명게시판', REVIEW: '후기게시판', STORY: '썰게시판', QUESTION: '질문게시판' };
+    const boardTagMap = { FREE: '자유', ANON: '익명', REVIEW: '후기', STORY: '썰', QUESTION: '질문' };
+    const boardType = String(post.boardType || '').toUpperCase();
+
+    if (titleElement) titleElement.textContent = `[${boardTagMap[boardType] || '자유'}] ${post.title || ''}`;
     if (contentElement) {
         contentElement.innerHTML = (post.content || '').replace(/\n/g, '<br>');
     }
-    if (authorElement) authorElement.textContent = post.authorNickname || '';
+    const boardNameEl = document.getElementById('post-board-name');
+    if (boardNameEl) boardNameEl.textContent = boardNameMap[boardType] || '게시판';
+
+    if (authorElement) authorElement.textContent = boardType === 'ANON' ? '익명' : (post.authorNickname || '');
     if (dateElement) dateElement.textContent = formatDateTime(post.createdAt) || '';
 
     const levelElement = document.getElementById('post-author-level');
@@ -364,12 +371,6 @@ function renderPostDetail(post) {
     const editBtn = document.getElementById('edit-btn');
     const deleteBtn = document.getElementById('delete-btn');
     const reportBtn = document.getElementById('report-btn');
-    const boardName = document.getElementById('post-board-name');
-
-    if (boardName) {
-        boardName.textContent = post.boardName || post.categoryName;
-    }
-
     const isGuestPost = !post.authorId && !post.userId;
     const isCurrentAuthor = post.isAuthor || isCurrentUserPostAuthor(post);
 
@@ -587,7 +588,7 @@ function createCommentItem(comment, depth = 0) {
             <div class="comment-body">
                 <div class="comment-meta">
                     <div class="comment-meta-main">
-                        <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${sanitizeHTML(comment.authorNickname)}</span>
+                        <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${sanitizeHTML(comment.authorNickname || '익명')}</span>
                         ${isSecretComment ? '<span style="margin-left:6px;font-size:12px;color:#7a5;">🔒 비밀댓글</span>' : ''}
                         ${isDeletedComment ? '<span style="margin-left:6px;font-size:12px;color:#999;">삭제됨</span>' : ''}
                     </div>

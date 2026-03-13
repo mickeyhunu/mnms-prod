@@ -11,6 +11,8 @@ const PostAPI = {
                 size
             };
 
+            query.boardType = params.boardType || 'ALL';
+
             if (params.keyword) {
                 query.keyword = params.keyword;
                 query.search = params.search || 'bbs_title';

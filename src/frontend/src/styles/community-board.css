@@ -459,3 +459,26 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+.board-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 0 12px 12px;
+}
+
+.board-tab {
+    border: 1px solid #d9c3ea;
+    background: #fff;
+    color: #7b34aa;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.board-tab.active {
+    background: #7b34aa;
+    color: #fff;
+    border-color: #7b34aa;
+}

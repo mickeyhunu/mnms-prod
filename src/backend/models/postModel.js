@@ -3,14 +3,40 @@
  */
 const { getPool } = require('../config/database');
 
+const BOARD_TYPES = {
+  FREE: 'FREE',
+  ANON: 'ANON',
+  REVIEW: 'REVIEW',
+  STORY: 'STORY',
+  QUESTION: 'QUESTION'
+};
+
+const BOARD_TYPE_SET = new Set(Object.values(BOARD_TYPES));
+
+function normalizeBoardType(boardType) {
+  const normalized = String(boardType || '').toUpperCase();
+  return BOARD_TYPE_SET.has(normalized) ? normalized : BOARD_TYPES.FREE;
+}
+
+function normalizeBoardFilter(boardType) {
+  const normalized = String(boardType || 'ALL').toUpperCase();
+  return normalized === 'ALL' ? 'ALL' : normalizeBoardType(normalized);
+}
+
 async function listPosts(page = 0, size = 10, options = {}) {
   const pool = getPool();
   const offset = page * size;
   const keyword = typeof options.keyword === 'string' ? options.keyword.trim() : '';
   const searchType = options.searchType || 'bbs_title';
+  const boardFilter = normalizeBoardFilter(options.boardType);
 
   const whereConditions = ['p.is_deleted = 0'];
   const whereParams = [];
+
+  if (boardFilter !== 'ALL') {
+    whereConditions.push('p.board_type = ?');
+    whereParams.push(boardFilter);
+  }
 
   if (keyword) {
     const likeKeyword = `%${keyword}%`;
@@ -27,9 +53,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
     }
   }
 
-  const whereClause = whereConditions.length > 0
-    ? `WHERE ${whereConditions.join(' AND ')}`
-    : '';
+  const whereClause = `WHERE ${whereConditions.join(' AND ')}`;
 
   const [countRows] = await pool.query(
     `SELECT COUNT(*) AS total
@@ -39,8 +63,10 @@ async function listPosts(page = 0, size = 10, options = {}) {
   );
 
   const [rows] = await pool.query(
-    `SELECT p.id, p.title, p.content, p.user_id AS userId, p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
+    `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
+            p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
+            COALESCE(u.role, 'USER') AS authorRole,
             (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS commentCount,
             (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
@@ -53,11 +79,12 @@ async function listPosts(page = 0, size = 10, options = {}) {
   return { rows, total: Number(countRows[0].total) };
 }
 
-async function createPost({ userId, title, content }) {
+async function createPost({ userId, title, content, boardType = BOARD_TYPES.FREE }) {
   const pool = getPool();
+  const normalizedBoardType = normalizeBoardType(boardType);
   const [result] = await pool.query(
-    'INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)',
-    [userId || null, title, content]
+    'INSERT INTO posts (user_id, board_type, title, content) VALUES (?, ?, ?, ?)',
+    [userId || null, normalizedBoardType, title, content]
   );
   return result.insertId;
 }
@@ -78,8 +105,10 @@ async function findPostByIdIncludingDeleted(id) {
 async function findPostDetailById(id) {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT p.id, p.title, p.content, p.user_id AS userId, p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
+    `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
+            p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
+            COALESCE(u.role, 'USER') AS authorRole,
             (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
@@ -169,6 +198,7 @@ async function togglePostLike(postId, userId) {
 }
 
 module.exports = {
+  BOARD_TYPES,
   listPosts,
   createPost,
   findPostById,

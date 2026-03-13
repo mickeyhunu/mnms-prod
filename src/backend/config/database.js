@@ -53,6 +53,9 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS posts (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       user_id BIGINT NULL,
+      board_type ENUM('FREE','ANON','REVIEW','STORY','QUESTION') NOT NULL DEFAULT 'FREE',
+      is_notice TINYINT(1) NOT NULL DEFAULT 0,
+      notice_target_boards VARCHAR(50) NULL,
       title VARCHAR(255) NOT NULL,
       content TEXT NOT NULL,
       is_deleted TINYINT(1) NOT NULL DEFAULT 0,
@@ -89,6 +92,51 @@ async function initDatabase() {
 
   if (!postIsDeletedColumn.length) {
     await pool.query('ALTER TABLE posts ADD COLUMN is_deleted TINYINT(1) NOT NULL DEFAULT 0 AFTER content');
+  }
+
+  const [boardTypeColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'posts'
+       AND COLUMN_NAME = 'board_type'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!boardTypeColumn.length) {
+    await pool.query("ALTER TABLE posts ADD COLUMN board_type ENUM('FREE','ANON','REVIEW','STORY','QUESTION') NOT NULL DEFAULT 'FREE' AFTER user_id");
+  }
+
+
+  await pool.query("ALTER TABLE posts MODIFY COLUMN board_type ENUM('FREE','ANON','REVIEW','STORY','QUESTION') NOT NULL DEFAULT 'FREE'");
+
+  const [isNoticeColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'posts'
+       AND COLUMN_NAME = 'is_notice'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!isNoticeColumn.length) {
+    await pool.query('ALTER TABLE posts ADD COLUMN is_notice TINYINT(1) NOT NULL DEFAULT 0 AFTER board_type');
+  }
+
+  const [noticeTargetColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'posts'
+       AND COLUMN_NAME = 'notice_target_boards'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!noticeTargetColumn.length) {
+    await pool.query('ALTER TABLE posts ADD COLUMN notice_target_boards VARCHAR(50) NULL AFTER is_notice');
   }
 
   await pool.query(`

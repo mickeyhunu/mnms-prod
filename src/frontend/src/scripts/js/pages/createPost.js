@@ -20,6 +20,7 @@ function initCreatePost() {
     setupEventListeners();
     toggleGuestPasswordField();
     setupImageUpload();
+    setupBoardOptions();
     setupModeUI();
     validateForm();
 
@@ -46,6 +47,10 @@ function toggleGuestPasswordField() {
     } else {
         group.classList.remove('hidden');
     }
+}
+
+function setupBoardOptions() {
+    // 카테고리 선택은 모든 로그인 사용자에게 동일하게 제공됩니다.
 }
 
 function setupEventListeners() {
@@ -227,6 +232,7 @@ async function handleSubmit(event) {
     const guestPasswordInput = document.getElementById('guest-password');
 
     const guestPassword = guestPasswordInput?.value?.trim() || '';
+    const boardType = document.getElementById('board-type')?.value || 'FREE';
 
     if (!titleValue || !contentValue) {
         alert('제목과 내용을 모두 입력해주세요.');
@@ -254,6 +260,7 @@ async function handleSubmit(event) {
         const payload = {
             title: titleValue,
             content: contentValue,
+            boardType,
             imageUrl: newImageUrl || existingImageUrl,
             guestPassword: Auth.isAuthenticated() ? undefined : guestPassword
         };

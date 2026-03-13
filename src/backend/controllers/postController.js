@@ -3,6 +3,8 @@
  */
 const postModel = require('../models/postModel');
 
+const BOARD_TYPES = postModel.BOARD_TYPES || { FREE: 'FREE', ANON: 'ANON', REVIEW: 'REVIEW', STORY: 'STORY', QUESTION: 'QUESTION' };
+
 const DEFAULT_PAGE = 0;
 const DEFAULT_SIZE = 10;
 const MAX_SIZE = 100;
@@ -22,6 +24,12 @@ function parseId(value) {
   return Number.isInteger(id) && id > 0 ? id : null;
 }
 
+function parseBoardType(value) {
+  const normalized = String(value || '').toUpperCase();
+  if (normalized === 'ALL') return 'ALL';
+  if (Object.values(BOARD_TYPES).includes(normalized)) return normalized;
+  return BOARD_TYPES.FREE;
+}
 
 function canViewSecretComment(comment, post, currentUser) {
   if (!comment.isSecret) {
@@ -50,6 +58,22 @@ function canReplyToComment(comment, post, currentUser) {
     || Number(currentUser.id) === Number(post.user_id);
 }
 
+
+function sanitizePostForViewer(post) {
+  if (!post) return post;
+
+  const normalized = {
+    ...post,
+    boardType: parseBoardType(post.boardType)
+  };
+
+  if (normalized.boardType === BOARD_TYPES.ANON) {
+    normalized.authorNickname = '익명';
+  }
+
+  return normalized;
+}
+
 function sanitizeCommentForViewer(comment, post, currentUser) {
   const normalized = {
     ...comment,
@@ -69,6 +93,10 @@ function sanitizeCommentForViewer(comment, post, currentUser) {
     };
   }
 
+  if (post.board_type === BOARD_TYPES.ANON || post.boardType === BOARD_TYPES.ANON) {
+    normalized.authorNickname = '익명';
+  }
+
   if (canViewSecretComment(normalized, post, currentUser)) {
     return normalized;
   }
@@ -85,8 +113,10 @@ async function listPosts(req, res, next) {
     const { page, size } = parsePagination(req.query.page, req.query.size);
     const keyword = typeof req.query.keyword === 'string' ? req.query.keyword.trim() : '';
     const searchType = typeof req.query.search === 'string' ? req.query.search : 'bbs_title';
-    const { rows, total } = await postModel.listPosts(page, size, { keyword, searchType });
-    res.json({ content: rows, totalElements: total, page, size, totalPages: Math.ceil(total / size) });
+    const boardType = parseBoardType(req.query.boardType || 'ALL');
+    const { rows, total } = await postModel.listPosts(page, size, { keyword, searchType, boardType });
+    const normalizedRows = rows.map((item) => sanitizePostForViewer(item));
+    res.json({ content: normalizedRows, totalElements: total, page, size, totalPages: Math.ceil(total / size) });
   } catch (error) {
     next(error);
   }
@@ -110,7 +140,7 @@ async function getPost(req, res, next) {
       ? await postModel.isPostLikedByUser(postId, req.user.id)
       : false;
 
-    res.json({ ...postDetail, isLiked, comments: visibleComments });
+    res.json({ ...sanitizePostForViewer(postDetail), isLiked, comments: visibleComments });
   } catch (error) {
     next(error);
   }
@@ -140,7 +170,13 @@ async function createPost(req, res, next) {
     const { title, content } = req.body;
     if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
 
-    const postId = await postModel.createPost({ userId: req.user.id, title, content });
+    const boardType = parseBoardType(req.body.boardType);
+    const postId = await postModel.createPost({
+      userId: req.user.id,
+      title,
+      content,
+      boardType
+    });
     const post = await postModel.findPostById(postId);
     res.status(201).json({ success: true, post });
   } catch (error) {

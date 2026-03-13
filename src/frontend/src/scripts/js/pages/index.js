@@ -9,6 +9,7 @@ const searchState = {
     searchType: 'bbs_title',
     keyword: ''
 };
+let currentBoardType = 'ALL';
 
 async function initIndexPage() {
     Auth.updateHeaderUI();
@@ -18,6 +19,7 @@ async function initIndexPage() {
     }
 
     setupCommunityActions();
+    initBoardTabs();
     initSearchEvents();
     await loadPosts(0);
     initCommonEvents();
@@ -28,7 +30,6 @@ async function loadPosts(page = 0) {
 
     const loading = document.getElementById('loading');
     const postListContainer = document.getElementById('post-list');
-    const noticeArea = document.getElementById('notice-area');
     const errorBanner = document.getElementById('error-banner');
     const emptyState = document.getElementById('empty-state');
     const pagination = document.getElementById('pagination');
@@ -45,7 +46,8 @@ async function loadPosts(page = 0) {
             page,
             size: pageSize,
             keyword: searchState.keyword,
-            search: searchState.searchType
+            search: searchState.searchType,
+            boardType: currentBoardType
         });
 
         const posts = Array.isArray(response?.posts)
@@ -61,11 +63,10 @@ async function loadPosts(page = 0) {
         totalPages = resolvedTotalPages;
 
         if (posts.length > 0) {
-            renderPostList(posts, postListContainer, noticeArea);
+            renderPostList(posts, postListContainer);
             updatePagination();
             showElement(pagination);
         } else {
-            noticeArea.innerHTML = '';
             postListContainer.innerHTML = '';
             showElement(emptyState);
         }
@@ -78,42 +79,24 @@ async function loadPosts(page = 0) {
     }
 }
 
-function renderPostList(posts, container, noticeArea) {
+function renderPostList(posts, container) {
     if (!container) return;
 
-    const notices = posts.filter((post) => isNoticePost(post));
-    const normalPosts = posts.filter((post) => !isNoticePost(post));
-
-    noticeArea.innerHTML = notices
-        .map((post) => `
-            <div class="notice-item">
-                <a href="/post-detail?id=${post.id}">
-                    <span class="badge">공지</span>
-                    <span>${sanitizeHTML(post.title || '제목 없음')}</span>
-                </a>
-            </div>
-        `)
-        .join('');
-
-    container.innerHTML = normalPosts
+    container.innerHTML = posts
         .map((post) => createArticleItem(post))
         .join('');
 }
 
-function isNoticePost(post) {
-    const title = String(post?.title || '').toLowerCase();
-    const category = String(post?.category || post?.type || '').toLowerCase();
-    const authorRole = String(post?.authorRole || '').toUpperCase();
+function getBoardLabel(boardType) {
+    const boardMap = {
+        FREE: '자유',
+        ANON: '익명',
+        REVIEW: '후기',
+        STORY: '썰',
+        QUESTION: '질문'
+    };
 
-    return Boolean(
-        post?.isAdminPost
-        || post?.adminPost
-        || authorRole === 'ADMIN'
-        || category.includes('공지')
-        || category.includes('필독')
-        || title.includes('[공지]')
-        || title.includes('[필독]')
-    );
+    return boardMap[String(boardType || '').toUpperCase()] || '자유';
 }
 
 function createArticleItem(post) {
@@ -122,11 +105,10 @@ function createArticleItem(post) {
     const viewCount = Number(post.viewCount || 0);
     const recommendCount = Number(post.likeCount || post.recommendCount || 0);
     const previewText = sanitizeHTML(getPreviewText(post));
-    const authorName = sanitizeHTML(post.authorNickname || '익명');
+    const authorName = sanitizeHTML(post.boardType === 'ANON' ? '익명' : (post.authorNickname || '익명'));
+    const boardLabel = sanitizeHTML(getBoardLabel(post.boardType));
     const authorBadge = sanitizeHTML(post.authorRole === 'ADMIN' ? '관리자' : authorName);
-    const categoryTag = post.category && !isNoticePost(post)
-        ? `<span class="article-tag">${sanitizeHTML(post.category)}</span>`
-        : '';
+    const categoryTag = '';
     const isNewPost = isWithin12Hours(post.createdAt);
     const isNewComment = isWithin12Hours(
         post.lastCommentCreatedAt
@@ -141,7 +123,7 @@ function createArticleItem(post) {
             <a class="article-main" href="/post-detail?id=${post.id}">
                 <div class="article-title-row">
                     <span class="article-inline-icon" aria-hidden="true">💬</span>
-                    <h3 class="article-title">${sanitizeHTML(post.title || '제목 없음')}</h3>
+                    <h3 class="article-title">[${boardLabel}] ${sanitizeHTML(post.title || '제목 없음')}</h3>
                     <span class="article-comment-inline">[${commentCount}]</span>
                     ${shouldShowNewBadge ? '<span class="article-new-badge">NEW</span>' : ''}
                 </div>
@@ -204,6 +186,19 @@ function updatePagination() {
     });
 }
 
+
+function initBoardTabs() {
+    const tabs = document.querySelectorAll('.board-tab');
+    if (!tabs.length) return;
+
+    tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            currentBoardType = tab.dataset.boardType || 'ALL';
+            tabs.forEach((item) => item.classList.toggle('active', item === tab));
+            loadPosts(0);
+        });
+    });
+}
 
 function setupCommunityActions() {
     const communityActions = document.getElementById('community-actions');
