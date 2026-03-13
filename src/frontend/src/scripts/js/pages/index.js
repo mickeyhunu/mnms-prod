@@ -193,7 +193,6 @@ function createArticleItem(post) {
                     <h3 class="article-title">[${boardLabel}] ${sanitizeHTML(post.title || '제목 없음')}</h3>
                     <span class="article-comment-inline">[${commentCount}]</span>
                     ${shouldShowNewBadge ? '<span class="article-new-badge">NEW</span>' : ''}
-                    <span class="article-read-state ${isViewedPost ? 'viewed' : 'unviewed'}">${isViewedPost ? '확인완료' : '미확인'}</span>
                 </div>
                 <p class="article-preview">${previewText}</p>
                 <div class="article-meta">
