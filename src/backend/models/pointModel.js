@@ -7,7 +7,10 @@ const POINT_RULES = {
   REGISTER: { points: 20, dailyLimit: null },
   LOGIN_DAILY: { points: 5, dailyLimit: 1 },
   CREATE_POST: { points: 10, dailyLimit: 5 },
-  CREATE_COMMENT: { points: 2, dailyLimit: 20 }
+  CREATE_REVIEW_BONUS: { points: 10, dailyLimit: 5 },
+  CREATE_COMMENT: { points: 2, dailyLimit: 20 },
+  LIKE_POST: { points: 1, dailyLimit: 20 },
+  RECEIVE_POST_LIKE: { points: 5, dailyLimit: null }
 };
 
 function startOfToday() {
