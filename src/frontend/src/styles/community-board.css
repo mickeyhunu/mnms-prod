@@ -256,6 +256,68 @@
     background: #fff;
 }
 
+.best-posts-section {
+    padding: 12px;
+    background: #f8f5ff;
+    border-bottom: 1px solid #e5ddf6;
+}
+
+.best-posts-block + .best-posts-block {
+    margin-top: 10px;
+}
+
+.best-posts-title {
+    margin: 0 0 6px;
+    font-size: 14px;
+    color: #3c2457;
+}
+
+.best-posts-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.best-post-item + .best-post-item {
+    margin-top: 4px;
+}
+
+.best-post-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #242424;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.best-post-rank {
+    min-width: 16px;
+    font-weight: 700;
+    color: #6c2e96;
+}
+
+.best-post-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.best-post-meta {
+    color: #646464;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.best-posts-empty {
+    margin: 0;
+    font-size: 12px;
+    color: #787878;
+}
+
 .article-item {
     border-bottom: 1px solid #e4e4e4;
     padding: 7px 7px 9px;

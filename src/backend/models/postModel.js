@@ -68,7 +68,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'USER') AS authorRole,
             (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS commentCount,
-            (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
+            (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
      ${whereClause}
@@ -119,7 +119,7 @@ async function findPostDetailById(id) {
               WHEN COALESCE(u.total_points, 0) >= 100 THEN 2
               ELSE 1
             END AS authorLevel,
-            (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
+            (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
      WHERE p.id = ? AND p.is_deleted = 0`,
@@ -210,10 +210,54 @@ async function togglePostLike(postId, userId) {
     await pool.query('INSERT INTO post_likes (post_id, user_id) VALUES (?, ?)', [postId, userId]);
   }
 
-  const [countRows] = await pool.query('SELECT COUNT(*) AS likeCount FROM post_likes WHERE post_id = ?', [postId]);
+  const [countRows] = await pool.query('SELECT COUNT(DISTINCT user_id) AS likeCount FROM post_likes WHERE post_id = ?', [postId]);
   return {
     isLiked: !liked,
     likeCount: Number(countRows[0].likeCount)
+  };
+}
+
+async function listBestPosts() {
+  const pool = getPool();
+
+  const selectQuery = `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
+            p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
+            COALESCE(u.nickname, '비회원') AS authorNickname,
+            COALESCE(u.role, 'USER') AS authorRole,
+            COALESCE(stats.commentCount, 0) AS commentCount,
+            COALESCE(stats.likeCount, 0) AS likeCount,
+            ((COALESCE(stats.likeCount, 0) * 5) + (COALESCE(stats.commentCount, 0) * 2) + (p.view_count * 0.1)) AS score
+     FROM posts p
+     LEFT JOIN users u ON u.id = p.user_id
+     LEFT JOIN (
+       SELECT p2.id,
+              COUNT(DISTINCT pl.user_id) AS likeCount,
+              (SELECT COUNT(*) FROM comments c WHERE c.post_id = p2.id) AS commentCount
+       FROM posts p2
+       LEFT JOIN post_likes pl ON pl.post_id = p2.id
+       GROUP BY p2.id
+     ) stats ON stats.id = p.id
+     WHERE p.is_deleted = 0`;
+
+  const [todayRows] = await pool.query(
+    `${selectQuery}
+     AND DATE(p.created_at) = CURDATE()
+     AND COALESCE(stats.likeCount, 0) >= 3
+     ORDER BY score DESC, p.created_at DESC
+     LIMIT 5`
+  );
+
+  const [weeklyRows] = await pool.query(
+    `${selectQuery}
+     AND p.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+     AND COALESCE(stats.likeCount, 0) >= 5
+     ORDER BY score DESC, p.created_at DESC
+     LIMIT 3`
+  );
+
+  return {
+    daily: todayRows,
+    weekly: weeklyRows
   };
 }
 
@@ -233,5 +277,6 @@ module.exports = {
   updateComment,
   deleteComment,
   isPostLikedByUser,
-  togglePostLike
+  togglePostLike,
+  listBestPosts
 };

@@ -123,6 +123,20 @@ async function listPosts(req, res, next) {
   }
 }
 
+async function listBestPosts(req, res, next) {
+  try {
+    const result = await postModel.listBestPosts();
+    const normalizeRows = (rows = []) => rows.map((item) => sanitizePostForViewer(item));
+
+    res.json({
+      daily: normalizeRows(result.daily),
+      weekly: normalizeRows(result.weekly)
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function getPost(req, res, next) {
   try {
     const postId = parseId(req.params.id);
@@ -358,6 +372,7 @@ async function deleteComment(req, res, next) {
 
 module.exports = {
   listPosts,
+  listBestPosts,
   getPost,
   createPost,
   updatePost,

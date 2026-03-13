@@ -8,6 +8,7 @@ const { authMiddleware, optionalAuthMiddleware } = require('../middlewares/authM
 const router = express.Router();
 
 router.get('/', controller.listPosts);
+router.get('/best', controller.listBestPosts);
 router.get('/:id', optionalAuthMiddleware, controller.getPost);
 router.post('/', authMiddleware, controller.createPost);
 router.put('/:id', authMiddleware, controller.updatePost);

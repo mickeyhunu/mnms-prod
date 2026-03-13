@@ -21,8 +21,60 @@ async function initIndexPage() {
     setupCommunityActions();
     initBoardTabs();
     initSearchEvents();
+    await loadBestPosts();
     await loadPosts(0);
     initCommonEvents();
+}
+
+async function loadBestPosts() {
+    const dailyList = document.getElementById('daily-best-list');
+    const weeklyList = document.getElementById('weekly-best-list');
+    const dailyEmpty = document.getElementById('daily-best-empty');
+    const weeklyEmpty = document.getElementById('weekly-best-empty');
+
+    if (!dailyList || !weeklyList || !dailyEmpty || !weeklyEmpty) return;
+
+    try {
+        const response = await PostAPI.getBestPosts();
+        const dailyPosts = Array.isArray(response?.daily) ? response.daily : [];
+        const weeklyPosts = Array.isArray(response?.weekly) ? response.weekly : [];
+
+        renderBestPosts(dailyPosts, dailyList, dailyEmpty);
+        renderBestPosts(weeklyPosts, weeklyList, weeklyEmpty);
+    } catch (error) {
+        dailyList.innerHTML = '';
+        weeklyList.innerHTML = '';
+        dailyEmpty.textContent = '베스트 게시글을 불러오지 못했습니다.';
+        weeklyEmpty.textContent = '베스트 게시글을 불러오지 못했습니다.';
+        showElement(dailyEmpty);
+        showElement(weeklyEmpty);
+    }
+}
+
+function renderBestPosts(posts, container, emptyElement) {
+    if (!Array.isArray(posts) || !posts.length) {
+        container.innerHTML = '';
+        showElement(emptyElement);
+        return;
+    }
+
+    hideElement(emptyElement);
+    container.innerHTML = posts.map((post, index) => {
+        const score = Number(post.score || 0).toFixed(1);
+        const likeCount = Number(post.likeCount || 0);
+        const commentCount = Number(post.commentCount || 0);
+        const viewCount = Number(post.viewCount || 0);
+
+        return `
+            <li class="best-post-item">
+                <a class="best-post-link" href="/post-detail?id=${post.id}">
+                    <span class="best-post-rank">${index + 1}</span>
+                    <span class="best-post-text">[${sanitizeHTML(getBoardLabel(post.boardType))}] ${sanitizeHTML(post.title || '제목 없음')}</span>
+                    <span class="best-post-meta">점수 ${score} · 👍 ${likeCount} · 💬 ${commentCount} · 👁 ${viewCount}</span>
+                </a>
+            </li>
+        `;
+    }).join('');
 }
 
 async function loadPosts(page = 0) {
