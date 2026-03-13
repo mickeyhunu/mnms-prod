@@ -379,6 +379,7 @@
 
 .company-footer-slot {
     margin-top: 28px;
+    padding: 0 20px 20px;
     background: #27262b;
     color: #f6f6f9;
 }
@@ -397,23 +398,6 @@
     letter-spacing: 0.2px;
 }
 
-.company-footer-socials {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.company-social-btn {
-    width: 32px;
-    height: 32px;
-    border: none;
-    border-radius: 9999px;
-    background: #35333b;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-}
 
 .company-footer-links-row {
     display: flex;
