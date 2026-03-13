@@ -813,7 +813,7 @@ const pageRegistry = {
 
             <section class="company-footer-slot">
                 <div class="company-footer-top">
-                    <div class="company-footer-logo">Midnight Terrace</div>
+                    <div class="company-footer-logo">미드나잇 맨즈</div>
                 </div>
 
                 <div class="company-footer-links-row">
@@ -825,10 +825,9 @@ const pageRegistry = {
                 </div>
 
                 <div class="company-business-link-wrap">
-                    <a target="_blank" rel="noopener noreferrer" href="/business-info" class="company-business-link">
-                        (주)블랙스케일 사업자정보
-                        <span aria-hidden="true">›</span>
-                    </a>
+                    <span class="company-business-link" aria-disabled="true">
+                        사업자정보 준비중
+                    </span>
                 </div>
 
                 <p class="company-footer-notice">미드나잇테라스는 통신판매 중개자이며, 통신 판매의 당사자가 아닙니다. 상품, 상품정보, 거래에 관한 의무와 책임은 판매자에게 있습니다.</p>
