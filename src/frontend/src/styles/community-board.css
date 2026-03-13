@@ -506,6 +506,14 @@
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
+    box-shadow: 0 3px 8px rgba(94, 43, 126, 0.08);
+    transition: all 0.2s ease;
+}
+
+.board-tab:hover {
+    border-color: #b579df;
+    color: #542274;
+    transform: translateY(-1px);
 }
 
 .board-tab:hover {
