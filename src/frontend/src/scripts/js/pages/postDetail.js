@@ -4,6 +4,7 @@
 let postId = null;
 let currentCommentsPage = 1;
 let currentPostAuthor = null;
+let currentPostBoardType = '';
 let selectedMessageRecipient = null;
 let replyingTo = null;
 let activeCommentActionId = null;
@@ -335,6 +336,11 @@ function renderPostDetail(post) {
     const boardNameMap = { FREE: '자유게시판', ANON: '익명게시판', REVIEW: '후기게시판', STORY: '썰게시판', QUESTION: '질문게시판' };
     const boardTagMap = { FREE: '자유', ANON: '익명', REVIEW: '후기', STORY: '썰', QUESTION: '질문' };
     const boardType = String(post.boardType || '').toUpperCase();
+    currentPostBoardType = boardType;
+    const isCurrentAuthor = post.isAuthor || isCurrentUserPostAuthor(post);
+    const postAuthorLabel = boardType === 'ANON'
+        ? `익명${isCurrentAuthor ? ' (본인)' : ''}`
+        : (post.authorNickname || '');
 
     if (titleElement) titleElement.textContent = `[${boardTagMap[boardType] || '자유'}] ${post.title || ''}`;
     if (contentElement) {
@@ -343,7 +349,7 @@ function renderPostDetail(post) {
     const boardNameEl = document.getElementById('post-board-name');
     if (boardNameEl) boardNameEl.textContent = boardNameMap[boardType] || '게시판';
 
-    if (authorElement) authorElement.textContent = boardType === 'ANON' ? '익명' : (post.authorNickname || '');
+    if (authorElement) authorElement.textContent = postAuthorLabel;
     if (dateElement) dateElement.textContent = formatDateTime(post.createdAt) || '';
 
     const levelElement = document.getElementById('post-author-level');
@@ -372,8 +378,6 @@ function renderPostDetail(post) {
     const deleteBtn = document.getElementById('delete-btn');
     const reportBtn = document.getElementById('report-btn');
     const isGuestPost = !post.authorId && !post.userId;
-    const isCurrentAuthor = post.isAuthor || isCurrentUserPostAuthor(post);
-
     if (isCurrentAuthor || isGuestPost) {
         console.log('작성자임 - 수정/삭제 버튼 표시');
         if (messageBtn) messageBtn.style.display = 'none';
@@ -571,6 +575,9 @@ function createCommentItem(comment, depth = 0) {
                           comment.role === 'ADMIN';
     const isSecretComment = Boolean(comment.isSecret);
     const isDeletedComment = Boolean(comment.isDeleted);
+    const isAnonymousComment = currentPostBoardType === 'ANON' || String(comment.authorNickname || '').trim() === '익명';
+    const showOwnBadge = isAuthor && (isAnonymousComment || isSecretComment);
+    const authorName = sanitizeHTML(comment.authorNickname || '익명');
     const canReplyByServer = comment.canReply !== false;
     const canReply = Auth.isAuthenticated() && depth < 3 && !isDeletedComment && canReplyByServer;
     const canGuestEdit = !Auth.isAuthenticated() && !comment.userId;
@@ -588,7 +595,8 @@ function createCommentItem(comment, depth = 0) {
             <div class="comment-body">
                 <div class="comment-meta">
                     <div class="comment-meta-main">
-                        <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${sanitizeHTML(comment.authorNickname || '익명')}</span>
+                        <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${authorName}</span>
+                        ${showOwnBadge ? '<span class="own-content-badge">본인</span>' : ''}
                         ${isSecretComment ? '<span style="margin-left:6px;font-size:12px;color:#7a5;">🔒 비밀댓글</span>' : ''}
                         ${isDeletedComment ? '<span style="margin-left:6px;font-size:12px;color:#999;">삭제됨</span>' : ''}
                     </div>
