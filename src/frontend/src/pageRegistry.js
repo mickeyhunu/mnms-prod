@@ -200,12 +200,6 @@ const pageRegistry = {
         <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
-                    <button type="button" class="board-menu-toggle" id="board-menu-toggle" aria-label="카테고리 열기" aria-expanded="false" aria-controls="board-tabs-panel">
-                        <span aria-hidden="true">☰</span>
-                    </button>
-                    <nav class="board-tabs hidden" id="board-tabs-panel" aria-label="페이지 카테고리">
-                        <button type="button" class="board-tab active" data-board-type="BUSINESS">업체정보</button>
-                    </nav>
                     <span class="community-board-name">업체정보</span>
                 </div>
             </header>
@@ -565,12 +559,6 @@ const pageRegistry = {
         <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
-                    <button type="button" class="board-menu-toggle" id="board-menu-toggle" aria-label="카테고리 열기" aria-expanded="false" aria-controls="board-tabs-panel">
-                        <span aria-hidden="true">☰</span>
-                    </button>
-                    <nav class="board-tabs hidden" id="board-tabs-panel" aria-label="페이지 카테고리">
-                        <button type="button" class="board-tab active" data-board-type="LIVE">LIVE</button>
-                    </nav>
                     <span class="community-board-name">LIVE</span>
                 </div>
             </header>
@@ -679,12 +667,6 @@ const pageRegistry = {
         <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
-                    <button type="button" class="board-menu-toggle" id="board-menu-toggle" aria-label="카테고리 열기" aria-expanded="false" aria-controls="board-tabs-panel">
-                        <span aria-hidden="true">☰</span>
-                    </button>
-                    <nav class="board-tabs hidden" id="board-tabs-panel" aria-label="페이지 카테고리">
-                        <button type="button" class="board-tab active" data-board-type="MYPAGE">마이페이지</button>
-                    </nav>
                     <span class="community-board-name">마이페이지</span>
                 </div>
             </header>
