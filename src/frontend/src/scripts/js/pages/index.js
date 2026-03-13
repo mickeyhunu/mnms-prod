@@ -5,6 +5,7 @@ let currentPage = 0;
 let totalPages = 0;
 let isLoading = false;
 const pageSize = 20;
+const VIEWED_POST_IDS_STORAGE_KEY = 'communityViewedPostIds';
 const searchState = {
     searchType: 'bbs_title',
     keyword: ''
@@ -182,15 +183,17 @@ function createArticleItem(post) {
         || post.recentCommentCreatedAt
     );
     const shouldShowNewBadge = isNewPost || isNewComment || post.isNew || post.newPost;
+    const isViewedPost = hasViewedPost(post.id);
 
     return `
-        <li class="article-item">
-            <a class="article-main" href="/post-detail?id=${post.id}">
+        <li class="article-item ${isViewedPost ? 'article-item-viewed' : 'article-item-unviewed'}">
+            <a class="article-main" href="/post-detail?id=${post.id}" data-post-id="${post.id}">
                 <div class="article-title-row">
                     <span class="article-inline-icon" aria-hidden="true">💬</span>
                     <h3 class="article-title">[${boardLabel}] ${sanitizeHTML(post.title || '제목 없음')}</h3>
                     <span class="article-comment-inline">[${commentCount}]</span>
                     ${shouldShowNewBadge ? '<span class="article-new-badge">NEW</span>' : ''}
+                    <span class="article-read-state ${isViewedPost ? 'viewed' : 'unviewed'}">${isViewedPost ? '확인완료' : '미확인'}</span>
                 </div>
                 <p class="article-preview">${previewText}</p>
                 <div class="article-meta">
@@ -205,6 +208,35 @@ function createArticleItem(post) {
             </div>
         </li>
     `;
+}
+
+function getViewedPostIdSet() {
+    try {
+        const raw = localStorage.getItem(VIEWED_POST_IDS_STORAGE_KEY);
+        const parsed = JSON.parse(raw || '[]');
+        if (!Array.isArray(parsed)) return new Set();
+        return new Set(parsed.map((id) => String(id)));
+    } catch (error) {
+        return new Set();
+    }
+}
+
+function markPostAsViewed(postId) {
+    if (!postId) return;
+
+    const viewedPostIds = getViewedPostIdSet();
+    viewedPostIds.add(String(postId));
+
+    try {
+        localStorage.setItem(VIEWED_POST_IDS_STORAGE_KEY, JSON.stringify([...viewedPostIds]));
+    } catch (error) {
+        // localStorage 접근 제한 등 브라우저 예외 상황은 무시
+    }
+}
+
+function hasViewedPost(postId) {
+    if (!postId) return false;
+    return getViewedPostIdSet().has(String(postId));
 }
 
 function isWithin12Hours(dateValue) {
@@ -334,6 +366,17 @@ function initCommonEvents() {
         retryBtn.onclick = () => {
             if (!isLoading) loadPosts(currentPage);
         };
+    }
+
+    const postList = document.getElementById('post-list');
+    if (postList) {
+        postList.addEventListener('click', (event) => {
+            const targetLink = event.target.closest('.article-main');
+            if (!targetLink) return;
+
+            const targetPostId = targetLink.dataset.postId;
+            markPostAsViewed(targetPostId);
+        });
     }
 }
 
