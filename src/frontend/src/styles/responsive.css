@@ -175,10 +175,6 @@
 }
 
 @media (max-width: 480px) {
-    .container {
-        padding: 10px;
-    }
-
     .card, .post-card {
         padding: 12px;
     }
