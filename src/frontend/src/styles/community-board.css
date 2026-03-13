@@ -451,6 +451,10 @@
     gap: 8px;
 }
 
+.community-header-left {
+    position: relative;
+}
+
 .community-board-name {
     font-size: 16px;
     font-weight: 600;
@@ -460,22 +464,47 @@
     white-space: nowrap;
 }
 
+.board-menu-toggle {
+    border: 1px solid #5d6472;
+    border-radius: 6px;
+    background: #242933;
+    color: #f8fafc;
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.board-menu-toggle:hover {
+    background: #313848;
+}
+
 .board-tabs {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 150px;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    padding: 4px 12px 14px;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    border-radius: 8px;
+    background: #1f2430;
+    border: 1px solid #3a4150;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+    z-index: 20;
 }
 
 .board-tab {
-    border: 1px solid #d7c0ea;
-    background: linear-gradient(180deg, #fff 0%, #f8efff 100%);
-    color: #6f2f9b;
-    border-radius: 999px;
-    padding: 9px 15px;
+    width: 100%;
+    text-align: left;
+    border: 1px solid #41495a;
+    background: #2a3040;
+    color: #dbe2f1;
+    border-radius: 6px;
+    padding: 8px 10px;
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     box-shadow: 0 3px 8px rgba(94, 43, 126, 0.08);
     transition: all 0.2s ease;
@@ -487,9 +516,12 @@
     transform: translateY(-1px);
 }
 
+.board-tab:hover {
+    background: #353d4f;
+}
+
 .board-tab.active {
-    background: linear-gradient(180deg, #8e40c0 0%, #6c2e96 100%);
+    background: #6c2e96;
     color: #fff;
     border-color: #6c2e96;
-    box-shadow: 0 6px 14px rgba(108, 46, 150, 0.35);
 }
