@@ -109,6 +109,16 @@ async function findPostDetailById(id) {
             p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'USER') AS authorRole,
+            CASE
+              WHEN u.id IS NULL THEN NULL
+              WHEN COALESCE(u.total_points, 0) >= 15000 THEN 7
+              WHEN COALESCE(u.total_points, 0) >= 5000 THEN 6
+              WHEN COALESCE(u.total_points, 0) >= 2000 THEN 5
+              WHEN COALESCE(u.total_points, 0) >= 800 THEN 4
+              WHEN COALESCE(u.total_points, 0) >= 300 THEN 3
+              WHEN COALESCE(u.total_points, 0) >= 100 THEN 2
+              ELSE 1
+            END AS authorLevel,
             (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
@@ -136,7 +146,17 @@ async function listComments(postId) {
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.parent_id AS parentId, c.is_secret AS isSecret, c.is_deleted AS isDeleted, c.content, c.created_at AS createdAt,
-            COALESCE(u.nickname, '비회원') AS authorNickname
+            COALESCE(u.nickname, '비회원') AS authorNickname,
+            CASE
+              WHEN u.id IS NULL THEN NULL
+              WHEN COALESCE(u.total_points, 0) >= 15000 THEN 7
+              WHEN COALESCE(u.total_points, 0) >= 5000 THEN 6
+              WHEN COALESCE(u.total_points, 0) >= 2000 THEN 5
+              WHEN COALESCE(u.total_points, 0) >= 800 THEN 4
+              WHEN COALESCE(u.total_points, 0) >= 300 THEN 3
+              WHEN COALESCE(u.total_points, 0) >= 100 THEN 2
+              ELSE 1
+            END AS authorLevel
      FROM comments c
      LEFT JOIN users u ON u.id = c.user_id
      WHERE c.post_id = ?
