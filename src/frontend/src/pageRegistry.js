@@ -768,25 +768,22 @@ const pageRegistry = {
                     <div class="section-header">
                         <h2>고객센터</h2>
                     </div>
-                    <div class="mypage-card">
-                        <h3>1:1 문의</h3>
-                        <form id="support-form" class="support-form">
-                            <label>문의 유형
-                                <select name="inquiryType" id="inquiry-type">
-                                    <option value="광고/제휴">광고/제휴</option>
-                                    <option value="회원정보/계정">회원정보/계정</option>
-                                    <option value="서비스 오류">서비스 오류</option>
-                                    <option value="기타">기타</option>
-                                </select>
-                            </label>
-                            <label>문의 내용
-                                <textarea name="inquiryContent" id="inquiry-content" rows="6" placeholder="문의 내용을 입력해 주세요."></textarea>
-                            </label>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">문의 등록</button>
-                            </div>
-                            <p id="support-result" class="help-text"></p>
-                        </form>
+                    <div class="mypage-link-section">
+                        <p class="mypage-link-section-title">고객센터</p>
+                        <div class="mypage-link-list">
+                            <a target="_blank" rel="noopener noreferrer" class="mypage-link-item" href="https://o3z16.channel.io/workflows/739947">
+                                <span>1:1 고객센터</span>
+                                <span class="mypage-link-chevron" aria-hidden="true">›</span>
+                            </a>
+                            <a class="mypage-link-item" href="/board/customer/faq-search">
+                                <span>FAQ</span>
+                                <span class="mypage-link-chevron" aria-hidden="true">›</span>
+                            </a>
+                            <a class="mypage-link-item" href="/board/customer/feedback">
+                                <span>피드백 보내기</span>
+                                <span class="mypage-link-chevron" aria-hidden="true">›</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -794,19 +791,26 @@ const pageRegistry = {
                     <div class="section-header">
                         <h2>약관 및 정책</h2>
                     </div>
-                    <div class="policy-grid">
-                        <a href="#" class="mypage-card policy-card">
-                            <h3>이용약관</h3>
-                            <p>서비스 이용 시 필요한 기본 약관을 확인하세요.</p>
-                        </a>
-                        <a href="#" class="mypage-card policy-card">
-                            <h3>개인정보 처리방침</h3>
-                            <p>개인정보 수집 및 이용, 보관 정책을 확인하세요.</p>
-                        </a>
-                        <a href="#" class="mypage-card policy-card">
-                            <h3>커뮤니티 운영정책</h3>
-                            <p>건강한 커뮤니티 운영을 위한 기준을 확인하세요.</p>
-                        </a>
+                    <div class="mypage-link-section">
+                        <p class="mypage-link-section-title">ABOUT 미드나잇테라스</p>
+                        <div class="mypage-link-list">
+                            <a class="mypage-link-item" href="/board/about?type=notice">
+                                <span>공지사항</span>
+                                <span class="mypage-link-chevron" aria-hidden="true">›</span>
+                            </a>
+                            <a class="mypage-link-item" href="/board/about?type=event">
+                                <span>이벤트</span>
+                                <span class="mypage-link-chevron" aria-hidden="true">›</span>
+                            </a>
+                            <a class="mypage-link-item" href="/board/terms">
+                                <span>약관 및 정책</span>
+                                <span class="mypage-link-chevron" aria-hidden="true">›</span>
+                            </a>
+                            <a target="_blank" rel="noopener noreferrer" class="mypage-link-item" href="https://12terrace.com/board/notice/33">
+                                <span>미드나잇테라스 소개</span>
+                                <span class="mypage-link-chevron" aria-hidden="true">›</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
