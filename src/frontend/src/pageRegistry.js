@@ -348,11 +348,6 @@ const pageRegistry = {
                     </div>
 
 
-                    <div class="form-group hidden" id="guest-password-group">
-                        <label for="guest-password" class="form-label">비회원 비밀번호</label>
-                        <input type="password" id="guest-password" name="guestPassword" class="form-control" placeholder="수정/삭제에 사용할 비밀번호" minlength="4" maxlength="50">
-                        <small class="text-muted">비회원 작성글의 수정/삭제 시 필요합니다.</small>
-                    </div>
 
                     <div class="form-group">
                         <label for="image-files" class="form-label">이미지 첨부</label>
@@ -829,8 +824,7 @@ const pageRegistry = {
                                 비밀댓글
                             </label>
                             <div class="error-message hidden" id="content-error"></div>
-                            <input type="password" id="comment-guest-password" class="form-control" placeholder="비회원 댓글 비밀번호 (수정/삭제용)" style="margin-top:8px;display:none;">
-                        </div>
+                                                    </div>
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary btn-sm" id="comment-submit-btn">등록</button>
                         </div>
