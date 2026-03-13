@@ -323,7 +323,7 @@ const pageRegistry = {
                     </div>
                     
                     <div class="form-group">
-                    <label for="board-type" class="form-label">게시판</label>
+                    <label for="board-type" class="form-label">게시판 선택</label>
                     <select id="board-type" name="boardType" class="form-control">
                     <option value="FREE">자유게시판</option>
                     <option value="ANON">익명게시판</option>
