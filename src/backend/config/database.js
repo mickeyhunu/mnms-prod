@@ -55,6 +55,7 @@ async function initDatabase() {
       user_id BIGINT NULL,
       title VARCHAR(255) NOT NULL,
       content TEXT NOT NULL,
+      is_deleted TINYINT(1) NOT NULL DEFAULT 0,
       view_count BIGINT NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -74,6 +75,20 @@ async function initDatabase() {
 
   if (!viewCountColumn.length) {
     await pool.query('ALTER TABLE posts ADD COLUMN view_count BIGINT NOT NULL DEFAULT 0');
+  }
+
+  const [postIsDeletedColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'posts'
+       AND COLUMN_NAME = 'is_deleted'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!postIsDeletedColumn.length) {
+    await pool.query('ALTER TABLE posts ADD COLUMN is_deleted TINYINT(1) NOT NULL DEFAULT 0 AFTER content');
   }
 
   await pool.query(`

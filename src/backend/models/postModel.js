@@ -9,7 +9,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
   const keyword = typeof options.keyword === 'string' ? options.keyword.trim() : '';
   const searchType = options.searchType || 'bbs_title';
 
-  const whereConditions = [];
+  const whereConditions = ['p.is_deleted = 0'];
   const whereParams = [];
 
   if (keyword) {
@@ -64,6 +64,12 @@ async function createPost({ userId, title, content }) {
 
 async function findPostById(id) {
   const pool = getPool();
+  const [rows] = await pool.query('SELECT * FROM posts WHERE id = ? AND is_deleted = 0', [id]);
+  return rows[0] || null;
+}
+
+async function findPostByIdIncludingDeleted(id) {
+  const pool = getPool();
   const [rows] = await pool.query('SELECT * FROM posts WHERE id = ?', [id]);
   return rows[0] || null;
 }
@@ -77,7 +83,7 @@ async function findPostDetailById(id) {
             (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
-     WHERE p.id = ?`,
+     WHERE p.id = ? AND p.is_deleted = 0`,
     [id]
   );
   return rows[0] || null;
@@ -94,7 +100,7 @@ async function updatePost(id, { title, content }) {
 
 async function deletePost(id) {
   const pool = getPool();
-  await pool.query('DELETE FROM posts WHERE id = ?', [id]);
+  await pool.query("UPDATE posts SET is_deleted = 1, title = '[삭제된 게시글]', content = '삭제된 게시글입니다.' WHERE id = ?", [id]);
 }
 
 async function listComments(postId) {
@@ -167,6 +173,7 @@ module.exports = {
   createPost,
   findPostById,
   findPostDetailById,
+  findPostByIdIncludingDeleted,
   incrementPostViewCount,
   updatePost,
   deletePost,
