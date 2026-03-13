@@ -18,7 +18,7 @@ function updateHeaderForUser(user) {
         showElement(navUser);
         
         if (userNickname) {
-            userNickname.textContent = user.nickname;
+            userNickname.textContent = Auth.formatNicknameWithLevel(user);
         }
         
         if (adminLink) {

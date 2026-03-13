@@ -58,7 +58,7 @@ function bindTabs() {
 
 function renderHeaderUser(user) {
     const nickname = document.getElementById('user-nickname');
-    if (nickname) nickname.textContent = user.nickname || user.email;
+    if (nickname) nickname.textContent = Auth.formatNicknameWithLevel(user);
 
     const adminLink = document.getElementById('admin-link');
     if (adminLink) {
