@@ -238,6 +238,15 @@ const pageRegistry = {
                 </div>
             </header>
 
+            <div class="board-tabs">
+                <button type="button" class="board-tab active" data-board-type="ALL">전체</button>
+                <button type="button" class="board-tab" data-board-type="FREE">자유게시판</button>
+                <button type="button" class="board-tab" data-board-type="ANON">익명게시판</button>
+                <button type="button" class="board-tab" data-board-type="REVIEW">후기게시판</button>
+                <button type="button" class="board-tab" data-board-type="STORY">썰게시판</button>
+                <button type="button" class="board-tab" data-board-type="QUESTION">질문게시판</button>
+            </div>
+
             <div class="loading" id="loading">게시글을 불러오는 중...</div>
 
             <div class="error-banner hidden" id="error-banner">
@@ -245,8 +254,7 @@ const pageRegistry = {
                 <button id="retry-btn" class="btn btn-sm btn-outline">재시도</button>
             </div>
 
-            <div class="notice-area" id="notice-area"></div>
-            <ul class="article-list" id="post-list"></ul>
+<ul class="article-list" id="post-list"></ul>
 
             <div class="empty-state hidden" id="empty-state">
                 등록된 게시글이 없습니다.
@@ -317,6 +325,19 @@ const pageRegistry = {
                         <input type="text" id="title" name="title" class="form-control" placeholder="제목을 입력하세요" maxlength="255" required>
                         <div class="error-message hidden" id="title-error"></div>
                     </div>
+
+                    <div class="form-group">
+                        <label for="board-type" class="form-label">게시판</label>
+                        <select id="board-type" name="boardType" class="form-control">
+                            <option value="FREE">자유게시판</option>
+                            <option value="ANON">익명게시판</option>
+                            <option value="REVIEW">후기게시판</option>
+                            <option value="STORY">썰게시판</option>
+                            <option value="QUESTION">질문게시판</option>
+                        </select>
+                    </div>
+
+                    
 
                     <div class="form-group">
                         <label for="content" class="form-label">내용</label>
