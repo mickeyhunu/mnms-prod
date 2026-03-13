@@ -172,6 +172,15 @@ async function toggleLike(req, res, next) {
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
 
     const result = await postModel.togglePostLike(postId, req.user.id);
+
+    if (result.isLiked) {
+      await awardPointByAction(req.user.id, 'LIKE_POST');
+
+      if (Number(post.user_id) !== Number(req.user.id)) {
+        await awardPointByAction(post.user_id, 'RECEIVE_POST_LIKE');
+      }
+    }
+
     res.json(result);
   } catch (error) {
     next(error);
@@ -194,6 +203,10 @@ async function createPost(req, res, next) {
     });
     const post = await postModel.findPostById(postId);
     await awardPointByAction(req.user.id, 'CREATE_POST');
+
+    if (boardType === BOARD_TYPES.REVIEW) {
+      await awardPointByAction(req.user.id, 'CREATE_REVIEW_BONUS');
+    }
     res.status(201).json({ success: true, post });
   } catch (error) {
     next(error);
