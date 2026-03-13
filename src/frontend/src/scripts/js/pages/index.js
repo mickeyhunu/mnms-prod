@@ -22,8 +22,21 @@ async function initIndexPage() {
     initBoardTabs();
     initSearchEvents();
     await loadBestPosts();
+    updateBestPostsVisibility();
     await loadPosts(0);
     initCommonEvents();
+}
+
+function updateBestPostsVisibility() {
+    const bestPostsSection = document.querySelector('.best-posts-section');
+    if (!bestPostsSection) return;
+
+    if (currentBoardType === 'ALL') {
+        showElement(bestPostsSection);
+        return;
+    }
+
+    hideElement(bestPostsSection);
 }
 
 async function loadBestPosts() {
@@ -272,6 +285,7 @@ function initBoardTabs() {
             currentBoardType = tab.dataset.boardType || 'ALL';
             tabs.forEach((item) => item.classList.toggle('active', item === tab));
             closeTabsPanel();
+            updateBestPostsVisibility();
             loadPosts(0);
         });
     });
