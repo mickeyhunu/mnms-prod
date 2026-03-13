@@ -655,63 +655,150 @@ const pageRegistry = {
         <div class="container">
             <div class="page-header">
                 <h1>마이페이지</h1>
-                <p>내 활동과 쪽지를 관리할 수 있습니다</p>
+                <p>활동 정보, 내 정보 수정, 공지/고객지원, 정책 안내를 확인할 수 있습니다</p>
             </div>
 
             <div class="my-page-tabs">
-                <button class="tab-btn active" data-tab="posts">내 게시글</button>
-                <button class="tab-btn" data-tab="comments">내 댓글</button>
-                <button class="tab-btn" data-tab="messages">쪽지함</button>
-                <button class="tab-btn" data-tab="stats">통계</button>
+                <button class="tab-btn active" data-tab="activity">활동 정보</button>
+                <button class="tab-btn" data-tab="profile">내 정보</button>
+                <button class="tab-btn" data-tab="notices">공지사항</button>
+                <button class="tab-btn" data-tab="support">고객센터</button>
+                <button class="tab-btn" data-tab="policy">약관 및 정책</button>
             </div>
 
             <div class="tab-content">
-                <div id="posts-tab" class="tab-pane active">
+                <div id="activity-tab" class="tab-pane active">
                     <div class="section-header">
-                        <h2>내 게시글</h2>
+                        <h2>활동 정보</h2>
                     </div>
-                    <div id="my-posts-list">
+
+                    <div id="my-stats" class="activity-summary-grid">
+                        <div class="loading">로딩 중...</div>
+                    </div>
+
+                    <div class="activity-group">
+                        <div class="section-header">
+                            <h3>내 게시글</h3>
+                        </div>
+                        <div id="my-posts-list">
+                            <div class="loading">로딩 중...</div>
+                        </div>
+                    </div>
+
+                    <div class="activity-group">
+                        <div class="section-header">
+                            <h3>내 댓글</h3>
+                        </div>
+                        <div id="my-comments-list">
+                            <div class="loading">로딩 중...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="profile-tab" class="tab-pane hidden">
+                    <div class="section-header">
+                        <h2>내 정보</h2>
+                    </div>
+
+                    <div class="mypage-card fixed-info-card">
+                        <h3>기본정보 (고정)</h3>
+                        <div class="fixed-info-grid">
+                            <div><span>이름</span><strong id="fixed-name">-</strong></div>
+                            <div><span>생년월일</span><strong id="fixed-birth">-</strong></div>
+                        </div>
+                    </div>
+
+                    <form id="profile-form" class="mypage-card profile-form">
+                        <h3>수정 가능한 정보</h3>
+                        <div class="profile-form-grid">
+                            <label>비밀번호
+                                <input type="password" name="password" placeholder="새 비밀번호 입력" autocomplete="new-password" />
+                            </label>
+                            <label>닉네임
+                                <input type="text" name="nickname" id="profile-nickname" maxlength="20" />
+                            </label>
+                            <label>연락처
+                                <input type="tel" name="phone" id="profile-phone" placeholder="010-0000-0000" />
+                            </label>
+                            <label>이메일
+                                <input type="email" name="email" id="profile-email" />
+                            </label>
+                        </div>
+
+                        <div class="consent-wrap">
+                            <label><input type="checkbox" name="emailConsent" id="email-consent" /> 이메일 수신 동의</label>
+                            <label><input type="checkbox" name="smsConsent" id="sms-consent" /> SMS 수신 동의</label>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">내 정보 저장</button>
+                        </div>
+                        <p class="help-text">* 기본정보(이름/생년월일)는 변경할 수 없습니다.</p>
+                        <p id="profile-save-result" class="help-text"></p>
+                    </form>
+                </div>
+
+                <div id="notices-tab" class="tab-pane hidden">
+                    <div class="section-header">
+                        <h2>공지사항</h2>
+                    </div>
+                    <div id="notice-list" class="notice-list">
                         <div class="loading">로딩 중...</div>
                     </div>
                 </div>
 
-                <div id="comments-tab" class="tab-pane hidden">
+                <div id="support-tab" class="tab-pane hidden">
                     <div class="section-header">
-                        <h2>내 댓글</h2>
+                        <h2>고객센터</h2>
                     </div>
-                    <div id="my-comments-list">
-                        <div class="loading">로딩 중...</div>
+                    <div class="mypage-card">
+                        <h3>1:1 문의</h3>
+                        <form id="support-form" class="support-form">
+                            <label>문의 유형
+                                <select name="inquiryType" id="inquiry-type">
+                                    <option value="광고/제휴">광고/제휴</option>
+                                    <option value="회원정보/계정">회원정보/계정</option>
+                                    <option value="서비스 오류">서비스 오류</option>
+                                    <option value="기타">기타</option>
+                                </select>
+                            </label>
+                            <label>문의 내용
+                                <textarea name="inquiryContent" id="inquiry-content" rows="6" placeholder="문의 내용을 입력해 주세요."></textarea>
+                            </label>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">문의 등록</button>
+                            </div>
+                            <p id="support-result" class="help-text"></p>
+                        </form>
                     </div>
                 </div>
 
-                <div id="messages-tab" class="tab-pane hidden">
+                <div id="policy-tab" class="tab-pane hidden">
                     <div class="section-header">
-                        <h2>쪽지함</h2>
+                        <h2>약관 및 정책</h2>
                     </div>
-
-                    <div class="message-tabs">
-                        <button class="message-tab-btn active" data-message-tab="received">받은 쪽지</button>
-                        <button class="message-tab-btn" data-message-tab="sent">보낸 쪽지</button>
-                    </div>
-
-                    <div id="received-messages" class="message-list">
-                        <div class="loading">로딩 중...</div>
-                    </div>
-
-                    <div id="sent-messages" class="message-list hidden">
-                        <div class="loading">로딩 중...</div>
-                    </div>
-                </div>
-
-                <div id="stats-tab" class="tab-pane hidden">
-                    <div class="section-header">
-                        <h2>내 활동 통계</h2>
-                    </div>
-                    <div id="my-stats">
-                        <div class="loading">로딩 중...</div>
+                    <div class="policy-grid">
+                        <a href="#" class="mypage-card policy-card">
+                            <h3>이용약관</h3>
+                            <p>서비스 이용 시 필요한 기본 약관을 확인하세요.</p>
+                        </a>
+                        <a href="#" class="mypage-card policy-card">
+                            <h3>개인정보 처리방침</h3>
+                            <p>개인정보 수집 및 이용, 보관 정책을 확인하세요.</p>
+                        </a>
+                        <a href="#" class="mypage-card policy-card">
+                            <h3>커뮤니티 운영정책</h3>
+                            <p>건강한 커뮤니티 운영을 위한 기준을 확인하세요.</p>
+                        </a>
                     </div>
                 </div>
             </div>
+
+            <section class="company-footer-slot mypage-card">
+                <h2>회사정보</h2>
+                <p>회사 로고, 사업자 정보, 고객지원 연락처가 들어갈 영역입니다.</p>
+                <div class="company-placeholder">LOGO / COMPANY INFO</div>
+            </section>
         </div>
     </main>
 
