@@ -365,6 +365,21 @@
     color: #1f2630;
 }
 
+
+.own-content-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: #eef5ff;
+    border: 1px solid #c9ddff;
+    color: #2f6fcc;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
 .comment-date,
 .comment-reply-link {
     color: #8993a0;
