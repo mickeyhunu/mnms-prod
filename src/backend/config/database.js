@@ -228,12 +228,18 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS point_histories (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       user_id BIGINT NOT NULL,
-      action_type ENUM('REGISTER','LOGIN_DAILY','CREATE_POST','CREATE_COMMENT') NOT NULL,
+      action_type ENUM('REGISTER','LOGIN_DAILY','CREATE_POST','CREATE_REVIEW_BONUS','CREATE_COMMENT','LIKE_POST','RECEIVE_POST_LIKE') NOT NULL,
       points INT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       INDEX idx_point_histories_user_action_created_at (user_id, action_type, created_at),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+
+  await pool.query(`
+    ALTER TABLE point_histories
+    MODIFY COLUMN action_type ENUM('REGISTER','LOGIN_DAILY','CREATE_POST','CREATE_REVIEW_BONUS','CREATE_COMMENT','LIKE_POST','RECEIVE_POST_LIKE') NOT NULL
   `);
 
   const [adminRows] = await pool.query('SELECT id FROM users WHERE email = ?', ['admin@company.com']);
