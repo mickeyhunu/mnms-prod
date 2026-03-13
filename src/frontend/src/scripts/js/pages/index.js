@@ -231,11 +231,30 @@ function markPostAsViewed(postId) {
     } catch (error) {
         // localStorage 접근 제한 등 브라우저 예외 상황은 무시
     }
+
+    updatePostViewedStyle(postId, true);
 }
 
 function hasViewedPost(postId) {
     if (!postId) return false;
     return getViewedPostIdSet().has(String(postId));
+}
+
+function updatePostViewedStyle(postId, isViewed) {
+    const postLink = document.querySelector(`.article-main[data-post-id="${postId}"]`);
+    const articleItem = postLink?.closest('.article-item');
+    if (!articleItem) return;
+
+    articleItem.classList.toggle('article-item-viewed', isViewed);
+    articleItem.classList.toggle('article-item-unviewed', !isViewed);
+}
+
+function syncViewedPostStyles() {
+    const postLinks = document.querySelectorAll('.article-main[data-post-id]');
+    postLinks.forEach((postLink) => {
+        const postId = postLink.dataset.postId;
+        updatePostViewedStyle(postId, hasViewedPost(postId));
+    });
 }
 
 function isWithin12Hours(dateValue) {
@@ -377,6 +396,8 @@ function initCommonEvents() {
             markPostAsViewed(targetPostId);
         });
     }
+
+    window.addEventListener('pageshow', syncViewedPostStyles);
 }
 
 function showErrorBanner(message) {
