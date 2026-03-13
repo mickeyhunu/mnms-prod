@@ -176,8 +176,9 @@ async function deletePost(req, res, next) {
     const postId = parseId(req.params.id);
     if (!postId) return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' });
 
-    const post = await postModel.findPostById(postId);
+    const post = await postModel.findPostByIdIncludingDeleted(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
+    if (post.is_deleted) return res.status(400).json({ message: '이미 삭제된 게시글입니다.' });
     if (!req.user || (post.user_id !== req.user.id && req.user.role !== 'ADMIN')) {
       return res.status(403).json({ message: '삭제 권한이 없습니다.' });
     }
