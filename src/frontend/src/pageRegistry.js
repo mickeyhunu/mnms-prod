@@ -321,24 +321,23 @@ const pageRegistry = {
                     <div class="error-banner hidden" id="error-banner">
                         <p id="error-message"></p>
                     </div>
-
+                    
+                    <div class="form-group">
+                    <label for="board-type" class="form-label">게시판</label>
+                    <select id="board-type" name="boardType" class="form-control">
+                    <option value="FREE">자유게시판</option>
+                    <option value="ANON">익명게시판</option>
+                    <option value="REVIEW">후기게시판</option>
+                    <option value="STORY">썰게시판</option>
+                    <option value="QUESTION">질문게시판</option>
+                    </select>
+                    </div>
+                    
                     <div class="form-group">
                         <label for="title" class="form-label">제목</label>
                         <input type="text" id="title" name="title" class="form-control" placeholder="제목을 입력하세요" maxlength="255" required>
                         <div class="error-message hidden" id="title-error"></div>
                     </div>
-
-                    <div class="form-group">
-                        <label for="board-type" class="form-label">게시판</label>
-                        <select id="board-type" name="boardType" class="form-control">
-                            <option value="FREE">자유게시판</option>
-                            <option value="ANON">익명게시판</option>
-                            <option value="REVIEW">후기게시판</option>
-                            <option value="STORY">썰게시판</option>
-                            <option value="QUESTION">질문게시판</option>
-                        </select>
-                    </div>
-
                     
 
                     <div class="form-group">
