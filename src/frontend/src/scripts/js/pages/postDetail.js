@@ -103,21 +103,6 @@ function setupEventListeners() {
     });
 
     setupMessageModal();
-    updateGuestCommentField();
-}
-
-function updateGuestCommentField() {
-    const input = document.getElementById('comment-guest-password');
-    if (!input) return;
-
-    const isGuest = !Auth.isAuthenticated();
-    input.style.display = isGuest ? 'block' : 'none';
-    input.required = isGuest;
-
-    if (!isGuest) {
-        input.value = '';
-        removeInputError(input);
-    }
 }
 
 function setupMessageModal() {
@@ -896,26 +881,19 @@ async function handleCreateComment(e) {
     
     const content = contentTextarea.value.trim();
     const secretCheckbox = document.getElementById('comment-secret');
-    const guestPasswordInput = document.getElementById('comment-guest-password');
     
     if (!content) {
         addInputError(contentTextarea, '댓글 내용을 입력해주세요');
         return;
     }
 
-    const guestPassword = guestPasswordInput?.value?.trim() || '';
-    if (!Auth.isAuthenticated() && guestPassword.length < 4) {
-        addInputError(guestPasswordInput, '비회원은 4자 이상의 비밀번호를 입력해주세요');
-        return;
-    }
     
     try {
         setLoading(submitBtn, true);
         
         await CommentAPI.createComment(postId, {
             content,
-            isSecret: Boolean(secretCheckbox && secretCheckbox.checked),
-            guestPassword: Auth.isAuthenticated() ? undefined : guestPassword
+            isSecret: Boolean(secretCheckbox && secretCheckbox.checked)
         });
         
         if (typeof NotificationSettings !== 'undefined' && NotificationSettings.isCommentNotificationEnabled()) {
@@ -925,7 +903,6 @@ async function handleCreateComment(e) {
         }
         
         form.reset();
-        if (guestPasswordInput) guestPasswordInput.value = '';
         if (secretCheckbox) secretCheckbox.checked = false;
         removeInputError(contentTextarea);
         
@@ -952,13 +929,7 @@ async function handleDeletePost() {
     }
     
     try {
-        const payload = {};
-        if (!Auth.isAuthenticated()) {
-            const guestPassword = prompt('비밀번호를 입력하세요.');
-            if (!guestPassword) return;
-            payload.guestPassword = guestPassword;
-        }
-        await APIClient.delete(`/posts/${postId}`, payload);
+        await APIClient.delete(`/posts/${postId}`);
         
         showNotification('게시글이 삭제되었습니다.', 'success');
         
@@ -978,13 +949,7 @@ async function deleteComment(commentId) {
     }
     
     try {
-        if (!Auth.isAuthenticated()) {
-            const guestPassword = prompt('비밀번호를 입력하세요.');
-            if (!guestPassword) return;
-            await APIClient.delete(`/comments/${commentId}`, { guestPassword });
-        } else {
-            await CommentAPI.deleteComment(commentId);
-        }
+        await CommentAPI.deleteComment(commentId);
         
         showNotification('댓글이 삭제되었습니다.', 'success');
         
