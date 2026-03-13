@@ -11,9 +11,9 @@ async function initMyPage() {
         return;
     }
 
-    bindTabs();
     bindProfileForm();
     bindSupportForm();
+    bindLogoutActions();
 
     try {
         currentUser = await APIClient.get('/auth/me');
@@ -34,28 +34,8 @@ async function initMyPage() {
     }
 }
 
-function bindTabs() {
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const tabPanes = document.querySelectorAll('.tab-pane');
 
-    tabButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tab = btn.dataset.tab;
-            tabButtons.forEach(b => b.classList.remove('active'));
-            tabPanes.forEach(p => {
-                p.classList.remove('active');
-                p.classList.add('hidden');
-            });
-
-            btn.classList.add('active');
-            const target = document.getElementById(`${tab}-tab`);
-            if (target) {
-                target.classList.add('active');
-                target.classList.remove('hidden');
-            }
-        });
-    });
-
+function bindLogoutActions() {
     Auth.bindLogoutButton();
 
     const footerLogoutButton = document.querySelector('.mypage-footer-logout');
