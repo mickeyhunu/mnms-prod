@@ -109,6 +109,34 @@ async function initDatabase() {
     await pool.query('ALTER TABLE posts ADD COLUMN is_deleted TINYINT(1) NOT NULL DEFAULT 0 AFTER content');
   }
 
+  const [postCreatePointAwardedColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'posts'
+       AND COLUMN_NAME = 'create_point_awarded'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!postCreatePointAwardedColumn.length) {
+    await pool.query('ALTER TABLE posts ADD COLUMN create_point_awarded TINYINT(1) NOT NULL DEFAULT 0 AFTER is_deleted');
+  }
+
+  const [postReviewBonusAwardedColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'posts'
+       AND COLUMN_NAME = 'review_bonus_point_awarded'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!postReviewBonusAwardedColumn.length) {
+    await pool.query('ALTER TABLE posts ADD COLUMN review_bonus_point_awarded TINYINT(1) NOT NULL DEFAULT 0 AFTER create_point_awarded');
+  }
+
   const [boardTypeColumn] = await pool.query(
     `SELECT 1
      FROM INFORMATION_SCHEMA.COLUMNS
@@ -213,10 +241,26 @@ async function initDatabase() {
     await pool.query('ALTER TABLE comments ADD COLUMN is_deleted TINYINT(1) NOT NULL DEFAULT 0 AFTER is_secret');
   }
 
+  const [commentPointAwardedColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'comments'
+       AND COLUMN_NAME = 'point_awarded'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!commentPointAwardedColumn.length) {
+    await pool.query('ALTER TABLE comments ADD COLUMN point_awarded TINYINT(1) NOT NULL DEFAULT 0 AFTER is_deleted');
+  }
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS post_likes (
       post_id BIGINT NOT NULL,
       user_id BIGINT NOT NULL,
+      liker_point_awarded TINYINT(1) NOT NULL DEFAULT 0,
+      author_point_awarded TINYINT(1) NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (post_id, user_id),
       FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
@@ -224,11 +268,39 @@ async function initDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
+  const [likerPointAwardedColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'post_likes'
+       AND COLUMN_NAME = 'liker_point_awarded'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!likerPointAwardedColumn.length) {
+    await pool.query('ALTER TABLE post_likes ADD COLUMN liker_point_awarded TINYINT(1) NOT NULL DEFAULT 0 AFTER user_id');
+  }
+
+  const [authorPointAwardedColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'post_likes'
+       AND COLUMN_NAME = 'author_point_awarded'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!authorPointAwardedColumn.length) {
+    await pool.query('ALTER TABLE post_likes ADD COLUMN author_point_awarded TINYINT(1) NOT NULL DEFAULT 0 AFTER liker_point_awarded');
+  }
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS point_histories (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       user_id BIGINT NOT NULL,
-      action_type ENUM('REGISTER','LOGIN_DAILY','CREATE_POST','CREATE_REVIEW_BONUS','CREATE_COMMENT','LIKE_POST','RECEIVE_POST_LIKE') NOT NULL,
+      action_type ENUM('REGISTER','LOGIN_DAILY','CREATE_POST','CREATE_REVIEW_BONUS','CREATE_COMMENT','LIKE_POST','RECEIVE_POST_LIKE','REVOKE_CREATE_POST','REVOKE_CREATE_REVIEW_BONUS','REVOKE_CREATE_COMMENT','REVOKE_LIKE_POST','REVOKE_RECEIVE_POST_LIKE') NOT NULL,
       points INT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       INDEX idx_point_histories_user_action_created_at (user_id, action_type, created_at),
@@ -239,7 +311,7 @@ async function initDatabase() {
 
   await pool.query(`
     ALTER TABLE point_histories
-    MODIFY COLUMN action_type ENUM('REGISTER','LOGIN_DAILY','CREATE_POST','CREATE_REVIEW_BONUS','CREATE_COMMENT','LIKE_POST','RECEIVE_POST_LIKE') NOT NULL
+    MODIFY COLUMN action_type ENUM('REGISTER','LOGIN_DAILY','CREATE_POST','CREATE_REVIEW_BONUS','CREATE_COMMENT','LIKE_POST','RECEIVE_POST_LIKE','REVOKE_CREATE_POST','REVOKE_CREATE_REVIEW_BONUS','REVOKE_CREATE_COMMENT','REVOKE_LIKE_POST','REVOKE_RECEIVE_POST_LIKE') NOT NULL
   `);
 
   const [adminRows] = await pool.query('SELECT id FROM users WHERE email = ?', ['admin@company.com']);

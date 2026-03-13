@@ -2,7 +2,7 @@
  * 파일 역할: postController 관련 HTTP 요청을 처리하고 모델/응답 로직을 조합하는 컨트롤러 파일.
  */
 const postModel = require('../models/postModel');
-const { awardPointByAction } = require('../models/pointModel');
+const { awardPointByAction, revokePointByAction } = require('../models/pointModel');
 
 const BOARD_TYPES = postModel.BOARD_TYPES || { FREE: 'FREE', ANON: 'ANON', REVIEW: 'REVIEW', STORY: 'STORY', QUESTION: 'QUESTION' };
 
@@ -174,10 +174,25 @@ async function toggleLike(req, res, next) {
     const result = await postModel.togglePostLike(postId, req.user.id);
 
     if (result.isLiked) {
-      await awardPointByAction(req.user.id, 'LIKE_POST');
+      const likePointResult = await awardPointByAction(req.user.id, 'LIKE_POST');
+      let authorPointAwarded = false;
 
       if (Number(post.user_id) !== Number(req.user.id)) {
-        await awardPointByAction(post.user_id, 'RECEIVE_POST_LIKE');
+        const receivePointResult = await awardPointByAction(post.user_id, 'RECEIVE_POST_LIKE');
+        authorPointAwarded = receivePointResult.awarded;
+      }
+
+      await postModel.updatePostLikePointAwards(postId, req.user.id, {
+        likerPointAwarded: likePointResult.awarded,
+        authorPointAwarded
+      });
+    } else {
+      if (result.likerPointAwarded) {
+        await revokePointByAction(req.user.id, 'LIKE_POST');
+      }
+
+      if (result.authorPointAwarded && Number(post.user_id) !== Number(req.user.id)) {
+        await revokePointByAction(post.user_id, 'RECEIVE_POST_LIKE');
       }
     }
 
@@ -202,11 +217,19 @@ async function createPost(req, res, next) {
       boardType
     });
     const post = await postModel.findPostById(postId);
-    await awardPointByAction(req.user.id, 'CREATE_POST');
+    const createPostPointResult = await awardPointByAction(req.user.id, 'CREATE_POST');
+    let reviewBonusAwarded = false;
 
     if (boardType === BOARD_TYPES.REVIEW) {
-      await awardPointByAction(req.user.id, 'CREATE_REVIEW_BONUS');
+      const reviewBonusResult = await awardPointByAction(req.user.id, 'CREATE_REVIEW_BONUS');
+      reviewBonusAwarded = reviewBonusResult.awarded;
     }
+
+    await postModel.updatePostPointAwards(postId, {
+      createPointAwarded: createPostPointResult.awarded,
+      reviewBonusPointAwarded: reviewBonusAwarded
+    });
+
     res.status(201).json({ success: true, post });
   } catch (error) {
     next(error);
@@ -248,6 +271,32 @@ async function deletePost(req, res, next) {
       return res.status(403).json({ message: '삭제 권한이 없습니다.' });
     }
 
+    const likes = await postModel.listPointAwardedLikesByPostId(postId);
+    for (const like of likes) {
+      if (like.likerPointAwarded) {
+        await revokePointByAction(like.userId, 'LIKE_POST');
+      }
+
+      if (like.authorPointAwarded && Number(post.user_id) !== Number(like.userId)) {
+        await revokePointByAction(post.user_id, 'RECEIVE_POST_LIKE');
+      }
+    }
+
+    const comments = await postModel.listPointAwardedCommentsByPostId(postId);
+    for (const comment of comments) {
+      await revokePointByAction(comment.userId, 'CREATE_COMMENT');
+    }
+
+    if (post.create_point_awarded) {
+      await revokePointByAction(post.user_id, 'CREATE_POST');
+    }
+
+    if (post.review_bonus_point_awarded) {
+      await revokePointByAction(post.user_id, 'CREATE_REVIEW_BONUS');
+    }
+
+    await postModel.deletePostLikesByPostId(postId);
+    await postModel.markCommentsDeletedByPostId(postId);
     await postModel.deletePost(postId);
     res.json({ success: true });
   } catch (error) {
@@ -306,14 +355,15 @@ async function createComment(req, res, next) {
       }
     }
 
-    await postModel.createComment({
+    const commentId = await postModel.createComment({
       postId,
       userId: req.user.id,
       content,
       parentId,
       isSecret: Boolean(isSecret)
     });
-    await awardPointByAction(req.user.id, 'CREATE_COMMENT');
+    const pointResult = await awardPointByAction(req.user.id, 'CREATE_COMMENT');
+    await postModel.updateCommentPointAwarded(commentId, pointResult.awarded);
 
     const comments = await postModel.listComments(postId);
     const visibleComments = comments.map((comment) => sanitizeCommentForViewer(comment, post, req.user));
@@ -371,6 +421,11 @@ async function deleteComment(req, res, next) {
 
     if (comment.is_deleted) {
       return res.status(400).json({ message: '이미 삭제된 댓글입니다.' });
+    }
+
+    if (comment.point_awarded) {
+      await revokePointByAction(comment.user_id, 'CREATE_COMMENT');
+      await postModel.updateCommentPointAwarded(commentId, false);
     }
 
     await postModel.deleteComment(commentId);
