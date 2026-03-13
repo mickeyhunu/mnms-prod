@@ -563,6 +563,8 @@ function createCommentItem(comment, depth = 0) {
     const isAnonymousComment = currentPostBoardType === 'ANON' || String(comment.authorNickname || '').trim() === '익명';
     const showOwnBadge = isAuthor && (isAnonymousComment || isSecretComment);
     const authorName = sanitizeHTML(comment.authorNickname || '익명');
+    const commentAuthorLevel = Number(comment.authorLevel ?? comment.level ?? comment.authorRank ?? comment.rank ?? comment.authorGrade ?? comment.grade);
+    const hasCommentAuthorLevel = Number.isFinite(commentAuthorLevel) && commentAuthorLevel > 0;
     const canReplyByServer = comment.canReply !== false;
     const canReply = Auth.isAuthenticated() && depth < 3 && !isDeletedComment && canReplyByServer;
     const canGuestEdit = !Auth.isAuthenticated() && !comment.userId;
@@ -580,6 +582,7 @@ function createCommentItem(comment, depth = 0) {
             <div class="comment-body">
                 <div class="comment-meta">
                     <div class="comment-meta-main">
+                        ${hasCommentAuthorLevel ? `<span class="comment-level-badge" data-text="Lv.">${commentAuthorLevel}</span>` : ''}
                         <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${authorName}</span>
                         ${showOwnBadge ? '<span class="own-content-badge">본인</span>' : ''}
                         ${isSecretComment ? '<span style="margin-left:6px;font-size:12px;color:#7a5;">🔒 비밀댓글</span>' : ''}
