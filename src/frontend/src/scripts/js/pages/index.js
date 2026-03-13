@@ -188,13 +188,38 @@ function updatePagination() {
 
 
 function initBoardTabs() {
+    const tabsPanel = document.getElementById('board-tabs-panel');
+    const toggleButton = document.getElementById('board-menu-toggle');
     const tabs = document.querySelectorAll('.board-tab');
-    if (!tabs.length) return;
+    if (!tabs.length || !tabsPanel || !toggleButton) return;
+
+    const closeTabsPanel = () => {
+        hideElement(tabsPanel);
+        toggleButton.setAttribute('aria-expanded', 'false');
+    };
+
+    toggleButton.addEventListener('click', () => {
+        const isOpen = !tabsPanel.classList.contains('hidden');
+        if (isOpen) {
+            closeTabsPanel();
+            return;
+        }
+
+        showElement(tabsPanel);
+        toggleButton.setAttribute('aria-expanded', 'true');
+    });
+
+    document.addEventListener('click', (event) => {
+        if (tabsPanel.classList.contains('hidden')) return;
+        if (tabsPanel.contains(event.target) || toggleButton.contains(event.target)) return;
+        closeTabsPanel();
+    });
 
     tabs.forEach((tab) => {
         tab.addEventListener('click', () => {
             currentBoardType = tab.dataset.boardType || 'ALL';
             tabs.forEach((item) => item.classList.toggle('active', item === tab));
+            closeTabsPanel();
             loadPosts(0);
         });
     });

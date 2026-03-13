@@ -231,6 +231,7 @@ const pageRegistry = {
         <div class="container community-container">
             <header class="community-section-header">
                 <div class="community-header-left">
+                    <button type="button" class="board-menu-toggle" id="board-menu-toggle" aria-expanded="false" aria-controls="board-tabs-panel">카테고리</button>
                     <span class="community-board-name">커뮤니티 게시글</span>
                 </div>
                 <div class="community-actions hidden" id="community-actions">
@@ -238,14 +239,14 @@ const pageRegistry = {
                 </div>
             </header>
 
-            <div class="board-tabs">
+            <nav class="board-tabs hidden" id="board-tabs-panel" aria-label="게시판 카테고리">
                 <button type="button" class="board-tab active" data-board-type="ALL">전체</button>
                 <button type="button" class="board-tab" data-board-type="FREE">자유게시판</button>
                 <button type="button" class="board-tab" data-board-type="ANON">익명게시판</button>
                 <button type="button" class="board-tab" data-board-type="REVIEW">후기게시판</button>
                 <button type="button" class="board-tab" data-board-type="STORY">썰게시판</button>
                 <button type="button" class="board-tab" data-board-type="QUESTION">질문게시판</button>
-            </div>
+            </nav>
 
             <div class="loading" id="loading">게시글을 불러오는 중...</div>
 
