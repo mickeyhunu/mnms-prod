@@ -20,7 +20,12 @@ const AuthAPI = {
                     id: response.id,
                     email: response.email,
                     nickname: response.nickname,
-                    isAdmin: response.isAdmin
+                    isAdmin: response.isAdmin,
+                    totalPoints: response.totalPoints,
+                    level: response.level,
+                    levelEmoji: response.levelEmoji,
+                    levelTitle: response.levelTitle,
+                    levelLabel: response.levelLabel
                 };
                 console.log('사용자 데이터 저장 시도:', userData);
                 Auth.setUser(userData);
@@ -73,7 +78,12 @@ const AuthAPI = {
                     id: response.id,
                     email: response.email,
                     nickname: response.nickname,
-                    isAdmin: response.isAdmin
+                    isAdmin: response.isAdmin,
+                    totalPoints: response.totalPoints,
+                    level: response.level,
+                    levelEmoji: response.levelEmoji,
+                    levelTitle: response.levelTitle,
+                    levelLabel: response.levelLabel
                 });
             }
 

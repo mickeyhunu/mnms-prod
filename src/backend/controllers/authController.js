@@ -4,6 +4,7 @@
 const crypto = require('crypto');
 const { createUser, findByEmail, findByNickname } = require('../models/userModel');
 const { createSession, deleteSession } = require('../models/sessionModel');
+const { awardPointByAction } = require('../models/pointModel');
 const { pickUserRow } = require('../utils/response');
 
 async function register(req, res, next) {
@@ -22,6 +23,8 @@ async function register(req, res, next) {
     }
 
     const userId = await createUser({ email: resolvedLoginId, password, nickname: nickname.trim() });
+    await awardPointByAction(userId, 'REGISTER');
+
     const user = await findByEmail(resolvedLoginId);
     res.json({ success: true, message: '회원가입이 완료되었습니다.', user: pickUserRow({ ...user, id: userId }) });
   } catch (error) {
@@ -40,7 +43,10 @@ async function login(req, res, next) {
 
     const token = crypto.randomBytes(32).toString('hex');
     await createSession(token, user.id);
-    res.json({ success: true, token, ...pickUserRow(user) });
+    await awardPointByAction(user.id, 'LOGIN_DAILY');
+
+    const refreshedUser = await findByEmail(resolvedLoginId);
+    res.json({ success: true, token, ...pickUserRow(refreshedUser || user) });
   } catch (error) {
     next(error);
   }

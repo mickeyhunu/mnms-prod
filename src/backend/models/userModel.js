@@ -6,8 +6,8 @@ const { getPool } = require('../config/database');
 async function createUser({ email, password, nickname }) {
   const pool = getPool();
   const [result] = await pool.query(
-    'INSERT INTO users (email, password, nickname, role) VALUES (?, ?, ?, ?)',
-    [email, password, nickname, 'USER']
+    'INSERT INTO users (email, password, nickname, role, total_points) VALUES (?, ?, ?, ?, ?)',
+    [email, password, nickname, 'USER', 0]
   );
   return result.insertId;
 }
