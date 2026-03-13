@@ -672,15 +672,7 @@ const pageRegistry = {
             </header>
 
             <div class="page-header">
-                <p>활동 정보, 내 정보 수정, 공지/고객지원, 정책 안내를 확인할 수 있습니다</p>
-            </div>
-
-            <div class="my-page-tabs">
-                <button class="tab-btn active" data-tab="activity">활동 정보</button>
-                <button class="tab-btn" data-tab="profile">내 정보</button>
-                <button class="tab-btn" data-tab="notices">공지사항</button>
-                <button class="tab-btn" data-tab="support">고객센터</button>
-                <button class="tab-btn" data-tab="policy">약관 및 정책</button>
+                <p>활동 정보, 내 정보 수정, 공지/고객지원, 정책 안내를 한 페이지에서 확인할 수 있습니다</p>
             </div>
 
             <div class="tab-content">
@@ -712,7 +704,7 @@ const pageRegistry = {
                     </div>
                 </div>
 
-                <div id="profile-tab" class="tab-pane hidden">
+                <div id="profile-tab" class="tab-pane">
                     <div class="section-header">
                         <h2>내 정보</h2>
                     </div>
@@ -755,7 +747,7 @@ const pageRegistry = {
                     </form>
                 </div>
 
-                <div id="notices-tab" class="tab-pane hidden">
+                <div id="notices-tab" class="tab-pane">
                     <div class="section-header">
                         <h2>공지사항</h2>
                     </div>
@@ -764,7 +756,7 @@ const pageRegistry = {
                     </div>
                 </div>
 
-                <div id="support-tab" class="tab-pane hidden">
+                <div id="support-tab" class="tab-pane">
                     <div class="section-header">
                         <h2>고객센터</h2>
                     </div>
@@ -787,7 +779,7 @@ const pageRegistry = {
                     </div>
                 </div>
 
-                <div id="policy-tab" class="tab-pane hidden">
+                <div id="policy-tab" class="tab-pane">
                     <div class="section-header">
                         <h2>약관 및 정책</h2>
                     </div>
