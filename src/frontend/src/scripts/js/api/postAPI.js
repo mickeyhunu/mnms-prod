@@ -32,6 +32,14 @@ const PostAPI = {
         }
     },
 
+    async getBestPosts() {
+        try {
+            return await APIClient.get('/api/posts/best');
+        } catch (error) {
+            throw error;
+        }
+    },
+
     async createPost(postData) {
         try {
             return await APIClient.post(`/api/posts`, postData);
