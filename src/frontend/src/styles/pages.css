@@ -456,3 +456,48 @@
 }
 
 
+
+.mypage-link-section {
+    background: #1d1d1d;
+    border: 1px solid #2c2f36;
+    border-radius: 10px;
+    padding: 10px 16px;
+    margin-bottom: 14px;
+}
+
+.mypage-link-section-title {
+    color: #f3f4f6;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 12px 0;
+}
+
+.mypage-link-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.mypage-link-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 13px 0;
+    color: #d1d5db;
+    text-decoration: none;
+    font-size: 15px;
+    border-top: 1px solid #2c2f36;
+}
+
+.mypage-link-list .mypage-link-item:first-child {
+    border-top: 0;
+}
+
+.mypage-link-item:hover {
+    color: #ffffff;
+}
+
+.mypage-link-chevron {
+    color: #8b9099;
+    font-size: 20px;
+    line-height: 1;
+}
