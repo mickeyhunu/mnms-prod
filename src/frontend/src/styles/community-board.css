@@ -352,7 +352,7 @@
     margin: 0;
     font-size: 13px;
     font-weight: 400;
-    color: #505050;
+    color: #000;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -371,8 +371,20 @@
     border-left: 3px solid #6c0391;
 }
 
+.article-item-unviewed .article-title {
+    color: #000;
+}
+
 .article-item-viewed {
-    opacity: 0.78;
+    opacity: 1;
+}
+
+.article-item-viewed .article-title,
+.article-item-viewed .article-preview,
+.article-item-viewed .article-meta,
+.article-item-viewed .article-comment-inline,
+.article-item-viewed .article-inline-icon {
+    color: #b3b3b3;
 }
 
 .article-read-state {
