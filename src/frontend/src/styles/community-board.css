@@ -369,10 +369,26 @@
 
 .article-item-unviewed {
     border-left: 3px solid #6c0391;
+    background: linear-gradient(90deg, #f9f2ff 0, #ffffff 26px, #ffffff 100%);
 }
 
 .article-item-viewed {
-    opacity: 0.78;
+    opacity: 0.72;
+}
+
+.article-item-unviewed .article-title {
+    color: #2e1746;
+    font-weight: 600;
+}
+
+.article-item-viewed .article-title {
+    color: #8d8d8d;
+}
+
+.article-item-viewed .article-preview,
+.article-item-viewed .article-meta,
+.article-item-viewed .article-inline-icon {
+    color: #9a9a9a;
 }
 
 .article-read-state {
@@ -385,13 +401,15 @@
 }
 
 .article-read-state.unviewed {
-    background: #f3e9fb;
-    color: #6c0391;
+    background: #ead5fb;
+    color: #4f0a70;
+    border: 1px solid #d2afea;
 }
 
 .article-read-state.viewed {
-    background: #f1f1f1;
-    color: #666;
+    background: #efefef;
+    color: #757575;
+    border: 1px solid #dddddd;
 }
 
 .article-comment-inline {
