@@ -12,16 +12,19 @@ async function initMyPage() {
     }
 
     bindTabs();
+    bindProfileForm();
+    bindSupportForm();
 
     try {
         currentUser = await APIClient.get('/auth/me');
         Auth.setUser(currentUser);
         renderHeaderUser(currentUser);
+        renderProfileForm(currentUser);
 
         await Promise.all([
             loadMyPosts(),
             loadMyComments(),
-            loadMessages(),
+            loadNotices(),
             loadStats()
         ]);
     } catch (error) {
@@ -65,6 +68,116 @@ function renderHeaderUser(user) {
         if (user.isAdmin) adminLink.classList.remove('hidden');
         else adminLink.classList.add('hidden');
     }
+}
+
+function renderProfileForm(user) {
+    const nicknameInput = document.getElementById('profile-nickname');
+    const phoneInput = document.getElementById('profile-phone');
+    const emailInput = document.getElementById('profile-email');
+    const fixedName = document.getElementById('fixed-name');
+    const fixedBirth = document.getElementById('fixed-birth');
+    const emailConsent = document.getElementById('email-consent');
+    const smsConsent = document.getElementById('sms-consent');
+
+    if (nicknameInput) nicknameInput.value = user.nickname || '';
+    if (phoneInput) phoneInput.value = user.phone || '';
+    if (emailInput) emailInput.value = user.email || '';
+    if (fixedName) fixedName.textContent = user.name || '미등록';
+    if (fixedBirth) fixedBirth.textContent = user.birthDate || user.birth || '미등록';
+    if (emailConsent) emailConsent.checked = Boolean(user.emailConsent);
+    if (smsConsent) smsConsent.checked = Boolean(user.smsConsent);
+}
+
+function bindProfileForm() {
+    const form = document.getElementById('profile-form');
+    if (!form) return;
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const result = document.getElementById('profile-save-result');
+        const submitButton = form.querySelector('button[type="submit"]');
+
+        const payload = {
+            nickname: form.nickname.value.trim(),
+            phone: form.phone.value.trim(),
+            email: form.email.value.trim(),
+            emailConsent: form.emailConsent.checked,
+            smsConsent: form.smsConsent.checked
+        };
+
+        if (form.password.value.trim()) {
+            payload.password = form.password.value.trim();
+        }
+
+        try {
+            submitButton.disabled = true;
+            if (result) {
+                result.textContent = '저장 중입니다...';
+                result.style.color = '#6c757d';
+            }
+
+            await APIClient.put('/users/me', payload);
+            if (result) {
+                result.textContent = '내 정보가 저장되었습니다.';
+                result.style.color = '#198754';
+            }
+        } catch (error) {
+            if (result) {
+                result.textContent = '저장에 실패했습니다. 입력값을 확인해 주세요.';
+                result.style.color = '#dc3545';
+            }
+        } finally {
+            submitButton.disabled = false;
+            form.password.value = '';
+        }
+    });
+}
+
+function bindSupportForm() {
+    const form = document.getElementById('support-form');
+    if (!form) return;
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const result = document.getElementById('support-result');
+        const submitButton = form.querySelector('button[type="submit"]');
+        const type = form.inquiryType.value;
+        const content = form.inquiryContent.value.trim();
+
+        if (!content) {
+            if (result) {
+                result.textContent = '문의 내용을 입력해 주세요.';
+                result.style.color = '#dc3545';
+            }
+            return;
+        }
+
+        try {
+            submitButton.disabled = true;
+            if (result) {
+                result.textContent = '문의 접수 중입니다...';
+                result.style.color = '#6c757d';
+            }
+
+            await APIClient.post('/support/inquiries', {
+                type,
+                content
+            });
+
+            form.reset();
+            if (result) {
+                result.textContent = '문의가 정상적으로 접수되었습니다.';
+                result.style.color = '#198754';
+            }
+        } catch (error) {
+            if (result) {
+                result.textContent = '문의 접수에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+                result.style.color = '#dc3545';
+            }
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
 }
 
 async function loadMyPosts() {
@@ -116,47 +229,28 @@ async function loadMyComments() {
     }
 }
 
-async function loadMessages() {
-    const receivedContainer = document.getElementById('received-messages');
-    const sentContainer = document.getElementById('sent-messages');
-    if (!receivedContainer || !sentContainer) return;
-
-    const tabButtons = document.querySelectorAll('.message-tab-btn');
-    tabButtons.forEach(btn => {
-        btn.addEventListener('click', async () => {
-            tabButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const tab = btn.dataset.messageTab;
-            receivedContainer.classList.toggle('hidden', tab !== 'received');
-            sentContainer.classList.toggle('hidden', tab !== 'sent');
-        });
-    });
+async function loadNotices() {
+    const container = document.getElementById('notice-list');
+    if (!container) return;
 
     try {
-        const [received, sent] = await Promise.all([
-            APIClient.get('/posts/messages/received'),
-            APIClient.get('/posts/messages/sent')
-        ]);
+        const response = await APIClient.get('/posts', { page: 0, size: 20 });
+        const noticePosts = (response.content || []).filter(post => post.isNotice || post.notice || post.category === '공지');
 
-        receivedContainer.innerHTML = renderMessages(received, true);
-        sentContainer.innerHTML = renderMessages(sent, false);
+        if (!noticePosts.length) {
+            container.innerHTML = '<div class="no-data">게시된 공지사항이 없습니다.</div>';
+            return;
+        }
+
+        container.innerHTML = noticePosts.map(post => `
+            <a class="notice-item" href="/post-detail?id=${post.id}">
+                <strong>[공지] ${sanitizeHTML(post.title)}</strong>
+                <span>${formatDate(post.createdAt)}</span>
+            </a>
+        `).join('');
     } catch (error) {
-        receivedContainer.innerHTML = '<div class="error-message">받은 쪽지를 불러오지 못했습니다.</div>';
-        sentContainer.innerHTML = '<div class="error-message">보낸 쪽지를 불러오지 못했습니다.</div>';
+        container.innerHTML = '<div class="error-message">공지사항을 불러오지 못했습니다.</div>';
     }
-}
-
-function renderMessages(messages, received) {
-    if (!messages || !messages.length) {
-        return `<div class="no-data">${received ? '받은' : '보낸'} 쪽지가 없습니다.</div>`;
-    }
-
-    return messages.map(message => `
-        <div style="padding:12px;border:1px solid #eee;border-radius:8px;margin-bottom:10px;">
-            <div style="margin-bottom:8px;">${sanitizeHTML(message.content)}</div>
-            <div style="font-size:13px;color:#666;">${formatDate(message.created_at || message.createdAt)}</div>
-        </div>
-    `).join('');
 }
 
 async function loadStats() {
@@ -166,13 +260,11 @@ async function loadStats() {
     try {
         const response = await APIClient.get('/users/me/stats');
         container.innerHTML = `
-            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
-                <div class="card" style="padding:16px;"><strong>내 게시글</strong><div style="font-size:24px;margin-top:8px;">${response.postCount}</div></div>
-                <div class="card" style="padding:16px;"><strong>내 댓글</strong><div style="font-size:24px;margin-top:8px;">${response.commentCount}</div></div>
-                <div class="card" style="padding:16px;"><strong>받은 좋아요</strong><div style="font-size:24px;margin-top:8px;">${response.likeCount}</div></div>
-                <div class="card" style="padding:16px;"><strong>회원 등급</strong><div style="font-size:20px;margin-top:8px;">${sanitizeHTML(currentUser.levelLabel || 'Lv1 🐣 룸린이')}</div></div>
-                <div class="card" style="padding:16px;"><strong>누적 포인트</strong><div style="font-size:24px;margin-top:8px;">${Number(currentUser.totalPoints || 0)}</div></div>
-            </div>
+            <div class="card" style="padding:16px;"><strong>내 게시글</strong><div style="font-size:24px;margin-top:8px;">${response.postCount}</div></div>
+            <div class="card" style="padding:16px;"><strong>내 댓글</strong><div style="font-size:24px;margin-top:8px;">${response.commentCount}</div></div>
+            <div class="card" style="padding:16px;"><strong>받은 좋아요</strong><div style="font-size:24px;margin-top:8px;">${response.likeCount}</div></div>
+            <div class="card" style="padding:16px;"><strong>회원 등급</strong><div style="font-size:20px;margin-top:8px;">${sanitizeHTML(currentUser.levelLabel || 'Lv1 🐣 룸린이')}</div></div>
+            <div class="card" style="padding:16px;"><strong>누적 포인트</strong><div style="font-size:24px;margin-top:8px;">${Number(currentUser.totalPoints || 0)}</div></div>
         `;
     } catch (error) {
         container.innerHTML = '<div class="error-message">통계를 불러오지 못했습니다.</div>';

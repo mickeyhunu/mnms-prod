@@ -94,6 +94,20 @@
         white-space: nowrap;
     }
 
+    .profile-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .consent-wrap {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .notice-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
     .admin-table-container {
         font-size: 14px;
     }
