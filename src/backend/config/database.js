@@ -36,9 +36,24 @@ async function initDatabase() {
       password VARCHAR(255) NOT NULL,
       nickname VARCHAR(255) NOT NULL UNIQUE,
       role ENUM('USER','ADMIN') NOT NULL DEFAULT 'USER',
+      total_points BIGINT NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  const [totalPointsColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'users'
+       AND COLUMN_NAME = 'total_points'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!totalPointsColumn.length) {
+    await pool.query('ALTER TABLE users ADD COLUMN total_points BIGINT NOT NULL DEFAULT 0 AFTER role');
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS sessions (
@@ -205,6 +220,18 @@ async function initDatabase() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (post_id, user_id),
       FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS point_histories (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      user_id BIGINT NOT NULL,
+      action_type ENUM('REGISTER','LOGIN_DAILY','CREATE_POST','CREATE_COMMENT') NOT NULL,
+      points INT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_point_histories_user_action_created_at (user_id, action_type, created_at),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);

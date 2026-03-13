@@ -170,6 +170,8 @@ async function loadStats() {
                 <div class="card" style="padding:16px;"><strong>내 게시글</strong><div style="font-size:24px;margin-top:8px;">${response.postCount}</div></div>
                 <div class="card" style="padding:16px;"><strong>내 댓글</strong><div style="font-size:24px;margin-top:8px;">${response.commentCount}</div></div>
                 <div class="card" style="padding:16px;"><strong>받은 좋아요</strong><div style="font-size:24px;margin-top:8px;">${response.likeCount}</div></div>
+                <div class="card" style="padding:16px;"><strong>회원 등급</strong><div style="font-size:20px;margin-top:8px;">${sanitizeHTML(currentUser.levelLabel || 'Lv1 🐣 룸린이')}</div></div>
+                <div class="card" style="padding:16px;"><strong>누적 포인트</strong><div style="font-size:24px;margin-top:8px;">${Number(currentUser.totalPoints || 0)}</div></div>
             </div>
         `;
     } catch (error) {

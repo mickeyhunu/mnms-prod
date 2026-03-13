@@ -2,6 +2,7 @@
  * 파일 역할: postController 관련 HTTP 요청을 처리하고 모델/응답 로직을 조합하는 컨트롤러 파일.
  */
 const postModel = require('../models/postModel');
+const { awardPointByAction } = require('../models/pointModel');
 
 const BOARD_TYPES = postModel.BOARD_TYPES || { FREE: 'FREE', ANON: 'ANON', REVIEW: 'REVIEW', STORY: 'STORY', QUESTION: 'QUESTION' };
 
@@ -178,6 +179,7 @@ async function createPost(req, res, next) {
       boardType
     });
     const post = await postModel.findPostById(postId);
+    await awardPointByAction(req.user.id, 'CREATE_POST');
     res.status(201).json({ success: true, post });
   } catch (error) {
     next(error);
@@ -284,6 +286,8 @@ async function createComment(req, res, next) {
       parentId,
       isSecret: Boolean(isSecret)
     });
+    await awardPointByAction(req.user.id, 'CREATE_COMMENT');
+
     const comments = await postModel.listComments(postId);
     const visibleComments = comments.map((comment) => sanitizeCommentForViewer(comment, post, req.user));
     res.status(201).json({ success: true, comments: visibleComments });
