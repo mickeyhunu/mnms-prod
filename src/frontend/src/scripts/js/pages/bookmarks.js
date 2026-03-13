@@ -20,7 +20,7 @@ function initBookmarksHeader() {
     const adminLink = document.getElementById('admin-link');
     
     if (user && userNickname) {
-        userNickname.textContent = user.nickname;
+        userNickname.textContent = Auth.formatNicknameWithLevel(user);
         
         if (user.role === 'ADMIN' && adminLink) {
             showElement(adminLink);

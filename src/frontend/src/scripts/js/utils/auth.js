@@ -2,6 +2,14 @@
  * 파일 역할: auth에서 사용하는 공통 보조 함수/상수를 제공하는 유틸리티 파일.
  */
 const Auth = {
+    formatNicknameWithLevel(user) {
+        if (!user) return '';
+
+        const nickname = user.nickname || user.email || '';
+        const levelEmoji = user.levelEmoji || '';
+
+        return levelEmoji ? `${nickname} ${levelEmoji}` : nickname;
+    },
     getToken() {
         return localStorage.getItem(STORAGE_KEYS.TOKEN);
     },
@@ -68,7 +76,7 @@ const Auth = {
             if (navGuest) navGuest.classList.add('hidden');
             if (navUser) navUser.classList.remove('hidden');
             if (userNickname) {
-                userNickname.textContent = user.nickname;
+                userNickname.textContent = this.formatNicknameWithLevel(user);
             }
             if (adminLink && user.isAdmin) {
                 adminLink.classList.remove('hidden');

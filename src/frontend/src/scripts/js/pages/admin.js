@@ -22,7 +22,7 @@ async function initAdminPage() {
         }
 
         const nickname = document.getElementById('user-nickname');
-        if (nickname) nickname.textContent = me.nickname;
+        if (nickname) nickname.textContent = Auth.formatNicknameWithLevel(me);
 
         await loadPosts();
     } catch (error) {
