@@ -462,23 +462,34 @@
 
 .board-tabs {
     display: flex;
-    gap: 8px;
-    padding: 0 12px 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding: 4px 12px 14px;
 }
 
 .board-tab {
-    border: 1px solid #d9c3ea;
-    background: #fff;
-    color: #7b34aa;
+    border: 1px solid #d7c0ea;
+    background: linear-gradient(180deg, #fff 0%, #f8efff 100%);
+    color: #6f2f9b;
     border-radius: 999px;
-    padding: 8px 14px;
+    padding: 9px 15px;
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
+    box-shadow: 0 3px 8px rgba(94, 43, 126, 0.08);
+    transition: all 0.2s ease;
+}
+
+.board-tab:hover {
+    border-color: #b579df;
+    color: #542274;
+    transform: translateY(-1px);
 }
 
 .board-tab.active {
-    background: #7b34aa;
+    background: linear-gradient(180deg, #8e40c0 0%, #6c2e96 100%);
     color: #fff;
-    border-color: #7b34aa;
+    border-color: #6c2e96;
+    box-shadow: 0 6px 14px rgba(108, 46, 150, 0.35);
 }
