@@ -218,7 +218,7 @@ const pageRegistry = {
 
     <script src="scripts/js/components/sectionHeader.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css"],
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css"],
     scripts: ["scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
   'community': {
@@ -583,7 +583,7 @@ const pageRegistry = {
 
     <script src="scripts/js/components/sectionHeader.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css"],
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css"],
     scripts: ["scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
   'login': {
@@ -844,7 +844,7 @@ const pageRegistry = {
     <script src="scripts/js/pages/myPage.js"></script>
     <script src="scripts/js/components/sectionHeader.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css"],
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/myPage.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
   'post-detail': {
