@@ -297,6 +297,22 @@ function normalizePostDetailResponse(post) {
     };
 }
 
+
+function resolveLevelEmoji(level) {
+    const numericLevel = Number(level);
+    if (!Number.isFinite(numericLevel) || numericLevel <= 0) {
+        return '';
+    }
+
+    if (numericLevel >= 7) return '🔱';
+    if (numericLevel >= 6) return '👑';
+    if (numericLevel >= 5) return '💎';
+    if (numericLevel >= 4) return '🎓';
+    if (numericLevel >= 3) return '🧠';
+    if (numericLevel >= 2) return '🍻';
+    return '🐣';
+}
+
 function isCurrentUserPostAuthor(post) {
     const currentUser = Auth.getUser();
     if (!currentUser) {
@@ -323,9 +339,10 @@ function renderPostDetail(post) {
     const boardType = String(post.boardType || '').toUpperCase();
     currentPostBoardType = boardType;
     const isCurrentAuthor = post.isAuthor || isCurrentUserPostAuthor(post);
+    const authorEmoji = resolveLevelEmoji(post.authorLevel);
     const postAuthorLabel = boardType === 'ANON'
-        ? `익명${isCurrentAuthor ? ' (본인)' : ''}`
-        : (post.authorNickname || '');
+        ? `익명${isCurrentAuthor ? ' (본인)' : ''}${authorEmoji ? ` ${authorEmoji}` : ''}`
+        : `${post.authorNickname || ''}${authorEmoji ? ` ${authorEmoji}` : ''}`;
 
     if (titleElement) titleElement.textContent = `[${boardTagMap[boardType] || '자유'}] ${post.title || ''}`;
     if (contentElement) {
@@ -339,14 +356,8 @@ function renderPostDetail(post) {
 
     const levelElement = document.getElementById('post-author-level');
     if (levelElement) {
-        const hasLevel = Number.isFinite(post.authorLevel) && post.authorLevel > 0;
-        if (hasLevel) {
-            levelElement.textContent = post.authorLevel;
-            levelElement.classList.remove('hidden');
-        } else {
-            levelElement.textContent = '';
-            levelElement.classList.add('hidden');
-        }
+        levelElement.textContent = '';
+        levelElement.classList.add('hidden');
     }
 
     currentPostAuthor = {
@@ -563,6 +574,9 @@ function createCommentItem(comment, depth = 0) {
     const isAnonymousComment = currentPostBoardType === 'ANON' || String(comment.authorNickname || '').trim() === '익명';
     const showOwnBadge = isAuthor && (isAnonymousComment || isSecretComment);
     const authorName = sanitizeHTML(comment.authorNickname || '익명');
+    const commentAuthorLevel = Number(comment.authorLevel ?? comment.level ?? comment.authorRank ?? comment.rank ?? comment.authorGrade ?? comment.grade);
+    const commentAuthorEmoji = resolveLevelEmoji(commentAuthorLevel);
+    const authorDisplayName = `${authorName}${commentAuthorEmoji ? ` ${commentAuthorEmoji}` : ''}`;
     const canReplyByServer = comment.canReply !== false;
     const canReply = Auth.isAuthenticated() && depth < 3 && !isDeletedComment && canReplyByServer;
     const canGuestEdit = !Auth.isAuthenticated() && !comment.userId;
@@ -580,7 +594,7 @@ function createCommentItem(comment, depth = 0) {
             <div class="comment-body">
                 <div class="comment-meta">
                     <div class="comment-meta-main">
-                        <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${authorName}</span>
+                        <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${authorDisplayName}</span>
                         ${showOwnBadge ? '<span class="own-content-badge">본인</span>' : ''}
                         ${isSecretComment ? '<span style="margin-left:6px;font-size:12px;color:#7a5;">🔒 비밀댓글</span>' : ''}
                         ${isDeletedComment ? '<span style="margin-left:6px;font-size:12px;color:#999;">삭제됨</span>' : ''}
