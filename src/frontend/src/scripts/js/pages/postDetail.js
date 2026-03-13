@@ -8,7 +8,6 @@ let currentPostBoardType = '';
 let selectedMessageRecipient = null;
 let replyingTo = null;
 let activeCommentActionId = null;
-const likedCommentIds = new Set();
 
 function initPostDetailPage() {
     if (typeof Auth !== 'undefined') {
@@ -582,7 +581,6 @@ function createCommentItem(comment, depth = 0) {
     const canGuestEdit = !Auth.isAuthenticated() && !comment.userId;
     const isOtherUser = Auth.isAuthenticated() && currentUser && !isAuthor;
     const hasActionMenu = !isDeletedComment && (isAuthor || canGuestEdit || isOtherUser);
-    const isCommentLiked = likedCommentIds.has(comment.id);
     const replyMarker = depth > 0 ? '<span class="comment-reply-marker" aria-hidden="true"></span>' : '';
     
     console.log(`댓글 ${comment.id}: user=${currentUser?.id}, author=${comment.authorId}, isAuthor=${isAuthor}, isAdmin=${isAdminComment}`);
@@ -600,7 +598,6 @@ function createCommentItem(comment, depth = 0) {
                         ${isDeletedComment ? '<span style="margin-left:6px;font-size:12px;color:#999;">삭제됨</span>' : ''}
                     </div>
                     <div class="comment-meta-actions">
-                        ${isOtherUser ? `<button class="comment-action-icon-btn comment-like-toggle ${isCommentLiked ? 'liked' : ''}" type="button" title="댓글 좋아요" aria-label="댓글 좋아요" onclick="toggleCommentLike(${comment.id}, this)">${isCommentLiked ? '♥' : '♡'}</button>` : ''}
                         ${hasActionMenu ? `
                             <div class="comment-actions-wrapper">
                                 <button class="comment-more-btn" type="button" aria-label="댓글 더보기" onclick="toggleCommentActions(${comment.id})">⋯</button>
@@ -841,27 +838,6 @@ function reportComment(commentId) {
 
     showNotification('댓글 신고가 접수되었습니다.', 'success');
     console.log('댓글 신고 접수:', commentId);
-}
-
-function toggleCommentLike(commentId, button) {
-    if (!Auth.requireAuth()) return;
-
-    if (!button) {
-        return;
-    }
-
-    const isLiked = likedCommentIds.has(commentId);
-
-    if (isLiked) {
-        likedCommentIds.delete(commentId);
-        button.textContent = '♡';
-        button.classList.remove('liked');
-        return;
-    }
-
-    likedCommentIds.add(commentId);
-    button.textContent = '♥';
-    button.classList.add('liked');
 }
 
 async function handleToggleLike() {
