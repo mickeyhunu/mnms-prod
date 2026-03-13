@@ -831,7 +831,7 @@ const pageRegistry = {
                 </div>
 
                 <p class="company-footer-notice">미드나잇맨즈는 커뮤니티 서비스 및 업소 광고 플랫폼을 제공하는 중개 서비스이며, 개별 업소의 서비스 제공 또는 거래의 당사자가 아닙니다. 사이트에 게시된 업소 정보, 상품, 서비스 및 거래에 관한 모든 책임은 해당 업소 또는 정보 제공자에게 있습니다.</p>
-                <p class="company-footer-copyright">© 2025 Midnight Mens. All rights reserved. Powered by Black Scale Co., Ltd.</p>
+                <p class="company-footer-copyright">© 2026 Midnight Mens. All rights reserved. Powered by Black Scale Co., Ltd.</p>
             </section>
         </div>
     </main>
