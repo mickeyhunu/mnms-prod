@@ -142,6 +142,14 @@ async function deletePost(id) {
   await pool.query("UPDATE posts SET is_deleted = 1, title = '[삭제된 게시글]', content = '삭제된 게시글입니다.' WHERE id = ?", [id]);
 }
 
+async function updatePostPointAwards(id, { createPointAwarded, reviewBonusPointAwarded }) {
+  const pool = getPool();
+  await pool.query(
+    'UPDATE posts SET create_point_awarded = ?, review_bonus_point_awarded = ? WHERE id = ?',
+    [createPointAwarded ? 1 : 0, reviewBonusPointAwarded ? 1 : 0, id]
+  );
+}
+
 async function listComments(postId) {
   const pool = getPool();
   const [rows] = await pool.query(
@@ -191,6 +199,11 @@ async function deleteComment(id) {
   await pool.query('UPDATE comments SET is_deleted = 1 WHERE id = ?', [id]);
 }
 
+async function updateCommentPointAwarded(id, pointAwarded) {
+  const pool = getPool();
+  await pool.query('UPDATE comments SET point_awarded = ? WHERE id = ?', [pointAwarded ? 1 : 0, id]);
+}
+
 async function isPostLikedByUser(postId, userId) {
   const pool = getPool();
   const [rows] = await pool.query(
@@ -202,7 +215,12 @@ async function isPostLikedByUser(postId, userId) {
 
 async function togglePostLike(postId, userId) {
   const pool = getPool();
-  const liked = await isPostLikedByUser(postId, userId);
+  const [likeRows] = await pool.query(
+    'SELECT liker_point_awarded AS likerPointAwarded, author_point_awarded AS authorPointAwarded FROM post_likes WHERE post_id = ? AND user_id = ? LIMIT 1',
+    [postId, userId]
+  );
+  const liked = likeRows.length > 0;
+  const existingLike = likeRows[0] || null;
 
   if (liked) {
     await pool.query('DELETE FROM post_likes WHERE post_id = ? AND user_id = ?', [postId, userId]);
@@ -213,8 +231,46 @@ async function togglePostLike(postId, userId) {
   const [countRows] = await pool.query('SELECT COUNT(DISTINCT user_id) AS likeCount FROM post_likes WHERE post_id = ?', [postId]);
   return {
     isLiked: !liked,
-    likeCount: Number(countRows[0].likeCount)
+    likeCount: Number(countRows[0].likeCount),
+    likerPointAwarded: Boolean(existingLike?.likerPointAwarded),
+    authorPointAwarded: Boolean(existingLike?.authorPointAwarded)
   };
+}
+
+async function updatePostLikePointAwards(postId, userId, { likerPointAwarded, authorPointAwarded }) {
+  const pool = getPool();
+  await pool.query(
+    'UPDATE post_likes SET liker_point_awarded = ?, author_point_awarded = ? WHERE post_id = ? AND user_id = ?',
+    [likerPointAwarded ? 1 : 0, authorPointAwarded ? 1 : 0, postId, userId]
+  );
+}
+
+async function listPointAwardedCommentsByPostId(postId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    'SELECT id, user_id AS userId FROM comments WHERE post_id = ? AND is_deleted = 0 AND point_awarded = 1',
+    [postId]
+  );
+  return rows;
+}
+
+async function listPointAwardedLikesByPostId(postId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    'SELECT user_id AS userId, liker_point_awarded AS likerPointAwarded, author_point_awarded AS authorPointAwarded FROM post_likes WHERE post_id = ?',
+    [postId]
+  );
+  return rows;
+}
+
+async function deletePostLikesByPostId(postId) {
+  const pool = getPool();
+  await pool.query('DELETE FROM post_likes WHERE post_id = ?', [postId]);
+}
+
+async function markCommentsDeletedByPostId(postId) {
+  const pool = getPool();
+  await pool.query('UPDATE comments SET is_deleted = 1, point_awarded = 0 WHERE post_id = ?', [postId]);
 }
 
 async function listBestPosts() {
@@ -271,12 +327,19 @@ module.exports = {
   incrementPostViewCount,
   updatePost,
   deletePost,
+  updatePostPointAwards,
   listComments,
   findCommentById,
   createComment,
   updateComment,
   deleteComment,
+  updateCommentPointAwarded,
   isPostLikedByUser,
   togglePostLike,
+  updatePostLikePointAwards,
+  listPointAwardedCommentsByPostId,
+  listPointAwardedLikesByPostId,
+  deletePostLikesByPostId,
+  markCommentsDeletedByPostId,
   listBestPosts
 };

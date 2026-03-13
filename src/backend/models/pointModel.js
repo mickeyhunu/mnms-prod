@@ -13,6 +13,14 @@ const POINT_RULES = {
   RECEIVE_POST_LIKE: { points: 5, dailyLimit: null }
 };
 
+const POINT_REVOKE_ACTIONS = {
+  CREATE_POST: 'REVOKE_CREATE_POST',
+  CREATE_REVIEW_BONUS: 'REVOKE_CREATE_REVIEW_BONUS',
+  CREATE_COMMENT: 'REVOKE_CREATE_COMMENT',
+  LIKE_POST: 'REVOKE_LIKE_POST',
+  RECEIVE_POST_LIKE: 'REVOKE_RECEIVE_POST_LIKE'
+};
+
 function startOfToday() {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -83,4 +91,43 @@ async function awardPointByAction(userId, actionType) {
   }
 }
 
-module.exports = { POINT_RULES, awardPointByAction };
+async function revokePointByAction(userId, actionType) {
+  const pool = getPool();
+  const rule = POINT_RULES[actionType];
+  const revokeActionType = POINT_REVOKE_ACTIONS[actionType];
+
+  if (!rule || !revokeActionType) {
+    throw new Error(`지원하지 않는 포인트 회수 액션입니다: ${actionType}`);
+  }
+
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    await connection.query(
+      'UPDATE users SET total_points = GREATEST(total_points - ?, 0) WHERE id = ?',
+      [rule.points, userId]
+    );
+    await connection.query(
+      'INSERT INTO point_histories (user_id, action_type, points) VALUES (?, ?, ?)',
+      [userId, revokeActionType, -rule.points]
+    );
+
+    const [users] = await connection.query('SELECT total_points FROM users WHERE id = ?', [userId]);
+    await connection.commit();
+
+    return {
+      revoked: true,
+      revokedPoints: rule.points,
+      actionType,
+      totalPoints: Number(users[0]?.total_points || 0)
+    };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+module.exports = { POINT_RULES, awardPointByAction, revokePointByAction };
