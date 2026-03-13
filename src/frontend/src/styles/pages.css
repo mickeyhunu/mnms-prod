@@ -379,14 +379,96 @@
 
 .company-footer-slot {
     margin-top: 28px;
+    background: #27262b;
+    color: #f6f6f9;
 }
 
-.company-placeholder {
-    margin-top: 12px;
-    border: 1px dashed #adb5bd;
-    border-radius: 8px;
-    padding: 16px;
-    text-align: center;
-    color: #6c757d;
-    font-weight: 700;
+.company-footer-top {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
 }
+
+.company-footer-logo {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.company-footer-socials {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.company-social-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 9999px;
+    background: #35333b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.company-footer-links-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0;
+    font-size: 14px;
+    color: #b8bbc5;
+    padding: 4px 0;
+    margin-bottom: 16px;
+}
+
+.company-footer-links-row a,
+.company-footer-links-row button {
+    color: inherit;
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.footer-divider {
+    width: 1px;
+    min-width: 1px;
+    height: 16px;
+    background: #444750;
+    margin: 0 10px;
+}
+
+.company-business-link-wrap {
+    padding: 4px 0;
+    margin-bottom: 2px;
+}
+
+.company-business-link {
+    display: inline-flex;
+    align-items: center;
+    color: #8d9099;
+    font-size: 13px;
+    text-decoration: none;
+    gap: 2px;
+}
+
+.company-footer-notice {
+    font-size: 12px;
+    color: #737782;
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.company-footer-copyright {
+    font-size: 12px;
+    color: #737782;
+}
+
+
