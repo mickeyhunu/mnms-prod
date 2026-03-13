@@ -198,16 +198,28 @@ const pageRegistry = {
 
     <main class="main-content">
         <div class="container">
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <button type="button" class="board-menu-toggle" id="board-menu-toggle" aria-label="카테고리 열기" aria-expanded="false" aria-controls="board-tabs-panel">
+                        <span aria-hidden="true">☰</span>
+                    </button>
+                    <nav class="board-tabs hidden" id="board-tabs-panel" aria-label="페이지 카테고리">
+                        <button type="button" class="board-tab active" data-board-type="BUSINESS">업체정보</button>
+                    </nav>
+                    <span class="community-board-name">업체정보</span>
+                </div>
+            </header>
+
             <div class="page-header">
-                <h1>업체정보</h1>
                 <p>업체정보 페이지 준비 중입니다.</p>
             </div>
         </div>
     </main>
 
+    <script src="scripts/js/components/sectionHeader.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
-    scripts: ["scripts/js/components/footerNav.js"]
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css"],
+    scripts: ["scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
   'community': {
     template: `<header class="header">
@@ -551,16 +563,28 @@ const pageRegistry = {
 
     <main class="main-content">
         <div class="container">
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <button type="button" class="board-menu-toggle" id="board-menu-toggle" aria-label="카테고리 열기" aria-expanded="false" aria-controls="board-tabs-panel">
+                        <span aria-hidden="true">☰</span>
+                    </button>
+                    <nav class="board-tabs hidden" id="board-tabs-panel" aria-label="페이지 카테고리">
+                        <button type="button" class="board-tab active" data-board-type="LIVE">LIVE</button>
+                    </nav>
+                    <span class="community-board-name">LIVE</span>
+                </div>
+            </header>
+
             <div class="page-header">
-                <h1>LIVE</h1>
                 <p>LIVE 서비스 준비 중입니다.</p>
             </div>
         </div>
     </main>
 
+    <script src="scripts/js/components/sectionHeader.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
-    scripts: ["scripts/js/components/footerNav.js"]
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css"],
+    scripts: ["scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
   'login': {
     template: `<header class="header">
@@ -653,8 +677,19 @@ const pageRegistry = {
 
     <main class="main-content">
         <div class="container">
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <button type="button" class="board-menu-toggle" id="board-menu-toggle" aria-label="카테고리 열기" aria-expanded="false" aria-controls="board-tabs-panel">
+                        <span aria-hidden="true">☰</span>
+                    </button>
+                    <nav class="board-tabs hidden" id="board-tabs-panel" aria-label="페이지 카테고리">
+                        <button type="button" class="board-tab active" data-board-type="MYPAGE">마이페이지</button>
+                    </nav>
+                    <span class="community-board-name">마이페이지</span>
+                </div>
+            </header>
+
             <div class="page-header">
-                <h1>마이페이지</h1>
                 <p>활동 정보, 내 정보 수정, 공지/고객지원, 정책 안내를 확인할 수 있습니다</p>
             </div>
 
@@ -807,9 +842,10 @@ const pageRegistry = {
     <script src="scripts/js/utils/auth.js"></script>
     <script src="scripts/js/api/apiClient.js"></script>
     <script src="scripts/js/pages/myPage.js"></script>
+    <script src="scripts/js/components/sectionHeader.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/myPage.js", "scripts/js/components/footerNav.js"]
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/myPage.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
   'post-detail': {
     template: `<header class="header">
