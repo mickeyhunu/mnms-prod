@@ -9,13 +9,13 @@ const router = express.Router();
 
 router.get('/', controller.listPosts);
 router.get('/:id', optionalAuthMiddleware, controller.getPost);
-router.post('/', optionalAuthMiddleware, controller.createPost);
-router.put('/:id', optionalAuthMiddleware, controller.updatePost);
-router.delete('/:id', optionalAuthMiddleware, controller.deletePost);
+router.post('/', authMiddleware, controller.createPost);
+router.put('/:id', authMiddleware, controller.updatePost);
+router.delete('/:id', authMiddleware, controller.deletePost);
 router.post('/:id/like', authMiddleware, controller.toggleLike);
 router.get('/:postId/comments', optionalAuthMiddleware, controller.listComments);
-router.post('/:postId/comments', optionalAuthMiddleware, controller.createComment);
-router.put('/comments/:commentId', optionalAuthMiddleware, controller.updateComment);
-router.delete('/comments/:commentId', optionalAuthMiddleware, controller.deleteComment);
+router.post('/:postId/comments', authMiddleware, controller.createComment);
+router.put('/comments/:commentId', authMiddleware, controller.updateComment);
+router.delete('/comments/:commentId', authMiddleware, controller.deleteComment);
 
 module.exports = router;
