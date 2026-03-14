@@ -714,7 +714,7 @@ const pageRegistry = {
         </div>
     </header>
 
-    <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">마이페이지 - 정보수정</span></div></header></div></main>
+    <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">마이페이지 - 정보 수정</span></div></header></div></main>
 
     <script src="scripts/js/utils/constants.js"></script>
     <script src="scripts/js/utils/helpers.js"></script>
@@ -728,7 +728,7 @@ const pageRegistry = {
   },
   'my-page-activity': {
     template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
-    <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">마이페이지 - 활동내역보기</span></div></header>
+    <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">마이페이지 - 활동 내역 보기</span></div></header>
     <div class="section-header"><h2>활동현황</h2></div><div id="my-stats" class="activity-summary-grid"><div class="loading">로딩 중...</div></div></div></main>
     <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/pages/myPage.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
@@ -736,7 +736,7 @@ const pageRegistry = {
   },
   'my-page-points': {
     template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
-    <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">마이페이지 - 포인트내역보기</span></div></header>
+    <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">마이페이지 - 포인트 내역 보기</span></div></header>
     <div class="section-header"><h2>포인트 내역</h2></div><div id="my-stats" class="activity-summary-grid"><div class="loading">로딩 중...</div></div></div></main>
     <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/pages/myPage.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
