@@ -35,7 +35,7 @@ async function myStats(req, res, next) {
       reviewCount: Number(stats.reviewCount || 0),
       recommendCount: Number(stats.recommendCount || 0),
       neededPointsToNextLevel: nextLevel ? Math.max(0, nextLevel.minPoints - totalPoints) : 0,
-      nextLevelLabel: nextLevel ? `Lv.${nextLevel.level}` : 'MAX',
+      nextLevelLabel: nextLevel ? `${nextLevel.emoji} ${nextLevel.title}` : 'MAX',
       progressRate,
       nextLevelMinPoints: nextLevel ? nextLevel.minPoints : totalPoints
     });
