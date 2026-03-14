@@ -64,20 +64,31 @@ function renderHeaderUser(user) {
 
 function renderProfileForm(user) {
     const nicknameInput = document.getElementById('profile-nickname');
-    const phoneInput = document.getElementById('profile-phone');
-    const emailInput = document.getElementById('profile-email');
+    const phoneField = document.getElementById('profile-phone');
+    const emailField = document.getElementById('profile-email');
     const fixedName = document.getElementById('fixed-name');
     const fixedBirth = document.getElementById('fixed-birth');
     const emailConsent = document.getElementById('email-consent');
     const smsConsent = document.getElementById('sms-consent');
+    const loginProvider = document.getElementById('profile-login-provider');
 
     if (nicknameInput) nicknameInput.value = user.nickname || '';
-    if (phoneInput) phoneInput.value = user.phone || '';
-    if (emailInput) emailInput.value = user.email || '';
-    if (fixedName) fixedName.textContent = user.name || '미등록';
+
+    if (phoneField) {
+        if (phoneField.tagName === 'INPUT') phoneField.value = user.phone || '';
+        else phoneField.textContent = user.phone || '없음';
+    }
+
+    if (emailField) {
+        if (emailField.tagName === 'INPUT') emailField.value = user.email || '';
+        else emailField.textContent = user.email || '없음';
+    }
+
+    if (fixedName) fixedName.textContent = user.name || user.nickname || '미등록';
     if (fixedBirth) fixedBirth.textContent = user.birthDate || user.birth || '미등록';
     if (emailConsent) emailConsent.checked = Boolean(user.emailConsent);
     if (smsConsent) smsConsent.checked = Boolean(user.smsConsent);
+    if (loginProvider) loginProvider.textContent = '카카오 로그인 중';
 }
 
 function bindProfileForm() {

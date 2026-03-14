@@ -90,6 +90,15 @@
         white-space: nowrap;
     }
 
+
+    .my-page-section-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mypage-overview-grid {
+        grid-template-columns: 1fr;
+    }
+
     .profile-form-grid {
         grid-template-columns: 1fr;
     }
@@ -219,6 +228,11 @@
         padding: 8px 12px;
         font-size: 13px;
     }
+
+    .my-page-section-list {
+        grid-template-columns: 1fr;
+    }
+
 }
 
 @media (min-width: 1200px) {

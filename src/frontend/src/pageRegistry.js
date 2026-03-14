@@ -713,62 +713,35 @@ const pageRegistry = {
     </header>
 
     <main class="main-content">
-        <div class="container">
-            <header class="community-section-header">
-                <div class="community-header-left">
-                    <span class="community-board-name">마이페이지</span>
+        <div class="container mypage-profile-container">
+            <p class="mypage-mobile-title">내 정보</p>
+
+            <section class="mypage-card mypage-info-card">
+                <div class="mypage-info-login-row">
+                    <span>로그인정보</span>
+                    <strong id="profile-login-provider">카카오 로그인 중</strong>
                 </div>
-            </header>
+                <a class="mypage-info-row" href="/my-page/profile">
+                    <span class="mypage-info-label">이름 · 연락처</span>
+                    <span class="mypage-info-value-wrap"><strong id="fixed-name">-</strong><strong id="profile-phone">-</strong><span class="mypage-info-chevron" aria-hidden="true">›</span></span>
+                </a>
+                <a class="mypage-info-row" href="/my-page/profile">
+                    <span class="mypage-info-label">이메일</span>
+                    <span class="mypage-info-value-wrap"><strong id="profile-email">없음</strong><span class="mypage-info-chevron" aria-hidden="true">›</span></span>
+                </a>
+            </section>
 
-            <nav class="my-page-section-nav" aria-label="마이페이지 섹션 이동">
-                <ul class="my-page-section-list">
-                    <li><a class="my-page-section-btn active" href="/my-page/profile">회원정보</a></li>
-                    <li><a class="my-page-section-btn" href="/my-page/activity">활동현황</a></li>
-                    <li><a class="my-page-section-btn" href="/my-page/support">고객센터</a></li>
-                    <li><a class="my-page-section-btn" href="/my-page/policy">약관 및 정책</a></li>
-                </ul>
-            </nav>
+            <button class="mypage-logout-btn mypage-footer-logout" type="button">로그아웃</button>
 
-            <div class="section-header">
-                <h2>회원정보</h2>
+            <section class="mypage-card mypage-menu-list">
+                <a class="mypage-menu-item" href="/my-page/support"><span>고객센터</span><span class="mypage-info-chevron" aria-hidden="true">›</span></a>
+                <a class="mypage-menu-item" href="/my-page/policy"><span>약관 및 정책</span><span class="mypage-info-chevron" aria-hidden="true">›</span></a>
+                <a class="mypage-menu-item" href="/my-page/activity"><span>광고 이용 내역</span><span class="mypage-info-chevron" aria-hidden="true">›</span></a>
+            </section>
+
+            <div class="mypage-withdraw-wrap">
+                <a class="mypage-withdraw-link" href="/board/terms">회원탈퇴</a>
             </div>
-
-            <div class="mypage-card fixed-info-card">
-                <h3>기본정보 (고정)</h3>
-                <div class="fixed-info-grid">
-                    <div><span>이름</span><strong id="fixed-name">-</strong></div>
-                    <div><span>생년월일</span><strong id="fixed-birth">-</strong></div>
-                </div>
-            </div>
-
-            <form id="profile-form" class="mypage-card profile-form">
-                <h3>수정 가능한 정보</h3>
-                <div class="profile-form-grid">
-                    <label>비밀번호
-                        <input type="password" name="password" placeholder="새 비밀번호 입력" autocomplete="new-password" />
-                    </label>
-                    <label>닉네임
-                        <input type="text" name="nickname" id="profile-nickname" maxlength="20" />
-                    </label>
-                    <label>연락처
-                        <input type="tel" name="phone" id="profile-phone" placeholder="010-0000-0000" />
-                    </label>
-                    <label>이메일
-                        <input type="email" name="email" id="profile-email" />
-                    </label>
-                </div>
-
-                <div class="consent-wrap">
-                    <label><input type="checkbox" name="emailConsent" id="email-consent" /> 이메일 수신 동의</label>
-                    <label><input type="checkbox" name="smsConsent" id="sms-consent" /> SMS 수신 동의</label>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">내 정보 저장</button>
-                </div>
-                <p class="help-text">* 기본정보(이름/생년월일)는 변경할 수 없습니다.</p>
-                <p id="profile-save-result" class="help-text"></p>
-            </form>
         </div>
     </main>
 
