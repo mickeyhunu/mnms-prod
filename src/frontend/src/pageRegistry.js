@@ -671,18 +671,37 @@ const pageRegistry = {
                 </div>
             </header>
 
-            <nav class="my-page-section-nav" aria-label="마이페이지 섹션 이동">
-                <ul class="my-page-section-list">
-                    <li><a class="my-page-section-btn" href="/my-page/profile">회원정보</a></li>
-                    <li><a class="my-page-section-btn" href="/my-page/activity">활동현황</a></li>
-                    <li><a class="my-page-section-btn" href="/my-page/support">고객센터</a></li>
-                    <li><a class="my-page-section-btn" href="/my-page/policy">약관 및 정책</a></li>
-                </ul>
-            </nav>
+            <div class="container mypage-profile-container">
+                <p class="mypage-mobile-title">내 정보</p>
 
-            <section class="mypage-card">
-                <p>상단 버튼을 눌러 각 페이지로 이동해 주세요.</p>
-            </section>
+                <section class="mypage-card mypage-info-card">
+                    <div class="mypage-info-login-row">
+                        <span>로그인정보</span>
+                        <strong id="profile-login-provider">카카오 로그인 중</strong>
+                    </div>
+                    <a class="mypage-info-row" href="/my-page/profile">
+                        <span class="mypage-info-label">이름 · 연락처</span>
+                        <span class="mypage-info-value-wrap"><strong id="fixed-name">-</strong><strong id="profile-phone">-</strong><span class="mypage-info-chevron" aria-hidden="true">›</span></span>
+                    </a>
+                    <a class="mypage-info-row" href="/my-page/profile">
+                        <span class="mypage-info-label">이메일</span>
+                        <span class="mypage-info-value-wrap"><strong id="profile-email">없음</strong><span class="mypage-info-chevron" aria-hidden="true">›</span></span>
+                    </a>
+                </section>
+
+                <button class="mypage-logout-btn mypage-footer-logout" type="button">로그아웃</button>
+
+                <section class="mypage-card mypage-menu-list">
+                    <a class="mypage-menu-item" href="/my-page/support"><span>고객센터</span><span class="mypage-info-chevron" aria-hidden="true">›</span></a>
+                    <a class="mypage-menu-item" href="/my-page/policy"><span>약관 및 정책</span><span class="mypage-info-chevron" aria-hidden="true">›</span></a>
+                    <a class="mypage-menu-item" href="/my-page/activity"><span>광고 이용 내역</span><span class="mypage-info-chevron" aria-hidden="true">›</span></a>
+                </section>
+
+                <div class="mypage-withdraw-wrap">
+                    <a class="mypage-withdraw-link" href="/board/terms">회원탈퇴</a>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -711,39 +730,6 @@ const pageRegistry = {
             </nav>
         </div>
     </header>
-
-    <main class="main-content">
-        <div class="container mypage-profile-container">
-            <p class="mypage-mobile-title">내 정보</p>
-
-            <section class="mypage-card mypage-info-card">
-                <div class="mypage-info-login-row">
-                    <span>로그인정보</span>
-                    <strong id="profile-login-provider">카카오 로그인 중</strong>
-                </div>
-                <a class="mypage-info-row" href="/my-page/profile">
-                    <span class="mypage-info-label">이름 · 연락처</span>
-                    <span class="mypage-info-value-wrap"><strong id="fixed-name">-</strong><strong id="profile-phone">-</strong><span class="mypage-info-chevron" aria-hidden="true">›</span></span>
-                </a>
-                <a class="mypage-info-row" href="/my-page/profile">
-                    <span class="mypage-info-label">이메일</span>
-                    <span class="mypage-info-value-wrap"><strong id="profile-email">없음</strong><span class="mypage-info-chevron" aria-hidden="true">›</span></span>
-                </a>
-            </section>
-
-            <button class="mypage-logout-btn mypage-footer-logout" type="button">로그아웃</button>
-
-            <section class="mypage-card mypage-menu-list">
-                <a class="mypage-menu-item" href="/my-page/support"><span>고객센터</span><span class="mypage-info-chevron" aria-hidden="true">›</span></a>
-                <a class="mypage-menu-item" href="/my-page/policy"><span>약관 및 정책</span><span class="mypage-info-chevron" aria-hidden="true">›</span></a>
-                <a class="mypage-menu-item" href="/my-page/activity"><span>광고 이용 내역</span><span class="mypage-info-chevron" aria-hidden="true">›</span></a>
-            </section>
-
-            <div class="mypage-withdraw-wrap">
-                <a class="mypage-withdraw-link" href="/board/terms">회원탈퇴</a>
-            </div>
-        </div>
-    </main>
 
     <script src="scripts/js/utils/constants.js"></script>
     <script src="scripts/js/utils/helpers.js"></script>
