@@ -678,17 +678,11 @@ const pageRegistry = {
                     <div class="loading">로딩 중...</div>
                 </section>
 
-                <button class="mypage-logout-btn mypage-footer-logout" type="button">로그아웃</button>
-
                 <section class="mypage-card mypage-menu-list">
                     <a class="mypage-menu-item" href="/my-page/support"><span>고객센터</span><span class="mypage-info-chevron" aria-hidden="true">›</span></a>
                     <a class="mypage-menu-item" href="/my-page/policy"><span>약관 및 정책</span><span class="mypage-info-chevron" aria-hidden="true">›</span></a>
                     <a class="mypage-menu-item" href="/my-page/activity"><span>광고 이용 내역</span><span class="mypage-info-chevron" aria-hidden="true">›</span></a>
                 </section>
-
-                <div class="mypage-withdraw-wrap">
-                    <a class="mypage-withdraw-link" href="/board/terms">회원탈퇴</a>
-                </div>
             </div>
 
         </div>
