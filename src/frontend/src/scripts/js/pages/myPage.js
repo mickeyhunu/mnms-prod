@@ -12,9 +12,7 @@ async function initMyPage() {
     }
 
     bindProfileForm();
-    bindSupportForm();
     bindLogoutActions();
-    bindSectionNavigation();
 
     try {
         currentUser = await APIClient.get('/auth/me');
@@ -23,7 +21,6 @@ async function initMyPage() {
         renderProfileForm(currentUser);
 
         await Promise.all([
-            loadNotices(),
             loadStats()
         ]);
     } catch (error) {
@@ -32,36 +29,6 @@ async function initMyPage() {
         Auth.logout();
     }
 }
-
-function bindSectionNavigation() {
-    const sectionButtons = document.querySelectorAll('.my-page-section-btn');
-    if (!sectionButtons.length) return;
-
-    const tabs = document.querySelectorAll('.tab-content .tab-pane');
-    const openTab = (tabName) => {
-        tabs.forEach((tabPane) => {
-            const isTarget = tabPane.id === `${tabName}-tab`;
-            tabPane.classList.toggle('active', isTarget);
-        });
-
-        sectionButtons.forEach((button) => {
-            const isTargetButton = button.dataset.targetTab === tabName;
-            button.classList.toggle('active', isTargetButton);
-        });
-    };
-
-    sectionButtons.forEach((button) => {
-        if (button.dataset.boundClick === 'true') return;
-
-        button.dataset.boundClick = 'true';
-        button.addEventListener('click', () => {
-            const targetTab = button.dataset.targetTab;
-            if (!targetTab) return;
-            openTab(targetTab);
-        });
-    });
-}
-
 
 function bindLogoutActions() {
     Auth.bindLogoutButton();
@@ -158,53 +125,6 @@ function bindProfileForm() {
     });
 }
 
-function bindSupportForm() {
-    const form = document.getElementById('support-form');
-    if (!form) return;
-
-    form.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const result = document.getElementById('support-result');
-        const submitButton = form.querySelector('button[type="submit"]');
-        const type = form.inquiryType.value;
-        const content = form.inquiryContent.value.trim();
-
-        if (!content) {
-            if (result) {
-                result.textContent = '문의 내용을 입력해 주세요.';
-                result.style.color = '#dc3545';
-            }
-            return;
-        }
-
-        try {
-            submitButton.disabled = true;
-            if (result) {
-                result.textContent = '문의 접수 중입니다...';
-                result.style.color = '#6c757d';
-            }
-
-            await APIClient.post('/support/inquiries', {
-                type,
-                content
-            });
-
-            form.reset();
-            if (result) {
-                result.textContent = '문의가 정상적으로 접수되었습니다.';
-                result.style.color = '#198754';
-            }
-        } catch (error) {
-            if (result) {
-                result.textContent = '문의 접수에 실패했습니다. 잠시 후 다시 시도해 주세요.';
-                result.style.color = '#dc3545';
-            }
-        } finally {
-            submitButton.disabled = false;
-        }
-    });
-}
-
 async function loadMyPosts() {
     const container = document.getElementById('my-posts-list');
     if (!container || !currentUser) return;
@@ -251,30 +171,6 @@ async function loadMyComments() {
         `).join('');
     } catch (error) {
         container.innerHTML = '<div class="error-message">내 댓글을 불러오지 못했습니다.</div>';
-    }
-}
-
-async function loadNotices() {
-    const container = document.getElementById('notice-list');
-    if (!container) return;
-
-    try {
-        const response = await APIClient.get('/posts', { page: 0, size: 20 });
-        const noticePosts = (response.content || []).filter(post => post.isNotice || post.notice || post.category === '공지');
-
-        if (!noticePosts.length) {
-            container.innerHTML = '<div class="no-data">게시된 공지사항이 없습니다.</div>';
-            return;
-        }
-
-        container.innerHTML = noticePosts.map(post => `
-            <a class="notice-item" href="/post-detail?id=${post.id}">
-                <strong>[공지] ${sanitizeHTML(post.title)}</strong>
-                <span>${formatDate(post.createdAt)}</span>
-            </a>
-        `).join('');
-    } catch (error) {
-        container.innerHTML = '<div class="error-message">공지사항을 불러오지 못했습니다.</div>';
     }
 }
 
