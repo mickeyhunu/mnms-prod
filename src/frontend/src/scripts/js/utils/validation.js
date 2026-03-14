@@ -209,4 +209,3 @@ function getFormData(form) {
     return formData;
 }
 
-console.log('Validation loaded');
