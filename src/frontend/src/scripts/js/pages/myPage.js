@@ -199,7 +199,10 @@ async function loadStats() {
 
         container.innerHTML = `
             <section class="mypage-summary-section">
-                <h3 class="mypage-summary-title">기본 정보</h3>
+                <div class="mypage-summary-head">
+                    <h3 class="mypage-summary-title">기본 정보</h3>
+                    <a class="mypage-summary-action" href="/my-page/profile">정보 수정</a>
+                </div>
                 <div class="mypage-summary-list">
                     <div class="mypage-summary-row"><span>아이디</span><strong>${sanitizeHTML(response.loginId || '')}</strong></div>
                     <div class="mypage-summary-row"><span>닉네임</span><strong>${sanitizeHTML(response.nickname || '')}</strong></div>
@@ -209,7 +212,10 @@ async function loadStats() {
             </section>
 
             <section class="mypage-summary-section">
-                <h3 class="mypage-summary-title">포인트</h3>
+                <div class="mypage-summary-head">
+                    <h3 class="mypage-summary-title">포인트</h3>
+                    <a class="mypage-summary-action" href="/my-page/points">포인트 내역 보기</a>
+                </div>
                 <div class="mypage-summary-row"><span>보유 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
                 <div class="mypage-level-progress">
                     <div class="mypage-level-progress-meta">
@@ -222,7 +228,10 @@ async function loadStats() {
             </section>
 
             <section class="mypage-summary-section">
-                <h3 class="mypage-summary-title">활동 내역</h3>
+                <div class="mypage-summary-head">
+                    <h3 class="mypage-summary-title">활동 내역</h3>
+                    <a class="mypage-summary-action" href="/my-page/activity">활동 내역 보기</a>
+                </div>
                 <div class="mypage-activity-grid">
                     <div class="mypage-activity-item"><span>출석</span><strong>${Number(response.attendanceCount || 0)}</strong></div>
                     <div class="mypage-activity-item"><span>후기</span><strong>${Number(response.reviewCount || 0)}</strong></div>
