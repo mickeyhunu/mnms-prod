@@ -423,21 +423,6 @@
     font-size: 14px;
 }
 
-
-.profile-form-grid input[readonly] {
-    background: #f8f9fa;
-    color: #6c757d;
-}
-
-.profile-nickname-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.profile-nickname-actions .help-text {
-    margin-top: 0;
-}
 .consent-wrap {
     display: flex;
     gap: 16px;

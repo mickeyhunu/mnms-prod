@@ -724,42 +724,36 @@ const pageRegistry = {
         </header>
 
         <section class="mypage-card">
-          <h3>회원정보수정</h3>
+          <h3>기본 정보</h3>
+          <div class="fixed-info-grid">
+            <div><span>이름</span><strong id="fixed-name">-</strong></div>
+            <div><span>생년월일</span><strong id="fixed-birth">-</strong></div>
+            <div><span>로그인 방식</span><strong id="profile-login-provider">일반 로그인</strong></div>
+          </div>
+        </section>
+
+        <section class="mypage-card">
+          <h3>수정 가능 정보</h3>
           <form id="profile-form">
             <div class="profile-form-grid">
-              <label>아이디
-                <input type="text" id="profile-login-id" name="loginId" readonly>
+              <label>닉네임
+                <input type="text" id="profile-nickname" name="nickname" minlength="2" required>
               </label>
               <label>비밀번호
                 <input type="password" id="profile-password" name="password" minlength="4" placeholder="변경 시 입력">
               </label>
-              <label>비밀번호 확인
-                <input type="password" id="profile-password-confirm" name="passwordConfirm" minlength="4" placeholder="비밀번호 재입력">
-              </label>
-              <label>이름
-                <input type="text" id="profile-name" name="name" readonly>
-              </label>
-              <label>닉네임
-                <input type="text" id="profile-nickname" name="nickname" minlength="2" required>
-                <span class="profile-nickname-actions">
-                  <button type="button" class="btn btn-outline btn-sm hidden" id="nickname-check-btn">중복 확인</button>
-                  <small id="nickname-check-result" class="help-text"></small>
-                </span>
-              </label>
-              <label>생년월일
-                <input type="text" id="profile-birth" name="birthDate" readonly>
+              <label>연락처
+                <input type="text" id="profile-phone" name="phone" placeholder="010-0000-0000">
               </label>
               <label>이메일
                 <input type="email" id="profile-email" name="email" readonly>
-              </label>
-              <label>연락처
-                <input type="text" id="profile-phone" name="phone" placeholder="010-0000-0000">
               </label>
             </div>
             <div class="consent-wrap">
               <label><input type="checkbox" id="email-consent" name="emailConsent"> 이메일 수신 동의</label>
               <label><input type="checkbox" id="sms-consent" name="smsConsent"> SMS 수신 동의</label>
             </div>
+            <p class="help-text">닉네임은 하루에 한 번만 변경할 수 있으며, 중복 닉네임은 사용할 수 없습니다.</p>
             <button type="submit" class="btn btn-primary">저장</button>
             <p id="profile-save-result" class="help-text" role="status"></p>
           </form>

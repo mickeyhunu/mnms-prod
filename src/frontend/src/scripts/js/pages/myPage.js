@@ -2,7 +2,6 @@
  * 파일 역할: myPage 페이지의 이벤트/데이터 흐름을 초기화하는 페이지 스크립트 파일.
  */
 let currentUser = null;
-let nicknameCheckState = { checked: false, available: false, value: '' };
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initMyPage);
@@ -73,16 +72,15 @@ function renderHeaderUser(user) {
 }
 
 function renderProfileForm(user) {
-    const loginIdField = document.getElementById('profile-login-id');
     const nicknameInput = document.getElementById('profile-nickname');
     const phoneField = document.getElementById('profile-phone');
     const emailField = document.getElementById('profile-email');
-    const nameField = document.getElementById('profile-name');
-    const birthField = document.getElementById('profile-birth');
+    const fixedName = document.getElementById('fixed-name');
+    const fixedBirth = document.getElementById('fixed-birth');
     const emailConsent = document.getElementById('email-consent');
     const smsConsent = document.getElementById('sms-consent');
+    const loginProvider = document.getElementById('profile-login-provider');
 
-    if (loginIdField) loginIdField.value = user.email || '';
     if (nicknameInput) nicknameInput.value = user.nickname || '';
 
     if (phoneField) {
@@ -95,106 +93,31 @@ function renderProfileForm(user) {
         else emailField.textContent = user.email || '없음';
     }
 
-    if (nameField) nameField.value = user.name || user.nickname || '미등록';
-    if (birthField) birthField.value = user.birthDate || user.birth || '미등록';
+    if (fixedName) fixedName.textContent = user.name || user.nickname || '미등록';
+    if (fixedBirth) fixedBirth.textContent = user.birthDate || user.birth || '미등록';
     if (emailConsent) emailConsent.checked = Boolean(user.emailConsent);
     if (smsConsent) smsConsent.checked = Boolean(user.smsConsent);
-
-    nicknameCheckState = { checked: true, available: true, value: user.nickname || '' };
+    if (loginProvider) loginProvider.textContent = '카카오 로그인 중';
 }
 
 function bindProfileForm() {
     const form = document.getElementById('profile-form');
     if (!form) return;
 
-    const nicknameInput = form.querySelector('#profile-nickname');
-    const nicknameCheckButton = form.querySelector('#nickname-check-btn');
-    const nicknameCheckResult = form.querySelector('#nickname-check-result');
-
-    if (nicknameInput && nicknameCheckButton) {
-        nicknameInput.addEventListener('input', () => {
-            const isChanged = nicknameInput.value.trim() !== (currentUser?.nickname || '');
-            nicknameCheckButton.classList.toggle('hidden', !isChanged);
-            nicknameCheckState = { checked: !isChanged, available: !isChanged, value: currentUser?.nickname || '' };
-            if (nicknameCheckResult) nicknameCheckResult.textContent = '';
-        });
-
-        nicknameCheckButton.addEventListener('click', async () => {
-            const nickname = nicknameInput.value.trim();
-            if (!nickname || nickname.length < 2) {
-                nicknameCheckState = { checked: true, available: false, value: nickname };
-                if (nicknameCheckResult) {
-                    nicknameCheckResult.textContent = '닉네임은 2글자 이상이어야 합니다.';
-                    nicknameCheckResult.style.color = '#dc3545';
-                }
-                return;
-            }
-
-            try {
-                const duplicateCheck = await APIClient.get('/auth/check-nickname', { nickname });
-                nicknameCheckState = { checked: true, available: Boolean(duplicateCheck.available), value: nickname };
-
-                if (nicknameCheckResult) {
-                    nicknameCheckResult.textContent = duplicateCheck.available
-                        ? '사용 가능한 닉네임입니다.'
-                        : '이미 사용 중인 닉네임입니다.';
-                    nicknameCheckResult.style.color = duplicateCheck.available ? '#198754' : '#dc3545';
-                }
-            } catch (error) {
-                nicknameCheckState = { checked: true, available: false, value: nickname };
-                if (nicknameCheckResult) {
-                    nicknameCheckResult.textContent = error?.message || '중복 확인에 실패했습니다.';
-                    nicknameCheckResult.style.color = '#dc3545';
-                }
-            }
-        });
-    }
-
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const result = document.getElementById('profile-save-result');
         const submitButton = form.querySelector('button[type="submit"]');
 
-        const nickname = form.nickname.value.trim();
-        const password = form.password.value.trim();
-        const passwordConfirm = form.passwordConfirm.value.trim();
-
-        if (password && password !== passwordConfirm) {
-            if (result) {
-                result.textContent = '비밀번호와 비밀번호 확인이 일치하지 않습니다.';
-                result.style.color = '#dc3545';
-            }
-            return;
-        }
-
-        const isNicknameChanged = nickname !== (currentUser?.nickname || '');
-        if (isNicknameChanged) {
-            const checkedSameValue = nicknameCheckState.checked && nicknameCheckState.value === nickname;
-            if (!checkedSameValue) {
-                if (result) {
-                    result.textContent = '닉네임 중복 확인을 진행해 주세요.';
-                    result.style.color = '#dc3545';
-                }
-                return;
-            }
-            if (!nicknameCheckState.available) {
-                if (result) {
-                    result.textContent = '이미 사용 중인 닉네임입니다.';
-                    result.style.color = '#dc3545';
-                }
-                return;
-            }
-        }
-
         const payload = {
-            nickname,
+            nickname: form.nickname.value.trim(),
             phone: form.phone.value.trim(),
             emailConsent: form.emailConsent.checked,
             smsConsent: form.smsConsent.checked
         };
 
-        if (password) {
-            payload.password = password;
+        if (form.password.value.trim()) {
+            payload.password = form.password.value.trim();
         }
 
         try {
@@ -204,14 +127,19 @@ function bindProfileForm() {
                 result.style.color = '#6c757d';
             }
 
+            if (payload.nickname !== (currentUser?.nickname || '')) {
+                const duplicateCheck = await APIClient.get('/auth/check-nickname', { nickname: payload.nickname });
+                if (!duplicateCheck.available) {
+                    throw new Error('이미 사용 중인 닉네임입니다.');
+                }
+            }
+
             const response = await APIClient.put('/users/me', payload);
             if (response?.user) {
                 currentUser = { ...currentUser, ...response.user };
                 Auth.setUser(currentUser);
                 renderHeaderUser(currentUser);
                 renderProfileForm(currentUser);
-                if (nicknameCheckButton) nicknameCheckButton.classList.add('hidden');
-                if (nicknameCheckResult) nicknameCheckResult.textContent = '';
             }
 
             if (result) {
@@ -226,11 +154,9 @@ function bindProfileForm() {
         } finally {
             submitButton.disabled = false;
             form.password.value = '';
-            form.passwordConfirm.value = '';
         }
     });
 }
-
 
 
 function getBoardLabel(boardType) {
