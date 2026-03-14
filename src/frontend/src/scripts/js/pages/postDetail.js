@@ -303,9 +303,10 @@ function resolveLevelEmoji(level) {
         return '';
     }
 
-    if (numericLevel >= 6) return '🔱';
-    if (numericLevel >= 5) return '👑';
-    if (numericLevel >= 4) return '💎';
+    if (numericLevel >= 7) return '🔱';
+    if (numericLevel >= 6) return '👑';
+    if (numericLevel >= 5) return '💎';
+    if (numericLevel >= 4) return '🎓';
     if (numericLevel >= 3) return '🧠';
     if (numericLevel >= 2) return '🍻';
     return '🐣';

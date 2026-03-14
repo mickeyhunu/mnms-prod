@@ -5,9 +5,10 @@ const MEMBER_LEVELS = [
   { level: 1, emoji: '🐣', title: '룸린이', minPoints: 0 },
   { level: 2, emoji: '🍻', title: '단골러', minPoints: 100 },
   { level: 3, emoji: '🧠', title: '빠꼼이', minPoints: 300 },
-  { level: 4, emoji: '💎', title: 'VIP', minPoints: 2000 },
-  { level: 5, emoji: '👑', title: '사장님', minPoints: 5000 },
-  { level: 6, emoji: '🔱', title: '전설', minPoints: 15000 }
+  { level: 4, emoji: '🎓', title: '룸박사', minPoints: 800 },
+  { level: 5, emoji: '💎', title: 'VIP', minPoints: 2000 },
+  { level: 6, emoji: '👑', title: '사장님', minPoints: 5000 },
+  { level: 7, emoji: '🔱', title: '전설', minPoints: 15000 }
 ];
 
 function normalizePoints(points) {
