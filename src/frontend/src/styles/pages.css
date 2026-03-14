@@ -980,3 +980,33 @@
         flex: initial;
     }
 }
+
+.mypage-point-pagination {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.mypage-point-page-btn {
+    border: 1px solid #d5d9e2;
+    background: #fff;
+    color: #2f3a4d;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.mypage-point-page-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.mypage-point-page-indicator {
+    font-size: 13px;
+    font-weight: 600;
+    color: #5a6474;
+}

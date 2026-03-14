@@ -39,19 +39,36 @@ async function getUserActivityStats(userId) {
   return rows[0] || {};
 }
 
-async function getUserPointHistories(userId, limit = 100) {
+async function getUserPointHistories(userId, { limit = 20, page = 1 } = {}) {
   const pool = getPool();
-  const safeLimit = Math.max(1, Math.min(500, Number(limit) || 100));
+  const safeLimit = Math.max(1, Math.min(100, Number(limit) || 20));
+  const safePage = Math.max(1, Number(page) || 1);
+  const offset = (safePage - 1) * safeLimit;
+
+  const [countRows] = await pool.query(
+    'SELECT COUNT(*) AS totalCount FROM point_histories WHERE user_id = ?',
+    [userId]
+  );
+  const totalCount = Number(countRows[0]?.totalCount || 0);
+
   const [rows] = await pool.query(
     `SELECT id, action_type AS actionType, points, created_at AS createdAt
      FROM point_histories
      WHERE user_id = ?
      ORDER BY created_at DESC, id DESC
-     LIMIT ?`,
-    [userId, safeLimit]
+     LIMIT ? OFFSET ?`,
+    [userId, safeLimit, offset]
   );
 
-  return rows;
+  return {
+    histories: rows,
+    pagination: {
+      page: safePage,
+      limit: safeLimit,
+      totalCount,
+      totalPages: Math.max(1, Math.ceil(totalCount / safeLimit))
+    }
+  };
 }
 
 async function findByNickname(nickname) {
