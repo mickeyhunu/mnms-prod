@@ -55,6 +55,31 @@ async function initDatabase() {
     await pool.query('ALTER TABLE users ADD COLUMN total_points BIGINT NOT NULL DEFAULT 0 AFTER role');
   }
 
+  const userColumnDefinitions = [
+    { name: 'name', query: "ALTER TABLE users ADD COLUMN name VARCHAR(100) NULL AFTER nickname" },
+    { name: 'birth_date', query: "ALTER TABLE users ADD COLUMN birth_date DATE NULL AFTER name" },
+    { name: 'phone', query: "ALTER TABLE users ADD COLUMN phone VARCHAR(30) NULL AFTER birth_date" },
+    { name: 'email_consent', query: "ALTER TABLE users ADD COLUMN email_consent TINYINT(1) NOT NULL DEFAULT 0 AFTER phone" },
+    { name: 'sms_consent', query: "ALTER TABLE users ADD COLUMN sms_consent TINYINT(1) NOT NULL DEFAULT 0 AFTER email_consent" },
+    { name: 'last_nickname_changed_at', query: "ALTER TABLE users ADD COLUMN last_nickname_changed_at DATETIME NULL AFTER sms_consent" }
+  ];
+
+  for (const column of userColumnDefinitions) {
+    const [rows] = await pool.query(
+      `SELECT 1
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = ?
+         AND TABLE_NAME = 'users'
+         AND COLUMN_NAME = ?
+       LIMIT 1`,
+      [dbConfig.database, column.name]
+    );
+
+    if (!rows.length) {
+      await pool.query(column.query);
+    }
+  }
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS sessions (
       token VARCHAR(128) PRIMARY KEY,
