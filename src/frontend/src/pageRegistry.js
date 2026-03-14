@@ -672,157 +672,20 @@ const pageRegistry = {
             </header>
 
             <div class="page-header">
-                <p>활동 정보, 내 정보 수정, 공지/고객지원, 정책 안내를 한 페이지에서 확인할 수 있습니다</p>
+                <p>원하는 항목을 선택해 상세 페이지로 이동하세요.</p>
             </div>
 
             <nav class="my-page-section-nav" aria-label="마이페이지 섹션 이동">
                 <ul class="my-page-section-list">
-                    <li><button type="button" class="my-page-section-btn" data-target-tab="profile">회원정보</button></li>
-                    <li><button type="button" class="my-page-section-btn active" data-target-tab="activity">활동현황</button></li>
-                    <li><button type="button" class="my-page-section-btn" data-target-tab="support">고객센터</button></li>
-                    <li><button type="button" class="my-page-section-btn" data-target-tab="policy">약관 및 정책</button></li>
+                    <li><a class="my-page-section-btn" href="/my-page/profile">회원정보</a></li>
+                    <li><a class="my-page-section-btn" href="/my-page/activity">활동현황</a></li>
+                    <li><a class="my-page-section-btn" href="/my-page/support">고객센터</a></li>
+                    <li><a class="my-page-section-btn" href="/my-page/policy">약관 및 정책</a></li>
                 </ul>
             </nav>
 
-            <div class="tab-content">
-                <div id="activity-tab" class="tab-pane active">
-                    <div class="section-header">
-                        <h2>활동현황</h2>
-                    </div>
-
-                    <div id="my-stats" class="activity-summary-grid">
-                        <div class="loading">로딩 중...</div>
-                    </div>
-
-                </div>
-
-                <div id="profile-tab" class="tab-pane">
-                    <div class="section-header">
-                        <h2>회원정보</h2>
-                    </div>
-
-                    <div class="mypage-card fixed-info-card">
-                        <h3>기본정보 (고정)</h3>
-                        <div class="fixed-info-grid">
-                            <div><span>이름</span><strong id="fixed-name">-</strong></div>
-                            <div><span>생년월일</span><strong id="fixed-birth">-</strong></div>
-                        </div>
-                    </div>
-
-                    <form id="profile-form" class="mypage-card profile-form">
-                        <h3>수정 가능한 정보</h3>
-                        <div class="profile-form-grid">
-                            <label>비밀번호
-                                <input type="password" name="password" placeholder="새 비밀번호 입력" autocomplete="new-password" />
-                            </label>
-                            <label>닉네임
-                                <input type="text" name="nickname" id="profile-nickname" maxlength="20" />
-                            </label>
-                            <label>연락처
-                                <input type="tel" name="phone" id="profile-phone" placeholder="010-0000-0000" />
-                            </label>
-                            <label>이메일
-                                <input type="email" name="email" id="profile-email" />
-                            </label>
-                        </div>
-
-                        <div class="consent-wrap">
-                            <label><input type="checkbox" name="emailConsent" id="email-consent" /> 이메일 수신 동의</label>
-                            <label><input type="checkbox" name="smsConsent" id="sms-consent" /> SMS 수신 동의</label>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">내 정보 저장</button>
-                        </div>
-                        <p class="help-text">* 기본정보(이름/생년월일)는 변경할 수 없습니다.</p>
-                        <p id="profile-save-result" class="help-text"></p>
-                    </form>
-                </div>
-
-                <div id="notices-tab" class="tab-pane">
-                    <div class="section-header">
-                        <h2>공지사항</h2>
-                    </div>
-                    <div id="notice-list" class="notice-list">
-                        <div class="loading">로딩 중...</div>
-                    </div>
-                </div>
-
-                <div id="support-tab" class="tab-pane">
-                    <section class="support-link-section">
-                        <p class="support-link-section-title">고객센터</p>
-                        <div class="support-link-list">
-                            <a target="_blank" rel="noopener noreferrer" class="support-link-item" href="https://o3z16.channel.io/workflows/739947">
-                                <span>1:1 고객센터</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                                    <path d="m9 18 6-6-6-6"></path>
-                                </svg>
-                            </a>
-                            <a class="support-link-item" href="/board/customer/faq-search">
-                                <span>FAQ</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                                    <path d="m9 18 6-6-6-6"></path>
-                                </svg>
-                            </a>
-                            <a class="support-link-item" href="/board/customer/feedback">
-                                <span>피드백 보내기</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                                    <path d="m9 18 6-6-6-6"></path>
-                                </svg>
-                            </a>
-                        </div>
-                    </section>
-                </div>
-
-                <div id="policy-tab" class="tab-pane">
-                    <div class="section-header">
-                        <h2>약관 및 정책</h2>
-                    </div>
-                    <div class="mypage-link-section">
-                        <p class="mypage-link-section-title">ABOUT 미드나잇테라스</p>
-                        <div class="mypage-link-list">
-                            <a class="mypage-link-item" href="/board/about?type=notice">
-                                <span>공지사항</span>
-                                <span class="mypage-link-chevron" aria-hidden="true">›</span>
-                            </a>
-                            <a class="mypage-link-item" href="/board/about?type=event">
-                                <span>이벤트</span>
-                                <span class="mypage-link-chevron" aria-hidden="true">›</span>
-                            </a>
-                            <a class="mypage-link-item" href="/board/terms">
-                                <span>약관 및 정책</span>
-                                <span class="mypage-link-chevron" aria-hidden="true">›</span>
-                            </a>
-                            <a target="_blank" rel="noopener noreferrer" class="mypage-link-item" href="https://12terrace.com/board/notice/33">
-                                <span>미드나잇테라스 소개</span>
-                                <span class="mypage-link-chevron" aria-hidden="true">›</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <section class="company-footer-slot">
-                <div class="company-footer-top">
-                    <div class="company-footer-logo">미드나잇 맨즈</div>
-                </div>
-
-                <div class="company-footer-links-row">
-                    <a target="_blank" rel="noopener noreferrer" href="https://o3z16.channel.io/workflows/739947">1:1 고객센터</a>
-                    <span class="footer-divider" aria-hidden="true"></span>
-                    <a target="_blank" rel="noopener noreferrer" href="https://o3z16.channel.io/workflows/739947">광고/제휴 문의</a>
-                    <span class="footer-divider" aria-hidden="true"></span>
-                    <button type="button" class="mypage-footer-logout">로그아웃</button>
-                </div>
-
-                <div class="company-business-link-wrap">
-                    <span class="company-business-link" aria-disabled="true">
-                        사업자정보 준비중
-                    </span>
-                </div>
-
-                <p class="company-footer-notice">미드나잇맨즈는 커뮤니티 서비스 및 업소 광고 플랫폼을 제공하는 중개 서비스이며, 개별 업소의 서비스 제공 또는 거래의 당사자가 아닙니다. 사이트에 게시된 업소 정보, 상품, 서비스 및 거래에 관한 모든 책임은 해당 업소 또는 정보 제공자에게 있습니다.</p>
-                <p class="company-footer-copyright">© 2026 Midnight Mens. All rights reserved. Powered by Black Scale Co., Ltd.</p>
+            <section class="mypage-card">
+                <p>상단 버튼을 눌러 각 페이지로 이동해 주세요.</p>
             </section>
         </div>
     </main>
@@ -834,6 +697,123 @@ const pageRegistry = {
     <script src="scripts/js/pages/myPage.js"></script>
     <script src="scripts/js/components/sectionHeader.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/myPage.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
+  },
+  'my-page-profile': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <h1>미드나잇 맨즈</h1>
+            </a>
+            <nav class="nav" id="navigation">
+                <div class="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <span class="community-board-name">마이페이지</span>
+                </div>
+            </header>
+
+            <nav class="my-page-section-nav" aria-label="마이페이지 섹션 이동">
+                <ul class="my-page-section-list">
+                    <li><a class="my-page-section-btn active" href="/my-page/profile">회원정보</a></li>
+                    <li><a class="my-page-section-btn" href="/my-page/activity">활동현황</a></li>
+                    <li><a class="my-page-section-btn" href="/my-page/support">고객센터</a></li>
+                    <li><a class="my-page-section-btn" href="/my-page/policy">약관 및 정책</a></li>
+                </ul>
+            </nav>
+
+            <div class="section-header">
+                <h2>회원정보</h2>
+            </div>
+
+            <div class="mypage-card fixed-info-card">
+                <h3>기본정보 (고정)</h3>
+                <div class="fixed-info-grid">
+                    <div><span>이름</span><strong id="fixed-name">-</strong></div>
+                    <div><span>생년월일</span><strong id="fixed-birth">-</strong></div>
+                </div>
+            </div>
+
+            <form id="profile-form" class="mypage-card profile-form">
+                <h3>수정 가능한 정보</h3>
+                <div class="profile-form-grid">
+                    <label>비밀번호
+                        <input type="password" name="password" placeholder="새 비밀번호 입력" autocomplete="new-password" />
+                    </label>
+                    <label>닉네임
+                        <input type="text" name="nickname" id="profile-nickname" maxlength="20" />
+                    </label>
+                    <label>연락처
+                        <input type="tel" name="phone" id="profile-phone" placeholder="010-0000-0000" />
+                    </label>
+                    <label>이메일
+                        <input type="email" name="email" id="profile-email" />
+                    </label>
+                </div>
+
+                <div class="consent-wrap">
+                    <label><input type="checkbox" name="emailConsent" id="email-consent" /> 이메일 수신 동의</label>
+                    <label><input type="checkbox" name="smsConsent" id="sms-consent" /> SMS 수신 동의</label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">내 정보 저장</button>
+                </div>
+                <p class="help-text">* 기본정보(이름/생년월일)는 변경할 수 없습니다.</p>
+                <p id="profile-save-result" class="help-text"></p>
+            </form>
+        </div>
+    </main>
+
+    <script src="scripts/js/utils/constants.js"></script>
+    <script src="scripts/js/utils/helpers.js"></script>
+    <script src="scripts/js/utils/auth.js"></script>
+    <script src="scripts/js/api/apiClient.js"></script>
+    <script src="scripts/js/pages/myPage.js"></script>
+    <script src="scripts/js/components/sectionHeader.js"></script>
+    <script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/myPage.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
+  },
+  'my-page-activity': {
+    template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
+    <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><span class="community-board-name">마이페이지</span></div></header>
+    <nav class="my-page-section-nav" aria-label="마이페이지 섹션 이동"><ul class="my-page-section-list"><li><a class="my-page-section-btn" href="/my-page/profile">회원정보</a></li><li><a class="my-page-section-btn active" href="/my-page/activity">활동현황</a></li><li><a class="my-page-section-btn" href="/my-page/support">고객센터</a></li><li><a class="my-page-section-btn" href="/my-page/policy">약관 및 정책</a></li></ul></nav>
+    <div class="section-header"><h2>활동현황</h2></div><div id="my-stats" class="activity-summary-grid"><div class="loading">로딩 중...</div></div></div></main>
+    <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/pages/myPage.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/myPage.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
+  },
+  'my-page-support': {
+    template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
+    <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><span class="community-board-name">마이페이지</span></div></header>
+    <nav class="my-page-section-nav" aria-label="마이페이지 섹션 이동"><ul class="my-page-section-list"><li><a class="my-page-section-btn" href="/my-page/profile">회원정보</a></li><li><a class="my-page-section-btn" href="/my-page/activity">활동현황</a></li><li><a class="my-page-section-btn active" href="/my-page/support">고객센터</a></li><li><a class="my-page-section-btn" href="/my-page/policy">약관 및 정책</a></li></ul></nav>
+    <section class="support-link-section"><p class="support-link-section-title">고객센터</p><div class="support-link-list">
+    <a target="_blank" rel="noopener noreferrer" class="support-link-item" href="https://o3z16.channel.io/workflows/739947"><span>1:1 고객센터</span></a>
+    <a class="support-link-item" href="/board/customer/faq-search"><span>FAQ</span></a>
+    <a class="support-link-item" href="/board/customer/feedback"><span>피드백 보내기</span></a>
+    </div></section></div></main>
+    <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/pages/myPage.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/myPage.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
+  },
+  'my-page-policy': {
+    template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
+    <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><span class="community-board-name">마이페이지</span></div></header>
+    <nav class="my-page-section-nav" aria-label="마이페이지 섹션 이동"><ul class="my-page-section-list"><li><a class="my-page-section-btn" href="/my-page/profile">회원정보</a></li><li><a class="my-page-section-btn" href="/my-page/activity">활동현황</a></li><li><a class="my-page-section-btn" href="/my-page/support">고객센터</a></li><li><a class="my-page-section-btn active" href="/my-page/policy">약관 및 정책</a></li></ul></nav>
+    <div class="section-header"><h2>약관 및 정책</h2></div><div class="mypage-link-section"><p class="mypage-link-section-title">ABOUT 미드나잇테라스</p><div class="mypage-link-list"><a class="mypage-link-item" href="/board/about?type=notice"><span>공지사항</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a class="mypage-link-item" href="/board/about?type=event"><span>이벤트</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a class="mypage-link-item" href="/board/terms"><span>약관 및 정책</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a target="_blank" rel="noopener noreferrer" class="mypage-link-item" href="https://12terrace.com/board/notice/33"><span>미드나잇테라스 소개</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a></div></div></div></main>
+    <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/pages/myPage.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/myPage.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
