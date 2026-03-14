@@ -39,10 +39,32 @@ async function getUserActivityStats(userId) {
   return rows[0] || {};
 }
 
+async function getUserPointHistories(userId, limit = 100) {
+  const pool = getPool();
+  const safeLimit = Math.max(1, Math.min(500, Number(limit) || 100));
+  const [rows] = await pool.query(
+    `SELECT id, action_type AS actionType, points, created_at AS createdAt
+     FROM point_histories
+     WHERE user_id = ?
+     ORDER BY created_at DESC, id DESC
+     LIMIT ?`,
+    [userId, safeLimit]
+  );
+
+  return rows;
+}
+
 async function findByNickname(nickname) {
   const pool = getPool();
   const [rows] = await pool.query('SELECT id FROM users WHERE nickname = ?', [nickname]);
   return rows[0] || null;
 }
 
-module.exports = { createUser, findByEmail, findById, findByNickname, getUserActivityStats };
+module.exports = {
+  createUser,
+  findByEmail,
+  findById,
+  findByNickname,
+  getUserActivityStats,
+  getUserPointHistories
+};

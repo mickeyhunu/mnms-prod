@@ -866,3 +866,73 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
+
+.mypage-point-history-list {
+    border-top: 1px solid #f1f5f9;
+}
+
+.mypage-point-history-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.mypage-point-history-row strong {
+    display: block;
+    font-size: 14px;
+    color: #0f172a;
+}
+
+.mypage-point-history-row p {
+    margin: 4px 0 0;
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.point-change {
+    font-weight: 700;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.point-change.plus {
+    color: #2563eb;
+}
+
+.point-change.minus {
+    color: #dc2626;
+}
+
+.mypage-guide-list {
+    border-top: 1px solid #f1f5f9;
+}
+
+.mypage-guide-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 12px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.mypage-guide-row span {
+    color: #334155;
+    font-size: 14px;
+}
+
+.mypage-guide-row strong {
+    color: #0f172a;
+    font-size: 13px;
+    text-align: right;
+}
+
+.mypage-guide-row em {
+    grid-column: 1 / -1;
+    color: #94a3b8;
+    font-style: normal;
+    font-size: 12px;
+}
