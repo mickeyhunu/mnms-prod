@@ -675,38 +675,30 @@ const pageRegistry = {
                 <p>활동 정보, 내 정보 수정, 공지/고객지원, 정책 안내를 한 페이지에서 확인할 수 있습니다</p>
             </div>
 
+            <nav class="my-page-section-nav" aria-label="마이페이지 섹션 이동">
+                <ul class="my-page-section-list">
+                    <li><button type="button" class="my-page-section-btn" data-target-tab="profile">회원정보</button></li>
+                    <li><button type="button" class="my-page-section-btn active" data-target-tab="activity">활동현황</button></li>
+                    <li><button type="button" class="my-page-section-btn" data-target-tab="support">고객센터</button></li>
+                    <li><button type="button" class="my-page-section-btn" data-target-tab="policy">약관 및 정책</button></li>
+                </ul>
+            </nav>
+
             <div class="tab-content">
                 <div id="activity-tab" class="tab-pane active">
                     <div class="section-header">
-                        <h2>활동 정보</h2>
+                        <h2>활동현황</h2>
                     </div>
 
                     <div id="my-stats" class="activity-summary-grid">
                         <div class="loading">로딩 중...</div>
                     </div>
 
-                    <div class="activity-group">
-                        <div class="section-header">
-                            <h3>내 게시글</h3>
-                        </div>
-                        <div id="my-posts-list">
-                            <div class="loading">로딩 중...</div>
-                        </div>
-                    </div>
-
-                    <div class="activity-group">
-                        <div class="section-header">
-                            <h3>내 댓글</h3>
-                        </div>
-                        <div id="my-comments-list">
-                            <div class="loading">로딩 중...</div>
-                        </div>
-                    </div>
                 </div>
 
                 <div id="profile-tab" class="tab-pane">
                     <div class="section-header">
-                        <h2>내 정보</h2>
+                        <h2>회원정보</h2>
                     </div>
 
                     <div class="mypage-card fixed-info-card">
@@ -757,26 +749,29 @@ const pageRegistry = {
                 </div>
 
                 <div id="support-tab" class="tab-pane">
-                    <div class="section-header">
-                        <h2>고객센터</h2>
-                    </div>
-                    <div class="mypage-link-section">
-                        <p class="mypage-link-section-title">고객센터</p>
-                        <div class="mypage-link-list">
-                            <a target="_blank" rel="noopener noreferrer" class="mypage-link-item" href="https://o3z16.channel.io/workflows/739947">
+                    <section class="support-link-section">
+                        <p class="support-link-section-title">고객센터</p>
+                        <div class="support-link-list">
+                            <a target="_blank" rel="noopener noreferrer" class="support-link-item" href="https://o3z16.channel.io/workflows/739947">
                                 <span>1:1 고객센터</span>
-                                <span class="mypage-link-chevron" aria-hidden="true">›</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                    <path d="m9 18 6-6-6-6"></path>
+                                </svg>
                             </a>
-                            <a class="mypage-link-item" href="/board/customer/faq-search">
+                            <a class="support-link-item" href="/board/customer/faq-search">
                                 <span>FAQ</span>
-                                <span class="mypage-link-chevron" aria-hidden="true">›</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                    <path d="m9 18 6-6-6-6"></path>
+                                </svg>
                             </a>
-                            <a class="mypage-link-item" href="/board/customer/feedback">
+                            <a class="support-link-item" href="/board/customer/feedback">
                                 <span>피드백 보내기</span>
-                                <span class="mypage-link-chevron" aria-hidden="true">›</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                    <path d="m9 18 6-6-6-6"></path>
+                                </svg>
                             </a>
                         </div>
-                    </div>
+                    </section>
                 </div>
 
                 <div id="policy-tab" class="tab-pane">
