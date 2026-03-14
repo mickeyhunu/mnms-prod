@@ -79,5 +79,3 @@ const PAGINATION = {
     DEFAULT_SIZE: 10,
     MAX_SIZE: 50
 };
-
-console.log('Constants loaded');

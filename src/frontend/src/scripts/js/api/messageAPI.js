@@ -4,9 +4,6 @@
 class MessageAPI {
 
     static async sendMessage(recipientId, content) {
-        console.log('MessageAPI.sendMessage 호출됨');
-        console.log('recipientId:', recipientId);
-        console.log('content:', content);
 
         try {
             const messageData = {
@@ -15,7 +12,6 @@ class MessageAPI {
                 content: content
             };
 
-            console.log('전송할 데이터:', messageData);
 
             const token = Auth.getToken();
             if (!token) {
@@ -23,7 +19,6 @@ class MessageAPI {
             }
 
             const url = `${API_BASE_URL}/posts/messages`;
-            console.log('요청 URL:', url);
 
             const response = await fetch(url, {
                 method: 'POST',
@@ -34,7 +29,6 @@ class MessageAPI {
                 body: JSON.stringify(messageData)
             });
 
-            console.log('응답 상태:', response.status);
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -43,18 +37,15 @@ class MessageAPI {
             }
 
             const result = await response.json();
-            console.log('성공 응답:', result);
 
             if (result.success) {
                 if (typeof loadSentMessages === 'function') {
-                    console.log('보낸쪽지함 새로고침 중...');
                     setTimeout(() => {
                         loadSentMessages();
                     }, 500);
                 }
 
                 if (typeof currentMessageTab !== 'undefined' && currentMessageTab === 'sent') {
-                    console.log('마이페이지 보낸쪽지 탭 새로고침 중...');
                     setTimeout(() => {
                         if (typeof loadSentMessages === 'function') {
                             loadSentMessages();
@@ -202,5 +193,3 @@ class MessageAPI {
         }
     }
 }
-
-console.log('MessageAPI loaded - debug version');

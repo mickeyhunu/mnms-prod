@@ -71,5 +71,3 @@ async function updateMessageNotificationBadge() {
         console.error('Failed to update notification badge:', error);
     }
 }
-
-console.log('Header loaded');

@@ -51,13 +51,7 @@ async function handleLogin(e) {
         
         showNotification(MESSAGES.LOGIN_SUCCESS, 'success');
 
-        console.log('===== 최종 확인 =====');
-        console.log('저장된 토큰:', Auth.getToken());
-        console.log('저장된 사용자:', Auth.getUser());
-        console.log('인증 상태:', Auth.isAuthenticated());
-        console.log('=================');
         
-        console.log('2초 후 자동 이동됩니다.');
         setTimeout(() => {
             window.location.href = 'http://localhost:8080/';
         }, 2000);
@@ -78,5 +72,3 @@ if (document.readyState === 'loading') {
 } else {
     initLoginPage();
 }
-
-console.log('Login JS loaded');

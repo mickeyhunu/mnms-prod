@@ -226,5 +226,3 @@ function setupNotificationToggles() {
         });
     }
 }
-
-console.log('NotificationSettings loaded');

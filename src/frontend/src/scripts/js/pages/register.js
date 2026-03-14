@@ -5,7 +5,6 @@ let generatedVerificationCode = null;
 let verifiedPhoneNumber = null;
 
 function initRegisterPage() {
-    console.log('Register page 초기화');
 
     if (Auth.redirectIfAuthenticated()) {
         return;
@@ -182,7 +181,6 @@ async function checkNicknameAvailability() {
 
 async function handleRegister(e) {
     e.preventDefault();
-    console.log('회원가입 시도');
 
     const form = e.target;
     const submitBtn = document.getElementById('submit-btn');
@@ -219,7 +217,6 @@ async function handleRegister(e) {
             genderDigit: formData.genderDigit,
             nickname: formData.nickname
         });
-        console.log('회원가입 응답:', response);
 
         showNotification('회원가입이 완료되었습니다!', 'success');
 
@@ -246,4 +243,3 @@ if (document.readyState === 'loading') {
     initRegisterPage();
 }
 
-console.log('Register JS loaded');

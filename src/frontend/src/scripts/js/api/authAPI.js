@@ -6,15 +6,9 @@ const AuthAPI = {
         try {
             const response = await APIClient.post('/auth/login', credentials);
 
-            console.log('=== AuthAPI.login 디버깅 ===');
-            console.log('전체 응답:', response);
-            console.log('response.token 존재?', !!response.token);
-            console.log('토큰 값:', response.token);
 
             if (response.token) {
-                console.log('토큰 저장 시도...');
                 Auth.setToken(response.token);
-                console.log('토큰 저장 후 확인:', Auth.getToken());
 
                 const userData = {
                     id: response.id,
@@ -27,9 +21,7 @@ const AuthAPI = {
                     levelTitle: response.levelTitle,
                     levelLabel: response.levelLabel
                 };
-                console.log('사용자 데이터 저장 시도:', userData);
                 Auth.setUser(userData);
-                console.log('사용자 저장 후 확인:', Auth.getUser());
             } else {
                 console.error('응답에 토큰이 없습니다!');
             }
@@ -103,5 +95,3 @@ const AuthAPI = {
         }
     }
 };
-
-console.log('AuthAPI loaded');

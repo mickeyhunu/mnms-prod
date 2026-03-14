@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function initApp() {
     try {
-        console.log('Initializing app...');
         
         initHeader();
         
@@ -18,7 +17,6 @@ async function initApp() {
         setupGlobalEventListeners();
         setupNotifications();
         
-        console.log('App initialized successfully');
         
     } catch (error) {
         console.error('App initialization failed:', error);
@@ -217,5 +215,3 @@ window.setLoading = setLoading;
 window.debounce = debounce;
 window.throttle = throttle;
 window.trackFormChanges = trackFormChanges;
-
-console.log('App loaded');

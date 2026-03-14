@@ -73,4 +73,3 @@ const PostAPI = {
     },
 };
 
-console.log('PostAPI loaded');

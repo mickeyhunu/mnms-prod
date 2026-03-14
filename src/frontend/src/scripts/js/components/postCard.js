@@ -130,7 +130,6 @@ function getDisplayAuthorName(post) {
 }
 
 function handlePostClick(postId) {
-    console.log("게시글 클릭:", postId);
     window.location.href = `/post-detail?id=${postId}`;
 }
 
@@ -268,4 +267,3 @@ function truncateText(text, maxLength) {
     return text.substr(0, maxLength) + '...';
 }
 
-console.log('PostCard loaded');

@@ -364,8 +364,6 @@ function renderPostDetail(post) {
         nickname: post.authorNickname
     };
 
-    console.log('게시글 데이터:', post);
-    console.log('isAuthor:', post.isAuthor);
 
     const messageBtn = document.getElementById('message-btn');
     const ownerActions = document.getElementById('post-owner-actions');
@@ -374,14 +372,12 @@ function renderPostDetail(post) {
     const reportBtn = document.getElementById('report-btn');
     const isGuestPost = !post.authorId && !post.userId;
     if (isCurrentAuthor || isGuestPost) {
-        console.log('작성자임 - 수정/삭제 버튼 표시');
         if (messageBtn) messageBtn.style.display = 'none';
         if (ownerActions) ownerActions.classList.remove('hidden');
         if (editBtn) editBtn.classList.remove('hidden');
         if (deleteBtn) deleteBtn.classList.remove('hidden');
         if (reportBtn) reportBtn.classList.add('hidden');
     } else {
-        console.log('작성자 아님 - 쪽지 버튼 표시');
         if (ownerActions) ownerActions.classList.add('hidden');
         if (messageBtn && Auth.isAuthenticated()) {
             messageBtn.style.display = 'inline-block';
@@ -612,7 +608,6 @@ function createCommentItem(comment, depth = 0) {
     const hasActionMenu = !isDeletedComment && (isAuthor || canGuestEdit || isOtherUser);
     const replyMarker = depth > 0 ? '<span class="comment-reply-marker" aria-hidden="true"></span>' : '';
     
-    console.log(`댓글 ${comment.id}: user=${currentUser?.id}, author=${comment.authorId}, isAuthor=${isAuthor}, isAdmin=${isAdminComment}`);
     
     div.innerHTML = `
         <div class="comment-layout">
@@ -866,7 +861,6 @@ function reportComment(commentId) {
     }
 
     showNotification('댓글 신고가 접수되었습니다.', 'success');
-    console.log('댓글 신고 접수:', commentId);
 }
 
 async function handleToggleLike() {

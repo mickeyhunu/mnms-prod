@@ -211,4 +211,3 @@ function getURLParams() {
    return params;
 }
 
-console.log('Helpers loaded');
