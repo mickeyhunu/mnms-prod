@@ -714,7 +714,52 @@ const pageRegistry = {
         </div>
     </header>
 
-    <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">마이페이지 - 정보 수정</span></div></header></div></main>
+    <main class="main-content">
+      <div class="container">
+        <header class="community-section-header">
+          <div class="community-header-left">
+            <a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a>
+            <span class="community-board-name">마이페이지 - 정보 수정</span>
+          </div>
+        </header>
+
+        <section class="mypage-card">
+          <h3>기본 정보</h3>
+          <div class="fixed-info-grid">
+            <div><span>이름</span><strong id="fixed-name">-</strong></div>
+            <div><span>생년월일</span><strong id="fixed-birth">-</strong></div>
+            <div><span>로그인 방식</span><strong id="profile-login-provider">일반 로그인</strong></div>
+          </div>
+        </section>
+
+        <section class="mypage-card">
+          <h3>수정 가능 정보</h3>
+          <form id="profile-form">
+            <div class="profile-form-grid">
+              <label>닉네임
+                <input type="text" id="profile-nickname" name="nickname" minlength="2" required>
+              </label>
+              <label>비밀번호
+                <input type="password" id="profile-password" name="password" minlength="4" placeholder="변경 시 입력">
+              </label>
+              <label>연락처
+                <input type="text" id="profile-phone" name="phone" placeholder="010-0000-0000">
+              </label>
+              <label>이메일
+                <input type="email" id="profile-email" name="email" readonly>
+              </label>
+            </div>
+            <div class="consent-wrap">
+              <label><input type="checkbox" id="email-consent" name="emailConsent"> 이메일 수신 동의</label>
+              <label><input type="checkbox" id="sms-consent" name="smsConsent"> SMS 수신 동의</label>
+            </div>
+            <p class="help-text">닉네임은 하루에 한 번만 변경할 수 있으며, 중복 닉네임은 사용할 수 없습니다.</p>
+            <button type="submit" class="btn btn-primary">저장</button>
+            <p id="profile-save-result" class="help-text" role="status"></p>
+          </form>
+        </section>
+      </div>
+    </main>
 
     <script src="scripts/js/utils/constants.js"></script>
     <script src="scripts/js/utils/helpers.js"></script>

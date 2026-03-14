@@ -15,7 +15,6 @@ async function initMyPage() {
         return;
     }
 
-    bindProfileForm();
     bindLogoutActions();
 
     try {
@@ -24,7 +23,9 @@ async function initMyPage() {
         renderHeaderUser(currentUser);
         renderProfileForm(currentUser);
 
-        if (window.location.pathname === '/my-page/points') {
+        if (window.location.pathname === '/my-page/profile') {
+            bindProfileForm();
+        } else if (window.location.pathname === '/my-page/points') {
             await loadPointHistories();
         } else if (window.location.pathname === '/my-page/activity') {
             await loadActivityHistory();
@@ -111,7 +112,6 @@ function bindProfileForm() {
         const payload = {
             nickname: form.nickname.value.trim(),
             phone: form.phone.value.trim(),
-            email: form.email.value.trim(),
             emailConsent: form.emailConsent.checked,
             smsConsent: form.smsConsent.checked
         };
@@ -127,14 +127,28 @@ function bindProfileForm() {
                 result.style.color = '#6c757d';
             }
 
-            await APIClient.put('/users/me', payload);
+            if (payload.nickname !== (currentUser?.nickname || '')) {
+                const duplicateCheck = await APIClient.get('/auth/check-nickname', { nickname: payload.nickname });
+                if (!duplicateCheck.available) {
+                    throw new Error('이미 사용 중인 닉네임입니다.');
+                }
+            }
+
+            const response = await APIClient.put('/users/me', payload);
+            if (response?.user) {
+                currentUser = { ...currentUser, ...response.user };
+                Auth.setUser(currentUser);
+                renderHeaderUser(currentUser);
+                renderProfileForm(currentUser);
+            }
+
             if (result) {
-                result.textContent = '내 정보가 저장되었습니다.';
+                result.textContent = response?.message || '내 정보가 저장되었습니다.';
                 result.style.color = '#198754';
             }
         } catch (error) {
             if (result) {
-                result.textContent = '저장에 실패했습니다. 입력값을 확인해 주세요.';
+                result.textContent = error?.message || '저장에 실패했습니다. 입력값을 확인해 주세요.';
                 result.style.color = '#dc3545';
             }
         } finally {

@@ -1,11 +1,88 @@
 /**
  * 파일 역할: userController 관련 HTTP 요청을 처리하고 모델/응답 로직을 조합하는 컨트롤러 파일.
  */
-const { getUserActivityStats, getUserPointHistories, getUserActivityDetails } = require('../models/userModel');
+const { getUserActivityStats, getUserPointHistories, getUserActivityDetails, findByNicknameExceptUser, updateUserProfile, findById } = require('../models/userModel');
 const { resolveMemberLevel, MEMBER_LEVELS } = require('../utils/memberLevel');
 const { POINT_RULES } = require('../models/pointModel');
 
 
+function isNicknameChangeLocked(lastChangedAt) {
+  if (!lastChangedAt) return false;
+  const nextAllowedAt = new Date(lastChangedAt);
+  nextAllowedAt.setDate(nextAllowedAt.getDate() + 1);
+  return nextAllowedAt > new Date();
+}
+
+function getNicknameChangeAvailableAt(lastChangedAt) {
+  if (!lastChangedAt) return null;
+  const date = new Date(lastChangedAt);
+  date.setDate(date.getDate() + 1);
+  return date.toISOString();
+}
+
+async function updateMyProfile(req, res, next) {
+  try {
+    const nickname = String(req.body.nickname || '').trim();
+    const phone = String(req.body.phone || '').trim();
+    const password = String(req.body.password || '').trim();
+    const emailConsent = Boolean(req.body.emailConsent);
+    const smsConsent = Boolean(req.body.smsConsent);
+
+    if (!nickname || nickname.length < 2) {
+      return res.status(400).json({ message: '닉네임은 2글자 이상이어야 합니다.' });
+    }
+
+    const updates = {
+      phone,
+      email_consent: emailConsent,
+      sms_consent: smsConsent
+    };
+
+    if (password) {
+      if (password.length < 4) {
+        return res.status(400).json({ message: '비밀번호는 4글자 이상이어야 합니다.' });
+      }
+      updates.password = password;
+    }
+
+    if (nickname !== req.user.nickname) {
+      if (isNicknameChangeLocked(req.user.last_nickname_changed_at)) {
+        return res.status(400).json({
+          message: '닉네임은 하루에 한 번만 변경할 수 있습니다.',
+          availableAt: getNicknameChangeAvailableAt(req.user.last_nickname_changed_at)
+        });
+      }
+
+      const duplicateNickname = await findByNicknameExceptUser(nickname, req.user.id);
+      if (duplicateNickname) {
+        return res.status(400).json({ message: '이미 사용 중인 닉네임입니다. 중복 확인 후 다시 입력해주세요.' });
+      }
+
+      updates.nickname = nickname;
+    }
+
+    await updateUserProfile(req.user.id, updates);
+    const updatedUser = await findById(req.user.id);
+
+    res.json({
+      success: true,
+      message: '내 정보가 저장되었습니다.',
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        nickname: updatedUser.nickname,
+        phone: updatedUser.phone || '',
+        name: updatedUser.name || '',
+        birthDate: updatedUser.birth_date || null,
+        emailConsent: Boolean(updatedUser.email_consent),
+        smsConsent: Boolean(updatedUser.sms_consent),
+        nicknameChangeAvailableAt: getNicknameChangeAvailableAt(updatedUser.last_nickname_changed_at)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 
 const POINT_ACTION_LABELS = {
   REGISTER: '회원가입',
@@ -153,4 +230,4 @@ async function myPointHistories(req, res, next) {
   }
 }
 
-module.exports = { myStats, myPointHistories, myActivity };
+module.exports = { myStats, myPointHistories, myActivity, updateMyProfile };

@@ -120,11 +120,56 @@ async function findByNickname(nickname) {
   return rows[0] || null;
 }
 
+async function findByNicknameExceptUser(nickname, userId) {
+  const pool = getPool();
+  const [rows] = await pool.query('SELECT id FROM users WHERE nickname = ? AND id <> ?', [nickname, userId]);
+  return rows[0] || null;
+}
+
+async function updateUserProfile(userId, payload) {
+  const pool = getPool();
+  const fields = [];
+  const values = [];
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'password')) {
+    fields.push('password = ?');
+    values.push(payload.password);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'nickname')) {
+    fields.push('nickname = ?');
+    values.push(payload.nickname);
+    fields.push('last_nickname_changed_at = NOW()');
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'phone')) {
+    fields.push('phone = ?');
+    values.push(payload.phone || null);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'email_consent')) {
+    fields.push('email_consent = ?');
+    values.push(payload.email_consent ? 1 : 0);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'sms_consent')) {
+    fields.push('sms_consent = ?');
+    values.push(payload.sms_consent ? 1 : 0);
+  }
+
+  if (!fields.length) return;
+
+  values.push(userId);
+  await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+}
+
 module.exports = {
   createUser,
   findByEmail,
   findById,
   findByNickname,
+  findByNicknameExceptUser,
+  updateUserProfile,
   getUserActivityStats,
   getUserPointHistories,
   getUserActivityDetails

@@ -17,7 +17,15 @@ function pickUserRow(user) {
     level: memberLevel.level,
     levelEmoji: memberLevel.emoji,
     levelTitle: memberLevel.title,
-    levelLabel: memberLevel.label
+    levelLabel: memberLevel.label,
+    phone: user.phone || '',
+    name: user.name || '',
+    birthDate: user.birth_date || null,
+    emailConsent: Boolean(user.email_consent),
+    smsConsent: Boolean(user.sms_consent),
+    nicknameChangeAvailableAt: user.last_nickname_changed_at
+      ? new Date(new Date(user.last_nickname_changed_at).getTime() + 24 * 60 * 60 * 1000).toISOString()
+      : null
   };
 }
 
