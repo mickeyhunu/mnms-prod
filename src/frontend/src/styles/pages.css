@@ -781,6 +781,7 @@
 
 .mypage-point-reference-grid {
     display: flex;
+    justify-content: center;
     gap: 10px;
     margin-bottom: 14px;
 }
