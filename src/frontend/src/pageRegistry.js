@@ -826,7 +826,7 @@ const pageRegistry = {
                             <span class="author-avatar" aria-hidden="true"></span>
                         </div>
                         <div class="user">
-                            <span class="lv hidden" id="post-author-level" data-text="Lv."></span>
+                            <span class="lv hidden" id="post-author-level" data-text=""></span>
                             <span id="post-author" class="s-fs-body"></span>
                         </div>
                         <div class="caption">
