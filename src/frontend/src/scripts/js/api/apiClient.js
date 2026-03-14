@@ -10,7 +10,6 @@ const APIClient = {
             url += '?' + urlParams.toString();
         }
         
-        console.log('API GET Request:', url);
         
         try {
             const headers = {
@@ -28,7 +27,6 @@ const APIClient = {
                 credentials: 'include'
             });
             
-            console.log('API Response status:', response.status);
             
             if (!response.ok) {
                 let errorData = {};
@@ -45,7 +43,6 @@ const APIClient = {
             }
 
             const responseData = await response.json();
-            console.log('API Response data:', responseData);
             return responseData;
             
         } catch (error) {
@@ -59,7 +56,6 @@ const APIClient = {
 
     async post(endpoint, data = {}) {
         const url = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
-        console.log('API POST Request:', url, data);
         
         try {
             const headers = {
@@ -78,7 +74,6 @@ const APIClient = {
                 body: JSON.stringify(data)
             });
             
-            console.log('API Response status:', response.status);
             
             if (!response.ok) {
                 let errorData = {};
@@ -95,7 +90,6 @@ const APIClient = {
             }
 
             const responseData = await response.json();
-            console.log('API Response data:', responseData);
             return responseData;
             
         } catch (error) {
@@ -109,7 +103,6 @@ const APIClient = {
 
     async put(endpoint, data = {}) {
         const url = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
-        console.log('API PUT Request:', url, data);
         
         try {
             const headers = {
@@ -128,7 +121,6 @@ const APIClient = {
                 body: JSON.stringify(data)
             });
             
-            console.log('API Response status:', response.status);
             
             if (!response.ok) {
                 let errorData = {};
@@ -145,7 +137,6 @@ const APIClient = {
             }
 
             const responseData = await response.json();
-            console.log('API Response data:', responseData);
             return responseData;
             
         } catch (error) {
@@ -159,7 +150,6 @@ const APIClient = {
 
     async delete(endpoint, data = null) {
         const url = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
-        console.log('API DELETE Request:', url);
         
         try {
             const headers = {
@@ -179,7 +169,6 @@ const APIClient = {
                 body: data ? JSON.stringify(data) : undefined
             });
             
-            console.log('API Response status:', response.status);
             
             if (!response.ok) {
                 let errorData = {};
@@ -200,7 +189,6 @@ const APIClient = {
             }
 
             const responseData = await response.json();
-            console.log('API Response data:', responseData);
             return responseData;
             
         } catch (error) {
@@ -213,4 +201,3 @@ const APIClient = {
     }
 };
 
-console.log('APIClient loaded');

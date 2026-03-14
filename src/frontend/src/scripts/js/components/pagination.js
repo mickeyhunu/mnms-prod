@@ -179,5 +179,3 @@ function createLoadMorePagination(hasMore, onLoadMore, containerSelector, loadin
     showElement(container);
     window.handleLoadMore = onLoadMore;
 }
-
-console.log('Pagination loaded');

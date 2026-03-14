@@ -114,4 +114,3 @@ const Auth = {
     }
 };
 
-console.log('Auth loaded');
