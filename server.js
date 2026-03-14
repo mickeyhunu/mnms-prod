@@ -8,6 +8,7 @@ const path = require('path');
 const { initDatabase, dbConfig } = require('./src/backend/config/database');
 const authRoutes = require('./src/backend/routes/authRoutes');
 const postRoutes = require('./src/backend/routes/postRoutes');
+const userRoutes = require('./src/backend/routes/userRoutes');
 
 const app = express();
 const PORT = Number(process.env.PORT || 8080);
@@ -29,6 +30,7 @@ app.use('/api', (req, res, next) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/users', userRoutes);
 
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ message: 'Not Found' });
