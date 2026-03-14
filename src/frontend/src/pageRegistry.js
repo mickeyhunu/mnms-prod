@@ -938,17 +938,6 @@ const pageRegistry = {
                 </div>
             </div>
 
-            <div class="adjacent-post-navigation hidden" id="post-adjacent-navigation">
-                <a class="adjacent-post-link" id="previous-post-link" href="#">
-                    <span class="adjacent-post-label">이전글</span>
-                    <span class="adjacent-post-title">게시글이 없습니다.</span>
-                </a>
-                <a class="adjacent-post-link" id="next-post-link" href="#">
-                    <span class="adjacent-post-label">다음글</span>
-                    <span class="adjacent-post-title">게시글이 없습니다.</span>
-                </a>
-            </div>
-
             <div id="comments-section" class="reply hidden">
                 <div class="tit">
                     <span class="mr-2">댓글</span>
@@ -977,6 +966,18 @@ const pageRegistry = {
                     <button class="btn btn-outline btn-sm" id="load-more-comments">더 보기</button>
                 </div>
             </div>
+
+            <div class="adjacent-post-navigation hidden" id="post-adjacent-navigation">
+                <a class="adjacent-post-link" id="previous-post-link" href="#">
+                    <span class="adjacent-post-label">이전글</span>
+                    <span class="adjacent-post-title">게시글이 없습니다.</span>
+                </a>
+                <a class="adjacent-post-link" id="next-post-link" href="#">
+                    <span class="adjacent-post-label">다음글</span>
+                    <span class="adjacent-post-title">게시글이 없습니다.</span>
+                </a>
+            </div>
+
         </div>
     </main>
 
