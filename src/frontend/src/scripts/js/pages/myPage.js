@@ -3,7 +3,11 @@
  */
 let currentUser = null;
 
-document.addEventListener('DOMContentLoaded', initMyPage);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMyPage);
+} else {
+    initMyPage();
+}
 
 async function initMyPage() {
     if (!Auth.isAuthenticated()) {
