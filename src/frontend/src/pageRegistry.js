@@ -671,10 +671,6 @@ const pageRegistry = {
                 </div>
             </header>
 
-            <div class="page-header">
-                <p>원하는 항목을 선택해 상세 페이지로 이동하세요.</p>
-            </div>
-
             <nav class="my-page-section-nav" aria-label="마이페이지 섹션 이동">
                 <ul class="my-page-section-list">
                     <li><a class="my-page-section-btn" href="/my-page/profile">회원정보</a></li>
