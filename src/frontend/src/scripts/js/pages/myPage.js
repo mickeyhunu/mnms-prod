@@ -259,51 +259,57 @@ async function loadPointHistories() {
         const histories = response.pointHistories || [];
 
         container.innerHTML = `
-            <section class="mypage-summary-section">
-                <div class="mypage-summary-head">
-                    <h3 class="mypage-summary-title">보유 포인트</h3>
-                </div>
-                <div class="mypage-summary-row"><span>현재 등급</span><strong>${sanitizeHTML(response.levelLabel || '-')}</strong></div>
-                <div class="mypage-summary-row"><span>누적 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
-            </section>
+            <div class="mypage-point-layout">
+                <div class="mypage-point-primary-column">
+                    <section class="mypage-summary-section">
+                        <div class="mypage-summary-head">
+                            <h3 class="mypage-summary-title">보유 포인트</h3>
+                        </div>
+                        <div class="mypage-summary-row"><span>현재 등급</span><strong>${sanitizeHTML(response.levelLabel || '-')}</strong></div>
+                        <div class="mypage-summary-row"><span>누적 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
+                    </section>
 
-            <section class="mypage-summary-section">
-                <div class="mypage-summary-head">
-                    <h3 class="mypage-summary-title">포인트 적립/차감 내역</h3>
+                    <section class="mypage-summary-section">
+                        <div class="mypage-summary-head">
+                            <h3 class="mypage-summary-title">포인트 적립/차감 내역</h3>
+                        </div>
+                        ${histories.length ? `
+                            <div class="mypage-point-history-list">
+                                ${histories.map((item) => {
+                                    const pointValue = Number(item.points || 0);
+                                    const pointClass = pointValue >= 0 ? 'plus' : 'minus';
+                                    const pointText = `${pointValue >= 0 ? '+' : ''}${pointValue.toLocaleString()}P`;
+                                    return `
+                                        <div class="mypage-point-history-row">
+                                            <div>
+                                                <strong>${sanitizeHTML(item.actionLabel || formatPointActionLabel(item.actionType || ''))}</strong>
+                                                <p>${sanitizeHTML(formatDate(item.createdAt))}</p>
+                                            </div>
+                                            <span class="point-change ${pointClass}">${pointText}</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        ` : '<div class="no-data">포인트 내역이 없습니다.</div>'}
+                    </section>
                 </div>
-                ${histories.length ? `
-                    <div class="mypage-point-history-list">
-                        ${histories.map((item) => {
-                            const pointValue = Number(item.points || 0);
-                            const pointClass = pointValue >= 0 ? 'plus' : 'minus';
-                            const pointText = `${pointValue >= 0 ? '+' : ''}${pointValue.toLocaleString()}P`;
-                            return `
-                                <div class="mypage-point-history-row">
-                                    <div>
-                                        <strong>${sanitizeHTML(item.actionLabel || formatPointActionLabel(item.actionType || ''))}</strong>
-                                        <p>${sanitizeHTML(formatDate(item.createdAt))}</p>
-                                    </div>
-                                    <span class="point-change ${pointClass}">${pointText}</span>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                ` : '<div class="no-data">포인트 내역이 없습니다.</div>'}
-            </section>
 
-            <section class="mypage-summary-section">
-                <div class="mypage-summary-head">
-                    <h3 class="mypage-summary-title">포인트 지급 기준</h3>
-                </div>
-                ${renderPointRuleGuide(response.pointRuleGuide || [])}
-            </section>
+                <div class="mypage-point-reference-grid">
+                    <section class="mypage-summary-section mypage-summary-section--compact">
+                        <div class="mypage-summary-head">
+                            <h3 class="mypage-summary-title">포인트 지급 기준</h3>
+                        </div>
+                        ${renderPointRuleGuide(response.pointRuleGuide || [])}
+                    </section>
 
-            <section class="mypage-summary-section">
-                <div class="mypage-summary-head">
-                    <h3 class="mypage-summary-title">회원 등급 기준</h3>
+                    <section class="mypage-summary-section mypage-summary-section--compact">
+                        <div class="mypage-summary-head">
+                            <h3 class="mypage-summary-title">회원 등급 기준</h3>
+                        </div>
+                        ${renderLevelGuide(response.levelGuide || [])}
+                    </section>
                 </div>
-                ${renderLevelGuide(response.levelGuide || [])}
-            </section>
+            </div>
         `;
     } catch (error) {
         container.innerHTML = '<div class="error-message">포인트 내역을 불러오지 못했습니다.</div>';

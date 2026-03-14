@@ -768,6 +768,35 @@
     padding-right: 22px;
 }
 
+.mypage-point-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.mypage-point-primary-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.mypage-point-reference-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.mypage-summary-section--compact {
+    padding: 14px 16px;
+}
+
+.mypage-summary-section--compact .mypage-summary-head {
+    margin-bottom: 8px;
+}
+
+.mypage-summary-section--compact .mypage-summary-title {
+    font-size: 13px;
+}
+
 .mypage-summary-head {
     display: flex;
     justify-content: space-between;
@@ -935,4 +964,11 @@
     color: #94a3b8;
     font-style: normal;
     font-size: 12px;
+}
+
+@media (max-width: 640px) {
+    .mypage-point-reference-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
 }
