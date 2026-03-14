@@ -391,6 +391,8 @@ function renderPostDetail(post) {
         if (reportBtn) reportBtn.classList.remove('hidden');
     }
 
+    renderAdjacentPosts(post.previousPost, post.nextPost);
+
     if (post.imageUrls && post.imageUrls.length > 0) {
         renderPostImages(post.imageUrls);
     }
@@ -453,6 +455,33 @@ function reportPost() {
     if (menu) {
         menu.classList.add('hidden');
     }
+}
+
+function renderAdjacentPosts(previousPost, nextPost) {
+    const navigation = document.getElementById('post-adjacent-navigation');
+    const previousLink = document.getElementById('previous-post-link');
+    const nextLink = document.getElementById('next-post-link');
+
+    if (!navigation || !previousLink || !nextLink) {
+        return;
+    }
+
+    const updateLink = (element, post, label) => {
+        if (!post || !post.id) {
+            element.classList.add('is-empty');
+            element.removeAttribute('href');
+            element.innerHTML = `<span class="adjacent-post-label">${label}</span><span class="adjacent-post-title">게시글이 없습니다.</span>`;
+            return;
+        }
+
+        element.classList.remove('is-empty');
+        element.href = `/post-detail?id=${post.id}`;
+        element.innerHTML = `<span class="adjacent-post-label">${label}</span><span class="adjacent-post-title">${sanitizeHTML(post.title || '')}</span>`;
+    };
+
+    updateLink(previousLink, previousPost, '이전글');
+    updateLink(nextLink, nextPost, '다음글');
+    navigation.classList.remove('hidden');
 }
 
 function renderPostImages(imageUrls) {
