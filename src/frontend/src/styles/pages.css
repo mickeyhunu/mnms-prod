@@ -768,6 +768,42 @@
     padding-right: 22px;
 }
 
+.mypage-activity-tab-wrap {
+    padding-top: 10px;
+}
+
+.mypage-activity-tab-header {
+    display: flex;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 10px;
+}
+
+.mypage-activity-tab {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 12px 6px 10px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+}
+
+.mypage-activity-tab.is-active {
+    color: #111827;
+    border-bottom-color: #111827;
+}
+
+.mypage-activity-tab-panel {
+    display: none;
+}
+
+.mypage-activity-tab-panel.is-active {
+    display: block;
+}
+
 .mypage-point-layout {
     display: flex;
     flex-direction: column;

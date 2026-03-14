@@ -153,13 +153,31 @@ async function loadActivityHistory() {
         const myPosts = response.posts || [];
         const myComments = response.comments || [];
         const likedPosts = response.likedPosts || [];
+        const commentedPosts = Array.from(
+            myComments.reduce((map, comment) => {
+                if (!comment.postId || map.has(comment.postId)) return map;
+
+                map.set(comment.postId, {
+                    postId: comment.postId,
+                    postTitle: comment.postTitle || '원문 보기',
+                    commentedAt: comment.createdAt
+                });
+
+                return map;
+            }, new Map()).values()
+        );
 
         container.innerHTML = `
-            <section class="mypage-summary-section">
-                <div class="mypage-summary-head">
-                    <h3 class="mypage-summary-title">내가 작성한 글</h3>
+            <section class="mypage-summary-section mypage-activity-tab-wrap">
+                <div class="mypage-activity-tab-header" role="tablist" aria-label="활동 내역 탭">
+                    <button type="button" class="mypage-activity-tab is-active" role="tab" aria-selected="true" data-activity-tab="posts">작성글</button>
+                    <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="comments">작성댓글</button>
+                    <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="commented-posts">댓글단 글</button>
+                    <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="liked-posts">좋아요한 글</button>
                 </div>
-                ${myPosts.length ? `
+
+                <div class="mypage-activity-tab-panel is-active" role="tabpanel" data-activity-panel="posts">
+                    ${myPosts.length ? `
                     <div class="mypage-point-history-list">
                         ${myPosts.map((post) => `
                             <a class="mypage-point-history-row" href="/post-detail?id=${post.id}">
@@ -170,14 +188,11 @@ async function loadActivityHistory() {
                             </a>
                         `).join('')}
                     </div>
-                ` : '<div class="no-data">작성한 게시글이 없습니다.</div>'}
-            </section>
-
-            <section class="mypage-summary-section">
-                <div class="mypage-summary-head">
-                    <h3 class="mypage-summary-title">내가 작성한 댓글</h3>
+                    ` : '<div class="no-data">작성한 게시글이 없습니다.</div>'}
                 </div>
-                ${myComments.length ? `
+
+                <div class="mypage-activity-tab-panel" role="tabpanel" data-activity-panel="comments" hidden>
+                    ${myComments.length ? `
                     <div class="mypage-point-history-list">
                         ${myComments.map((comment) => `
                             <a class="mypage-point-history-row" href="/post-detail?id=${comment.postId}">
@@ -189,14 +204,26 @@ async function loadActivityHistory() {
                             </a>
                         `).join('')}
                     </div>
-                ` : '<div class="no-data">작성한 댓글이 없습니다.</div>'}
-            </section>
-
-            <section class="mypage-summary-section">
-                <div class="mypage-summary-head">
-                    <h3 class="mypage-summary-title">내가 좋아요(추천)한 글</h3>
+                    ` : '<div class="no-data">작성한 댓글이 없습니다.</div>'}
                 </div>
-                ${likedPosts.length ? `
+
+                <div class="mypage-activity-tab-panel" role="tabpanel" data-activity-panel="commented-posts" hidden>
+                    ${commentedPosts.length ? `
+                    <div class="mypage-point-history-list">
+                        ${commentedPosts.map((post) => `
+                            <a class="mypage-point-history-row" href="/post-detail?id=${post.postId}">
+                                <div>
+                                    <strong>${sanitizeHTML(post.postTitle)}</strong>
+                                    <p>최근 댓글 ${sanitizeHTML(formatDate(post.commentedAt))}</p>
+                                </div>
+                            </a>
+                        `).join('')}
+                    </div>
+                    ` : '<div class="no-data">댓글을 작성한 게시글이 없습니다.</div>'}
+                </div>
+
+                <div class="mypage-activity-tab-panel" role="tabpanel" data-activity-panel="liked-posts" hidden>
+                    ${likedPosts.length ? `
                     <div class="mypage-point-history-list">
                         ${likedPosts.map((post) => `
                             <a class="mypage-point-history-row" href="/post-detail?id=${post.id}">
@@ -207,12 +234,39 @@ async function loadActivityHistory() {
                             </a>
                         `).join('')}
                     </div>
-                ` : '<div class="no-data">좋아요한 게시글이 없습니다.</div>'}
+                    ` : '<div class="no-data">좋아요한 게시글이 없습니다.</div>'}
+                </div>
             </section>
         `;
+
+        bindActivityTabs(container);
     } catch (error) {
         container.innerHTML = '<div class="error-message">활동 내역을 불러오지 못했습니다.</div>';
     }
+}
+
+function bindActivityTabs(container) {
+    const tabs = container.querySelectorAll('[data-activity-tab]');
+    const panels = container.querySelectorAll('[data-activity-panel]');
+    if (!tabs.length || !panels.length) return;
+
+    tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            const target = tab.dataset.activityTab;
+
+            tabs.forEach((item) => {
+                const isActive = item === tab;
+                item.classList.toggle('is-active', isActive);
+                item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+
+            panels.forEach((panel) => {
+                const isActive = panel.dataset.activityPanel === target;
+                panel.classList.toggle('is-active', isActive);
+                panel.hidden = !isActive;
+            });
+        });
+    });
 }
 
 
