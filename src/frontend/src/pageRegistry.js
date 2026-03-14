@@ -740,12 +740,13 @@ const pageRegistry = {
                 <input type="text" id="profile-name" name="name" readonly>
               </label>
               <label>
-                <span class="profile-field-header">
-                  <span class="profile-field-title">닉네임</span>
+                <span class="profile-field-title">닉네임</span>
+                <span class="profile-nickname-inline">
+                  <input type="text" id="profile-nickname" name="nickname" minlength="2" required>
                   <button type="button" class="btn btn-outline btn-sm hidden" id="nickname-check-btn">중복 확인</button>
                 </span>
-                <input type="text" id="profile-nickname" name="nickname" minlength="2" required>
                 <small id="nickname-check-result" class="help-text"></small>
+                <small id="profile-password-match-result" class="help-text" role="status"></small>
               </label>
               <label>생년월일
                 <input type="text" id="profile-birth" name="birthDate" readonly>
@@ -759,7 +760,6 @@ const pageRegistry = {
                 <span class="profile-consent-inline"><input type="checkbox" id="sms-consent" name="smsConsent"> SMS 수신 동의</span>
               </label>
             </div>
-            <p id="profile-password-match-result" class="help-text" role="status"></p>
             <button type="submit" class="btn btn-primary">저장</button>
             <p id="profile-save-result" class="help-text" role="status"></p>
           </form>
