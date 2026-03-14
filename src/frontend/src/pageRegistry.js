@@ -733,6 +733,15 @@ const pageRegistry = {
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/myPage.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
+  'my-page-points': {
+    template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
+    <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><span class="community-board-name">마이페이지</span></div></header>
+    <nav class="my-page-section-nav" aria-label="마이페이지 섹션 이동"><ul class="my-page-section-list"><li><a class="my-page-section-btn" href="/my-page/profile">회원정보</a></li><li><a class="my-page-section-btn" href="/my-page/activity">활동현황</a></li><li><a class="my-page-section-btn active" href="/my-page/points">포인트 내역</a></li><li><a class="my-page-section-btn" href="/my-page/support">고객센터</a></li><li><a class="my-page-section-btn" href="/my-page/policy">약관 및 정책</a></li></ul></nav>
+    <div class="section-header"><h2>포인트 내역</h2></div><div id="my-stats" class="activity-summary-grid"><div class="loading">로딩 중...</div></div></div></main>
+    <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/pages/myPage.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/myPage.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
+  },
   'my-page-support': {
     template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
     <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><span class="community-board-name">마이페이지</span></div></header>
