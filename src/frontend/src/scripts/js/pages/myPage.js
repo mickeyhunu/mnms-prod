@@ -26,6 +26,8 @@ async function initMyPage() {
 
         if (window.location.pathname === '/my-page/points') {
             await loadPointHistories();
+        } else if (window.location.pathname === '/my-page/activity') {
+            await loadActivityHistory();
         } else {
             await loadStats();
         }
@@ -142,52 +144,74 @@ function bindProfileForm() {
     });
 }
 
-async function loadMyPosts() {
-    const container = document.getElementById('my-posts-list');
+async function loadActivityHistory() {
+    const container = document.getElementById('my-stats');
     if (!container || !currentUser) return;
 
     try {
-        const response = await APIClient.get('/posts', { page: 0, size: 100 });
-        const posts = (response.content || []).filter(post => Number(post.userId) === Number(currentUser.id));
+        const response = await APIClient.get('/users/me/activity');
+        const myPosts = response.posts || [];
+        const myComments = response.comments || [];
+        const likedPosts = response.likedPosts || [];
 
-        if (!posts.length) {
-            container.innerHTML = '<div class="no-data">작성한 게시글이 없습니다.</div>';
-            return;
-        }
+        container.innerHTML = `
+            <section class="mypage-summary-section">
+                <div class="mypage-summary-head">
+                    <h3 class="mypage-summary-title">내가 작성한 글</h3>
+                </div>
+                ${myPosts.length ? `
+                    <div class="mypage-point-history-list">
+                        ${myPosts.map((post) => `
+                            <a class="mypage-point-history-row" href="/post-detail?id=${post.id}">
+                                <div>
+                                    <strong>${sanitizeHTML(post.title || '제목 없음')}</strong>
+                                    <p>${sanitizeHTML(formatDate(post.createdAt))} · 좋아요 ${Number(post.likeCount || 0)} · 댓글 ${Number(post.commentCount || 0)}</p>
+                                </div>
+                            </a>
+                        `).join('')}
+                    </div>
+                ` : '<div class="no-data">작성한 게시글이 없습니다.</div>'}
+            </section>
 
-        container.innerHTML = posts.map(post => `
-            <div class="my-post-card" onclick="location.href='/post-detail?id=${post.id}'" style="cursor:pointer;padding:12px;border:1px solid #eee;border-radius:8px;margin-bottom:10px;">
-                <div class="post-title"><strong>${sanitizeHTML(post.title)}</strong></div>
-                <div class="post-meta" style="margin-top:6px;color:#666;font-size:13px;">${formatDate(post.createdAt)} · 좋아요 ${post.likeCount || 0} · 댓글 ${post.commentCount || 0}</div>
-                <div class="post-content" style="margin-top:8px;">${sanitizeHTML((post.content || '').slice(0, 120))}${(post.content || '').length > 120 ? '...' : ''}</div>
-            </div>
-        `).join('');
+            <section class="mypage-summary-section">
+                <div class="mypage-summary-head">
+                    <h3 class="mypage-summary-title">내가 작성한 댓글</h3>
+                </div>
+                ${myComments.length ? `
+                    <div class="mypage-point-history-list">
+                        ${myComments.map((comment) => `
+                            <a class="mypage-point-history-row" href="/post-detail?id=${comment.postId}">
+                                <div>
+                                    <strong>${sanitizeHTML(comment.postTitle || '원문 보기')}</strong>
+                                    <p>${sanitizeHTML(formatDate(comment.createdAt))}</p>
+                                    <p>${sanitizeHTML(comment.content || '')}</p>
+                                </div>
+                            </a>
+                        `).join('')}
+                    </div>
+                ` : '<div class="no-data">작성한 댓글이 없습니다.</div>'}
+            </section>
+
+            <section class="mypage-summary-section">
+                <div class="mypage-summary-head">
+                    <h3 class="mypage-summary-title">내가 좋아요(추천)한 글</h3>
+                </div>
+                ${likedPosts.length ? `
+                    <div class="mypage-point-history-list">
+                        ${likedPosts.map((post) => `
+                            <a class="mypage-point-history-row" href="/post-detail?id=${post.id}">
+                                <div>
+                                    <strong>${sanitizeHTML(post.title || '제목 없음')}</strong>
+                                    <p>추천일 ${sanitizeHTML(formatDate(post.likedAt || post.createdAt))} · 좋아요 ${Number(post.likeCount || 0)} · 댓글 ${Number(post.commentCount || 0)}</p>
+                                </div>
+                            </a>
+                        `).join('')}
+                    </div>
+                ` : '<div class="no-data">좋아요한 게시글이 없습니다.</div>'}
+            </section>
+        `;
     } catch (error) {
-        container.innerHTML = '<div class="error-message">내 게시글을 불러오지 못했습니다.</div>';
-    }
-}
-
-async function loadMyComments() {
-    const container = document.getElementById('my-comments-list');
-    if (!container || !currentUser) return;
-
-    try {
-        const response = await APIClient.get('/users/me/comments');
-        const comments = response.content || [];
-
-        if (!comments.length) {
-            container.innerHTML = '<div class="no-data">작성한 댓글이 없습니다.</div>';
-            return;
-        }
-
-        container.innerHTML = comments.map(comment => `
-            <div style="padding:12px;border:1px solid #eee;border-radius:8px;margin-bottom:10px;">
-                <div style="margin-bottom:8px;">${sanitizeHTML(comment.content)}</div>
-                <div style="font-size:13px;color:#666;">${formatDate(comment.createdAt)} · <a href="/post-detail?id=${comment.postId}">원문 보기</a></div>
-            </div>
-        `).join('');
-    } catch (error) {
-        container.innerHTML = '<div class="error-message">내 댓글을 불러오지 못했습니다.</div>';
+        container.innerHTML = '<div class="error-message">활동 내역을 불러오지 못했습니다.</div>';
     }
 }
 

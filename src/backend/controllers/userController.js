@@ -1,7 +1,7 @@
 /**
  * 파일 역할: userController 관련 HTTP 요청을 처리하고 모델/응답 로직을 조합하는 컨트롤러 파일.
  */
-const { getUserActivityStats, getUserPointHistories } = require('../models/userModel');
+const { getUserActivityStats, getUserPointHistories, getUserActivityDetails } = require('../models/userModel');
 const { resolveMemberLevel, MEMBER_LEVELS } = require('../utils/memberLevel');
 const { POINT_RULES } = require('../models/pointModel');
 
@@ -75,6 +75,43 @@ async function myStats(req, res, next) {
 
 
 
+
+
+async function myActivity(req, res, next) {
+  try {
+    const limit = Math.max(1, Math.min(50, Number(req.query.limit) || 20));
+    const { posts, comments, likedPosts } = await getUserActivityDetails(req.user.id, { limit });
+
+    res.json({
+      posts: posts.map((post) => ({
+        id: Number(post.id),
+        title: post.title,
+        content: post.content,
+        createdAt: post.createdAt,
+        likeCount: Number(post.likeCount || 0),
+        commentCount: Number(post.commentCount || 0)
+      })),
+      comments: comments.map((comment) => ({
+        id: Number(comment.id),
+        postId: Number(comment.postId),
+        postTitle: comment.postTitle,
+        content: comment.content,
+        createdAt: comment.createdAt
+      })),
+      likedPosts: likedPosts.map((post) => ({
+        id: Number(post.id),
+        title: post.title,
+        content: post.content,
+        createdAt: post.createdAt,
+        likedAt: post.likedAt,
+        likeCount: Number(post.likeCount || 0),
+        commentCount: Number(post.commentCount || 0)
+      }))
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 async function myPointHistories(req, res, next) {
   try {
     const page = Math.max(1, Number(req.query.page) || 1);
@@ -113,4 +150,4 @@ async function myPointHistories(req, res, next) {
   }
 }
 
-module.exports = { myStats, myPointHistories };
+module.exports = { myStats, myPointHistories, myActivity };
