@@ -739,27 +739,27 @@ const pageRegistry = {
               <label>이름
                 <input type="text" id="profile-name" name="name" readonly>
               </label>
-              <label>닉네임
-                <input type="text" id="profile-nickname" name="nickname" minlength="2" required>
-                <span class="profile-nickname-actions">
+              <label>
+                <span class="profile-field-header">
+                  <span class="profile-field-title">닉네임</span>
                   <button type="button" class="btn btn-outline btn-sm hidden" id="nickname-check-btn">중복 확인</button>
-                  <small id="nickname-check-result" class="help-text"></small>
                 </span>
+                <input type="text" id="profile-nickname" name="nickname" minlength="2" required>
+                <small id="nickname-check-result" class="help-text"></small>
               </label>
               <label>생년월일
                 <input type="text" id="profile-birth" name="birthDate" readonly>
               </label>
               <label>이메일
-                <input type="email" id="profile-email" name="email" readonly>
+                <input type="email" id="profile-email" name="email">
+                <span class="profile-consent-inline"><input type="checkbox" id="email-consent" name="emailConsent"> 이메일 수신 동의</span>
               </label>
               <label>연락처
                 <input type="text" id="profile-phone" name="phone" placeholder="010-0000-0000">
+                <span class="profile-consent-inline"><input type="checkbox" id="sms-consent" name="smsConsent"> SMS 수신 동의</span>
               </label>
             </div>
-            <div class="consent-wrap">
-              <label><input type="checkbox" id="email-consent" name="emailConsent"> 이메일 수신 동의</label>
-              <label><input type="checkbox" id="sms-consent" name="smsConsent"> SMS 수신 동의</label>
-            </div>
+            <p id="profile-password-match-result" class="help-text" role="status"></p>
             <button type="submit" class="btn btn-primary">저장</button>
             <p id="profile-save-result" class="help-text" role="status"></p>
           </form>
