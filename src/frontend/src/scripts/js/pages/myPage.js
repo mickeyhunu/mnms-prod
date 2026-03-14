@@ -24,9 +24,11 @@ async function initMyPage() {
         renderHeaderUser(currentUser);
         renderProfileForm(currentUser);
 
-        await Promise.all([
-            loadStats()
-        ]);
+        if (window.location.pathname === '/my-page/points') {
+            await loadPointHistories();
+        } else {
+            await loadStats();
+        }
     } catch (error) {
         console.error(error);
         alert('로그인 정보가 유효하지 않습니다. 다시 로그인해주세요.');
@@ -186,6 +188,125 @@ async function loadMyComments() {
         `).join('');
     } catch (error) {
         container.innerHTML = '<div class="error-message">내 댓글을 불러오지 못했습니다.</div>';
+    }
+}
+
+
+
+function formatPointActionLabel(actionType) {
+    const labels = {
+        REGISTER: '회원가입',
+        LOGIN_DAILY: '출석 체크',
+        CREATE_POST: '게시글 작성',
+        CREATE_REVIEW_BONUS: '후기 게시글 보너스',
+        CREATE_COMMENT: '댓글 작성',
+        LIKE_POST: '좋아요 누름',
+        RECEIVE_POST_LIKE: '내 게시글 좋아요 받음',
+        REVOKE_CREATE_POST: '게시글 삭제로 포인트 차감',
+        REVOKE_CREATE_REVIEW_BONUS: '후기 보너스 포인트 차감',
+        REVOKE_CREATE_COMMENT: '댓글 삭제로 포인트 차감',
+        REVOKE_LIKE_POST: '좋아요 취소로 포인트 차감',
+        REVOKE_RECEIVE_POST_LIKE: '받은 좋아요 취소로 포인트 차감'
+    };
+
+    return labels[actionType] || actionType;
+}
+
+function renderPointRuleGuide(pointRuleGuide = []) {
+    if (!pointRuleGuide.length) {
+        return '<div class="no-data">포인트 지급 기준 정보가 없습니다.</div>';
+    }
+
+    return `
+        <div class="mypage-guide-list">
+            ${pointRuleGuide.map((rule) => `
+                <div class="mypage-guide-row">
+                    <span>${sanitizeHTML(rule.actionLabel || formatPointActionLabel(rule.actionType || ''))}</span>
+                    <strong>${Number(rule.points || 0).toLocaleString()}P</strong>
+                    <em>${sanitizeHTML(rule.dailyLimitLabel || '제한 없음')}</em>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function renderLevelGuide(levelGuide = []) {
+    if (!levelGuide.length) {
+        return '<div class="no-data">등급 정보가 없습니다.</div>';
+    }
+
+    return `
+        <div class="mypage-guide-list">
+            ${levelGuide.map((level) => {
+                const maxLabel = level.maxPoints == null ? '이상' : `${Number(level.maxPoints).toLocaleString()}P`;
+                return `
+                    <div class="mypage-guide-row">
+                        <span>${sanitizeHTML(level.label || '')}</span>
+                        <strong>${Number(level.minPoints || 0).toLocaleString()}P ~ ${maxLabel}</strong>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
+async function loadPointHistories() {
+    const container = document.getElementById('my-stats');
+    if (!container || !currentUser) return;
+
+    try {
+        const response = await APIClient.get('/users/me/points');
+        const histories = response.pointHistories || [];
+
+        container.innerHTML = `
+            <section class="mypage-summary-section">
+                <div class="mypage-summary-head">
+                    <h3 class="mypage-summary-title">보유 포인트</h3>
+                </div>
+                <div class="mypage-summary-row"><span>현재 등급</span><strong>${sanitizeHTML(response.levelLabel || '-')}</strong></div>
+                <div class="mypage-summary-row"><span>누적 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
+            </section>
+
+            <section class="mypage-summary-section">
+                <div class="mypage-summary-head">
+                    <h3 class="mypage-summary-title">포인트 적립/차감 내역</h3>
+                </div>
+                ${histories.length ? `
+                    <div class="mypage-point-history-list">
+                        ${histories.map((item) => {
+                            const pointValue = Number(item.points || 0);
+                            const pointClass = pointValue >= 0 ? 'plus' : 'minus';
+                            const pointText = `${pointValue >= 0 ? '+' : ''}${pointValue.toLocaleString()}P`;
+                            return `
+                                <div class="mypage-point-history-row">
+                                    <div>
+                                        <strong>${sanitizeHTML(item.actionLabel || formatPointActionLabel(item.actionType || ''))}</strong>
+                                        <p>${sanitizeHTML(formatDate(item.createdAt))}</p>
+                                    </div>
+                                    <span class="point-change ${pointClass}">${pointText}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                ` : '<div class="no-data">포인트 내역이 없습니다.</div>'}
+            </section>
+
+            <section class="mypage-summary-section">
+                <div class="mypage-summary-head">
+                    <h3 class="mypage-summary-title">포인트 지급 기준</h3>
+                </div>
+                ${renderPointRuleGuide(response.pointRuleGuide || [])}
+            </section>
+
+            <section class="mypage-summary-section">
+                <div class="mypage-summary-head">
+                    <h3 class="mypage-summary-title">회원 등급 기준</h3>
+                </div>
+                ${renderLevelGuide(response.levelGuide || [])}
+            </section>
+        `;
+    } catch (error) {
+        container.innerHTML = '<div class="error-message">포인트 내역을 불러오지 못했습니다.</div>';
     }
 }
 

@@ -1,8 +1,37 @@
 /**
  * 파일 역할: userController 관련 HTTP 요청을 처리하고 모델/응답 로직을 조합하는 컨트롤러 파일.
  */
-const { getUserActivityStats } = require('../models/userModel');
+const { getUserActivityStats, getUserPointHistories } = require('../models/userModel');
 const { resolveMemberLevel, MEMBER_LEVELS } = require('../utils/memberLevel');
+const { POINT_RULES } = require('../models/pointModel');
+
+
+
+const POINT_ACTION_LABELS = {
+  REGISTER: '회원가입',
+  LOGIN_DAILY: '출석 체크',
+  CREATE_POST: '게시글 작성',
+  CREATE_REVIEW_BONUS: '후기 게시글 보너스',
+  CREATE_COMMENT: '댓글 작성',
+  LIKE_POST: '좋아요 누름',
+  RECEIVE_POST_LIKE: '내 게시글 좋아요 받음',
+  REVOKE_CREATE_POST: '게시글 삭제로 포인트 차감',
+  REVOKE_CREATE_REVIEW_BONUS: '후기 보너스 포인트 차감',
+  REVOKE_CREATE_COMMENT: '댓글 삭제로 포인트 차감',
+  REVOKE_LIKE_POST: '좋아요 취소로 포인트 차감',
+  REVOKE_RECEIVE_POST_LIKE: '받은 좋아요 취소로 포인트 차감'
+};
+
+function formatPointRule(ruleKey, rule) {
+  const limitLabel = rule.dailyLimit == null ? '제한 없음' : `일 ${rule.dailyLimit}회`;
+  return {
+    actionType: ruleKey,
+    actionLabel: POINT_ACTION_LABELS[ruleKey] || ruleKey,
+    points: Number(rule.points || 0),
+    dailyLimit: rule.dailyLimit,
+    dailyLimitLabel: limitLabel
+  };
+}
 
 function getNextLevelInfo(level) {
   return MEMBER_LEVELS.find((item) => item.level === level + 1) || null;
@@ -44,4 +73,41 @@ async function myStats(req, res, next) {
   }
 }
 
-module.exports = { myStats };
+
+
+async function myPointHistories(req, res, next) {
+  try {
+    const histories = await getUserPointHistories(req.user.id, req.query.limit);
+    const totalPoints = Number(req.user.total_points || 0);
+    const currentLevel = resolveMemberLevel(totalPoints);
+
+    const levelGuide = MEMBER_LEVELS.map((info, index) => ({
+      level: info.level,
+      label: `${info.emoji} ${info.title}`,
+      minPoints: info.minPoints,
+      maxPoints: MEMBER_LEVELS[index + 1] ? MEMBER_LEVELS[index + 1].minPoints - 1 : null
+    }));
+
+    const pointRuleGuide = Object.entries(POINT_RULES)
+      .map(([ruleKey, rule]) => formatPointRule(ruleKey, rule));
+
+    res.json({
+      totalPoints,
+      level: currentLevel.level,
+      levelLabel: currentLevel.label,
+      pointHistories: histories.map((row) => ({
+        id: Number(row.id),
+        actionType: row.actionType,
+        actionLabel: POINT_ACTION_LABELS[row.actionType] || row.actionType,
+        points: Number(row.points || 0),
+        createdAt: row.createdAt
+      })),
+      pointRuleGuide,
+      levelGuide
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { myStats, myPointHistories };
