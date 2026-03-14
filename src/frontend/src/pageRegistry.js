@@ -674,19 +674,8 @@ const pageRegistry = {
             <div class="container mypage-profile-container">
                 <p class="mypage-mobile-title">내 정보</p>
 
-                <section class="mypage-card mypage-info-card">
-                    <div class="mypage-info-login-row">
-                        <span>로그인정보</span>
-                        <strong id="profile-login-provider">카카오 로그인 중</strong>
-                    </div>
-                    <a class="mypage-info-row" href="/my-page/profile">
-                        <span class="mypage-info-label">이름 · 연락처</span>
-                        <span class="mypage-info-value-wrap"><strong id="fixed-name">-</strong><strong id="profile-phone">-</strong><span class="mypage-info-chevron" aria-hidden="true">›</span></span>
-                    </a>
-                    <a class="mypage-info-row" href="/my-page/profile">
-                        <span class="mypage-info-label">이메일</span>
-                        <span class="mypage-info-value-wrap"><strong id="profile-email">없음</strong><span class="mypage-info-chevron" aria-hidden="true">›</span></span>
-                    </a>
+                <section class="mypage-card mypage-info-card" id="my-stats">
+                    <div class="loading">로딩 중...</div>
                 </section>
 
                 <button class="mypage-logout-btn mypage-footer-logout" type="button">로그아웃</button>

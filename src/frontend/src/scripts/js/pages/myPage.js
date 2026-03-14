@@ -191,12 +191,42 @@ async function loadStats() {
 
     try {
         const response = await APIClient.get('/users/me/stats');
+        const joinedAt = response.joinedAt ? formatDate(response.joinedAt).replace(/-/g, '.') : '-';
+
         container.innerHTML = `
-            <div class="card" style="padding:16px;"><strong>내 게시글</strong><div style="font-size:24px;margin-top:8px;">${response.postCount}</div></div>
-            <div class="card" style="padding:16px;"><strong>내 댓글</strong><div style="font-size:24px;margin-top:8px;">${response.commentCount}</div></div>
-            <div class="card" style="padding:16px;"><strong>받은 좋아요</strong><div style="font-size:24px;margin-top:8px;">${response.likeCount}</div></div>
-            <div class="card" style="padding:16px;"><strong>회원 등급</strong><div style="font-size:20px;margin-top:8px;">${sanitizeHTML(currentUser.levelLabel || 'Lv1 🐣 룸린이')}</div></div>
-            <div class="card" style="padding:16px;"><strong>누적 포인트</strong><div style="font-size:24px;margin-top:8px;">${Number(currentUser.totalPoints || 0)}</div></div>
+            <section class="mypage-summary-section">
+                <h3 class="mypage-summary-title">기본 정보</h3>
+                <div class="mypage-summary-list">
+                    <div class="mypage-summary-row"><span>아이디</span><strong>${sanitizeHTML(response.loginId || '')}</strong></div>
+                    <div class="mypage-summary-row"><span>닉네임</span><strong>${sanitizeHTML(response.nickname || '')}</strong></div>
+                    <div class="mypage-summary-row"><span>랭크</span><strong>Lv.${Number(response.level || 1)}</strong></div>
+                    <div class="mypage-summary-row"><span>가입일</span><strong>${sanitizeHTML(joinedAt)}</strong></div>
+                </div>
+            </section>
+
+            <section class="mypage-summary-section">
+                <h3 class="mypage-summary-title">포인트</h3>
+                <div class="mypage-summary-row"><span>보유 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
+                <div class="mypage-level-progress">
+                    <div class="mypage-level-progress-meta">
+                        <span>Lv.${Number(response.level || 1)} → ${sanitizeHTML(response.nextLevelLabel || 'MAX')}</span>
+                        <span>${Number(response.neededPointsToNextLevel || 0).toLocaleString()}P 필요</span>
+                    </div>
+                    <progress class="mypage-progress-bar" max="100" value="${Number(response.progressRate || 0)}"></progress>
+                    <div class="mypage-level-progress-meta"><span>${Number(response.totalPoints || 0).toLocaleString()}P</span><span>${Number(response.nextLevelMinPoints || response.totalPoints || 0).toLocaleString()}P</span></div>
+                </div>
+            </section>
+
+            <section class="mypage-summary-section">
+                <h3 class="mypage-summary-title">활동 내역</h3>
+                <div class="mypage-activity-grid">
+                    <div class="mypage-activity-item"><span>출석</span><strong>${Number(response.attendanceCount || 0)}</strong></div>
+                    <div class="mypage-activity-item"><span>후기</span><strong>${Number(response.reviewCount || 0)}</strong></div>
+                    <div class="mypage-activity-item"><span>게시글</span><strong>${Number(response.postCount || 0)}</strong></div>
+                    <div class="mypage-activity-item"><span>댓글</span><strong>${Number(response.commentCount || 0)}</strong></div>
+                    <div class="mypage-activity-item"><span>추천</span><strong>${Number(response.recommendCount || 0)}</strong></div>
+                </div>
+            </section>
         `;
     } catch (error) {
         container.innerHTML = '<div class="error-message">통계를 불러오지 못했습니다.</div>';

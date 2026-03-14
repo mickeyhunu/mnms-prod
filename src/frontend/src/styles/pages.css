@@ -759,3 +759,90 @@
 .mypage-withdraw-link:hover {
     text-decoration: underline;
 }
+
+.mypage-summary-section {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 14px;
+}
+
+.mypage-summary-title {
+    margin: 0 0 10px;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.mypage-summary-list {
+    border-top: 1px solid #f1f5f9;
+}
+
+.mypage-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+}
+
+.mypage-summary-row span {
+    color: #64748b;
+}
+
+.mypage-summary-row strong {
+    color: #111827;
+}
+
+.mypage-summary-row .point-value {
+    font-size: 22px;
+    color: #3b82f6;
+}
+
+.mypage-level-progress {
+    margin-top: 10px;
+}
+
+.mypage-level-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    color: #94a3b8;
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+
+.mypage-progress-bar {
+    width: 100%;
+    height: 8px;
+}
+
+.mypage-activity-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.mypage-activity-item {
+    background: #f1f5f9;
+    border-radius: 8px;
+    text-align: center;
+    padding: 10px 4px;
+}
+
+.mypage-activity-item span {
+    display: block;
+    color: #64748b;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.mypage-activity-item strong {
+    font-size: 14px;
+}
+
+@media (max-width: 640px) {
+    .mypage-activity-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
