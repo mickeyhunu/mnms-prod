@@ -466,21 +466,21 @@ function renderAdjacentPosts(previousPost, nextPost) {
         return;
     }
 
-    const updateLink = (element, post, label) => {
+    const updateLink = (element, post, label, directionSymbol) => {
         if (!post || !post.id) {
             element.classList.add('is-empty');
             element.removeAttribute('href');
-            element.innerHTML = `<span class="adjacent-post-label">${label}</span><span class="adjacent-post-title">게시글이 없습니다.</span>`;
+            element.innerHTML = `<span class="adjacent-post-label"><span class="adjacent-post-direction" aria-hidden="true">${directionSymbol}</span>${label}</span><span class="adjacent-post-title">게시글이 없습니다.</span>`;
             return;
         }
 
         element.classList.remove('is-empty');
         element.href = `/post-detail?id=${post.id}`;
-        element.innerHTML = `<span class="adjacent-post-label">${label}</span><span class="adjacent-post-title">${sanitizeHTML(post.title || '')}</span>`;
+        element.innerHTML = `<span class="adjacent-post-label"><span class="adjacent-post-direction" aria-hidden="true">${directionSymbol}</span>${label}</span><span class="adjacent-post-title">${sanitizeHTML(post.title || '')}</span>`;
     };
 
-    updateLink(previousLink, previousPost, '이전글');
-    updateLink(nextLink, nextPost, '다음글');
+    updateLink(previousLink, previousPost, '이전글', '˄');
+    updateLink(nextLink, nextPost, '다음글', '˅');
     navigation.classList.remove('hidden');
 }
 

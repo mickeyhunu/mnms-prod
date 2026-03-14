@@ -969,11 +969,11 @@ const pageRegistry = {
 
             <div class="adjacent-post-navigation hidden" id="post-adjacent-navigation">
                 <a class="adjacent-post-link" id="previous-post-link" href="#">
-                    <span class="adjacent-post-label">이전글</span>
+                    <span class="adjacent-post-label"><span class="adjacent-post-direction" aria-hidden="true">˄</span>이전글</span>
                     <span class="adjacent-post-title">게시글이 없습니다.</span>
                 </a>
                 <a class="adjacent-post-link" id="next-post-link" href="#">
-                    <span class="adjacent-post-label">다음글</span>
+                    <span class="adjacent-post-label"><span class="adjacent-post-direction" aria-hidden="true">˅</span>다음글</span>
                     <span class="adjacent-post-title">게시글이 없습니다.</span>
                 </a>
             </div>

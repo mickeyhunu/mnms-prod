@@ -306,9 +306,19 @@
 }
 
 .adjacent-post-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 13px;
     min-width: 44px;
     color: #697586;
+}
+
+.adjacent-post-direction {
+    width: 12px;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1;
 }
 
 .adjacent-post-title {
