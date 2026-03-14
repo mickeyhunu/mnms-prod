@@ -766,12 +766,34 @@
     border-radius: 12px;
     padding: 18px;
     margin-bottom: 14px;
+    padding-left: 22px;
+    padding-right: 22px;
+}
+
+.mypage-summary-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
 }
 
 .mypage-summary-title {
-    margin: 0 0 10px;
+    margin: 0;
     font-size: 14px;
     color: #64748b;
+}
+
+.mypage-summary-action {
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.mypage-summary-action:hover {
+    text-decoration: underline;
 }
 
 .mypage-summary-list {
