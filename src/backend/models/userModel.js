@@ -71,6 +71,48 @@ async function getUserPointHistories(userId, { limit = 20, page = 1 } = {}) {
   };
 }
 
+async function getUserActivityDetails(userId, { limit = 20 } = {}) {
+  const pool = getPool();
+  const safeLimit = Math.max(1, Math.min(100, Number(limit) || 20));
+
+  const [posts] = await pool.query(
+    `SELECT p.id, p.title, p.content, p.created_at AS createdAt,
+            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) AS commentCount,
+            (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
+     FROM posts p
+     WHERE p.user_id = ? AND p.is_deleted = 0
+     ORDER BY p.created_at DESC, p.id DESC
+     LIMIT ?`,
+    [userId, safeLimit]
+  );
+
+  const [comments] = await pool.query(
+    `SELECT c.id, c.post_id AS postId, c.content, c.created_at AS createdAt,
+            p.title AS postTitle
+     FROM comments c
+     INNER JOIN posts p ON p.id = c.post_id
+     WHERE c.user_id = ? AND c.is_deleted = 0 AND p.is_deleted = 0
+     ORDER BY c.created_at DESC, c.id DESC
+     LIMIT ?`,
+    [userId, safeLimit]
+  );
+
+  const [likedPosts] = await pool.query(
+    `SELECT p.id, p.title, p.content, p.created_at AS createdAt,
+            pl.created_at AS likedAt,
+            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) AS commentCount,
+            (SELECT COUNT(DISTINCT pl2.user_id) FROM post_likes pl2 WHERE pl2.post_id = p.id) AS likeCount
+     FROM post_likes pl
+     INNER JOIN posts p ON p.id = pl.post_id
+     WHERE pl.user_id = ? AND p.is_deleted = 0
+     ORDER BY pl.created_at DESC, p.id DESC
+     LIMIT ?`,
+    [userId, safeLimit]
+  );
+
+  return { posts, comments, likedPosts };
+}
+
 async function findByNickname(nickname) {
   const pool = getPool();
   const [rows] = await pool.query('SELECT id FROM users WHERE nickname = ?', [nickname]);
@@ -83,5 +125,6 @@ module.exports = {
   findById,
   findByNickname,
   getUserActivityStats,
-  getUserPointHistories
+  getUserPointHistories,
+  getUserActivityDetails
 };
