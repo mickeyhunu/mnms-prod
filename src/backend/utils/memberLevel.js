@@ -30,7 +30,7 @@ function resolveMemberLevel(totalPoints) {
 
   return {
     ...current,
-    label: `Lv${current.level} ${current.emoji} ${current.title}`,
+    label: `${current.emoji} ${current.title}`,
     totalPoints: normalizedPoints
   };
 }
