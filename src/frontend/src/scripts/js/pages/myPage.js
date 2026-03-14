@@ -250,13 +250,18 @@ function renderLevelGuide(levelGuide = []) {
     `;
 }
 
-async function loadPointHistories() {
+async function loadPointHistories(page = 1) {
     const container = document.getElementById('my-stats');
     if (!container || !currentUser) return;
 
+    const currentPage = Math.max(1, Number(page) || 1);
+
     try {
-        const response = await APIClient.get('/users/me/points');
+        const response = await APIClient.get('/users/me/points', { page: currentPage, limit: 20 });
         const histories = response.pointHistories || [];
+        const pagination = response.pagination || {};
+        const pageNumber = Math.max(1, Number(pagination.page) || currentPage);
+        const totalPages = Math.max(1, Number(pagination.totalPages) || 1);
 
         container.innerHTML = `
             <div class="mypage-point-layout">
@@ -290,6 +295,11 @@ async function loadPointHistories() {
                                     `;
                                 }).join('')}
                             </div>
+                            <div class="mypage-point-pagination" aria-label="포인트 내역 페이지">
+                                <button type="button" class="mypage-point-page-btn" data-page="${Math.max(1, pageNumber - 1)}" ${pageNumber <= 1 ? 'disabled' : ''}>이전</button>
+                                <span class="mypage-point-page-indicator">${pageNumber} / ${totalPages}</span>
+                                <button type="button" class="mypage-point-page-btn" data-page="${Math.min(totalPages, pageNumber + 1)}" ${pageNumber >= totalPages ? 'disabled' : ''}>다음</button>
+                            </div>
                         ` : '<div class="no-data">포인트 내역이 없습니다.</div>'}
                     </section>
                 </div>
@@ -311,6 +321,15 @@ async function loadPointHistories() {
                 </div>
             </div>
         `;
+
+        const pageButtons = container.querySelectorAll('.mypage-point-page-btn[data-page]');
+        pageButtons.forEach((button) => {
+            if (button.disabled) return;
+            button.addEventListener('click', async () => {
+                const nextPage = Number(button.dataset.page || pageNumber);
+                await loadPointHistories(nextPage);
+            });
+        });
     } catch (error) {
         container.innerHTML = '<div class="error-message">포인트 내역을 불러오지 못했습니다.</div>';
     }

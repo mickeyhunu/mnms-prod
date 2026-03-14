@@ -77,7 +77,9 @@ async function myStats(req, res, next) {
 
 async function myPointHistories(req, res, next) {
   try {
-    const histories = await getUserPointHistories(req.user.id, req.query.limit);
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.max(1, Math.min(20, Number(req.query.limit) || 20));
+    const { histories, pagination } = await getUserPointHistories(req.user.id, { page, limit });
     const totalPoints = Number(req.user.total_points || 0);
     const currentLevel = resolveMemberLevel(totalPoints);
 
@@ -103,7 +105,8 @@ async function myPointHistories(req, res, next) {
         createdAt: row.createdAt
       })),
       pointRuleGuide,
-      levelGuide
+      levelGuide,
+      pagination
     });
   } catch (error) {
     next(error);
