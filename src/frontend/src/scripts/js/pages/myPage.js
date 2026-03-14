@@ -14,6 +14,7 @@ async function initMyPage() {
     bindProfileForm();
     bindSupportForm();
     bindLogoutActions();
+    bindSectionNavigation();
 
     try {
         currentUser = await APIClient.get('/auth/me');
@@ -22,8 +23,6 @@ async function initMyPage() {
         renderProfileForm(currentUser);
 
         await Promise.all([
-            loadMyPosts(),
-            loadMyComments(),
             loadNotices(),
             loadStats()
         ]);
@@ -32,6 +31,35 @@ async function initMyPage() {
         alert('로그인 정보가 유효하지 않습니다. 다시 로그인해주세요.');
         Auth.logout();
     }
+}
+
+function bindSectionNavigation() {
+    const sectionButtons = document.querySelectorAll('.my-page-section-btn');
+    if (!sectionButtons.length) return;
+
+    const tabs = document.querySelectorAll('.tab-content .tab-pane');
+    const openTab = (tabName) => {
+        tabs.forEach((tabPane) => {
+            const isTarget = tabPane.id === `${tabName}-tab`;
+            tabPane.classList.toggle('active', isTarget);
+        });
+
+        sectionButtons.forEach((button) => {
+            const isTargetButton = button.dataset.targetTab === tabName;
+            button.classList.toggle('active', isTargetButton);
+        });
+    };
+
+    sectionButtons.forEach((button) => {
+        if (button.dataset.boundClick === 'true') return;
+
+        button.dataset.boundClick = 'true';
+        button.addEventListener('click', () => {
+            const targetTab = button.dataset.targetTab;
+            if (!targetTab) return;
+            openTab(targetTab);
+        });
+    });
 }
 
 
