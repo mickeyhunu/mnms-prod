@@ -435,6 +435,25 @@
     gap: 8px;
 }
 
+.profile-field-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.profile-field-title {
+    font-weight: 600;
+}
+
+.profile-consent-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    color: #495057;
+}
+
 .profile-nickname-actions .help-text {
     margin-top: 0;
 }

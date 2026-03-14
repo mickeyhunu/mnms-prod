@@ -110,6 +110,35 @@ function bindProfileForm() {
     const nicknameInput = form.querySelector('#profile-nickname');
     const nicknameCheckButton = form.querySelector('#nickname-check-btn');
     const nicknameCheckResult = form.querySelector('#nickname-check-result');
+    const passwordInput = form.querySelector('#profile-password');
+    const passwordConfirmInput = form.querySelector('#profile-password-confirm');
+    const passwordMatchResult = form.querySelector('#profile-password-match-result');
+
+    const updatePasswordMatchMessage = () => {
+        if (!passwordMatchResult || !passwordConfirmInput) return;
+
+        const password = passwordInput?.value.trim() || '';
+        const passwordConfirm = passwordConfirmInput.value.trim();
+
+        if (!passwordConfirm) {
+            passwordMatchResult.textContent = '';
+            return;
+        }
+
+        if (password !== passwordConfirm) {
+            passwordMatchResult.textContent = '비밀번호와 비밀번호 확인이 다릅니다.';
+            passwordMatchResult.style.color = '#dc3545';
+            return;
+        }
+
+        passwordMatchResult.textContent = '비밀번호와 비밀번호 확인이 일치합니다.';
+        passwordMatchResult.style.color = '#198754';
+    };
+
+    if (passwordInput && passwordConfirmInput) {
+        passwordInput.addEventListener('input', updatePasswordMatchMessage);
+        passwordConfirmInput.addEventListener('input', updatePasswordMatchMessage);
+    }
 
     if (nicknameInput && nicknameCheckButton) {
         nicknameInput.addEventListener('input', () => {
@@ -189,6 +218,7 @@ function bindProfileForm() {
         const payload = {
             nickname,
             phone: form.phone.value.trim(),
+            email: form.email.value.trim(),
             emailConsent: form.emailConsent.checked,
             smsConsent: form.smsConsent.checked
         };
@@ -227,6 +257,7 @@ function bindProfileForm() {
             submitButton.disabled = false;
             form.password.value = '';
             form.passwordConfirm.value = '';
+            if (passwordMatchResult) passwordMatchResult.textContent = '';
         }
     });
 }
