@@ -203,7 +203,7 @@ async function loadStats() {
                 <div class="mypage-summary-list">
                     <div class="mypage-summary-row"><span>아이디</span><strong>${sanitizeHTML(response.loginId || '')}</strong></div>
                     <div class="mypage-summary-row"><span>닉네임</span><strong>${sanitizeHTML(response.nickname || '')}</strong></div>
-                    <div class="mypage-summary-row"><span>랭크</span><strong>Lv.${Number(response.level || 1)}</strong></div>
+                    <div class="mypage-summary-row"><span>랭크</span><strong>${sanitizeHTML(response.levelLabel || '')}</strong></div>
                     <div class="mypage-summary-row"><span>가입일</span><strong>${sanitizeHTML(joinedAt)}</strong></div>
                 </div>
             </section>
@@ -213,7 +213,7 @@ async function loadStats() {
                 <div class="mypage-summary-row"><span>보유 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
                 <div class="mypage-level-progress">
                     <div class="mypage-level-progress-meta">
-                        <span>Lv.${Number(response.level || 1)} → ${sanitizeHTML(response.nextLevelLabel || 'MAX')}</span>
+                        <span>${sanitizeHTML(response.levelLabel || '')} → ${sanitizeHTML(response.nextLevelLabel || 'MAX')}</span>
                         <span>${Number(response.neededPointsToNextLevel || 0).toLocaleString()}P 필요</span>
                     </div>
                     <progress class="mypage-progress-bar" max="100" value="${Number(response.progressRate || 0)}"></progress>
