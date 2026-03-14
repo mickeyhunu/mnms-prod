@@ -128,6 +128,52 @@ async function findPostDetailById(id) {
   return rows[0] || null;
 }
 
+async function findAdjacentPosts(id) {
+  const pool = getPool();
+  const [currentRows] = await pool.query(
+    'SELECT id, board_type AS boardType, created_at AS createdAt FROM posts WHERE id = ? AND is_deleted = 0 LIMIT 1',
+    [id]
+  );
+
+  const current = currentRows[0] || null;
+  if (!current) {
+    return { previous: null, next: null };
+  }
+
+  const [previousRows] = await pool.query(
+    `SELECT p.id, p.title
+     FROM posts p
+     WHERE p.is_deleted = 0
+       AND p.board_type = ?
+       AND (
+         p.created_at > ?
+         OR (p.created_at = ? AND p.id > ?)
+       )
+     ORDER BY p.created_at ASC, p.id ASC
+     LIMIT 1`,
+    [current.boardType, current.createdAt, current.createdAt, current.id]
+  );
+
+  const [nextRows] = await pool.query(
+    `SELECT p.id, p.title
+     FROM posts p
+     WHERE p.is_deleted = 0
+       AND p.board_type = ?
+       AND (
+         p.created_at < ?
+         OR (p.created_at = ? AND p.id < ?)
+       )
+     ORDER BY p.created_at DESC, p.id DESC
+     LIMIT 1`,
+    [current.boardType, current.createdAt, current.createdAt, current.id]
+  );
+
+  return {
+    previous: previousRows[0] || null,
+    next: nextRows[0] || null
+  };
+}
+
 async function incrementPostViewCount(id) {
   const pool = getPool();
   await pool.query('UPDATE posts SET view_count = view_count + 1 WHERE id = ?', [id]);
@@ -323,6 +369,7 @@ module.exports = {
   createPost,
   findPostById,
   findPostDetailById,
+  findAdjacentPosts,
   findPostByIdIncludingDeleted,
   incrementPostViewCount,
   updatePost,

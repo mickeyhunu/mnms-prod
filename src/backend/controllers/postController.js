@@ -150,12 +150,19 @@ async function getPost(req, res, next) {
     const postDetail = await postModel.findPostDetailById(postId);
     const comments = await postModel.listComments(postId);
     const visibleComments = comments.map((comment) => sanitizeCommentForViewer(comment, post, req.user));
+    const adjacentPosts = await postModel.findAdjacentPosts(postId);
 
     const isLiked = req.user
       ? await postModel.isPostLikedByUser(postId, req.user.id)
       : false;
 
-    res.json({ ...sanitizePostForViewer(postDetail), isLiked, comments: visibleComments });
+    res.json({
+      ...sanitizePostForViewer(postDetail),
+      isLiked,
+      comments: visibleComments,
+      previousPost: adjacentPosts.previous,
+      nextPost: adjacentPosts.next
+    });
   } catch (error) {
     next(error);
   }
