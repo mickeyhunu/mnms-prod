@@ -144,6 +144,25 @@ function bindProfileForm() {
     });
 }
 
+
+function getBoardLabel(boardType) {
+    const boardMap = {
+        FREE: '자유',
+        ANON: '익명',
+        REVIEW: '후기',
+        STORY: '썰',
+        QUESTION: '질문'
+    };
+
+    return boardMap[String(boardType || '').toUpperCase()] || '자유';
+}
+
+function formatActivityTitle(title, boardType) {
+    const boardLabel = sanitizeHTML(getBoardLabel(boardType));
+    const safeTitle = sanitizeHTML(title || '제목 없음');
+    return `[${boardLabel}] ${safeTitle}`;
+}
+
 async function loadActivityHistory() {
     const container = document.getElementById('my-stats');
     if (!container || !currentUser) return;
@@ -160,6 +179,7 @@ async function loadActivityHistory() {
                 map.set(comment.postId, {
                     postId: comment.postId,
                     postTitle: comment.postTitle || '원문 보기',
+                    postBoardType: comment.postBoardType,
                     commentedAt: comment.createdAt
                 });
 
@@ -182,7 +202,7 @@ async function loadActivityHistory() {
                         ${myPosts.map((post) => `
                             <a class="mypage-point-history-row" href="/post-detail?id=${post.id}">
                                 <div>
-                                    <strong>${sanitizeHTML(post.title || '제목 없음')}</strong>
+                                    <strong>${formatActivityTitle(post.title, post.boardType)}</strong>
                                     <p>${sanitizeHTML(formatDate(post.createdAt))} · 좋아요 ${Number(post.likeCount || 0)} · 댓글 ${Number(post.commentCount || 0)}</p>
                                 </div>
                             </a>
@@ -197,7 +217,7 @@ async function loadActivityHistory() {
                         ${myComments.map((comment) => `
                             <a class="mypage-point-history-row" href="/post-detail?id=${comment.postId}">
                                 <div>
-                                    <strong>${sanitizeHTML(comment.postTitle || '원문 보기')}</strong>
+                                    <strong>${formatActivityTitle(comment.postTitle || '원문 보기', comment.postBoardType)}</strong>
                                     <p>${sanitizeHTML(formatDate(comment.createdAt))}</p>
                                     <p>${sanitizeHTML(comment.content || '')}</p>
                                 </div>
@@ -213,7 +233,7 @@ async function loadActivityHistory() {
                         ${commentedPosts.map((post) => `
                             <a class="mypage-point-history-row" href="/post-detail?id=${post.postId}">
                                 <div>
-                                    <strong>${sanitizeHTML(post.postTitle)}</strong>
+                                    <strong>${formatActivityTitle(post.postTitle, post.postBoardType)}</strong>
                                     <p>최근 댓글 ${sanitizeHTML(formatDate(post.commentedAt))}</p>
                                 </div>
                             </a>
@@ -228,7 +248,7 @@ async function loadActivityHistory() {
                         ${likedPosts.map((post) => `
                             <a class="mypage-point-history-row" href="/post-detail?id=${post.id}">
                                 <div>
-                                    <strong>${sanitizeHTML(post.title || '제목 없음')}</strong>
+                                    <strong>${formatActivityTitle(post.title, post.boardType)}</strong>
                                     <p>추천일 ${sanitizeHTML(formatDate(post.likedAt || post.createdAt))} · 좋아요 ${Number(post.likeCount || 0)} · 댓글 ${Number(post.commentCount || 0)}</p>
                                 </div>
                             </a>

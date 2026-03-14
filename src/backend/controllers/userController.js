@@ -87,6 +87,7 @@ async function myActivity(req, res, next) {
         id: Number(post.id),
         title: post.title,
         content: post.content,
+        boardType: post.boardType,
         createdAt: post.createdAt,
         likeCount: Number(post.likeCount || 0),
         commentCount: Number(post.commentCount || 0)
@@ -95,6 +96,7 @@ async function myActivity(req, res, next) {
         id: Number(comment.id),
         postId: Number(comment.postId),
         postTitle: comment.postTitle,
+        postBoardType: comment.postBoardType,
         content: comment.content,
         createdAt: comment.createdAt
       })),
@@ -102,6 +104,7 @@ async function myActivity(req, res, next) {
         id: Number(post.id),
         title: post.title,
         content: post.content,
+        boardType: post.boardType,
         createdAt: post.createdAt,
         likedAt: post.likedAt,
         likeCount: Number(post.likeCount || 0),

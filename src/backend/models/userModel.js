@@ -76,7 +76,7 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
   const safeLimit = Math.max(1, Math.min(100, Number(limit) || 20));
 
   const [posts] = await pool.query(
-    `SELECT p.id, p.title, p.content, p.created_at AS createdAt,
+    `SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt,
             (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) AS commentCount,
             (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
@@ -88,7 +88,8 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
 
   const [comments] = await pool.query(
     `SELECT c.id, c.post_id AS postId, c.content, c.created_at AS createdAt,
-            p.title AS postTitle
+            p.title AS postTitle,
+            p.board_type AS postBoardType
      FROM comments c
      INNER JOIN posts p ON p.id = c.post_id
      WHERE c.user_id = ? AND c.is_deleted = 0 AND p.is_deleted = 0
@@ -98,7 +99,7 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
   );
 
   const [likedPosts] = await pool.query(
-    `SELECT p.id, p.title, p.content, p.created_at AS createdAt,
+    `SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt,
             pl.created_at AS likedAt,
             (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) AS commentCount,
             (SELECT COUNT(DISTINCT pl2.user_id) FROM post_likes pl2 WHERE pl2.post_id = p.id) AS likeCount
