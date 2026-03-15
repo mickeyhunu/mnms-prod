@@ -773,6 +773,21 @@ const pageRegistry = {
                         <a class="mypage-link-item" href="/board/terms"><span>약관 및 정책</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a>
                     </div>
                 </div>
+
+                <footer class="company-footer-slot" aria-label="마이페이지 하단 정보">
+                    <div class="company-footer-top">
+                        <strong class="company-footer-logo">MIDNIGHT MANS</strong>
+                    </div>
+                    <div class="company-footer-links-row">
+                        <a href="/board/terms">이용약관</a>
+                        <span class="footer-divider" aria-hidden="true"></span>
+                        <a href="/board/terms">개인정보처리방침</a>
+                        <span class="footer-divider" aria-hidden="true"></span>
+                        <button type="button" class="mypage-footer-logout">로그아웃</button>
+                    </div>
+                    <p class="company-footer-notice">미드나잇 맨즈는 커뮤니티 서비스 제공 플랫폼입니다.</p>
+                    <p class="company-footer-copyright">© MIDNIGHT MANS. ALL RIGHTS RESERVED.</p>
+                </footer>
             </div>
 
         </div>
