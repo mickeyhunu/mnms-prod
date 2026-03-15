@@ -3,6 +3,14 @@
  */
 let currentUser = null;
 let nicknameCheckState = { checked: false, available: false, value: '' };
+const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
+
+function formatPhoneNumber(value) {
+    const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+    return `${digits.slice(0, 3)}-${digits.slice(3, digits.length - 4)}-${digits.slice(-4)}`;
+}
 
 function setHelpMessage(element, message, color) {
     if (!element) return;
@@ -92,7 +100,7 @@ function renderProfileForm(user) {
     if (nicknameInput) nicknameInput.value = user.nickname || '';
 
     if (phoneField) {
-        if (phoneField.tagName === 'INPUT') phoneField.value = user.phone || '';
+        if (phoneField.tagName === 'INPUT') phoneField.value = formatPhoneNumber(user.phone || '');
         else phoneField.textContent = user.phone || '없음';
     }
 
@@ -101,8 +109,8 @@ function renderProfileForm(user) {
         else emailField.textContent = user.email || '없음';
     }
 
-    if (nameField) nameField.value = user.name || user.nickname || '미등록';
-    if (birthField) birthField.value = user.birthDate || user.birth || '미등록';
+    if (nameField) nameField.value = user.name || user.nickname || '';
+    if (birthField) birthField.value = user.birthDate || user.birth || '';
     if (emailConsent) emailConsent.checked = Boolean(user.emailConsent);
     if (smsConsent) smsConsent.checked = Boolean(user.smsConsent);
 
@@ -119,6 +127,13 @@ function bindProfileForm() {
     const passwordInput = form.querySelector('#profile-password');
     const passwordConfirmInput = form.querySelector('#profile-password-confirm');
     const passwordMatchResult = form.querySelector('#profile-password-match-result');
+    const phoneInput = form.querySelector('#profile-phone');
+
+    if (phoneInput) {
+        phoneInput.addEventListener('input', () => {
+            phoneInput.value = formatPhoneNumber(phoneInput.value);
+        });
+    }
 
     const updatePasswordMatchMessage = () => {
         if (!passwordMatchResult || !passwordConfirmInput) return;
@@ -193,6 +208,9 @@ function bindProfileForm() {
         const nickname = form.nickname.value.trim();
         const password = form.password.value.trim();
         const passwordConfirm = form.passwordConfirm.value.trim();
+        const phone = formatPhoneNumber(form.phone.value.trim());
+
+        if (form.phone) form.phone.value = phone;
 
         if (password && password !== passwordConfirm) {
             setHelpMessage(passwordMatchResult, '비밀번호와 비밀번호 확인이 일치하지 않습니다.', '#dc3545');
@@ -218,9 +236,14 @@ function bindProfileForm() {
             }
         }
 
+        if (phone && !PHONE_PATTERN.test(phone)) {
+            setHelpMessage(result, '연락처 형식은 010-0000-0000으로 입력해 주세요.', '#dc3545');
+            return;
+        }
+
         const payload = {
             nickname,
-            phone: form.phone.value.trim(),
+            phone,
             email: form.email.value.trim(),
             emailConsent: form.emailConsent.checked,
             smsConsent: form.smsConsent.checked
