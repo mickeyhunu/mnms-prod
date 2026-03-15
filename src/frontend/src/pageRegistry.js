@@ -678,25 +678,19 @@ const pageRegistry = {
                     <div class="loading">로딩 중...</div>
                 </section>
 
-                <section class="support-link-section">
-                    <p class="support-link-section-title">고객센터</p>
-                    <div class="support-link-list">
-                        <a target="_blank" rel="noopener noreferrer" class="support-link-item" href="https://o3z16.channel.io/workflows/739947"><span>1:1 고객센터</span></a>
-                        <a class="support-link-item" href="/board/customer/faq-search"><span>FAQ</span></a>
-                        <a class="support-link-item" href="/board/customer/feedback"><span>피드백 보내기</span></a>
+                <section class="mypage-link-section">
+                    <p class="mypage-link-section-title">고객센터</p>
+                    <div class="mypage-link-list">
+                        <a target="_blank" rel="noopener noreferrer" class="mypage-link-item" href="https://o3z16.channel.io/workflows/739947"><span>1:1 고객센터</span></a>
+                        <a class="mypage-link-item" href="/board/customer/faq-search"><span>FAQ</span></a>
                     </div>
                 </section>
 
-                <div class="section-header">
-                    <h2>약관 및 정책</h2>
-                </div>
                 <div class="mypage-link-section">
-                    <p class="mypage-link-section-title">ABOUT 미드나잇테라스</p>
+                    <p class="mypage-link-section-title">ABOUT 미드나잇 맨즈</p>
                     <div class="mypage-link-list">
                         <a class="mypage-link-item" href="/board/about?type=notice"><span>공지사항</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a>
-                        <a class="mypage-link-item" href="/board/about?type=event"><span>이벤트</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a>
                         <a class="mypage-link-item" href="/board/terms"><span>약관 및 정책</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a>
-                        <a target="_blank" rel="noopener noreferrer" class="mypage-link-item" href="https://12terrace.com/board/notice/33"><span>미드나잇테라스 소개</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a>
                     </div>
                 </div>
             </div>
