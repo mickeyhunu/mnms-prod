@@ -220,6 +220,18 @@ async function listComments(postId) {
   return rows;
 }
 
+async function listAllCommentsForAdmin() {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.parent_id AS parentId, c.is_secret AS isSecret, c.is_deleted AS isDeleted, c.content, c.created_at AS createdAt,
+            COALESCE(u.nickname, '비회원') AS authorNickname
+     FROM comments c
+     LEFT JOIN users u ON u.id = c.user_id
+     ORDER BY c.created_at DESC`
+  );
+  return rows;
+}
+
 async function findCommentById(id) {
   const pool = getPool();
   const [rows] = await pool.query('SELECT * FROM comments WHERE id = ?', [id]);
@@ -376,6 +388,7 @@ module.exports = {
   deletePost,
   updatePostPointAwards,
   listComments,
+  listAllCommentsForAdmin,
   findCommentById,
   createComment,
   updateComment,

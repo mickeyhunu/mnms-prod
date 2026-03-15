@@ -27,6 +27,7 @@ const pageRegistry = {
             <div class="admin-tabs">
                 <button class="admin-tab active" data-tab="posts">게시글 관리</button>
                 <button class="admin-tab" data-tab="comments">댓글 관리</button>
+                <button class="admin-tab" data-tab="support">공지/FAQ 관리</button>
             </div>
 
             <div class="tab-content">
@@ -102,9 +103,81 @@ const pageRegistry = {
                         </table>
                     </div>
                 </div>
+
+                <div id="support-section" class="tab-pane hidden">
+                    <div class="section-header">
+                        <h2>공지사항 / FAQ 관리</h2>
+                        <div class="admin-stats">
+                            총 <span id="support-total">0</span>개
+                        </div>
+                    </div>
+
+                    <div class="admin-support-toolbar">
+                        <select id="support-category" class="form-control">
+                            <option value="NOTICE">공지사항</option>
+                            <option value="FAQ">FAQ</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm" id="support-new-btn">새 글 작성</button>
+                    </div>
+
+                    <div class="loading" id="support-loading">
+                        <div class="spinner"></div>
+                        <p>글을 불러오는 중...</p>
+                    </div>
+
+                    <div class="error-banner hidden" id="support-error">
+                        <p id="support-error-message"></p>
+                        <button class="btn btn-sm btn-primary" id="support-retry-btn">다시 시도</button>
+                    </div>
+
+                    <div class="admin-table-container hidden" id="support-content">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>구분</th>
+                                    <th>제목</th>
+                                    <th>작성일</th>
+                                    <th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="support-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
+
+    <div class="modal hidden" id="support-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="support-modal-title">공지/FAQ 작성</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="support-form-category">구분</label>
+                    <select id="support-form-category" class="form-control">
+                        <option value="NOTICE">공지사항</option>
+                        <option value="FAQ">FAQ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="support-form-title">제목</label>
+                    <input id="support-form-title" class="form-control" maxlength="255">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="support-form-content">내용</label>
+                    <textarea id="support-form-content" class="form-control" rows="8"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="support-cancel-btn">취소</button>
+                <button class="btn btn-primary" id="support-save-btn">저장</button>
+            </div>
+        </div>
+    </div>
 
     <div class="modal hidden" id="delete-modal">
         <div class="modal-content">
@@ -128,7 +201,7 @@ const pageRegistry = {
     <script src="scripts/js/api/apiClient.js"></script>
     <script src="scripts/js/pages/admin.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/admin.js", "scripts/js/components/footerNav.js"]
   },
   'bookmarks': {
@@ -689,14 +762,14 @@ const pageRegistry = {
                     <p class="mypage-link-section-title">고객센터</p>
                     <div class="mypage-link-list">
                         <a target="_blank" rel="noopener noreferrer" class="mypage-link-item" href="https://o3z16.channel.io/workflows/739947"><span>1:1 고객센터</span></a>
-                        <a class="mypage-link-item" href="/board/customer/faq-search"><span>FAQ</span></a>
+                        <a class="mypage-link-item" href="/support?tab=faq"><span>FAQ</span></a>
                     </div>
                 </section>
 
                 <div class="mypage-link-section">
                     <p class="mypage-link-section-title">ABOUT 미드나잇 맨즈</p>
                     <div class="mypage-link-list">
-                        <a class="mypage-link-item" href="/board/about?type=notice"><span>공지사항</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a>
+                        <a class="mypage-link-item" href="/support?tab=notice"><span>공지사항</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a>
                         <a class="mypage-link-item" href="/board/terms"><span>약관 및 정책</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a>
                     </div>
                 </div>
@@ -818,9 +891,9 @@ const pageRegistry = {
     <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">마이페이지</span></div></header>
     <section class="support-link-section"><p class="support-link-section-title">고객센터</p><div class="support-link-list">
     <a target="_blank" rel="noopener noreferrer" class="support-link-item" href="https://o3z16.channel.io/workflows/739947"><span>1:1 고객센터</span></a>
-    <a class="support-link-item" href="/board/customer/faq-search"><span>FAQ</span></a>
+    <a class="support-link-item" href="/support?tab=faq"><span>FAQ</span></a>
     <a class="support-link-item" href="/board/customer/feedback"><span>피드백 보내기</span></a>
-    </div></section><div class="section-header"><h2>약관 및 정책</h2></div><div class="mypage-link-section"><p class="mypage-link-section-title">ABOUT 미드나잇테라스</p><div class="mypage-link-list"><a class="mypage-link-item" href="/board/about?type=notice"><span>공지사항</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a class="mypage-link-item" href="/board/about?type=event"><span>이벤트</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a class="mypage-link-item" href="/board/terms"><span>약관 및 정책</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a target="_blank" rel="noopener noreferrer" class="mypage-link-item" href="https://12terrace.com/board/notice/33"><span>미드나잇테라스 소개</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a></div></div></div></main>
+    </div></section><div class="section-header"><h2>약관 및 정책</h2></div><div class="mypage-link-section"><p class="mypage-link-section-title">ABOUT 미드나잇테라스</p><div class="mypage-link-list"><a class="mypage-link-item" href="/support?tab=notice"><span>공지사항</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a class="mypage-link-item" href="/board/about?type=event"><span>이벤트</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a class="mypage-link-item" href="/board/terms"><span>약관 및 정책</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a target="_blank" rel="noopener noreferrer" class="mypage-link-item" href="https://12terrace.com/board/notice/33"><span>미드나잇테라스 소개</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a></div></div></div></main>
     <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/pages/myPage.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/myPage.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
@@ -828,10 +901,22 @@ const pageRegistry = {
   'my-page-policy': {
     template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
     <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><span class="community-board-name">마이페이지</span></div></header>
-    <div class="section-header"><h2>약관 및 정책</h2></div><div class="mypage-link-section"><p class="mypage-link-section-title">ABOUT 미드나잇테라스</p><div class="mypage-link-list"><a class="mypage-link-item" href="/board/about?type=notice"><span>공지사항</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a class="mypage-link-item" href="/board/about?type=event"><span>이벤트</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a class="mypage-link-item" href="/board/terms"><span>약관 및 정책</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a target="_blank" rel="noopener noreferrer" class="mypage-link-item" href="https://12terrace.com/board/notice/33"><span>미드나잇테라스 소개</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a></div></div><section class="support-link-section"><p class="support-link-section-title">고객센터</p><div class="support-link-list"><a target="_blank" rel="noopener noreferrer" class="support-link-item" href="https://o3z16.channel.io/workflows/739947"><span>1:1 고객센터</span></a><a class="support-link-item" href="/board/customer/faq-search"><span>FAQ</span></a><a class="support-link-item" href="/board/customer/feedback"><span>피드백 보내기</span></a></div></section></div></main>
+    <div class="section-header"><h2>약관 및 정책</h2></div><div class="mypage-link-section"><p class="mypage-link-section-title">ABOUT 미드나잇테라스</p><div class="mypage-link-list"><a class="mypage-link-item" href="/support?tab=notice"><span>공지사항</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a class="mypage-link-item" href="/board/about?type=event"><span>이벤트</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a class="mypage-link-item" href="/board/terms"><span>약관 및 정책</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a target="_blank" rel="noopener noreferrer" class="mypage-link-item" href="https://12terrace.com/board/notice/33"><span>미드나잇테라스 소개</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a></div></div><section class="support-link-section"><p class="support-link-section-title">고객센터</p><div class="support-link-list"><a target="_blank" rel="noopener noreferrer" class="support-link-item" href="https://o3z16.channel.io/workflows/739947"><span>1:1 고객센터</span></a><a class="support-link-item" href="/support?tab=faq"><span>FAQ</span></a><a class="support-link-item" href="/board/customer/feedback"><span>피드백 보내기</span></a></div></section></div></main>
     <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/pages/myPage.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/myPage.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
+  },
+
+  'support-board': {
+    template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
+    <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">공지사항 / FAQ</span></div></header>
+    <div class="admin-tabs"><button class="admin-tab active" data-tab="notice">공지사항</button><button class="admin-tab" data-tab="faq">FAQ</button></div>
+    <div class="loading" id="support-public-loading"><div class="spinner"></div><p>불러오는 중...</p></div>
+    <div class="error-banner hidden" id="support-public-error"><p id="support-public-error-message"></p></div>
+    <div id="support-public-list" class="hidden"></div></div></main>
+    <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/pages/supportBoard.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/supportBoard.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
   'post-detail': {
     template: `<header class="header">
