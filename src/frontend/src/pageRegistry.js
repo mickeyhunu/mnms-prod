@@ -683,6 +683,15 @@ const pageRegistry = {
                     <a class="mypage-menu-item" href="/my-page/policy"><span>약관 및 정책</span><span class="mypage-info-chevron" aria-hidden="true">›</span></a>
                     <a class="mypage-menu-item" href="/my-page/activity"><span>활동 내역 보기</span><span class="mypage-info-chevron" aria-hidden="true">›</span></a>
                 </section>
+
+                <section class="support-link-section">
+                    <p class="support-link-section-title">고객센터</p>
+                    <div class="support-link-list">
+                        <a target="_blank" rel="noopener noreferrer" class="support-link-item" href="https://o3z16.channel.io/workflows/739947"><span>1:1 고객센터</span></a>
+                        <a class="support-link-item" href="/board/customer/faq-search"><span>FAQ</span></a>
+                        <a class="support-link-item" href="/board/customer/feedback"><span>피드백 보내기</span></a>
+                    </div>
+                </section>
             </div>
 
         </div>
