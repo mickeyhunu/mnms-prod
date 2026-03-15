@@ -679,6 +679,13 @@ const pageRegistry = {
                 </section>
 
                 <section class="mypage-link-section">
+                    <p class="mypage-link-section-title">광고센터</p>
+                    <div class="mypage-link-list hidden" id="ad-center-section">
+                        <a class="mypage-link-item" href="/business-info"><span>광고센터 바로가기</span></a>
+                    </div>
+                </section>
+
+                <section class="mypage-link-section">
                     <p class="mypage-link-section-title">고객센터</p>
                     <div class="mypage-link-list">
                         <a target="_blank" rel="noopener noreferrer" class="mypage-link-item" href="https://o3z16.channel.io/workflows/739947"><span>1:1 고객센터</span></a>

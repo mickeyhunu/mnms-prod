@@ -36,6 +36,7 @@ async function initMyPage() {
         currentUser = await APIClient.get('/auth/me');
         Auth.setUser(currentUser);
         renderHeaderUser(currentUser);
+        renderAdCenterSection(currentUser);
         renderProfileForm(currentUser);
 
         if (window.location.pathname === '/my-page/profile') {
@@ -84,6 +85,25 @@ function renderHeaderUser(user) {
         if (user.isAdmin) adminLink.classList.remove('hidden');
         else adminLink.classList.add('hidden');
     }
+}
+
+function isAdAccount(user) {
+    if (!user) return false;
+
+    if (typeof user.isAdAccount === 'boolean') return user.isAdAccount;
+    if (typeof user.isAdvertiser === 'boolean') return user.isAdvertiser;
+
+    const role = String(user.role || '').toUpperCase();
+    const accountType = String(user.accountType || user.userType || '').toUpperCase();
+
+    return role === 'AD' || role === 'ADVERTISER' || accountType === 'AD' || accountType === 'ADVERTISER';
+}
+
+function renderAdCenterSection(user) {
+    const adCenterSection = document.getElementById('ad-center-section');
+    if (!adCenterSection) return;
+
+    adCenterSection.classList.toggle('hidden', !isAdAccount(user));
 }
 
 function renderProfileForm(user) {
