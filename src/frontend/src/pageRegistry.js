@@ -760,7 +760,9 @@ const pageRegistry = {
                 <span class="profile-consent-inline"><input type="checkbox" id="sms-consent" name="smsConsent"> SMS 수신 동의</span>
               </label>
             </div>
-            <button type="submit" class="btn btn-primary">저장</button>
+            <div class="profile-form-actions">
+              <button type="submit" class="btn btn-primary">저장</button>
+            </div>
             <p id="profile-save-result" class="help-text" role="status"></p>
           </form>
         </section>
