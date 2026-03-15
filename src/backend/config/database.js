@@ -13,7 +13,18 @@ const dbConfig = {
   charset: 'utf8mb4'
 };
 
+const chatbotDbConfig = {
+  host: process.env.CHATBOT_MYSQL_HOST || dbConfig.host,
+  port: Number(process.env.CHATBOT_MYSQL_PORT || dbConfig.port),
+  user: process.env.CHATBOT_MYSQL_USER || dbConfig.user,
+  password: process.env.CHATBOT_MYSQL_PASSWORD || dbConfig.password,
+  database: process.env.CHATBOT_MYSQL_DATABASE || 'chatbotdb',
+  connectionLimit: 10,
+  charset: 'utf8mb4'
+};
+
 let pool;
+let chatbotPool;
 
 async function initDatabase() {
   const bootstrap = await mysql.createConnection({
@@ -370,4 +381,17 @@ function getPool() {
   return pool;
 }
 
-module.exports = { dbConfig, initDatabase, getPool };
+function getChatbotPool() {
+  if (!chatbotPool) {
+    chatbotPool = mysql.createPool(chatbotDbConfig);
+  }
+  return chatbotPool;
+}
+
+module.exports = {
+  dbConfig,
+  chatbotDbConfig,
+  initDatabase,
+  getPool,
+  getChatbotPool
+};

@@ -11,6 +11,7 @@ const postRoutes = require('./src/backend/routes/postRoutes');
 const userRoutes = require('./src/backend/routes/userRoutes');
 const adminRoutes = require('./src/backend/routes/adminRoutes');
 const supportRoutes = require('./src/backend/routes/supportRoutes');
+const chatbotRoutes = require('./src/backend/routes/chatbotRoutes');
 
 const app = express();
 const PORT = Number(process.env.PORT || 8080);
@@ -35,6 +36,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/support', supportRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ message: 'Not Found' });
