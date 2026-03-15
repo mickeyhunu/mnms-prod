@@ -274,7 +274,7 @@ function bindProfileForm() {
             }
 
             alert('회원정보가 수정되었습니다.');
-            window.location.href = '/home';
+            window.location.href = '/';
         } catch (error) {
             setHelpMessage(result, error?.message || '저장에 실패했습니다. 입력값을 확인해 주세요.', '#dc3545');
         } finally {
