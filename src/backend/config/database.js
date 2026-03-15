@@ -339,6 +339,23 @@ async function initDatabase() {
     MODIFY COLUMN action_type ENUM('REGISTER','LOGIN_DAILY','CREATE_POST','CREATE_REVIEW_BONUS','CREATE_COMMENT','LIKE_POST','RECEIVE_POST_LIKE','REVOKE_CREATE_POST','REVOKE_CREATE_REVIEW_BONUS','REVOKE_CREATE_COMMENT','REVOKE_LIKE_POST','REVOKE_RECEIVE_POST_LIKE') NOT NULL
   `);
 
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS support_articles (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      category ENUM('NOTICE','FAQ') NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      content TEXT NOT NULL,
+      is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+      created_by BIGINT NULL,
+      updated_by BIGINT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+      FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
   const [adminRows] = await pool.query('SELECT id FROM users WHERE email = ?', ['admin@company.com']);
   if (!adminRows.length) {
     await pool.query(

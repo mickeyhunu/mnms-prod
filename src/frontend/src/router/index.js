@@ -22,7 +22,8 @@ const routes = [
   { path: '/admin', component: PageView, meta: { pageKey: 'admin' } },
   { path: '/find-account', component: PageView, meta: { pageKey: 'find-account' } },
   { path: '/business-info', component: PageView, meta: { pageKey: 'business-info' } },
-  { path: '/live', component: PageView, meta: { pageKey: 'live' } }
+  { path: '/live', component: PageView, meta: { pageKey: 'live' } },
+  { path: '/support', component: PageView, meta: { pageKey: 'support-board' } }
 ];
 
 const router = createRouter({
