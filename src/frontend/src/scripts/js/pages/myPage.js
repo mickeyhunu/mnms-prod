@@ -100,10 +100,13 @@ function isAdAccount(user) {
 }
 
 function renderAdCenterSection(user) {
+    const adCenterWrapper = document.getElementById('ad-center-wrapper');
     const adCenterSection = document.getElementById('ad-center-section');
-    if (!adCenterSection) return;
+    if (!adCenterWrapper || !adCenterSection) return;
 
-    adCenterSection.classList.toggle('hidden', !isAdAccount(user));
+    const shouldShow = isAdAccount(user);
+    adCenterWrapper.classList.toggle('hidden', !shouldShow);
+    adCenterSection.classList.toggle('hidden', !shouldShow);
 }
 
 function renderProfileForm(user) {
