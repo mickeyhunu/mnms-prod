@@ -435,11 +435,14 @@
     gap: 8px;
 }
 
-.profile-field-header {
+.profile-nickname-inline {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 8px;
+}
+
+.profile-nickname-inline input {
+    flex: 1;
 }
 
 .profile-field-title {

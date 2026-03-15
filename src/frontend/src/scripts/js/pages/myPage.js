@@ -4,6 +4,12 @@
 let currentUser = null;
 let nicknameCheckState = { checked: false, available: false, value: '' };
 
+function setHelpMessage(element, message, color) {
+    if (!element) return;
+    element.textContent = message;
+    if (color) element.style.color = color;
+}
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initMyPage);
 } else {
@@ -189,10 +195,7 @@ function bindProfileForm() {
         const passwordConfirm = form.passwordConfirm.value.trim();
 
         if (password && password !== passwordConfirm) {
-            if (result) {
-                result.textContent = '비밀번호와 비밀번호 확인이 일치하지 않습니다.';
-                result.style.color = '#dc3545';
-            }
+            setHelpMessage(passwordMatchResult, '비밀번호와 비밀번호 확인이 일치하지 않습니다.', '#dc3545');
             return;
         }
 
@@ -229,10 +232,7 @@ function bindProfileForm() {
 
         try {
             submitButton.disabled = true;
-            if (result) {
-                result.textContent = '저장 중입니다...';
-                result.style.color = '#6c757d';
-            }
+            setHelpMessage(result, '저장 중입니다...', '#6c757d');
 
             const response = await APIClient.put('/users/me', payload);
             if (response?.user) {
@@ -244,15 +244,16 @@ function bindProfileForm() {
                 if (nicknameCheckResult) nicknameCheckResult.textContent = '';
             }
 
-            if (result) {
-                result.textContent = response?.message || '내 정보가 저장되었습니다.';
-                result.style.color = '#198754';
+            if (password) {
+                alert('비밀번호가 변경되었습니다. 보안을 위해 다시 로그인해 주세요.');
+                Auth.logout();
+                return;
             }
+
+            alert('회원정보가 수정되었습니다.');
+            window.location.href = '/home';
         } catch (error) {
-            if (result) {
-                result.textContent = error?.message || '저장에 실패했습니다. 입력값을 확인해 주세요.';
-                result.style.color = '#dc3545';
-            }
+            setHelpMessage(result, error?.message || '저장에 실패했습니다. 입력값을 확인해 주세요.', '#dc3545');
         } finally {
             submitButton.disabled = false;
             form.password.value = '';
