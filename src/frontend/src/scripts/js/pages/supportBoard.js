@@ -44,8 +44,14 @@ async function loadArticles() {
         const rows = response.content || [];
 
         if (!rows.length) {
-            list.innerHTML = '<div class="card">등록된 글이 없습니다.</div>';
-        } else {
+            if (list) {
+                list.innerHTML = '<div class="card">등록된 글이 없습니다.</div>';
+                list.classList.remove('hidden');
+            }
+            return;
+        }
+
+        if (list) {
             list.innerHTML = rows.map((item) => `
                 <article class="card" style="margin-bottom:12px;">
                     <h3 style="margin-bottom:8px;">${sanitizeHTML(item.title || '')}</h3>
@@ -53,16 +59,15 @@ async function loadArticles() {
                     <div style="white-space:pre-wrap; line-height:1.6;">${sanitizeHTML(item.content || '')}</div>
                 </article>
             `).join('');
+            list.classList.remove('hidden');
         }
-
-        loading?.classList.add('hidden');
-        list?.classList.remove('hidden');
     } catch (error) {
-        loading?.classList.add('hidden');
         if (errorBox) {
             errorBox.classList.remove('hidden');
             const message = document.getElementById('support-public-error-message');
             if (message) message.textContent = error.message || '목록을 불러오지 못했습니다.';
         }
+    } finally {
+        loading?.classList.add('hidden');
     }
 }

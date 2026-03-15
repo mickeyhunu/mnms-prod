@@ -751,9 +751,9 @@ const pageRegistry = {
                     <div class="loading">로딩 중...</div>
                 </section>
 
-                <section class="mypage-link-section">
+                <section class="mypage-link-section hidden" id="ad-center-wrapper">
                     <p class="mypage-link-section-title">광고센터</p>
-                    <div class="mypage-link-list hidden" id="ad-center-section">
+                    <div class="mypage-link-list" id="ad-center-section">
                         <a class="mypage-link-item" href="/business-info"><span>광고센터 바로가기</span></a>
                     </div>
                 </section>
