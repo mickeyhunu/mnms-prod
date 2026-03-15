@@ -460,6 +460,12 @@
 .profile-nickname-actions .help-text {
     margin-top: 0;
 }
+
+.profile-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
 .consent-wrap {
     display: flex;
     gap: 16px;
