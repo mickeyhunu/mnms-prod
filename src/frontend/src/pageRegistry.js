@@ -756,7 +756,7 @@ const pageRegistry = {
                 <span class="profile-consent-inline"><input type="checkbox" id="email-consent" name="emailConsent"> 이메일 수신 동의</span>
               </label>
               <label>연락처
-                <input type="text" id="profile-phone" name="phone" placeholder="010-0000-0000">
+                <input type="tel" id="profile-phone" name="phone" placeholder="010-0000-0000" inputmode="numeric" pattern="01[0-9]-[0-9]{3,4}-[0-9]{4}" maxlength="13" title="010-0000-0000 형식으로 입력해 주세요.">
                 <span class="profile-consent-inline"><input type="checkbox" id="sms-consent" name="smsConsent"> SMS 수신 동의</span>
               </label>
             </div>
