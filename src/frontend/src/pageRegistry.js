@@ -757,6 +757,7 @@ const pageRegistry = {
               </label>
               <label>비밀번호 확인
                 <input type="password" id="profile-password-confirm" name="passwordConfirm" minlength="4" placeholder="비밀번호 재입력">
+                <small id="profile-password-match-result" class="help-text" role="status"></small>
               </label>
               <label>이름
                 <input type="text" id="profile-name" name="name" readonly>
@@ -768,7 +769,7 @@ const pageRegistry = {
                   <button type="button" class="btn btn-outline btn-sm hidden" id="nickname-check-btn">중복 확인</button>
                 </span>
                 <small id="nickname-check-result" class="help-text"></small>
-                <small id="profile-password-match-result" class="help-text" role="status"></small>
+                
               </label>
               <label>생년월일
                 <input type="text" id="profile-birth" name="birthDate" readonly>
@@ -778,7 +779,7 @@ const pageRegistry = {
                 <span class="profile-consent-inline"><input type="checkbox" id="email-consent" name="emailConsent"> 이메일 수신 동의</span>
               </label>
               <label>연락처
-                <input type="tel" id="profile-phone" name="phone" placeholder="010-0000-0000" inputmode="numeric" pattern="01[0-9]-[0-9]{3,4}-[0-9]{4}" maxlength="13" title="010-0000-0000 형식으로 입력해 주세요.">
+                <input type="text" id="profile-phone" name="phone" placeholder="010-0000-0000">
                 <span class="profile-consent-inline"><input type="checkbox" id="sms-consent" name="smsConsent"> SMS 수신 동의</span>
               </label>
             </div>
