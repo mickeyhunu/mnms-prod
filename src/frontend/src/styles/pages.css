@@ -633,18 +633,20 @@
 }
 
 .mypage-link-section {
-    background: #1d1d1d;
-    border: 1px solid #2c2f36;
+    background: #fff;
+    border: 1px solid #e9ecef;
     border-radius: 10px;
-    padding: 10px 16px;
-    margin-bottom: 14px;
+    padding: 0;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
 }
 
 .mypage-link-section-title {
-    color: #f3f4f6;
+    color: #111827;
     font-size: 16px;
     font-weight: 700;
-    padding: 12px 0;
+    padding: 16px;
 }
 
 .mypage-link-list {
@@ -656,11 +658,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 13px 0;
-    color: #d1d5db;
+    padding: 16px;
+    color: #111827;
     text-decoration: none;
-    font-size: 15px;
-    border-top: 1px solid #2c2f36;
+    font-size: 14px;
+    border-top: 1px solid #e8eaed;
 }
 
 .mypage-link-list .mypage-link-item:first-child {
@@ -668,11 +670,11 @@
 }
 
 .mypage-link-item:hover {
-    color: #ffffff;
+    background: #f8f9fa;
 }
 
 .mypage-link-chevron {
-    color: #8b9099;
+    color: #b3b7bf;
     font-size: 20px;
     line-height: 1;
 }
