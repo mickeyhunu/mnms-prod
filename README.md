@@ -43,6 +43,20 @@ npm run start
 - `MYSQL_PASSWORD=root`
 - `MYSQL_DATABASE=midnightmens`
 
+
+## chatbotdb 동시 사용 (별도 DB 풀)
+미드나잇맨즈 DB(`MYSQL_DATABASE`)와 별개로 chatbot DB를 동시에 연결할 수 있습니다.
+
+- 관리자 전용 API: `GET /api/chatbot/table?table=<테이블명>&limit=100`
+- 응답: 지정한 chatbotdb 테이블의 최신 행 목록
+
+추가 환경변수(미지정 시 메인 DB 설정값 상속):
+- `CHATBOT_MYSQL_HOST`
+- `CHATBOT_MYSQL_PORT`
+- `CHATBOT_MYSQL_USER`
+- `CHATBOT_MYSQL_PASSWORD`
+- `CHATBOT_MYSQL_DATABASE` (기본값: `chatbotdb`)
+
 ## 기본 관리자 계정
 - email: `admin@company.com`
 - password: `admin1234`
