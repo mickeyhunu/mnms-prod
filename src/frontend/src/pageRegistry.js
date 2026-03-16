@@ -870,16 +870,21 @@ const pageRegistry = {
     <form id="customer-service-form" class="customer-service-form" novalidate>
       <input type="hidden" id="inquiry-target-type" name="targetType" value="general">
       <input type="hidden" id="inquiry-target-id" name="targetId" value="">
-      <div class="form-group"><label for="inquiry-type">문의 유형</label><select id="inquiry-type" name="inquiryType" class="form-control" required><option value="">-- 유형 선택 --</option><option value="question">일반 문의</option><option value="post_report">게시글 신고</option><option value="comment_report">댓글 신고</option><option value="account">계정 문의</option><option value="etc">기타</option></select></div>
+      <div class="form-group"><label for="inquiry-type">문의 유형</label><select id="inquiry-type" name="inquiryType" class="form-control" required><option value="">-- 유형 선택 --</option><option value="question">일반 문의</option><option value="post_report">게시글 신고</option><option value="comment_report">댓글 신고</option><option value="account">계정 문의</option><option value="service_error">서비스 오류</option><option value="ad_inquiry">광고 문의</option><option value="etc">기타</option></select></div>
       <div class="form-group"><label for="inquiry-reason">신고/문의 사유</label><textarea id="inquiry-reason" name="content" class="form-control" rows="6" placeholder="상세 내용을 입력해주세요." required></textarea></div>
       <section class="customer-file-upload"><div class="file-upload-header">첨부파일</div><p class="file-upload-guide">* 파일 형식: JPG, PNG, GIF, WEBP, PDF (최대 50MB)</p>
         <div class="file-upload-item"><div class="file-input-wrapper"><input type="file" name="attachments[]" id="attachment_1" class="file-input" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,image/jpeg,image/png,image/gif,image/webp,application/pdf"><button type="button" class="cancel-button" data-target="attachment_1" aria-label="첫 번째 파일 제거">×</button></div></div>
         <div class="file-upload-item"><div class="file-input-wrapper"><input type="file" name="attachments[]" id="attachment_2" class="file-input" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,image/jpeg,image/png,image/gif,image/webp,application/pdf"><button type="button" class="cancel-button" data-target="attachment_2" aria-label="두 번째 파일 제거">×</button></div></div>
         <div class="file-upload-item"><div class="file-input-wrapper"><input type="file" name="attachments[]" id="attachment_3" class="file-input" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,image/jpeg,image/png,image/gif,image/webp,application/pdf"><button type="button" class="cancel-button" data-target="attachment_3" aria-label="세 번째 파일 제거">×</button></div></div>
       </section>
-      <p class="customer-service-note">처리 결과는 별도 답변이 제공되지 않을 수 있습니다. 추가 상담이 필요하신 경우 다시 문의해주세요.</p>
+      <p class="customer-service-note">문의는 즉시 답변드릴 수 있도록 노력하고 있습니다.<br><br>답변 시간: 24시간 (순차처리)</p>
       <button type="submit" class="btn btn-primary btn-block btn-round">접수하기</button>
-    </form></section></div></main>
+    </form>
+    <section class="my-inquiries-section">
+      <h3 class="my-inquiries-title">내 문의함</h3>
+      <p id="my-inquiries-empty" class="my-inquiries-empty">아직 접수된 문의가 없습니다.</p>
+      <div id="my-inquiries-list" class="my-inquiries-list"></div>
+    </section></section></div></main>
     <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/pages/customerService.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/pages/customerService.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
