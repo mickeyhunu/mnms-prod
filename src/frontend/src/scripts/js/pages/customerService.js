@@ -3,7 +3,6 @@
  */
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
-const MY_INQUIRIES_STORAGE_KEY = 'myCustomerServiceInquiries';
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initCustomerServicePage, { once: true });
@@ -21,30 +20,6 @@ function initCustomerServicePage() {
     bindFileValidation();
 
     form.addEventListener('submit', handleCustomerServiceSubmit);
-}
-
-function getMyInquiries() {
-    try {
-        const raw = localStorage.getItem(MY_INQUIRIES_STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : [];
-        return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-        console.warn('문의함 데이터를 불러오지 못했습니다.', error);
-        return [];
-    }
-}
-
-function saveMyInquiries(items) {
-    localStorage.setItem(MY_INQUIRIES_STORAGE_KEY, JSON.stringify(items));
-}
-
-function escapeHtml(value) {
-    return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
 }
 
 function applyTargetContextFromQuery() {
@@ -106,7 +81,7 @@ function validateFileUpload(fileInput) {
     return true;
 }
 
-function handleCustomerServiceSubmit(event) {
+async function handleCustomerServiceSubmit(event) {
     event.preventDefault();
 
     if (!Auth.requireAuth()) return;
@@ -115,13 +90,16 @@ function handleCustomerServiceSubmit(event) {
     const typeSelect = document.getElementById('inquiry-type');
     const titleInput = document.getElementById('inquiry-title');
     const contentInput = document.getElementById('inquiry-reason');
+    const targetTypeInput = document.getElementById('inquiry-target-type');
+    const targetIdInput = document.getElementById('inquiry-target-id');
 
-    const inquiryType = String(typeSelect?.value || '').trim();
-    const inquiryTypeLabel = typeSelect?.selectedOptions?.[0]?.textContent?.trim() || inquiryType;
+    const type = String(typeSelect?.value || '').trim();
     const title = String(titleInput?.value || '').trim();
     const content = String(contentInput?.value || '').trim();
+    const targetType = String(targetTypeInput?.value || '').trim();
+    const targetId = String(targetIdInput?.value || '').trim();
 
-    if (!inquiryType) {
+    if (!type) {
         showNotification('문의 유형을 선택해주세요.', 'warning');
         typeSelect?.focus();
         return;
@@ -140,28 +118,25 @@ function handleCustomerServiceSubmit(event) {
     }
 
     const invalidFile = Array.from(form.querySelectorAll('.file-input')).some((input) => !validateFileUpload(input));
-    if (invalidFile) {
-        return;
+    if (invalidFile) return;
+
+    try {
+        await APIClient.post('/support/inquiries', {
+            type,
+            title,
+            content,
+            targetType,
+            targetId
+        });
+
+        showNotification('문의가 접수되었습니다. 내 문의함에서 처리 상태를 확인할 수 있습니다.', 'success');
+        form.reset();
+        applyTargetContextFromQuery();
+
+        setTimeout(() => {
+            window.location.href = '/my-inquiries';
+        }, 700);
+    } catch (error) {
+        showNotification(error.message || '문의 접수에 실패했습니다.', 'error');
     }
-
-    const inquiries = getMyInquiries();
-    inquiries.unshift({
-        id: `inq_${Date.now()}`,
-        type: inquiryType,
-        typeLabel: inquiryTypeLabel,
-        title,
-        content,
-        status: 'pending',
-        answer: '',
-        createdAt: new Date().toISOString()
-    });
-    saveMyInquiries(inquiries.slice(0, 50));
-
-    showNotification('문의가 접수되었습니다. 내 문의함에서 처리 상태를 확인할 수 있습니다.', 'success');
-    form.reset();
-    applyTargetContextFromQuery();
-
-    setTimeout(() => {
-        window.location.href = '/my-inquiries';
-    }, 700);
 }

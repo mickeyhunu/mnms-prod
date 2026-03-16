@@ -31,6 +31,7 @@ const pageRegistry = {
                 <button class="admin-tab" data-tab="users">회원 관리</button>
                 <button class="admin-tab" data-tab="ads">광고 관리</button>
                 <button class="admin-tab" data-tab="support">공지/FAQ 관리</button>
+                <button class="admin-tab" data-tab="inquiries">1:1 문의 관리</button>
             </div>
 
             <div class="tab-content">
@@ -75,6 +76,16 @@ const pageRegistry = {
                         <table class="admin-table"><thead><tr><th>ID</th><th>구분</th><th>제목</th><th>작성일</th><th>관리</th></tr></thead><tbody id="support-tbody"></tbody></table>
                     </div>
                 </div>
+
+                <div id="inquiries-section" class="tab-pane hidden">
+                    <div class="admin-support-toolbar"><select id="inquiries-status" class="form-control"><option value="">전체</option><option value="PENDING">대기</option><option value="ANSWERED">답변완료</option></select></div>
+                    <div class="loading" id="inquiries-loading"><div class="spinner"></div><p>문의를 불러오는 중...</p></div>
+                    <div class="error-banner hidden" id="inquiries-error"><p id="inquiries-error-message"></p><button class="btn btn-sm btn-primary" id="inquiries-retry-btn">다시 시도</button></div>
+                    <div class="admin-table-container hidden" id="inquiries-content">
+                        <table class="admin-table"><thead><tr><th>ID</th><th>회원</th><th>유형</th><th>제목</th><th>상태</th><th>접수일</th><th>관리</th></tr></thead><tbody id="inquiries-tbody"></tbody></table>
+                    </div>
+                </div>
+                </div>
             </div>
         </div>
     </main>
@@ -88,6 +99,19 @@ const pageRegistry = {
                 <div class="form-group"><label class="form-label" for="support-form-content">내용</label><textarea id="support-form-content" class="form-control" rows="8"></textarea></div>
             </div>
             <div class="modal-footer"><button class="btn btn-secondary" id="support-cancel-btn">취소</button><button class="btn btn-primary" id="support-save-btn">저장</button></div>
+        </div>
+    </div>
+
+
+
+    <div class="modal hidden" id="inquiry-answer-modal">
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="inquiry-answer-modal-title">문의 답변</h3></div>
+            <div class="modal-body">
+                <p id="inquiry-answer-target" class="text-muted"></p>
+                <div class="form-group"><label class="form-label" for="inquiry-answer-content">답변 내용</label><textarea id="inquiry-answer-content" class="form-control" rows="8"></textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" id="inquiry-answer-cancel-btn">취소</button><button class="btn btn-primary" id="inquiry-answer-save-btn">답변 저장</button></div>
         </div>
     </div>
 
