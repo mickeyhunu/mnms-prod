@@ -50,7 +50,7 @@ async function listAdminArticles(req, res, next) {
 
 async function createArticle(req, res, next) {
   try {
-    const category = supportModel.normalizeCategory(req.body.category);
+    const category = supportModel.normalizeCategory(req.body.category) || supportModel.SUPPORT_CATEGORIES.NOTICE;
     const title = String(req.body.title || '').trim();
     const content = String(req.body.content || '').trim();
 
@@ -79,11 +79,12 @@ async function updateArticle(req, res, next) {
     const article = await supportModel.findArticleById(id);
     if (!article || article.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
 
+    const category = supportModel.normalizeCategory(req.body.category) || article.category;
     const title = String(req.body.title ?? article.title).trim();
     const content = String(req.body.content ?? article.content).trim();
     if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
 
-    await supportModel.updateArticle(id, { title, content, userId: req.user.id });
+    await supportModel.updateArticle(id, { category, title, content, userId: req.user.id });
     res.json({ success: true });
   } catch (error) {
     next(error);

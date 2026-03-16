@@ -71,11 +71,12 @@ async function createArticle({ category, title, content, userId }) {
   return result.insertId;
 }
 
-async function updateArticle(id, { title, content, userId }) {
+async function updateArticle(id, { category, title, content, userId }) {
   const pool = getPool();
+  const normalizedCategory = normalizeCategory(category) || SUPPORT_CATEGORIES.NOTICE;
   await pool.query(
-    'UPDATE support_articles SET title = ?, content = ?, updated_by = ? WHERE id = ?',
-    [title, content, userId, id]
+    'UPDATE support_articles SET category = ?, title = ?, content = ?, updated_by = ? WHERE id = ?',
+    [normalizedCategory, title, content, userId, id]
   );
 }
 

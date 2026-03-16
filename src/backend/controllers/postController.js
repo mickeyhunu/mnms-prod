@@ -226,11 +226,18 @@ async function createPost(req, res, next) {
     if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
 
     const boardType = parseBoardType(req.body.boardType);
+    const isAdmin = req.user.role === 'ADMIN';
+    const isNotice = isAdmin ? Boolean(req.body.isNotice) : false;
+    const noticeType = isNotice ? parseNoticeType(req.body.noticeType) || 'NOTICE' : null;
+    const isPinned = isNotice && isAdmin ? Boolean(req.body.isPinned) : false;
     const postId = await postModel.createPost({
       userId: req.user.id,
       title,
       content,
-      boardType
+      boardType,
+      isNotice,
+      noticeType,
+      isPinned
     });
     const post = await postModel.findPostById(postId);
     const createPostPointResult = await awardPointByAction(req.user.id, 'CREATE_POST');
@@ -265,7 +272,14 @@ async function updatePost(req, res, next) {
 
     await postModel.updatePost(postId, {
       title: req.body.title ?? post.title,
-      content: req.body.content ?? post.content
+      content: req.body.content ?? post.content,
+      isNotice: req.user.role === 'ADMIN' ? Boolean(req.body.isNotice) : Boolean(post.is_notice),
+      noticeType: req.user.role === 'ADMIN'
+        ? (Boolean(req.body.isNotice) ? (parseNoticeType(req.body.noticeType) || 'NOTICE') : null)
+        : post.notice_type,
+      isPinned: req.user.role === 'ADMIN'
+        ? (Boolean(req.body.isNotice) && Boolean(req.body.isPinned))
+        : Boolean(post.is_pinned)
     });
 
     const updated = await postModel.findPostById(postId);
