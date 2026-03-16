@@ -29,6 +29,18 @@ function getStatusInfo(status) {
     return { text: '대기', className: '' };
 }
 
+function getInquiryTypeLabel(type) {
+    const normalized = String(type || '').toLowerCase();
+    if (normalized === 'post_report') return '게시글 신고';
+    if (normalized === 'comment_report') return '댓글 신고';
+    if (normalized === 'question') return '일반 문의';
+    if (normalized === 'account') return '계정 문의';
+    if (normalized === 'service_error') return '서비스 오류';
+    if (normalized === 'ad_inquiry') return '광고 문의';
+    if (normalized === 'etc' || normalized === 'other') return '기타';
+    return '기타';
+}
+
 async function renderMyInquiries() {
     const listContainer = document.getElementById('my-inquiries-list');
     const emptyMessage = document.getElementById('my-inquiries-empty');
@@ -50,7 +62,7 @@ async function renderMyInquiries() {
         const rows = inquiries.map((inquiry) => {
             const status = getStatusInfo(inquiry.status);
             const createdAt = inquiry.createdAt ? formatDate(inquiry.createdAt) : '-';
-            const type = escapeHtml(inquiry.type || '기타');
+            const type = escapeHtml(getInquiryTypeLabel(inquiry.type));
             const title = escapeHtml(inquiry.title || '제목 없음');
             const href = `/my-inquiries/${encodeURIComponent(inquiry.id)}`;
 
