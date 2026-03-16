@@ -23,6 +23,19 @@
     });
 
     document.addEventListener('click', (event) => {
+        const backLink = event.target.closest('.community-back-link');
+        if (backLink) {
+            event.preventDefault();
+
+            if (window.history.length > 1) {
+                window.history.back();
+                return;
+            }
+
+            window.location.href = backLink.getAttribute('href') || '/';
+            return;
+        }
+
         if (tabsPanel.classList.contains('hidden')) {
             return;
         }
