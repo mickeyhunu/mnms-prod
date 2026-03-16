@@ -92,7 +92,8 @@ async function loadPosts() {
     try {
         const response = await APIClient.get('/admin/posts');
         const posts = response.content || [];
-        document.getElementById('posts-total').textContent = response.totalElements || posts.length;
+        const postsTotal = document.getElementById('posts-total');
+        if (postsTotal) postsTotal.textContent = response.totalElements || posts.length;
 
         const tbody = document.getElementById('posts-tbody');
         if (!posts.length) {
