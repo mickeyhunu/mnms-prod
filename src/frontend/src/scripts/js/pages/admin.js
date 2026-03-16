@@ -92,7 +92,8 @@ async function loadPosts() {
     try {
         const response = await APIClient.get('/admin/posts');
         const posts = response.content || [];
-        document.getElementById('posts-total').textContent = response.totalElements || posts.length;
+        const postsTotal = document.getElementById('posts-total');
+        if (postsTotal) postsTotal.textContent = response.totalElements || posts.length;
 
         const tbody = document.getElementById('posts-tbody');
         if (!posts.length) {
@@ -122,7 +123,8 @@ async function loadComments() {
     try {
         const response = await APIClient.get('/admin/comments');
         const comments = response.content || [];
-        document.getElementById('comments-total').textContent = response.totalElements || comments.length;
+        const commentsTotal = document.getElementById('comments-total');
+        if (commentsTotal) commentsTotal.textContent = response.totalElements || comments.length;
 
         const tbody = document.getElementById('comments-tbody');
         if (!comments.length) {
@@ -156,7 +158,8 @@ async function loadUsers() {
     try {
         const response = await APIClient.get('/admin/users');
         const users = response.content || [];
-        document.getElementById('users-total').textContent = response.totalElements || users.length;
+        const usersTotal = document.getElementById('users-total');
+        if (usersTotal) usersTotal.textContent = response.totalElements || users.length;
 
         const tbody = document.getElementById('users-tbody');
         if (!users.length) {
@@ -207,7 +210,8 @@ async function loadAds() {
     try {
         const response = await APIClient.get('/admin/ads');
         const ads = response.content || [];
-        document.getElementById('ads-total').textContent = response.totalElements || ads.length;
+        const adsTotal = document.getElementById('ads-total');
+        if (adsTotal) adsTotal.textContent = response.totalElements || ads.length;
 
         const tbody = document.getElementById('ads-tbody');
         if (!ads.length) {
@@ -292,7 +296,8 @@ async function loadSupportArticles() {
     try {
         const response = await APIClient.get('/admin/support', { category: currentSupportCategory });
         const articles = response.content || [];
-        document.getElementById('support-total').textContent = response.totalElements || articles.length;
+        const supportTotal = document.getElementById('support-total');
+        if (supportTotal) supportTotal.textContent = response.totalElements || articles.length;
 
         const tbody = document.getElementById('support-tbody');
         if (!articles.length) {
