@@ -2,7 +2,6 @@
  * 파일 역할: 공지사항/FAQ 요청을 처리하는 컨트롤러 파일.
  */
 const supportModel = require('../models/supportModel');
-const postModel = require('../models/postModel');
 
 function parseId(value) {
   const id = Number.parseInt(value, 10);
@@ -24,24 +23,6 @@ async function getPublicArticleDetail(req, res, next) {
   try {
     const id = parseId(req.params.id);
     if (!id) return res.status(400).json({ message: '유효하지 않은 글 ID입니다.' });
-
-    const sourceType = String(req.query.sourceType || '').toUpperCase();
-
-    if (sourceType === 'POST') {
-      const post = await postModel.findPostDetailById(id);
-      if (!post || post.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
-
-      return res.json({
-        id: post.id,
-        sourceType: 'POST',
-        category: 'NOTICE',
-        title: post.title,
-        content: post.content,
-        createdAt: post.createdAt,
-        updatedAt: post.updatedAt,
-        createdByNickname: post.authorNickname || '운영팀'
-      });
-    }
 
     const article = await supportModel.findPublicArticleDetailById(id);
     if (!article) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
@@ -95,20 +76,6 @@ async function updateArticle(req, res, next) {
     const id = parseId(req.params.id);
     if (!id) return res.status(400).json({ message: '유효하지 않은 글 ID입니다.' });
 
-    const sourceType = String(req.query.sourceType || req.body.sourceType || 'SUPPORT').toUpperCase();
-
-    if (sourceType === 'POST') {
-      const post = await postModel.findPostByIdIncludingDeleted(id);
-      if (!post || post.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
-
-      const title = String(req.body.title ?? post.title).trim();
-      const content = String(req.body.content ?? post.content).trim();
-      if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
-
-      await postModel.updatePost(id, { title, content });
-      return res.json({ success: true });
-    }
-
     const article = await supportModel.findArticleById(id);
     if (!article || article.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
 
@@ -127,16 +94,6 @@ async function deleteArticle(req, res, next) {
   try {
     const id = parseId(req.params.id);
     if (!id) return res.status(400).json({ message: '유효하지 않은 글 ID입니다.' });
-
-    const sourceType = String(req.query.sourceType || req.body.sourceType || 'SUPPORT').toUpperCase();
-
-    if (sourceType === 'POST') {
-      const post = await postModel.findPostByIdIncludingDeleted(id);
-      if (!post || post.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
-
-      await postModel.deletePost(id);
-      return res.json({ success: true });
-    }
 
     const article = await supportModel.findArticleById(id);
     if (!article || article.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });

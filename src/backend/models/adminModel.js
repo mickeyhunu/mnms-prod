@@ -6,8 +6,9 @@ const { getPool } = require('../config/database');
 async function listUsers() {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT id, email, nickname, role, total_points AS totalPoints, created_at AS createdAt
+    `SELECT id, email, nickname, role, member_type AS memberType, total_points AS totalPoints, created_at AS createdAt
      FROM users
+     WHERE role = 'USER'
      ORDER BY created_at DESC, id DESC`
   );
   return rows;
@@ -22,6 +23,12 @@ async function findUserById(userId) {
 async function updateUserRole(userId, role) {
   const pool = getPool();
   await pool.query('UPDATE users SET role = ? WHERE id = ?', [role, userId]);
+}
+
+
+async function updateUserMemberType(userId, memberType) {
+  const pool = getPool();
+  await pool.query('UPDATE users SET member_type = ? WHERE id = ?', [memberType, userId]);
 }
 
 async function deleteUser(userId) {
@@ -75,6 +82,7 @@ module.exports = {
   listUsers,
   findUserById,
   updateUserRole,
+  updateUserMemberType,
   deleteUser,
   listAds,
   createAd,
