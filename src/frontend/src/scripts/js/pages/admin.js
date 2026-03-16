@@ -153,8 +153,8 @@ async function loadSupportArticles() {
                     <td>${sanitizeHTML(item.title || '')}</td>
                     <td>${formatDate(item.createdAt || item.created_at)}</td>
                     <td>
-                        <button class="btn btn-sm btn-secondary" onclick="openSupportModal(${item.id})">수정</button>
-                        <button class="btn btn-sm btn-danger" onclick="openDeleteModal('support', ${item.id})">삭제</button>
+                        <button class="btn btn-sm btn-secondary" onclick="openSupportModal(${item.sourceId || item.id}, '${item.sourceType || 'SUPPORT'}')">수정</button>
+                        <button class="btn btn-sm btn-danger" onclick="openDeleteModal('support', ${item.sourceId || item.id}, '${item.sourceType || 'SUPPORT'}')">삭제</button>
                     </td>
                 </tr>
             `).join('');
@@ -166,7 +166,7 @@ async function loadSupportArticles() {
     }
 }
 
-async function openSupportModal(id = null) {
+async function openSupportModal(id = null, sourceType = 'SUPPORT') {
     supportEditTarget = null;
     const titleEl = document.getElementById('support-modal-title');
     const categoryEl = document.getElementById('support-form-category');
@@ -182,13 +182,13 @@ async function openSupportModal(id = null) {
         contentEl.value = '';
     } else {
         const response = await APIClient.get('/admin/support', { category: currentSupportCategory });
-        const target = (response.content || []).find((item) => Number(item.id) === Number(id));
+        const target = (response.content || []).find((item) => Number(item.sourceId || item.id) === Number(id) && String(item.sourceType || 'SUPPORT') === String(sourceType || 'SUPPORT'));
         if (!target) {
             alert('글을 찾을 수 없습니다.');
             return;
         }
 
-        supportEditTarget = target.id;
+        supportEditTarget = { id: Number(target.sourceId || target.id), sourceType: String(target.sourceType || 'SUPPORT') };
         titleEl.textContent = '공지/FAQ 수정';
         categoryEl.value = target.category;
         subjectEl.value = target.title || '';
@@ -215,7 +215,7 @@ async function saveSupportArticle() {
 
     try {
         if (supportEditTarget) {
-            await APIClient.put(`/admin/support/${supportEditTarget}`, { category, title, content });
+            await APIClient.put(`/admin/support/${supportEditTarget.id}?sourceType=${encodeURIComponent(supportEditTarget.sourceType)}`, { category, title, content, sourceType: supportEditTarget.sourceType });
         } else {
             await APIClient.post('/admin/support', { category, title, content });
         }
@@ -280,8 +280,8 @@ function showError(prefix, message) {
     if (errorBox) errorBox.classList.remove('hidden');
 }
 
-function openDeleteModal(type, id) {
-    deleteTarget = { type, id };
+function openDeleteModal(type, id, sourceType = 'SUPPORT') {
+    deleteTarget = { type, id, sourceType };
     const modal = document.getElementById('delete-modal');
     const title = document.getElementById('delete-modal-title');
     const message = document.getElementById('delete-modal-message');
@@ -316,7 +316,7 @@ async function confirmDelete() {
             await APIClient.delete(`/admin/comments/${deleteTarget.id}`);
             await loadComments();
         } else {
-            await APIClient.delete(`/admin/support/${deleteTarget.id}`);
+            await APIClient.delete(`/admin/support/${deleteTarget.id}?sourceType=${encodeURIComponent(deleteTarget.sourceType || 'SUPPORT')}`);
             await loadSupportArticles();
         }
         closeDeleteModal();
