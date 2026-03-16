@@ -443,14 +443,12 @@ async function handleSharePost() {
 function reportPost() {
     if (!Auth.requireAuth()) return;
 
-    const confirmed = confirm('이 게시글을 신고하시겠습니까?');
-    if (!confirmed) return;
-
-    showNotification('게시글 신고가 접수되었습니다.', 'success');
     const menu = document.getElementById('post-more-menu');
     if (menu) {
         menu.classList.add('hidden');
     }
+
+    window.location.href = `/customer-service?type=post&targetId=${encodeURIComponent(postId)}`;
 }
 
 function renderAdjacentPosts(previousPost, nextPost) {
@@ -855,12 +853,7 @@ function openCommentMessageModal(authorId, authorNickname) {
 function reportComment(commentId) {
     if (!Auth.requireAuth()) return;
 
-    const confirmed = confirm('이 댓글을 신고하시겠습니까?');
-    if (!confirmed) {
-        return;
-    }
-
-    showNotification('댓글 신고가 접수되었습니다.', 'success');
+    window.location.href = `/customer-service?type=comment&targetId=${encodeURIComponent(commentId)}`;
 }
 
 async function handleToggleLike() {

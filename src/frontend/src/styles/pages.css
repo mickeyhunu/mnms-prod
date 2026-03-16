@@ -1107,3 +1107,113 @@
     font-weight: 600;
     color: #5a6474;
 }
+
+.customer-service-page {
+    max-width: 760px;
+}
+
+.customer-service-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.customer-service-intro h2 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    color: #111827;
+}
+
+.customer-service-intro p {
+    margin: 0 0 16px;
+    color: #4b5563;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.customer-service-form {
+    display: grid;
+    gap: 16px;
+}
+
+.customer-service-form .form-group {
+    display: grid;
+    gap: 8px;
+}
+
+.customer-service-form label {
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 14px;
+}
+
+.customer-service-form .form-control {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 14px;
+    color: #1f2937;
+    background: #fff;
+}
+
+.customer-service-form .form-control:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.customer-file-upload {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #f8fafc;
+    padding: 14px;
+}
+
+.customer-file-upload .file-upload-header {
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.customer-file-upload .file-upload-guide {
+    margin: 0 0 10px;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.customer-file-upload .file-upload-item + .file-upload-item {
+    margin-top: 8px;
+}
+
+.customer-file-upload .file-input-wrapper {
+    display: flex;
+    gap: 8px;
+}
+
+.customer-file-upload .file-input {
+    flex: 1;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 8px;
+    background: #fff;
+}
+
+.customer-file-upload .cancel-button {
+    min-width: 34px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+    color: #475569;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.customer-service-note {
+    margin: 0;
+    font-size: 13px;
+    color: #6b7280;
+}
