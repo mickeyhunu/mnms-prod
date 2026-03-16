@@ -33,46 +33,7 @@ async function listArticles(category, includeDeleted = false) {
     [normalizedCategory]
   );
 
-  if (normalizedCategory !== SUPPORT_CATEGORIES.NOTICE) {
-    return rows;
-  }
-
-  const postDeletedFilter = includeDeleted ? '' : 'AND p.is_deleted = 0';
-  const [adminNoticePosts] = await pool.query(
-    `SELECT p.id, p.id AS sourceId, 'POST' AS sourceType,
-            'NOTICE' AS category, p.title, p.content,
-            p.user_id AS createdBy, p.user_id AS updatedBy,
-            p.created_at AS createdAt, p.updated_at AS updatedAt,
-            COALESCE(u.nickname, '관리자') AS createdByNickname,
-            COALESCE(u.nickname, '관리자') AS updatedByNickname
-     FROM posts p
-     LEFT JOIN users u ON u.id = p.user_id
-     WHERE (
-         p.is_notice = 1
-         OR EXISTS (
-           SELECT 1
-           FROM users au
-           WHERE au.id = p.user_id
-             AND au.role = 'ADMIN'
-         )
-       )
-       ${postDeletedFilter}
-     ORDER BY p.created_at DESC, p.id DESC`
-  );
-
-  const mergedRows = [...rows, ...adminNoticePosts]
-    .sort((a, b) => {
-      const aTime = new Date(a.createdAt || a.created_at || 0).getTime();
-      const bTime = new Date(b.createdAt || b.created_at || 0).getTime();
-
-      if (aTime !== bTime) {
-        return bTime - aTime;
-      }
-
-      return Number(b.id || 0) - Number(a.id || 0);
-    });
-
-  return mergedRows;
+  return rows;
 }
 
 async function findArticleById(id) {

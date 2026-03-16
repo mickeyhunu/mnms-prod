@@ -47,6 +47,7 @@ async function initDatabase() {
       password VARCHAR(255) NOT NULL,
       nickname VARCHAR(255) NOT NULL UNIQUE,
       role ENUM('USER','ADMIN') NOT NULL DEFAULT 'USER',
+      member_type ENUM('GENERAL','ADVERTISER') NOT NULL DEFAULT 'GENERAL',
       total_points BIGINT NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
@@ -64,6 +65,21 @@ async function initDatabase() {
 
   if (!totalPointsColumn.length) {
     await pool.query('ALTER TABLE users ADD COLUMN total_points BIGINT NOT NULL DEFAULT 0 AFTER role');
+  }
+
+
+  const [memberTypeColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'users'
+       AND COLUMN_NAME = 'member_type'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!memberTypeColumn.length) {
+    await pool.query("ALTER TABLE users ADD COLUMN member_type ENUM('GENERAL','ADVERTISER') NOT NULL DEFAULT 'GENERAL' AFTER role");
   }
 
   const userColumnDefinitions = [
@@ -414,8 +430,8 @@ async function initDatabase() {
   const [adminRows] = await pool.query('SELECT id FROM users WHERE email = ?', ['admin@company.com']);
   if (!adminRows.length) {
     await pool.query(
-      'INSERT INTO users (email, password, nickname, role) VALUES (?, ?, ?, ?)',
-      ['admin@company.com', 'admin1234', '관리자001', 'ADMIN']
+      'INSERT INTO users (email, password, nickname, role, member_type) VALUES (?, ?, ?, ?, ?)',
+      ['admin@company.com', 'admin1234', '관리자001', 'ADMIN', 'GENERAL']
     );
   }
 }

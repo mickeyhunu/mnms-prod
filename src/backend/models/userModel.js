@@ -3,11 +3,11 @@
  */
 const { getPool } = require('../config/database');
 
-async function createUser({ email, password, nickname }) {
+async function createUser({ email, password, nickname, memberType = 'GENERAL' }) {
   const pool = getPool();
   const [result] = await pool.query(
-    'INSERT INTO users (email, password, nickname, role, total_points) VALUES (?, ?, ?, ?, ?)',
-    [email, password, nickname, 'USER', 0]
+    'INSERT INTO users (email, password, nickname, role, member_type, total_points) VALUES (?, ?, ?, ?, ?, ?)',
+    [email, password, nickname, 'USER', memberType, 0]
   );
   return result.insertId;
 }
