@@ -701,6 +701,10 @@
     padding: 14px 12px 22px;
 }
 
+.mypage-linked-container {
+    padding: 14px 12px 22px;
+}
+
 .mypage-mobile-title {
     color: #111827;
     font-size: 18px;
@@ -1118,6 +1122,32 @@
     border-radius: 16px;
     padding: 14px 12px 22px;
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.mypage-linked-container .community-section-header {
+    margin: 0 0 12px;
+}
+
+.mypage-linked-container #support-public-list {
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.mypage-linked-container #support-public-list .notice-list {
+    gap: 0;
+}
+
+.mypage-linked-container #support-public-list .notice-item {
+    border: 0;
+    border-top: 1px solid #e8eaed;
+    border-radius: 0;
+    padding: 16px;
+}
+
+.mypage-linked-container #support-public-list .notice-list .notice-item:first-child {
+    border-top: 0;
 }
 
 .customer-service-intro h2 {
