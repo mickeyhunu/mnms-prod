@@ -112,6 +112,16 @@
         align-items: flex-start;
     }
 
+
+    .admin-support-toolbar {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .admin-support-toolbar-right {
+        justify-content: flex-start;
+    }
+
     .admin-table-container {
         font-size: 14px;
     }

@@ -79,6 +79,12 @@ function bindCommonEvents() {
     document.getElementById('support-save-btn')?.addEventListener('click', saveSupportArticle);
 
     document.getElementById('ads-new-btn')?.addEventListener('click', () => openAdEditor());
+
+    document.getElementById('posts-tbody')?.addEventListener('click', handleAdminTableActionClick);
+    document.getElementById('comments-tbody')?.addEventListener('click', handleAdminTableActionClick);
+    document.getElementById('users-tbody')?.addEventListener('click', handleAdminTableActionClick);
+    document.getElementById('ads-tbody')?.addEventListener('click', handleAdminTableActionClick);
+    document.getElementById('support-tbody')?.addEventListener('click', handleAdminTableActionClick);
 }
 
 async function loadPosts() {
@@ -100,7 +106,7 @@ async function loadPosts() {
                     <td>${formatDate(post.createdAt || post.created_at)}</td>
                     <td>${post.likeCount || 0}</td>
                     <td>${post.commentCount || 0}</td>
-                    <td><button class="btn btn-sm btn-danger" onclick="openDeleteModal('post', ${post.id})">삭제</button></td>
+                    <td><button class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="post" data-target-id="${post.id}">삭제</button></td>
                 </tr>
             `).join('');
         }
@@ -134,7 +140,7 @@ async function loadComments() {
                     <td><a href="/post-detail?id=${comment.postId || comment.post_id}" target="_blank">게시글 보기</a></td>
                     <td>${sanitizeHTML(comment.authorNickname || `사용자#${comment.user_id || comment.userId}`)}</td>
                     <td>${formatDate(comment.createdAt || comment.created_at)}</td>
-                    <td><button class="btn btn-sm btn-danger" onclick="openDeleteModal('comment', ${comment.id})">삭제</button></td>
+                    <td><button class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="comment" data-target-id="${comment.id}">삭제</button></td>
                 </tr>
             `).join('');
         }
@@ -171,8 +177,8 @@ async function loadUsers() {
                     </td>
                     <td>${user.isCurrentUser ? '내 계정' : '-'}</td>
                     <td>
-                        <button class="btn btn-sm btn-secondary" onclick="updateUserRole(${user.id})">권한저장</button>
-                        <button class="btn btn-sm btn-danger" ${user.isCurrentUser ? 'disabled' : ''} onclick="openDeleteModal('user', ${user.id})">삭제</button>
+                        <button class="btn btn-sm btn-secondary" data-admin-action="save-user-role" data-target-id="${user.id}">권한저장</button>
+                        <button class="btn btn-sm btn-danger" ${user.isCurrentUser ? 'disabled' : ''} data-admin-action="delete" data-target-type="user" data-target-id="${user.id}">삭제</button>
                     </td>
                 </tr>
             `).join('');
@@ -217,8 +223,8 @@ async function loadAds() {
                     <td>${formatDate(ad.createdAt || ad.created_at)}</td>
                     <td>${formatDate(ad.updatedAt || ad.updated_at)}</td>
                     <td>
-                        <button class="btn btn-sm btn-secondary" onclick="openAdEditor(${ad.id})">수정</button>
-                        <button class="btn btn-sm btn-danger" onclick="openDeleteModal('ad', ${ad.id})">삭제</button>
+                        <button class="btn btn-sm btn-secondary" data-admin-action="edit-ad" data-target-id="${ad.id}">수정</button>
+                        <button class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="ad" data-target-id="${ad.id}">삭제</button>
                     </td>
                 </tr>
             `).join('');
@@ -299,8 +305,8 @@ async function loadSupportArticles() {
                     <td>${sanitizeHTML(article.title || '')}</td>
                     <td>${formatDate(article.createdAt || article.created_at)}</td>
                     <td>
-                        <button class="btn btn-sm btn-secondary" onclick="openSupportModal(${article.sourceId || article.id}, '${article.sourceType || 'SUPPORT'}')">수정</button>
-                        <button class="btn btn-sm btn-danger" onclick="openDeleteModal('support', ${article.sourceId || article.id}, '${article.sourceType || 'SUPPORT'}')">삭제</button>
+                        <button class="btn btn-sm btn-secondary" data-admin-action="edit-support" data-target-id="${article.sourceId || article.id}" data-source-type="${article.sourceType || 'SUPPORT'}">수정</button>
+                        <button class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="support" data-target-id="${article.sourceId || article.id}" data-source-type="${article.sourceType || 'SUPPORT'}">삭제</button>
                     </td>
                 </tr>
             `).join('');
@@ -321,6 +327,7 @@ async function openSupportModal(id = null, sourceType = 'SUPPORT') {
     if (!categoryEl || !subjectEl || !contentEl) return;
 
     if (!id) {
+        supportEditTarget = null;
         titleEl.textContent = '공지/FAQ 작성';
         categoryEl.value = currentSupportCategory;
         subjectEl.value = '';
@@ -341,6 +348,35 @@ async function openSupportModal(id = null, sourceType = 'SUPPORT') {
     }
 
     document.getElementById('support-modal')?.classList.remove('hidden');
+}
+
+async function handleAdminTableActionClick(event) {
+    const button = event.target.closest('button[data-admin-action]');
+    if (!button || button.disabled) return;
+
+    const action = button.dataset.adminAction;
+    const targetId = Number.parseInt(button.dataset.targetId, 10);
+    const targetType = button.dataset.targetType;
+    const sourceType = button.dataset.sourceType || 'SUPPORT';
+
+    if (action === 'delete' && Number.isInteger(targetId) && targetType) {
+        openDeleteModal(targetType, targetId, sourceType);
+        return;
+    }
+
+    if (action === 'edit-ad' && Number.isInteger(targetId)) {
+        await openAdEditor(targetId);
+        return;
+    }
+
+    if (action === 'edit-support' && Number.isInteger(targetId)) {
+        await openSupportModal(targetId, sourceType);
+        return;
+    }
+
+    if (action === 'save-user-role' && Number.isInteger(targetId)) {
+        await updateUserRole(targetId);
+    }
 }
 
 function closeSupportModal() {

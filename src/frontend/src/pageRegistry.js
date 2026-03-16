@@ -74,7 +74,7 @@ const pageRegistry = {
                         <h2>광고 관리</h2>
                         <div class="admin-stats">총 <span id="ads-total">0</span>개</div>
                     </div>
-                    <div class="admin-support-toolbar"><button class="btn btn-primary btn-sm" id="ads-new-btn">광고 등록</button></div>
+                    <div class="admin-support-toolbar admin-support-toolbar-right"><button class="btn btn-primary btn-sm" id="ads-new-btn">광고 등록</button></div>
                     <div class="loading" id="ads-loading"><div class="spinner"></div><p>광고를 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="ads-error"><p id="ads-error-message"></p><button class="btn btn-sm btn-primary" id="ads-retry-btn">다시 시도</button></div>
                     <div class="admin-table-container hidden" id="ads-content">
