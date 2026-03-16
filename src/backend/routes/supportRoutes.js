@@ -6,6 +6,8 @@ const supportController = require('../controllers/supportController');
 
 const router = express.Router();
 
+router.get('/article/:id', supportController.getPublicArticleDetail);
+
 router.get('/:category(notice|faq)', (req, res, next) => {
   req.params.category = String(req.params.category || '').toUpperCase();
   return supportController.listPublicArticles(req, res, next);

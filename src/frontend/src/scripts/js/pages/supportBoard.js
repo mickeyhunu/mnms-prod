@@ -27,6 +27,14 @@ async function initSupportBoardPage() {
     Auth.bindLogoutButton();
 
     const params = new URLSearchParams(window.location.search);
+    const articleId = String(params.get('articleId') || '').trim();
+    const sourceType = String(params.get('sourceType') || '').toUpperCase();
+
+    if (articleId) {
+        await loadArticleDetail(articleId, sourceType);
+        return;
+    }
+
     const rawTab = String(params.get('tab') || '').toLowerCase();
     const normalizedTab = rawTab === 'fqa' ? 'faq' : rawTab;
     if (normalizedTab === 'faq' || normalizedTab === 'notice') {
@@ -102,9 +110,11 @@ function createSupportNoticeCard(item) {
     const authorName = sanitizeHTML(item.createdByNickname || item.updatedByNickname || '운영팀');
     const title = sanitizeHTML(item.title || '제목 없음');
     const content = sanitizeHTML(item.content || '');
+    const articleId = encodeURIComponent(item.id || '');
+    const sourceType = encodeURIComponent(String(item.sourceType || 'SUPPORT').toUpperCase());
 
     return `
-        <article class="post-card admin-notice" style="cursor:default;">
+        <a class="post-card admin-notice" href="/support?articleId=${articleId}&sourceType=${sourceType}" style="display:block;text-decoration:none;color:inherit;">
             <div class="post-header">
                 <div class="post-header-left">
                     <h3 class="post-title">[공지] ${title}</h3>
@@ -115,7 +125,7 @@ function createSupportNoticeCard(item) {
                 </div>
             </div>
             <div class="post-content" style="white-space:pre-wrap;">${content}</div>
-        </article>
+        </a>
     `;
 }
 
@@ -127,4 +137,68 @@ function createSupportFaqCard(item) {
             <div style="white-space:pre-wrap; line-height:1.6;">${sanitizeHTML(item.content || '')}</div>
         </article>
     `;
+}
+
+function applyDetailModeHeader() {
+    const tabs = document.querySelector('.admin-tabs');
+    if (tabs) {
+        tabs.classList.add('hidden');
+    }
+
+    const boardName = document.querySelector('.community-board-name');
+    if (boardName) {
+        boardName.textContent = '공지사항';
+    }
+}
+
+async function loadArticleDetail(articleId, sourceType) {
+    const loading = document.getElementById('support-public-loading');
+    const errorBox = document.getElementById('support-public-error');
+    const list = document.getElementById('support-public-list');
+
+    applyDetailModeHeader();
+
+    loading?.classList.remove('hidden');
+    errorBox?.classList.add('hidden');
+    list?.classList.add('hidden');
+
+    try {
+        const query = sourceType ? { sourceType } : {};
+        const article = await withTimeout(APIClient.get(`/support/article/${encodeURIComponent(articleId)}`, query));
+
+        if (!list) return;
+
+        const detailCreatedAt = formatDateTime(article.createdAt || article.created_at) || '';
+        const detailAuthor = sanitizeHTML(article.createdByNickname || article.updatedByNickname || '운영팀');
+        const detailTitle = sanitizeHTML(article.title || '제목 없음');
+        const detailContent = sanitizeHTML(article.content || '').replace(/\n/g, '<br>');
+
+        list.innerHTML = `
+            <article class="post-card admin-notice" style="cursor:default;">
+                <div class="post-header">
+                    <div class="post-header-left">
+                        <h3 class="post-title">[공지] ${detailTitle}</h3>
+                        <div class="post-meta">
+                            <span class="post-author">${detailAuthor}</span>
+                            <span class="post-date">${detailCreatedAt}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="post-content" style="white-space:normal;line-height:1.7;">${detailContent}</div>
+            </article>
+            <div style="margin-top:12px;">
+                <a class="btn btn-outline btn-sm" href="/support?tab=notice">목록으로</a>
+            </div>
+        `;
+
+        list.classList.remove('hidden');
+    } catch (error) {
+        if (errorBox) {
+            errorBox.classList.remove('hidden');
+            const message = document.getElementById('support-public-error-message');
+            if (message) message.textContent = error.message || '글을 불러오지 못했습니다.';
+        }
+    } finally {
+        loading?.classList.add('hidden');
+    }
 }
