@@ -2,6 +2,25 @@
     const tabsPanel = document.getElementById('board-tabs-panel');
     const toggleButton = document.getElementById('board-menu-toggle');
 
+    if (!window.__communityBackLinkBound) {
+        document.addEventListener('click', (event) => {
+            const backLink = event.target.closest('.community-back-link');
+            if (!backLink) {
+                return;
+            }
+
+            event.preventDefault();
+
+            if (window.history.length > 1) {
+                window.history.back();
+                return;
+            }
+
+            window.location.href = backLink.getAttribute('href') || '/';
+        });
+        window.__communityBackLinkBound = true;
+    }
+
     if (!tabsPanel || !toggleButton) {
         return;
     }
