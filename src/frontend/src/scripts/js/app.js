@@ -32,6 +32,13 @@ function setupGlobalEventListeners() {
 }
 
 function handleGlobalClick(e) {
+    const backButton = e.target.closest('.community-back-link, [data-action="go-back"]');
+    if (backButton) {
+        e.preventDefault();
+        window.history.back();
+        return;
+    }
+
     if (e.target.matches('.modal-overlay')) {
         closeModal();
     }
