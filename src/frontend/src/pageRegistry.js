@@ -720,7 +720,7 @@ const pageRegistry = {
 
     <footer class="company-footer-slot" aria-label="마이페이지 하단 정보">
         <div class="company-footer-top">
-            <strong class="company-footer-logo">MIDNIGHT MANS</strong>
+            <strong class="company-footer-logo">MIDNIGHT MENS</strong>
         </div>
         <div class="company-footer-links-row">
             <a href="/board/terms">이용약관</a>
@@ -730,7 +730,7 @@ const pageRegistry = {
             <button type="button" class="mypage-footer-logout">로그아웃</button>
         </div>
         <p class="company-footer-notice">미드나잇 맨즈는 커뮤니티 서비스 제공 플랫폼입니다.</p>
-        <p class="company-footer-copyright">© MIDNIGHT MANS. ALL RIGHTS RESERVED.</p>
+        <p class="company-footer-copyright">© MIDNIGHT MENS. ALL RIGHTS RESERVED.</p>
     </footer>
 
     <script src="scripts/js/utils/constants.js"></script>
