@@ -417,7 +417,7 @@ function closeSupportModal() {
 }
 
 async function saveSupportArticle() {
-    const category = document.getElementById('support-form-category')?.value;
+    const category = document.getElementById('support-form-category')?.value || 'NOTICE';
     const title = document.getElementById('support-form-title')?.value?.trim();
     const content = document.getElementById('support-form-content')?.value?.trim();
 
