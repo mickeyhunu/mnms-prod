@@ -1345,6 +1345,10 @@
 .my-inquiries-title-cell {
     font-weight: 600;
     color: #111827;
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .my-inquiries-row {

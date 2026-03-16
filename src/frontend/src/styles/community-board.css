@@ -128,6 +128,10 @@
 }
 
 .board-table .col-title a {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     color: #505050;
     text-decoration: none;
 }
