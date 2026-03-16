@@ -43,10 +43,6 @@ const pageRegistry = {
                 </div>
 
                 <div id="comments-section" class="tab-pane hidden">
-                    <div class="section-header">
-                        <h2>댓글 관리</h2>
-                        <div class="admin-stats">총 <span id="comments-total">0</span>개</div>
-                    </div>
                     <div class="loading" id="comments-loading"><div class="spinner"></div><p>댓글을 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="comments-error"><p id="comments-error-message"></p><button class="btn btn-sm btn-primary" id="comments-retry-btn">다시 시도</button></div>
                     <div class="admin-table-container hidden" id="comments-content">
@@ -55,10 +51,6 @@ const pageRegistry = {
                 </div>
 
                 <div id="users-section" class="tab-pane hidden">
-                    <div class="section-header">
-                        <h2>회원 관리</h2>
-                        <div class="admin-stats">총 <span id="users-total">0</span>명</div>
-                    </div>
                     <div class="loading" id="users-loading"><div class="spinner"></div><p>회원 정보를 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="users-error"><p id="users-error-message"></p><button class="btn btn-sm btn-primary" id="users-retry-btn">다시 시도</button></div>
                     <div class="admin-table-container hidden" id="users-content">
@@ -67,10 +59,6 @@ const pageRegistry = {
                 </div>
 
                 <div id="ads-section" class="tab-pane hidden">
-                    <div class="section-header">
-                        <h2>광고 관리</h2>
-                        <div class="admin-stats">총 <span id="ads-total">0</span>개</div>
-                    </div>
                     <div class="admin-support-toolbar admin-support-toolbar-right"><button class="btn btn-primary btn-sm" id="ads-new-btn">광고 등록</button></div>
                     <div class="loading" id="ads-loading"><div class="spinner"></div><p>광고를 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="ads-error"><p id="ads-error-message"></p><button class="btn btn-sm btn-primary" id="ads-retry-btn">다시 시도</button></div>
@@ -80,10 +68,6 @@ const pageRegistry = {
                 </div>
 
                 <div id="support-section" class="tab-pane hidden">
-                    <div class="section-header">
-                        <h2>공지사항 / FAQ 관리</h2>
-                        <div class="admin-stats">총 <span id="support-total">0</span>개</div>
-                    </div>
                     <div class="admin-support-toolbar"><select id="support-category" class="form-control"><option value="NOTICE">공지사항</option><option value="FAQ">FAQ</option></select><button class="btn btn-primary btn-sm" id="support-new-btn">새 글 작성</button></div>
                     <div class="loading" id="support-loading"><div class="spinner"></div><p>글을 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="support-error"><p id="support-error-message"></p><button class="btn btn-sm btn-primary" id="support-retry-btn">다시 시도</button></div>
