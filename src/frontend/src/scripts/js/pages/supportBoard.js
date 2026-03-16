@@ -106,7 +106,6 @@ async function loadArticles() {
 
 function createSupportNoticeCard(item) {
     const createdAt = formatDateOnly(item.createdAt || item.created_at);
-    const authorName = sanitizeHTML(item.createdByNickname || item.updatedByNickname || '운영팀');
     const title = sanitizeHTML(item.title || '제목 없음');
     const articleId = encodeURIComponent(item.id || '');
     const sourceType = encodeURIComponent(String(item.sourceType || 'SUPPORT').toUpperCase());
@@ -115,9 +114,8 @@ function createSupportNoticeCard(item) {
         <a class="post-card admin-notice" href="/support?articleId=${articleId}&sourceType=${sourceType}" style="display:block;text-decoration:none;color:inherit;">
             <div class="post-header">
                 <div class="post-header-left">
-                    <h3 class="post-title">[공지] ${title}</h3>
+                    <h3 class="post-title">${title}</h3>
                     <div class="post-meta support-notice-meta">
-                        <span class="post-author">${authorName}</span>
                         <span class="post-date support-notice-date">${createdAt}</span>
                     </div>
                 </div>
@@ -182,7 +180,6 @@ async function loadArticleDetail(articleId, sourceType) {
         if (!list) return;
 
         const detailCreatedAt = formatDateOnly(article.createdAt || article.created_at) || '';
-        const detailAuthor = sanitizeHTML(article.createdByNickname || article.updatedByNickname || '운영팀');
         const detailTitle = sanitizeHTML(article.title || '제목 없음');
         const detailContent = sanitizeHTML(article.content || '').replace(/\n/g, '<br>');
 
@@ -190,9 +187,8 @@ async function loadArticleDetail(articleId, sourceType) {
             <article class="post-card admin-notice" style="cursor:default;">
                 <div class="post-header">
                     <div class="post-header-left">
-                        <h3 class="post-title">[공지] ${detailTitle}</h3>
+                        <h3 class="post-title">${detailTitle}</h3>
                         <div class="post-meta support-notice-meta">
-                            <span class="post-author">${detailAuthor}</span>
                             <span class="post-date support-notice-date">${detailCreatedAt}</span>
                         </div>
                     </div>
