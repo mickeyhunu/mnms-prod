@@ -24,6 +24,7 @@ const routes = [
   { path: '/business-info', component: PageView, meta: { pageKey: 'business-info' } },
   { path: '/live', component: PageView, meta: { pageKey: 'live' } },
   { path: '/support', component: PageView, meta: { pageKey: 'support-board' } },
+  { path: '/support/faq', component: PageView, meta: { pageKey: 'support-board' } },
   { path: '/customer-service', component: PageView, meta: { pageKey: 'customer-service' } },
   { path: '/my-inquiries', component: PageView, meta: { pageKey: 'my-inquiries' } },
   { path: '/my-inquiries/:id', component: PageView, meta: { pageKey: 'my-inquiry-detail' } }
