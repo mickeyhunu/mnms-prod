@@ -21,12 +21,14 @@ const pageRegistry = {
         <div class="container">
             <div class="page-header">
                 <h1>관리자 페이지</h1>
-                <p>게시글과 댓글을 관리할 수 있습니다</p>
+                <p>회원/광고/커뮤니티 데이터를 관리할 수 있습니다</p>
             </div>
 
             <div class="admin-tabs">
                 <button class="admin-tab active" data-tab="posts">게시글 관리</button>
                 <button class="admin-tab" data-tab="comments">댓글 관리</button>
+                <button class="admin-tab" data-tab="users">회원 관리</button>
+                <button class="admin-tab" data-tab="ads">광고 관리</button>
                 <button class="admin-tab" data-tab="support">공지/FAQ 관리</button>
             </div>
 
@@ -34,116 +36,62 @@ const pageRegistry = {
                 <div id="posts-section" class="tab-pane active">
                     <div class="section-header">
                         <h2>게시글 관리</h2>
-                        <div class="admin-stats">
-                            총 <span id="posts-total">0</span>개
-                        </div>
+                        <div class="admin-stats">총 <span id="posts-total">0</span>개</div>
                     </div>
-
-                    <div class="loading" id="posts-loading">
-                        <div class="spinner"></div>
-                        <p>게시글을 불러오는 중...</p>
-                    </div>
-
-                    <div class="error-banner hidden" id="posts-error">
-                        <p id="posts-error-message"></p>
-                        <button class="btn btn-sm btn-primary" id="posts-retry-btn">다시 시도</button>
-                    </div>
-
+                    <div class="loading" id="posts-loading"><div class="spinner"></div><p>게시글을 불러오는 중...</p></div>
+                    <div class="error-banner hidden" id="posts-error"><p id="posts-error-message"></p><button class="btn btn-sm btn-primary" id="posts-retry-btn">다시 시도</button></div>
                     <div class="admin-table-container hidden" id="posts-content">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>제목</th>
-                                    <th>작성자</th>
-                                    <th>작성일</th>
-                                    <th>좋아요</th>
-                                    <th>댓글</th>
-                                    <th>관리</th>
-                                </tr>
-                            </thead>
-                            <tbody id="posts-tbody">
-                            </tbody>
-                        </table>
+                        <table class="admin-table"><thead><tr><th>ID</th><th>제목</th><th>작성자</th><th>작성일</th><th>좋아요</th><th>댓글</th><th>관리</th></tr></thead><tbody id="posts-tbody"></tbody></table>
                     </div>
                 </div>
 
                 <div id="comments-section" class="tab-pane hidden">
                     <div class="section-header">
                         <h2>댓글 관리</h2>
-                        <div class="admin-stats">
-                            총 <span id="comments-total">0</span>개
-                        </div>
+                        <div class="admin-stats">총 <span id="comments-total">0</span>개</div>
                     </div>
-
-                    <div class="loading" id="comments-loading">
-                        <div class="spinner"></div>
-                        <p>댓글을 불러오는 중...</p>
-                    </div>
-
-                    <div class="error-banner hidden" id="comments-error">
-                        <p id="comments-error-message"></p>
-                        <button class="btn btn-sm btn-primary" id="comments-retry-btn">다시 시도</button>
-                    </div>
-
+                    <div class="loading" id="comments-loading"><div class="spinner"></div><p>댓글을 불러오는 중...</p></div>
+                    <div class="error-banner hidden" id="comments-error"><p id="comments-error-message"></p><button class="btn btn-sm btn-primary" id="comments-retry-btn">다시 시도</button></div>
                     <div class="admin-table-container hidden" id="comments-content">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>내용</th>
-                                    <th>게시글</th>
-                                    <th>작성자</th>
-                                    <th>작성일</th>
-                                    <th>관리</th>
-                                </tr>
-                            </thead>
-                            <tbody id="comments-tbody">
-                            </tbody>
-                        </table>
+                        <table class="admin-table"><thead><tr><th>ID</th><th>내용</th><th>게시글</th><th>작성자</th><th>작성일</th><th>관리</th></tr></thead><tbody id="comments-tbody"></tbody></table>
+                    </div>
+                </div>
+
+                <div id="users-section" class="tab-pane hidden">
+                    <div class="section-header">
+                        <h2>회원 관리</h2>
+                        <div class="admin-stats">총 <span id="users-total">0</span>명</div>
+                    </div>
+                    <div class="loading" id="users-loading"><div class="spinner"></div><p>회원 정보를 불러오는 중...</p></div>
+                    <div class="error-banner hidden" id="users-error"><p id="users-error-message"></p><button class="btn btn-sm btn-primary" id="users-retry-btn">다시 시도</button></div>
+                    <div class="admin-table-container hidden" id="users-content">
+                        <table class="admin-table"><thead><tr><th>ID</th><th>이메일</th><th>닉네임</th><th>포인트</th><th>가입일</th><th>권한</th><th>비고</th><th>관리</th></tr></thead><tbody id="users-tbody"></tbody></table>
+                    </div>
+                </div>
+
+                <div id="ads-section" class="tab-pane hidden">
+                    <div class="section-header">
+                        <h2>광고 관리</h2>
+                        <div class="admin-stats">총 <span id="ads-total">0</span>개</div>
+                    </div>
+                    <div class="admin-support-toolbar"><button class="btn btn-primary btn-sm" id="ads-new-btn">광고 등록</button></div>
+                    <div class="loading" id="ads-loading"><div class="spinner"></div><p>광고를 불러오는 중...</p></div>
+                    <div class="error-banner hidden" id="ads-error"><p id="ads-error-message"></p><button class="btn btn-sm btn-primary" id="ads-retry-btn">다시 시도</button></div>
+                    <div class="admin-table-container hidden" id="ads-content">
+                        <table class="admin-table"><thead><tr><th>ID</th><th>제목</th><th>링크</th><th>순서</th><th>노출</th><th>생성일</th><th>수정일</th><th>관리</th></tr></thead><tbody id="ads-tbody"></tbody></table>
                     </div>
                 </div>
 
                 <div id="support-section" class="tab-pane hidden">
                     <div class="section-header">
                         <h2>공지사항 / FAQ 관리</h2>
-                        <div class="admin-stats">
-                            총 <span id="support-total">0</span>개
-                        </div>
+                        <div class="admin-stats">총 <span id="support-total">0</span>개</div>
                     </div>
-
-                    <div class="admin-support-toolbar">
-                        <select id="support-category" class="form-control">
-                            <option value="NOTICE">공지사항</option>
-                            <option value="FAQ">FAQ</option>
-                        </select>
-                        <button class="btn btn-primary btn-sm" id="support-new-btn">새 글 작성</button>
-                    </div>
-
-                    <div class="loading" id="support-loading">
-                        <div class="spinner"></div>
-                        <p>글을 불러오는 중...</p>
-                    </div>
-
-                    <div class="error-banner hidden" id="support-error">
-                        <p id="support-error-message"></p>
-                        <button class="btn btn-sm btn-primary" id="support-retry-btn">다시 시도</button>
-                    </div>
-
+                    <div class="admin-support-toolbar"><select id="support-category" class="form-control"><option value="NOTICE">공지사항</option><option value="FAQ">FAQ</option></select><button class="btn btn-primary btn-sm" id="support-new-btn">새 글 작성</button></div>
+                    <div class="loading" id="support-loading"><div class="spinner"></div><p>글을 불러오는 중...</p></div>
+                    <div class="error-banner hidden" id="support-error"><p id="support-error-message"></p><button class="btn btn-sm btn-primary" id="support-retry-btn">다시 시도</button></div>
                     <div class="admin-table-container hidden" id="support-content">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>구분</th>
-                                    <th>제목</th>
-                                    <th>작성일</th>
-                                    <th>관리</th>
-                                </tr>
-                            </thead>
-                            <tbody id="support-tbody">
-                            </tbody>
-                        </table>
+                        <table class="admin-table"><thead><tr><th>ID</th><th>구분</th><th>제목</th><th>작성일</th><th>관리</th></tr></thead><tbody id="support-tbody"></tbody></table>
                     </div>
                 </div>
             </div>
@@ -152,46 +100,21 @@ const pageRegistry = {
 
     <div class="modal hidden" id="support-modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="support-modal-title">공지/FAQ 작성</h3>
-            </div>
+            <div class="modal-header"><h3 id="support-modal-title">공지/FAQ 작성</h3></div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label" for="support-form-category">구분</label>
-                    <select id="support-form-category" class="form-control">
-                        <option value="NOTICE">공지사항</option>
-                        <option value="FAQ">FAQ</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="support-form-title">제목</label>
-                    <input id="support-form-title" class="form-control" maxlength="255">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="support-form-content">내용</label>
-                    <textarea id="support-form-content" class="form-control" rows="8"></textarea>
-                </div>
+                <div class="form-group"><label class="form-label" for="support-form-category">구분</label><select id="support-form-category" class="form-control"><option value="NOTICE">공지사항</option><option value="FAQ">FAQ</option></select></div>
+                <div class="form-group"><label class="form-label" for="support-form-title">제목</label><input id="support-form-title" class="form-control" maxlength="255"></div>
+                <div class="form-group"><label class="form-label" for="support-form-content">내용</label><textarea id="support-form-content" class="form-control" rows="8"></textarea></div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="support-cancel-btn">취소</button>
-                <button class="btn btn-primary" id="support-save-btn">저장</button>
-            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" id="support-cancel-btn">취소</button><button class="btn btn-primary" id="support-save-btn">저장</button></div>
         </div>
     </div>
 
     <div class="modal hidden" id="delete-modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="delete-modal-title">삭제 확인</h3>
-            </div>
-            <div class="modal-body">
-                <p id="delete-modal-message">정말로 삭제하시겠습니까?</p>
-                <p class="text-muted text-sm">삭제된 내용은 복구할 수 없습니다.</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="delete-cancel-btn">취소</button>
-                <button class="btn btn-danger" id="delete-confirm-btn">삭제</button>
-            </div>
+            <div class="modal-header"><h3 id="delete-modal-title">삭제 확인</h3></div>
+            <div class="modal-body"><p id="delete-modal-message">정말로 삭제하시겠습니까?</p><p class="text-muted text-sm">삭제된 내용은 복구할 수 없습니다.</p></div>
+            <div class="modal-footer"><button class="btn btn-secondary" id="delete-cancel-btn">취소</button><button class="btn btn-danger" id="delete-confirm-btn">삭제</button></div>
         </div>
     </div>
 
