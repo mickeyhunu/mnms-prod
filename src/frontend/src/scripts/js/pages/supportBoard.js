@@ -2,8 +2,13 @@
  * 파일 역할: 공지사항/FAQ 공개 목록을 불러와 렌더링하는 페이지 스크립트 파일.
  */
 let activeTab = 'notice';
+let latestLoadRequestId = 0;
 
-document.addEventListener('DOMContentLoaded', initSupportBoardPage);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSupportBoardPage, { once: true });
+} else {
+    initSupportBoardPage();
+}
 
 function withTimeout(promise, ms = 8000) {
     return Promise.race([
@@ -15,6 +20,10 @@ function withTimeout(promise, ms = 8000) {
 }
 
 async function initSupportBoardPage() {
+    const list = document.getElementById('support-public-list');
+    if (!list || list.dataset.initialized === 'true') return;
+    list.dataset.initialized = 'true';
+
     Auth.bindLogoutButton();
 
     const params = new URLSearchParams(window.location.search);
@@ -33,6 +42,7 @@ function bindTabEvents() {
     tabs.forEach((tabButton) => {
         tabButton.classList.toggle('active', tabButton.dataset.tab === activeTab);
         tabButton.addEventListener('click', async () => {
+            if (activeTab === tabButton.dataset.tab) return;
             activeTab = tabButton.dataset.tab;
             tabs.forEach((item) => item.classList.toggle('active', item.dataset.tab === activeTab));
             await loadArticles();
@@ -41,6 +51,7 @@ function bindTabEvents() {
 }
 
 async function loadArticles() {
+    const requestId = ++latestLoadRequestId;
     const loading = document.getElementById('support-public-loading');
     const errorBox = document.getElementById('support-public-error');
     const list = document.getElementById('support-public-list');
@@ -51,6 +62,7 @@ async function loadArticles() {
 
     try {
         const response = await withTimeout(APIClient.get(`/support/${activeTab}`));
+        if (requestId !== latestLoadRequestId) return;
         const rows = response.content || [];
 
         if (!rows.length) {
@@ -72,12 +84,15 @@ async function loadArticles() {
             list.classList.remove('hidden');
         }
     } catch (error) {
+        if (requestId !== latestLoadRequestId) return;
         if (errorBox) {
             errorBox.classList.remove('hidden');
             const message = document.getElementById('support-public-error-message');
             if (message) message.textContent = error.message || '목록을 불러오지 못했습니다.';
         }
     } finally {
-        loading?.classList.add('hidden');
+        if (requestId === latestLoadRequestId) {
+            loading?.classList.add('hidden');
+        }
     }
 }
