@@ -1292,3 +1292,73 @@
     margin-top: 6px;
     color: #6b7280;
 }
+
+.customer-service-actions {
+    margin-top: 12px;
+}
+
+.my-inquiry-link-item {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.my-inquiry-link-item:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.my-inquiry-detail-block + .my-inquiry-detail-block {
+    margin-top: 12px;
+}
+
+.my-inquiry-detail-block h3 {
+    margin: 0 0 6px;
+    font-size: 14px;
+    color: #111827;
+}
+
+.my-inquiries-board {
+    width: 100%;
+}
+
+.my-inquiries-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.my-inquiries-table th,
+.my-inquiries-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.my-inquiries-table th {
+    font-weight: 700;
+    color: #374151;
+    background: #f8fafc;
+}
+
+.my-inquiries-title-cell {
+    font-weight: 600;
+    color: #111827;
+}
+
+.my-inquiries-row {
+    cursor: pointer;
+}
+
+.my-inquiries-row:hover,
+.my-inquiries-row:focus {
+    background: #f8fafc;
+    outline: none;
+}
+
+.my-inquiry-detail-title {
+    margin: 0 0 8px;
+    font-size: 20px;
+    color: #111827;
+}

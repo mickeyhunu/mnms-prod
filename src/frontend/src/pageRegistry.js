@@ -701,7 +701,7 @@ const pageRegistry = {
                 <section class="mypage-link-section">
                     <p class="mypage-link-section-title">고객센터</p>
                     <div class="mypage-link-list">
-                        <a class="mypage-link-item" href="/customer-service"><span>1:1 고객센터</span></a>
+                        <a class="mypage-link-item" href="/customer-service"><span>1:1 고객센터</span></a><a class="mypage-link-item" href="/my-inquiries"><span>내 문의함</span></a>
                         <a class="mypage-link-item" href="/support?tab=faq"><span>FAQ</span></a>
                     </div>
                 </section>
@@ -846,6 +846,7 @@ const pageRegistry = {
     <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">마이페이지</span></div></header>
     <section class="support-link-section"><p class="support-link-section-title">고객센터</p><div class="support-link-list">
     <a class="support-link-item" href="/customer-service"><span>1:1 고객센터</span></a>
+    <a class="support-link-item" href="/my-inquiries"><span>내 문의함</span></a>
     <a class="support-link-item" href="/support?tab=faq"><span>FAQ</span></a>
     <a class="support-link-item" href="/board/customer/feedback"><span>피드백 보내기</span></a>
     </div></section><div class="section-header"><h2>약관 및 정책</h2></div><div class="mypage-link-section"><p class="mypage-link-section-title">ABOUT 미드나잇테라스</p><div class="mypage-link-list"><a class="mypage-link-item" href="/support?tab=notice"><span>공지사항</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a class="mypage-link-item" href="/board/about?type=event"><span>이벤트</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a class="mypage-link-item" href="/board/terms"><span>약관 및 정책</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a target="_blank" rel="noopener noreferrer" class="mypage-link-item" href="https://12terrace.com/board/notice/33"><span>미드나잇테라스 소개</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a></div></div></div></main>
@@ -871,6 +872,7 @@ const pageRegistry = {
       <input type="hidden" id="inquiry-target-type" name="targetType" value="general">
       <input type="hidden" id="inquiry-target-id" name="targetId" value="">
       <div class="form-group"><label for="inquiry-type">문의 유형</label><select id="inquiry-type" name="inquiryType" class="form-control" required><option value="">-- 유형 선택 --</option><option value="question">일반 문의</option><option value="post_report">게시글 신고</option><option value="comment_report">댓글 신고</option><option value="account">계정 문의</option><option value="service_error">서비스 오류</option><option value="ad_inquiry">광고 문의</option><option value="etc">기타</option></select></div>
+      <div class="form-group"><label for="inquiry-title">제목</label><input id="inquiry-title" name="title" type="text" class="form-control" maxlength="100" placeholder="문의 제목을 입력해주세요." required></div>
       <div class="form-group"><label for="inquiry-reason">신고/문의 사유</label><textarea id="inquiry-reason" name="content" class="form-control" rows="6" placeholder="상세 내용을 입력해주세요." required></textarea></div>
       <section class="customer-file-upload"><div class="file-upload-header">첨부파일</div><p class="file-upload-guide">* 파일 형식: JPG, PNG, GIF, WEBP, PDF (최대 50MB)</p>
         <div class="file-upload-item"><div class="file-input-wrapper"><input type="file" name="attachments[]" id="attachment_1" class="file-input" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,image/jpeg,image/png,image/gif,image/webp,application/pdf"><button type="button" class="cancel-button" data-target="attachment_1" aria-label="첫 번째 파일 제거">×</button></div></div>
@@ -880,14 +882,29 @@ const pageRegistry = {
       <p class="customer-service-note">문의는 즉시 답변드릴 수 있도록 노력하고 있습니다.<br><br>답변 시간: 24시간 (순차처리)</p>
       <button type="submit" class="btn btn-primary btn-block btn-round">접수하기</button>
     </form>
-    <section class="my-inquiries-section">
-      <h3 class="my-inquiries-title">내 문의함</h3>
-      <p id="my-inquiries-empty" class="my-inquiries-empty">아직 접수된 문의가 없습니다.</p>
-      <div id="my-inquiries-list" class="my-inquiries-list"></div>
-    </section></section></div></main>
+    <div class="customer-service-actions"><a class="btn btn-outline btn-block" href="/my-inquiries">내 문의함 바로가기</a></div>
+    </section></div></main>
     <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/pages/customerService.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/pages/customerService.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
+  },
+
+  'my-inquiries': {
+    template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
+    <main class="main-content"><div class="container customer-service-page"><header class="community-section-header"><div class="community-header-left"><a href="/my-page/support" class="community-back-link" aria-label="고객센터 메뉴로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">내 문의함</span></div></header>
+    <section class="customer-service-card"><div id="my-inquiries-list" class="my-inquiries-board"></div><p id="my-inquiries-empty" class="my-inquiries-empty">아직 접수된 문의가 없습니다.</p></section></div></main>
+    <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/pages/myInquiries.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/pages/myInquiries.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
+  },
+
+  'my-inquiry-detail': {
+    template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
+    <main class="main-content"><div class="container customer-service-page"><header class="community-section-header"><div class="community-header-left"><a href="/my-inquiries" class="community-back-link" aria-label="내 문의함으로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">문의 상세</span></div></header>
+    <section id="my-inquiry-detail" class="customer-service-card my-inquiry-detail-card"></section></div></main>
+    <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/pages/myInquiryDetail.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/pages/myInquiryDetail.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
 
   'support-board': {
