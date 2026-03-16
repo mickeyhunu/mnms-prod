@@ -47,7 +47,7 @@ function bindCommonEvents() {
             tab.classList.add('active');
 
             const tabKey = tab.dataset.tab;
-            ['posts', 'comments', 'support'].forEach((key) => {
+            ['posts', 'comments', 'users', 'ads', 'support'].forEach((key) => {
                 const isActive = key === tabKey;
                 document.getElementById(`${key}-section`)?.classList.toggle('hidden', !isActive);
                 document.getElementById(`${key}-section`)?.classList.toggle('active', isActive);
@@ -55,12 +55,16 @@ function bindCommonEvents() {
 
             if (tabKey === 'posts') await loadPosts();
             else if (tabKey === 'comments') await loadComments();
+            else if (tabKey === 'users') await loadUsers();
+            else if (tabKey === 'ads') await loadAds();
             else if (tabKey === 'support') await loadSupportArticles();
         });
     });
 
     document.getElementById('posts-retry-btn')?.addEventListener('click', loadPosts);
     document.getElementById('comments-retry-btn')?.addEventListener('click', loadComments);
+    document.getElementById('users-retry-btn')?.addEventListener('click', loadUsers);
+    document.getElementById('ads-retry-btn')?.addEventListener('click', loadAds);
     document.getElementById('support-retry-btn')?.addEventListener('click', loadSupportArticles);
 
     document.getElementById('delete-cancel-btn')?.addEventListener('click', closeDeleteModal);
@@ -73,6 +77,8 @@ function bindCommonEvents() {
     document.getElementById('support-new-btn')?.addEventListener('click', () => openSupportModal());
     document.getElementById('support-cancel-btn')?.addEventListener('click', closeSupportModal);
     document.getElementById('support-save-btn')?.addEventListener('click', saveSupportArticle);
+
+    document.getElementById('ads-new-btn')?.addEventListener('click', () => openAdEditor());
 }
 
 async function loadPosts() {
@@ -139,26 +145,162 @@ async function loadComments() {
     }
 }
 
+async function loadUsers() {
+    toggleLoading('users', true);
+    try {
+        const response = await APIClient.get('/admin/users');
+        const users = response.content || [];
+        document.getElementById('users-total').textContent = response.totalElements || users.length;
+
+        const tbody = document.getElementById('users-tbody');
+        if (!users.length) {
+            tbody.innerHTML = '<tr><td colspan="8">회원이 없습니다.</td></tr>';
+        } else {
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.id}</td>
+                    <td>${sanitizeHTML(user.email || '')}</td>
+                    <td>${sanitizeHTML(user.nickname || '')}</td>
+                    <td>${Number(user.totalPoints || 0)}</td>
+                    <td>${formatDate(user.createdAt || user.created_at)}</td>
+                    <td>
+                        <select id="user-role-${user.id}" class="form-control admin-inline-select">
+                            <option value="USER" ${user.role === 'USER' ? 'selected' : ''}>USER</option>
+                            <option value="ADMIN" ${user.role === 'ADMIN' ? 'selected' : ''}>ADMIN</option>
+                        </select>
+                    </td>
+                    <td>${user.isCurrentUser ? '내 계정' : '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="updateUserRole(${user.id})">권한저장</button>
+                        <button class="btn btn-sm btn-danger" ${user.isCurrentUser ? 'disabled' : ''} onclick="openDeleteModal('user', ${user.id})">삭제</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        showContent('users');
+    } catch (error) {
+        showError('users', error.message || '회원 목록을 불러오지 못했습니다.');
+    }
+}
+
+async function updateUserRole(userId) {
+    const role = document.getElementById(`user-role-${userId}`)?.value;
+    if (!role) return;
+
+    try {
+        await APIClient.patch(`/admin/users/${userId}/role`, { role });
+        await loadUsers();
+    } catch (error) {
+        alert(error.message || '권한 변경에 실패했습니다.');
+    }
+}
+
+async function loadAds() {
+    toggleLoading('ads', true);
+    try {
+        const response = await APIClient.get('/admin/ads');
+        const ads = response.content || [];
+        document.getElementById('ads-total').textContent = response.totalElements || ads.length;
+
+        const tbody = document.getElementById('ads-tbody');
+        if (!ads.length) {
+            tbody.innerHTML = '<tr><td colspan="8">등록된 광고가 없습니다.</td></tr>';
+        } else {
+            tbody.innerHTML = ads.map(ad => `
+                <tr>
+                    <td>${ad.id}</td>
+                    <td>${sanitizeHTML(ad.title || '')}</td>
+                    <td><a href="${sanitizeHTML(ad.linkUrl || '#')}" target="_blank">링크 열기</a></td>
+                    <td>${Number(ad.displayOrder || 0)}</td>
+                    <td>${ad.isActive ? '노출' : '숨김'}</td>
+                    <td>${formatDate(ad.createdAt || ad.created_at)}</td>
+                    <td>${formatDate(ad.updatedAt || ad.updated_at)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="openAdEditor(${ad.id})">수정</button>
+                        <button class="btn btn-sm btn-danger" onclick="openDeleteModal('ad', ${ad.id})">삭제</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        showContent('ads');
+    } catch (error) {
+        showError('ads', error.message || '광고 목록을 불러오지 못했습니다.');
+    }
+}
+
+async function openAdEditor(adId = null) {
+    let base = { title: '', imageUrl: '', linkUrl: '', displayOrder: 0, isActive: true };
+
+    if (adId) {
+        try {
+            const response = await APIClient.get('/admin/ads');
+            const target = (response.content || []).find((item) => Number(item.id) === Number(adId));
+            if (!target) {
+                alert('광고를 찾을 수 없습니다.');
+                return;
+            }
+            base = target;
+        } catch (error) {
+            alert(error.message || '광고 정보를 불러오지 못했습니다.');
+            return;
+        }
+    }
+
+    const title = window.prompt('광고 제목을 입력해주세요.', base.title || '');
+    if (title == null || !title.trim()) return;
+
+    const imageUrl = window.prompt('광고 이미지 URL을 입력해주세요.', base.imageUrl || '');
+    if (imageUrl == null || !imageUrl.trim()) return;
+
+    const linkUrl = window.prompt('광고 클릭 링크 URL을 입력해주세요.', base.linkUrl || '');
+    if (linkUrl == null || !linkUrl.trim()) return;
+
+    const displayOrderRaw = window.prompt('노출 순서를 입력해주세요(숫자).', String(base.displayOrder || 0));
+    if (displayOrderRaw == null) return;
+
+    const isActiveRaw = window.prompt('노출 여부를 입력해주세요 (Y/N).', base.isActive ? 'Y' : 'N');
+    if (isActiveRaw == null) return;
+
+    const payload = {
+        title: title.trim(),
+        imageUrl: imageUrl.trim(),
+        linkUrl: linkUrl.trim(),
+        displayOrder: Number(displayOrderRaw) || 0,
+        isActive: ['y', 'yes', '1', 'true'].includes(String(isActiveRaw).trim().toLowerCase())
+    };
+
+    try {
+        if (adId) await APIClient.put(`/admin/ads/${adId}`, payload);
+        else await APIClient.post('/admin/ads', payload);
+
+        await loadAds();
+    } catch (error) {
+        alert(error.message || '광고 저장에 실패했습니다.');
+    }
+}
+
 async function loadSupportArticles() {
     toggleLoading('support', true);
     try {
         const response = await APIClient.get('/admin/support', { category: currentSupportCategory });
-        const rows = response.content || [];
-        document.getElementById('support-total').textContent = response.totalElements || rows.length;
+        const articles = response.content || [];
+        document.getElementById('support-total').textContent = response.totalElements || articles.length;
 
         const tbody = document.getElementById('support-tbody');
-        if (!rows.length) {
+        if (!articles.length) {
             tbody.innerHTML = '<tr><td colspan="5">등록된 글이 없습니다.</td></tr>';
         } else {
-            tbody.innerHTML = rows.map(item => `
+            tbody.innerHTML = articles.map(article => `
                 <tr>
-                    <td>${item.id}</td>
-                    <td>${item.category === 'NOTICE' ? '공지사항' : 'FAQ'}</td>
-                    <td>${sanitizeHTML(item.title || '')}</td>
-                    <td>${formatDate(item.createdAt || item.created_at)}</td>
+                    <td>${article.id}</td>
+                    <td>${article.category === 'FAQ' ? 'FAQ' : '공지사항'}</td>
+                    <td>${sanitizeHTML(article.title || '')}</td>
+                    <td>${formatDate(article.createdAt || article.created_at)}</td>
                     <td>
-                        <button class="btn btn-sm btn-secondary" onclick="openSupportModal(${item.sourceId || item.id}, '${item.sourceType || 'SUPPORT'}')">수정</button>
-                        <button class="btn btn-sm btn-danger" onclick="openDeleteModal('support', ${item.sourceId || item.id}, '${item.sourceType || 'SUPPORT'}')">삭제</button>
+                        <button class="btn btn-sm btn-secondary" onclick="openSupportModal(${article.sourceId || article.id}, '${article.sourceType || 'SUPPORT'}')">수정</button>
+                        <button class="btn btn-sm btn-danger" onclick="openDeleteModal('support', ${article.sourceId || article.id}, '${article.sourceType || 'SUPPORT'}')">삭제</button>
                     </td>
                 </tr>
             `).join('');
@@ -171,7 +313,6 @@ async function loadSupportArticles() {
 }
 
 async function openSupportModal(id = null, sourceType = 'SUPPORT') {
-    supportEditTarget = null;
     const titleEl = document.getElementById('support-modal-title');
     const categoryEl = document.getElementById('support-form-category');
     const subjectEl = document.getElementById('support-form-title');
@@ -296,6 +437,12 @@ function openDeleteModal(type, id, sourceType = 'SUPPORT') {
     } else if (type === 'comment') {
         if (title) title.textContent = '댓글 삭제';
         if (message) message.textContent = '이 댓글을 삭제하시겠습니까?';
+    } else if (type === 'user') {
+        if (title) title.textContent = '회원 삭제';
+        if (message) message.textContent = '이 회원을 삭제하시겠습니까?';
+    } else if (type === 'ad') {
+        if (title) title.textContent = '광고 삭제';
+        if (message) message.textContent = '이 광고를 삭제하시겠습니까?';
     } else {
         if (title) title.textContent = '공지/FAQ 삭제';
         if (message) message.textContent = '이 글을 삭제하시겠습니까?';
@@ -319,6 +466,12 @@ async function confirmDelete() {
         } else if (deleteTarget.type === 'comment') {
             await APIClient.delete(`/admin/comments/${deleteTarget.id}`);
             await loadComments();
+        } else if (deleteTarget.type === 'user') {
+            await APIClient.delete(`/admin/users/${deleteTarget.id}`);
+            await loadUsers();
+        } else if (deleteTarget.type === 'ad') {
+            await APIClient.delete(`/admin/ads/${deleteTarget.id}`);
+            await loadAds();
         } else {
             await APIClient.delete(`/admin/support/${deleteTarget.id}?sourceType=${encodeURIComponent(deleteTarget.sourceType || 'SUPPORT')}`);
             await loadSupportArticles();

@@ -173,6 +173,19 @@ async function initDatabase() {
     await pool.query('ALTER TABLE posts ADD COLUMN review_bonus_point_awarded TINYINT(1) NOT NULL DEFAULT 0 AFTER create_point_awarded');
   }
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS ads (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      title VARCHAR(255) NOT NULL,
+      image_url VARCHAR(1000) NOT NULL,
+      link_url VARCHAR(1000) NOT NULL,
+      display_order INT NOT NULL DEFAULT 0,
+      is_active TINYINT(1) NOT NULL DEFAULT 1,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
   const [boardTypeColumn] = await pool.query(
     `SELECT 1
      FROM INFORMATION_SCHEMA.COLUMNS
