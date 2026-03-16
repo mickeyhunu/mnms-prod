@@ -892,8 +892,7 @@ const pageRegistry = {
 
   'support-board': {
     template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
-    <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">공지사항 / FAQ</span></div></header>
-    <div class="admin-tabs"><button class="admin-tab active" data-tab="notice">공지사항</button><button class="admin-tab" data-tab="faq">FAQ</button></div>
+    <main class="main-content"><div class="container community-container"><header class="community-section-header"><div class="community-header-left"><button type="button" class="board-menu-toggle" id="board-menu-toggle" aria-label="공지사항 메뉴 열기" aria-expanded="false" aria-controls="board-tabs-panel"><span aria-hidden="true">☰</span></button><nav class="board-tabs hidden" id="board-tabs-panel" aria-label="공지사항 카테고리"><button type="button" class="board-tab active" data-tab="notice">공지사항</button><button type="button" class="board-tab" data-tab="faq">FAQ</button></nav><span class="community-board-name">공지사항</span></div></header>
     <div class="loading" id="support-public-loading"><div class="spinner"></div><p>불러오는 중...</p></div>
     <div class="error-banner hidden" id="support-public-error"><p id="support-public-error-message"></p></div>
     <div id="support-public-list" class="hidden"></div></div></main>
