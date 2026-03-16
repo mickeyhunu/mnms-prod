@@ -351,13 +351,16 @@ async function openSupportModal(id = null, sourceType = 'SUPPORT') {
 }
 
 async function handleAdminTableActionClick(event) {
-    const button = event.target.closest('button[data-admin-action]');
-    if (!button || button.disabled) return;
+    const actionElement = event.target.closest('[data-admin-action]');
+    if (!actionElement || actionElement.disabled) return;
 
-    const action = button.dataset.adminAction;
-    const targetId = Number.parseInt(button.dataset.targetId, 10);
-    const targetType = button.dataset.targetType;
-    const sourceType = button.dataset.sourceType || 'SUPPORT';
+    event.preventDefault();
+
+    const action = actionElement.dataset.adminAction;
+    const targetIdRaw = actionElement.dataset.targetId;
+    const targetId = Number.parseInt(targetIdRaw, 10);
+    const targetType = actionElement.dataset.targetType;
+    const sourceType = actionElement.dataset.sourceType || 'SUPPORT';
 
     if (action === 'delete' && Number.isInteger(targetId) && targetType) {
         openDeleteModal(targetType, targetId, sourceType);
@@ -376,6 +379,11 @@ async function handleAdminTableActionClick(event) {
 
     if (action === 'save-user-role' && Number.isInteger(targetId)) {
         await updateUserRole(targetId);
+        return;
+    }
+
+    if (['delete', 'edit-ad', 'edit-support', 'save-user-role'].includes(action) && !Number.isInteger(targetId)) {
+        alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
     }
 }
 
