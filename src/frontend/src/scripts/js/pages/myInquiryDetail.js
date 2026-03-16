@@ -39,6 +39,10 @@ function getInquiryTypeLabel(type) {
     if (normalized === 'post_report') return '게시글 신고';
     if (normalized === 'comment_report') return '댓글 신고';
     if (normalized === 'question') return '일반 문의';
+    if (normalized === 'account') return '계정 문의';
+    if (normalized === 'service_error') return '서비스 오류';
+    if (normalized === 'ad_inquiry') return '광고 문의';
+    if (normalized === 'etc' || normalized === 'other') return '기타';
     return '기타';
 }
 
