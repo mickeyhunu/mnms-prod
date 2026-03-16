@@ -60,10 +60,10 @@ function renderMyInquiries() {
 
         return `
             <tr class="my-inquiries-row" data-href="${href}" role="link" tabindex="0">
-                <td>${type}</td>
+                <td class="my-inquiries-type-cell">${type}</td>
                 <td class="my-inquiries-title-cell">${title}</td>
-                <td>${escapeHtml(createdAt)}</td>
-                <td><span class="my-inquiry-status ${statusClass}">${statusText}</span></td>
+                <td class="my-inquiries-date-cell">${escapeHtml(createdAt)}</td>
+                <td class="my-inquiries-status-cell"><span class="my-inquiry-status ${statusClass}">${statusText}</span></td>
             </tr>
         `;
     }).join('');
@@ -72,10 +72,10 @@ function renderMyInquiries() {
       <table class="my-inquiries-table" aria-label="내 문의 목록">
         <thead>
           <tr>
-            <th>분류</th>
-            <th>제목</th>
-            <th>날짜</th>
-            <th>처리상태</th>
+            <th class="my-inquiries-type-cell">분류</th>
+            <th class="my-inquiries-title-cell">제목</th>
+            <th class="my-inquiries-date-cell">날짜</th>
+            <th class="my-inquiries-status-cell">처리상태</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>

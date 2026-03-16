@@ -1336,6 +1336,25 @@
     vertical-align: middle;
 }
 
+.my-inquiries-type-cell {
+    width: 22%;
+}
+
+.my-inquiries-date-cell {
+    width: 20%;
+    padding-left: 6px;
+    padding-right: 6px;
+    white-space: nowrap;
+    color: #4b5563;
+}
+
+.my-inquiries-status-cell {
+    width: 14%;
+    padding-left: 6px;
+    padding-right: 6px;
+    white-space: nowrap;
+}
+
 .my-inquiries-table th {
     font-weight: 700;
     color: #374151;
@@ -1343,6 +1362,7 @@
 }
 
 .my-inquiries-title-cell {
+    width: 44%;
     font-weight: 600;
     color: #111827;
     max-width: 0;
