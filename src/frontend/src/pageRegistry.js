@@ -70,7 +70,7 @@ const pageRegistry = {
                 </div>
 
                 <div id="support-section" class="tab-pane hidden">
-                    <div class="admin-support-toolbar"><select id="support-category" class="form-control"><option value="NOTICE">공지사항</option><option value="FAQ">FAQ</option></select><button class="btn btn-primary btn-sm" id="support-new-btn">새 글 작성</button></div>
+                    <div class="admin-support-toolbar admin-support-toolbar-split"><div class="admin-support-toolbar-start"><select id="support-category" class="form-control"><option value="NOTICE">공지사항</option><option value="FAQ">FAQ</option></select></div><div class="admin-support-toolbar-end"><button class="btn btn-primary btn-sm" id="support-new-btn">새 글 작성</button></div></div>
                     <div class="loading" id="support-loading"><div class="spinner"></div><p>글을 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="support-error"><p id="support-error-message"></p><button class="btn btn-sm btn-primary" id="support-retry-btn">다시 시도</button></div>
                     <div class="admin-table-container hidden" id="support-content">
