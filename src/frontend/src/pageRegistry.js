@@ -35,10 +35,6 @@ const pageRegistry = {
 
             <div class="tab-content">
                 <div id="posts-section" class="tab-pane active">
-                    <div class="section-header">
-                        <h2>게시글 관리</h2>
-                        <div class="admin-stats">총 <span id="posts-total">0</span>개</div>
-                    </div>
                     <div class="loading" id="posts-loading"><div class="spinner"></div><p>게시글을 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="posts-error"><p id="posts-error-message"></p><button class="btn btn-sm btn-primary" id="posts-retry-btn">다시 시도</button></div>
                     <div class="admin-table-container hidden" id="posts-content">
