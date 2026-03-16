@@ -64,6 +64,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
 
   const [rows] = await pool.query(
     `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
+            p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
             p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'USER') AS authorRole,
@@ -72,19 +73,19 @@ async function listPosts(page = 0, size = 10, options = {}) {
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
      ${whereClause}
-     ORDER BY p.created_at DESC
+     ORDER BY p.is_pinned DESC, p.is_notice DESC, p.created_at DESC
      LIMIT ? OFFSET ?`,
     [...whereParams, size, offset]
   );
   return { rows, total: Number(countRows[0].total) };
 }
 
-async function createPost({ userId, title, content, boardType = BOARD_TYPES.FREE }) {
+async function createPost({ userId, title, content, boardType = BOARD_TYPES.FREE, isNotice = false, noticeType = null, isPinned = false }) {
   const pool = getPool();
   const normalizedBoardType = normalizeBoardType(boardType);
   const [result] = await pool.query(
-    'INSERT INTO posts (user_id, board_type, title, content) VALUES (?, ?, ?, ?)',
-    [userId || null, normalizedBoardType, title, content]
+    'INSERT INTO posts (user_id, board_type, is_notice, notice_type, is_pinned, title, content) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [userId || null, normalizedBoardType, isNotice ? 1 : 0, noticeType || null, isPinned ? 1 : 0, title, content]
   );
   return result.insertId;
 }
@@ -106,6 +107,7 @@ async function findPostDetailById(id) {
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
+            p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
             p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'USER') AS authorRole,
@@ -178,9 +180,9 @@ async function incrementPostViewCount(id) {
   const pool = getPool();
   await pool.query('UPDATE posts SET view_count = view_count + 1 WHERE id = ?', [id]);
 }
-async function updatePost(id, { title, content }) {
+async function updatePost(id, { title, content, isNotice, noticeType, isPinned }) {
   const pool = getPool();
-  await pool.query('UPDATE posts SET title = ?, content = ? WHERE id = ?', [title, content, id]);
+  await pool.query('UPDATE posts SET title = ?, content = ?, is_notice = ?, notice_type = ?, is_pinned = ? WHERE id = ?', [title, content, isNotice ? 1 : 0, noticeType || null, isPinned ? 1 : 0, id]);
 }
 
 async function deletePost(id) {
@@ -335,6 +337,7 @@ async function listBestPosts() {
   const pool = getPool();
 
   const selectQuery = `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
+            p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
             p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'USER') AS authorRole,
