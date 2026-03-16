@@ -889,7 +889,7 @@ const pageRegistry = {
 
   'support-board': {
     template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
-    <main class="main-content"><div class="container community-container"><header class="community-section-header"><div class="community-header-left"><nav class="board-tabs" aria-label="공지사항 카테고리"><a class="board-tab active" href="/support">공지사항</a><a class="board-tab" href="/support/faq">FAQ</a></nav><span class="community-board-name">공지사항</span></div></header>
+    <main class="main-content"><div class="container community-container"><header class="community-section-header"><div class="community-header-left"><span class="community-board-name">공지사항</span></div></header>
     <div class="loading" id="support-public-loading"><div class="spinner"></div><p>불러오는 중...</p></div>
     <div class="error-banner hidden" id="support-public-error"><p id="support-public-error-message"></p></div>
     <div id="support-public-list" class="hidden"></div></div></main>
