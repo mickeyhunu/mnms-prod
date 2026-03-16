@@ -106,10 +106,9 @@ async function loadArticles() {
 }
 
 function createSupportNoticeCard(item) {
-    const createdAt = formatDate(item.createdAt || item.created_at);
+    const createdAt = formatDateOnly(item.createdAt || item.created_at);
     const authorName = sanitizeHTML(item.createdByNickname || item.updatedByNickname || '운영팀');
     const title = sanitizeHTML(item.title || '제목 없음');
-    const content = sanitizeHTML(item.content || '');
     const articleId = encodeURIComponent(item.id || '');
     const sourceType = encodeURIComponent(String(item.sourceType || 'SUPPORT').toUpperCase());
 
@@ -118,13 +117,12 @@ function createSupportNoticeCard(item) {
             <div class="post-header">
                 <div class="post-header-left">
                     <h3 class="post-title">[공지] ${title}</h3>
-                    <div class="post-meta">
+                    <div class="post-meta support-notice-meta">
                         <span class="post-author">${authorName}</span>
-                        <span class="post-date">${createdAt}</span>
+                        <span class="post-date support-notice-date">${createdAt}</span>
                     </div>
                 </div>
             </div>
-            <div class="post-content" style="white-space:pre-wrap;">${content}</div>
         </a>
     `;
 }
@@ -168,7 +166,7 @@ async function loadArticleDetail(articleId, sourceType) {
 
         if (!list) return;
 
-        const detailCreatedAt = formatDateTime(article.createdAt || article.created_at) || '';
+        const detailCreatedAt = formatDateOnly(article.createdAt || article.created_at) || '';
         const detailAuthor = sanitizeHTML(article.createdByNickname || article.updatedByNickname || '운영팀');
         const detailTitle = sanitizeHTML(article.title || '제목 없음');
         const detailContent = sanitizeHTML(article.content || '').replace(/\n/g, '<br>');
@@ -178,9 +176,9 @@ async function loadArticleDetail(articleId, sourceType) {
                 <div class="post-header">
                     <div class="post-header-left">
                         <h3 class="post-title">[공지] ${detailTitle}</h3>
-                        <div class="post-meta">
+                        <div class="post-meta support-notice-meta">
                             <span class="post-author">${detailAuthor}</span>
-                            <span class="post-date">${detailCreatedAt}</span>
+                            <span class="post-date support-notice-date">${detailCreatedAt}</span>
                         </div>
                     </div>
                 </div>
@@ -201,4 +199,17 @@ async function loadArticleDetail(articleId, sourceType) {
     } finally {
         loading?.classList.add('hidden');
     }
+}
+
+function formatDateOnly(dateString) {
+    if (!dateString) return '';
+
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return String(dateString);
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}.${month}.${day}`;
 }
