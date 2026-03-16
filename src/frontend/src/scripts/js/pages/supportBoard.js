@@ -114,7 +114,7 @@ function createSupportNoticeCard(item) {
         <a class="post-card admin-notice" href="/support?articleId=${articleId}&sourceType=${sourceType}" style="display:block;text-decoration:none;color:inherit;">
             <div class="post-header">
                 <div class="post-header-left">
-                    <h3 class="post-title">${title}</h3>
+                    <h3 class="post-title">[공지] ${title}</h3>
                     <div class="post-meta support-notice-meta">
                         <span class="post-date support-notice-date">${createdAt}</span>
                     </div>
