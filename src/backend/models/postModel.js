@@ -30,7 +30,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
   const searchType = options.searchType || 'bbs_title';
   const boardFilter = normalizeBoardFilter(options.boardType);
 
-  const whereConditions = ['p.is_deleted = 0', 'p.is_notice = 0'];
+  const whereConditions = ['p.is_deleted = 0'];
   const whereParams = [];
 
   if (boardFilter !== 'ALL') {
@@ -83,16 +83,17 @@ async function listPosts(page = 0, size = 10, options = {}) {
 async function createPost({ userId, title, content, boardType = BOARD_TYPES.FREE, isNotice = false, noticeType = null, isPinned = false }) {
   const pool = getPool();
   const normalizedBoardType = normalizeBoardType(boardType);
+  const normalizedNoticeType = isNotice ? (String(noticeType || '').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE') : null;
   const [result] = await pool.query(
     'INSERT INTO posts (user_id, board_type, is_notice, notice_type, is_pinned, title, content) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [userId || null, normalizedBoardType, 0, null, 0, title, content]
+    [userId || null, normalizedBoardType, isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, title, content]
   );
   return result.insertId;
 }
 
 async function findPostById(id) {
   const pool = getPool();
-  const [rows] = await pool.query('SELECT * FROM posts WHERE id = ? AND is_deleted = 0 AND is_notice = 0', [id]);
+  const [rows] = await pool.query('SELECT * FROM posts WHERE id = ? AND is_deleted = 0', [id]);
   return rows[0] || null;
 }
 
@@ -124,7 +125,7 @@ async function findPostDetailById(id) {
             (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
-     WHERE p.id = ? AND p.is_deleted = 0 AND p.is_notice = 0`,
+     WHERE p.id = ? AND p.is_deleted = 0`,
     [id]
   );
   return rows[0] || null;
@@ -133,7 +134,7 @@ async function findPostDetailById(id) {
 async function findAdjacentPosts(id) {
   const pool = getPool();
   const [currentRows] = await pool.query(
-    'SELECT id, board_type AS boardType, created_at AS createdAt FROM posts WHERE id = ? AND is_deleted = 0 AND is_notice = 0 LIMIT 1',
+    'SELECT id, board_type AS boardType, created_at AS createdAt FROM posts WHERE id = ? AND is_deleted = 0 LIMIT 1',
     [id]
   );
 
@@ -146,7 +147,6 @@ async function findAdjacentPosts(id) {
     `SELECT p.id, p.title
      FROM posts p
      WHERE p.is_deleted = 0
-       AND p.is_notice = 0
        AND p.board_type = ?
        AND (
          p.created_at > ?
@@ -161,7 +161,6 @@ async function findAdjacentPosts(id) {
     `SELECT p.id, p.title
      FROM posts p
      WHERE p.is_deleted = 0
-       AND p.is_notice = 0
        AND p.board_type = ?
        AND (
          p.created_at < ?
@@ -184,7 +183,11 @@ async function incrementPostViewCount(id) {
 }
 async function updatePost(id, { title, content, isNotice, noticeType, isPinned }) {
   const pool = getPool();
-  await pool.query('UPDATE posts SET title = ?, content = ?, is_notice = 0, notice_type = NULL, is_pinned = 0 WHERE id = ?', [title, content, id]);
+  const normalizedNoticeType = isNotice ? (String(noticeType || '').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE') : null;
+  await pool.query(
+    'UPDATE posts SET title = ?, content = ?, is_notice = ?, notice_type = ?, is_pinned = ? WHERE id = ?',
+    [title, content, isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, id]
+  );
 }
 
 async function deletePost(id) {
