@@ -32,6 +32,21 @@ function parseBoardType(value) {
   return BOARD_TYPES.FREE;
 }
 
+
+function parseNoticeType(value) {
+  const normalized = String(value || '').toUpperCase();
+  if (normalized === 'NOTICE' || normalized === 'IMPORTANT') return normalized;
+  return null;
+}
+
+function parseBoolean(value, defaultValue = false) {
+  if (value === undefined || value === null) return defaultValue;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  const normalized = String(value).trim().toLowerCase();
+  return ['1', 'true', 'yes', 'on'].includes(normalized);
+}
+
 function canViewSecretComment(comment, post, currentUser) {
   if (!comment.isSecret) {
     return true;
@@ -65,7 +80,10 @@ function sanitizePostForViewer(post) {
 
   const normalized = {
     ...post,
-    boardType: parseBoardType(post.boardType)
+    boardType: parseBoardType(post.boardType),
+    isNotice: Boolean(post.isNotice),
+    isPinned: Boolean(post.isPinned),
+    noticeType: parseNoticeType(post.noticeType)
   };
 
   if (normalized.boardType === BOARD_TYPES.ANON) {
@@ -217,11 +235,19 @@ async function createPost(req, res, next) {
     if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
 
     const boardType = parseBoardType(req.body.boardType);
+    const isAdmin = req.user.role === 'ADMIN';
+    const isNotice = isAdmin ? parseBoolean(req.body.isNotice, false) : false;
+    const isPinned = isAdmin ? parseBoolean(req.body.isPinned, false) : false;
+    const noticeType = isNotice ? (parseNoticeType(req.body.noticeType) || 'NOTICE') : null;
+
     const postId = await postModel.createPost({
       userId: req.user.id,
       title,
       content,
-      boardType
+      boardType,
+      isNotice,
+      noticeType,
+      isPinned
     });
     const post = await postModel.findPostById(postId);
     const createPostPointResult = await awardPointByAction(req.user.id, 'CREATE_POST');
@@ -254,9 +280,20 @@ async function updatePost(req, res, next) {
       return res.status(403).json({ message: '수정 권한이 없습니다.' });
     }
 
+    const isAdmin = req.user.role === 'ADMIN';
+    const nextIsNotice = isAdmin ? parseBoolean(req.body.isNotice, Boolean(post.is_notice)) : Boolean(post.is_notice);
+    const nextIsPinned = isAdmin ? parseBoolean(req.body.isPinned, Boolean(post.is_pinned)) : Boolean(post.is_pinned);
+    const defaultNoticeType = post.notice_type || 'NOTICE';
+    const nextNoticeType = nextIsNotice
+      ? (isAdmin ? (parseNoticeType(req.body.noticeType) || defaultNoticeType) : defaultNoticeType)
+      : null;
+
     await postModel.updatePost(postId, {
       title: req.body.title ?? post.title,
-      content: req.body.content ?? post.content
+      content: req.body.content ?? post.content,
+      isNotice: nextIsNotice,
+      noticeType: nextNoticeType,
+      isPinned: nextIsPinned
     });
 
     const updated = await postModel.findPostById(postId);

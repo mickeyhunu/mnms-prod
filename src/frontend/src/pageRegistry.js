@@ -348,6 +348,22 @@ const pageRegistry = {
                     </select>
                     </div>
                     
+                    <div class="form-group hidden" id="admin-post-options">
+                        <label class="form-label">관리자 게시글 옵션</label>
+                        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+                            <label><input type="checkbox" id="is-notice"> 공지/필독으로 등록</label>
+                            <label><input type="checkbox" id="is-pinned"> 게시판 상단 고정</label>
+                        </div>
+                        <div class="mt-2 hidden" id="notice-type-wrap">
+                            <label for="notice-type" class="form-label">공지 유형</label>
+                            <select id="notice-type" class="form-control" style="max-width:200px;">
+                                <option value="NOTICE">공지</option>
+                                <option value="IMPORTANT">필독</option>
+                            </select>
+                        </div>
+                    </div>
+
+
                     <div class="form-group">
                         <label for="title" class="form-label">제목</label>
                         <input type="text" id="title" name="title" class="form-control" placeholder="제목을 입력하세요" maxlength="255" required>

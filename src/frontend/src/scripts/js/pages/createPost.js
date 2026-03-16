@@ -20,6 +20,7 @@ function initCreatePost() {
     setupEventListeners();
     setupImageUpload();
     setupBoardOptions();
+    setupAdminOptions();
     setupModeUI();
     validateForm();
 
@@ -37,6 +38,32 @@ function setupModeUI() {
 
 function setupBoardOptions() {
     // 카테고리 선택은 모든 로그인 사용자에게 동일하게 제공됩니다.
+}
+
+
+function setupAdminOptions() {
+    const user = Auth.getUser();
+    const adminOptionSection = document.getElementById('admin-post-options');
+    const noticeCheckbox = document.getElementById('is-notice');
+    const noticeTypeWrap = document.getElementById('notice-type-wrap');
+
+    if (!adminOptionSection) return;
+
+    if (!user || !user.isAdmin) {
+        adminOptionSection.classList.add('hidden');
+        return;
+    }
+
+    adminOptionSection.classList.remove('hidden');
+
+    if (noticeCheckbox && noticeTypeWrap) {
+        const syncNoticeTypeVisibility = () => {
+            noticeTypeWrap.classList.toggle('hidden', !noticeCheckbox.checked);
+        };
+
+        noticeCheckbox.addEventListener('change', syncNoticeTypeVisibility);
+        syncNoticeTypeVisibility();
+    }
 }
 
 function setupEventListeners() {
@@ -185,6 +212,18 @@ async function loadPostForEdit() {
         if (titleInput) titleInput.value = post.title || '';
         if (contentInput) contentInput.value = post.content || '';
 
+        const isNoticeInput = document.getElementById('is-notice');
+        const noticeTypeInput = document.getElementById('notice-type');
+        const isPinnedInput = document.getElementById('is-pinned');
+        const noticeTypeWrap = document.getElementById('notice-type-wrap');
+
+        if (isNoticeInput && Auth.getUser()?.isAdmin) {
+            isNoticeInput.checked = Boolean(post.isNotice);
+            if (noticeTypeInput) noticeTypeInput.value = post.noticeType || 'NOTICE';
+            if (isPinnedInput) isPinnedInput.checked = Boolean(post.isPinned);
+            if (noticeTypeWrap) noticeTypeWrap.classList.toggle('hidden', !isNoticeInput.checked);
+        }
+
         existingImageUrl = post.imageUrl || (post.images && post.images[0]) || null;
         if (existingImageUrl) {
             displayExistingImagePreview(existingImageUrl);
@@ -209,6 +248,10 @@ async function handleSubmit(event) {
     const contentValue = document.getElementById('content')?.value.trim() || '';
     const submitBtn = document.getElementById('submit-btn');
     const boardType = document.getElementById('board-type')?.value || 'FREE';
+    const isNotice = document.getElementById('is-notice')?.checked || false;
+    const noticeType = document.getElementById('notice-type')?.value || 'NOTICE';
+    const isPinned = document.getElementById('is-pinned')?.checked || false;
+    const isAdmin = Boolean(Auth.getUser()?.isAdmin);
 
     if (!titleValue || !contentValue) {
         alert('제목과 내용을 모두 입력해주세요.');
@@ -234,6 +277,12 @@ async function handleSubmit(event) {
             boardType,
             imageUrl: newImageUrl || existingImageUrl
         };
+
+        if (isAdmin) {
+            payload.isNotice = isNotice;
+            payload.noticeType = isNotice ? noticeType : null;
+            payload.isPinned = isPinned;
+        }
 
         if (isEditMode) {
             await APIClient.put(`/posts/${editingPostId}`, payload);

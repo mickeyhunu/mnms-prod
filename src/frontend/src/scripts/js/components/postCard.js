@@ -28,8 +28,8 @@ function renderPostList(posts, container) {
         return (b.id || 0) - (a.id || 0);
     });
 
-    const notices = sortedPosts.slice(0, 3);
-    const normalPosts = sortedPosts.slice(3);
+    const notices = sortedPosts.filter((post) => Boolean(post.isNotice));
+    const normalPosts = sortedPosts.filter((post) => !post.isNotice);
 
     if (noticeList) {
         noticeList.innerHTML = notices.map((post) => createBoardRow(post, true)).join('');
@@ -39,12 +39,14 @@ function renderPostList(posts, container) {
 }
 
 function createBoardRow(post, isNotice = false, index = 0) {
-    const noticeBadge = isNotice ? '<span class="badge-notice">[공지]</span>' : '';
+    const noticeType = String(post.noticeType || 'NOTICE').toUpperCase();
+    const noticeText = noticeType === 'IMPORTANT' ? '필독' : '공지';
+    const noticeBadge = isNotice ? `<span class="badge-notice">[${noticeText}]</span>` : '';
     const hotBadge = !isNotice && (post.likeCount || 0) >= 5 ? '<span class="badge-hot">추천</span>' : '';
     const newBadge = isPostWithin24Hours(post.createdAt)
         ? '<span class="badge-new" aria-label="24시간 이내 새 글">N</span>'
         : '';
-    const numberLabel = isNotice ? '공지' : post.id || index + 1;
+    const numberLabel = isNotice ? (post.isPinned ? '📌' : noticeText) : post.id || index + 1;
 
     const authorName = getDisplayAuthorName(post);
 
@@ -79,9 +81,11 @@ function createPostCard(post) {
     const user = Auth.getUser();
     const isLoggedIn = !!user;
     const isAuthor = isLoggedIn && user.id === post.authorId;
-    const isAdmin = post.isAdminPost || post.adminPost;
-    const cardClass = isAdmin ? 'post-card admin-notice' : 'post-card';
-    const titlePrefix = isAdmin ? '📌 [공지] ' : '';
+    const isAdminNotice = Boolean(post.isNotice);
+    const cardClass = isAdminNotice ? 'post-card admin-notice' : 'post-card';
+    const noticeLabel = String(post.noticeType || 'NOTICE').toUpperCase() === 'IMPORTANT' ? '필독' : '공지';
+    const pinPrefix = post.isPinned ? '📌 ' : '';
+    const titlePrefix = isAdminNotice ? `${pinPrefix}[${noticeLabel}] ` : '';
     
     const isLikedByMe = Boolean(post.isLiked || post.liked || post.likedByMe);
 

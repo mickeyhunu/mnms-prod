@@ -106,6 +106,8 @@ async function initDatabase() {
       user_id BIGINT NULL,
       board_type ENUM('FREE','ANON','REVIEW','STORY','QUESTION') NOT NULL DEFAULT 'FREE',
       is_notice TINYINT(1) NOT NULL DEFAULT 0,
+      notice_type ENUM('NOTICE','IMPORTANT') NULL,
+      is_pinned TINYINT(1) NOT NULL DEFAULT 0,
       notice_target_boards VARCHAR(50) NULL,
       title VARCHAR(255) NOT NULL,
       content TEXT NOT NULL,
@@ -229,6 +231,35 @@ async function initDatabase() {
 
   if (!noticeTargetColumn.length) {
     await pool.query('ALTER TABLE posts ADD COLUMN notice_target_boards VARCHAR(50) NULL AFTER is_notice');
+  }
+
+
+  const [noticeTypeColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'posts'
+       AND COLUMN_NAME = 'notice_type'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!noticeTypeColumn.length) {
+    await pool.query("ALTER TABLE posts ADD COLUMN notice_type ENUM('NOTICE','IMPORTANT') NULL AFTER is_notice");
+  }
+
+  const [isPinnedColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'posts'
+       AND COLUMN_NAME = 'is_pinned'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!isPinnedColumn.length) {
+    await pool.query('ALTER TABLE posts ADD COLUMN is_pinned TINYINT(1) NOT NULL DEFAULT 0 AFTER notice_type');
   }
 
   await pool.query(`
