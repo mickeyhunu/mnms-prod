@@ -137,7 +137,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 0 14px;
+    padding: 8px 8px 14px;
 }
 
 .admin-support-toolbar-split {
