@@ -9,9 +9,10 @@ async function initSupportBoardPage() {
     Auth.bindLogoutButton();
 
     const params = new URLSearchParams(window.location.search);
-    const tab = params.get('tab');
-    if (tab === 'faq' || tab === 'notice') {
-        activeTab = tab;
+    const rawTab = String(params.get('tab') || '').toLowerCase();
+    const normalizedTab = rawTab === 'fqa' ? 'faq' : rawTab;
+    if (normalizedTab === 'faq' || normalizedTab === 'notice') {
+        activeTab = normalizedTab;
     }
 
     bindTabEvents();
