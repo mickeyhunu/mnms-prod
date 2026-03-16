@@ -19,10 +19,11 @@ const pageRegistry = {
 
     <main class="main-content">
         <div class="container">
-            <div class="page-header">
-                <h1>관리자 페이지</h1>
-                <p>회원/광고/커뮤니티 데이터를 관리할 수 있습니다</p>
-            </div>
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <span class="community-board-name">관리자 페이지</span>
+                </div>
+            </header>
 
             <div class="admin-tabs">
                 <button class="admin-tab active" data-tab="posts">게시글 관리</button>
