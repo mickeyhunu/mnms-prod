@@ -148,6 +148,53 @@ const APIClient = {
         }
     },
 
+    async patch(endpoint, data = {}) {
+        const url = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
+
+        try {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            const token = Auth.getToken();
+            if (token) {
+                headers['Authorization'] = 'Bearer ' + token;
+            }
+
+            const response = await fetch(url, {
+                method: 'PATCH',
+                headers: headers,
+                credentials: 'include',
+                body: JSON.stringify(data)
+            });
+
+
+            if (!response.ok) {
+                let errorData = {};
+                try {
+                    errorData = await response.json();
+                } catch (e) {
+                    console.error('Error parsing error response:', e);
+                }
+
+                const error = new Error(errorData.message || '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                error.status = response.status;
+                error.data = errorData;
+                throw error;
+            }
+
+            const responseData = await response.json();
+            return responseData;
+
+        } catch (error) {
+            if (error.name === 'TypeError' || error.message.includes('fetch')) {
+                error.message = '네트워크 연결에 문제가 발생했습니다.';
+            }
+            console.error('API Client error:', error);
+            throw error;
+        }
+    },
+
     async delete(endpoint, data = null) {
         const url = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
         
@@ -200,4 +247,3 @@ const APIClient = {
         }
     }
 };
-
