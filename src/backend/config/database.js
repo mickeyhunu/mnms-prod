@@ -427,6 +427,29 @@ async function initDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
+
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS support_inquiries (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      user_id BIGINT NOT NULL,
+      inquiry_type VARCHAR(50) NOT NULL,
+      target_type VARCHAR(20) NULL,
+      target_id BIGINT NULL,
+      title VARCHAR(255) NOT NULL,
+      content TEXT NOT NULL,
+      status ENUM('PENDING','ANSWERED') NOT NULL DEFAULT 'PENDING',
+      answer_content TEXT NULL,
+      answered_by BIGINT NULL,
+      answered_at DATETIME NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_support_inquiries_user_created (user_id, created_at),
+      INDEX idx_support_inquiries_status_created (status, created_at),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (answered_by) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
   const [adminRows] = await pool.query('SELECT id FROM users WHERE email = ?', ['admin@company.com']);
   if (!adminRows.length) {
     await pool.query(

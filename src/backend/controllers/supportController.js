@@ -106,11 +106,109 @@ async function deleteArticle(req, res, next) {
   }
 }
 
+async function createInquiry(req, res, next) {
+  try {
+    const type = supportModel.normalizeInquiryType(req.body.type);
+    const title = String(req.body.title || '').trim();
+    const content = String(req.body.content || '').trim();
+    const targetType = String(req.body.targetType || '').trim().toLowerCase() || null;
+    const targetId = parseId(req.body.targetId);
+
+    if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
+
+    const id = await supportModel.createInquiry({
+      userId: req.user.id,
+      type,
+      title,
+      content,
+      targetType,
+      targetId
+    });
+
+    res.status(201).json({ success: true, id });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function listMyInquiries(req, res, next) {
+  try {
+    const rows = await supportModel.listInquiriesByUser(req.user.id);
+    res.json({ content: rows, totalElements: rows.length });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getMyInquiryDetail(req, res, next) {
+  try {
+    const id = parseId(req.params.id);
+    if (!id) return res.status(400).json({ message: '유효하지 않은 문의 ID입니다.' });
+
+    const inquiry = await supportModel.findInquiryById(id);
+    if (!inquiry || Number(inquiry.user_id) !== Number(req.user.id)) {
+      return res.status(404).json({ message: '문의를 찾을 수 없습니다.' });
+    }
+
+    res.json({
+      id: inquiry.id,
+      userId: inquiry.user_id,
+      type: inquiry.inquiry_type,
+      targetType: inquiry.target_type,
+      targetId: inquiry.target_id,
+      title: inquiry.title,
+      content: inquiry.content,
+      status: inquiry.status,
+      answerContent: inquiry.answer_content,
+      answeredAt: inquiry.answered_at,
+      createdAt: inquiry.created_at,
+      updatedAt: inquiry.updated_at
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function listAdminInquiries(req, res, next) {
+  try {
+    const status = supportModel.normalizeInquiryStatus(req.query.status);
+    if (req.query.status && !status) return res.status(400).json({ message: '유효하지 않은 처리 상태입니다.' });
+
+    const rows = await supportModel.listInquiriesForAdmin({ status });
+    res.json({ content: rows, totalElements: rows.length });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function answerInquiry(req, res, next) {
+  try {
+    const id = parseId(req.params.id);
+    if (!id) return res.status(400).json({ message: '유효하지 않은 문의 ID입니다.' });
+
+    const inquiry = await supportModel.findInquiryById(id);
+    if (!inquiry) return res.status(404).json({ message: '문의를 찾을 수 없습니다.' });
+
+    const answerContent = String(req.body.answerContent || '').trim();
+    if (!answerContent) return res.status(400).json({ message: '답변 내용을 입력해주세요.' });
+
+    await supportModel.answerInquiry(id, { answerContent, answeredBy: req.user.id });
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   listPublicArticles,
   getPublicArticleDetail,
   listAdminArticles,
   createArticle,
   updateArticle,
-  deleteArticle
+  deleteArticle,
+  createInquiry,
+  listMyInquiries,
+  getMyInquiryDetail,
+  listAdminInquiries,
+  answerInquiry
 };

@@ -4,6 +4,8 @@
 let deleteTarget = null;
 let supportEditTarget = null;
 let currentSupportCategory = 'NOTICE';
+let currentInquiryStatus = '';
+let inquiryAnswerTarget = null;
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAdminPage);
@@ -47,7 +49,7 @@ function bindCommonEvents() {
             tab.classList.add('active');
 
             const tabKey = tab.dataset.tab;
-            ['posts', 'comments', 'users', 'ads', 'support'].forEach((key) => {
+            ['posts', 'comments', 'users', 'ads', 'support', 'inquiries'].forEach((key) => {
                 const isActive = key === tabKey;
                 document.getElementById(`${key}-section`)?.classList.toggle('hidden', !isActive);
                 document.getElementById(`${key}-section`)?.classList.toggle('active', isActive);
@@ -58,6 +60,7 @@ function bindCommonEvents() {
             else if (tabKey === 'users') await loadUsers();
             else if (tabKey === 'ads') await loadAds();
             else if (tabKey === 'support') await loadSupportArticles();
+            else if (tabKey === 'inquiries') await loadInquiries();
         });
     });
 
@@ -66,6 +69,7 @@ function bindCommonEvents() {
     document.getElementById('users-retry-btn')?.addEventListener('click', loadUsers);
     document.getElementById('ads-retry-btn')?.addEventListener('click', loadAds);
     document.getElementById('support-retry-btn')?.addEventListener('click', loadSupportArticles);
+    document.getElementById('inquiries-retry-btn')?.addEventListener('click', loadInquiries);
 
     document.getElementById('delete-cancel-btn')?.addEventListener('click', closeDeleteModal);
     document.getElementById('delete-confirm-btn')?.addEventListener('click', confirmDelete);
@@ -80,11 +84,19 @@ function bindCommonEvents() {
 
     document.getElementById('ads-new-btn')?.addEventListener('click', () => openAdEditor());
 
+    document.getElementById('inquiries-status')?.addEventListener('change', async (event) => {
+        currentInquiryStatus = event.target.value || '';
+        await loadInquiries();
+    });
+    document.getElementById('inquiry-answer-cancel-btn')?.addEventListener('click', closeInquiryAnswerModal);
+    document.getElementById('inquiry-answer-save-btn')?.addEventListener('click', saveInquiryAnswer);
+
     document.getElementById('posts-tbody')?.addEventListener('click', handleAdminTableActionClick);
     document.getElementById('comments-tbody')?.addEventListener('click', handleAdminTableActionClick);
     document.getElementById('users-tbody')?.addEventListener('click', handleAdminTableActionClick);
     document.getElementById('ads-tbody')?.addEventListener('click', handleAdminTableActionClick);
     document.getElementById('support-tbody')?.addEventListener('click', handleAdminTableActionClick);
+    document.getElementById('inquiries-tbody')?.addEventListener('click', handleAdminTableActionClick);
 }
 
 async function loadPosts() {
@@ -406,7 +418,12 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
-    if (['delete', 'edit-ad', 'edit-support', 'save-user-role'].includes(action) && !Number.isInteger(targetId)) {
+    if (action === 'answer-inquiry' && Number.isInteger(targetId)) {
+        await openInquiryAnswerModal(targetId);
+        return;
+    }
+
+    if (['delete', 'edit-ad', 'edit-support', 'save-user-role', 'answer-inquiry'].includes(action) && !Number.isInteger(targetId)) {
         alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
     }
 }
@@ -441,6 +458,96 @@ async function saveSupportArticle() {
         await loadSupportArticles();
     } catch (error) {
         alert(error.message || '저장에 실패했습니다.');
+    }
+}
+
+
+
+function toInquiryTypeLabel(type) {
+    const normalized = String(type || '').toLowerCase();
+    if (normalized === 'post_report') return '게시글 신고';
+    if (normalized === 'comment_report') return '댓글 신고';
+    if (normalized === 'question') return '일반 문의';
+    return '기타';
+}
+
+function toInquiryStatusInfo(status) {
+    const normalized = String(status || '').toUpperCase();
+    if (normalized === 'ANSWERED') return { text: '답변완료', className: 'is-completed' };
+    return { text: '대기', className: '' };
+}
+
+async function loadInquiries() {
+    toggleLoading('inquiries', true);
+    try {
+        const params = currentInquiryStatus ? { status: currentInquiryStatus } : {};
+        const response = await APIClient.get('/admin/support/inquiries', params);
+        const inquiries = response.content || [];
+
+        const tbody = document.getElementById('inquiries-tbody');
+        if (!inquiries.length) {
+            tbody.innerHTML = '<tr><td colspan="7">접수된 문의가 없습니다.</td></tr>';
+        } else {
+            tbody.innerHTML = inquiries.map((inquiry) => {
+                const status = toInquiryStatusInfo(inquiry.status);
+                return `
+                <tr>
+                    <td>${inquiry.id}</td>
+                    <td>${sanitizeHTML(inquiry.userNickname || inquiry.userEmail || `회원#${inquiry.userId}`)}</td>
+                    <td>${toInquiryTypeLabel(inquiry.type)}</td>
+                    <td>${sanitizeHTML(inquiry.title || '')}</td>
+                    <td><span class="my-inquiry-status ${status.className}">${status.text}</span></td>
+                    <td>${formatDate(inquiry.createdAt || inquiry.created_at)}</td>
+                    <td><button class="btn btn-sm btn-primary" data-admin-action="answer-inquiry" data-target-id="${inquiry.id}">답변</button></td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        showContent('inquiries');
+    } catch (error) {
+        showError('inquiries', error.message || '문의 목록을 불러오지 못했습니다.');
+    }
+}
+
+async function openInquiryAnswerModal(inquiryId) {
+    try {
+        const response = await APIClient.get('/admin/support/inquiries', currentInquiryStatus ? { status: currentInquiryStatus } : {});
+        const target = (response.content || []).find((item) => Number(item.id) === Number(inquiryId));
+        if (!target) {
+            alert('문의를 찾을 수 없습니다.');
+            return;
+        }
+
+        inquiryAnswerTarget = target;
+        document.getElementById('inquiry-answer-modal-title').textContent = `문의 #${target.id} 답변`;
+        document.getElementById('inquiry-answer-target').textContent = `${toInquiryTypeLabel(target.type)} · ${target.userNickname || target.userEmail || `회원#${target.userId}`} · ${target.title || ''}`;
+        document.getElementById('inquiry-answer-content').value = target.answerContent || '';
+        document.getElementById('inquiry-answer-modal')?.classList.remove('hidden');
+    } catch (error) {
+        alert(error.message || '문의 정보를 불러오지 못했습니다.');
+    }
+}
+
+function closeInquiryAnswerModal() {
+    inquiryAnswerTarget = null;
+    document.getElementById('inquiry-answer-modal')?.classList.add('hidden');
+}
+
+async function saveInquiryAnswer() {
+    if (!inquiryAnswerTarget) return;
+    const answerContent = document.getElementById('inquiry-answer-content')?.value?.trim() || '';
+    if (!answerContent) {
+        alert('답변 내용을 입력해주세요.');
+        return;
+    }
+
+    try {
+        await APIClient.put(`/admin/support/inquiries/${inquiryAnswerTarget.id}/answer`, { answerContent });
+        closeInquiryAnswerModal();
+        await loadInquiries();
+    } catch (error) {
+        alert(error.message || '답변 저장에 실패했습니다.');
     }
 }
 
