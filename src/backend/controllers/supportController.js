@@ -19,6 +19,42 @@ async function listPublicArticles(req, res, next) {
   }
 }
 
+
+async function getPublicArticleDetail(req, res, next) {
+  try {
+    const id = parseId(req.params.id);
+    if (!id) return res.status(400).json({ message: '유효하지 않은 글 ID입니다.' });
+
+    const sourceType = String(req.query.sourceType || '').toUpperCase();
+
+    if (sourceType === 'POST') {
+      const post = await postModel.findPostDetailById(id);
+      if (!post || post.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
+
+      return res.json({
+        id: post.id,
+        sourceType: 'POST',
+        category: 'NOTICE',
+        title: post.title,
+        content: post.content,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt,
+        createdByNickname: post.authorNickname || '운영팀'
+      });
+    }
+
+    const article = await supportModel.findPublicArticleDetailById(id);
+    if (!article) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
+
+    res.json({
+      ...article,
+      sourceType: 'SUPPORT'
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function listAdminArticles(req, res, next) {
   try {
     const category = supportModel.normalizeCategory(req.query.category);
@@ -114,6 +150,7 @@ async function deleteArticle(req, res, next) {
 
 module.exports = {
   listPublicArticles,
+  getPublicArticleDetail,
   listAdminArticles,
   createArticle,
   updateArticle,

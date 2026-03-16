@@ -81,6 +81,25 @@ async function findArticleById(id) {
   return rows[0] || null;
 }
 
+async function findPublicArticleDetailById(id) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT a.id, a.category, a.title, a.content,
+            a.created_by AS createdBy, a.updated_by AS updatedBy,
+            a.created_at AS createdAt, a.updated_at AS updatedAt,
+            COALESCE(cu.nickname, '운영팀') AS createdByNickname,
+            COALESCE(uu.nickname, '운영팀') AS updatedByNickname
+     FROM support_articles a
+     LEFT JOIN users cu ON cu.id = a.created_by
+     LEFT JOIN users uu ON uu.id = a.updated_by
+     WHERE a.id = ?
+       AND a.is_deleted = 0
+     LIMIT 1`,
+    [id]
+  );
+  return rows[0] || null;
+}
+
 async function createArticle({ category, title, content, userId }) {
   const pool = getPool();
   const normalizedCategory = normalizeCategory(category);
@@ -109,6 +128,7 @@ module.exports = {
   normalizeCategory,
   listArticles,
   findArticleById,
+  findPublicArticleDetailById,
   createArticle,
   updateArticle,
   deleteArticle
