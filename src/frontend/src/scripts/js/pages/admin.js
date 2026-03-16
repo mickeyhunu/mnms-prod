@@ -5,7 +5,11 @@ let deleteTarget = null;
 let supportEditTarget = null;
 let currentSupportCategory = 'NOTICE';
 
-document.addEventListener('DOMContentLoaded', initAdminPage);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAdminPage);
+} else {
+    initAdminPage();
+}
 
 async function initAdminPage() {
     if (!Auth.isAuthenticated()) {
