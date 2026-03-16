@@ -17,6 +17,10 @@ const INQUIRY_TYPES = {
   QUESTION: 'question',
   POST_REPORT: 'post_report',
   COMMENT_REPORT: 'comment_report',
+  ACCOUNT: 'account',
+  SERVICE_ERROR: 'service_error',
+  AD_INQUIRY: 'ad_inquiry',
+  ETC: 'etc',
   OTHER: 'other'
 };
 
