@@ -19,7 +19,6 @@ function initCustomerServicePage() {
     Auth.bindLogoutButton();
     applyTargetContextFromQuery();
     bindFileValidation();
-    renderMyInquiries();
 
     form.addEventListener('submit', handleCustomerServiceSubmit);
 }
@@ -37,44 +36,6 @@ function getMyInquiries() {
 
 function saveMyInquiries(items) {
     localStorage.setItem(MY_INQUIRIES_STORAGE_KEY, JSON.stringify(items));
-}
-
-function renderMyInquiries() {
-    const listContainer = document.getElementById('my-inquiries-list');
-    const emptyMessage = document.getElementById('my-inquiries-empty');
-
-    if (!listContainer || !emptyMessage) return;
-
-    const inquiries = getMyInquiries();
-    listContainer.innerHTML = '';
-
-    if (!inquiries.length) {
-        emptyMessage.classList.remove('hidden');
-        return;
-    }
-
-    emptyMessage.classList.add('hidden');
-
-    inquiries.forEach((inquiry) => {
-        const item = document.createElement('article');
-        item.className = 'my-inquiry-item';
-
-        const statusText = inquiry.status === 'completed' ? '처리 완료' : '접수/처리 중';
-        const answerText = inquiry.answer ? inquiry.answer : '답변 준비 중입니다.';
-        const createdAt = inquiry.createdAt ? new Date(inquiry.createdAt).toLocaleString('ko-KR') : '-';
-
-        item.innerHTML = `
-            <div class="my-inquiry-meta">
-                <span class="my-inquiry-type">${escapeHtml(inquiry.typeLabel || inquiry.type || '기타')}</span>
-                <span class="my-inquiry-status ${inquiry.status === 'completed' ? 'is-completed' : ''}">${statusText}</span>
-            </div>
-            <p class="my-inquiry-content">${escapeHtml(inquiry.content || '')}</p>
-            <p class="my-inquiry-answer"><strong>답변:</strong> ${escapeHtml(answerText)}</p>
-            <time class="my-inquiry-date">문의일시: ${escapeHtml(createdAt)}</time>
-        `;
-
-        listContainer.appendChild(item);
-    });
 }
 
 function escapeHtml(value) {
@@ -152,15 +113,23 @@ function handleCustomerServiceSubmit(event) {
 
     const form = event.currentTarget;
     const typeSelect = document.getElementById('inquiry-type');
+    const titleInput = document.getElementById('inquiry-title');
     const contentInput = document.getElementById('inquiry-reason');
 
     const inquiryType = String(typeSelect?.value || '').trim();
     const inquiryTypeLabel = typeSelect?.selectedOptions?.[0]?.textContent?.trim() || inquiryType;
+    const title = String(titleInput?.value || '').trim();
     const content = String(contentInput?.value || '').trim();
 
     if (!inquiryType) {
         showNotification('문의 유형을 선택해주세요.', 'warning');
         typeSelect?.focus();
+        return;
+    }
+
+    if (!title) {
+        showNotification('문의 제목을 입력해주세요.', 'warning');
+        titleInput?.focus();
         return;
     }
 
@@ -180,6 +149,7 @@ function handleCustomerServiceSubmit(event) {
         id: `inq_${Date.now()}`,
         type: inquiryType,
         typeLabel: inquiryTypeLabel,
+        title,
         content,
         status: 'pending',
         answer: '',
@@ -190,5 +160,8 @@ function handleCustomerServiceSubmit(event) {
     showNotification('문의가 접수되었습니다. 내 문의함에서 처리 상태를 확인할 수 있습니다.', 'success');
     form.reset();
     applyTargetContextFromQuery();
-    renderMyInquiries();
+
+    setTimeout(() => {
+        window.location.href = '/my-inquiries';
+    }, 700);
 }
