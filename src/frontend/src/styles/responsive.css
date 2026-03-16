@@ -78,9 +78,16 @@
         min-width: 80px;
     }
 
-    .my-page-tabs, .admin-tabs, .message-tabs {
+    .my-page-tabs, .message-tabs {
         flex-wrap: wrap;
         overflow-x: auto;
+    }
+
+    .admin-tabs {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .tab-btn, .admin-tab, .message-tab-btn {
