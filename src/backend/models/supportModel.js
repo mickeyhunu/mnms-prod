@@ -20,7 +20,8 @@ async function listArticles(category, includeDeleted = false) {
 
   const whereDeleted = includeDeleted ? '' : 'AND a.is_deleted = 0';
   const [rows] = await pool.query(
-    `SELECT a.id, a.category, a.title, a.content, a.created_by AS createdBy, a.updated_by AS updatedBy,
+    `SELECT a.id, a.id AS sourceId, 'SUPPORT' AS sourceType,
+            a.category, a.title, a.content, a.created_by AS createdBy, a.updated_by AS updatedBy,
             a.created_at AS createdAt, a.updated_at AS updatedAt,
             COALESCE(cu.nickname, '관리자') AS createdByNickname,
             COALESCE(uu.nickname, '관리자') AS updatedByNickname
@@ -32,20 +33,30 @@ async function listArticles(category, includeDeleted = false) {
     [normalizedCategory]
   );
 
-  if (normalizedCategory !== SUPPORT_CATEGORIES.NOTICE || includeDeleted) {
+  if (normalizedCategory !== SUPPORT_CATEGORIES.NOTICE) {
     return rows;
   }
 
+  const postDeletedFilter = includeDeleted ? '' : 'AND p.is_deleted = 0';
   const [adminNoticePosts] = await pool.query(
-    `SELECT p.id, 'NOTICE' AS category, p.title, p.content,
+    `SELECT p.id, p.id AS sourceId, 'POST' AS sourceType,
+            'NOTICE' AS category, p.title, p.content,
             p.user_id AS createdBy, p.user_id AS updatedBy,
             p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '관리자') AS createdByNickname,
             COALESCE(u.nickname, '관리자') AS updatedByNickname
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
-     WHERE p.is_deleted = 0
-       AND u.role = 'ADMIN'
+     WHERE (
+         p.is_notice = 1
+         OR EXISTS (
+           SELECT 1
+           FROM users au
+           WHERE au.id = p.user_id
+             AND au.role = 'ADMIN'
+         )
+       )
+       ${postDeletedFilter}
      ORDER BY p.created_at DESC, p.id DESC`
   );
 
