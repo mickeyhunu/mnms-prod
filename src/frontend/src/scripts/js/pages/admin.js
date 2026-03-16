@@ -78,7 +78,9 @@ function bindCommonEvents() {
         currentSupportCategory = event.target.value;
         await loadSupportArticles();
     });
-    document.getElementById('support-new-btn')?.addEventListener('click', () => openSupportModal());
+    document.getElementById('support-new-btn')?.addEventListener('click', () => {
+        window.location.href = '/admin/support/create';
+    });
     document.getElementById('support-cancel-btn')?.addEventListener('click', closeSupportModal);
     document.getElementById('support-save-btn')?.addEventListener('click', saveSupportArticle);
 
