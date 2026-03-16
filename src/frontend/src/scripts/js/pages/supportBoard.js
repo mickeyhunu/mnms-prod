@@ -5,13 +5,23 @@ let activeTab = 'notice';
 
 document.addEventListener('DOMContentLoaded', initSupportBoardPage);
 
+function withTimeout(promise, ms = 8000) {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.')), ms);
+        })
+    ]);
+}
+
 async function initSupportBoardPage() {
     Auth.bindLogoutButton();
 
     const params = new URLSearchParams(window.location.search);
-    const tab = params.get('tab');
-    if (tab === 'faq' || tab === 'notice') {
-        activeTab = tab;
+    const rawTab = String(params.get('tab') || '').toLowerCase();
+    const normalizedTab = rawTab === 'fqa' ? 'faq' : rawTab;
+    if (normalizedTab === 'faq' || normalizedTab === 'notice') {
+        activeTab = normalizedTab;
     }
 
     bindTabEvents();
@@ -40,7 +50,7 @@ async function loadArticles() {
     list?.classList.add('hidden');
 
     try {
-        const response = await APIClient.get(`/support/${activeTab}`);
+        const response = await withTimeout(APIClient.get(`/support/${activeTab}`));
         const rows = response.content || [];
 
         if (!rows.length) {
