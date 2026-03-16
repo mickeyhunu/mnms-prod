@@ -33,6 +33,15 @@ function getStatusText(status) {
     return String(status || '').toUpperCase() === 'ANSWERED' ? '처리완료' : '대기';
 }
 
+
+function getInquiryTypeLabel(type) {
+    const normalized = String(type || '').toLowerCase();
+    if (normalized === 'post_report') return '게시글 신고';
+    if (normalized === 'comment_report') return '댓글 신고';
+    if (normalized === 'question') return '일반 문의';
+    return '기타';
+}
+
 async function renderInquiryDetail() {
     const detailContainer = document.getElementById('my-inquiry-detail');
     if (!detailContainer) return;
@@ -49,7 +58,7 @@ async function renderInquiryDetail() {
         const statusText = getStatusText(inquiry.status);
         const answerText = inquiry.answerContent ? inquiry.answerContent : '답변 준비 중입니다.';
         const createdAt = inquiry.createdAt ? formatDateTime(inquiry.createdAt) : '-';
-        const typeText = inquiry.type || '기타';
+        const typeText = getInquiryTypeLabel(inquiry.type);
         const titleText = inquiry.title || '제목 없음';
 
         detailContainer.innerHTML = `
