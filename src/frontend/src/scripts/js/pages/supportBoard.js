@@ -1,7 +1,7 @@
 /**
  * 파일 역할: 공지사항/FAQ 공개 목록을 불러와 렌더링하는 페이지 스크립트 파일.
  */
-let activeTab = 'notice';
+let activeTab = window.location.pathname === '/support/faq' ? 'faq' : 'notice';
 let latestLoadRequestId = 0;
 
 if (document.readyState === 'loading') {
@@ -35,27 +35,16 @@ async function initSupportBoardPage() {
         return;
     }
 
-    const rawTab = String(params.get('tab') || '').toLowerCase();
-    const normalizedTab = rawTab === 'fqa' ? 'faq' : rawTab;
-    if (normalizedTab === 'faq' || normalizedTab === 'notice') {
-        activeTab = normalizedTab;
-    }
-
     bindTabEvents();
     await loadArticles();
 }
 
 function bindTabEvents() {
     const tabs = document.querySelectorAll('.board-tab');
-    tabs.forEach((tabButton) => {
-        tabButton.classList.toggle('active', tabButton.dataset.tab === activeTab);
-        tabButton.addEventListener('click', async () => {
-            if (activeTab === tabButton.dataset.tab) return;
-            activeTab = tabButton.dataset.tab;
-            tabs.forEach((item) => item.classList.toggle('active', item.dataset.tab === activeTab));
-            syncBoardTitle();
-            await loadArticles();
-        });
+    tabs.forEach((tabLink) => {
+        const isFaqLink = tabLink.getAttribute('href') === '/support/faq';
+        const tabType = isFaqLink ? 'faq' : 'notice';
+        tabLink.classList.toggle('active', tabType === activeTab);
     });
 
     syncBoardTitle();
@@ -211,7 +200,7 @@ async function loadArticleDetail(articleId, sourceType) {
                 <div class="post-content" style="white-space:normal;line-height:1.7;">${detailContent}</div>
             </article>
             <div style="margin-top:12px;">
-                <a class="btn btn-outline btn-sm" href="/support?tab=notice">목록으로</a>
+                <a class="btn btn-outline btn-sm" href="/support">목록으로</a>
             </div>
         `;
 
