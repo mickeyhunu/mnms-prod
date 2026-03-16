@@ -411,6 +411,68 @@ const pageRegistry = {
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/createPost.js", "scripts/js/components/footerNav.js"]
   },
+  'support-create': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <h1>미드나잇 맨즈</h1>
+            </a>
+            <nav class="nav" id="navigation">
+                <div class="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="/admin" class="btn btn-secondary btn-sm">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container" style="max-width: 800px;">
+            <div class="page-header">
+                <h1>공지사항 새 글 작성</h1>
+                <p>커뮤니티 글쓰기 화면과 동일한 방식으로 공지사항 글을 등록할 수 있습니다.</p>
+            </div>
+
+            <div class="card">
+                <form id="support-post-form">
+                    <div class="form-group">
+                        <label for="support-form-category" class="form-label">구분</label>
+                        <select id="support-form-category" class="form-control">
+                            <option value="NOTICE">공지사항</option>
+                            <option value="FAQ">FAQ</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="title" class="form-label">제목</label>
+                        <input type="text" id="title" class="form-control" maxlength="255" placeholder="제목을 입력하세요" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="content" class="form-label">내용</label>
+                        <textarea id="content" class="form-control" rows="15" placeholder="내용을 입력하세요" required></textarea>
+                        <small class="text-muted">최소 10자 이상 입력해주세요</small>
+                    </div>
+
+                    <div class="form-actions form-actions-inline" style="display:flex;justify-content:flex-end;gap:8px;">
+                        <button type="submit" class="btn btn-primary" id="submit-btn">등록</button>
+                        <a href="/admin" class="btn btn-secondary">취소</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="scripts/js/utils/constants.js"></script>
+    <script src="scripts/js/utils/helpers.js"></script>
+    <script src="scripts/js/utils/auth.js"></script>
+    <script src="scripts/js/api/apiClient.js"></script>
+    <script src="scripts/js/pages/supportCreate.js"></script>
+    <script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/supportCreate.js", "scripts/js/components/footerNav.js"]
+  },
   'find-account': {
     template: `<header class="header">
     <div class="header-container">
