@@ -46,16 +46,26 @@ async function initSupportBoardPage() {
 }
 
 function bindTabEvents() {
-    const tabs = document.querySelectorAll('.admin-tab');
+    const tabs = document.querySelectorAll('.board-tab');
     tabs.forEach((tabButton) => {
         tabButton.classList.toggle('active', tabButton.dataset.tab === activeTab);
         tabButton.addEventListener('click', async () => {
             if (activeTab === tabButton.dataset.tab) return;
             activeTab = tabButton.dataset.tab;
             tabs.forEach((item) => item.classList.toggle('active', item.dataset.tab === activeTab));
+            syncBoardTitle();
             await loadArticles();
         });
     });
+
+    syncBoardTitle();
+}
+
+function syncBoardTitle() {
+    const boardName = document.querySelector('.community-board-name');
+    if (boardName) {
+        boardName.textContent = activeTab === 'faq' ? 'FAQ' : '공지사항';
+    }
 }
 
 async function loadArticles() {
@@ -128,19 +138,35 @@ function createSupportNoticeCard(item) {
 }
 
 function createSupportFaqCard(item) {
+    const createdAt = formatDateOnly(item.createdAt || item.created_at);
+    const title = sanitizeHTML(item.title || '제목 없음');
+    const content = sanitizeHTML(item.content || '').replace(/\n/g, '<br>');
+
     return `
-        <article class="card" style="margin-bottom:12px;">
-            <h3 style="margin-bottom:8px;">${sanitizeHTML(item.title || '')}</h3>
-            <div class="text-muted text-sm" style="margin-bottom:12px;">${formatDate(item.createdAt || item.created_at)}</div>
-            <div style="white-space:pre-wrap; line-height:1.6;">${sanitizeHTML(item.content || '')}</div>
+        <article class="post-card" style="cursor:default;">
+            <div class="post-header">
+                <div class="post-header-left">
+                    <h3 class="post-title">[FAQ] ${title}</h3>
+                    <div class="post-meta support-notice-meta">
+                        <span class="post-author">운영팀</span>
+                        <span class="post-date support-notice-date">${createdAt}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="post-content" style="white-space:normal;line-height:1.7;">${content}</div>
         </article>
     `;
 }
 
 function applyDetailModeHeader() {
-    const tabs = document.querySelector('.admin-tabs');
+    const tabs = document.getElementById('board-tabs-panel');
     if (tabs) {
         tabs.classList.add('hidden');
+    }
+
+    const toggleButton = document.getElementById('board-menu-toggle');
+    if (toggleButton) {
+        toggleButton.classList.add('hidden');
     }
 
     const boardName = document.querySelector('.community-board-name');
