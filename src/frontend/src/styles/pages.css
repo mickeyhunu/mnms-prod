@@ -1217,3 +1217,78 @@
     font-size: 13px;
     color: #6b7280;
 }
+
+.my-inquiries-section {
+    margin-top: 18px;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 14px;
+}
+
+.my-inquiries-title {
+    margin: 0 0 10px;
+    font-size: 16px;
+    color: #111827;
+}
+
+.my-inquiries-empty {
+    margin: 0;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.my-inquiries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.my-inquiry-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    background: #fff;
+}
+
+.my-inquiry-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.my-inquiry-type {
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 13px;
+}
+
+.my-inquiry-status {
+    font-size: 12px;
+    color: #92400e;
+    background: #fef3c7;
+    border-radius: 999px;
+    padding: 2px 8px;
+}
+
+.my-inquiry-status.is-completed {
+    color: #065f46;
+    background: #d1fae5;
+}
+
+.my-inquiry-content,
+.my-inquiry-answer,
+.my-inquiry-date {
+    margin: 0;
+    font-size: 13px;
+    color: #374151;
+}
+
+.my-inquiry-answer {
+    margin-top: 6px;
+}
+
+.my-inquiry-date {
+    margin-top: 6px;
+    color: #6b7280;
+}
