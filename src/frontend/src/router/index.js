@@ -18,7 +18,6 @@ const routes = [
   { path: '/my-page/points', component: PageView, meta: { pageKey: 'my-page-points' } },
   { path: '/my-page/support', component: PageView, meta: { pageKey: 'my-page-support' } },
   { path: '/my-page/policy', component: PageView, meta: { pageKey: 'my-page-policy' } },
-  { path: '/edit-post', component: PageView, meta: { pageKey: 'edit-post' } },
   { path: '/admin', component: PageView, meta: { pageKey: 'admin' } },
   { path: '/find-account', component: PageView, meta: { pageKey: 'find-account' } },
   { path: '/business-info', component: PageView, meta: { pageKey: 'business-info' } },
