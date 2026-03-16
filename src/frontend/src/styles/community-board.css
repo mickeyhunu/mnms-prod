@@ -611,3 +611,11 @@
     color: #fff;
     border-color: #6c2e96;
 }
+
+.support-notice-meta {
+    width: 100%;
+}
+
+.support-notice-date {
+    margin-left: auto;
+}
