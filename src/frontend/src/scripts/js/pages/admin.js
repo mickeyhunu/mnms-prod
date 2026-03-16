@@ -92,7 +92,8 @@ async function loadPosts() {
     try {
         const response = await APIClient.get('/admin/posts');
         const posts = response.content || [];
-        document.getElementById('posts-total').textContent = response.totalElements || posts.length;
+        const postsTotal = document.getElementById('posts-total');
+        if (postsTotal) postsTotal.textContent = response.totalElements || posts.length;
 
         const tbody = document.getElementById('posts-tbody');
         if (!posts.length) {
@@ -217,7 +218,7 @@ async function loadAds() {
                 <tr>
                     <td>${ad.id}</td>
                     <td>${sanitizeHTML(ad.title || '')}</td>
-                    <td><a href="${sanitizeHTML(ad.linkUrl || '#')}" target="_blank">링크 열기</a></td>
+                    <td><a href="${sanitizeHTML(normalizeExternalUrl(ad.linkUrl))}" target="_blank" rel="noopener noreferrer">링크 열기</a></td>
                     <td>${Number(ad.displayOrder || 0)}</td>
                     <td>${ad.isActive ? '노출' : '숨김'}</td>
                     <td>${formatDate(ad.createdAt || ad.created_at)}</td>
@@ -269,6 +270,11 @@ async function openAdEditor(adId = null) {
     const isActiveRaw = window.prompt('노출 여부를 입력해주세요 (Y/N).', base.isActive ? 'Y' : 'N');
     if (isActiveRaw == null) return;
 
+    if (!isValidExternalUrl(linkUrl.trim())) {
+        alert('광고 클릭 링크 URL은 http:// 또는 https:// 형식이어야 합니다.');
+        return;
+    }
+
     const payload = {
         title: title.trim(),
         imageUrl: imageUrl.trim(),
@@ -285,6 +291,20 @@ async function openAdEditor(adId = null) {
     } catch (error) {
         alert(error.message || '광고 저장에 실패했습니다.');
     }
+}
+
+function isValidExternalUrl(url) {
+    try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch (error) {
+        return false;
+    }
+}
+
+function normalizeExternalUrl(url) {
+    const target = String(url || '').trim();
+    return isValidExternalUrl(target) ? target : '#';
 }
 
 async function loadSupportArticles() {
