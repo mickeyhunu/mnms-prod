@@ -32,7 +32,36 @@ async function listArticles(category, includeDeleted = false) {
     [normalizedCategory]
   );
 
-  return rows;
+  if (normalizedCategory !== SUPPORT_CATEGORIES.NOTICE || includeDeleted) {
+    return rows;
+  }
+
+  const [adminNoticePosts] = await pool.query(
+    `SELECT p.id, 'NOTICE' AS category, p.title, p.content,
+            p.user_id AS createdBy, p.user_id AS updatedBy,
+            p.created_at AS createdAt, p.updated_at AS updatedAt,
+            COALESCE(u.nickname, '관리자') AS createdByNickname,
+            COALESCE(u.nickname, '관리자') AS updatedByNickname
+     FROM posts p
+     LEFT JOIN users u ON u.id = p.user_id
+     WHERE p.is_deleted = 0
+       AND u.role = 'ADMIN'
+     ORDER BY p.created_at DESC, p.id DESC`
+  );
+
+  const mergedRows = [...rows, ...adminNoticePosts]
+    .sort((a, b) => {
+      const aTime = new Date(a.createdAt || a.created_at || 0).getTime();
+      const bTime = new Date(b.createdAt || b.created_at || 0).getTime();
+
+      if (aTime !== bTime) {
+        return bTime - aTime;
+      }
+
+      return Number(b.id || 0) - Number(a.id || 0);
+    });
+
+  return mergedRows;
 }
 
 async function findArticleById(id) {
