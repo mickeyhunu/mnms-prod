@@ -621,5 +621,8 @@
 }
 
 .support-notice-date {
+    display: inline-block;
+    width: fit-content;
     margin-left: auto;
+    white-space: nowrap;
 }
