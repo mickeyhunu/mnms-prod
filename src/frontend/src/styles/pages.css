@@ -140,6 +140,20 @@
     padding: 8px 0 14px;
 }
 
+.admin-support-toolbar-split {
+    justify-content: space-between;
+}
+
+.admin-support-toolbar-start,
+.admin-support-toolbar-end {
+    display: flex;
+    align-items: center;
+}
+
+.admin-support-toolbar-end {
+    justify-content: flex-end;
+}
+
 .admin-support-toolbar-right {
     justify-content: flex-end;
 }

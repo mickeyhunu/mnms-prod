@@ -129,6 +129,14 @@
         justify-content: flex-start;
     }
 
+    .admin-support-toolbar-split {
+        justify-content: flex-start;
+    }
+
+    .admin-support-toolbar-end {
+        justify-content: flex-start;
+    }
+
     .admin-table-container {
         font-size: 14px;
     }
