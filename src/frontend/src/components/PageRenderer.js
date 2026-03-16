@@ -13,7 +13,6 @@ const LINK_MAP = {
   'bookmarks.html': '/bookmarks',
   'community.html': '/community',
   'my-page.html': '/my-page',
-  'edit-post.html': '/edit-post',
   'admin.html': '/admin',
   'find-account.html': '/find-account',
   'business-info.html': '/business-info',
