@@ -1337,11 +1337,11 @@
 }
 
 .my-inquiries-type-cell {
-    width: 22%;
+    width: 12%;
 }
 
 .my-inquiries-date-cell {
-    width: 20%;
+    width: 40%;
     padding-left: 6px;
     padding-right: 6px;
     white-space: nowrap;
@@ -1349,7 +1349,7 @@
 }
 
 .my-inquiries-status-cell {
-    width: 14%;
+    width: 12%;
     padding-left: 6px;
     padding-right: 6px;
     white-space: nowrap;
