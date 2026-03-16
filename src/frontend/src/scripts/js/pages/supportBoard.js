@@ -74,13 +74,13 @@ async function loadArticles() {
         }
 
         if (list) {
-            list.innerHTML = rows.map((item) => `
-                <article class="card" style="margin-bottom:12px;">
-                    <h3 style="margin-bottom:8px;">${sanitizeHTML(item.title || '')}</h3>
-                    <div class="text-muted text-sm" style="margin-bottom:12px;">${formatDate(item.createdAt || item.created_at)}</div>
-                    <div style="white-space:pre-wrap; line-height:1.6;">${sanitizeHTML(item.content || '')}</div>
-                </article>
-            `).join('');
+            list.innerHTML = rows.map((item) => {
+                if (activeTab === 'notice') {
+                    return createSupportNoticeCard(item);
+                }
+
+                return createSupportFaqCard(item);
+            }).join('');
             list.classList.remove('hidden');
         }
     } catch (error) {
@@ -95,4 +95,36 @@ async function loadArticles() {
             loading?.classList.add('hidden');
         }
     }
+}
+
+function createSupportNoticeCard(item) {
+    const createdAt = formatDate(item.createdAt || item.created_at);
+    const authorName = sanitizeHTML(item.createdByNickname || item.updatedByNickname || '운영팀');
+    const title = sanitizeHTML(item.title || '제목 없음');
+    const content = sanitizeHTML(item.content || '');
+
+    return `
+        <article class="post-card admin-notice" style="cursor:default;">
+            <div class="post-header">
+                <div class="post-header-left">
+                    <h3 class="post-title">[공지] ${title}</h3>
+                    <div class="post-meta">
+                        <span class="post-author">${authorName}</span>
+                        <span class="post-date">${createdAt}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="post-content" style="white-space:pre-wrap;">${content}</div>
+        </article>
+    `;
+}
+
+function createSupportFaqCard(item) {
+    return `
+        <article class="card" style="margin-bottom:12px;">
+            <h3 style="margin-bottom:8px;">${sanitizeHTML(item.title || '')}</h3>
+            <div class="text-muted text-sm" style="margin-bottom:12px;">${formatDate(item.createdAt || item.created_at)}</div>
+            <div style="white-space:pre-wrap; line-height:1.6;">${sanitizeHTML(item.content || '')}</div>
+        </article>
+    `;
 }
