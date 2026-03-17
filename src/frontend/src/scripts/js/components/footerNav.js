@@ -32,6 +32,12 @@
 
     function createFooterNav() {
         const currentPath = normalizePath(window.location.pathname);
+        const existingFooter = document.querySelector('.bottom-nav-footer');
+
+        if (existingFooter) {
+            existingFooter.remove();
+        }
+
         const footer = document.createElement('footer');
         footer.className = 'bottom-nav-footer';
 

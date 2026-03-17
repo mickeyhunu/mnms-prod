@@ -19,6 +19,33 @@ const LINK_MAP = {
   'live.html': '/live'
 };
 
+const GLOBAL_HEADER_TEMPLATE = `<header class="header">
+  <div class="header-container">
+    <a href="/" class="logo"><h1>미드나잇 맨즈</h1></a>
+    <nav class="nav" id="navigation">
+      <div class="nav-guest" id="nav-guest">
+        <a href="/login" class="btn btn-outline btn-sm">로그인</a>
+        <a href="/register" class="btn btn-primary btn-sm">회원가입</a>
+      </div>
+      <div class="nav-user hidden" id="nav-user">
+        <span class="user-nickname" id="user-nickname"></span>
+        <a href="/admin" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+        <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+      </div>
+    </nav>
+  </div>
+</header>`;
+
+const GLOBAL_SCRIPTS = [
+  'scripts/js/utils/constants.js',
+  'scripts/js/utils/helpers.js',
+  'scripts/js/utils/auth.js',
+  'scripts/js/api/apiClient.js',
+  'scripts/js/api/authAPI.js',
+  'scripts/js/components/header.js',
+  'scripts/js/components/footerNav.js'
+];
+
 function mapHtmlPath(rawPath) {
   const normalizedPath = rawPath.replace(/^\.\//, '');
   const [file, suffix = ''] = normalizedPath.split(/(?=[?#])/);
@@ -30,6 +57,10 @@ function normalizeTemplateLinks(template) {
   return template.replace(/href=(['"])([^'"]+\.html(?:[?#][^'"]*)?)\1/gi, (_, quote, fileWithSuffix) => {
     return `href=${quote}${mapHtmlPath(fileWithSuffix)}${quote}`;
   });
+}
+
+function stripLegacyHeader(template) {
+  return template.replace(/^\s*<header class="header">[\s\S]*?<\/header>\s*/i, '');
 }
 
 function toPublicAssetPath(assetPath) {
@@ -49,7 +80,7 @@ export default {
     const injectedNodes = [];
 
     const pageConfig = computed(() => pageRegistry[props.page] || { template: '<div>페이지를 찾을 수 없습니다.</div>', styles: [], scripts: [] });
-    const content = computed(() => normalizeTemplateLinks(pageConfig.value.template || ''));
+    const pageBodyContent = computed(() => normalizeTemplateLinks(stripLegacyHeader(pageConfig.value.template || '')));
 
     const clearInjectedNodes = () => {
       injectedNodes.forEach((node) => node.remove());
@@ -68,7 +99,12 @@ export default {
     };
 
     const injectScripts = async () => {
-      for (const src of pageConfig.value.scripts || []) {
+      const pageScripts = (pageConfig.value.scripts || []).filter(
+        (src) => !GLOBAL_SCRIPTS.includes(src)
+      );
+      const orderedScripts = [...GLOBAL_SCRIPTS, ...pageScripts];
+
+      for (const src of orderedScripts) {
         const script = document.createElement('script');
         script.src = toPublicAssetPath(src);
         script.defer = true;
@@ -103,7 +139,7 @@ export default {
       clearInjectedNodes();
     });
 
-    return { content };
+    return { pageBodyContent, globalHeaderTemplate: GLOBAL_HEADER_TEMPLATE };
   },
-  template: `<div v-html="content"></div>`
+  template: `<div><div v-html="globalHeaderTemplate"></div><div v-html="pageBodyContent"></div></div>`
 };
