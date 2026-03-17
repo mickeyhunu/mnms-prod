@@ -604,9 +604,6 @@
     border-color: #b579df;
     color: #542274;
     transform: translateY(-1px);
-}
-
-.board-tab:hover {
     background: #353d4f;
 }
 
