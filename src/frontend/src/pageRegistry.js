@@ -195,6 +195,17 @@ const pageRegistry = {
     template: `<header class="header">
         <div class="header-container">
             <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="register.html" class="btn btn-primary btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
         </div>
     </header>
 
@@ -215,7 +226,7 @@ const pageRegistry = {
     <script src="scripts/js/components/sectionHeader.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css"],
-    scripts: ["scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
   'community': {
     template: `<header class="header">
@@ -477,9 +488,16 @@ const pageRegistry = {
     template: `<header class="header">
     <div class="header-container">
         <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
-        <nav class="nav">
-            <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
-            <a href="register.html" class="btn btn-primary btn-sm">회원가입</a>
+        <nav class="nav" id="navigation">
+            <div class="nav-guest" id="nav-guest">
+                <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                <a href="register.html" class="btn btn-primary btn-sm">회원가입</a>
+            </div>
+            <div class="nav-user hidden" id="nav-user">
+                <span class="user-nickname" id="user-nickname"></span>
+                <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+            </div>
         </nav>
     </div>
 </header>
@@ -505,7 +523,7 @@ const pageRegistry = {
 </main>
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
-    scripts: ["scripts/js/components/footerNav.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js"]
   },
   'index': {
     template: `<header class="header">
@@ -560,6 +578,17 @@ const pageRegistry = {
     template: `<header class="header">
         <div class="header-container">
             <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="register.html" class="btn btn-primary btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
         </div>
     </header>
 
@@ -580,7 +609,7 @@ const pageRegistry = {
     <script src="scripts/js/components/sectionHeader.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css"],
-    scripts: ["scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
   'login': {
     template: `<header class="header">
@@ -588,8 +617,15 @@ const pageRegistry = {
             <a href="index.html" class="logo">
                 <h1>미드나잇 맨즈</h1>
             </a>
-            <nav class="nav">
-                <a href="register.html" class="btn btn-primary btn-sm">회원가입</a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="register.html" class="btn btn-primary btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
             </nav>
         </div>
     </header>
@@ -653,7 +689,7 @@ const pageRegistry = {
     <script src="scripts/js/pages/login.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/validation.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/pages/login.js", "scripts/js/components/footerNav.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/validation.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/login.js", "scripts/js/components/footerNav.js"]
   },
   'my-page': {
     template: `<header class="header">
@@ -1069,8 +1105,15 @@ const pageRegistry = {
             <a href="index.html" class="logo">
                 <h1>미드나잇 맨즈</h1>
             </a>
-            <nav class="nav">
-                <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
             </nav>
         </div>
     </header>
@@ -1166,7 +1209,7 @@ const pageRegistry = {
     <script src="scripts/js/pages/register.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/validation.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/pages/register.js", "scripts/js/components/footerNav.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/validation.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/register.js", "scripts/js/components/footerNav.js"]
   },
 };
 
