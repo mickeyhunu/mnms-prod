@@ -20,13 +20,28 @@ function normalizeAttachmentUrls(payload) {
 async function listPublicArticles(req, res, next) {
   try {
     const category = req.params.category;
-    const rows = await supportModel.listArticles(
-      category,
-      false,
-      category === supportModel.SUPPORT_CATEGORIES.NOTICE
-        ? { sourceType: supportModel.SOURCE_TYPES.POST }
-        : {}
-    );
+    let rows = [];
+
+    if (category === supportModel.SUPPORT_CATEGORIES.NOTICE) {
+      const [postNotices, legacyNotices] = await Promise.all([
+        supportModel.listArticles(category, false, { sourceType: supportModel.SOURCE_TYPES.POST }),
+        supportModel.listArticles(category, false, { sourceType: supportModel.SOURCE_TYPES.SUPPORT })
+      ]);
+
+      rows = [...postNotices, ...legacyNotices].sort((a, b) => {
+        const pinnedGap = Number(b.isPinned || 0) - Number(a.isPinned || 0);
+        if (pinnedGap !== 0) return pinnedGap;
+
+        const timeA = new Date(a.createdAt || a.created_at || 0).getTime();
+        const timeB = new Date(b.createdAt || b.created_at || 0).getTime();
+        if (timeA !== timeB) return timeB - timeA;
+
+        return Number(b.id || 0) - Number(a.id || 0);
+      });
+    } else {
+      rows = await supportModel.listArticles(category, false);
+    }
+
     res.json({ content: rows, totalElements: rows.length });
   } catch (error) {
     next(error);
