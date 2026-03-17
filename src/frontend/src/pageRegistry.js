@@ -152,7 +152,7 @@ const pageRegistry = {
 
     <main class="main-content">
         <div class="container">
-            <div class="page-header">
+            <div class="community-section-header">
                 <h1>내 북마크</h1>
                 <p>북마크한 게시글을 확인하세요</p>
             </div>
@@ -218,7 +218,7 @@ const pageRegistry = {
                 </div>
             </header>
 
-            <div class="page-header">
+            <div class="community-section-header">
                 <p>업체정보 페이지 준비 중입니다.</p>
             </div>
         </div>
@@ -344,7 +344,7 @@ const pageRegistry = {
 
     <main class="main-content">
         <div class="container" style="max-width: 800px;">
-            <div class="page-header">
+            <div class="community-section-header">
                 <h1>새 글 작성</h1>
                 <p>미드나잇 맨즈에 새로운 이야기를 공유해보세요</p>
             </div>
@@ -442,7 +442,7 @@ const pageRegistry = {
 
     <main class="main-content">
         <div class="container" style="max-width: 800px;">
-            <div class="page-header">
+            <div class="community-section-header">
                 <h1>공지사항 새 글 작성</h1>
                 <p>커뮤니티 글쓰기 화면과 동일한 방식으로 공지사항 글을 등록할 수 있습니다.</p>
             </div>
@@ -518,7 +518,7 @@ const pageRegistry = {
 
     <main class="main-content">
         <div class="container" style="max-width: 900px;">
-            <div class="page-header">
+            <div class="community-section-header">
                 <h1>1:1 문의 답변</h1>
                 <p>문의 상세 내용을 확인하고 답변을 저장할 수 있습니다.</p>
             </div>
@@ -580,7 +580,7 @@ const pageRegistry = {
 
 <main class="main-content">
     <div class="container auth-container auth-login">
-        <div class="page-header">
+        <div class="community-section-header">
             <h1>계정 찾기</h1>
             <p>가입하신 이메일 또는 전화번호로 계정을 찾을 수 있습니다.</p>
         </div>
@@ -676,7 +676,7 @@ const pageRegistry = {
                 </div>
             </header>
 
-            <div class="page-header">
+            <div class="community-section-header">
                 <p>LIVE 서비스 준비 중입니다.</p>
             </div>
         </div>
@@ -717,7 +717,7 @@ const pageRegistry = {
         </div>
 
         <div class="container auth-container auth-login">
-            <div class="page-header">
+            <div class="community-section-header">
                 <h1>로그인</h1>
                 <p>미드나잇 맨즈에 로그인하여 다양한 사람들과 소통하세요</p>
             </div>
@@ -1196,7 +1196,7 @@ const pageRegistry = {
 
     <main class="main-content">
         <div class="container auth-container">
-            <div class="page-header">
+            <div class="community-section-header">
                 <h1>회원가입</h1>
                 <p>미드나잇 맨즈에 가입하여 다양한 사람들과 소통하세요</p>
             </div>
