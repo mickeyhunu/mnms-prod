@@ -4,6 +4,7 @@
 let activeTab = window.location.pathname === '/support/faq' ? 'faq' : 'notice';
 let latestLoadRequestId = 0;
 const FAQ_TOPICS = ['서비스', '채팅', '기업회원', '회원/계정', '기타'];
+const FAQ_ALL_TOPIC = '전체';
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initSupportBoardPage, { once: true });
@@ -170,7 +171,7 @@ function createFaqLayout(rows) {
         };
     });
 
-    const tabsMarkup = FAQ_TOPICS.map((topic, index) => `
+    const tabsMarkup = [FAQ_ALL_TOPIC, ...FAQ_TOPICS].map((topic, index) => `
         <button type="button" class="faq-topic-tab ${index === 0 ? 'active' : ''}" data-topic="${topic}">${topic}</button>
     `).join('');
 
@@ -218,17 +219,14 @@ function bindFaqEvents() {
     const topicTabs = document.querySelectorAll('.faq-topic-tab');
     const items = document.querySelectorAll('.faq-item');
 
-    const initialTopic = FAQ_TOPICS.find((topic) => Array.from(items).some((item) => item.dataset.topic === topic));
-    let selectedTopic = initialTopic || '전체';
+    let selectedTopic = FAQ_ALL_TOPIC;
 
     const applyFilter = () => {
         const query = String(searchInput?.value || '').trim().toLowerCase();
-        const hasTopicItems = Array.from(items).some((item) => item.dataset.topic === selectedTopic);
-
         items.forEach((item) => {
             const topic = item.dataset.topic;
             const text = item.dataset.searchText || '';
-            const matchTopic = selectedTopic === '전체' || !hasTopicItems || topic === selectedTopic;
+            const matchTopic = selectedTopic === FAQ_ALL_TOPIC || topic === selectedTopic;
             const matchQuery = !query || text.includes(query);
 
             item.classList.toggle('hidden', !(matchTopic && matchQuery));
@@ -239,7 +237,7 @@ function bindFaqEvents() {
         tab.classList.toggle('active', (tab.dataset.topic || '') === selectedTopic);
 
         tab.addEventListener('click', () => {
-            selectedTopic = tab.dataset.topic || FAQ_TOPICS[0];
+            selectedTopic = tab.dataset.topic || FAQ_ALL_TOPIC;
             topicTabs.forEach((button) => button.classList.remove('active'));
             tab.classList.add('active');
             applyFilter();
