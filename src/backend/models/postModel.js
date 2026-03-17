@@ -23,6 +23,28 @@ function normalizeBoardFilter(boardType) {
   return normalized === 'ALL' ? 'ALL' : normalizeBoardType(normalized);
 }
 
+function normalizeNoticeTargetBoards(noticeTargetBoards = []) {
+  if (!Array.isArray(noticeTargetBoards)) return [];
+  const unique = new Set();
+
+  noticeTargetBoards.forEach((board) => {
+    const normalized = normalizeBoardType(board);
+    if (normalized) unique.add(normalized);
+  });
+
+  return Array.from(unique);
+}
+
+function serializeNoticeTargetBoards(noticeTargetBoards = []) {
+  const normalized = normalizeNoticeTargetBoards(noticeTargetBoards);
+  return normalized.length ? normalized.join(',') : null;
+}
+
+function parseNoticeTargetBoards(raw) {
+  if (!raw) return [];
+  return normalizeNoticeTargetBoards(String(raw).split(','));
+}
+
 
 function normalizeImageUrls(imageUrls) {
   if (!Array.isArray(imageUrls)) return [];
@@ -68,8 +90,14 @@ async function listPosts(page = 0, size = 10, options = {}) {
   const whereParams = [];
 
   if (boardFilter !== 'ALL') {
-    whereConditions.push('p.board_type = ?');
-    whereParams.push(boardFilter);
+    whereConditions.push(`(
+      p.board_type = ?
+      OR (
+        p.is_notice = 1
+        AND FIND_IN_SET(?, REPLACE(COALESCE(p.notice_target_boards, ''), ' ', '')) > 0
+      )
+    )`);
+    whereParams.push(boardFilter, boardFilter);
   }
 
   if (keyword) {
@@ -99,6 +127,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
   const [rows] = await pool.query(
     `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
             p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
+            p.notice_target_boards AS noticeTargetBoards,
             p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'USER') AS authorRole,
@@ -114,16 +143,25 @@ async function listPosts(page = 0, size = 10, options = {}) {
      LIMIT ? OFFSET ?`,
     [...whereParams, size, offset]
   );
-  return { rows: rows.map((row) => normalizePostImages(row)), total: Number(countRows[0].total) };
+  return {
+    rows: rows.map((row) => normalizePostImages({
+      ...row,
+      noticeTargetBoards: parseNoticeTargetBoards(row.noticeTargetBoards)
+    })),
+    total: Number(countRows[0].total)
+  };
 }
 
-async function createPost({ userId, title, content, imageUrls = [], boardType = BOARD_TYPES.FREE, isNotice = false, noticeType = null, isPinned = false }) {
+async function createPost({ userId, title, content, imageUrls = [], boardType = BOARD_TYPES.FREE, isNotice = false, noticeType = null, isPinned = false, noticeTargetBoards = [] }) {
   const pool = getPool();
   const normalizedBoardType = normalizeBoardType(boardType);
   const normalizedNoticeType = isNotice ? (String(noticeType || '').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE') : null;
+  const serializedNoticeTargetBoards = isNotice
+    ? serializeNoticeTargetBoards(noticeTargetBoards.length ? noticeTargetBoards : [normalizedBoardType])
+    : null;
   const [result] = await pool.query(
-    'INSERT INTO posts (user_id, board_type, is_notice, notice_type, is_pinned, title, content, image_urls) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [userId || null, normalizedBoardType, isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, title, content, JSON.stringify(normalizeImageUrls(imageUrls))]
+    'INSERT INTO posts (user_id, board_type, is_notice, notice_type, is_pinned, notice_target_boards, title, content, image_urls) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [userId || null, normalizedBoardType, isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, serializedNoticeTargetBoards, title, content, JSON.stringify(normalizeImageUrls(imageUrls))]
   );
   return result.insertId;
 }
@@ -146,6 +184,7 @@ async function findPostDetailById(id) {
   const [rows] = await pool.query(
     `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
             p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
+            p.notice_target_boards AS noticeTargetBoards,
             p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'USER') AS authorRole,
@@ -165,7 +204,12 @@ async function findPostDetailById(id) {
      WHERE p.id = ? AND p.is_deleted = 0`,
     [id]
   );
-  return rows[0] ? normalizePostImages(rows[0]) : null;
+  return rows[0]
+    ? normalizePostImages({
+      ...rows[0],
+      noticeTargetBoards: parseNoticeTargetBoards(rows[0].noticeTargetBoards)
+    })
+    : null;
 }
 
 async function findAdjacentPosts(id) {
@@ -218,12 +262,13 @@ async function incrementPostViewCount(id) {
   const pool = getPool();
   await pool.query('UPDATE posts SET view_count = view_count + 1 WHERE id = ?', [id]);
 }
-async function updatePost(id, { title, content, imageUrls = [], isNotice, noticeType, isPinned }) {
+async function updatePost(id, { title, content, imageUrls = [], isNotice, noticeType, isPinned, noticeTargetBoards = [] }) {
   const pool = getPool();
   const normalizedNoticeType = isNotice ? (String(noticeType || '').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE') : null;
+  const serializedNoticeTargetBoards = isNotice ? serializeNoticeTargetBoards(noticeTargetBoards) : null;
   await pool.query(
-    'UPDATE posts SET title = ?, content = ?, image_urls = ?, is_notice = ?, notice_type = ?, is_pinned = ? WHERE id = ?',
-    [title, content, JSON.stringify(normalizeImageUrls(imageUrls)), isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, id]
+    'UPDATE posts SET title = ?, content = ?, image_urls = ?, is_notice = ?, notice_type = ?, is_pinned = ?, notice_target_boards = ? WHERE id = ?',
+    [title, content, JSON.stringify(normalizeImageUrls(imageUrls)), isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, serializedNoticeTargetBoards, id]
   );
 }
 

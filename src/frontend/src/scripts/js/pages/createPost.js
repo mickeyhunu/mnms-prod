@@ -5,6 +5,7 @@ let isSubmitting = false;
 let isEditMode = false;
 let editingPostId = null;
 let existingImageUrl = null;
+let isAdminUser = false;
 
 function getModeFromQuery() {
     const params = new URLSearchParams(window.location.search);
@@ -15,16 +16,17 @@ function getModeFromQuery() {
     editingPostId = isEditMode ? postId : null;
 }
 
-function initCreatePost() {
+async function initCreatePost() {
     getModeFromQuery();
     setupEventListeners();
     setupImageUpload();
     setupBoardOptions();
     setupModeUI();
+    await setupAdminNoticeOptions();
     validateForm();
 
     if (isEditMode) {
-        loadPostForEdit();
+        await loadPostForEdit();
     }
 }
 
@@ -39,6 +41,42 @@ function setupBoardOptions() {
     // 카테고리 선택은 모든 로그인 사용자에게 동일하게 제공됩니다.
 }
 
+
+
+async function setupAdminNoticeOptions() {
+    const noticeGroup = document.getElementById('notice-options-group');
+    const isNoticeInput = document.getElementById('is-notice');
+    const noticeTargetGroup = document.getElementById('notice-target-group');
+
+    if (!noticeGroup || !isNoticeInput || !noticeTargetGroup) return;
+
+    try {
+        const me = await APIClient.get('/auth/me');
+        isAdminUser = Boolean(me?.isAdmin);
+    } catch (error) {
+        isAdminUser = false;
+    }
+
+    if (!isAdminUser) return;
+
+    noticeGroup.classList.remove('hidden');
+
+    isNoticeInput.addEventListener('change', () => {
+        noticeTargetGroup.classList.toggle('hidden', !isNoticeInput.checked);
+    });
+}
+
+function getSelectedNoticeTargetBoards() {
+    const checkboxes = Array.from(document.querySelectorAll('input[name="notice-target-board"]:checked'));
+    return checkboxes.map((checkbox) => checkbox.value);
+}
+
+function setNoticeTargetBoards(boards = []) {
+    const normalized = new Set(boards.map((board) => String(board || '').toUpperCase()));
+    document.querySelectorAll('input[name="notice-target-board"]').forEach((checkbox) => {
+        checkbox.checked = normalized.has(String(checkbox.value || '').toUpperCase());
+    });
+}
 
 function setupEventListeners() {
     const postForm = document.getElementById('post-form');
@@ -192,6 +230,16 @@ async function loadPostForEdit() {
 
         updateCharCount('title', 255);
         updateCharCount('content', 1000);
+
+        const isNoticeInput = document.getElementById('is-notice');
+        const noticeTargetGroup = document.getElementById('notice-target-group');
+        if (isAdminUser && isNoticeInput && noticeTargetGroup) {
+            const isNotice = Boolean(post.isNotice);
+            isNoticeInput.checked = isNotice;
+            noticeTargetGroup.classList.toggle('hidden', !isNotice);
+            setNoticeTargetBoards(Array.isArray(post.noticeTargetBoards) ? post.noticeTargetBoards : []);
+        }
+
         validateForm();
     } catch (error) {
         console.error('수정할 게시글 로드 실패:', error);
@@ -209,6 +257,8 @@ async function handleSubmit(event) {
     const contentValue = document.getElementById('content')?.value.trim() || '';
     const submitBtn = document.getElementById('submit-btn');
     const boardType = document.getElementById('board-type')?.value || 'FREE';
+    const isNotice = Boolean(document.getElementById('is-notice')?.checked) && isAdminUser;
+    const noticeTargetBoards = isNotice ? getSelectedNoticeTargetBoards() : [];
 
     if (!titleValue || !contentValue) {
         alert('제목과 내용을 모두 입력해주세요.');
@@ -228,10 +278,18 @@ async function handleSubmit(event) {
 
     try {
         const imageUrls = await readSelectedImagesAsDataUrls();
+        if (isNotice && noticeTargetBoards.length === 0) {
+            alert('공지 노출 게시판을 1개 이상 선택해주세요.');
+            return;
+        }
+
         const payload = {
             title: titleValue,
             content: contentValue,
             boardType,
+            isNotice,
+            noticeType: isNotice ? 'IMPORTANT' : null,
+            noticeTargetBoards,
             imageUrls: imageUrls.length > 0 ? imageUrls : (existingImageUrl ? [existingImageUrl] : [])
         };
 
