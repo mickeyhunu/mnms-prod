@@ -194,6 +194,7 @@ router.delete('/ads/:id', async (req, res, next) => {
 });
 
 router.get('/support', supportController.listAdminArticles);
+router.get('/support/:id', supportController.getAdminArticleDetail);
 router.get('/support/inquiries', supportController.listAdminInquiries);
 router.put('/support/inquiries/:id/answer', supportController.answerInquiry);
 router.post('/support', supportController.createArticle);
