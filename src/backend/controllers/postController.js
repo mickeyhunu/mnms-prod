@@ -40,6 +40,17 @@ function parseNoticeType(value) {
 }
 
 
+function parseNoticeTargetBoards(value, fallbackBoardType = BOARD_TYPES.FREE) {
+  const values = Array.isArray(value) ? value : (typeof value === 'string' ? value.split(',') : []);
+  const normalized = Array.from(new Set(values
+    .map((item) => parseBoardType(item))
+    .filter((item) => item !== 'ALL')));
+
+  if (normalized.length) return normalized;
+  return [parseBoardType(fallbackBoardType)];
+}
+
+
 function normalizeImageUrls(payload) {
   const arrayValue = Array.isArray(payload?.imageUrls)
     ? payload.imageUrls
@@ -87,7 +98,8 @@ function sanitizePostForViewer(post) {
     boardType: parseBoardType(post.boardType),
     isNotice: Boolean(post.isNotice),
     isPinned: Boolean(post.isPinned),
-    noticeType: parseNoticeType(post.noticeType)
+    noticeType: parseNoticeType(post.noticeType),
+    noticeTargetBoards: Array.isArray(post.noticeTargetBoards) ? post.noticeTargetBoards.map((board) => parseBoardType(board)) : []
   };
 
   if (normalized.boardType === BOARD_TYPES.ANON) {
@@ -243,6 +255,9 @@ async function createPost(req, res, next) {
     const isNotice = isAdmin ? Boolean(req.body.isNotice) : false;
     const noticeType = isNotice ? parseNoticeType(req.body.noticeType) || 'NOTICE' : null;
     const isPinned = isNotice && isAdmin ? Boolean(req.body.isPinned) : false;
+    const noticeTargetBoards = isNotice
+      ? parseNoticeTargetBoards(req.body.noticeTargetBoards, boardType)
+      : [];
     const postId = await postModel.createPost({
       userId: req.user.id,
       title,
@@ -251,7 +266,8 @@ async function createPost(req, res, next) {
       imageUrls: normalizeImageUrls(req.body),
       isNotice,
       noticeType,
-      isPinned
+      isPinned,
+      noticeTargetBoards
     });
     const post = await postModel.findPostById(postId);
     const createPostPointResult = await awardPointByAction(req.user.id, 'CREATE_POST');
@@ -294,7 +310,12 @@ async function updatePost(req, res, next) {
         : post.notice_type,
       isPinned: req.user.role === 'ADMIN'
         ? (Boolean(req.body.isNotice) && Boolean(req.body.isPinned))
-        : Boolean(post.is_pinned)
+        : Boolean(post.is_pinned),
+      noticeTargetBoards: req.user.role === 'ADMIN'
+        ? (Boolean(req.body.isNotice)
+          ? parseNoticeTargetBoards(req.body.noticeTargetBoards, post.board_type || post.boardType)
+          : [])
+        : parseNoticeTargetBoards(post.notice_target_boards || post.noticeTargetBoards, post.board_type || post.boardType)
     });
 
     const updated = await postModel.findPostById(postId);
