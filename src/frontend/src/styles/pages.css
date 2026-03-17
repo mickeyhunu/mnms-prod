@@ -1615,3 +1615,43 @@
     border: 0;
     background: transparent;
 }
+
+.my-inquiry-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.my-inquiry-info-item {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.my-inquiry-info-label {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.my-inquiry-info-value {
+    font-size: 14px;
+    color: #111827;
+    font-weight: 600;
+}
+
+.my-inquiry-answer-block {
+    border: 1px solid #f1f5f9;
+    border-radius: 10px;
+    padding: 14px;
+    background: #fffbeb;
+}
+
+.my-inquiry-answer-block.is-completed {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
