@@ -523,20 +523,20 @@ const pageRegistry = {
                 <p>문의 상세 내용을 확인하고 답변을 저장할 수 있습니다.</p>
             </div>
 
-            <div class="card" style="padding: 20px;">
+            <div class="card admin-inquiry-answer-card">
                 <div class="loading" id="admin-inquiry-loading"><div class="spinner"></div><p>문의를 불러오는 중...</p></div>
                 <form id="admin-inquiry-answer-form" class="hidden">
                     <div class="form-group">
                         <label class="form-label">문의 제목</label>
-                        <div id="admin-inquiry-title" class="form-control" style="min-height:44px;display:flex;align-items:center;background:#f8f9fa;"></div>
+                        <div id="admin-inquiry-title" class="form-control admin-inquiry-readonly admin-inquiry-title-box"></div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">문의 정보</label>
-                        <div id="admin-inquiry-meta" class="form-control" style="min-height:44px;display:flex;align-items:center;background:#f8f9fa;font-size:13px;"></div>
+                        <div id="admin-inquiry-meta" class="form-control admin-inquiry-readonly admin-inquiry-meta-grid"></div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">문의 내용</label>
-                        <div id="admin-inquiry-content" class="form-control" style="min-height:180px;white-space:pre-wrap;background:#f8f9fa;"></div>
+                        <div id="admin-inquiry-content" class="form-control admin-inquiry-readonly admin-inquiry-content-box"></div>
                     </div>
                     <div class="form-group">
                         <label for="admin-inquiry-answer-content" class="form-label">답변 내용</label>

@@ -98,13 +98,22 @@ async function renderInquiryDetail() {
             <span class="my-inquiry-status ${String(inquiry.status || '').toUpperCase() === 'ANSWERED' ? 'is-completed' : ''}">${statusText}</span>
         </div>
         <h2 class="my-inquiry-detail-title">${escapeHtml(titleText)}</h2>
-        <time class="my-inquiry-date">문의일시: ${escapeHtml(createdAt)}</time>
+        <div class="my-inquiry-info-grid">
+            <div class="my-inquiry-info-item">
+                <span class="my-inquiry-info-label">문의 번호</span>
+                <span class="my-inquiry-info-value">#${escapeHtml(inquiry.id)}</span>
+            </div>
+            <div class="my-inquiry-info-item">
+                <span class="my-inquiry-info-label">문의 일시</span>
+                <time class="my-inquiry-info-value">${escapeHtml(createdAt)}</time>
+            </div>
+        </div>
         <div class="my-inquiry-detail-block">
             <h3>문의 내용</h3>
             <p class="my-inquiry-content">${escapeHtml(inquiry.content || '').replace(/\n/g, '<br>')}</p>
         </div>
         ${renderAttachmentList(inquiry.attachmentUrls)}
-        <div class="my-inquiry-detail-block">
+        <div class="my-inquiry-detail-block my-inquiry-answer-block ${String(inquiry.status || '').toUpperCase() === 'ANSWERED' ? 'is-completed' : ''}">
             <h3>관리자 답변</h3>
             <p class="my-inquiry-answer">${escapeHtml(answerText).replace(/\n/g, '<br>')}</p>
         </div>

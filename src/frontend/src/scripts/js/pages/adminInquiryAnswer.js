@@ -45,6 +45,17 @@ function validateForm() {
     saveButton.disabled = isSaving || !answer;
 }
 
+function renderMetaItem(label, value, modifierClass = '') {
+    const safeValue = value || '-';
+    const className = modifierClass ? `admin-inquiry-meta-value ${modifierClass}` : 'admin-inquiry-meta-value';
+    return `
+        <div class="admin-inquiry-meta-item">
+            <span class="admin-inquiry-meta-label">${label}</span>
+            <span class="${className}">${safeValue}</span>
+        </div>
+    `;
+}
+
 function renderInquiryInfo(inquiry) {
     const titleEl = document.getElementById('admin-inquiry-title');
     const metaEl = document.getElementById('admin-inquiry-meta');
@@ -54,14 +65,19 @@ function renderInquiryInfo(inquiry) {
     if (titleEl) titleEl.textContent = inquiry.title || '(제목 없음)';
 
     const userLabel = inquiry.userNickname || inquiry.userEmail || `회원#${inquiry.userId}`;
-    const metaText = [
-        `문의번호 #${inquiry.id}`,
-        `회원: ${userLabel}`,
-        `유형: ${toInquiryTypeLabel(inquiry.type)}`,
-        `상태: ${toInquiryStatusLabel(inquiry.status)}`,
-        `접수일: ${formatDateTime(inquiry.createdAt || inquiry.created_at)}`
-    ].join(' · ');
-    if (metaEl) metaEl.textContent = metaText;
+    const statusLabel = toInquiryStatusLabel(inquiry.status);
+    const statusClass = String(inquiry.status || '').toUpperCase() === 'ANSWERED'
+        ? 'admin-inquiry-meta-status is-completed'
+        : 'admin-inquiry-meta-status';
+    if (metaEl) {
+        metaEl.innerHTML = [
+            renderMetaItem('문의번호', `#${inquiry.id}`),
+            renderMetaItem('문의자', userLabel),
+            renderMetaItem('문의유형', toInquiryTypeLabel(inquiry.type)),
+            renderMetaItem('진행상태', statusLabel, statusClass),
+            renderMetaItem('접수일시', formatDateTime(inquiry.createdAt || inquiry.created_at))
+        ].join('');
+    }
     if (contentEl) contentEl.textContent = inquiry.content || '-';
     if (answerEl) answerEl.value = inquiry.answerContent || '';
 
