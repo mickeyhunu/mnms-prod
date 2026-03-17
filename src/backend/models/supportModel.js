@@ -8,6 +8,11 @@ const SUPPORT_CATEGORIES = {
   FAQ: 'FAQ'
 };
 
+const SOURCE_TYPES = {
+  SUPPORT: 'SUPPORT',
+  POST: 'POST'
+};
+
 const INQUIRY_STATUSES = {
   PENDING: 'PENDING',
   ANSWERED: 'ANSWERED'
@@ -39,6 +44,11 @@ function normalizeInquiryType(type) {
   return Object.values(INQUIRY_TYPES).includes(normalized) ? normalized : INQUIRY_TYPES.OTHER;
 }
 
+function normalizeSourceType(sourceType) {
+  const normalized = String(sourceType || '').toUpperCase();
+  return Object.values(SOURCE_TYPES).includes(normalized) ? normalized : null;
+}
+
 
 function normalizeAttachmentUrls(attachmentUrls) {
   if (!Array.isArray(attachmentUrls)) return [];
@@ -66,16 +76,40 @@ function normalizeInquiryRow(row) {
 }
 
 
-async function listArticles(category, includeDeleted = false) {
+async function listArticles(category, includeDeleted = false, { sourceType = null } = {}) {
   const pool = getPool();
   const normalizedCategory = normalizeCategory(category);
   if (!normalizedCategory) return [];
+
+  const normalizedSourceType = normalizeSourceType(sourceType);
+  if (normalizedSourceType === SOURCE_TYPES.POST && normalizedCategory !== SUPPORT_CATEGORIES.NOTICE) {
+    return [];
+  }
+
+  if (normalizedSourceType === SOURCE_TYPES.POST) {
+    const [rows] = await pool.query(
+      `SELECT p.id, p.id AS sourceId, 'POST' AS sourceType,
+              'NOTICE' AS category, p.title, p.content,
+              p.user_id AS createdBy, p.user_id AS updatedBy,
+              p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
+              p.created_at AS createdAt, p.updated_at AS updatedAt,
+              COALESCE(u.nickname, '관리자') AS createdByNickname,
+              COALESCE(u.nickname, '관리자') AS updatedByNickname
+       FROM posts p
+       LEFT JOIN users u ON u.id = p.user_id
+       WHERE p.is_notice = 1
+         AND p.is_deleted = 0
+       ORDER BY p.is_pinned DESC, p.created_at DESC, p.id DESC`
+    );
+    return rows;
+  }
 
   const whereDeleted = includeDeleted ? '' : 'AND a.is_deleted = 0';
   const [rows] = await pool.query(
     `SELECT a.id, a.id AS sourceId, 'SUPPORT' AS sourceType,
             a.category, a.title, a.content, a.created_by AS createdBy, a.updated_by AS updatedBy,
             a.created_at AS createdAt, a.updated_at AS updatedAt,
+            0 AS isNotice, NULL AS noticeType, 0 AS isPinned,
             COALESCE(cu.nickname, '관리자') AS createdByNickname,
             COALESCE(uu.nickname, '관리자') AS updatedByNickname
      FROM support_articles a
@@ -114,6 +148,26 @@ async function findPublicArticleDetailById(id) {
   return rows[0] || null;
 }
 
+async function findPublicNoticePostDetailById(id) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT p.id, 'NOTICE' AS category, p.title, p.content,
+            p.user_id AS createdBy, p.user_id AS updatedBy,
+            p.created_at AS createdAt, p.updated_at AS updatedAt,
+            COALESCE(u.nickname, '운영팀') AS createdByNickname,
+            COALESCE(u.nickname, '운영팀') AS updatedByNickname,
+            p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned
+     FROM posts p
+     LEFT JOIN users u ON u.id = p.user_id
+     WHERE p.id = ?
+       AND p.is_notice = 1
+       AND p.is_deleted = 0
+     LIMIT 1`,
+    [id]
+  );
+  return rows[0] || null;
+}
+
 async function createArticle({ category, title, content, userId }) {
   const pool = getPool();
   const normalizedCategory = normalizeCategory(category);
@@ -136,6 +190,51 @@ async function updateArticle(id, { category, title, content, userId }) {
 async function deleteArticle(id) {
   const pool = getPool();
   await pool.query('UPDATE support_articles SET is_deleted = 1 WHERE id = ?', [id]);
+}
+
+async function createNoticePost({ title, content, userId, noticeType = 'NOTICE', isPinned = false }) {
+  const pool = getPool();
+  const normalizedNoticeType = String(noticeType || '').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE';
+  const [result] = await pool.query(
+    `INSERT INTO posts
+      (user_id, board_type, is_notice, notice_type, is_pinned, title, content, image_urls)
+     VALUES (?, 'FREE', 1, ?, ?, ?, ?, '[]')`,
+    [userId, normalizedNoticeType, isPinned ? 1 : 0, title, content]
+  );
+  return result.insertId;
+}
+
+async function findNoticePostById(id) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT p.id, p.id AS sourceId, 'POST' AS sourceType,
+            'NOTICE' AS category, p.title, p.content,
+            p.user_id AS createdBy, p.user_id AS updatedBy,
+            p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
+            p.is_deleted,
+            p.created_at AS createdAt, p.updated_at AS updatedAt
+     FROM posts p
+     WHERE p.id = ?
+     LIMIT 1`,
+    [id]
+  );
+  return rows[0] || null;
+}
+
+async function updateNoticePost(id, { title, content, noticeType = 'NOTICE', isPinned = false }) {
+  const pool = getPool();
+  const normalizedNoticeType = String(noticeType || '').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE';
+  await pool.query(
+    `UPDATE posts
+     SET title = ?, content = ?, is_notice = 1, notice_type = ?, is_pinned = ?
+     WHERE id = ?`,
+    [title, content, normalizedNoticeType, isPinned ? 1 : 0, id]
+  );
+}
+
+async function deleteNoticePost(id) {
+  const pool = getPool();
+  await pool.query("UPDATE posts SET is_deleted = 1, title = '[삭제된 게시글]', content = '삭제된 게시글입니다.' WHERE id = ?", [id]);
 }
 
 async function createInquiry({ userId, type, title, content, targetType = null, targetId = null, attachmentUrls = [] }) {
@@ -218,17 +317,24 @@ async function answerInquiry(id, { answerContent, answeredBy }) {
 
 module.exports = {
   SUPPORT_CATEGORIES,
+  SOURCE_TYPES,
   INQUIRY_STATUSES,
   INQUIRY_TYPES,
   normalizeCategory,
   normalizeInquiryStatus,
   normalizeInquiryType,
+  normalizeSourceType,
   listArticles,
   findArticleById,
   findPublicArticleDetailById,
+  findPublicNoticePostDetailById,
   createArticle,
   updateArticle,
   deleteArticle,
+  createNoticePost,
+  findNoticePostById,
+  updateNoticePost,
+  deleteNoticePost,
   createInquiry,
   listInquiriesByUser,
   findInquiryById,
