@@ -217,15 +217,18 @@ function bindFaqEvents() {
     const searchInput = document.getElementById('faq-search-input');
     const topicTabs = document.querySelectorAll('.faq-topic-tab');
     const items = document.querySelectorAll('.faq-item');
-    let selectedTopic = FAQ_TOPICS[0];
+
+    const initialTopic = FAQ_TOPICS.find((topic) => Array.from(items).some((item) => item.dataset.topic === topic));
+    let selectedTopic = initialTopic || '전체';
 
     const applyFilter = () => {
         const query = String(searchInput?.value || '').trim().toLowerCase();
+        const hasTopicItems = Array.from(items).some((item) => item.dataset.topic === selectedTopic);
 
         items.forEach((item) => {
             const topic = item.dataset.topic;
             const text = item.dataset.searchText || '';
-            const matchTopic = selectedTopic === '전체' || topic === selectedTopic;
+            const matchTopic = selectedTopic === '전체' || !hasTopicItems || topic === selectedTopic;
             const matchQuery = !query || text.includes(query);
 
             item.classList.toggle('hidden', !(matchTopic && matchQuery));
@@ -233,6 +236,8 @@ function bindFaqEvents() {
     };
 
     topicTabs.forEach((tab) => {
+        tab.classList.toggle('active', (tab.dataset.topic || '') === selectedTopic);
+
         tab.addEventListener('click', () => {
             selectedTopic = tab.dataset.topic || FAQ_TOPICS[0];
             topicTabs.forEach((button) => button.classList.remove('active'));
