@@ -46,11 +46,23 @@ function togglePinOptions(category) {
     pinOptionEl.classList.toggle('hidden', String(category || '').toUpperCase() !== 'NOTICE');
 }
 
+function syncBoardTypeByCategory(category) {
+    const boardTypeEl = document.getElementById('support-form-board-type');
+    if (!boardTypeEl) return;
+
+    const isNotice = String(category || '').toUpperCase() === 'NOTICE';
+    boardTypeEl.disabled = !isNotice;
+    if (!isNotice) {
+        boardTypeEl.value = 'FREE';
+    }
+}
+
 function applyInitialCategory() {
     const category = getInitialSupportCategory();
     const categorySelect = document.getElementById('support-form-category');
     if (categorySelect) categorySelect.value = category;
     togglePinOptions(category);
+    syncBoardTypeByCategory(category);
     applyPageTitle(category, false);
 }
 
@@ -80,14 +92,17 @@ async function loadEditTargetIfNeeded() {
         const titleInput = document.getElementById('title');
         const contentInput = document.getElementById('content');
         const pinnedInput = document.getElementById('support-form-is-pinned');
+        const boardTypeInput = document.getElementById('support-form-board-type');
         if (titleInput) titleInput.value = article.title || '';
         if (contentInput) contentInput.value = article.content || '';
         if (pinnedInput) pinnedInput.checked = Boolean(article.isPinned) && String(article.noticeType || '').toUpperCase() === 'IMPORTANT';
+        if (boardTypeInput) boardTypeInput.value = String(article.boardType || 'FREE').toUpperCase();
 
         const submitBtn = document.getElementById('submit-btn');
         if (submitBtn) submitBtn.textContent = '수정';
 
         togglePinOptions(category);
+        syncBoardTypeByCategory(category);
         applyPageTitle(category, true);
         validateSupportForm();
     } catch (error) {
@@ -123,6 +138,7 @@ function bindSupportCreateEvents() {
     categoryInput?.addEventListener('change', () => {
         const category = String(categoryInput.value || 'NOTICE').toUpperCase();
         togglePinOptions(category);
+        syncBoardTypeByCategory(category);
 
         if (category !== 'NOTICE') {
             const pinnedInput = document.getElementById('support-form-is-pinned');
@@ -150,6 +166,7 @@ async function submitSupportPost(event) {
 
     const category = document.getElementById('support-form-category')?.value || 'NOTICE';
     const isPinned = Boolean(document.getElementById('support-form-is-pinned')?.checked);
+    const boardType = document.getElementById('support-form-board-type')?.value || 'FREE';
     const noticeType = isPinned ? 'IMPORTANT' : 'NOTICE';
     const title = document.getElementById('title')?.value?.trim() || '';
     const content = document.getElementById('content')?.value?.trim() || '';
@@ -176,7 +193,7 @@ async function submitSupportPost(event) {
             category,
             title,
             content,
-            ...(category === 'NOTICE' ? { noticeType, isPinned } : {})
+            ...(category === 'NOTICE' ? { noticeType, isPinned, boardType } : {})
         };
 
         if (editingTarget) {
