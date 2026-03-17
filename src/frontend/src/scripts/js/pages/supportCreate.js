@@ -29,15 +29,28 @@ function getInitialSupportCategory() {
 }
 
 function applyPageTitle(category, isEdit) {
-    const heading = document.querySelector('.community-section-header h1');
+    const heading = document.querySelector('.community-board-name');
+    const description = document.querySelector('.support-create-description');
     if (!heading) return;
 
+    const isFaq = category === 'FAQ';
+
     if (isEdit) {
-        heading.textContent = category === 'FAQ' ? 'FAQ 글 수정' : '공지사항 글 수정';
+        heading.textContent = isFaq ? 'FAQ 글 수정' : '공지사항 글 수정';
+        if (description) {
+            description.textContent = isFaq
+                ? '등록된 FAQ 글을 수정할 수 있습니다.'
+                : '등록된 공지사항 글을 수정할 수 있습니다.';
+        }
         return;
     }
 
-    heading.textContent = category === 'FAQ' ? 'FAQ 새 글 작성' : '공지사항 새 글 작성';
+    heading.textContent = isFaq ? 'FAQ 새 글 작성' : '공지사항 새 글 작성';
+    if (description) {
+        description.textContent = isFaq
+            ? '자주 묻는 질문으로 안내할 내용을 작성해보세요.'
+            : '커뮤니티 글쓰기 화면과 동일한 방식으로 공지사항 글을 등록할 수 있습니다.';
+    }
 }
 
 function togglePinOptions(category) {

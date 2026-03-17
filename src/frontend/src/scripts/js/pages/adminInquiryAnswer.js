@@ -40,8 +40,8 @@ function formatDateTime(value) {
 
 
 function applyPageTitle(isEditMode) {
-    const heading = document.querySelector('.community-section-header h1');
-    const description = document.querySelector('.community-section-header p');
+    const heading = document.querySelector('.community-board-name');
+    const description = document.querySelector('.admin-inquiry-answer-description');
 
     if (heading) {
         heading.textContent = isEditMode ? '1:1 문의 답변 수정' : '1:1 문의 답변 작성';
