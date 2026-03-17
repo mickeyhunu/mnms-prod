@@ -38,6 +38,22 @@ function formatDateTime(value) {
     });
 }
 
+
+function applyPageTitle(isEditMode) {
+    const heading = document.querySelector('.community-section-header h1');
+    const description = document.querySelector('.community-section-header p');
+
+    if (heading) {
+        heading.textContent = isEditMode ? '1:1 문의 답변 수정' : '1:1 문의 답변 작성';
+    }
+
+    if (description) {
+        description.textContent = isEditMode
+            ? '등록된 답변을 수정하고 저장할 수 있습니다.'
+            : '문의 상세 내용을 확인하고 답변을 저장할 수 있습니다.';
+    }
+}
+
 function validateForm() {
     const answer = document.getElementById('admin-inquiry-answer-content')?.value?.trim() || '';
     const saveButton = document.getElementById('admin-inquiry-answer-save-btn');
@@ -79,8 +95,13 @@ function renderInquiryInfo(inquiry) {
         ].join('');
     }
     if (contentEl) contentEl.textContent = inquiry.content || '-';
+    const hasExistingAnswer = Boolean((inquiry.answerContent || '').trim());
     if (answerEl) answerEl.value = inquiry.answerContent || '';
 
+    const saveButton = document.getElementById('admin-inquiry-answer-save-btn');
+    if (saveButton) saveButton.textContent = hasExistingAnswer ? '답변 수정' : '답변 저장';
+
+    applyPageTitle(hasExistingAnswer);
     validateForm();
 }
 
