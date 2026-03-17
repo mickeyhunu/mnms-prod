@@ -3,6 +3,7 @@
  */
 let activeTab = window.location.pathname === '/support/faq' ? 'faq' : 'notice';
 let latestLoadRequestId = 0;
+const FAQ_TOPICS = ['서비스', '채팅', '기업회원', '회원/계정', '기타'];
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initSupportBoardPage, { once: true });
@@ -48,6 +49,10 @@ function bindTabEvents() {
     });
 
     syncBoardTitle();
+
+    if (activeTab === 'faq') {
+        document.body.classList.add('faq-page-body');
+    }
 }
 
 function syncBoardTitle() {
@@ -74,20 +79,21 @@ async function loadArticles() {
 
         if (!rows.length) {
             if (list) {
-                list.innerHTML = '<div class="card">등록된 글이 없습니다.</div>';
+                list.innerHTML = activeTab === 'faq'
+                    ? createEmptyFaqState()
+                    : '<div class="card">등록된 글이 없습니다.</div>';
                 list.classList.remove('hidden');
             }
             return;
         }
 
         if (list) {
-            list.innerHTML = rows.map((item) => {
-                if (activeTab === 'notice') {
-                    return createSupportNoticeCard(item);
-                }
-
-                return createSupportFaqCard(item);
-            }).join('');
+            if (activeTab === 'faq') {
+                list.innerHTML = createFaqLayout(rows);
+                bindFaqEvents();
+            } else {
+                list.innerHTML = rows.map((item) => createSupportNoticeCard(item)).join('');
+            }
             list.classList.remove('hidden');
         }
     } catch (error) {
@@ -143,6 +149,120 @@ function createSupportFaqCard(item) {
             <div class="post-content" style="white-space:normal;line-height:1.7;">${content}</div>
         </article>
     `;
+}
+
+function createEmptyFaqState() {
+    return `
+        <section class="faq-layout">
+            <div class="faq-hero"><p class="faq-title">자주 묻는 질문</p></div>
+            <div class="faq-empty">등록된 FAQ가 없습니다.</div>
+        </section>
+    `;
+}
+
+function createFaqLayout(rows) {
+    const faqItems = rows.map((item) => {
+        const topic = inferFaqTopic(item);
+        return {
+            topic,
+            question: sanitizeHTML(item.title || '제목 없음'),
+            answer: sanitizeHTML(item.content || '').replace(/\n/g, '<br>')
+        };
+    });
+
+    const tabsMarkup = FAQ_TOPICS.map((topic, index) => `
+        <button type="button" class="faq-topic-tab ${index === 0 ? 'active' : ''}" data-topic="${topic}">${topic}</button>
+    `).join('');
+
+    const itemsMarkup = faqItems.map((item, index) => `
+        <article class="faq-item" data-topic="${item.topic}" data-search-text="${(item.question + ' ' + item.answer).toLowerCase()}">
+            <button type="button" class="faq-question" data-faq-toggle>
+                <span class="faq-question-text">Q. ${item.question}</span>
+                <span class="faq-chevron" aria-hidden="true">⌄</span>
+            </button>
+            <div class="faq-answer-wrap ${index === 0 ? 'open' : ''}">
+                <div class="faq-answer">${item.answer}</div>
+            </div>
+        </article>
+    `).join('');
+
+    return `
+        <section class="faq-layout" id="faq-layout">
+            <div class="faq-hero">
+                <p class="faq-title">자주 묻는 질문</p>
+                <div class="faq-search-box">
+                    <span class="faq-search-icon" aria-hidden="true">🔍</span>
+                    <input id="faq-search-input" class="faq-search-input" type="text" placeholder="찾으시는 질문을 검색해보세요.">
+                </div>
+            </div>
+            <div class="faq-topic-tabs" id="faq-topic-tabs">${tabsMarkup}</div>
+            <div id="faq-items">${itemsMarkup}</div>
+        </section>
+    `;
+}
+
+function inferFaqTopic(item) {
+    const rawTopic = String(item.topic || item.subCategory || item.sub_category || item.section || '').trim();
+    if (FAQ_TOPICS.includes(rawTopic)) return rawTopic;
+
+    const text = `${item.title || ''} ${item.content || ''}`;
+    if (/채팅|메시지|대화/i.test(text)) return '채팅';
+    if (/기업|비즈니스|파트너/i.test(text)) return '기업회원';
+    if (/회원|계정|로그인|가입|비밀번호|인증/i.test(text)) return '회원/계정';
+    if (/서비스|이용|운영|앱|웹|플랫폼/i.test(text)) return '서비스';
+    return '기타';
+}
+
+function bindFaqEvents() {
+    const searchInput = document.getElementById('faq-search-input');
+    const topicTabs = document.querySelectorAll('.faq-topic-tab');
+    const items = document.querySelectorAll('.faq-item');
+
+    const initialTopic = FAQ_TOPICS.find((topic) => Array.from(items).some((item) => item.dataset.topic === topic));
+    let selectedTopic = initialTopic || '전체';
+
+    const applyFilter = () => {
+        const query = String(searchInput?.value || '').trim().toLowerCase();
+        const hasTopicItems = Array.from(items).some((item) => item.dataset.topic === selectedTopic);
+
+        items.forEach((item) => {
+            const topic = item.dataset.topic;
+            const text = item.dataset.searchText || '';
+            const matchTopic = selectedTopic === '전체' || !hasTopicItems || topic === selectedTopic;
+            const matchQuery = !query || text.includes(query);
+
+            item.classList.toggle('hidden', !(matchTopic && matchQuery));
+        });
+    };
+
+    topicTabs.forEach((tab) => {
+        tab.classList.toggle('active', (tab.dataset.topic || '') === selectedTopic);
+
+        tab.addEventListener('click', () => {
+            selectedTopic = tab.dataset.topic || FAQ_TOPICS[0];
+            topicTabs.forEach((button) => button.classList.remove('active'));
+            tab.classList.add('active');
+            applyFilter();
+        });
+    });
+
+    items.forEach((item) => {
+        const toggleButton = item.querySelector('[data-faq-toggle]');
+        const answerWrap = item.querySelector('.faq-answer-wrap');
+        if (!toggleButton || !answerWrap) return;
+
+        toggleButton.addEventListener('click', () => {
+            answerWrap.classList.toggle('open');
+            item.classList.toggle('expanded', answerWrap.classList.contains('open'));
+        });
+
+        if (answerWrap.classList.contains('open')) {
+            item.classList.add('expanded');
+        }
+    });
+
+    searchInput?.addEventListener('input', applyFilter);
+    applyFilter();
 }
 
 function applyDetailModeHeader() {
