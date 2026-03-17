@@ -1432,11 +1432,11 @@
 }
 
 .faq-page-body {
-    background: #17161b;
+    background: #f6f3ef;
 }
 
 .faq-layout {
-    color: #f4f4f5;
+    color: #3f3128;
 }
 
 .faq-hero {
@@ -1451,7 +1451,7 @@
     margin: 0;
     font-size: 24px;
     font-weight: 700;
-    color: #ffffff;
+    color: #2f231b;
 }
 
 .faq-search-box {
@@ -1459,7 +1459,8 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    background: #27262b;
+    background: #fffdfa;
+    border: 1px solid #e4d7ca;
     border-radius: 999px;
     padding: 10px 14px;
 }
@@ -1469,17 +1470,17 @@
     border: 0;
     outline: 0;
     background: transparent;
-    color: #ececef;
+    color: #5a4436;
     font-size: 14px;
 }
 
 .faq-search-input::placeholder {
-    color: #8e8c95;
+    color: #a88f7d;
 }
 
 .faq-search-icon {
     font-size: 15px;
-    opacity: 0.7;
+    opacity: 0.75;
 }
 
 .faq-topic-tabs {
@@ -1492,9 +1493,9 @@
 }
 
 .faq-topic-tab {
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    background: transparent;
-    color: rgba(255, 255, 255, 0.55);
+    border: 1px solid #dbc8b7;
+    background: #fffdfa;
+    color: #876b59;
     border-radius: 999px;
     padding: 7px 12px;
     font-size: 13px;
@@ -1503,7 +1504,8 @@
 
 .faq-topic-tab.active {
     color: #fff;
-    border-color: rgba(255, 255, 255, 0.8);
+    border-color: #b17c56;
+    background: #b17c56;
 }
 
 #faq-items {
@@ -1511,7 +1513,7 @@
 }
 
 .faq-item {
-    border-top: 1px solid #36343b;
+    border-top: 1px solid #e8dbcf;
     padding: 14px 0;
 }
 
@@ -1519,7 +1521,7 @@
     width: 100%;
     background: transparent;
     border: 0;
-    color: #cdccce;
+    color: #5f4a3d;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -1537,7 +1539,7 @@
 .faq-chevron {
     font-size: 16px;
     line-height: 1;
-    color: #9a98a1;
+    color: #a68773;
     transition: transform 0.2s ease;
 }
 
@@ -1559,10 +1561,11 @@
 
 .faq-answer {
     margin-top: 10px;
-    background: #27262b;
+    background: #fffaf4;
+    border: 1px solid #eadbcf;
     border-radius: 10px;
     padding: 14px;
-    color: #d8d8d8;
+    color: #5f4a3d;
     line-height: 1.7;
     font-size: 14px;
 }
@@ -1570,7 +1573,7 @@
 .faq-empty {
     margin-top: 10px;
     text-align: center;
-    color: #a3a1ab;
+    color: #9a806f;
     font-size: 14px;
 }
 
