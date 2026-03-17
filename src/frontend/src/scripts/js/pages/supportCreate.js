@@ -40,11 +40,17 @@ function applyPageTitle(category, isEdit) {
     heading.textContent = category === 'FAQ' ? 'FAQ 새 글 작성' : '공지사항 새 글 작성';
 }
 
+function togglePinOptions(category) {
+    const pinOptionEl = document.getElementById('support-pin-options');
+    if (!pinOptionEl) return;
+    pinOptionEl.classList.toggle('hidden', String(category || '').toUpperCase() !== 'NOTICE');
+}
+
 function applyInitialCategory() {
     const category = getInitialSupportCategory();
     const categorySelect = document.getElementById('support-form-category');
     if (categorySelect) categorySelect.value = category;
-    toggleNoticeOptions(category);
+    togglePinOptions(category);
     applyPageTitle(category, false);
 }
 
@@ -73,17 +79,15 @@ async function loadEditTargetIfNeeded() {
 
         const titleInput = document.getElementById('title');
         const contentInput = document.getElementById('content');
-        const noticeTypeInput = document.getElementById('support-form-notice-type');
         const pinnedInput = document.getElementById('support-form-is-pinned');
         if (titleInput) titleInput.value = article.title || '';
         if (contentInput) contentInput.value = article.content || '';
-        if (noticeTypeInput) noticeTypeInput.value = String(article.noticeType || 'NOTICE').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE';
-        if (pinnedInput) pinnedInput.checked = Boolean(article.isPinned);
+        if (pinnedInput) pinnedInput.checked = Boolean(article.isPinned) && String(article.noticeType || '').toUpperCase() === 'IMPORTANT';
 
         const submitBtn = document.getElementById('submit-btn');
         if (submitBtn) submitBtn.textContent = '수정';
 
-        toggleNoticeOptions(category);
+        togglePinOptions(category);
         applyPageTitle(category, true);
         validateSupportForm();
     } catch (error) {
@@ -117,8 +121,15 @@ function bindSupportCreateEvents() {
 
     form?.addEventListener('submit', submitSupportPost);
     categoryInput?.addEventListener('change', () => {
-        toggleNoticeOptions(categoryInput.value);
-        applyPageTitle(categoryInput.value, Boolean(editingTarget));
+        const category = String(categoryInput.value || 'NOTICE').toUpperCase();
+        togglePinOptions(category);
+
+        if (category !== 'NOTICE') {
+            const pinnedInput = document.getElementById('support-form-is-pinned');
+            if (pinnedInput) pinnedInput.checked = false;
+        }
+
+        applyPageTitle(category, Boolean(editingTarget));
     });
     titleInput?.addEventListener('input', validateSupportForm);
     contentInput?.addEventListener('input', validateSupportForm);
@@ -138,8 +149,8 @@ async function submitSupportPost(event) {
     if (isSubmitting) return;
 
     const category = document.getElementById('support-form-category')?.value || 'NOTICE';
-    const noticeType = document.getElementById('support-form-notice-type')?.value || 'NOTICE';
     const isPinned = Boolean(document.getElementById('support-form-is-pinned')?.checked);
+    const noticeType = isPinned ? 'IMPORTANT' : 'NOTICE';
     const title = document.getElementById('title')?.value?.trim() || '';
     const content = document.getElementById('content')?.value?.trim() || '';
     const submitBtn = document.getElementById('submit-btn');

@@ -440,15 +440,9 @@ const pageRegistry = {
                         </select>
                     </div>
 
-                    <div class="form-group" id="support-notice-options">
-                        <label for="support-form-notice-type" class="form-label">공지 옵션</label>
-                        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
-                            <select id="support-form-notice-type" class="form-control" style="max-width:200px;">
-                                <option value="NOTICE">공지</option>
-                                <option value="IMPORTANT">필독</option>
-                            </select>
-                            <label><input type="checkbox" id="support-form-is-pinned"> 커뮤니티 상단 고정</label>
-                        </div>
+                    <div class="form-group" id="support-pin-options">
+                        <label class="form-label">커뮤니티 노출</label>
+                        <label><input type="checkbox" id="support-form-is-pinned"> 커뮤니티 필독 상단 고정으로 표시</label>
                     </div>
 
                     <div class="form-group">
