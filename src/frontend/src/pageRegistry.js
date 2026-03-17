@@ -440,6 +440,11 @@ const pageRegistry = {
                         </select>
                     </div>
 
+                    <div class="form-group" id="support-pin-options">
+                        <label class="form-label">커뮤니티 노출</label>
+                        <label><input type="checkbox" id="support-form-is-pinned"> 커뮤니티 필독 상단 고정으로 표시</label>
+                    </div>
+
                     <div class="form-group">
                         <label for="title" class="form-label">제목</label>
                         <input type="text" id="title" class="form-control" maxlength="255" placeholder="제목을 입력하세요" required>

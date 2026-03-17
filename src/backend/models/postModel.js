@@ -61,7 +61,10 @@ async function listPosts(page = 0, size = 10, options = {}) {
   const searchType = options.searchType || 'bbs_title';
   const boardFilter = normalizeBoardFilter(options.boardType);
 
-  const whereConditions = ['p.is_deleted = 0'];
+  const whereConditions = [
+    'p.is_deleted = 0',
+    "(p.is_notice = 0 OR (p.is_notice = 1 AND p.notice_type = 'IMPORTANT' AND p.is_pinned = 1))"
+  ];
   const whereParams = [];
 
   if (boardFilter !== 'ALL') {
@@ -104,7 +107,10 @@ async function listPosts(page = 0, size = 10, options = {}) {
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
      ${whereClause}
-     ORDER BY p.is_pinned DESC, p.is_notice DESC, p.created_at DESC
+     ORDER BY p.is_pinned DESC,
+              CASE WHEN p.is_notice = 1 AND p.notice_type = 'IMPORTANT' THEN 1 ELSE 0 END DESC,
+              p.is_notice DESC,
+              p.created_at DESC
      LIMIT ? OFFSET ?`,
     [...whereParams, size, offset]
   );
