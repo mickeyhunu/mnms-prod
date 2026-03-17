@@ -6,6 +6,7 @@ let supportEditTarget = null;
 let currentSupportCategory = 'NOTICE';
 let currentInquiryStatus = '';
 let inquiryAnswerTarget = null;
+let isGlobalAdminClickBound = false;
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAdminPage);
@@ -78,9 +79,6 @@ function bindCommonEvents() {
         currentSupportCategory = event.target.value;
         await loadSupportArticles();
     });
-    document.getElementById('support-new-btn')?.addEventListener('click', () => {
-        openSupportModal();
-    });
     document.getElementById('support-cancel-btn')?.addEventListener('click', closeSupportModal);
     document.getElementById('support-save-btn')?.addEventListener('click', saveSupportArticle);
 
@@ -93,12 +91,23 @@ function bindCommonEvents() {
     document.getElementById('inquiry-answer-cancel-btn')?.addEventListener('click', closeInquiryAnswerModal);
     document.getElementById('inquiry-answer-save-btn')?.addEventListener('click', saveInquiryAnswer);
 
-    document.getElementById('posts-tbody')?.addEventListener('click', handleAdminTableActionClick);
-    document.getElementById('comments-tbody')?.addEventListener('click', handleAdminTableActionClick);
-    document.getElementById('users-tbody')?.addEventListener('click', handleAdminTableActionClick);
-    document.getElementById('ads-tbody')?.addEventListener('click', handleAdminTableActionClick);
-    document.getElementById('support-tbody')?.addEventListener('click', handleAdminTableActionClick);
-    document.getElementById('inquiries-tbody')?.addEventListener('click', handleAdminTableActionClick);
+    if (!isGlobalAdminClickBound) {
+        document.addEventListener('click', handleGlobalAdminClick);
+        isGlobalAdminClickBound = true;
+    }
+}
+
+function handleGlobalAdminClick(event) {
+    const supportNewButton = event.target.closest('#support-new-btn');
+    if (supportNewButton) {
+        event.preventDefault();
+        openSupportModal();
+        return;
+    }
+
+    const actionButton = event.target.closest('[data-admin-action]');
+    if (!actionButton) return;
+    handleAdminTableActionClick(event);
 }
 
 async function loadPosts() {
