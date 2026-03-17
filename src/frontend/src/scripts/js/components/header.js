@@ -7,6 +7,19 @@ function initHeader() {
     Auth.bindLogoutButton();
 }
 
+function autoInitHeader() {
+    const hasHeaderAuthTargets = document.getElementById('nav-guest')
+        || document.getElementById('nav-user')
+        || document.getElementById('logout-btn')
+        || document.getElementById('user-nickname');
+
+    if (!hasHeaderAuthTargets || typeof Auth === 'undefined') {
+        return;
+    }
+
+    initHeader();
+}
+
 function updateHeaderForUser(user) {
     const navGuest = document.getElementById('nav-guest');
     const navUser = document.getElementById('nav-user');
@@ -71,3 +84,5 @@ async function updateMessageNotificationBadge() {
         console.error('Failed to update notification badge:', error);
     }
 }
+
+autoInitHeader();
