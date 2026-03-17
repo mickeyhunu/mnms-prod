@@ -20,6 +20,9 @@ const pageRegistry = {
     <main class="main-content">
         <header class="community-section-header">
             <div class="community-header-left">
+                <a href="/" class="community-back-link" aria-label="홈으로 이동">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                </a>
                 <span class="community-board-name">관리자 페이지</span>
             </div>
         </header>
@@ -153,7 +156,12 @@ const pageRegistry = {
     <main class="main-content">
         <div class="container">
             <div class="community-section-header">
-                <h1>내 북마크</h1>
+                <div class="community-header-left">
+                    <a href="/community" class="community-back-link" aria-label="커뮤니티로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
+                    <h1>내 북마크</h1>
+                </div>
                 <p>북마크한 게시글을 확인하세요</p>
             </div>
 
@@ -214,6 +222,9 @@ const pageRegistry = {
         <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
+                    <a href="/" class="community-back-link" aria-label="홈으로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
                     <span class="community-board-name">업체정보</span>
                 </div>
             </header>
@@ -509,7 +520,7 @@ const pageRegistry = {
     <script src="scripts/js/pages/supportCreate.js"></script>
     <script src="scripts/js/components/sectionHeader.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/supportCreate.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
 
@@ -574,7 +585,7 @@ const pageRegistry = {
     <script src="scripts/js/pages/adminInquiryAnswer.js"></script>
     <script src="scripts/js/components/sectionHeader.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/adminInquiryAnswer.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
   'find-account': {
@@ -689,6 +700,9 @@ const pageRegistry = {
         <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
+                    <a href="/" class="community-back-link" aria-label="홈으로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
                     <span class="community-board-name">LIVE</span>
                 </div>
             </header>
@@ -804,6 +818,9 @@ const pageRegistry = {
         <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
+                    <a href="/" class="community-back-link" aria-label="홈으로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
                     <span class="community-board-name">마이페이지</span>
                 </div>
             </header>
@@ -980,7 +997,7 @@ const pageRegistry = {
   },
   'my-page-policy': {
     template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
-    <main class="main-content"><header class="community-section-header"><div class="community-header-left"><span class="community-board-name">마이페이지</span></div></header><div class="container">
+    <main class="main-content"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">마이페이지</span></div></header><div class="container">
     <div class="section-header"><h2>약관 및 정책</h2></div><div class="mypage-link-section"><p class="mypage-link-section-title">ABOUT 미드나잇테라스</p><div class="mypage-link-list"><a class="mypage-link-item" href="/support"><span>공지사항</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a class="mypage-link-item" href="/board/about?type=event"><span>이벤트</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a class="mypage-link-item" href="/board/terms"><span>약관 및 정책</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a><a target="_blank" rel="noopener noreferrer" class="mypage-link-item" href="https://12terrace.com/board/notice/33"><span>미드나잇테라스 소개</span><span class="mypage-link-chevron" aria-hidden="true">›</span></a></div></div><section class="support-link-section"><p class="support-link-section-title">고객센터</p><div class="support-link-list"><a class="support-link-item" href="/customer-service"><span>1:1 고객센터</span></a><a class="support-link-item" href="/support/faq"><span>FAQ</span></a><a class="support-link-item" href="/board/customer/feedback"><span>피드백 보내기</span></a></div></section></div></main>
     <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/pages/myPage.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
