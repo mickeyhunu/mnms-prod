@@ -174,13 +174,13 @@ function createFaqLayout(rows) {
         <button type="button" class="faq-topic-tab ${index === 0 ? 'active' : ''}" data-topic="${topic}">${topic}</button>
     `).join('');
 
-    const itemsMarkup = faqItems.map((item, index) => `
+    const itemsMarkup = faqItems.map((item) => `
         <article class="faq-item" data-topic="${item.topic}" data-search-text="${(item.question + ' ' + item.answer).toLowerCase()}">
             <button type="button" class="faq-question" data-faq-toggle>
                 <span class="faq-question-text">Q. ${item.question}</span>
                 <span class="faq-chevron" aria-hidden="true">⌄</span>
             </button>
-            <div class="faq-answer-wrap ${index === 0 ? 'open' : ''}">
+            <div class="faq-answer-wrap">
                 <div class="faq-answer">${item.answer}</div>
             </div>
         </article>
