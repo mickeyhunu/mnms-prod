@@ -18,11 +18,11 @@ body.home-dark {
     background: #ffffff;
 }
 
-.home-dark .page-header h1 {
+.home-dark div.community-section-header h1 {
     color: var(--text-color);
 }
 
-.home-dark .page-header p,
+.home-dark div.community-section-header p,
 .home-dark .user-nickname {
     color: var(--text-subtle);
 }

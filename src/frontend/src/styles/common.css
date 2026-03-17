@@ -283,7 +283,7 @@ a:hover {
     font-weight: bold !important;
 }
 
-.bookmarks-page .page-header {
+.bookmarks-page div.community-section-header {
     background: white;
     color: #2d3748;
     text-align: center;
@@ -294,14 +294,14 @@ a:hover {
     border: 1px solid #e2e8f0;
 }
 
-.bookmarks-page .page-header h1 {
+.bookmarks-page div.community-section-header h1 {
     font-size: 2.5rem;
     font-weight: 700;
     margin-bottom: 16px;
     color: #2d3748;
 }
 
-.bookmarks-page .page-header p {
+.bookmarks-page div.community-section-header p {
     font-size: 1.2rem;
     opacity: 0.7;
     font-weight: 400;
@@ -499,11 +499,11 @@ a:hover {
 }
 
 @media (max-width: 768px) {
-    .bookmarks-page .page-header {
+    .bookmarks-page div.community-section-header {
         padding: 40px 20px;
     }
     
-    .bookmarks-page .page-header h1 {
+    .bookmarks-page div.community-section-header h1 {
         font-size: 2rem;
     }
     
@@ -539,7 +539,7 @@ body,
 .service-item,
 .message-card,
 .stats-card,
-.bookmarks-page .page-header,
+.bookmarks-page div.community-section-header,
 .bookmarks-page .post-card,
 .bookmarks-page .empty-state,
 .bookmarks-page .loading,
@@ -554,7 +554,7 @@ body,
 .community-container,
 .notice-item,
 .service-item,
-.bookmarks-page .page-header,
+.bookmarks-page div.community-section-header,
 .bookmarks-page .post-card,
 .bookmarks-page .empty-state,
 .bookmarks-page .loading,
