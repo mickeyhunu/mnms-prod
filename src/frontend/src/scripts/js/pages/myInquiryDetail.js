@@ -41,8 +41,16 @@ function renderAttachmentList(attachmentUrls = []) {
     const items = attachmentUrls.map((url, index) => {
         const safeUrl = escapeHtml(url);
         const isPdf = safeUrl.startsWith('data:application/pdf');
-        const label = isPdf ? `첨부파일 ${index + 1} (PDF)` : `첨부 이미지 ${index + 1}`;
-        return `<li><a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${label}</a></li>`;
+        if (isPdf) {
+            const label = `첨부파일 ${index + 1} (PDF)`;
+            return `<li class="my-inquiry-attachment-item"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${label}</a></li>`;
+        }
+
+        return `
+            <li class="my-inquiry-attachment-item">
+                <img class="my-inquiry-attachment-image" src="${safeUrl}" alt="첨부 이미지 ${index + 1}">
+            </li>
+        `;
     }).join('');
 
     return `
