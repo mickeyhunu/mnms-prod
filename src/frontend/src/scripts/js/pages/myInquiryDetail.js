@@ -34,6 +34,25 @@ function getStatusText(status) {
 }
 
 
+
+function renderAttachmentList(attachmentUrls = []) {
+    if (!Array.isArray(attachmentUrls) || attachmentUrls.length === 0) return '';
+
+    const items = attachmentUrls.map((url, index) => {
+        const safeUrl = escapeHtml(url);
+        const isPdf = safeUrl.startsWith('data:application/pdf');
+        const label = isPdf ? `첨부파일 ${index + 1} (PDF)` : `첨부 이미지 ${index + 1}`;
+        return `<li><a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${label}</a></li>`;
+    }).join('');
+
+    return `
+        <div class="my-inquiry-detail-block">
+            <h3>첨부파일</h3>
+            <ul class="my-inquiry-attachments">${items}</ul>
+        </div>
+    `;
+}
+
 function getInquiryTypeLabel(type) {
     const normalized = String(type || '').toLowerCase();
     if (normalized === 'post_report') return '게시글 신고';
@@ -76,6 +95,7 @@ async function renderInquiryDetail() {
             <h3>문의 내용</h3>
             <p class="my-inquiry-content">${escapeHtml(inquiry.content || '').replace(/\n/g, '<br>')}</p>
         </div>
+        ${renderAttachmentList(inquiry.attachmentUrls)}
         <div class="my-inquiry-detail-block">
             <h3>관리자 답변</h3>
             <p class="my-inquiry-answer">${escapeHtml(answerText).replace(/\n/g, '<br>')}</p>

@@ -127,6 +127,7 @@ async function initDatabase() {
       notice_target_boards VARCHAR(50) NULL,
       title VARCHAR(255) NOT NULL,
       content TEXT NOT NULL,
+      image_urls LONGTEXT NULL,
       is_deleted TINYINT(1) NOT NULL DEFAULT 0,
       view_count BIGINT NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -161,6 +162,20 @@ async function initDatabase() {
 
   if (!postIsDeletedColumn.length) {
     await pool.query('ALTER TABLE posts ADD COLUMN is_deleted TINYINT(1) NOT NULL DEFAULT 0 AFTER content');
+  }
+
+  const [postImageUrlsColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'posts'
+       AND COLUMN_NAME = 'image_urls'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!postImageUrlsColumn.length) {
+    await pool.query('ALTER TABLE posts ADD COLUMN image_urls LONGTEXT NULL AFTER content');
   }
 
   const [postCreatePointAwardedColumn] = await pool.query(
@@ -438,6 +453,7 @@ async function initDatabase() {
       target_id BIGINT NULL,
       title VARCHAR(255) NOT NULL,
       content TEXT NOT NULL,
+      attachment_urls LONGTEXT NULL,
       status ENUM('PENDING','ANSWERED') NOT NULL DEFAULT 'PENDING',
       answer_content TEXT NULL,
       answered_by BIGINT NULL,
@@ -450,6 +466,21 @@ async function initDatabase() {
       FOREIGN KEY (answered_by) REFERENCES users(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  const [supportAttachmentUrlsColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'support_inquiries'
+       AND COLUMN_NAME = 'attachment_urls'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!supportAttachmentUrlsColumn.length) {
+    await pool.query('ALTER TABLE support_inquiries ADD COLUMN attachment_urls LONGTEXT NULL AFTER content');
+  }
+
   const [adminRows] = await pool.query('SELECT id FROM users WHERE email = ?', ['admin@company.com']);
   if (!adminRows.length) {
     await pool.query(

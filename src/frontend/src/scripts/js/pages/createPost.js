@@ -182,23 +182,22 @@ function validateForm() {
     submitBtn.disabled = !isValid || isSubmitting;
 }
 
-function readFirstImageAsDataUrl() {
+function readSelectedImagesAsDataUrls() {
     const imageInput = document.getElementById('image-files');
     if (!imageInput || !imageInput.files || imageInput.files.length === 0) {
-        return Promise.resolve(null);
+        return Promise.resolve([]);
     }
 
-    const first = imageInput.files[0];
-    if (!first.type.startsWith('image/')) {
-        return Promise.resolve(null);
-    }
+    const imageFiles = Array.from(imageInput.files)
+        .filter((file) => file.type.startsWith('image/'))
+        .slice(0, 5);
 
-    return new Promise((resolve, reject) => {
+    return Promise.all(imageFiles.map((file) => new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
         reader.onerror = () => reject(new Error('이미지 읽기에 실패했습니다.'));
-        reader.readAsDataURL(first);
-    });
+        reader.readAsDataURL(file);
+    })));
 }
 
 async function loadPostForEdit() {
@@ -224,7 +223,7 @@ async function loadPostForEdit() {
             if (noticeTypeWrap) noticeTypeWrap.classList.toggle('hidden', !isNoticeInput.checked);
         }
 
-        existingImageUrl = post.imageUrl || (post.images && post.images[0]) || null;
+        existingImageUrl = post.imageUrl || (Array.isArray(post.imageUrls) ? post.imageUrls[0] : null) || (post.images && post.images[0]) || null;
         if (existingImageUrl) {
             displayExistingImagePreview(existingImageUrl);
         }
@@ -270,12 +269,12 @@ async function handleSubmit(event) {
     }
 
     try {
-        const newImageUrl = await readFirstImageAsDataUrl();
+        const imageUrls = await readSelectedImagesAsDataUrls();
         const payload = {
             title: titleValue,
             content: contentValue,
             boardType,
-            imageUrl: newImageUrl || existingImageUrl
+            imageUrls: imageUrls.length > 0 ? imageUrls : (existingImageUrl ? [existingImageUrl] : [])
         };
 
         if (isAdmin) {

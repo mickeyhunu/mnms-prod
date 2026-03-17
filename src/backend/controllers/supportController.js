@@ -8,6 +8,15 @@ function parseId(value) {
   return Number.isInteger(id) && id > 0 ? id : null;
 }
 
+
+function normalizeAttachmentUrls(payload) {
+  const candidate = Array.isArray(payload?.attachmentUrls) ? payload.attachmentUrls : [];
+  return candidate
+    .map((url) => String(url || '').trim())
+    .filter((url) => url.startsWith('data:image/') || url.startsWith('data:application/pdf'))
+    .slice(0, 3);
+}
+
 async function listPublicArticles(req, res, next) {
   try {
     const category = req.params.category;
@@ -122,7 +131,8 @@ async function createInquiry(req, res, next) {
       title,
       content,
       targetType,
-      targetId
+      targetId,
+      attachmentUrls: normalizeAttachmentUrls(req.body)
     });
 
     res.status(201).json({ success: true, id });
@@ -158,6 +168,7 @@ async function getMyInquiryDetail(req, res, next) {
       targetId: inquiry.target_id,
       title: inquiry.title,
       content: inquiry.content,
+      attachmentUrls: inquiry.attachmentUrls || [],
       status: inquiry.status,
       answerContent: inquiry.answer_content,
       answeredAt: inquiry.answered_at,
