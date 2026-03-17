@@ -407,19 +407,19 @@ async function openSupportModal(id = null, sourceType = 'SUPPORT') {
         if (noticeTypeEl) noticeTypeEl.value = 'NOTICE';
         if (isPinnedEl) isPinnedEl.checked = false;
     } else {
-        const response = await APIClient.get('/admin/support', {
-            category: currentSupportCategory,
-            sourceType
-        });
-        const target = (response.content || []).find((item) => Number(item.sourceId || item.id) === Number(id) && String(item.sourceType || 'SUPPORT') === String(sourceType || 'SUPPORT'));
-        if (!target) {
-            alert('글을 찾을 수 없습니다.');
+        let target;
+        try {
+            target = await APIClient.get(`/admin/support/article/${id}`, {
+                sourceType
+            });
+        } catch (error) {
+            alert(error.message || '글을 찾을 수 없습니다.');
             return;
         }
 
-        supportEditTarget = { id: Number(target.sourceId || target.id), sourceType: String(target.sourceType || 'SUPPORT') };
+        supportEditTarget = { id: Number(target.sourceId || target.id), sourceType: String(target.sourceType || sourceType || 'SUPPORT') };
         titleEl.textContent = '공지/FAQ 수정';
-        categoryEl.value = target.category;
+        categoryEl.value = target.category || currentSupportCategory;
         subjectEl.value = target.title || '';
         contentEl.value = target.content || '';
         if (noticeTypeEl) noticeTypeEl.value = target.noticeType || 'NOTICE';
