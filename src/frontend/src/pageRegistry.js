@@ -520,7 +520,7 @@ const pageRegistry = {
     <script src="scripts/js/pages/supportCreate.js"></script>
     <script src="scripts/js/components/sectionHeader.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/supportCreate.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
 
@@ -585,7 +585,7 @@ const pageRegistry = {
     <script src="scripts/js/pages/adminInquiryAnswer.js"></script>
     <script src="scripts/js/components/sectionHeader.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/adminInquiryAnswer.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
   'find-account': {
