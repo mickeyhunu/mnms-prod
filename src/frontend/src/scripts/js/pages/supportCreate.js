@@ -54,6 +54,12 @@ function applyInitialCategory() {
     applyPageTitle(category, false);
 }
 
+function toggleNoticeOptions(category) {
+    const noticeOptionEl = document.getElementById('support-notice-options');
+    if (!noticeOptionEl) return;
+    noticeOptionEl.classList.toggle('hidden', String(category || '').toUpperCase() !== 'NOTICE');
+}
+
 async function loadEditTargetIfNeeded() {
     const params = getSearchParams();
     const targetId = Number.parseInt(params.get('id') || '', 10);
