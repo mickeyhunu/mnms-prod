@@ -101,7 +101,8 @@ function handleGlobalAdminClick(event) {
     const supportNewButton = event.target.closest('#support-new-btn');
     if (supportNewButton) {
         event.preventDefault();
-        openSupportModal();
+        const category = encodeURIComponent(currentSupportCategory || 'NOTICE');
+        window.location.href = `/admin/support/create?category=${category}`;
         return;
     }
 
