@@ -29,7 +29,7 @@ function getInitialSupportCategory() {
 }
 
 function applyPageTitle(category, isEdit) {
-    const heading = document.querySelector('.page-header h1');
+    const heading = document.querySelector('.community-section-header h1');
     if (!heading) return;
 
     if (isEdit) {
