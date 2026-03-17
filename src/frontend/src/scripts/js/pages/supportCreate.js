@@ -55,7 +55,7 @@ async function loadEditTargetIfNeeded() {
     const sourceType = String(params.get('sourceType') || 'SUPPORT').toUpperCase() === 'POST' ? 'POST' : 'SUPPORT';
 
     try {
-        const article = await APIClient.get(`/admin/support/${targetId}`, { sourceType });
+        const article = await APIClient.get(`/admin/support/article/${targetId}`, { sourceType });
         if (!article) return;
 
         editingTarget = { id: targetId, sourceType };
@@ -78,21 +78,6 @@ async function loadEditTargetIfNeeded() {
         alert(error.message || '수정할 글 정보를 불러오지 못했습니다.');
         window.location.href = '/admin';
     }
-}
-
-function getInitialSupportCategory() {
-    const params = new URLSearchParams(window.location.search || '');
-    const category = String(params.get('category') || '').toUpperCase();
-    return category === 'FAQ' ? 'FAQ' : 'NOTICE';
-}
-
-function applyInitialCategory() {
-    const category = getInitialSupportCategory();
-    const categorySelect = document.getElementById('support-form-category');
-    if (categorySelect) categorySelect.value = category;
-
-    const heading = document.querySelector('.page-header h1');
-    if (heading) heading.textContent = category === 'FAQ' ? 'FAQ 새 글 작성' : '공지사항 새 글 작성';
 }
 
 async function fillUserInfo() {
