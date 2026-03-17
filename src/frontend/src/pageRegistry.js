@@ -447,10 +447,15 @@ const pageRegistry = {
 
     <main class="main-content">
         <div class="container" style="max-width: 800px;">
-            <div class="community-section-header">
-                <h1>공지사항 새 글 작성</h1>
-                <p>커뮤니티 글쓰기 화면과 동일한 방식으로 공지사항 글을 등록할 수 있습니다.</p>
-            </div>
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <a href="/admin" class="community-back-link" aria-label="관리자 페이지로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
+                    <span class="community-board-name">공지사항 새 글 작성</span>
+                </div>
+            </header>
+            <p class="text-muted support-create-description" style="margin: 12px 0 24px;">커뮤니티 글쓰기 화면과 동일한 방식으로 공지사항 글을 등록할 수 있습니다.</p>
 
             <div class="card">
                 <form id="support-post-form">
@@ -523,10 +528,15 @@ const pageRegistry = {
 
     <main class="main-content">
         <div class="container" style="max-width: 900px;">
-            <div class="community-section-header">
-                <h1>1:1 문의 답변</h1>
-                <p>문의 상세 내용을 확인하고 답변을 저장할 수 있습니다.</p>
-            </div>
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <a href="/admin" class="community-back-link" aria-label="관리자 페이지로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
+                    <span class="community-board-name">1:1 문의 답변 작성</span>
+                </div>
+            </header>
+            <p class="text-muted admin-inquiry-answer-description" style="margin: 12px 0 24px;">문의 상세 내용을 확인하고 답변을 저장할 수 있습니다.</p>
 
             <div class="card admin-inquiry-answer-card">
                 <div class="loading" id="admin-inquiry-loading"><div class="spinner"></div><p>문의를 불러오는 중...</p></div>
