@@ -409,7 +409,7 @@ async function openSupportModal(id = null, sourceType = 'SUPPORT') {
     } else {
         let target;
         try {
-            target = await APIClient.get(`/admin/support/${id}`, {
+            target = await APIClient.get(`/admin/support/article/${id}`, {
                 sourceType
             });
         } catch (error) {
