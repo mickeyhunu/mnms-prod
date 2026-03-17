@@ -222,9 +222,6 @@ const pageRegistry = {
         <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
-                    <a href="/" class="community-back-link" aria-label="홈으로 이동">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
-                    </a>
                     <span class="community-board-name">업체정보</span>
                 </div>
             </header>
@@ -700,9 +697,6 @@ const pageRegistry = {
         <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
-                    <a href="/" class="community-back-link" aria-label="홈으로 이동">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
-                    </a>
                     <span class="community-board-name">LIVE</span>
                 </div>
             </header>
@@ -818,9 +812,6 @@ const pageRegistry = {
         <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
-                    <a href="/" class="community-back-link" aria-label="홈으로 이동">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
-                    </a>
                     <span class="community-board-name">마이페이지</span>
                 </div>
             </header>
