@@ -9,10 +9,26 @@ function initSupportCreatePage() {
         return;
     }
 
+    applyInitialCategory();
     bindSupportCreateEvents();
     validateSupportForm();
     Auth.bindLogoutButton();
     fillUserInfo();
+}
+
+function getInitialSupportCategory() {
+    const params = new URLSearchParams(window.location.search || '');
+    const category = String(params.get('category') || '').toUpperCase();
+    return category === 'FAQ' ? 'FAQ' : 'NOTICE';
+}
+
+function applyInitialCategory() {
+    const category = getInitialSupportCategory();
+    const categorySelect = document.getElementById('support-form-category');
+    if (categorySelect) categorySelect.value = category;
+
+    const heading = document.querySelector('.page-header h1');
+    if (heading) heading.textContent = category === 'FAQ' ? 'FAQ 새 글 작성' : '공지사항 새 글 작성';
 }
 
 async function fillUserInfo() {
