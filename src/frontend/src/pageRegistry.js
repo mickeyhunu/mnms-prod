@@ -344,10 +344,15 @@ const pageRegistry = {
 
     <main class="main-content">
         <div class="container" style="max-width: 800px;">
-            <div class="community-section-header">
-                <h1>새 글 작성</h1>
-                <p>미드나잇 맨즈에 새로운 이야기를 공유해보세요</p>
-            </div>
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <a href="/community" class="community-back-link" aria-label="커뮤니티로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
+                    <span class="community-board-name">새 글 작성</span>
+                </div>
+            </header>
+            <p class="text-muted" style="margin: 12px 0 24px;">미드나잇 맨즈에 새로운 이야기를 공유해보세요</p>
 
             <div class="card">
                 <form id="post-form" enctype="multipart/form-data">
@@ -421,7 +426,7 @@ const pageRegistry = {
     <script src="scripts/js/api/apiClient.js"></script>
     <script src="scripts/js/pages/createPost.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/createPost.js", "scripts/js/components/footerNav.js"]
   },
   'support-create': {
