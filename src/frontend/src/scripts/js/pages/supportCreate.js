@@ -44,7 +44,14 @@ function applyInitialCategory() {
     const category = getInitialSupportCategory();
     const categorySelect = document.getElementById('support-form-category');
     if (categorySelect) categorySelect.value = category;
+    toggleNoticeOptions(category);
     applyPageTitle(category, false);
+}
+
+function toggleNoticeOptions(category) {
+    const noticeOptionEl = document.getElementById('support-notice-options');
+    if (!noticeOptionEl) return;
+    noticeOptionEl.classList.toggle('hidden', String(category || '').toUpperCase() !== 'NOTICE');
 }
 
 async function loadEditTargetIfNeeded() {
@@ -66,12 +73,17 @@ async function loadEditTargetIfNeeded() {
 
         const titleInput = document.getElementById('title');
         const contentInput = document.getElementById('content');
+        const noticeTypeInput = document.getElementById('support-form-notice-type');
+        const pinnedInput = document.getElementById('support-form-is-pinned');
         if (titleInput) titleInput.value = article.title || '';
         if (contentInput) contentInput.value = article.content || '';
+        if (noticeTypeInput) noticeTypeInput.value = String(article.noticeType || 'NOTICE').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE';
+        if (pinnedInput) pinnedInput.checked = Boolean(article.isPinned);
 
         const submitBtn = document.getElementById('submit-btn');
         if (submitBtn) submitBtn.textContent = '수정';
 
+        toggleNoticeOptions(category);
         applyPageTitle(category, true);
         validateSupportForm();
     } catch (error) {
@@ -99,10 +111,15 @@ async function fillUserInfo() {
 
 function bindSupportCreateEvents() {
     const form = document.getElementById('support-post-form');
+    const categoryInput = document.getElementById('support-form-category');
     const titleInput = document.getElementById('title');
     const contentInput = document.getElementById('content');
 
     form?.addEventListener('submit', submitSupportPost);
+    categoryInput?.addEventListener('change', () => {
+        toggleNoticeOptions(categoryInput.value);
+        applyPageTitle(categoryInput.value, Boolean(editingTarget));
+    });
     titleInput?.addEventListener('input', validateSupportForm);
     contentInput?.addEventListener('input', validateSupportForm);
 }
@@ -121,6 +138,8 @@ async function submitSupportPost(event) {
     if (isSubmitting) return;
 
     const category = document.getElementById('support-form-category')?.value || 'NOTICE';
+    const noticeType = document.getElementById('support-form-notice-type')?.value || 'NOTICE';
+    const isPinned = Boolean(document.getElementById('support-form-is-pinned')?.checked);
     const title = document.getElementById('title')?.value?.trim() || '';
     const content = document.getElementById('content')?.value?.trim() || '';
     const submitBtn = document.getElementById('submit-btn');
@@ -142,16 +161,21 @@ async function submitSupportPost(event) {
             submitBtn.textContent = editingTarget ? '수정 중...' : '등록 중...';
         }
 
+        const payload = {
+            category,
+            title,
+            content,
+            ...(category === 'NOTICE' ? { noticeType, isPinned } : {})
+        };
+
         if (editingTarget) {
             await APIClient.put(`/admin/support/${editingTarget.id}?sourceType=${encodeURIComponent(editingTarget.sourceType)}`, {
-                category,
-                title,
-                content,
+                ...payload,
                 sourceType: editingTarget.sourceType
             });
             alert('공지/FAQ 글이 수정되었습니다.');
         } else {
-            await APIClient.post('/admin/support', { category, title, content });
+            await APIClient.post('/admin/support', payload);
             alert('공지/FAQ 글이 등록되었습니다.');
         }
 
