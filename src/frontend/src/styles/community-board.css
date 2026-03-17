@@ -617,12 +617,11 @@
 }
 
 .support-notice-meta {
-    width: 100%;
+    display: flex;
+    width: fit-content;
+    margin-left: auto;
 }
 
 .support-notice-date {
-    display: inline-block;
-    width: fit-content;
-    margin-left: auto;
     white-space: nowrap;
 }
