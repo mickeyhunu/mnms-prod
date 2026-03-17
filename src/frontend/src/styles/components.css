@@ -24,7 +24,6 @@
 .post-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
 }
 
 .post-title {
@@ -432,7 +431,6 @@
 .post-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
 }
 
 .post-header-left {
@@ -513,7 +511,6 @@
 
 @media (max-width: 768px) {
     .post-header {
-        align-items: flex-start;
         gap: 10px;
     }
     

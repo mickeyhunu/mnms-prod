@@ -620,6 +620,7 @@
     display: flex;
     width: fit-content;
     margin-left: auto;
+    justify-content: flex-end
 }
 
 .support-notice-date {
