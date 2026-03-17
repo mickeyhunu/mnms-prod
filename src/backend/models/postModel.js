@@ -23,6 +23,37 @@ function normalizeBoardFilter(boardType) {
   return normalized === 'ALL' ? 'ALL' : normalizeBoardType(normalized);
 }
 
+
+function normalizeImageUrls(imageUrls) {
+  if (!Array.isArray(imageUrls)) return [];
+  return imageUrls
+    .map((url) => String(url || '').trim())
+    .filter((url) => url.startsWith('data:image/'))
+    .slice(0, 5);
+}
+
+function parseImageUrlsFromRow(row) {
+  const raw = row?.imageUrls;
+  if (!raw) return [];
+
+  try {
+    const parsed = JSON.parse(raw);
+    return normalizeImageUrls(parsed);
+  } catch (error) {
+    return [];
+  }
+}
+
+function normalizePostImages(row) {
+  const imageUrls = parseImageUrlsFromRow(row);
+  return {
+    ...row,
+    imageUrls,
+    imageUrl: imageUrls[0] || null
+  };
+}
+
+
 async function listPosts(page = 0, size = 10, options = {}) {
   const pool = getPool();
   const offset = page * size;
@@ -65,7 +96,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
   const [rows] = await pool.query(
     `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
             p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
-            p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
+            p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'USER') AS authorRole,
             (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS commentCount,
@@ -77,16 +108,16 @@ async function listPosts(page = 0, size = 10, options = {}) {
      LIMIT ? OFFSET ?`,
     [...whereParams, size, offset]
   );
-  return { rows, total: Number(countRows[0].total) };
+  return { rows: rows.map((row) => normalizePostImages(row)), total: Number(countRows[0].total) };
 }
 
-async function createPost({ userId, title, content, boardType = BOARD_TYPES.FREE, isNotice = false, noticeType = null, isPinned = false }) {
+async function createPost({ userId, title, content, imageUrls = [], boardType = BOARD_TYPES.FREE, isNotice = false, noticeType = null, isPinned = false }) {
   const pool = getPool();
   const normalizedBoardType = normalizeBoardType(boardType);
   const normalizedNoticeType = isNotice ? (String(noticeType || '').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE') : null;
   const [result] = await pool.query(
-    'INSERT INTO posts (user_id, board_type, is_notice, notice_type, is_pinned, title, content) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [userId || null, normalizedBoardType, isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, title, content]
+    'INSERT INTO posts (user_id, board_type, is_notice, notice_type, is_pinned, title, content, image_urls) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [userId || null, normalizedBoardType, isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, title, content, JSON.stringify(normalizeImageUrls(imageUrls))]
   );
   return result.insertId;
 }
@@ -109,7 +140,7 @@ async function findPostDetailById(id) {
   const [rows] = await pool.query(
     `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
             p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
-            p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
+            p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'USER') AS authorRole,
             CASE
@@ -128,7 +159,7 @@ async function findPostDetailById(id) {
      WHERE p.id = ? AND p.is_deleted = 0`,
     [id]
   );
-  return rows[0] || null;
+  return rows[0] ? normalizePostImages(rows[0]) : null;
 }
 
 async function findAdjacentPosts(id) {
@@ -181,12 +212,12 @@ async function incrementPostViewCount(id) {
   const pool = getPool();
   await pool.query('UPDATE posts SET view_count = view_count + 1 WHERE id = ?', [id]);
 }
-async function updatePost(id, { title, content, isNotice, noticeType, isPinned }) {
+async function updatePost(id, { title, content, imageUrls = [], isNotice, noticeType, isPinned }) {
   const pool = getPool();
   const normalizedNoticeType = isNotice ? (String(noticeType || '').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE') : null;
   await pool.query(
-    'UPDATE posts SET title = ?, content = ?, is_notice = ?, notice_type = ?, is_pinned = ? WHERE id = ?',
-    [title, content, isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, id]
+    'UPDATE posts SET title = ?, content = ?, image_urls = ?, is_notice = ?, notice_type = ?, is_pinned = ? WHERE id = ?',
+    [title, content, JSON.stringify(normalizeImageUrls(imageUrls)), isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, id]
   );
 }
 
@@ -343,7 +374,7 @@ async function listBestPosts() {
 
   const selectQuery = `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
             p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
-            p.view_count AS viewCount, p.created_at AS createdAt, p.updated_at AS updatedAt,
+            p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'USER') AS authorRole,
             COALESCE(stats.commentCount, 0) AS commentCount,
@@ -378,8 +409,8 @@ async function listBestPosts() {
   );
 
   return {
-    daily: todayRows,
-    weekly: weeklyRows
+    daily: todayRows.map((row) => normalizePostImages(row)),
+    weekly: weeklyRows.map((row) => normalizePostImages(row))
   };
 }
 

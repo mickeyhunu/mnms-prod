@@ -39,6 +39,33 @@ function normalizeInquiryType(type) {
   return Object.values(INQUIRY_TYPES).includes(normalized) ? normalized : INQUIRY_TYPES.OTHER;
 }
 
+
+function normalizeAttachmentUrls(attachmentUrls) {
+  if (!Array.isArray(attachmentUrls)) return [];
+  return attachmentUrls
+    .map((url) => String(url || '').trim())
+    .filter((url) => url.startsWith('data:image/') || url.startsWith('data:application/pdf'))
+    .slice(0, 3);
+}
+
+function parseAttachmentUrls(raw) {
+  if (!raw) return [];
+
+  try {
+    return normalizeAttachmentUrls(JSON.parse(raw));
+  } catch (error) {
+    return [];
+  }
+}
+
+function normalizeInquiryRow(row) {
+  return {
+    ...row,
+    attachmentUrls: parseAttachmentUrls(row.attachmentUrls)
+  };
+}
+
+
 async function listArticles(category, includeDeleted = false) {
   const pool = getPool();
   const normalizedCategory = normalizeCategory(category);
@@ -111,7 +138,7 @@ async function deleteArticle(id) {
   await pool.query('UPDATE support_articles SET is_deleted = 1 WHERE id = ?', [id]);
 }
 
-async function createInquiry({ userId, type, title, content, targetType = null, targetId = null }) {
+async function createInquiry({ userId, type, title, content, targetType = null, targetId = null, attachmentUrls = [] }) {
   const pool = getPool();
   const normalizedType = normalizeInquiryType(type);
   const normalizedTargetType = String(targetType || '').trim().toLowerCase() || null;
@@ -119,9 +146,9 @@ async function createInquiry({ userId, type, title, content, targetType = null, 
 
   const [result] = await pool.query(
     `INSERT INTO support_inquiries
-      (user_id, inquiry_type, target_type, target_id, title, content, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [userId, normalizedType, normalizedTargetType, normalizedTargetId, title, content, INQUIRY_STATUSES.PENDING]
+      (user_id, inquiry_type, target_type, target_id, title, content, attachment_urls, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [userId, normalizedType, normalizedTargetType, normalizedTargetId, title, content, JSON.stringify(normalizeAttachmentUrls(attachmentUrls)), INQUIRY_STATUSES.PENDING]
   );
 
   return result.insertId;
@@ -132,7 +159,7 @@ async function listInquiriesByUser(userId) {
   const [rows] = await pool.query(
     `SELECT i.id, i.user_id AS userId, i.inquiry_type AS type,
             i.target_type AS targetType, i.target_id AS targetId,
-            i.title, i.content, i.status,
+            i.title, i.content, i.attachment_urls AS attachmentUrls, i.status,
             i.answer_content AS answerContent, i.answered_at AS answeredAt,
             i.created_at AS createdAt, i.updated_at AS updatedAt
      FROM support_inquiries i
@@ -140,13 +167,13 @@ async function listInquiriesByUser(userId) {
      ORDER BY i.created_at DESC, i.id DESC`,
     [userId]
   );
-  return rows;
+  return rows.map((row) => normalizeInquiryRow(row));
 }
 
 async function findInquiryById(id) {
   const pool = getPool();
-  const [rows] = await pool.query('SELECT * FROM support_inquiries WHERE id = ? LIMIT 1', [id]);
-  return rows[0] || null;
+  const [rows] = await pool.query('SELECT *, attachment_urls AS attachmentUrls FROM support_inquiries WHERE id = ? LIMIT 1', [id]);
+  return rows[0] ? normalizeInquiryRow(rows[0]) : null;
 }
 
 async function listInquiriesForAdmin({ status = null } = {}) {
@@ -164,7 +191,7 @@ async function listInquiriesForAdmin({ status = null } = {}) {
             u.nickname AS userNickname, u.email AS userEmail,
             i.inquiry_type AS type,
             i.target_type AS targetType, i.target_id AS targetId,
-            i.title, i.content, i.status,
+            i.title, i.content, i.attachment_urls AS attachmentUrls, i.status,
             i.answer_content AS answerContent, i.answered_at AS answeredAt,
             i.created_at AS createdAt, i.updated_at AS updatedAt,
             i.answered_by AS answeredBy,
@@ -176,7 +203,7 @@ async function listInquiriesForAdmin({ status = null } = {}) {
      ORDER BY i.created_at DESC, i.id DESC`,
     values
   );
-  return rows;
+  return rows.map((row) => normalizeInquiryRow(row));
 }
 
 async function answerInquiry(id, { answerContent, answeredBy }) {
