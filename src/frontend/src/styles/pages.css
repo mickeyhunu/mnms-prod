@@ -1130,6 +1130,10 @@
     max-width: 760px;
 }
 
+.mypage-linked-content {
+    padding: 14px 12px 22px;
+}
+
 .customer-service-card {
     background: #fff;
     border: 1px solid #e5e7eb;
