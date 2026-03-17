@@ -172,7 +172,16 @@ function createArticleItem(post) {
     const recommendCount = Number(post.likeCount || post.recommendCount || 0);
     const previewText = sanitizeHTML(getPreviewText(post));
     const authorName = sanitizeHTML(post.boardType === 'ANON' ? '익명' : (post.authorNickname || '익명'));
-    const boardLabel = sanitizeHTML(getBoardLabel(post.boardType));
+    const isNoticePost = Boolean(post.isNotice);
+    const noticeType = String(post.noticeType || 'NOTICE').toUpperCase();
+    const boardLabel = sanitizeHTML(
+        isNoticePost
+            ? (noticeType === 'IMPORTANT' ? '필독' : '공지')
+            : getBoardLabel(post.boardType)
+    );
+    const boardLabelClass = isNoticePost
+        ? (noticeType === 'IMPORTANT' ? 'article-board-label article-board-label-important' : 'article-board-label article-board-label-notice')
+        : 'article-board-label';
     const authorBadge = sanitizeHTML(post.authorRole === 'ADMIN' ? '관리자' : authorName);
     const categoryTag = '';
     const isNewPost = isWithin12Hours(post.createdAt);
@@ -186,11 +195,11 @@ function createArticleItem(post) {
     const isViewedPost = hasViewedPost(post.id);
 
     return `
-        <li class="article-item ${isViewedPost ? 'article-item-viewed' : 'article-item-unviewed'}">
+        <li class="article-item ${isViewedPost ? 'article-item-viewed' : 'article-item-unviewed'} ${isNoticePost ? 'article-item-notice' : ''} ${isNoticePost && noticeType === 'IMPORTANT' ? 'article-item-important' : ''}">
             <a class="article-main" href="/post-detail?id=${post.id}" data-post-id="${post.id}">
                 <div class="article-title-row">
                     <span class="article-inline-icon" aria-hidden="true">💬</span>
-                    <h3 class="article-title">[${boardLabel}] ${sanitizeHTML(post.title || '제목 없음')}</h3>
+                    <h3 class="article-title"><span class="${boardLabelClass}">[${boardLabel}]</span> ${sanitizeHTML(post.title || '제목 없음')}</h3>
                     <span class="article-comment-inline">[${commentCount}]</span>
                     ${shouldShowNewBadge ? '<span class="article-new-badge">NEW</span>' : ''}
                 </div>
