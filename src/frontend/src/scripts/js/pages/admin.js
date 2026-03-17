@@ -327,7 +327,10 @@ function normalizeExternalUrl(url) {
 async function loadSupportArticles() {
     toggleLoading('support', true);
     try {
-        const response = await APIClient.get('/admin/support', { category: currentSupportCategory });
+        const response = await APIClient.get('/admin/support', {
+            category: currentSupportCategory,
+            sourceType: currentSupportCategory === 'NOTICE' ? 'POST' : 'SUPPORT'
+        });
         const articles = response.content || [];
         const supportTotal = document.getElementById('support-total');
         if (supportTotal) supportTotal.textContent = response.totalElements || articles.length;
@@ -359,10 +362,18 @@ async function loadSupportArticles() {
 async function openSupportModal(id = null, sourceType = 'SUPPORT') {
     const titleEl = document.getElementById('support-modal-title');
     const categoryEl = document.getElementById('support-form-category');
+    const noticeOptionEl = document.getElementById('support-notice-options');
+    const noticeTypeEl = document.getElementById('support-form-notice-type');
+    const isPinnedEl = document.getElementById('support-form-is-pinned');
     const subjectEl = document.getElementById('support-form-title');
     const contentEl = document.getElementById('support-form-content');
 
     if (!categoryEl || !subjectEl || !contentEl) return;
+
+    const syncNoticeOptionVisibility = () => {
+        if (!noticeOptionEl) return;
+        noticeOptionEl.classList.toggle('hidden', categoryEl.value !== 'NOTICE');
+    };
 
     if (!id) {
         supportEditTarget = null;
@@ -370,8 +381,13 @@ async function openSupportModal(id = null, sourceType = 'SUPPORT') {
         categoryEl.value = currentSupportCategory;
         subjectEl.value = '';
         contentEl.value = '';
+        if (noticeTypeEl) noticeTypeEl.value = 'NOTICE';
+        if (isPinnedEl) isPinnedEl.checked = false;
     } else {
-        const response = await APIClient.get('/admin/support', { category: currentSupportCategory });
+        const response = await APIClient.get('/admin/support', {
+            category: currentSupportCategory,
+            sourceType
+        });
         const target = (response.content || []).find((item) => Number(item.sourceId || item.id) === Number(id) && String(item.sourceType || 'SUPPORT') === String(sourceType || 'SUPPORT'));
         if (!target) {
             alert('글을 찾을 수 없습니다.');
@@ -383,7 +399,12 @@ async function openSupportModal(id = null, sourceType = 'SUPPORT') {
         categoryEl.value = target.category;
         subjectEl.value = target.title || '';
         contentEl.value = target.content || '';
+        if (noticeTypeEl) noticeTypeEl.value = target.noticeType || 'NOTICE';
+        if (isPinnedEl) isPinnedEl.checked = Boolean(target.isPinned);
     }
+
+    categoryEl.onchange = syncNoticeOptionVisibility;
+    syncNoticeOptionVisibility();
 
     document.getElementById('support-modal')?.classList.remove('hidden');
 }
@@ -437,6 +458,8 @@ function closeSupportModal() {
 
 async function saveSupportArticle() {
     const category = document.getElementById('support-form-category')?.value || 'NOTICE';
+    const noticeType = document.getElementById('support-form-notice-type')?.value || 'NOTICE';
+    const isPinned = document.getElementById('support-form-is-pinned')?.checked || false;
     const title = document.getElementById('support-form-title')?.value?.trim();
     const content = document.getElementById('support-form-content')?.value?.trim();
 
@@ -447,9 +470,9 @@ async function saveSupportArticle() {
 
     try {
         if (supportEditTarget) {
-            await APIClient.put(`/admin/support/${supportEditTarget.id}?sourceType=${encodeURIComponent(supportEditTarget.sourceType)}`, { category, title, content, sourceType: supportEditTarget.sourceType });
+            await APIClient.put(`/admin/support/${supportEditTarget.id}?sourceType=${encodeURIComponent(supportEditTarget.sourceType)}`, { category, title, content, noticeType, isPinned, sourceType: supportEditTarget.sourceType });
         } else {
-            await APIClient.post('/admin/support', { category, title, content });
+            await APIClient.post('/admin/support', { category, title, content, noticeType, isPinned, sourceType: category === 'NOTICE' ? 'POST' : 'SUPPORT' });
         }
 
         currentSupportCategory = category;

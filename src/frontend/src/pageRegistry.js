@@ -96,6 +96,7 @@ const pageRegistry = {
             <div class="modal-header"><h3 id="support-modal-title">공지/FAQ 작성</h3></div>
             <div class="modal-body">
                 <div class="form-group"><label class="form-label" for="support-form-category">구분</label><select id="support-form-category" class="form-control"><option value="NOTICE">공지사항</option><option value="FAQ">FAQ</option></select></div>
+                <div class="form-group" id="support-notice-options"><label class="form-label" for="support-form-notice-type">공지 옵션</label><div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;"><select id="support-form-notice-type" class="form-control" style="max-width:200px;"><option value="NOTICE">공지</option><option value="IMPORTANT">필독</option></select><label><input type="checkbox" id="support-form-is-pinned"> 커뮤니티 상단 고정</label></div></div>
                 <div class="form-group"><label class="form-label" for="support-form-title">제목</label><input id="support-form-title" class="form-control" maxlength="255"></div>
                 <div class="form-group"><label class="form-label" for="support-form-content">내용</label><textarea id="support-form-content" class="form-control" rows="8"></textarea></div>
             </div>
@@ -365,22 +366,6 @@ const pageRegistry = {
                     </select>
                     </div>
                     
-                    <div class="form-group hidden" id="admin-post-options">
-                        <label class="form-label">관리자 게시글 옵션</label>
-                        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
-                            <label><input type="checkbox" id="is-notice"> 공지/필독으로 등록</label>
-                            <label><input type="checkbox" id="is-pinned"> 게시판 상단 고정</label>
-                        </div>
-                        <div class="mt-2 hidden" id="notice-type-wrap">
-                            <label for="notice-type" class="form-label">공지 유형</label>
-                            <select id="notice-type" class="form-control" style="max-width:200px;">
-                                <option value="NOTICE">공지</option>
-                                <option value="IMPORTANT">필독</option>
-                            </select>
-                        </div>
-                    </div>
-
-
                     <div class="form-group">
                         <label for="title" class="form-label">제목</label>
                         <input type="text" id="title" name="title" class="form-control" placeholder="제목을 입력하세요" maxlength="255" required>
