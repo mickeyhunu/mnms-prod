@@ -501,6 +501,65 @@ const pageRegistry = {
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/supportCreate.js", "scripts/js/components/footerNav.js"]
   },
+
+  'admin-inquiry-answer': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="/" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="/admin" class="btn btn-secondary btn-sm">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container" style="max-width: 900px;">
+            <div class="page-header">
+                <h1>1:1 문의 답변</h1>
+                <p>문의 상세 내용을 확인하고 답변을 저장할 수 있습니다.</p>
+            </div>
+
+            <div class="card" style="padding: 20px;">
+                <div class="loading" id="admin-inquiry-loading"><div class="spinner"></div><p>문의를 불러오는 중...</p></div>
+                <form id="admin-inquiry-answer-form" class="hidden">
+                    <div class="form-group">
+                        <label class="form-label">문의 제목</label>
+                        <div id="admin-inquiry-title" class="form-control" style="min-height:44px;display:flex;align-items:center;background:#f8f9fa;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">문의 정보</label>
+                        <div id="admin-inquiry-meta" class="form-control" style="min-height:44px;display:flex;align-items:center;background:#f8f9fa;font-size:13px;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">문의 내용</label>
+                        <div id="admin-inquiry-content" class="form-control" style="min-height:180px;white-space:pre-wrap;background:#f8f9fa;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-inquiry-answer-content" class="form-label">답변 내용</label>
+                        <textarea id="admin-inquiry-answer-content" class="form-control" rows="8" placeholder="답변 내용을 입력해주세요." required></textarea>
+                    </div>
+                    <div class="form-actions form-actions-inline" style="display:flex;justify-content:flex-end;gap:8px;">
+                        <a href="/admin" class="btn btn-secondary">목록으로</a>
+                        <button type="submit" class="btn btn-primary" id="admin-inquiry-answer-save-btn">답변 저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="scripts/js/utils/constants.js"></script>
+    <script src="scripts/js/utils/helpers.js"></script>
+    <script src="scripts/js/utils/auth.js"></script>
+    <script src="scripts/js/api/apiClient.js"></script>
+    <script src="scripts/js/pages/adminInquiryAnswer.js"></script>
+    <script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/adminInquiryAnswer.js", "scripts/js/components/footerNav.js"]
+  },
   'find-account': {
     template: `<header class="header">
     <div class="header-container">
