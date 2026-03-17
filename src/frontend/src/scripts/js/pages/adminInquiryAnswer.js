@@ -1,0 +1,169 @@
+/**
+ * 파일 역할: 관리자 1:1 문의 답변 페이지의 이벤트/데이터 흐름을 초기화하는 페이지 스크립트 파일.
+ */
+let inquiryTarget = null;
+let isSaving = false;
+
+function getInquiryIdFromPath() {
+    const matched = window.location.pathname.match(/\/admin\/inquiries\/(\d+)\/answer/i);
+    const parsed = Number.parseInt(matched?.[1] || '', 10);
+    return Number.isInteger(parsed) ? parsed : null;
+}
+
+function toInquiryTypeLabel(type) {
+    const normalized = String(type || '').toLowerCase();
+    if (normalized === 'post_report') return '게시글 신고';
+    if (normalized === 'comment_report') return '댓글 신고';
+    if (normalized === 'question') return '일반 문의';
+    if (normalized === 'account') return '계정 문의';
+    if (normalized === 'service_error') return '서비스 오류';
+    if (normalized === 'ad_inquiry') return '광고 문의';
+    if (normalized === 'etc' || normalized === 'other') return '기타';
+    return '기타';
+}
+
+function toInquiryStatusLabel(status) {
+    return String(status || '').toUpperCase() === 'ANSWERED' ? '답변완료' : '대기';
+}
+
+function formatDateTime(value) {
+    const date = value ? new Date(value) : null;
+    if (!date || Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function validateForm() {
+    const answer = document.getElementById('admin-inquiry-answer-content')?.value?.trim() || '';
+    const saveButton = document.getElementById('admin-inquiry-answer-save-btn');
+    if (!saveButton) return;
+    saveButton.disabled = isSaving || !answer;
+}
+
+function renderInquiryInfo(inquiry) {
+    const titleEl = document.getElementById('admin-inquiry-title');
+    const metaEl = document.getElementById('admin-inquiry-meta');
+    const contentEl = document.getElementById('admin-inquiry-content');
+    const answerEl = document.getElementById('admin-inquiry-answer-content');
+
+    if (titleEl) titleEl.textContent = inquiry.title || '(제목 없음)';
+
+    const userLabel = inquiry.userNickname || inquiry.userEmail || `회원#${inquiry.userId}`;
+    const metaText = [
+        `문의번호 #${inquiry.id}`,
+        `회원: ${userLabel}`,
+        `유형: ${toInquiryTypeLabel(inquiry.type)}`,
+        `상태: ${toInquiryStatusLabel(inquiry.status)}`,
+        `접수일: ${formatDateTime(inquiry.createdAt || inquiry.created_at)}`
+    ].join(' · ');
+    if (metaEl) metaEl.textContent = metaText;
+    if (contentEl) contentEl.textContent = inquiry.content || '-';
+    if (answerEl) answerEl.value = inquiry.answerContent || '';
+
+    validateForm();
+}
+
+async function loadInquiryDetail() {
+    const inquiryId = getInquiryIdFromPath();
+    if (!inquiryId) {
+        alert('문의 번호를 확인할 수 없습니다.');
+        window.location.href = '/admin';
+        return;
+    }
+
+    const loadingEl = document.getElementById('admin-inquiry-loading');
+    const formEl = document.getElementById('admin-inquiry-answer-form');
+    if (loadingEl) loadingEl.classList.remove('hidden');
+    if (formEl) formEl.classList.add('hidden');
+
+    try {
+        const response = await APIClient.get('/admin/support/inquiries');
+        const target = (response.content || []).find((item) => Number(item.id) === inquiryId);
+        if (!target) {
+            alert('문의를 찾을 수 없습니다.');
+            window.location.href = '/admin';
+            return;
+        }
+
+        inquiryTarget = target;
+        renderInquiryInfo(target);
+
+        if (loadingEl) loadingEl.classList.add('hidden');
+        if (formEl) formEl.classList.remove('hidden');
+    } catch (error) {
+        alert(error.message || '문의 정보를 불러오지 못했습니다.');
+        window.location.href = '/admin';
+    }
+}
+
+async function submitAnswer(event) {
+    event.preventDefault();
+    if (!inquiryTarget || isSaving) return;
+
+    const answerContent = document.getElementById('admin-inquiry-answer-content')?.value?.trim() || '';
+    if (!answerContent) {
+        alert('답변 내용을 입력해주세요.');
+        return;
+    }
+
+    const saveButton = document.getElementById('admin-inquiry-answer-save-btn');
+
+    try {
+        isSaving = true;
+        if (saveButton) saveButton.textContent = '저장 중...';
+        validateForm();
+
+        await APIClient.put(`/admin/support/inquiries/${inquiryTarget.id}/answer`, { answerContent });
+        alert('답변이 저장되었습니다.');
+        window.location.href = '/admin';
+    } catch (error) {
+        alert(error.message || '답변 저장에 실패했습니다.');
+    } finally {
+        isSaving = false;
+        if (saveButton) saveButton.textContent = '답변 저장';
+        validateForm();
+    }
+}
+
+function bindEvents() {
+    Auth.bindLogoutButton();
+    document.getElementById('admin-inquiry-answer-form')?.addEventListener('submit', submitAnswer);
+    document.getElementById('admin-inquiry-answer-content')?.addEventListener('input', validateForm);
+}
+
+async function initAdminInquiryAnswerPage() {
+    if (!Auth.isAuthenticated()) {
+        window.location.href = '/login';
+        return;
+    }
+
+    bindEvents();
+
+    try {
+        const me = await APIClient.get('/auth/me');
+        if (!me.isAdmin) {
+            alert('관리자만 접근할 수 있습니다.');
+            window.location.href = '/';
+            return;
+        }
+
+        const nickname = document.getElementById('user-nickname');
+        if (nickname) nickname.textContent = Auth.formatNicknameWithLevel(me);
+
+        await loadInquiryDetail();
+    } catch (error) {
+        alert('관리자 권한 확인에 실패했습니다.');
+        window.location.href = '/';
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAdminInquiryAnswerPage);
+} else {
+    initAdminInquiryAnswerPage();
+}

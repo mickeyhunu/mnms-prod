@@ -20,6 +20,7 @@ const routes = [
   { path: '/my-page/policy', component: PageView, meta: { pageKey: 'my-page-policy' } },
   { path: '/admin', component: PageView, meta: { pageKey: 'admin' } },
   { path: '/admin/support/create', component: PageView, meta: { pageKey: 'support-create' } },
+  { path: '/admin/inquiries/:id/answer', component: PageView, meta: { pageKey: 'admin-inquiry-answer' } },
   { path: '/find-account', component: PageView, meta: { pageKey: 'find-account' } },
   { path: '/business-info', component: PageView, meta: { pageKey: 'business-info' } },
   { path: '/live', component: PageView, meta: { pageKey: 'live' } },

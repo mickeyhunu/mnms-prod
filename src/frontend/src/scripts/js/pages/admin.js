@@ -562,7 +562,7 @@ async function loadInquiries() {
                     <td>${sanitizeHTML(inquiry.title || '')}</td>
                     <td><span class="my-inquiry-status ${status.className}">${status.text}</span></td>
                     <td>${formatDate(inquiry.createdAt || inquiry.created_at)}</td>
-                    <td><button class="btn btn-sm btn-primary" data-admin-action="answer-inquiry" data-target-id="${inquiry.id}">답변</button></td>
+                    <td><a class="btn btn-sm btn-primary" href="/admin/inquiries/${inquiry.id}/answer">답변</a></td>
                 </tr>
                 `;
             }).join('');
