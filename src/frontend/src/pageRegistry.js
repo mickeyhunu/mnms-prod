@@ -459,6 +459,16 @@ const pageRegistry = {
 
                     <div class="form-group" id="support-pin-options">
                         <label class="form-label">커뮤니티 노출</label>
+                        <div style="margin-bottom:8px;">
+                            <label for="support-form-board-type" class="form-label">노출 게시판</label>
+                            <select id="support-form-board-type" class="form-control" style="max-width:260px;">
+                                <option value="FREE">자유게시판</option>
+                                <option value="ANON">익명게시판</option>
+                                <option value="REVIEW">후기게시판</option>
+                                <option value="STORY">썰게시판</option>
+                                <option value="QUESTION">질문게시판</option>
+                            </select>
+                        </div>
                         <label><input type="checkbox" id="support-form-is-pinned"> 커뮤니티 필독 상단 고정으로 표시</label>
                     </div>
 
