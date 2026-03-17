@@ -62,6 +62,26 @@ function bindFileValidation() {
     });
 }
 
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('파일 읽기에 실패했습니다.'));
+        reader.readAsDataURL(file);
+    });
+}
+
+async function collectAttachmentUrls(form) {
+    const fileInputs = Array.from(form.querySelectorAll('.file-input'));
+    const selectedFiles = fileInputs
+        .map((input) => input.files?.[0])
+        .filter(Boolean);
+
+    const attachmentUrls = await Promise.all(selectedFiles.map((file) => readFileAsDataUrl(file)));
+    return attachmentUrls.filter((url) => typeof url === 'string' && (url.startsWith('data:image/') || url.startsWith('data:application/pdf')));
+}
+
 function validateFileUpload(fileInput) {
     const file = fileInput.files?.[0];
     if (!file) return true;
@@ -121,12 +141,15 @@ async function handleCustomerServiceSubmit(event) {
     if (invalidFile) return;
 
     try {
+        const attachmentUrls = await collectAttachmentUrls(form);
+
         await APIClient.post('/support/inquiries', {
             type,
             title,
             content,
             targetType,
-            targetId
+            targetId,
+            attachmentUrls
         });
 
         showNotification('문의가 접수되었습니다. 내 문의함에서 처리 상태를 확인할 수 있습니다.', 'success');

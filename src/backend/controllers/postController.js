@@ -38,6 +38,19 @@ function parseNoticeType(value) {
   if (normalized === 'NOTICE' || normalized === 'IMPORTANT') return normalized;
   return null;
 }
+
+
+function normalizeImageUrls(payload) {
+  const arrayValue = Array.isArray(payload?.imageUrls)
+    ? payload.imageUrls
+    : (payload?.imageUrl ? [payload.imageUrl] : []);
+
+  return arrayValue
+    .map((url) => String(url || '').trim())
+    .filter((url) => url.startsWith('data:image/'))
+    .slice(0, 5);
+}
+
 function canViewSecretComment(comment, post, currentUser) {
   if (!comment.isSecret) {
     return true;
@@ -235,6 +248,7 @@ async function createPost(req, res, next) {
       title,
       content,
       boardType,
+      imageUrls: normalizeImageUrls(req.body),
       isNotice,
       noticeType,
       isPinned
@@ -273,6 +287,7 @@ async function updatePost(req, res, next) {
     await postModel.updatePost(postId, {
       title: req.body.title ?? post.title,
       content: req.body.content ?? post.content,
+      imageUrls: normalizeImageUrls(req.body),
       isNotice: req.user.role === 'ADMIN' ? Boolean(req.body.isNotice) : Boolean(post.is_notice),
       noticeType: req.user.role === 'ADMIN'
         ? (Boolean(req.body.isNotice) ? (parseNoticeType(req.body.noticeType) || 'NOTICE') : null)
