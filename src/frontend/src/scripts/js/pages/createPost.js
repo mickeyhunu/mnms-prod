@@ -32,8 +32,21 @@ async function initCreatePost() {
 
 function setupModeUI() {
     const submitBtn = document.getElementById('submit-btn');
+    const boardName = document.querySelector('.community-board-name');
+    const description = document.querySelector('.main-content .text-muted');
+
+    if (boardName) {
+        boardName.textContent = isEditMode ? '게시글 수정' : '새 글 작성';
+    }
+
+    if (description) {
+        description.textContent = isEditMode
+            ? '기존 게시글 내용을 수정해보세요'
+            : '미드나잇 맨즈에 새로운 이야기를 공유해보세요';
+    }
+
     if (submitBtn) {
-        submitBtn.textContent = '등록';
+        submitBtn.textContent = isEditMode ? '수정' : '등록';
     }
 }
 
@@ -314,7 +327,7 @@ async function handleSubmit(event) {
         isSubmitting = false;
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.textContent = '등록';
+            submitBtn.textContent = isEditMode ? '수정' : '등록';
         }
         validateForm();
     }
