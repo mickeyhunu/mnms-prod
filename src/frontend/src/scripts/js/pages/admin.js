@@ -79,7 +79,7 @@ function bindCommonEvents() {
         await loadSupportArticles();
     });
     document.getElementById('support-new-btn')?.addEventListener('click', () => {
-        window.location.href = '/admin/support/create';
+        openSupportModal();
     });
     document.getElementById('support-cancel-btn')?.addEventListener('click', closeSupportModal);
     document.getElementById('support-save-btn')?.addEventListener('click', saveSupportArticle);
@@ -327,13 +327,9 @@ function normalizeExternalUrl(url) {
 async function loadSupportArticles() {
     toggleLoading('support', true);
     try {
-        const response = await APIClient.get('/admin/support', {
-            category: currentSupportCategory,
-            sourceType: currentSupportCategory === 'NOTICE' ? 'POST' : 'SUPPORT'
-        });
-        const articles = response.content || [];
+        const articles = await fetchSupportArticles();
         const supportTotal = document.getElementById('support-total');
-        if (supportTotal) supportTotal.textContent = response.totalElements || articles.length;
+        if (supportTotal) supportTotal.textContent = articles.length;
 
         const tbody = document.getElementById('support-tbody');
         if (!articles.length) {
@@ -357,6 +353,33 @@ async function loadSupportArticles() {
     } catch (error) {
         showError('support', error.message || '공지/FAQ를 불러오지 못했습니다.');
     }
+}
+
+async function fetchSupportArticles() {
+    if (currentSupportCategory !== 'NOTICE') {
+        const response = await APIClient.get('/admin/support', {
+            category: currentSupportCategory,
+            sourceType: 'SUPPORT'
+        });
+        return response.content || [];
+    }
+
+    const [postResponse, supportResponse] = await Promise.all([
+        APIClient.get('/admin/support', { category: 'NOTICE', sourceType: 'POST' }),
+        APIClient.get('/admin/support', { category: 'NOTICE', sourceType: 'SUPPORT' })
+    ]);
+
+    const merged = [...(postResponse.content || []), ...(supportResponse.content || [])];
+    return merged.sort((a, b) => {
+        const pinnedGap = Number(b.isPinned || 0) - Number(a.isPinned || 0);
+        if (pinnedGap !== 0) return pinnedGap;
+
+        const timeA = new Date(a.createdAt || a.created_at || 0).getTime();
+        const timeB = new Date(b.createdAt || b.created_at || 0).getTime();
+        if (timeA !== timeB) return timeB - timeA;
+
+        return Number(b.id || 0) - Number(a.id || 0);
+    });
 }
 
 async function openSupportModal(id = null, sourceType = 'SUPPORT') {
