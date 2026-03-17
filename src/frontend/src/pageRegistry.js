@@ -959,7 +959,7 @@ const pageRegistry = {
   },
   'my-page-activity': {
     template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
-    <main class="main-content"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">마이페이지 - 활동 내역 보기</span></div></header><div class="container">
+    <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">마이페이지 - 활동 내역 보기</span></div></header>
     <div id="my-stats" class="activity-summary-grid"><div class="loading">로딩 중...</div></div></div></main>
     <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/pages/myPage.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
@@ -967,7 +967,7 @@ const pageRegistry = {
   },
   'my-page-points': {
     template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
-    <main class="main-content"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">마이페이지 - 포인트 내역 보기</span></div></header><div class="container">
+    <main class="main-content"><div class="container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">마이페이지 - 포인트 내역 보기</span></div></header>
     <div id="my-stats" class="activity-summary-grid"><div class="loading">로딩 중...</div></div></div></main>
     <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/pages/myPage.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
@@ -998,7 +998,7 @@ const pageRegistry = {
 
   'customer-service': {
     template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
-    <main class="main-content"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">1:1 고객센터</span></div></header><div class="container customer-service-page mypage-linked-container">
+    <main class="main-content"><div class="container customer-service-page mypage-linked-container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">1:1 고객센터</span></div></header>
     <section class="customer-service-card"><div class="customer-service-intro"><h2>문의 / 신고 접수</h2><p>불편하신 사항을 접수해주시면 확인 후 신속하게 처리하겠습니다.<br>게시글 신고, 댓글 신고, 일반 문의 모두 동일한 화면에서 등록할 수 있습니다.</p></div>
     <form id="customer-service-form" class="customer-service-form" novalidate>
       <input type="hidden" id="inquiry-target-type" name="targetType" value="general">
@@ -1023,7 +1023,7 @@ const pageRegistry = {
 
   'my-inquiries': {
     template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
-    <main class="main-content"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="고객센터 메뉴로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">내 문의함</span></div></header><div class="container customer-service-page mypage-linked-container">
+    <main class="main-content"><div class="container customer-service-page mypage-linked-container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="고객센터 메뉴로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">내 문의함</span></div></header>
     <section class="customer-service-card"><div id="my-inquiries-list" class="my-inquiries-board"></div><p id="my-inquiries-empty" class="my-inquiries-empty">아직 접수된 문의가 없습니다.</p></section></div></main>
     <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/pages/myInquiries.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
@@ -1041,7 +1041,7 @@ const pageRegistry = {
 
   'support-board': {
     template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
-    <main class="main-content"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">공지사항</span></div></header><div class="container community-container mypage-linked-container">
+    <main class="main-content"><div class="container community-container mypage-linked-container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">공지사항</span></div></header>
     <div class="loading" id="support-public-loading"><div class="spinner"></div><p>불러오는 중...</p></div>
     <div class="error-banner hidden" id="support-public-error"><p id="support-public-error-message"></p></div>
     <div id="support-public-list" class="hidden"></div></div></main>
