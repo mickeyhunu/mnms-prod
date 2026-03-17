@@ -3,6 +3,14 @@
  */
 const supportModel = require('../models/supportModel');
 
+const BOARD_TYPES = {
+  FREE: 'FREE',
+  ANON: 'ANON',
+  REVIEW: 'REVIEW',
+  STORY: 'STORY',
+  QUESTION: 'QUESTION'
+};
+
 function parseId(value) {
   const id = Number.parseInt(value, 10);
   return Number.isInteger(id) && id > 0 ? id : null;
@@ -15,6 +23,11 @@ function normalizeAttachmentUrls(payload) {
     .map((url) => String(url || '').trim())
     .filter((url) => url.startsWith('data:image/') || url.startsWith('data:application/pdf'))
     .slice(0, 3);
+}
+
+function parseBoardType(value) {
+  const normalized = String(value || '').toUpperCase();
+  return Object.values(BOARD_TYPES).includes(normalized) ? normalized : BOARD_TYPES.FREE;
 }
 
 async function listPublicArticles(req, res, next) {
@@ -127,6 +140,7 @@ async function createArticle(req, res, next) {
     const content = String(req.body.content || '').trim();
     const noticeType = String(req.body.noticeType || '').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE';
     const isPinned = Boolean(req.body.isPinned);
+    const boardType = parseBoardType(req.body.boardType);
 
     if (!category) return res.status(400).json({ message: '유효하지 않은 카테고리입니다.' });
     if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
@@ -137,7 +151,8 @@ async function createArticle(req, res, next) {
         content,
         userId: req.user.id,
         noticeType,
-        isPinned
+        isPinned,
+        boardType
       });
 
       const created = await supportModel.findNoticePostById(id);
@@ -168,9 +183,10 @@ async function updateArticle(req, res, next) {
       const content = String(req.body.content ?? post.content).trim();
       const noticeType = String(req.body.noticeType || post.noticeType || 'NOTICE').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE';
       const isPinned = Boolean(req.body.isPinned ?? post.isPinned);
+      const boardType = parseBoardType(req.body.boardType ?? post.boardType);
       if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
 
-      await supportModel.updateNoticePost(id, { title, content, noticeType, isPinned });
+      await supportModel.updateNoticePost(id, { title, content, noticeType, isPinned, boardType });
       res.json({ success: true });
       return;
     }
