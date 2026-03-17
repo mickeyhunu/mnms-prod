@@ -465,7 +465,9 @@ async function handleAdminTableActionClick(event) {
     }
 
     if (action === 'edit-support' && Number.isInteger(targetId)) {
-        await openSupportModal(targetId, sourceType);
+        const category = encodeURIComponent(currentSupportCategory || 'NOTICE');
+        const query = `?id=${targetId}&sourceType=${encodeURIComponent(sourceType)}&category=${category}`;
+        window.location.href = `/admin/support/create${query}`;
         return;
     }
 

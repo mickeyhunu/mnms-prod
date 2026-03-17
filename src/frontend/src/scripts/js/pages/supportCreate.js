@@ -2,6 +2,7 @@
  * 파일 역할: 관리자 공지/FAQ 작성 페이지의 이벤트/데이터 흐름을 초기화하는 페이지 스크립트 파일.
  */
 let isSubmitting = false;
+let editingTarget = null;
 
 function initSupportCreatePage() {
     if (!Auth.isAuthenticated()) {
@@ -14,6 +15,69 @@ function initSupportCreatePage() {
     validateSupportForm();
     Auth.bindLogoutButton();
     fillUserInfo();
+    loadEditTargetIfNeeded();
+}
+
+function getSearchParams() {
+    return new URLSearchParams(window.location.search || '');
+}
+
+function getInitialSupportCategory() {
+    const params = getSearchParams();
+    const category = String(params.get('category') || '').toUpperCase();
+    return category === 'FAQ' ? 'FAQ' : 'NOTICE';
+}
+
+function applyPageTitle(category, isEdit) {
+    const heading = document.querySelector('.page-header h1');
+    if (!heading) return;
+
+    if (isEdit) {
+        heading.textContent = category === 'FAQ' ? 'FAQ 글 수정' : '공지사항 글 수정';
+        return;
+    }
+
+    heading.textContent = category === 'FAQ' ? 'FAQ 새 글 작성' : '공지사항 새 글 작성';
+}
+
+function applyInitialCategory() {
+    const category = getInitialSupportCategory();
+    const categorySelect = document.getElementById('support-form-category');
+    if (categorySelect) categorySelect.value = category;
+    applyPageTitle(category, false);
+}
+
+async function loadEditTargetIfNeeded() {
+    const params = getSearchParams();
+    const targetId = Number.parseInt(params.get('id') || '', 10);
+    if (!Number.isInteger(targetId)) return;
+
+    const sourceType = String(params.get('sourceType') || 'SUPPORT').toUpperCase() === 'POST' ? 'POST' : 'SUPPORT';
+
+    try {
+        const article = await APIClient.get(`/admin/support/${targetId}`, { sourceType });
+        if (!article) return;
+
+        editingTarget = { id: targetId, sourceType };
+
+        const category = String(article.category || getInitialSupportCategory()).toUpperCase() === 'FAQ' ? 'FAQ' : 'NOTICE';
+        const categorySelect = document.getElementById('support-form-category');
+        if (categorySelect) categorySelect.value = category;
+
+        const titleInput = document.getElementById('title');
+        const contentInput = document.getElementById('content');
+        if (titleInput) titleInput.value = article.title || '';
+        if (contentInput) contentInput.value = article.content || '';
+
+        const submitBtn = document.getElementById('submit-btn');
+        if (submitBtn) submitBtn.textContent = '수정';
+
+        applyPageTitle(category, true);
+        validateSupportForm();
+    } catch (error) {
+        alert(error.message || '수정할 글 정보를 불러오지 못했습니다.');
+        window.location.href = '/admin';
+    }
 }
 
 function getInitialSupportCategory() {
@@ -90,18 +154,29 @@ async function submitSupportPost(event) {
         isSubmitting = true;
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.textContent = '등록 중...';
+            submitBtn.textContent = editingTarget ? '수정 중...' : '등록 중...';
         }
 
-        await APIClient.post('/admin/support', { category, title, content });
-        alert('공지/FAQ 글이 등록되었습니다.');
+        if (editingTarget) {
+            await APIClient.put(`/admin/support/${editingTarget.id}?sourceType=${encodeURIComponent(editingTarget.sourceType)}`, {
+                category,
+                title,
+                content,
+                sourceType: editingTarget.sourceType
+            });
+            alert('공지/FAQ 글이 수정되었습니다.');
+        } else {
+            await APIClient.post('/admin/support', { category, title, content });
+            alert('공지/FAQ 글이 등록되었습니다.');
+        }
+
         window.location.href = '/admin';
     } catch (error) {
-        alert(error.message || '공지/FAQ 등록에 실패했습니다.');
+        alert(error.message || (editingTarget ? '공지/FAQ 수정에 실패했습니다.' : '공지/FAQ 등록에 실패했습니다.'));
     } finally {
         isSubmitting = false;
         if (submitBtn) {
-            submitBtn.textContent = '등록';
+            submitBtn.textContent = editingTarget ? '수정' : '등록';
         }
         validateSupportForm();
     }
