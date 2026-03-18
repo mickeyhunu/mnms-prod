@@ -108,6 +108,10 @@
         grid-template-columns: 1fr;
     }
 
+    .admin-user-form-grid {
+        grid-template-columns: 1fr;
+    }
+
     .consent-wrap {
         flex-direction: column;
         gap: 8px;

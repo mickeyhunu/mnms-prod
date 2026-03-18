@@ -190,6 +190,30 @@
     background-color: #f8f9fa;
 }
 
+.admin-user-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-user-modal-content {
+    max-width: 860px;
+}
+
+.admin-user-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-user-form-grid select,
+.admin-user-form-grid input {
+    width: 100%;
+}
+
+.admin-user-save-result {
+    margin-top: 12px;
+    margin-left: 0;
+}
+
 .admin-comment-cell {
     display: flex;
     flex-direction: column;

@@ -2,6 +2,7 @@
  * 파일 역할: 관리자 전용 회원/광고 데이터 조회 및 수정 쿼리를 담당하는 모델 파일.
  */
 const { getPool } = require('../config/database');
+const { pickUserRow } = require('../utils/response');
 
 async function listUsers() {
   const pool = getPool();
@@ -16,8 +17,13 @@ async function listUsers() {
 
 async function findUserById(userId) {
   const pool = getPool();
-  const [rows] = await pool.query('SELECT id, role FROM users WHERE id = ?', [userId]);
+  const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
   return rows[0] || null;
+}
+
+async function getUserDetail(userId) {
+  const user = await findUserById(userId);
+  return user ? pickUserRow(user) : null;
 }
 
 async function updateUserRole(userId, role) {
@@ -29,6 +35,57 @@ async function updateUserRole(userId, role) {
 async function updateUserMemberType(userId, memberType) {
   const pool = getPool();
   await pool.query('UPDATE users SET member_type = ? WHERE id = ?', [memberType, userId]);
+}
+
+async function updateUserByAdmin(userId, payload) {
+  const pool = getPool();
+  const fields = [];
+  const values = [];
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'nickname')) {
+    fields.push('nickname = ?');
+    values.push(payload.nickname);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'password')) {
+    fields.push('password = ?');
+    values.push(payload.password);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'phone')) {
+    fields.push('phone = ?');
+    values.push(payload.phone || null);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'email_consent')) {
+    fields.push('email_consent = ?');
+    values.push(payload.email_consent ? 1 : 0);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'sms_consent')) {
+    fields.push('sms_consent = ?');
+    values.push(payload.sms_consent ? 1 : 0);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'role')) {
+    fields.push('role = ?');
+    values.push(payload.role);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'member_type')) {
+    fields.push('member_type = ?');
+    values.push(payload.member_type);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'total_points')) {
+    fields.push('total_points = ?');
+    values.push(payload.total_points);
+  }
+
+  if (!fields.length) return;
+
+  values.push(userId);
+  await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
 }
 
 async function deleteUser(userId) {
@@ -81,8 +138,10 @@ async function deleteAd(adId) {
 module.exports = {
   listUsers,
   findUserById,
+  getUserDetail,
   updateUserRole,
   updateUserMemberType,
+  updateUserByAdmin,
   deleteUser,
   listAds,
   createAd,
