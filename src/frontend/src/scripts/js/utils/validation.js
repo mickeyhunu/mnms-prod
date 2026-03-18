@@ -37,6 +37,10 @@ function validateRegisterForm(data) {
         errors.nickname = '닉네임 중복 확인을 완료해주세요.';
     }
 
+    if (!data.termsConsent) {
+        errors.termsConsent = '약관 및 정책 동의가 필요합니다.';
+    }
+
     return errors;
 }
 
@@ -208,4 +212,3 @@ function getFormData(form) {
 
     return formData;
 }
-

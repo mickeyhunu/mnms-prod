@@ -1659,3 +1659,47 @@
     background: #f0fdf4;
     border-color: #bbf7d0;
 }
+
+.register-consent-group {
+    margin-top: 6px;
+}
+
+.register-consent-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 14px;
+    color: #343a40;
+}
+
+.register-consent-item a {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.terms-policy-card h2 {
+    margin-top: 24px;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.terms-policy-card h2:first-child {
+    margin-top: 0;
+}
+
+.terms-policy-card p {
+    line-height: 1.7;
+    color: #495057;
+}
+
+.terms-policy-card ul {
+    margin: 10px 0 0 18px;
+    color: #343a40;
+    line-height: 1.7;
+}
+
+.terms-policy-updated {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #6c757d;
+}
