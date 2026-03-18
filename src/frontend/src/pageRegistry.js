@@ -4,7 +4,7 @@
 const pageRegistry = {
   'admin': {
     template: `<header class="header">
-        <div class="header-container">
+        <div class="header-container admin-page-header-container">
             <a href="index.html" class="logo">
                 <h1>미드나잇 맨즈</h1>
             </a>
