@@ -710,7 +710,7 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
-    if (['delete', 'edit-ad', 'edit-support', 'edit-user', 'answer-inquiry'].includes(action) && !Number.isInteger(targetId)) {
+    if (['delete', 'toggle-hide', 'edit-ad', 'edit-support', 'edit-user', 'answer-inquiry'].includes(action) && !Number.isInteger(targetId)) {
         alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
     }
 }
@@ -964,9 +964,11 @@ function openAdminActionModal(target) {
     } else if (target.type === 'ad') {
         if (title) title.textContent = '광고 삭제';
         if (message) message.textContent = '이 광고를 삭제하시겠습니까?';
+        if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
     } else {
         if (title) title.textContent = '공지/FAQ 삭제';
         if (message) message.textContent = '이 글을 삭제하시겠습니까?';
+        if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
     }
 
     if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
@@ -1019,6 +1021,7 @@ async function confirmDelete() {
         }
         closeDeleteModal();
     } catch (error) {
-        alert(error.message || '삭제에 실패했습니다.');
+        const fallbackMessage = adminActionTarget.action === 'toggle-hide' ? '가리기 설정 변경에 실패했습니다.' : '삭제에 실패했습니다.';
+        alert(error.message || fallbackMessage);
     }
 }
