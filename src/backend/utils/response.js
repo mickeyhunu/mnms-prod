@@ -25,6 +25,7 @@ function pickUserRow(user) {
     birthDate: user.birth_date || null,
     emailConsent: Boolean(user.email_consent),
     smsConsent: Boolean(user.sms_consent),
+    createdAt: user.created_at || user.createdAt || null,
     nicknameChangeAvailableAt: user.last_nickname_changed_at
       ? new Date(new Date(user.last_nickname_changed_at).getTime() + 24 * 60 * 60 * 1000).toISOString()
       : null

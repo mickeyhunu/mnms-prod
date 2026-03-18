@@ -5,6 +5,7 @@ const express = require('express');
 const postModel = require('../models/postModel');
 const adminModel = require('../models/adminModel');
 const supportController = require('../controllers/supportController');
+const { findByNicknameExceptUser } = require('../models/userModel');
 const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
@@ -69,6 +70,98 @@ router.get('/users', async (req, res, next) => {
       isCurrentUser: Number(user.id) === Number(req.user.id)
     }));
     res.json({ content, totalElements: content.length });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/users/:id', async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 회원 ID입니다.' });
+
+    const user = await adminModel.getUserDetail(id);
+    if (!user || user.role !== 'USER') return res.status(404).json({ message: '일반 회원을 찾을 수 없습니다.' });
+
+    res.json({
+      user: {
+        ...user,
+        isCurrentUser: Number(user.id) === Number(req.user.id)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/users/:id', async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 회원 ID입니다.' });
+
+    const target = await adminModel.findUserById(id);
+    if (!target || target.role !== 'USER') return res.status(404).json({ message: '일반 회원을 찾을 수 없습니다.' });
+
+    const nickname = String(req.body?.nickname || '').trim();
+    const password = String(req.body?.password || '').trim();
+    const phone = String(req.body?.phone || '').trim();
+    const role = String(req.body?.role || '').toUpperCase();
+    const memberType = String(req.body?.memberType || '').toUpperCase();
+    const totalPoints = Number(req.body?.totalPoints);
+    const emailConsent = Boolean(req.body?.emailConsent);
+    const smsConsent = Boolean(req.body?.smsConsent);
+
+    if (!nickname || nickname.length < 2) {
+      return res.status(400).json({ message: '닉네임은 2글자 이상이어야 합니다.' });
+    }
+
+    if (password && password.length < 4) {
+      return res.status(400).json({ message: '비밀번호는 4글자 이상이어야 합니다.' });
+    }
+
+    if (phone && !/^01\d-\d{3,4}-\d{4}$/.test(phone)) {
+      return res.status(400).json({ message: '연락처 형식은 010-0000-0000으로 입력해 주세요.' });
+    }
+
+    if (!['USER', 'ADMIN'].includes(role)) {
+      return res.status(400).json({ message: '유효하지 않은 권한입니다.' });
+    }
+
+    if (!['GENERAL', 'ADVERTISER'].includes(memberType)) {
+      return res.status(400).json({ message: '유효하지 않은 회원 구분입니다.' });
+    }
+
+    if (!Number.isFinite(totalPoints) || totalPoints < 0 || !Number.isInteger(totalPoints)) {
+      return res.status(400).json({ message: '포인트는 0 이상의 정수만 입력할 수 있습니다.' });
+    }
+
+    const duplicateNickname = await findByNicknameExceptUser(nickname, id);
+    if (duplicateNickname) {
+      return res.status(400).json({ message: '이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.' });
+    }
+
+    const updates = {
+      nickname,
+      phone,
+      email_consent: emailConsent,
+      sms_consent: smsConsent,
+      role,
+      member_type: memberType,
+      total_points: totalPoints
+    };
+
+    if (password) {
+      updates.password = password;
+    }
+
+    await adminModel.updateUserByAdmin(id, updates);
+    const updatedUser = await adminModel.getUserDetail(id);
+
+    res.json({
+      success: true,
+      message: '회원 정보가 저장되었습니다.',
+      user: updatedUser
+    });
   } catch (error) {
     next(error);
   }
