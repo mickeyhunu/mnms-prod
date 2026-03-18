@@ -1723,3 +1723,78 @@
     font-size: 13px;
     color: #6c757d;
 }
+
+.admin-user-detail-panel {
+    margin-bottom: 24px;
+    padding: 24px;
+    border: 1px solid #e9ecef;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+.admin-user-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.admin-user-detail-eyebrow {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6c757d;
+}
+
+.admin-user-detail-header h3 {
+    margin: 0;
+    font-size: 24px;
+    color: #212529;
+}
+
+.admin-user-detail-description {
+    margin: 8px 0 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.admin-user-detail-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.admin-user-detail-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .admin-user-detail-panel {
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+    .admin-user-detail-header {
+        flex-direction: column;
+    }
+
+    .admin-user-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-user-detail-actions {
+        justify-content: stretch;
+    }
+
+    .admin-user-detail-actions .btn,
+    .admin-user-detail-header .btn {
+        width: 100%;
+    }
+}

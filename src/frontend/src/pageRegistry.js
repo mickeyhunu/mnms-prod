@@ -56,6 +56,71 @@ const pageRegistry = {
                 </div>
 
                 <div id="users-section" class="tab-pane hidden">
+                    <section class="admin-user-detail-panel hidden" id="user-edit-modal">
+                        <div class="admin-user-detail-header">
+                            <div>
+                                <p class="admin-user-detail-eyebrow">회원 관리</p>
+                                <h3 id="user-edit-modal-title">회원 정보 수정</h3>
+                                <p class="admin-user-detail-description">선택한 회원의 정보를 확인하고 수정할 수 있습니다.</p>
+                            </div>
+                            <button class="btn btn-outline btn-sm" id="user-edit-cancel-btn" type="button">닫기</button>
+                        </div>
+                        <form id="user-edit-form" class="admin-user-detail-form">
+                            <div class="profile-form-grid admin-user-form-grid">
+                                <label>아이디
+                                    <input type="text" id="admin-user-email" name="email" readonly>
+                                </label>
+                                <label>비밀번호
+                                    <input type="password" id="admin-user-password" name="password" minlength="4" placeholder="변경 시 입력">
+                                </label>
+                                <label>비밀번호 확인
+                                    <input type="password" id="admin-user-password-confirm" name="passwordConfirm" minlength="4" placeholder="비밀번호 재입력">
+                                    <small id="admin-user-password-match-result" class="help-text" role="status"></small>
+                                </label>
+                                <label>이름
+                                    <input type="text" id="admin-user-name" name="name" readonly>
+                                </label>
+                                <label>
+                                    <span class="profile-field-title">닉네임</span>
+                                    <input type="text" id="admin-user-nickname" name="nickname" minlength="2" required>
+                                </label>
+                                <label>생년월일
+                                    <input type="text" id="admin-user-birth" name="birthDate" readonly>
+                                </label>
+                                <label>이메일
+                                    <input type="email" id="admin-user-email-display" name="emailDisplay" readonly>
+                                    <span class="profile-consent-inline"><input type="checkbox" id="admin-user-email-consent" name="emailConsent"> 이메일 수신 동의</span>
+                                </label>
+                                <label>연락처
+                                    <input type="text" id="admin-user-phone" name="phone" placeholder="010-0000-0000">
+                                    <span class="profile-consent-inline"><input type="checkbox" id="admin-user-sms-consent" name="smsConsent"> SMS 수신 동의</span>
+                                </label>
+                                <label>포인트
+                                    <input type="number" id="admin-user-total-points" name="totalPoints" min="0" step="1">
+                                </label>
+                                <label>권한
+                                    <select id="admin-user-role" name="role" class="form-control">
+                                        <option value="USER">USER</option>
+                                        <option value="ADMIN">ADMIN</option>
+                                    </select>
+                                </label>
+                                <label>회원 구분
+                                    <select id="admin-user-member-type" name="memberType" class="form-control">
+                                        <option value="GENERAL">일반 회원</option>
+                                        <option value="ADVERTISER">광고 회원</option>
+                                    </select>
+                                </label>
+                                <label>가입일
+                                    <input type="text" id="admin-user-created-at" name="createdAt" readonly>
+                                </label>
+                            </div>
+                            <p id="admin-user-save-result" class="help-text admin-user-save-result" role="status"></p>
+                            <div class="admin-user-detail-actions">
+                                <button class="btn btn-secondary" id="user-edit-cancel-btn-secondary" type="button">취소</button>
+                                <button class="btn btn-primary" id="user-edit-save-btn" type="button">저장</button>
+                            </div>
+                        </form>
+                    </section>
                     <div class="loading" id="users-loading"><div class="spinner"></div><p>회원 정보를 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="users-error"><p id="users-error-message"></p><button class="btn btn-sm btn-primary" id="users-retry-btn">다시 시도</button></div>
                     <div class="admin-table-container hidden" id="users-content">
@@ -117,66 +182,6 @@ const pageRegistry = {
                 <div class="form-group"><label class="form-label" for="inquiry-answer-content">답변 내용</label><textarea id="inquiry-answer-content" class="form-control" rows="8"></textarea></div>
             </div>
             <div class="modal-footer"><button class="btn btn-secondary" id="inquiry-answer-cancel-btn">취소</button><button class="btn btn-primary" id="inquiry-answer-save-btn">답변 저장</button></div>
-        </div>
-    </div>
-
-    <div class="modal hidden" id="user-edit-modal">
-        <div class="modal-content admin-user-modal-content">
-            <div class="modal-header"><h3 id="user-edit-modal-title">회원 정보 수정</h3></div>
-            <div class="modal-body">
-                <form id="user-edit-form">
-                    <div class="profile-form-grid admin-user-form-grid">
-                        <label>아이디
-                            <input type="text" id="admin-user-email" name="email" readonly>
-                        </label>
-                        <label>비밀번호
-                            <input type="password" id="admin-user-password" name="password" minlength="4" placeholder="변경 시 입력">
-                        </label>
-                        <label>비밀번호 확인
-                            <input type="password" id="admin-user-password-confirm" name="passwordConfirm" minlength="4" placeholder="비밀번호 재입력">
-                            <small id="admin-user-password-match-result" class="help-text" role="status"></small>
-                        </label>
-                        <label>이름
-                            <input type="text" id="admin-user-name" name="name" readonly>
-                        </label>
-                        <label>
-                            <span class="profile-field-title">닉네임</span>
-                            <input type="text" id="admin-user-nickname" name="nickname" minlength="2" required>
-                        </label>
-                        <label>생년월일
-                            <input type="text" id="admin-user-birth" name="birthDate" readonly>
-                        </label>
-                        <label>이메일
-                            <input type="email" id="admin-user-email-display" name="emailDisplay" readonly>
-                            <span class="profile-consent-inline"><input type="checkbox" id="admin-user-email-consent" name="emailConsent"> 이메일 수신 동의</span>
-                        </label>
-                        <label>연락처
-                            <input type="text" id="admin-user-phone" name="phone" placeholder="010-0000-0000">
-                            <span class="profile-consent-inline"><input type="checkbox" id="admin-user-sms-consent" name="smsConsent"> SMS 수신 동의</span>
-                        </label>
-                        <label>포인트
-                            <input type="number" id="admin-user-total-points" name="totalPoints" min="0" step="1">
-                        </label>
-                        <label>권한
-                            <select id="admin-user-role" name="role" class="form-control">
-                                <option value="USER">USER</option>
-                                <option value="ADMIN">ADMIN</option>
-                            </select>
-                        </label>
-                        <label>회원 구분
-                            <select id="admin-user-member-type" name="memberType" class="form-control">
-                                <option value="GENERAL">일반 회원</option>
-                                <option value="ADVERTISER">광고 회원</option>
-                            </select>
-                        </label>
-                        <label>가입일
-                            <input type="text" id="admin-user-created-at" name="createdAt" readonly>
-                        </label>
-                    </div>
-                    <p id="admin-user-save-result" class="help-text admin-user-save-result" role="status"></p>
-                </form>
-            </div>
-            <div class="modal-footer"><button class="btn btn-secondary" id="user-edit-cancel-btn" type="button">취소</button><button class="btn btn-primary" id="user-edit-save-btn" type="button">저장</button></div>
         </div>
     </div>
 
