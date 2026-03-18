@@ -6,7 +6,10 @@ let supportEditTarget = null;
 let currentSupportCategory = 'NOTICE';
 let currentInquiryStatus = '';
 let inquiryAnswerTarget = null;
+let editingUserId = null;
 let isGlobalAdminClickBound = false;
+
+const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAdminPage);
@@ -74,6 +77,9 @@ function bindCommonEvents() {
 
     document.getElementById('delete-cancel-btn')?.addEventListener('click', closeDeleteModal);
     document.getElementById('delete-confirm-btn')?.addEventListener('click', confirmDelete);
+    document.getElementById('user-edit-cancel-btn')?.addEventListener('click', closeUserEditModal);
+    document.getElementById('user-edit-save-btn')?.addEventListener('click', saveUserDetail);
+    bindUserEditForm();
 
     document.getElementById('support-category')?.addEventListener('change', async (event) => {
         currentSupportCategory = event.target.value;
@@ -194,18 +200,15 @@ async function loadUsers() {
                     <td>${user.id}</td>
                     <td>${sanitizeHTML(user.email || '')}</td>
                     <td>${sanitizeHTML(user.nickname || '')}</td>
-                    <td>${Number(user.totalPoints || 0)}</td>
+                    <td>${Number(user.totalPoints || 0).toLocaleString()} P</td>
                     <td>${formatDate(user.createdAt || user.created_at)}</td>
+                    <td>${sanitizeHTML(user.role || 'USER')}</td>
+                    <td>${user.memberType === 'ADVERTISER' ? '광고 회원' : '일반 회원'}</td>
                     <td>
-                        <select id="user-role-${user.id}" class="form-control admin-inline-select">
-                            <option value="USER" ${user.role === 'USER' ? 'selected' : ''}>USER</option>
-                            <option value="ADMIN" ${user.role === 'ADMIN' ? 'selected' : ''}>ADMIN</option>
-                        </select>
-                    </td>
-                    <td>${user.isCurrentUser ? '내 계정' : '-'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-secondary" data-admin-action="save-user-role" data-target-id="${user.id}">권한저장</button>
-                        <button class="btn btn-sm btn-danger" ${user.isCurrentUser ? 'disabled' : ''} data-admin-action="delete" data-target-type="user" data-target-id="${user.id}">삭제</button>
+                        <div class="admin-user-actions">
+                            <button class="btn btn-sm btn-secondary" data-admin-action="edit-user" data-target-id="${user.id}">정보 수정</button>
+                            <button class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="user" data-target-id="${user.id}">삭제</button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -217,15 +220,162 @@ async function loadUsers() {
     }
 }
 
-async function updateUserRole(userId) {
-    const role = document.getElementById(`user-role-${userId}`)?.value;
-    if (!role) return;
+function formatPhoneNumber(value) {
+    const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+    return `${digits.slice(0, 3)}-${digits.slice(3, digits.length - 4)}-${digits.slice(-4)}`;
+}
+
+function setAdminUserHelpMessage(message, color = '#6c757d') {
+    const result = document.getElementById('admin-user-save-result');
+    if (!result) return;
+    result.textContent = message;
+    result.style.color = color;
+}
+
+function bindUserEditForm() {
+    const phoneInput = document.getElementById('admin-user-phone');
+    const passwordInput = document.getElementById('admin-user-password');
+    const passwordConfirmInput = document.getElementById('admin-user-password-confirm');
+    const passwordMatchResult = document.getElementById('admin-user-password-match-result');
+
+    phoneInput?.addEventListener('input', () => {
+        phoneInput.value = formatPhoneNumber(phoneInput.value);
+    });
+
+    const syncPasswordMatchMessage = () => {
+        if (!passwordMatchResult || !passwordConfirmInput) return;
+
+        const password = passwordInput?.value.trim() || '';
+        const passwordConfirm = passwordConfirmInput.value.trim();
+
+        if (!password && !passwordConfirm) {
+            passwordMatchResult.textContent = '';
+            return;
+        }
+
+        if (!passwordConfirm) {
+            passwordMatchResult.textContent = '변경할 비밀번호를 한 번 더 입력해주세요.';
+            passwordMatchResult.style.color = '#6c757d';
+            return;
+        }
+
+        if (password !== passwordConfirm) {
+            passwordMatchResult.textContent = '비밀번호와 비밀번호 확인이 다릅니다.';
+            passwordMatchResult.style.color = '#dc3545';
+            return;
+        }
+
+        passwordMatchResult.textContent = '비밀번호와 비밀번호 확인이 일치합니다.';
+        passwordMatchResult.style.color = '#198754';
+    };
+
+    passwordInput?.addEventListener('input', syncPasswordMatchMessage);
+    passwordConfirmInput?.addEventListener('input', syncPasswordMatchMessage);
+}
+
+function fillUserEditForm(user) {
+    document.getElementById('admin-user-email').value = user.email || '';
+    document.getElementById('admin-user-email-display').value = user.email || '';
+    document.getElementById('admin-user-name').value = user.name || user.nickname || '';
+    document.getElementById('admin-user-birth').value = user.birthDate || '';
+    document.getElementById('admin-user-nickname').value = user.nickname || '';
+    document.getElementById('admin-user-phone').value = formatPhoneNumber(user.phone || '');
+    document.getElementById('admin-user-email-consent').checked = Boolean(user.emailConsent);
+    document.getElementById('admin-user-sms-consent').checked = Boolean(user.smsConsent);
+    document.getElementById('admin-user-total-points').value = Number(user.totalPoints || 0);
+    document.getElementById('admin-user-role').value = user.role || 'USER';
+    document.getElementById('admin-user-member-type').value = user.memberType || 'GENERAL';
+    document.getElementById('admin-user-created-at').value = formatDate(user.createdAt || user.created_at);
+    document.getElementById('admin-user-password').value = '';
+    document.getElementById('admin-user-password-confirm').value = '';
+    document.getElementById('admin-user-password-match-result').textContent = '';
+    setAdminUserHelpMessage('');
+}
+
+async function openUserEditModal(userId) {
+    try {
+        const response = await APIClient.get(`/admin/users/${userId}`);
+        const user = response.user;
+        if (!user) throw new Error('회원 정보를 찾을 수 없습니다.');
+
+        editingUserId = userId;
+        document.getElementById('user-edit-modal-title').textContent = `회원 정보 수정 #${userId}`;
+        fillUserEditForm(user);
+        document.getElementById('user-edit-modal')?.classList.remove('hidden');
+    } catch (error) {
+        alert(error.message || '회원 정보를 불러오지 못했습니다.');
+    }
+}
+
+function closeUserEditModal() {
+    editingUserId = null;
+    document.getElementById('user-edit-form')?.reset();
+    document.getElementById('admin-user-password-match-result').textContent = '';
+    setAdminUserHelpMessage('');
+    document.getElementById('user-edit-modal')?.classList.add('hidden');
+}
+
+async function saveUserDetail() {
+    if (!editingUserId) return;
+
+    const nickname = document.getElementById('admin-user-nickname')?.value?.trim() || '';
+    const password = document.getElementById('admin-user-password')?.value?.trim() || '';
+    const passwordConfirm = document.getElementById('admin-user-password-confirm')?.value?.trim() || '';
+    const phone = formatPhoneNumber(document.getElementById('admin-user-phone')?.value?.trim() || '');
+    const totalPoints = Number.parseInt(document.getElementById('admin-user-total-points')?.value || '0', 10);
+    const role = document.getElementById('admin-user-role')?.value || 'USER';
+    const memberType = document.getElementById('admin-user-member-type')?.value || 'GENERAL';
+    const emailConsent = document.getElementById('admin-user-email-consent')?.checked || false;
+    const smsConsent = document.getElementById('admin-user-sms-consent')?.checked || false;
+    const saveButton = document.getElementById('user-edit-save-btn');
+
+    document.getElementById('admin-user-phone').value = phone;
+
+    if (!nickname || nickname.length < 2) {
+        setAdminUserHelpMessage('닉네임은 2글자 이상이어야 합니다.', '#dc3545');
+        return;
+    }
+
+    if (password && password !== passwordConfirm) {
+        setAdminUserHelpMessage('비밀번호와 비밀번호 확인이 일치하지 않습니다.', '#dc3545');
+        return;
+    }
+
+    if (phone && !PHONE_PATTERN.test(phone)) {
+        setAdminUserHelpMessage('연락처 형식은 010-0000-0000으로 입력해 주세요.', '#dc3545');
+        return;
+    }
+
+    if (!Number.isInteger(totalPoints) || totalPoints < 0) {
+        setAdminUserHelpMessage('포인트는 0 이상의 정수만 입력할 수 있습니다.', '#dc3545');
+        return;
+    }
+
+    const payload = {
+        nickname,
+        phone,
+        totalPoints,
+        role,
+        memberType,
+        emailConsent,
+        smsConsent
+    };
+
+    if (password) payload.password = password;
 
     try {
-        await APIClient.patch(`/admin/users/${userId}/role`, { role });
+        if (saveButton) saveButton.disabled = true;
+        setAdminUserHelpMessage('저장 중입니다...');
+        await APIClient.put(`/admin/users/${editingUserId}`, payload);
+        closeUserEditModal();
         await loadUsers();
+        alert('회원 정보가 저장되었습니다.');
     } catch (error) {
-        alert(error.message || '권한 변경에 실패했습니다.');
+        setAdminUserHelpMessage(error.message || '회원 정보 저장에 실패했습니다.', '#dc3545');
+    } finally {
+        if (saveButton) saveButton.disabled = false;
     }
 }
 
@@ -471,8 +621,8 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
-    if (action === 'save-user-role' && Number.isInteger(targetId)) {
-        await updateUserRole(targetId);
+    if (action === 'edit-user' && Number.isInteger(targetId)) {
+        await openUserEditModal(targetId);
         return;
     }
 
@@ -481,7 +631,7 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
-    if (['delete', 'edit-ad', 'edit-support', 'save-user-role', 'answer-inquiry'].includes(action) && !Number.isInteger(targetId)) {
+    if (['delete', 'edit-ad', 'edit-support', 'edit-user', 'answer-inquiry'].includes(action) && !Number.isInteger(targetId)) {
         alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
     }
 }
