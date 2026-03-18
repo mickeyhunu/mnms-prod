@@ -30,6 +30,24 @@ router.get('/comments', async (req, res, next) => {
   }
 });
 
+
+router.put('/posts/:id/hide', async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' });
+
+    const post = await postModel.findPostByIdIncludingDeleted(id);
+    if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
+    if (post.is_deleted) return res.status(400).json({ message: '이미 삭제된 게시글입니다.' });
+
+    const isHidden = Boolean(req.body?.isHidden);
+    await postModel.setPostHidden(id, isHidden);
+    res.json({ success: true, isHidden });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.delete('/posts/:id', async (req, res, next) => {
   try {
     const id = Number.parseInt(req.params.id, 10);
@@ -41,6 +59,24 @@ router.delete('/posts/:id', async (req, res, next) => {
 
     await postModel.deletePost(id);
     res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
+router.put('/comments/:id/hide', async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 댓글 ID입니다.' });
+
+    const comment = await postModel.findCommentById(id);
+    if (!comment) return res.status(404).json({ message: '댓글을 찾을 수 없습니다.' });
+    if (comment.is_deleted) return res.status(400).json({ message: '이미 삭제된 댓글입니다.' });
+
+    const isHidden = Boolean(req.body?.isHidden);
+    await postModel.setCommentHidden(id, isHidden);
+    res.json({ success: true, isHidden });
   } catch (error) {
     next(error);
   }

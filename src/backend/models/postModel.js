@@ -128,6 +128,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
     `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
             p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
             p.notice_target_boards AS noticeTargetBoards,
+            p.is_hidden AS isHidden,
             p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'USER') AS authorRole,
@@ -185,6 +186,7 @@ async function findPostDetailById(id) {
     `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
             p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
             p.notice_target_boards AS noticeTargetBoards,
+            p.is_hidden AS isHidden,
             p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'USER') AS authorRole,
@@ -272,6 +274,11 @@ async function updatePost(id, { title, content, imageUrls = [], isNotice, notice
   );
 }
 
+async function setPostHidden(id, isHidden) {
+  const pool = getPool();
+  await pool.query('UPDATE posts SET is_hidden = ? WHERE id = ?', [isHidden ? 1 : 0, id]);
+}
+
 async function deletePost(id) {
   const pool = getPool();
   await pool.query("UPDATE posts SET is_deleted = 1, title = '[삭제된 게시글]', content = '삭제된 게시글입니다.' WHERE id = ?", [id]);
@@ -288,7 +295,7 @@ async function updatePostPointAwards(id, { createPointAwarded, reviewBonusPointA
 async function listComments(postId) {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.parent_id AS parentId, c.is_secret AS isSecret, c.is_deleted AS isDeleted, c.content, c.created_at AS createdAt,
+    `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.parent_id AS parentId, c.is_secret AS isSecret, c.is_hidden AS isHidden, c.is_deleted AS isDeleted, c.content, c.created_at AS createdAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
             CASE
               WHEN u.id IS NULL THEN NULL
@@ -312,7 +319,7 @@ async function listComments(postId) {
 async function listAllCommentsForAdmin() {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.parent_id AS parentId, c.is_secret AS isSecret, c.is_deleted AS isDeleted, c.content, c.created_at AS createdAt,
+    `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.parent_id AS parentId, c.is_secret AS isSecret, c.is_hidden AS isHidden, c.is_deleted AS isDeleted, c.content, c.created_at AS createdAt,
             COALESCE(u.nickname, '비회원') AS authorNickname
      FROM comments c
      LEFT JOIN users u ON u.id = c.user_id
@@ -339,6 +346,11 @@ async function createComment({ postId, userId, content, parentId = null, isSecre
 async function updateComment(id, content) {
   const pool = getPool();
   await pool.query('UPDATE comments SET content = ? WHERE id = ?', [content, id]);
+}
+
+async function setCommentHidden(id, isHidden) {
+  const pool = getPool();
+  await pool.query('UPDATE comments SET is_hidden = ? WHERE id = ?', [isHidden ? 1 : 0, id]);
 }
 
 async function deleteComment(id) {
@@ -475,6 +487,7 @@ module.exports = {
   findPostByIdIncludingDeleted,
   incrementPostViewCount,
   updatePost,
+  setPostHidden,
   deletePost,
   updatePostPointAwards,
   listComments,
@@ -482,6 +495,7 @@ module.exports = {
   findCommentById,
   createComment,
   updateComment,
+  setCommentHidden,
   deleteComment,
   updateCommentPointAwarded,
   isPostLikedByUser,

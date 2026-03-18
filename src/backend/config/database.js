@@ -128,6 +128,7 @@ async function initDatabase() {
       title VARCHAR(255) NOT NULL,
       content TEXT NOT NULL,
       image_urls LONGTEXT NULL,
+      is_hidden TINYINT(1) NOT NULL DEFAULT 0,
       is_deleted TINYINT(1) NOT NULL DEFAULT 0,
       view_count BIGINT NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -176,6 +177,20 @@ async function initDatabase() {
 
   if (!postImageUrlsColumn.length) {
     await pool.query('ALTER TABLE posts ADD COLUMN image_urls LONGTEXT NULL AFTER content');
+  }
+
+  const [postIsHiddenColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'posts'
+       AND COLUMN_NAME = 'is_hidden'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!postIsHiddenColumn.length) {
+    await pool.query('ALTER TABLE posts ADD COLUMN is_hidden TINYINT(1) NOT NULL DEFAULT 0 AFTER image_urls');
   }
 
   const [postCreatePointAwardedColumn] = await pool.query(
@@ -300,6 +315,7 @@ async function initDatabase() {
       user_id BIGINT NOT NULL,
       parent_id BIGINT NULL,
       is_secret TINYINT(1) NOT NULL DEFAULT 0,
+      is_hidden TINYINT(1) NOT NULL DEFAULT 0,
       is_deleted TINYINT(1) NOT NULL DEFAULT 0,
       content TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -336,6 +352,20 @@ async function initDatabase() {
 
   if (!isSecretColumn.length) {
     await pool.query('ALTER TABLE comments ADD COLUMN is_secret TINYINT(1) NOT NULL DEFAULT 0 AFTER parent_id');
+  }
+
+  const [isHiddenColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'comments'
+       AND COLUMN_NAME = 'is_hidden'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!isHiddenColumn.length) {
+    await pool.query('ALTER TABLE comments ADD COLUMN is_hidden TINYINT(1) NOT NULL DEFAULT 0 AFTER is_secret');
   }
 
   const [isDeletedColumn] = await pool.query(
