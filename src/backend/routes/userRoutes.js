@@ -3,13 +3,14 @@
  */
 const express = require('express');
 const { authMiddleware } = require('../middlewares/authMiddleware');
-const { myStats, myPointHistories, myActivity, updateMyProfile } = require('../controllers/userController');
+const { myStats, myPointHistories, myActivity, myNotifications, updateMyProfile } = require('../controllers/userController');
 
 const router = express.Router();
 
 router.get('/me/stats', authMiddleware, myStats);
 router.get('/me/points', authMiddleware, myPointHistories);
 router.get('/me/activity', authMiddleware, myActivity);
+router.get('/me/notifications', authMiddleware, myNotifications);
 router.put('/me', authMiddleware, updateMyProfile);
 
 module.exports = router;

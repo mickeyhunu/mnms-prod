@@ -290,3 +290,18 @@
 .form-actions.form-actions-inline .btn {
     width: auto;
 }
+
+
+@media (max-width: 768px) {
+    .header-notification-button {
+        padding: 0 12px;
+    }
+
+    .header-notification-label {
+        display: none;
+    }
+
+    .header-notification-panel {
+        right: -24px;
+    }
+}

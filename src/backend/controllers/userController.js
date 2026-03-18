@@ -1,9 +1,10 @@
 /**
  * 파일 역할: userController 관련 HTTP 요청을 처리하고 모델/응답 로직을 조합하는 컨트롤러 파일.
  */
-const { getUserActivityStats, getUserPointHistories, getUserActivityDetails, findByNicknameExceptUser, updateUserProfile, findById } = require('../models/userModel');
+const { getUserActivityStats, getUserPointHistories, getUserActivityDetails, getUserNotifications, findByNicknameExceptUser, updateUserProfile, findById } = require('../models/userModel');
 const { resolveMemberLevel, MEMBER_LEVELS } = require('../utils/memberLevel');
 const { POINT_RULES } = require('../models/pointModel');
+const supportModel = require('../models/supportModel');
 
 
 function isNicknameChangeLocked(lastChangedAt) {
@@ -192,6 +193,65 @@ async function myActivity(req, res, next) {
     next(error);
   }
 }
+
+async function myNotifications(req, res, next) {
+  try {
+    const limit = Math.max(1, Math.min(100, Number(req.query.limit) || 50));
+    const [commentNotifications, notices, answeredInquiries] = await Promise.all([
+      getUserNotifications(req.user.id, { limit }),
+      supportModel.listArticles(supportModel.SUPPORT_CATEGORIES.NOTICE, false),
+      supportModel.listAnsweredInquiriesByUser(req.user.id, { limit })
+    ]);
+
+    const normalizedNotifications = [
+      ...commentNotifications.map((item) => ({
+        ...item,
+        targetUrl: item.postId ? `/post-detail?id=${item.postId}` : '/'
+      })),
+      ...notices.map((notice) => ({
+        notificationKey: `admin-notice-${notice.sourceType || 'SUPPORT'}-${notice.sourceId || notice.id}`,
+        type: 'admin_notice',
+        sourceId: Number(notice.sourceId || notice.id),
+        postId: null,
+        inquiryId: null,
+        parentId: null,
+        postTitle: null,
+        content: notice.content,
+        actorNickname: notice.createdByNickname || '운영팀',
+        title: notice.title,
+        message: `관리자 알림: ${notice.title}`,
+        createdAt: notice.createdAt,
+        sourceType: notice.sourceType || 'SUPPORT',
+        targetUrl: `/support?articleId=${notice.sourceId || notice.id}&sourceType=${String(notice.sourceType || 'SUPPORT').toUpperCase()}`
+      })),
+      ...answeredInquiries.map((item) => ({
+        notificationKey: `inquiry-answer-${item.id}`,
+        type: 'inquiry_answer',
+        sourceId: item.id,
+        postId: null,
+        inquiryId: item.id,
+        parentId: null,
+        postTitle: null,
+        content: item.answerContent,
+        actorNickname: '운영팀',
+        title: item.title,
+        message: `1:1 문의 "${item.title}"에 답변이 등록되었습니다.`,
+        createdAt: item.answeredAt || item.updatedAt,
+        targetUrl: `/my-inquiries/${item.id}`
+      }))
+    ]
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+      .slice(0, limit);
+
+    res.json({
+      content: normalizedNotifications,
+      totalElements: normalizedNotifications.length
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function myPointHistories(req, res, next) {
   try {
     const page = Math.max(1, Number(req.query.page) || 1);
@@ -230,4 +290,4 @@ async function myPointHistories(req, res, next) {
   }
 }
 
-module.exports = { myStats, myPointHistories, myActivity, updateMyProfile };
+module.exports = { myStats, myPointHistories, myActivity, myNotifications, updateMyProfile };
