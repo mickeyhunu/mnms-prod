@@ -1291,6 +1291,14 @@ const pageRegistry = {
 
                     <input type="hidden" id="nicknameChecked" name="nicknameChecked" value="false">
 
+                    <div class="form-group register-consent-group">
+                        <label class="register-consent-item" for="termsConsent">
+                            <input type="checkbox" id="termsConsent" name="termsConsent" required>
+                            <span>[필수] <a href="/board/terms" target="_blank" rel="noopener noreferrer">약관 및 정책</a>에 동의합니다.</span>
+                        </label>
+                        <div class="error-message hidden" id="termsConsent-error"></div>
+                    </div>
+
                     <button type="submit" class="btn btn-primary w-full" id="submit-btn">회원가입</button>
                 </form>
 
@@ -1311,6 +1319,14 @@ const pageRegistry = {
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/validation.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/register.js", "scripts/js/components/footerNav.js"]
+  },
+  'terms-policy': {
+    template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
+    <main class="main-content"><div class="container customer-service-page mypage-linked-container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">약관 및 정책</span></div></header>
+    <div class="mypage-linked-content"><section class="customer-service-card terms-policy-card"><h2>서비스 이용약관</h2><p>본 서비스는 커뮤니티 플랫폼 제공을 목적으로 하며, 회원은 관련 법령 및 본 약관을 준수해야 합니다. 회사는 서비스 운영, 점검, 기능 변경이 필요한 경우 사전 공지 후 서비스를 변경할 수 있습니다.</p><ul><li>회원 계정 정보는 정확하게 입력해야 하며 타인 계정 도용은 금지됩니다.</li><li>불법 게시물, 타인 권리 침해, 서비스 운영 방해 행위는 제재 대상입니다.</li><li>서비스 장애, 외부 링크, 제3자 제공 정보에 대한 책임 범위는 약관에 따릅니다.</li></ul><h2>개인정보처리방침</h2><p>회사는 회원가입, 본인확인, 서비스 제공 및 고객응대를 위해 필요한 최소한의 개인정보를 수집·이용합니다.</p><ul><li>수집 항목: 아이디, 비밀번호, 휴대폰 번호, 닉네임 등</li><li>이용 목적: 회원 식별, 부정 이용 방지, 문의 대응, 서비스 개선</li><li>보유 기간: 관련 법령 또는 이용 목적 달성 시까지</li></ul><p>개인정보 열람·정정·삭제 요청은 고객센터를 통해 접수할 수 있습니다.</p><h2>커뮤니티 운영정책</h2><p>건전한 커뮤니티 운영을 위해 아래 정책을 적용합니다.</p><ul><li>금지 콘텐츠: 불법 정보, 혐오·비방, 음란물, 저작권 침해 게시물</li><li>제재 절차: 경고 → 일시 이용제한 → 영구 이용제한</li><li>신고 처리: 접수 후 내부 기준에 따라 검토 및 조치</li></ul><p class="terms-policy-updated">시행일: 2026-03-17</p></section></div></div></main>
+    <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
 };
 

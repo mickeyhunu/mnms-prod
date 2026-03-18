@@ -196,7 +196,8 @@ async function handleRegister(e) {
         phoneVerified: form.phoneVerified.value,
         genderDigit: form.genderDigit.value.trim(),
         nickname: form.nickname.value.trim(),
-        nicknameChecked: form.nicknameChecked.value
+        nicknameChecked: form.nicknameChecked.value,
+        termsConsent: form.termsConsent.checked
     };
 
     const errors = validateRegisterForm(formData);
@@ -242,4 +243,3 @@ if (document.readyState === 'loading') {
 } else {
     initRegisterPage();
 }
-
