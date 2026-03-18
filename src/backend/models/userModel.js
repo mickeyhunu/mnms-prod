@@ -114,6 +114,83 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
   return { posts, comments, likedPosts };
 }
 
+
+async function getUserNotifications(userId, { limit = 50 } = {}) {
+  const pool = getPool();
+  const safeLimit = Math.max(1, Math.min(100, Number(limit) || 50));
+
+  const [rows] = await pool.query(
+    `SELECT *
+     FROM (
+       SELECT
+         CONCAT('post-comment-', c.id) AS notificationKey,
+         'post_comment' AS type,
+         c.id AS sourceId,
+         c.post_id AS postId,
+         p.title AS postTitle,
+         NULL AS inquiryId,
+         c.parent_id AS parentId,
+         c.content AS content,
+         c.created_at AS createdAt,
+         COALESCE(u.nickname, '익명') AS actorNickname,
+         CONCAT('내 게시글 "', p.title, '"에 새로운 댓글이 달렸습니다.') AS message
+       FROM comments c
+       INNER JOIN posts p ON p.id = c.post_id
+       LEFT JOIN users u ON u.id = c.user_id
+       WHERE p.user_id = ?
+         AND c.user_id <> ?
+         AND c.parent_id IS NULL
+         AND c.is_deleted = 0
+         AND c.is_hidden = 0
+         AND p.is_deleted = 0
+         AND p.is_hidden = 0
+
+       UNION ALL
+
+       SELECT
+         CONCAT('comment-reply-', c.id) AS notificationKey,
+         'comment_reply' AS type,
+         c.id AS sourceId,
+         c.post_id AS postId,
+         p.title AS postTitle,
+         NULL AS inquiryId,
+         c.parent_id AS parentId,
+         c.content AS content,
+         c.created_at AS createdAt,
+         COALESCE(u.nickname, '익명') AS actorNickname,
+         CONCAT('내 댓글에 새로운 대댓글이 달렸습니다. (', p.title, ')') AS message
+       FROM comments c
+       INNER JOIN comments parent ON parent.id = c.parent_id
+       INNER JOIN posts p ON p.id = c.post_id
+       LEFT JOIN users u ON u.id = c.user_id
+       WHERE parent.user_id = ?
+         AND c.user_id <> ?
+         AND c.is_deleted = 0
+         AND c.is_hidden = 0
+         AND parent.is_deleted = 0
+         AND p.is_deleted = 0
+         AND p.is_hidden = 0
+     ) notifications
+     ORDER BY createdAt DESC, sourceId DESC
+     LIMIT ?`,
+    [userId, userId, userId, userId, safeLimit]
+  );
+
+  return rows.map((row) => ({
+    notificationKey: row.notificationKey,
+    type: row.type,
+    sourceId: Number(row.sourceId),
+    postId: Number(row.postId),
+    inquiryId: row.inquiryId ? Number(row.inquiryId) : null,
+    parentId: row.parentId ? Number(row.parentId) : null,
+    postTitle: row.postTitle,
+    content: row.content,
+    actorNickname: row.actorNickname,
+    message: row.message,
+    createdAt: row.createdAt
+  }));
+}
+
 async function findByNickname(nickname) {
   const pool = getPool();
   const [rows] = await pool.query('SELECT id FROM users WHERE nickname = ?', [nickname]);
@@ -172,5 +249,6 @@ module.exports = {
   updateUserProfile,
   getUserActivityStats,
   getUserPointHistories,
-  getUserActivityDetails
+  getUserActivityDetails,
+  getUserNotifications
 };

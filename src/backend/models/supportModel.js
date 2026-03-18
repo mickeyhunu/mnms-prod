@@ -324,6 +324,35 @@ async function listInquiriesForAdmin({ status = null } = {}) {
   return rows.map((row) => normalizeInquiryRow(row));
 }
 
+
+async function listAnsweredInquiriesByUser(userId, { limit = 20 } = {}) {
+  const pool = getPool();
+  const safeLimit = Math.max(1, Math.min(100, Number(limit) || 20));
+  const [rows] = await pool.query(
+    `SELECT i.id, i.user_id AS userId, i.inquiry_type AS type,
+            i.title, i.answer_content AS answerContent,
+            i.answered_at AS answeredAt, i.updated_at AS updatedAt
+     FROM support_inquiries i
+     WHERE i.user_id = ?
+       AND i.status = ?
+       AND i.answer_content IS NOT NULL
+       AND TRIM(i.answer_content) <> ''
+     ORDER BY i.answered_at DESC, i.id DESC
+     LIMIT ?`,
+    [userId, INQUIRY_STATUSES.ANSWERED, safeLimit]
+  );
+
+  return rows.map((row) => ({
+    id: Number(row.id),
+    userId: Number(row.userId),
+    type: row.type,
+    title: row.title,
+    answerContent: row.answerContent,
+    answeredAt: row.answeredAt,
+    updatedAt: row.updatedAt
+  }));
+}
+
 async function answerInquiry(id, { answerContent, answeredBy }) {
   const pool = getPool();
   await pool.query(
@@ -358,5 +387,6 @@ module.exports = {
   listInquiriesByUser,
   findInquiryById,
   listInquiriesForAdmin,
+  listAnsweredInquiriesByUser,
   answerInquiry
 };
