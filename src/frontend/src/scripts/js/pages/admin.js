@@ -127,6 +127,7 @@ function bindCommonEvents() {
     document.getElementById('delete-cancel-btn')?.addEventListener('click', closeDeleteModal);
     document.getElementById('delete-confirm-btn')?.addEventListener('click', confirmDelete);
     document.getElementById('user-edit-cancel-btn')?.addEventListener('click', closeUserEditModal);
+    document.getElementById('user-edit-cancel-btn-secondary')?.addEventListener('click', closeUserEditModal);
     document.getElementById('user-edit-save-btn')?.addEventListener('click', saveUserDetail);
     bindUserEditForm();
 
@@ -355,6 +356,7 @@ async function openUserEditModal(userId, options = {}) {
         document.getElementById('user-edit-modal-title').textContent = `회원 정보 수정 #${userId}`;
         fillUserEditForm(user);
         document.getElementById('user-edit-modal')?.classList.remove('hidden');
+        document.getElementById('user-edit-modal')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         if (syncHistory) {
             syncAdminPageState({ activeTab: 'users', editUserId: userId }, { replace: replaceHistory });
