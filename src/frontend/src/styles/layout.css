@@ -35,8 +35,15 @@
     align-items: center;
 }
 
+.nav-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
 .user-nickname {
-    margin-right: 10px;
+    margin-right: 0;
     font-weight: 600;
     color: var(--text-color);
 }
