@@ -10,6 +10,65 @@ let editingUserId = null;
 let isGlobalAdminClickBound = false;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
+const ADMIN_TABS = ['posts', 'comments', 'users', 'ads', 'support', 'inquiries'];
+
+function getAdminPageState() {
+    const params = new URLSearchParams(window.location.search);
+    const requestedTab = params.get('tab');
+    const activeTab = ADMIN_TABS.includes(requestedTab) ? requestedTab : 'posts';
+    const editUserId = Number.parseInt(params.get('editUserId') || '', 10);
+
+    return {
+        activeTab,
+        editUserId: Number.isInteger(editUserId) && editUserId > 0 ? editUserId : null
+    };
+}
+
+function syncAdminPageState(nextState = {}, { replace = true } = {}) {
+    const url = new URL(window.location.href);
+    const currentState = getAdminPageState();
+    const activeTab = ADMIN_TABS.includes(nextState.activeTab) ? nextState.activeTab : currentState.activeTab;
+    const editUserId = Object.prototype.hasOwnProperty.call(nextState, 'editUserId') ? nextState.editUserId : currentState.editUserId;
+
+    if (activeTab && activeTab !== 'posts') url.searchParams.set('tab', activeTab);
+    else url.searchParams.delete('tab');
+
+    if (Number.isInteger(editUserId) && editUserId > 0) url.searchParams.set('editUserId', String(editUserId));
+    else url.searchParams.delete('editUserId');
+
+    const method = replace ? 'replaceState' : 'pushState';
+    window.history[method]({}, '', url);
+}
+
+async function activateAdminTab(tabKey, options = {}) {
+    const { updateHistory = true, replaceHistory = true } = options;
+    const resolvedTabKey = ADMIN_TABS.includes(tabKey) ? tabKey : 'posts';
+    const tabs = document.querySelectorAll('.admin-tab');
+
+    tabs.forEach((tab) => {
+        tab.classList.toggle('active', tab.dataset.tab === resolvedTabKey);
+    });
+
+    ADMIN_TABS.forEach((key) => {
+        const isActive = key === resolvedTabKey;
+        document.getElementById(`${key}-section`)?.classList.toggle('hidden', !isActive);
+        document.getElementById(`${key}-section`)?.classList.toggle('active', isActive);
+    });
+
+    if (updateHistory) {
+        syncAdminPageState({
+            activeTab: resolvedTabKey,
+            editUserId: resolvedTabKey === 'users' ? getAdminPageState().editUserId : null
+        }, { replace: replaceHistory });
+    }
+
+    if (resolvedTabKey === 'posts') await loadPosts();
+    else if (resolvedTabKey === 'comments') await loadComments();
+    else if (resolvedTabKey === 'users') await loadUsers();
+    else if (resolvedTabKey === 'ads') await loadAds();
+    else if (resolvedTabKey === 'support') await loadSupportArticles();
+    else if (resolvedTabKey === 'inquiries') await loadInquiries();
+}
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAdminPage);
@@ -36,7 +95,12 @@ async function initAdminPage() {
         const nickname = document.getElementById('user-nickname');
         if (nickname) nickname.textContent = Auth.formatNicknameWithLevel(me);
 
-        await loadPosts();
+        const pageState = getAdminPageState();
+        await activateAdminTab(pageState.activeTab, { updateHistory: true, replaceHistory: true });
+
+        if (pageState.activeTab === 'users' && pageState.editUserId) {
+            await openUserEditModal(pageState.editUserId, { syncHistory: false });
+        }
     } catch (error) {
         alert('관리자 권한 확인에 실패했습니다.');
         window.location.href = '/';
@@ -49,22 +113,7 @@ function bindCommonEvents() {
     const tabs = document.querySelectorAll('.admin-tab');
     tabs.forEach(tab => {
         tab.addEventListener('click', async () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-
-            const tabKey = tab.dataset.tab;
-            ['posts', 'comments', 'users', 'ads', 'support', 'inquiries'].forEach((key) => {
-                const isActive = key === tabKey;
-                document.getElementById(`${key}-section`)?.classList.toggle('hidden', !isActive);
-                document.getElementById(`${key}-section`)?.classList.toggle('active', isActive);
-            });
-
-            if (tabKey === 'posts') await loadPosts();
-            else if (tabKey === 'comments') await loadComments();
-            else if (tabKey === 'users') await loadUsers();
-            else if (tabKey === 'ads') await loadAds();
-            else if (tabKey === 'support') await loadSupportArticles();
-            else if (tabKey === 'inquiries') await loadInquiries();
+            await activateAdminTab(tab.dataset.tab, { updateHistory: true, replaceHistory: false });
         });
     });
 
@@ -206,7 +255,7 @@ async function loadUsers() {
                     <td>${user.memberType === 'ADVERTISER' ? '광고 회원' : '일반 회원'}</td>
                     <td>
                         <div class="admin-user-actions">
-                            <button class="btn btn-sm btn-secondary" data-admin-action="edit-user" data-target-id="${user.id}">정보 수정</button>
+                            <a class="btn btn-sm btn-secondary" href="/admin?tab=users&editUserId=${user.id}" data-admin-action="edit-user" data-target-id="${user.id}">정보 수정</a>
                             <button class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="user" data-target-id="${user.id}">삭제</button>
                         </div>
                     </td>
@@ -294,7 +343,9 @@ function fillUserEditForm(user) {
     setAdminUserHelpMessage('');
 }
 
-async function openUserEditModal(userId) {
+async function openUserEditModal(userId, options = {}) {
+    const { syncHistory = true, replaceHistory = true } = options;
+
     try {
         const response = await APIClient.get(`/admin/users/${userId}`);
         const user = response.user;
@@ -304,7 +355,14 @@ async function openUserEditModal(userId) {
         document.getElementById('user-edit-modal-title').textContent = `회원 정보 수정 #${userId}`;
         fillUserEditForm(user);
         document.getElementById('user-edit-modal')?.classList.remove('hidden');
+
+        if (syncHistory) {
+            syncAdminPageState({ activeTab: 'users', editUserId: userId }, { replace: replaceHistory });
+        }
     } catch (error) {
+        if (syncHistory) {
+            syncAdminPageState({ activeTab: 'users', editUserId: null }, { replace: true });
+        }
         alert(error.message || '회원 정보를 불러오지 못했습니다.');
     }
 }
@@ -315,6 +373,7 @@ function closeUserEditModal() {
     document.getElementById('admin-user-password-match-result').textContent = '';
     setAdminUserHelpMessage('');
     document.getElementById('user-edit-modal')?.classList.add('hidden');
+    syncAdminPageState({ activeTab: 'users', editUserId: null }, { replace: true });
 }
 
 async function saveUserDetail() {
