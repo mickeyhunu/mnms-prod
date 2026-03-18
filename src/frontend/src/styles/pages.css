@@ -514,9 +514,12 @@
     flex-shrink: 0;
 }
 
-.profile-consent-inline span {
+.profile-consent-text {
     display: inline-block;
     line-height: 1.4;
+    white-space: nowrap;
+    word-break: keep-all;
+    writing-mode: horizontal-tb;
 }
 
 .profile-nickname-actions .help-text {

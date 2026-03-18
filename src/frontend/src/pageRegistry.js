@@ -89,11 +89,11 @@ const pageRegistry = {
                                 </label>
                                 <label>이메일
                                     <input type="email" id="admin-user-email-display" name="emailDisplay" readonly>
-                                    <span class="profile-consent-inline"><input type="checkbox" id="admin-user-email-consent" name="emailConsent"><span>이메일 수신 동의</span></span>
+                                    <span class="profile-consent-inline"><input type="checkbox" id="admin-user-email-consent" name="emailConsent"><span class="profile-consent-text">이메일 수신 동의</span></span>
                                 </label>
                                 <label>연락처
                                     <input type="text" id="admin-user-phone" name="phone" placeholder="010-0000-0000">
-                                    <span class="profile-consent-inline"><input type="checkbox" id="admin-user-sms-consent" name="smsConsent"><span>SMS 수신 동의</span></span>
+                                    <span class="profile-consent-inline"><input type="checkbox" id="admin-user-sms-consent" name="smsConsent"><span class="profile-consent-text">SMS 수신 동의</span></span>
                                 </label>
                                 <label>포인트
                                     <input type="number" id="admin-user-total-points" name="totalPoints" min="0" step="1">
@@ -996,11 +996,11 @@ const pageRegistry = {
               </label>
               <label>이메일
                 <input type="email" id="profile-email" name="email">
-                <span class="profile-consent-inline"><input type="checkbox" id="email-consent" name="emailConsent"><span>이메일 수신 동의</span></span>
+                <span class="profile-consent-inline"><input type="checkbox" id="email-consent" name="emailConsent"><span class="profile-consent-text">이메일 수신 동의</span></span>
               </label>
               <label>연락처
                 <input type="text" id="profile-phone" name="phone" placeholder="010-0000-0000">
-                <span class="profile-consent-inline"><input type="checkbox" id="sms-consent" name="smsConsent"><span>SMS 수신 동의</span></span>
+                <span class="profile-consent-inline"><input type="checkbox" id="sms-consent" name="smsConsent"><span class="profile-consent-text">SMS 수신 동의</span></span>
               </label>
             </div>
             <div class="profile-form-actions">
