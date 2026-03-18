@@ -263,7 +263,12 @@
 }
 
 @media (min-width: 1200px) {
-    .container {
+    .main-content {
+        --main-content-unified-max-width: 1400px;
+    }
+
+    .container,
+    .header-container {
         max-width: 1400px;
     }
 
