@@ -153,7 +153,7 @@ function bindCommonEvents() {
     }
 }
 
-function handleGlobalAdminClick(event) {
+async function handleGlobalAdminClick(event) {
     const supportNewButton = event.target.closest('#support-new-btn');
     if (supportNewButton) {
         event.preventDefault();
@@ -164,7 +164,7 @@ function handleGlobalAdminClick(event) {
 
     const actionButton = event.target.closest('[data-admin-action]');
     if (!actionButton) return;
-    handleAdminTableActionClick(event);
+    await handleAdminTableActionClick(event);
 }
 
 async function loadPosts() {
@@ -195,10 +195,11 @@ async function loadPosts() {
                     <td>${post.likeCount || 0}</td>
                     <td>${post.commentCount || 0}</td>
                     <td>
-                        <button class="btn btn-sm ${isHidden ? 'btn-outline' : 'btn-secondary'}" data-admin-action="toggle-hide" data-target-type="post" data-target-id="${post.id}" data-hidden-next="${isHidden ? 'false' : 'true'}">${isHidden ? '가리기 해제' : '가리기'}</button>
+                        <button class="btn btn-sm ${isHidden ? 'btn-outline' : 'btn-secondary'}" type="button" data-admin-action="toggle-hide" data-target-type="post" data-target-id="${post.id}" data-current-hidden="${isHidden ? 'true' : 'false'}">${isHidden ? '가리기 해제' : '가리기'}</button>
                     </td>
                 </tr>
             `;}).join('');
+            bindAdminHideToggleButtons(tbody);
         }
 
         showContent('posts');
@@ -233,9 +234,10 @@ async function loadComments() {
                     <td><a href="/post-detail?id=${comment.postId || comment.post_id}" target="_blank">게시글 보기</a></td>
                     <td>${sanitizeHTML(comment.authorNickname || `사용자#${comment.user_id || comment.userId}`)}</td>
                     <td>${formatDate(comment.createdAt || comment.created_at)}</td>
-                    <td><button class="btn btn-sm ${isHidden ? 'btn-outline' : 'btn-secondary'}" data-admin-action="toggle-hide" data-target-type="comment" data-target-id="${comment.id}" data-hidden-next="${isHidden ? 'false' : 'true'}">${isHidden ? '가리기 해제' : '가리기'}</button></td>
+                    <td><button class="btn btn-sm ${isHidden ? 'btn-outline' : 'btn-secondary'}" type="button" data-admin-action="toggle-hide" data-target-type="comment" data-target-id="${comment.id}" data-current-hidden="${isHidden ? 'true' : 'false'}">${isHidden ? '가리기 해제' : '가리기'}</button></td>
                 </tr>
             `;}).join('');
+            bindAdminHideToggleButtons(tbody);
         }
 
         showContent('comments');
@@ -676,13 +678,12 @@ async function handleAdminTableActionClick(event) {
     const targetType = actionElement.dataset.targetType;
     const sourceType = actionElement.dataset.sourceType || 'SUPPORT';
 
-    if ((action === 'delete' || action === 'toggle-hide') && Number.isInteger(targetId) && targetType) {
+    if (action === 'delete' && Number.isInteger(targetId) && targetType) {
         openAdminActionModal({
             action,
             type: targetType,
             id: targetId,
-            sourceType,
-            isHidden: actionElement.dataset.hiddenNext === 'false'
+            sourceType
         });
         return;
     }
@@ -843,6 +844,34 @@ async function saveInquiryAnswer() {
     }
 }
 
+
+function bindAdminHideToggleButtons(container) {
+    if (!container) return;
+
+    const buttons = container.querySelectorAll('[data-admin-action="toggle-hide"]');
+    buttons.forEach((button) => {
+        button.onclick = async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const targetId = Number.parseInt(button.dataset.targetId || '', 10);
+            const targetType = button.dataset.targetType;
+            const isHidden = button.dataset.currentHidden === 'true';
+
+            if (!Number.isInteger(targetId) || !targetType) {
+                alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
+                return;
+            }
+
+            await toggleAdminHiddenState(button, {
+                type: targetType,
+                id: targetId,
+                isHidden
+            });
+        };
+    });
+}
+
 function renderAdminPostFlags(post) {
     const flags = [];
     if (isHiddenPost(post)) {
@@ -923,28 +952,15 @@ function openAdminActionModal(target) {
     const message = document.getElementById('delete-modal-message');
     const helpText = modal?.querySelector('.text-muted.text-sm');
 
-    if (target.action === 'toggle-hide') {
-        const isRestore = target.isHidden;
-        if (target.type === 'post') {
-            if (title) title.textContent = isRestore ? '게시글 가리기 해제' : '게시글 가리기';
-            if (message) message.textContent = isRestore ? '이 게시글의 가리기 설정을 해제하시겠습니까?' : '이 게시글을 가리시겠습니까?';
-        } else {
-            if (title) title.textContent = isRestore ? '댓글 가리기 해제' : '댓글 가리기';
-            if (message) message.textContent = isRestore ? '이 댓글의 가리기 설정을 해제하시겠습니까?' : '이 댓글을 가리시겠습니까?';
-        }
-        if (helpText) helpText.textContent = isRestore ? '해제 후 다시 일반 사용자에게 내용이 노출됩니다.' : '삭제하지 않고 상세 화면에서 제한 안내 문구로 대체됩니다.';
-    } else if (target.type === 'post') {
+    if (target.type === 'post') {
         if (title) title.textContent = '게시글 삭제';
         if (message) message.textContent = '이 게시글을 삭제하시겠습니까?';
-        if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
     } else if (target.type === 'comment') {
         if (title) title.textContent = '댓글 삭제';
         if (message) message.textContent = '이 댓글을 삭제하시겠습니까?';
-        if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
     } else if (target.type === 'user') {
         if (title) title.textContent = '회원 삭제';
         if (message) message.textContent = '이 회원을 삭제하시겠습니까?';
-        if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
     } else if (target.type === 'ad') {
         if (title) title.textContent = '광고 삭제';
         if (message) message.textContent = '이 광고를 삭제하시겠습니까?';
@@ -955,6 +971,7 @@ function openAdminActionModal(target) {
         if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
     }
 
+    if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
     modal?.classList.remove('hidden');
 }
 
@@ -963,15 +980,30 @@ function closeDeleteModal() {
     document.getElementById('delete-modal')?.classList.add('hidden');
 }
 
+async function toggleAdminHiddenState(actionElement, target) {
+    const nextHidden = !target.isHidden;
+    const originalText = actionElement.textContent;
+    const originalDisabled = actionElement.disabled;
+
+    actionElement.disabled = true;
+    actionElement.textContent = nextHidden ? '처리 중...' : '해제 중...';
+
+    try {
+        await APIClient.put(`/admin/${target.type === 'post' ? 'posts' : 'comments'}/${target.id}/hide`, { isHidden: nextHidden });
+        if (target.type === 'post') await loadPosts();
+        else await loadComments();
+    } catch (error) {
+        actionElement.disabled = originalDisabled;
+        actionElement.textContent = originalText;
+        alert(error.message || '가리기 설정 변경에 실패했습니다.');
+    }
+}
+
 async function confirmDelete() {
     if (!adminActionTarget) return;
 
     try {
-        if (adminActionTarget.action === 'toggle-hide') {
-            await APIClient.put(`/admin/${adminActionTarget.type === 'post' ? 'posts' : 'comments'}/${adminActionTarget.id}/hide`, { isHidden: !adminActionTarget.isHidden });
-            if (adminActionTarget.type === 'post') await loadPosts();
-            else await loadComments();
-        } else if (adminActionTarget.type === 'post') {
+        if (adminActionTarget.type === 'post') {
             await APIClient.delete(`/admin/posts/${adminActionTarget.id}`);
             await loadPosts();
         } else if (adminActionTarget.type === 'comment') {
