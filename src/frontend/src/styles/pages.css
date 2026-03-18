@@ -131,6 +131,63 @@
     color: #6c757d;
 }
 
+.admin-page-section-header {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 24px 28px;
+    text-align: left;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid #d9e2f2;
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.admin-page-section-header-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-page-back-link {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    justify-content: center;
+    background: #eff4ff;
+    color: #2563eb;
+}
+
+.admin-page-back-link:hover {
+    background: #dbeafe;
+}
+
+.admin-page-back-link svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.admin-page-section-header h1 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 32px;
+    font-weight: 800;
+}
+
+.admin-page-section-header p {
+    margin: 0;
+    color: #475569;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
 
 .admin-support-toolbar {
     display: flex;
