@@ -98,9 +98,16 @@ function sanitizePostForViewer(post) {
     boardType: parseBoardType(post.boardType),
     isNotice: Boolean(post.isNotice),
     isPinned: Boolean(post.isPinned),
+    isHidden: Boolean(post.isHidden),
     noticeType: parseNoticeType(post.noticeType),
     noticeTargetBoards: Array.isArray(post.noticeTargetBoards) ? post.noticeTargetBoards.map((board) => parseBoardType(board)) : []
   };
+
+  if (normalized.isHidden) {
+    normalized.content = '관리자에 의해 제한된 게시글입니다.';
+    normalized.imageUrls = [];
+    normalized.imageUrl = null;
+  }
 
   if (normalized.boardType === BOARD_TYPES.ANON) {
     normalized.authorNickname = '익명';
@@ -113,12 +120,17 @@ function sanitizeCommentForViewer(comment, post, currentUser) {
   const normalized = {
     ...comment,
     isSecret: Boolean(comment.isSecret),
+    isHidden: Boolean(comment.isHidden),
     isDeleted: Boolean(comment.isDeleted)
   };
 
   normalized.canReply = canReplyToComment(normalized, post, currentUser);
 
   const isAdminViewer = currentUser?.role === 'ADMIN';
+
+  if (post.board_type === BOARD_TYPES.ANON || post.boardType === BOARD_TYPES.ANON) {
+    normalized.authorNickname = '익명';
+  }
 
   if (normalized.isDeleted && !isAdminViewer) {
     return {
@@ -128,8 +140,11 @@ function sanitizeCommentForViewer(comment, post, currentUser) {
     };
   }
 
-  if (post.board_type === BOARD_TYPES.ANON || post.boardType === BOARD_TYPES.ANON) {
-    normalized.authorNickname = '익명';
+  if (normalized.isHidden) {
+    return {
+      ...normalized,
+      content: '관리자에 의해 제한된 댓글입니다.'
+    };
   }
 
   if (canViewSecretComment(normalized, post, currentUser)) {
@@ -211,6 +226,7 @@ async function toggleLike(req, res, next) {
 
     const post = await postModel.findPostById(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
+    if (post.is_hidden) return res.status(403).json({ message: '관리자에 의해 제한된 게시글은 추천할 수 없습니다.' });
 
     const result = await postModel.togglePostLike(postId, req.user.id);
 
@@ -395,6 +411,7 @@ async function createComment(req, res, next) {
 
     const post = await postModel.findPostById(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
+    if (post.is_hidden) return res.status(403).json({ message: '관리자에 의해 제한된 게시글에는 댓글을 작성할 수 없습니다.' });
 
     const { content, parentId: rawParentId, isSecret } = req.body;
     if (!content) return res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
@@ -456,6 +473,10 @@ async function updateComment(req, res, next) {
 
     if (comment.is_deleted) {
       return res.status(400).json({ message: '삭제된 댓글은 수정할 수 없습니다.' });
+    }
+
+    if (comment.is_hidden) {
+      return res.status(400).json({ message: '관리자에 의해 제한된 댓글은 수정할 수 없습니다.' });
     }
 
     const content = (req.body.content || '').trim();

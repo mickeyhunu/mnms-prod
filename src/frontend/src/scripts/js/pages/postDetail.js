@@ -264,7 +264,9 @@ async function loadPost() {
         if (commentsSection) commentsSection.classList.remove('hidden');
 
         const commentForm = document.getElementById('comment-form');
-        if (commentForm) commentForm.classList.remove('hidden');
+        if (commentForm) {
+            commentForm.classList.toggle('hidden', Boolean(normalizedPost.isHidden));
+        }
 
         loadComments();
 
@@ -292,6 +294,7 @@ function normalizePostDetailResponse(post) {
         imageUrls: normalizedImageUrls,
         authorLevel: Number.isFinite(authorLevel) && authorLevel > 0 ? authorLevel : null,
         isAuthor: Boolean(post.isAuthor),
+        isHidden: Boolean(post.isHidden),
         isLiked: Boolean(post.isLiked)
     };
 }
@@ -338,6 +341,7 @@ function renderPostDetail(post) {
     const boardType = String(post.boardType || '').toUpperCase();
     currentPostBoardType = boardType;
     const isCurrentAuthor = post.isAuthor || isCurrentUserPostAuthor(post);
+    const isHiddenPost = Boolean(post.isHidden);
     const authorEmoji = resolveLevelEmoji(post.authorLevel);
     const postAuthorLabel = boardType === 'ANON'
         ? `익명${isCurrentAuthor ? ' (본인)' : ''}${authorEmoji ? ` ${authorEmoji}` : ''}`
@@ -346,6 +350,7 @@ function renderPostDetail(post) {
     if (titleElement) titleElement.textContent = `[${boardTagMap[boardType] || '자유'}] ${post.title || ''}`;
     if (contentElement) {
         contentElement.innerHTML = (post.content || '').replace(/\n/g, '<br>');
+        contentElement.classList.toggle('admin-restricted-content', isHiddenPost);
     }
     const boardNameEl = document.getElementById('post-board-name');
     if (boardNameEl) boardNameEl.textContent = boardNameMap[boardType] || '게시판';
@@ -371,7 +376,13 @@ function renderPostDetail(post) {
     const deleteBtn = document.getElementById('delete-btn');
     const reportBtn = document.getElementById('report-btn');
     const isGuestPost = !post.authorId && !post.userId;
-    if (isCurrentAuthor || isGuestPost) {
+    if (isHiddenPost) {
+        if (messageBtn) messageBtn.style.display = 'none';
+        if (ownerActions) ownerActions.classList.add('hidden');
+        if (editBtn) editBtn.classList.add('hidden');
+        if (deleteBtn) deleteBtn.classList.add('hidden');
+        if (reportBtn) reportBtn.classList.add('hidden');
+    } else if (isCurrentAuthor || isGuestPost) {
         if (messageBtn) messageBtn.style.display = 'none';
         if (ownerActions) ownerActions.classList.remove('hidden');
         if (editBtn) editBtn.classList.remove('hidden');
@@ -389,8 +400,10 @@ function renderPostDetail(post) {
 
     renderAdjacentPosts(post.previousPost, post.nextPost);
 
-    if (post.imageUrls && post.imageUrls.length > 0) {
+    if (post.imageUrls && post.imageUrls.length > 0 && !isHiddenPost) {
         renderPostImages(post.imageUrls);
+    } else {
+        renderPostImages([]);
     }
 
     const likeBtn = document.getElementById('like-btn');
@@ -399,6 +412,8 @@ function renderPostDetail(post) {
     
     if (likeBtn && likeIcon && likeCount) {
         likeBtn.className = post.isLiked ? 'like-btn liked' : 'like-btn';
+        likeBtn.classList.toggle('is-disabled', isHiddenPost);
+        likeBtn.disabled = isHiddenPost;
         likeIcon.textContent = post.isLiked ? '❤️' : '🤍';
         likeCount.textContent = post.likeCount;
     }
@@ -482,7 +497,13 @@ function renderPostImages(imageUrls) {
     const imagesContainer = document.getElementById('post-images');
     const imagesGrid = document.getElementById('images-grid');
 
-    if (!imagesContainer || !imagesGrid || !imageUrls || imageUrls.length === 0) {
+    if (!imagesContainer || !imagesGrid) {
+        return;
+    }
+
+    if (!imageUrls || imageUrls.length === 0) {
+        imagesGrid.innerHTML = '';
+        imagesContainer.classList.add('hidden');
         return;
     }
 
@@ -593,6 +614,7 @@ function createCommentItem(comment, depth = 0) {
                           comment.role === 'ADMIN';
     const isSecretComment = Boolean(comment.isSecret);
     const isDeletedComment = Boolean(comment.isDeleted);
+    const isHiddenComment = Boolean(comment.isHidden);
     const isAnonymousComment = currentPostBoardType === 'ANON' || String(comment.authorNickname || '').trim() === '익명';
     const showOwnBadge = isAuthor && (isAnonymousComment || isSecretComment);
     const authorName = sanitizeHTML(comment.authorNickname || '익명');
@@ -600,10 +622,10 @@ function createCommentItem(comment, depth = 0) {
     const commentAuthorEmoji = resolveLevelEmoji(commentAuthorLevel);
     const authorDisplayName = `${authorName}${commentAuthorEmoji ? ` ${commentAuthorEmoji}` : ''}`;
     const canReplyByServer = comment.canReply !== false;
-    const canReply = Auth.isAuthenticated() && depth < 3 && !isDeletedComment && canReplyByServer;
+    const canReply = Auth.isAuthenticated() && depth < 3 && !isDeletedComment && !isHiddenComment && canReplyByServer;
     const canGuestEdit = !Auth.isAuthenticated() && !comment.userId;
     const isOtherUser = Auth.isAuthenticated() && currentUser && !isAuthor;
-    const hasActionMenu = !isDeletedComment && (isAuthor || canGuestEdit || isOtherUser);
+    const hasActionMenu = !isDeletedComment && !isHiddenComment && (isAuthor || canGuestEdit || isOtherUser);
     const replyMarker = depth > 0 ? '<span class="comment-reply-marker" aria-hidden="true"></span>' : '';
     
     
@@ -617,6 +639,7 @@ function createCommentItem(comment, depth = 0) {
                         <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${authorDisplayName}</span>
                         ${showOwnBadge ? '<span class="own-content-badge">본인</span>' : ''}
                         ${isSecretComment ? '<span style="margin-left:6px;font-size:12px;color:#7a5;">🔒 비밀댓글</span>' : ''}
+                        ${isHiddenComment ? '<span style="margin-left:6px;font-size:12px;color:#9a6700;">관리자 제한</span>' : ''}
                         ${isDeletedComment ? '<span style="margin-left:6px;font-size:12px;color:#999;">삭제됨</span>' : ''}
                     </div>
                     <div class="comment-meta-actions">
@@ -634,7 +657,7 @@ function createCommentItem(comment, depth = 0) {
                         ` : ''}
                     </div>
                 </div>
-                <div class="comment-content ${isAdminComment ? 'admin-comment-content' : ''}" id="comment-content-${comment.id}">${sanitizeHTML(comment.content).replace(/\n/g, '<br>')}</div>
+                <div class="comment-content ${isAdminComment ? 'admin-comment-content' : ''} ${isHiddenComment ? 'admin-restricted-content' : ''}" id="comment-content-${comment.id}">${sanitizeHTML(comment.content).replace(/\n/g, '<br>')}</div>
                 <div class="comment-footer">
                     <span class="comment-date">${formatDateTime(comment.createdAt)}</span>
                     ${canReply ? `<button class="comment-reply-link" onclick="showReplyForm(${comment.id}, '${sanitizeHTML(comment.authorNickname)}')">답글쓰기</button>` : ''}

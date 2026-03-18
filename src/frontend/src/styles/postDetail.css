@@ -205,6 +205,16 @@
     line-height: 1.7;
 }
 
+
+.admin-restricted-content {
+    padding: 16px 18px;
+    border: 1px solid #f1d58a;
+    background: #fff8e1;
+    color: #7a5600;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
 .media {
     padding: 0 20px 20px;
 }
@@ -272,6 +282,11 @@
 
 .like-btn.liked {
     color: #eb4c5f;
+}
+
+.like-btn.is-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 .adjacent-post-navigation {
