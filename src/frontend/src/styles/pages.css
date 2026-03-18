@@ -245,6 +245,15 @@
     background-color: #ffe3e6;
 }
 
+.admin-comment-flag.hidden {
+    color: #9a6700;
+    background-color: #fff2cc;
+}
+
+.admin-comment-row-hidden td {
+    background: linear-gradient(0deg, #fffbea, #fffbea);
+}
+
 .admin-comment-row-secret td {
     background: linear-gradient(0deg, #faf8ff, #faf8ff);
 }
