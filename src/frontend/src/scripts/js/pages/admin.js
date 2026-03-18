@@ -1,7 +1,7 @@
 /**
  * 파일 역할: admin 페이지의 이벤트/데이터 흐름을 초기화하는 페이지 스크립트 파일.
  */
-let deleteTarget = null;
+let adminActionTarget = null;
 let supportEditTarget = null;
 let currentSupportCategory = 'NOTICE';
 let currentInquiryStatus = '';
@@ -179,17 +179,26 @@ async function loadPosts() {
         if (!posts.length) {
             tbody.innerHTML = '<tr><td colspan="7">게시글이 없습니다.</td></tr>';
         } else {
-            tbody.innerHTML = posts.map(post => `
-                <tr>
+            tbody.innerHTML = posts.map(post => {
+                const isHidden = isHiddenPost(post);
+                return `
+                <tr class="${getAdminPostRowClass(post)}">
                     <td>${post.id}</td>
-                    <td><a href="/post-detail?id=${post.id}" target="_blank">${sanitizeHTML(post.title || '')}</a></td>
+                    <td>
+                        <div class="admin-comment-cell">
+                            <div class="admin-comment-flags">${renderAdminPostFlags(post)}</div>
+                            <a href="/post-detail?id=${post.id}" target="_blank">${sanitizeHTML(post.title || '')}</a>
+                        </div>
+                    </td>
                     <td>${sanitizeHTML(post.authorNickname || `사용자#${post.user_id || post.userId}`)}</td>
                     <td>${formatDate(post.createdAt || post.created_at)}</td>
                     <td>${post.likeCount || 0}</td>
                     <td>${post.commentCount || 0}</td>
-                    <td><button class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="post" data-target-id="${post.id}">삭제</button></td>
+                    <td>
+                        <button class="btn btn-sm ${isHidden ? 'btn-outline' : 'btn-secondary'}" data-admin-action="toggle-hide" data-target-type="post" data-target-id="${post.id}" data-hidden-next="${isHidden ? 'false' : 'true'}">${isHidden ? '가리기 해제' : '가리기'}</button>
+                    </td>
                 </tr>
-            `).join('');
+            `;}).join('');
         }
 
         showContent('posts');
@@ -210,7 +219,9 @@ async function loadComments() {
         if (!comments.length) {
             tbody.innerHTML = '<tr><td colspan="6">댓글이 없습니다.</td></tr>';
         } else {
-            tbody.innerHTML = comments.map(comment => `
+            tbody.innerHTML = comments.map(comment => {
+                const isHidden = isHiddenComment(comment);
+                return `
                 <tr class="${getAdminCommentRowClass(comment)}">
                     <td>${comment.id}</td>
                     <td>
@@ -222,9 +233,9 @@ async function loadComments() {
                     <td><a href="/post-detail?id=${comment.postId || comment.post_id}" target="_blank">게시글 보기</a></td>
                     <td>${sanitizeHTML(comment.authorNickname || `사용자#${comment.user_id || comment.userId}`)}</td>
                     <td>${formatDate(comment.createdAt || comment.created_at)}</td>
-                    <td><button class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="comment" data-target-id="${comment.id}">삭제</button></td>
+                    <td><button class="btn btn-sm ${isHidden ? 'btn-outline' : 'btn-secondary'}" data-admin-action="toggle-hide" data-target-type="comment" data-target-id="${comment.id}" data-hidden-next="${isHidden ? 'false' : 'true'}">${isHidden ? '가리기 해제' : '가리기'}</button></td>
                 </tr>
-            `).join('');
+            `;}).join('');
         }
 
         showContent('comments');
@@ -665,8 +676,14 @@ async function handleAdminTableActionClick(event) {
     const targetType = actionElement.dataset.targetType;
     const sourceType = actionElement.dataset.sourceType || 'SUPPORT';
 
-    if (action === 'delete' && Number.isInteger(targetId) && targetType) {
-        openDeleteModal(targetType, targetId, sourceType);
+    if ((action === 'delete' || action === 'toggle-hide') && Number.isInteger(targetId) && targetType) {
+        openAdminActionModal({
+            action,
+            type: targetType,
+            id: targetId,
+            sourceType,
+            isHidden: actionElement.dataset.hiddenNext === 'false'
+        });
         return;
     }
 
@@ -692,7 +709,7 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
-    if (['delete', 'edit-ad', 'edit-support', 'edit-user', 'answer-inquiry'].includes(action) && !Number.isInteger(targetId)) {
+    if (['delete', 'toggle-hide', 'edit-ad', 'edit-support', 'edit-user', 'answer-inquiry'].includes(action) && !Number.isInteger(targetId)) {
         alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
     }
 }
@@ -826,8 +843,23 @@ async function saveInquiryAnswer() {
     }
 }
 
+function renderAdminPostFlags(post) {
+    const flags = [];
+    if (isHiddenPost(post)) {
+        flags.push('<span class="admin-comment-flag hidden">가려짐</span>');
+    }
+    return flags.join('');
+}
+
+function getAdminPostRowClass(post) {
+    return isHiddenPost(post) ? 'admin-comment-row-hidden' : '';
+}
+
 function renderAdminCommentFlags(comment) {
     const flags = [];
+    if (isHiddenComment(comment)) {
+        flags.push('<span class="admin-comment-flag hidden">가려짐</span>');
+    }
     if (isDeletedComment(comment)) {
         flags.push('<span class="admin-comment-flag deleted">삭제됨</span>');
     }
@@ -839,9 +871,18 @@ function renderAdminCommentFlags(comment) {
 
 function getAdminCommentRowClass(comment) {
     const classes = [];
+    if (isHiddenComment(comment)) classes.push('admin-comment-row-hidden');
     if (isDeletedComment(comment)) classes.push('admin-comment-row-deleted');
     if (isSecretComment(comment)) classes.push('admin-comment-row-secret');
     return classes.join(' ');
+}
+
+function isHiddenPost(post) {
+    return Boolean(post.isHidden || post.is_hidden);
+}
+
+function isHiddenComment(comment) {
+    return Boolean(comment.isHidden || comment.is_hidden);
 }
 
 function isDeletedComment(comment) {
@@ -875,59 +916,80 @@ function showError(prefix, message) {
     if (errorBox) errorBox.classList.remove('hidden');
 }
 
-function openDeleteModal(type, id, sourceType = 'SUPPORT') {
-    deleteTarget = { type, id, sourceType };
+function openAdminActionModal(target) {
+    adminActionTarget = target;
     const modal = document.getElementById('delete-modal');
     const title = document.getElementById('delete-modal-title');
     const message = document.getElementById('delete-modal-message');
+    const helpText = modal?.querySelector('.text-muted.text-sm');
 
-    if (type === 'post') {
+    if (target.action === 'toggle-hide') {
+        const isRestore = target.isHidden;
+        if (target.type === 'post') {
+            if (title) title.textContent = isRestore ? '게시글 가리기 해제' : '게시글 가리기';
+            if (message) message.textContent = isRestore ? '이 게시글의 가리기 설정을 해제하시겠습니까?' : '이 게시글을 가리시겠습니까?';
+        } else {
+            if (title) title.textContent = isRestore ? '댓글 가리기 해제' : '댓글 가리기';
+            if (message) message.textContent = isRestore ? '이 댓글의 가리기 설정을 해제하시겠습니까?' : '이 댓글을 가리시겠습니까?';
+        }
+        if (helpText) helpText.textContent = isRestore ? '해제 후 다시 일반 사용자에게 내용이 노출됩니다.' : '삭제하지 않고 상세 화면에서 제한 안내 문구로 대체됩니다.';
+    } else if (target.type === 'post') {
         if (title) title.textContent = '게시글 삭제';
         if (message) message.textContent = '이 게시글을 삭제하시겠습니까?';
-    } else if (type === 'comment') {
+        if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
+    } else if (target.type === 'comment') {
         if (title) title.textContent = '댓글 삭제';
         if (message) message.textContent = '이 댓글을 삭제하시겠습니까?';
-    } else if (type === 'user') {
+        if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
+    } else if (target.type === 'user') {
         if (title) title.textContent = '회원 삭제';
         if (message) message.textContent = '이 회원을 삭제하시겠습니까?';
-    } else if (type === 'ad') {
+        if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
+    } else if (target.type === 'ad') {
         if (title) title.textContent = '광고 삭제';
         if (message) message.textContent = '이 광고를 삭제하시겠습니까?';
+        if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
     } else {
         if (title) title.textContent = '공지/FAQ 삭제';
         if (message) message.textContent = '이 글을 삭제하시겠습니까?';
+        if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
     }
 
     modal?.classList.remove('hidden');
 }
 
 function closeDeleteModal() {
-    deleteTarget = null;
+    adminActionTarget = null;
     document.getElementById('delete-modal')?.classList.add('hidden');
 }
 
 async function confirmDelete() {
-    if (!deleteTarget) return;
+    if (!adminActionTarget) return;
 
     try {
-        if (deleteTarget.type === 'post') {
-            await APIClient.delete(`/admin/posts/${deleteTarget.id}`);
+        if (adminActionTarget.action === 'toggle-hide') {
+            await APIClient.put(`/admin/${adminActionTarget.type === 'post' ? 'posts' : 'comments'}/${adminActionTarget.id}/hide`, { isHidden: !adminActionTarget.isHidden });
+            if (adminActionTarget.type === 'post') await loadPosts();
+            else await loadComments();
+        } else if (adminActionTarget.type === 'post') {
+            await APIClient.delete(`/admin/posts/${adminActionTarget.id}`);
             await loadPosts();
-        } else if (deleteTarget.type === 'comment') {
-            await APIClient.delete(`/admin/comments/${deleteTarget.id}`);
+        } else if (adminActionTarget.type === 'comment') {
+            await APIClient.delete(`/admin/comments/${adminActionTarget.id}`);
             await loadComments();
-        } else if (deleteTarget.type === 'user') {
-            await APIClient.delete(`/admin/users/${deleteTarget.id}`);
+        } else if (adminActionTarget.type === 'user') {
+            await APIClient.delete(`/admin/users/${adminActionTarget.id}`);
             await loadUsers();
-        } else if (deleteTarget.type === 'ad') {
-            await APIClient.delete(`/admin/ads/${deleteTarget.id}`);
+        } else if (adminActionTarget.type === 'ad') {
+            await APIClient.delete(`/admin/ads/${adminActionTarget.id}`);
             await loadAds();
         } else {
-            await APIClient.delete(`/admin/support/${deleteTarget.id}?sourceType=${encodeURIComponent(deleteTarget.sourceType || 'SUPPORT')}`);
+            await APIClient.delete(`/admin/support/${adminActionTarget.id}?sourceType=${encodeURIComponent(adminActionTarget.sourceType || 'SUPPORT')}`);
             await loadSupportArticles();
         }
         closeDeleteModal();
     } catch (error) {
-        alert(error.message || '삭제에 실패했습니다.');
+        const fallbackMessage = adminActionTarget.action === 'toggle-hide' ? '가리기 설정 변경에 실패했습니다.' : '삭제에 실패했습니다.';
+        alert(error.message || fallbackMessage);
     }
 }
