@@ -758,7 +758,7 @@ const pageRegistry = {
         <div class="container live-page">
             <header class="community-section-header">
                 <div class="community-header-left">
-                    <span class="community-board-name">LIVE</span>
+                    <span class="community-board-name community-board-name--live"><span class="live-status-dot" aria-hidden="true"></span><span>LIVE</span></span>
                 </div>
             </header>
 
