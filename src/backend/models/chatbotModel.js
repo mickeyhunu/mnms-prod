@@ -20,7 +20,7 @@ function normalizeLimit(limit) {
 }
 
 async function listTableRows(tableName, limit = 50) {
-  const pool = getChatbotPool();
+  const pool = await getChatbotPool();
   const safeTableName = ensureTableName(tableName);
   const rowLimit = normalizeLimit(limit);
 
