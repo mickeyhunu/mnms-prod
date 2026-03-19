@@ -14,7 +14,7 @@ function stripWrappingQuotes(value) {
 }
 
 function loadEnvFile(filePath = path.join(process.cwd(), '.env')) {
-  if (!fs.existsSync(filePath)) return;
+  if (!fs.existsSync(filePath)) return false;
 
   const raw = fs.readFileSync(filePath, 'utf8');
   raw.split(/\r?\n/).forEach((line) => {
@@ -30,8 +30,24 @@ function loadEnvFile(filePath = path.join(process.cwd(), '.env')) {
     const value = stripWrappingQuotes(trimmed.slice(separatorIndex + 1));
     process.env[key] = value;
   });
+
+  return true;
 }
 
-loadEnvFile();
+function loadDefaultEnvFiles() {
+  const candidates = [
+    path.join(process.cwd(), '.env'),
+    path.resolve(__dirname, '..', '.env')
+  ];
 
-module.exports = { loadEnvFile };
+  candidates.forEach((candidatePath) => {
+    loadEnvFile(candidatePath);
+  });
+}
+
+loadDefaultEnvFiles();
+
+module.exports = {
+  loadEnvFile,
+  loadDefaultEnvFiles
+};
