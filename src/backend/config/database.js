@@ -23,8 +23,53 @@ const chatbotDbConfig = {
   charset: 'utf8mb4'
 };
 
+const CHATBOT_DATABASE_FALLBACKS = ['chatBot_DB', 'chatbot_db', 'chatbotdb'];
+
 let pool;
 let chatbotPool;
+let chatbotPoolPromise;
+let resolvedChatbotDbConfig;
+
+function getChatbotDatabaseCandidates() {
+  return [...new Set([
+    chatbotDbConfig.database,
+    process.env.DB_NAME,
+    process.env.CHATBOT_MYSQL_DATABASE,
+    ...CHATBOT_DATABASE_FALLBACKS
+  ].map((value) => String(value || '').trim()).filter(Boolean))];
+}
+
+async function resolveChatbotDbConfig() {
+  if (resolvedChatbotDbConfig) return resolvedChatbotDbConfig;
+
+  const bootstrap = await mysql.createConnection({
+    host: chatbotDbConfig.host,
+    port: chatbotDbConfig.port,
+    user: chatbotDbConfig.user,
+    password: chatbotDbConfig.password,
+    charset: chatbotDbConfig.charset
+  });
+
+  try {
+    const [rows] = await bootstrap.query('SHOW DATABASES');
+    const databaseNames = rows.map((row) => String(Object.values(row)[0] || '').trim()).filter(Boolean);
+    const normalizedMap = new Map(databaseNames.map((databaseName) => [databaseName.toLowerCase(), databaseName]));
+    const candidates = getChatbotDatabaseCandidates();
+
+    const matchedDatabase = candidates.find((candidate) => databaseNames.includes(candidate))
+      || candidates.map((candidate) => normalizedMap.get(candidate.toLowerCase())).find(Boolean)
+      || chatbotDbConfig.database;
+
+    resolvedChatbotDbConfig = {
+      ...chatbotDbConfig,
+      database: matchedDatabase
+    };
+
+    return resolvedChatbotDbConfig;
+  } finally {
+    await bootstrap.end();
+  }
+}
 
 async function initDatabase() {
   const bootstrap = await mysql.createConnection({
@@ -531,11 +576,22 @@ function getPool() {
   return pool;
 }
 
-function getChatbotPool() {
-  if (!chatbotPool) {
-    chatbotPool = mysql.createPool(chatbotDbConfig);
+async function getChatbotPool() {
+  if (chatbotPool) return chatbotPool;
+
+  if (!chatbotPoolPromise) {
+    chatbotPoolPromise = resolveChatbotDbConfig()
+      .then((config) => {
+        chatbotPool = mysql.createPool(config);
+        return chatbotPool;
+      })
+      .catch((error) => {
+        chatbotPoolPromise = null;
+        throw error;
+      });
   }
-  return chatbotPool;
+
+  return chatbotPoolPromise;
 }
 
 module.exports = {

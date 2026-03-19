@@ -8,6 +8,10 @@ function handleLiveError(error, next, res) {
     return res.status(404).json({ message: 'LIVE 페이지 조회 대상 테이블을 찾을 수 없습니다.' });
   }
 
+  if (error.code === 'ER_BAD_DB_ERROR') {
+    return res.status(503).json({ message: 'LIVE 전용 데이터베이스를 찾을 수 없습니다.', detail: error.message });
+  }
+
   if (['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', 'EHOSTUNREACH', 'ENETUNREACH'].includes(error.code)) {
     return res.status(503).json({ message: 'LIVE 전용 데이터베이스에 연결할 수 없습니다.', detail: error.message });
   }

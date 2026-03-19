@@ -43,14 +43,14 @@ function findColumn(columns, candidates) {
 }
 
 async function getTableColumns(tableName) {
-  const pool = getChatbotPool();
+  const pool = await getChatbotPool();
   const safeTableName = ensureTableName(tableName);
   const [rows] = await pool.query(`SHOW COLUMNS FROM \`${safeTableName}\``);
   return rows.map((row) => row.Field);
 }
 
 async function listStoreNames() {
-  const pool = getChatbotPool();
+  const pool = await getChatbotPool();
   const tableName = 'INFO_STORE';
   const columns = await getTableColumns(tableName);
   const storeNameColumn = findColumn(columns, STORE_NAME_CANDIDATES);
@@ -71,7 +71,7 @@ async function listStoreNames() {
 }
 
 async function countRows(tableName, storeName = '') {
-  const pool = getChatbotPool();
+  const pool = await getChatbotPool();
   const safeTableName = ensureTableName(tableName);
   const columns = await getTableColumns(safeTableName);
   const storeColumn = findColumn(columns, STORE_FILTER_CANDIDATES);
@@ -88,7 +88,7 @@ async function countRows(tableName, storeName = '') {
 }
 
 async function listLiveEntries(categoryKey, { storeName = '', limit = 50 } = {}) {
-  const pool = getChatbotPool();
+  const pool = await getChatbotPool();
   const category = getCategoryConfig(categoryKey);
   const safeTableName = ensureTableName(category.tableName);
   const rowLimit = normalizeLimit(limit);

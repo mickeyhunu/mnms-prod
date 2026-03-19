@@ -762,6 +762,13 @@ const pageRegistry = {
                 </div>
             </header>
 
+            <section class="live-store-name-list" aria-labelledby="live-store-name-list-title">
+                <div class="live-store-name-list__header">
+                    <h2 class="live-store-name-list__title" id="live-store-name-list-title">매장명</h2>
+                </div>
+                <div class="live-store-name-list__items" id="live-store-name-list" aria-live="polite"></div>
+            </section>
+
             <div class="container site-subheader__container">
                 <div class="site-subheader__top-row">
                     <div class="site-subheader__filters">
