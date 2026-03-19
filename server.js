@@ -5,6 +5,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
+require('./src/backend/config/loadEnv');
+
 const { initDatabase, dbConfig } = require('./src/backend/config/database');
 const authRoutes = require('./src/backend/routes/authRoutes');
 const postRoutes = require('./src/backend/routes/postRoutes');
@@ -12,6 +14,7 @@ const userRoutes = require('./src/backend/routes/userRoutes');
 const adminRoutes = require('./src/backend/routes/adminRoutes');
 const supportRoutes = require('./src/backend/routes/supportRoutes');
 const chatbotRoutes = require('./src/backend/routes/chatbotRoutes');
+const liveRoutes = require('./src/backend/routes/liveRoutes');
 
 const app = express();
 const PORT = Number(process.env.PORT || 8080);
@@ -25,6 +28,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(FRONTEND_DIR));
 
 app.use('/api', (req, res, next) => {
+  if (req.path.startsWith('/live')) {
+    return next();
+  }
+
   if (!isDatabaseReady) {
     return res.status(503).json({ message: '데이터베이스 연결이 준비되지 않았습니다.' });
   }
@@ -37,6 +44,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/live', liveRoutes);
 
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ message: 'Not Found' });
