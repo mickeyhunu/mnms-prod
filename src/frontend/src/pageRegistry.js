@@ -754,41 +754,76 @@ const pageRegistry = {
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/pages/home.js", "scripts/js/components/footerNav.js"]
   },
   'live': {
-    template: `<header class="header">
-        <div class="header-container">
-            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
-            <nav class="nav" id="navigation">
-                <div class="nav-guest" id="nav-guest">
-                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
-                    <a href="register.html" class="btn btn-primary btn-sm">회원가입</a>
-                </div>
-                <div class="nav-user hidden" id="nav-user">
-                    <span class="user-nickname" id="user-nickname"></span>
-                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
-                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
-                </div>
-            </nav>
-        </div>
-    </header>
-
-    <main class="main-content">
+    template: `<main class="main-content live-page">
         <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
                     <span class="community-board-name">LIVE</span>
                 </div>
+                <p>DB에 저장된 실시간 정보를 자동 갱신으로 확인할 수 있습니다.</p>
             </header>
 
-            <div class="community-section-header">
-                <p>LIVE 서비스 준비 중입니다.</p>
-            </div>
-        </div>
-    </main>
+            <section class="card live-hero-card">
+                <div class="live-hero-copy">
+                    <span class="live-badge">REALTIME</span>
+                    <h2>실시간 정보 피드</h2>
+                    <p>선택한 테이블의 최신 데이터를 주기적으로 다시 불러와 카드 형태로 보여줍니다.</p>
+                </div>
+                <div class="live-stats" id="live-stats">
+                    <div class="live-stat">
+                        <span class="live-stat-label">테이블</span>
+                        <strong id="live-table-count">-</strong>
+                    </div>
+                    <div class="live-stat">
+                        <span class="live-stat-label">표시 건수</span>
+                        <strong id="live-row-count">-</strong>
+                    </div>
+                    <div class="live-stat">
+                        <span class="live-stat-label">마지막 갱신</span>
+                        <strong id="live-last-updated">-</strong>
+                    </div>
+                </div>
+            </section>
 
-    <script src="scripts/js/components/sectionHeader.js"></script>
-    <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
+            <section class="card live-toolbar">
+                <div class="live-toolbar-group">
+                    <label class="form-label" for="live-table-select">테이블 선택</label>
+                    <select id="live-table-select" class="form-control"></select>
+                </div>
+                <div class="live-toolbar-group">
+                    <label class="form-label" for="live-limit-select">표시 개수</label>
+                    <select id="live-limit-select" class="form-control">
+                        <option value="10">10개</option>
+                        <option value="20" selected>20개</option>
+                        <option value="50">50개</option>
+                        <option value="100">100개</option>
+                    </select>
+                </div>
+                <div class="live-toolbar-actions">
+                    <button class="btn btn-primary" id="live-refresh-btn" type="button">지금 새로고침</button>
+                    <span class="live-auto-refresh">10초 자동 갱신</span>
+                </div>
+            </section>
+
+            <div class="loading" id="live-loading">
+                <div class="spinner"></div>
+                <p>실시간 정보를 불러오는 중...</p>
+            </div>
+
+            <div class="error-banner hidden" id="live-error">
+                <p id="live-error-message">실시간 정보를 불러오지 못했습니다.</p>
+            </div>
+
+            <div class="empty-state hidden" id="live-empty">
+                <h3>표시할 데이터가 없습니다.</h3>
+                <p>선택한 테이블에 아직 데이터가 없거나 조회 가능한 테이블이 없습니다.</p>
+            </div>
+
+            <section class="live-feed hidden" id="live-feed"></section>
+        </div>
+    </main>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/live.js", "scripts/js/components/footerNav.js"]
   },
   'login': {
     template: `<header class="header">
