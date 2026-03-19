@@ -145,6 +145,14 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.area-filter--cities {
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+}
+
+.area-filter--districts {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
 .area-filter__button {
     display: inline-flex;
     align-items: center;
