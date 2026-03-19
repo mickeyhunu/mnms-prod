@@ -2,10 +2,12 @@
  * 파일 역할: 백엔드에서 공통 응답 포맷/헬퍼 로직을 제공하는 유틸리티 파일.
  */
 const { resolveMemberLevel } = require('./memberLevel');
+const { getLoginRestrictionState, LOGIN_STATUS } = require('./loginRestriction');
 
 function pickUserRow(user) {
   const totalPoints = Number(user.total_points ?? user.totalPoints ?? 0);
   const memberLevel = resolveMemberLevel(totalPoints);
+  const restrictionState = getLoginRestrictionState(user);
 
   return {
     id: user.id,
@@ -13,6 +15,10 @@ function pickUserRow(user) {
     nickname: user.nickname,
     role: user.role,
     memberType: user.member_type || user.memberType || 'GENERAL',
+    accountStatus: restrictionState.accountStatus || LOGIN_STATUS.ACTIVE,
+    isLoginRestricted: restrictionState.isRestricted,
+    loginRestrictedUntil: restrictionState.restrictedUntil ? restrictionState.restrictedUntil.toISOString() : null,
+    isLoginRestrictionPermanent: restrictionState.isPermanent,
     isAdmin: user.role === 'ADMIN',
     isAdvertiser: (user.member_type || user.memberType) === 'ADVERTISER',
     totalPoints,

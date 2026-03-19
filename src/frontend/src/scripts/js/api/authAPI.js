@@ -19,7 +19,11 @@ const AuthAPI = {
                     level: response.level,
                     levelEmoji: response.levelEmoji,
                     levelTitle: response.levelTitle,
-                    levelLabel: response.levelLabel
+                    levelLabel: response.levelLabel,
+                    accountStatus: response.accountStatus,
+                    isLoginRestricted: response.isLoginRestricted,
+                    loginRestrictedUntil: response.loginRestrictedUntil,
+                    isLoginRestrictionPermanent: response.isLoginRestrictionPermanent
                 };
                 Auth.setUser(userData);
             } else {
@@ -75,7 +79,11 @@ const AuthAPI = {
                     level: response.level,
                     levelEmoji: response.levelEmoji,
                     levelTitle: response.levelTitle,
-                    levelLabel: response.levelLabel
+                    levelLabel: response.levelLabel,
+                    accountStatus: response.accountStatus,
+                    isLoginRestricted: response.isLoginRestricted,
+                    loginRestrictedUntil: response.loginRestrictedUntil,
+                    isLoginRestrictionPermanent: response.isLoginRestrictionPermanent
                 });
             }
 

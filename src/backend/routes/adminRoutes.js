@@ -7,6 +7,8 @@ const adminModel = require('../models/adminModel');
 const supportController = require('../controllers/supportController');
 const { findByNicknameExceptUser } = require('../models/userModel');
 const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddleware');
+const { LOGIN_STATUS } = require('../utils/loginRestriction');
+const { deleteSessionsByUserId } = require('../models/sessionModel');
 
 const router = express.Router();
 
@@ -146,6 +148,11 @@ router.put('/users/:id', async (req, res, next) => {
     const totalPoints = Number(req.body?.totalPoints);
     const emailConsent = Boolean(req.body?.emailConsent);
     const smsConsent = Boolean(req.body?.smsConsent);
+    const accountStatus = String(req.body?.accountStatus || LOGIN_STATUS.ACTIVE).toUpperCase();
+    const isLoginRestrictionPermanent = Boolean(req.body?.isLoginRestrictionPermanent);
+    const loginRestrictionDaysRaw = req.body?.loginRestrictionDays;
+    const hasLoginRestrictionDays = loginRestrictionDaysRaw !== undefined && loginRestrictionDaysRaw !== null && String(loginRestrictionDaysRaw).trim() !== '';
+    const loginRestrictionDays = hasLoginRestrictionDays ? Number(loginRestrictionDaysRaw) : null;
 
     if (!nickname || nickname.length < 2) {
       return res.status(400).json({ message: '닉네임은 2글자 이상이어야 합니다.' });
@@ -171,6 +178,16 @@ router.put('/users/:id', async (req, res, next) => {
       return res.status(400).json({ message: '포인트는 0 이상의 정수만 입력할 수 있습니다.' });
     }
 
+    if (![LOGIN_STATUS.ACTIVE, LOGIN_STATUS.SUSPENDED].includes(accountStatus)) {
+      return res.status(400).json({ message: '유효하지 않은 계정 상태입니다.' });
+    }
+
+    if (accountStatus === LOGIN_STATUS.SUSPENDED && !isLoginRestrictionPermanent) {
+      if (!Number.isFinite(loginRestrictionDays) || loginRestrictionDays < 1 || !Number.isInteger(loginRestrictionDays)) {
+        return res.status(400).json({ message: '로그인 제한 일수는 1일 이상의 정수만 입력할 수 있습니다.' });
+      }
+    }
+
     const duplicateNickname = await findByNicknameExceptUser(nickname, id);
     if (duplicateNickname) {
       return res.status(400).json({ message: '이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.' });
@@ -183,6 +200,11 @@ router.put('/users/:id', async (req, res, next) => {
       sms_consent: smsConsent,
       role,
       member_type: memberType,
+      account_status: accountStatus,
+      login_restricted_until: accountStatus === LOGIN_STATUS.SUSPENDED && !isLoginRestrictionPermanent
+        ? new Date(Date.now() + loginRestrictionDays * 24 * 60 * 60 * 1000)
+        : null,
+      is_login_restriction_permanent: accountStatus === LOGIN_STATUS.SUSPENDED && isLoginRestrictionPermanent,
       total_points: totalPoints
     };
 
@@ -191,6 +213,9 @@ router.put('/users/:id', async (req, res, next) => {
     }
 
     await adminModel.updateUserByAdmin(id, updates);
+    if (accountStatus === LOGIN_STATUS.SUSPENDED) {
+      await deleteSessionsByUserId(id);
+    }
     const updatedUser = await adminModel.getUserDetail(id);
 
     res.json({

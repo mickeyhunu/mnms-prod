@@ -110,6 +110,19 @@ const pageRegistry = {
                                         <option value="ADVERTISER">광고 회원</option>
                                     </select>
                                 </label>
+                                <label>계정 상태
+                                    <select id="admin-user-account-status" name="accountStatus" class="form-control">
+                                        <option value="ACTIVE">정상</option>
+                                        <option value="SUSPENDED">정지</option>
+                                    </select>
+                                </label>
+                                <label>로그인 제한 일수
+                                    <input type="number" id="admin-user-login-restriction-days" name="loginRestrictionDays" min="1" step="1" placeholder="예: 1, 7, 30">
+                                    <span class="profile-consent-inline"><input type="checkbox" id="admin-user-login-restriction-permanent" name="isLoginRestrictionPermanent"><span class="profile-consent-text">영구 제한</span></span>
+                                </label>
+                                <label>제한 만료일
+                                    <input type="text" id="admin-user-login-restricted-until" name="loginRestrictedUntil" readonly>
+                                </label>
                                 <label>가입일
                                     <input type="text" id="admin-user-created-at" name="createdAt" readonly>
                                 </label>
@@ -124,7 +137,7 @@ const pageRegistry = {
                     <div class="loading" id="users-loading"><div class="spinner"></div><p>회원 정보를 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="users-error"><p id="users-error-message"></p><button class="btn btn-sm btn-primary" id="users-retry-btn">다시 시도</button></div>
                     <div class="admin-table-container hidden" id="users-content">
-                        <table class="admin-table"><thead><tr><th>ID</th><th>이메일</th><th>닉네임</th><th>포인트</th><th>가입일</th><th>권한</th><th>회원구분</th><th>관리</th></tr></thead><tbody id="users-tbody"></tbody></table>
+                        <table class="admin-table"><thead><tr><th>ID</th><th>이메일</th><th>닉네임</th><th>계정상태</th><th>포인트</th><th>가입일</th><th>권한</th><th>회원구분</th><th>관리</th></tr></thead><tbody id="users-tbody"></tbody></table>
                     </div>
                 </div>
 
