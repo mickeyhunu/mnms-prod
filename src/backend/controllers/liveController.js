@@ -31,14 +31,18 @@ async function getLiveFilters(req, res, next) {
 async function getLiveEntries(req, res, next) {
   try {
     const categoryKey = req.query.category;
-    const storeName = String(req.query.storeName || '').trim();
+    const storeNo = Number.parseInt(req.query.storeNo, 10);
     const limit = req.query.limit;
-    const data = await liveModel.listLiveEntries(categoryKey, { storeName, limit });
-    const totalCount = await liveModel.countRows(data.category.tableName, storeName);
+    const data = await liveModel.listLiveEntries(categoryKey, { storeNo, limit });
+    const totalCount = await liveModel.countRows(data.category.tableName, {
+      storeNo,
+      storeName: data.selectedStore?.storeName || ''
+    });
 
     return res.json({
       selectedCategory: data.category,
-      selectedStoreName: storeName || '전체',
+      selectedStoreNo: data.selectedStore?.storeNo || null,
+      selectedStoreName: data.selectedStore?.storeName || '전체',
       totalCount,
       columns: data.columns,
       titleColumn: data.titleColumn,
