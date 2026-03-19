@@ -772,11 +772,12 @@ const pageRegistry = {
                 <div class="area-filter area-filter--districts" id="live-category-filter" aria-label="LIVE 카테고리 선택"></div>
             </div>
 
-            <div class="live-refresh-bar">
-                <p class="live-refresh-status live-refresh-status--muted" id="live-refresh-status">저장된 데이터를 확인하는 중입니다...</p>
+            <div class="live-loading-overlay hidden" id="live-loading" aria-live="polite" aria-busy="true">
+                <div class="live-loading-overlay__content">
+                    <div class="spinner" aria-hidden="true"></div>
+                    <p>Loading...</p>
+                </div>
             </div>
-
-            <div class="live-feedback hidden" id="live-loading">LIVE 데이터를 불러오는 중입니다...</div>
             <div class="live-feedback live-feedback--error hidden" id="live-error"></div>
             <div class="live-feedback hidden" id="live-empty">선택한 조건에 해당하는 데이터가 없습니다.</div>
 

@@ -36,11 +36,10 @@ async function initLivePage() {
     startLiveAutoRefresh();
 
     try {
-        await refreshLiveData({ useLoading: !liveState.hasCachedEntries });
+        await refreshLiveData({ showLoading: true });
     } catch (error) {
         if (!liveState.hasCachedEntries) {
             showLiveError(error.message || 'LIVE 데이터를 불러오지 못했습니다.');
-            updateLiveRefreshStatus('LIVE 데이터를 불러오지 못했습니다.', 'error');
         }
     }
 }
@@ -60,8 +59,8 @@ function bindLiveEvents() {
 
         liveState.selectedStoreName = nextStoreName;
         renderStoreButtons();
-        const hasCache = hydrateLiveEntriesCache();
-        await loadLiveEntries({ useLoading: !hasCache });
+        hydrateLiveEntriesCache();
+        await loadLiveEntries({ showLoading: true });
     });
 
     categoryFilter?.addEventListener('click', async (event) => {
@@ -73,13 +72,13 @@ function bindLiveEvents() {
 
         liveState.selectedCategoryKey = nextCategoryKey;
         renderCategoryButtons(liveState.categories);
-        const hasCache = hydrateLiveEntriesCache();
-        await loadLiveEntries({ useLoading: !hasCache });
+        hydrateLiveEntriesCache();
+        await loadLiveEntries({ showLoading: true });
     });
 
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
-            refreshLiveData({ useLoading: false }).catch((error) => {
+            refreshLiveData({ showLoading: false }).catch((error) => {
                 console.error('LIVE visibility refresh error:', error);
             });
         }
@@ -96,15 +95,15 @@ function startLiveAutoRefresh() {
     liveState.refreshTimerId = window.setInterval(() => {
         if (document.hidden) return;
 
-        refreshLiveData({ useLoading: false }).catch((error) => {
+        refreshLiveData({ showLoading: false }).catch((error) => {
             console.error('LIVE auto refresh error:', error);
         });
     }, LIVE_REFRESH_INTERVAL_MS);
 }
 
-async function refreshLiveData({ useLoading = false } = {}) {
+async function refreshLiveData({ showLoading = false } = {}) {
     await loadLiveFilters();
-    await loadLiveEntries({ useLoading });
+    await loadLiveEntries({ showLoading });
 }
 
 function hydrateLiveFiltersCache() {
@@ -139,12 +138,11 @@ function hydrateLiveEntriesCache() {
         }
 
         hideElement(emptyElement);
-        updateLiveRefreshStatus('표시할 저장 데이터가 없습니다. 최신 데이터를 가져오는 중입니다...', 'muted');
         return false;
     }
 
     liveState.hasCachedEntries = true;
-    applyLiveEntriesResponse(cachedEntries.data, { cachedAt: cachedEntries.savedAt, isCached: true });
+    applyLiveEntriesResponse(cachedEntries.data);
     return true;
 }
 
@@ -169,22 +167,20 @@ async function loadLiveFilters() {
     renderCategoryButtons(liveState.categories);
 }
 
-async function loadLiveEntries({ useLoading = false } = {}) {
+async function loadLiveEntries({ showLoading = false } = {}) {
     const loadingElement = document.getElementById('live-loading');
     const errorElement = document.getElementById('live-error');
     const emptyElement = document.getElementById('live-empty');
     const listElement = document.getElementById('live-entry-list');
-    const hasVisibleEntries = Boolean(listElement?.children.length);
     const requestId = ++liveState.entriesRequestId;
 
     hideElement(errorElement);
 
-    if (useLoading && !hasVisibleEntries) {
+    if (showLoading) {
         hideElement(emptyElement);
         showElement(loadingElement);
     } else {
         hideElement(loadingElement);
-        updateLiveRefreshStatus('저장된 데이터를 먼저 보여주고 있으며, 백그라운드에서 최신 데이터를 확인하고 있습니다...', 'refreshing');
     }
 
     try {
@@ -200,18 +196,17 @@ async function loadLiveEntries({ useLoading = false } = {}) {
 
         writeLiveCache(getLiveEntriesCacheKey(), response);
         liveState.hasCachedEntries = true;
-        applyLiveEntriesResponse(response, { cachedAt: Date.now(), isCached: false });
+        applyLiveEntriesResponse(response);
     } catch (error) {
         if (requestId !== liveState.entriesRequestId) {
             return;
         }
 
-        if (!hasVisibleEntries) {
+        if (!listElement?.children.length) {
             renderLiveEntries([], null);
             showLiveError(error.message || 'LIVE 데이터를 불러오지 못했습니다.');
         }
 
-        updateLiveRefreshStatus('저장된 데이터를 표시 중입니다. 최신화에는 실패했습니다.', 'error');
         console.error('LIVE entries load error:', error);
         throw error;
     } finally {
@@ -219,7 +214,7 @@ async function loadLiveEntries({ useLoading = false } = {}) {
     }
 }
 
-function applyLiveEntriesResponse(response, { cachedAt = null, isCached = false } = {}) {
+function applyLiveEntriesResponse(response) {
     renderLiveSummary(response);
     renderLiveEntries(response?.rows || [], response?.titleColumn);
 
@@ -231,8 +226,6 @@ function applyLiveEntriesResponse(response, { cachedAt = null, isCached = false 
     } else {
         showElement(emptyElement);
     }
-
-    updateLiveRefreshStatus(buildLiveRefreshMessage(cachedAt, isCached), isCached ? 'muted' : 'fresh');
 }
 
 function renderStoreButtons() {
@@ -380,40 +373,6 @@ function formatFieldValue(value) {
     }
 
     return String(value);
-}
-
-function updateLiveRefreshStatus(message, tone = 'muted') {
-    const statusElement = document.getElementById('live-refresh-status');
-    if (!statusElement) return;
-
-    statusElement.textContent = message;
-    statusElement.className = `live-refresh-status live-refresh-status--${tone}`;
-}
-
-function buildLiveRefreshMessage(cachedAt, isCached) {
-    const formattedTime = formatLiveRefreshTime(cachedAt);
-    if (!formattedTime) {
-        return isCached
-            ? '저장된 데이터를 보여주고 있으며, 30초마다 자동으로 최신화를 시도합니다.'
-            : '최신 데이터를 불러왔습니다. 30초마다 자동으로 최신화를 시도합니다.';
-    }
-
-    return isCached
-        ? `저장된 데이터를 먼저 보여주고 있습니다. 마지막 저장 시각: ${formattedTime}`
-        : `최신 데이터를 갱신했습니다. 마지막 갱신 시각: ${formattedTime}`;
-}
-
-function formatLiveRefreshTime(timestamp) {
-    if (!timestamp) return '';
-
-    const date = new Date(timestamp);
-    if (Number.isNaN(date.getTime())) return '';
-
-    return new Intl.DateTimeFormat('ko-KR', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    }).format(date);
 }
 
 function getLiveEntriesCacheKey() {
