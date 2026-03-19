@@ -61,28 +61,88 @@
 .site-subheader__container {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 18px;
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    background: rgba(15, 23, 42, 0.72);
-    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.2);
+    gap: 14px;
+    padding: 14px;
+    border: 1px solid rgba(63, 63, 70, 0.9);
+    border-radius: 22px;
+    background: rgba(24, 24, 27, 0.82);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
 }
 
-.site-subheader__top-row {
+.live-subheader__title-row {
     display: flex;
+    align-items: flex-start;
     justify-content: space-between;
-    align-items: center;
-    gap: 12px;
+    gap: 16px;
 }
 
-.site-subheader__filters {
-    min-width: 0;
-    flex: 1;
+.live-subheader__title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.live-subheader__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #fbbf24;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+}
+
+.live-subheader__title {
+    margin: 0;
+    color: #fafafa;
+    font-size: clamp(20px, 4vw, 28px);
+    font-weight: 800;
+}
+
+.live-summary-pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.live-summary-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 12px;
+    border: 1px solid rgba(245, 158, 11, 0.22);
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.08);
+    color: #fcd34d;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.live-summary-pill strong {
+    color: #fff7ed;
 }
 
 .area-filter {
+    display: flex;
+    gap: 8px;
+}
+
+.area-filter--cities {
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+}
+
+.area-filter--cities::-webkit-scrollbar {
+    display: none;
+}
+
+.area-filter--districts {
     display: grid;
-    gap: 10px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .area-filter--cities {
@@ -97,64 +157,77 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    min-height: 44px;
-    border: 1px solid rgba(148, 163, 184, 0.24);
-    background: rgba(30, 41, 59, 0.8);
-    color: #e2e8f0;
-    padding: 10px 16px;
-    border-radius: 999px;
-    font-size: clamp(11px, 2.8vw, 14px);
+    min-height: 38px;
+    padding: 10px 14px;
+    border: 1px solid rgba(63, 63, 70, 1);
+    border-radius: 14px;
+    background: rgba(24, 24, 27, 0.96);
+    color: #a1a1aa;
+    font-size: clamp(10px, 2.6vw, 13px);
+    font-weight: 700;
     line-height: 1;
     white-space: nowrap;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.18s ease;
+    flex-shrink: 0;
 }
 
 .area-filter__button:hover {
-    border-color: rgba(96, 165, 250, 0.6);
+    color: #fafafa;
+    border-color: rgba(113, 113, 122, 1);
     transform: translateY(-1px);
 }
 
 .area-filter__button.is-active {
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
-    border-color: transparent;
-    color: #fff;
-    box-shadow: 0 10px 24px rgba(59, 130, 246, 0.28);
+    background: linear-gradient(180deg, #d97706, #f59e0b);
+    border-color: rgba(251, 191, 36, 0.9);
+    color: #ffffff;
+    box-shadow: 0 12px 24px rgba(120, 53, 15, 0.35);
 }
 
 .area-filter__button--district {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    width: 100%;
 }
 
 .live-filter-count {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 24px;
-    height: 24px;
-    padding: 0 8px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.16);
-    font-size: 12px;
-    font-weight: 700;
+    background: rgba(255, 255, 255, 0.18);
+    color: inherit;
+    font-size: 11px;
+    font-weight: 800;
 }
 
 @media (max-width: 640px) {
-    .area-filter {
-        gap: 8px;
+    .site-subheader__container {
+        padding: 12px;
+        border-radius: 18px;
+    }
+
+    .live-subheader__title-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .live-summary-pills {
+        justify-content: flex-start;
+    }
+
+    .area-filter--districts {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .area-filter__button {
-        padding: 8px 13px;
-    }
-
-    .live-filter-count {
-        min-width: 22px;
-        height: 22px;
-        font-size: 11px;
+        min-height: 34px;
+        padding: 9px 12px;
     }
 }
 
@@ -280,10 +353,6 @@
         padding: 16px;
     }
 
-    .site-subheader__top-row {
-        flex-direction: column;
-        align-items: stretch;
-    }
 
     .live-entry-card__detail-item {
         grid-template-columns: 1fr;

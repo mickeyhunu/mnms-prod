@@ -14,7 +14,7 @@ const LIVE_REFRESH_INTERVAL_MS = 30000;
 const liveState = {
     stores: [],
     categories: [],
-    selectedStoreName: '',
+    selectedStoreNo: null,
     selectedCategoryKey: 'choice',
     refreshTimerId: null,
     entriesRequestId: 0,
@@ -54,10 +54,10 @@ function bindLiveEvents() {
         const button = event.target.closest('[data-store-option]');
         if (!button) return;
 
-        const nextStoreName = button.dataset.storeOption ? decodeURIComponent(button.dataset.storeOption) : '';
-        if (liveState.selectedStoreName === nextStoreName) return;
+        const nextStoreNo = Number.parseInt(button.dataset.storeOption || '', 10);
+        if (!Number.isInteger(nextStoreNo) || liveState.selectedStoreNo === nextStoreNo) return;
 
-        liveState.selectedStoreName = nextStoreName;
+        liveState.selectedStoreNo = nextStoreNo;
         renderStoreButtons();
         hydrateLiveEntriesCache();
         await loadLiveEntries({ showLoading: true });
@@ -114,9 +114,9 @@ function hydrateLiveFiltersCache() {
         return false;
     }
 
-    liveState.stores = Array.isArray(cachedFilters.data.stores) ? cachedFilters.data.stores : [];
+    liveState.stores = normalizeStores(cachedFilters.data.stores);
     liveState.categories = Array.isArray(cachedFilters.data.categories) ? cachedFilters.data.categories : [];
-    syncSelectedStoreName();
+    syncSelectedStoreNo();
 
     renderStoreNameList();
     renderStoreButtons();
@@ -155,9 +155,9 @@ async function loadLiveFilters() {
         return;
     }
 
-    liveState.stores = Array.isArray(response?.stores) ? response.stores : [];
+    liveState.stores = normalizeStores(response?.stores);
     liveState.categories = Array.isArray(response?.categories) ? response.categories : [];
-    syncSelectedStoreName();
+    syncSelectedStoreNo();
 
     writeLiveCache(LIVE_FILTERS_CACHE_KEY, {
         stores: liveState.stores,
@@ -188,7 +188,7 @@ async function loadLiveEntries({ showLoading = false } = {}) {
     try {
         const response = await APIClient.get('/live/entries', {
             category: liveState.selectedCategoryKey,
-            storeName: liveState.selectedStoreName,
+            storeNo: liveState.selectedStoreNo,
             limit: 30
         });
 
@@ -230,29 +230,44 @@ function applyLiveEntriesResponse(response) {
     }
 }
 
+function normalizeStores(stores) {
+    return (Array.isArray(stores) ? stores : [])
+        .map((store) => ({
+            storeNo: Number.parseInt(store?.storeNo, 10),
+            storeName: String(store?.storeName || '').trim()
+        }))
+        .filter((store) => Number.isInteger(store.storeNo) && store.storeName)
+        .sort((a, b) => a.storeNo - b.storeNo);
+}
+
+function getSelectedStoreName() {
+    return liveState.stores.find((store) => store.storeNo === liveState.selectedStoreNo)?.storeName || '전체';
+}
+
 function renderStoreButtons() {
     const storeFilter = document.getElementById('live-store-filter');
     if (!storeFilter) return;
 
-    storeFilter.innerHTML = liveState.stores.map((storeName) => `
+    storeFilter.innerHTML = liveState.stores.map((store) => `
         <button
             type="button"
-            class="area-filter__button ${liveState.selectedStoreName === storeName ? 'is-active' : ''}"
-            data-store-option="${encodeURIComponent(storeName)}"
+            class="area-filter__button ${liveState.selectedStoreNo === store.storeNo ? 'is-active' : ''}"
+            data-store-option="${store.storeNo}"
         >
-            ${sanitizeHTML(storeName)}
+            ${sanitizeHTML(store.storeName)}
         </button>
     `).join('');
 }
 
-function syncSelectedStoreName() {
+function syncSelectedStoreNo() {
     if (!Array.isArray(liveState.stores) || !liveState.stores.length) {
-        liveState.selectedStoreName = '';
+        liveState.selectedStoreNo = null;
         return;
     }
 
-    if (!liveState.stores.includes(liveState.selectedStoreName)) {
-        [liveState.selectedStoreName] = liveState.stores;
+    const hasSelectedStore = liveState.stores.some((store) => store.storeNo === liveState.selectedStoreNo);
+    if (!hasSelectedStore) {
+        liveState.selectedStoreNo = liveState.stores[0].storeNo;
     }
 }
 
@@ -265,8 +280,8 @@ function renderStoreNameList() {
         return;
     }
 
-    storeNameList.innerHTML = liveState.stores.map((storeName) => `
-        <span class="live-store-name-list__item">${sanitizeHTML(storeName)}</span>
+    storeNameList.innerHTML = liveState.stores.map((store) => `
+        <span class="live-store-name-list__item">${sanitizeHTML(store.storeName)}</span>
     `).join('');
 }
 
@@ -301,7 +316,7 @@ function renderLiveSummary(response = null) {
     const totalCount = document.getElementById('live-total-count');
 
     if (selectedStore) {
-        selectedStore.textContent = response?.selectedStoreName || liveState.selectedStoreName;
+        selectedStore.textContent = response?.selectedStoreName || getSelectedStoreName();
     }
 
     if (selectedCategory) {
@@ -388,7 +403,7 @@ function formatFieldValue(value) {
 }
 
 function getLiveEntriesCacheKey() {
-    return `${LIVE_ENTRIES_CACHE_PREFIX}${liveState.selectedCategoryKey}:${liveState.selectedStoreName}`;
+    return `${LIVE_ENTRIES_CACHE_PREFIX}${liveState.selectedCategoryKey}:${liveState.selectedStoreNo ?? 'all'}`;
 }
 
 function readLiveCache(key) {
