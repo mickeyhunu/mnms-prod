@@ -14,7 +14,7 @@ const LIVE_REFRESH_INTERVAL_MS = 30000;
 const liveState = {
     stores: [],
     categories: [],
-    selectedStoreName: '전체',
+    selectedStoreName: '',
     selectedCategoryKey: 'choice',
     refreshTimerId: null,
     entriesRequestId: 0,
@@ -54,7 +54,7 @@ function bindLiveEvents() {
         const button = event.target.closest('[data-store-option]');
         if (!button) return;
 
-        const nextStoreName = button.dataset.storeOption ? decodeURIComponent(button.dataset.storeOption) : '전체';
+        const nextStoreName = button.dataset.storeOption ? decodeURIComponent(button.dataset.storeOption) : '';
         if (liveState.selectedStoreName === nextStoreName) return;
 
         liveState.selectedStoreName = nextStoreName;
@@ -116,6 +116,7 @@ function hydrateLiveFiltersCache() {
 
     liveState.stores = Array.isArray(cachedFilters.data.stores) ? cachedFilters.data.stores : [];
     liveState.categories = Array.isArray(cachedFilters.data.categories) ? cachedFilters.data.categories : [];
+    syncSelectedStoreName();
 
     renderStoreNameList();
     renderStoreButtons();
@@ -156,6 +157,7 @@ async function loadLiveFilters() {
 
     liveState.stores = Array.isArray(response?.stores) ? response.stores : [];
     liveState.categories = Array.isArray(response?.categories) ? response.categories : [];
+    syncSelectedStoreName();
 
     writeLiveCache(LIVE_FILTERS_CACHE_KEY, {
         stores: liveState.stores,
@@ -186,7 +188,7 @@ async function loadLiveEntries({ showLoading = false } = {}) {
     try {
         const response = await APIClient.get('/live/entries', {
             category: liveState.selectedCategoryKey,
-            storeName: liveState.selectedStoreName === '전체' ? '' : liveState.selectedStoreName,
+            storeName: liveState.selectedStoreName,
             limit: 30
         });
 
@@ -232,8 +234,7 @@ function renderStoreButtons() {
     const storeFilter = document.getElementById('live-store-filter');
     if (!storeFilter) return;
 
-    const items = ['전체', ...liveState.stores];
-    storeFilter.innerHTML = items.map((storeName) => `
+    storeFilter.innerHTML = liveState.stores.map((storeName) => `
         <button
             type="button"
             class="area-filter__button ${liveState.selectedStoreName === storeName ? 'is-active' : ''}"
@@ -242,6 +243,17 @@ function renderStoreButtons() {
             ${sanitizeHTML(storeName)}
         </button>
     `).join('');
+}
+
+function syncSelectedStoreName() {
+    if (!Array.isArray(liveState.stores) || !liveState.stores.length) {
+        liveState.selectedStoreName = '';
+        return;
+    }
+
+    if (!liveState.stores.includes(liveState.selectedStoreName)) {
+        [liveState.selectedStoreName] = liveState.stores;
+    }
 }
 
 function renderStoreNameList() {
