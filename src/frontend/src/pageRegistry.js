@@ -772,21 +772,6 @@ const pageRegistry = {
                 <div class="area-filter area-filter--districts" id="live-category-filter" aria-label="LIVE 카테고리 선택"></div>
             </div>
 
-            <section class="live-summary" aria-label="현재 선택 요약">
-                <article class="live-summary__item">
-                    <span class="live-summary__label">선택 매장</span>
-                    <strong class="live-summary__value" id="live-selected-store">전체</strong>
-                </article>
-                <article class="live-summary__item">
-                    <span class="live-summary__label">선택 구분</span>
-                    <strong class="live-summary__value" id="live-selected-category">초이스톡</strong>
-                </article>
-                <article class="live-summary__item">
-                    <span class="live-summary__label">조회 건수</span>
-                    <strong class="live-summary__value" id="live-total-count">0</strong>
-                </article>
-            </section>
-
             <div class="live-feedback hidden" id="live-loading">LIVE 데이터를 불러오는 중입니다...</div>
             <div class="live-feedback live-feedback--error hidden" id="live-error"></div>
             <div class="live-feedback hidden" id="live-empty">선택한 조건에 해당하는 데이터가 없습니다.</div>
