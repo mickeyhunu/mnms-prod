@@ -759,7 +759,6 @@ const pageRegistry = {
             <header class="community-section-header">
                 <div class="community-header-left">
                     <span class="community-board-name">LIVE</span>
-                    <p>매장 선택 버튼과 초이스톡/웨이팅/엔트리 데이터를 먼저 볼 수 있는 초안 화면입니다.</p>
                 </div>
             </header>
 
