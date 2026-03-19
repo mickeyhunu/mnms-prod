@@ -234,6 +234,21 @@ async function handleSendMessage() {
     }
 }
 
+function navigateBackFromRestrictedPost() {
+    if (window.history.length > 1) {
+        window.history.back();
+        return;
+    }
+
+    window.location.href = '/';
+}
+
+function handleRestrictedPostAccess(error) {
+    const message = error?.data?.message || error?.message || '제한된 게시글이라 확인할 수 없습니다.';
+    alert(message);
+    navigateBackFromRestrictedPost();
+}
+
 function showError(message) {
     const errorBanner = document.getElementById('error-banner');
     const errorMessage = document.getElementById('error-message');
@@ -273,7 +288,13 @@ async function loadPost() {
     } catch (error) {
         console.error('게시글 로드 실패:', error);
         if (loading) loading.classList.add('hidden');
-        showError('게시글을 불러오는 중 오류가 발생했습니다.');
+
+        if (error?.status === 403) {
+            handleRestrictedPostAccess(error);
+            return;
+        }
+
+        showError(error?.message || '게시글을 불러오는 중 오류가 발생했습니다.');
     }
 }
 
