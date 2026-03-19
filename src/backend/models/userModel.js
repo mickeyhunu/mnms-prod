@@ -2,6 +2,7 @@
  * 파일 역할: userModel 도메인 데이터의 DB 조회/저장 쿼리를 담당하는 모델 파일.
  */
 const { getPool } = require('../config/database');
+const { getLoginRestrictionState, LOGIN_STATUS } = require('../utils/loginRestriction');
 
 async function createUser({ email, password, nickname, memberType = 'GENERAL' }) {
   const pool = getPool();
@@ -15,15 +16,38 @@ async function createUser({ email, password, nickname, memberType = 'GENERAL' })
 async function findByEmail(email) {
   const pool = getPool();
   const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-  return rows[0] || null;
+  return ensureResolvedLoginRestriction(rows[0] || null);
 }
 
 async function findById(id) {
   const pool = getPool();
   const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
-  return rows[0] || null;
+  return ensureResolvedLoginRestriction(rows[0] || null);
 }
 
+
+
+async function clearExpiredLoginRestriction(userId) {
+  const pool = getPool();
+  await pool.query(
+    `UPDATE users
+     SET account_status = ?,
+         login_restricted_until = NULL,
+         is_login_restriction_permanent = 0
+     WHERE id = ?`,
+    [LOGIN_STATUS.ACTIVE, userId]
+  );
+}
+
+async function ensureResolvedLoginRestriction(user) {
+  if (!user) return null;
+
+  const state = getLoginRestrictionState(user);
+  if (!state.isExpired) return user;
+
+  await clearExpiredLoginRestriction(user.id);
+  return findById(user.id);
+}
 
 async function getUserActivityStats(userId) {
   const pool = getPool();
@@ -241,6 +265,8 @@ async function updateUserProfile(userId, payload) {
 }
 
 module.exports = {
+  clearExpiredLoginRestriction,
+  ensureResolvedLoginRestriction,
   createUser,
   findByEmail,
   findById,

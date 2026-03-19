@@ -10,6 +10,7 @@ let editingUserId = null;
 let isGlobalAdminClickBound = false;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
+const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
 const ADMIN_TABS = ['posts', 'comments', 'users', 'ads', 'support', 'inquiries'];
 
 function getAdminPageState() {
@@ -256,13 +257,14 @@ async function loadUsers() {
 
         const tbody = document.getElementById('users-tbody');
         if (!users.length) {
-            tbody.innerHTML = '<tr><td colspan="8">회원이 없습니다.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9">회원이 없습니다.</td></tr>';
         } else {
             tbody.innerHTML = users.map(user => `
                 <tr>
                     <td>${user.id}</td>
                     <td>${sanitizeHTML(user.email || '')}</td>
                     <td>${sanitizeHTML(user.nickname || '')}</td>
+                    <td>${formatAdminRestrictionStatus(user)}</td>
                     <td>${Number(user.totalPoints || 0).toLocaleString()} P</td>
                     <td>${formatDate(user.createdAt || user.created_at)}</td>
                     <td>${sanitizeHTML(user.role || 'USER')}</td>
@@ -297,11 +299,44 @@ function setAdminUserHelpMessage(message, color = '#6c757d') {
     result.style.color = color;
 }
 
+function syncLoginRestrictionFields() {
+    const accountStatusEl = document.getElementById('admin-user-account-status');
+    const loginRestrictionDaysEl = document.getElementById('admin-user-login-restriction-days');
+    const loginRestrictionPermanentEl = document.getElementById('admin-user-login-restriction-permanent');
+    const loginRestrictedUntilEl = document.getElementById('admin-user-login-restricted-until');
+    if (!accountStatusEl || !loginRestrictionDaysEl || !loginRestrictionPermanentEl || !loginRestrictedUntilEl) return;
+
+    const isSuspended = accountStatusEl.value === ACCOUNT_STATUS.SUSPENDED;
+    const isPermanent = loginRestrictionPermanentEl.checked;
+    loginRestrictionDaysEl.disabled = !isSuspended || isPermanent;
+    loginRestrictionDaysEl.placeholder = isSuspended
+        ? (isPermanent ? '영구 제한은 일수 입력이 필요 없습니다.' : '예: 1, 7, 30')
+        : '정상 계정은 제한이 없습니다.';
+
+    if (!isSuspended) {
+        loginRestrictionDaysEl.value = '';
+        loginRestrictionPermanentEl.checked = false;
+        loginRestrictedUntilEl.value = '';
+    } else if (isPermanent) {
+        loginRestrictionDaysEl.value = '';
+        loginRestrictedUntilEl.value = '영구 제한';
+    }
+}
+
+function formatAdminRestrictionStatus(user) {
+    if (user.accountStatus !== ACCOUNT_STATUS.SUSPENDED) return '정상';
+    if (user.isLoginRestrictionPermanent) return '정지 (영구 제한)';
+    if (user.loginRestrictedUntil) return `정지 (${formatDate(user.loginRestrictedUntil)})`;
+    return '정지';
+}
+
 function bindUserEditForm() {
     const phoneInput = document.getElementById('admin-user-phone');
     const passwordInput = document.getElementById('admin-user-password');
     const passwordConfirmInput = document.getElementById('admin-user-password-confirm');
     const passwordMatchResult = document.getElementById('admin-user-password-match-result');
+    const accountStatusEl = document.getElementById('admin-user-account-status');
+    const loginRestrictionPermanentEl = document.getElementById('admin-user-login-restriction-permanent');
 
     phoneInput?.addEventListener('input', () => {
         phoneInput.value = formatPhoneNumber(phoneInput.value);
@@ -336,6 +371,8 @@ function bindUserEditForm() {
 
     passwordInput?.addEventListener('input', syncPasswordMatchMessage);
     passwordConfirmInput?.addEventListener('input', syncPasswordMatchMessage);
+    accountStatusEl?.addEventListener('change', syncLoginRestrictionFields);
+    loginRestrictionPermanentEl?.addEventListener('change', syncLoginRestrictionFields);
 }
 
 function fillUserEditForm(user) {
@@ -350,11 +387,18 @@ function fillUserEditForm(user) {
     document.getElementById('admin-user-total-points').value = Number(user.totalPoints || 0);
     document.getElementById('admin-user-role').value = user.role || 'USER';
     document.getElementById('admin-user-member-type').value = user.memberType || 'GENERAL';
+    document.getElementById('admin-user-account-status').value = user.accountStatus || ACCOUNT_STATUS.ACTIVE;
+    document.getElementById('admin-user-login-restriction-permanent').checked = Boolean(user.isLoginRestrictionPermanent);
+    document.getElementById('admin-user-login-restriction-days').value = '';
+    document.getElementById('admin-user-login-restricted-until').value = user.isLoginRestrictionPermanent
+        ? '영구 제한'
+        : (user.loginRestrictedUntil ? formatDate(user.loginRestrictedUntil) : '');
     document.getElementById('admin-user-created-at').value = formatDate(user.createdAt || user.created_at);
     document.getElementById('admin-user-password').value = '';
     document.getElementById('admin-user-password-confirm').value = '';
     document.getElementById('admin-user-password-match-result').textContent = '';
     setAdminUserHelpMessage('');
+    syncLoginRestrictionFields();
 }
 
 async function openUserEditModal(userId, options = {}) {
@@ -403,6 +447,9 @@ async function saveUserDetail() {
     const memberType = document.getElementById('admin-user-member-type')?.value || 'GENERAL';
     const emailConsent = document.getElementById('admin-user-email-consent')?.checked || false;
     const smsConsent = document.getElementById('admin-user-sms-consent')?.checked || false;
+    const accountStatus = document.getElementById('admin-user-account-status')?.value || ACCOUNT_STATUS.ACTIVE;
+    const loginRestrictionDaysValue = document.getElementById('admin-user-login-restriction-days')?.value || '';
+    const isLoginRestrictionPermanent = document.getElementById('admin-user-login-restriction-permanent')?.checked || false;
     const saveButton = document.getElementById('user-edit-save-btn');
 
     document.getElementById('admin-user-phone').value = phone;
@@ -427,12 +474,25 @@ async function saveUserDetail() {
         return;
     }
 
+    if (accountStatus === ACCOUNT_STATUS.SUSPENDED && !isLoginRestrictionPermanent) {
+        const loginRestrictionDays = Number.parseInt(loginRestrictionDaysValue, 10);
+        if (!Number.isInteger(loginRestrictionDays) || loginRestrictionDays < 1) {
+            setAdminUserHelpMessage('로그인 제한 일수는 1일 이상의 정수로 입력해주세요.', '#dc3545');
+            return;
+        }
+    }
+
     const payload = {
         nickname,
         phone,
         totalPoints,
         role,
         memberType,
+        accountStatus,
+        loginRestrictionDays: accountStatus === ACCOUNT_STATUS.SUSPENDED && !isLoginRestrictionPermanent
+            ? Number.parseInt(loginRestrictionDaysValue, 10)
+            : null,
+        isLoginRestrictionPermanent,
         emailConsent,
         smsConsent
     };

@@ -3,6 +3,7 @@
  */
 const crypto = require('crypto');
 const { createUser, findByEmail, findByNickname } = require('../models/userModel');
+const { formatRestrictionMessage, getLoginRestrictionState } = require('../utils/loginRestriction');
 
 function normalizeMemberType(value) {
   const normalized = String(value || '').trim().toUpperCase();
@@ -45,6 +46,11 @@ async function login(req, res, next) {
     const user = await findByEmail(resolvedLoginId);
     if (!user || user.password !== password) {
       return res.status(401).json({ message: '아이디 또는 비밀번호가 올바르지 않습니다.' });
+    }
+
+    const restrictionState = getLoginRestrictionState(user);
+    if (restrictionState.isRestricted) {
+      return res.status(403).json({ message: formatRestrictionMessage(user) });
     }
 
     const token = crypto.randomBytes(32).toString('hex');

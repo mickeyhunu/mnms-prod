@@ -48,6 +48,9 @@ async function initDatabase() {
       nickname VARCHAR(255) NOT NULL UNIQUE,
       role ENUM('USER','ADMIN') NOT NULL DEFAULT 'USER',
       member_type ENUM('GENERAL','ADVERTISER') NOT NULL DEFAULT 'GENERAL',
+      account_status ENUM('ACTIVE','SUSPENDED') NOT NULL DEFAULT 'ACTIVE',
+      login_restricted_until DATETIME NULL,
+      is_login_restriction_permanent TINYINT(1) NOT NULL DEFAULT 0,
       total_points BIGINT NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
@@ -88,7 +91,10 @@ async function initDatabase() {
     { name: 'phone', query: "ALTER TABLE users ADD COLUMN phone VARCHAR(30) NULL AFTER birth_date" },
     { name: 'email_consent', query: "ALTER TABLE users ADD COLUMN email_consent TINYINT(1) NOT NULL DEFAULT 0 AFTER phone" },
     { name: 'sms_consent', query: "ALTER TABLE users ADD COLUMN sms_consent TINYINT(1) NOT NULL DEFAULT 0 AFTER email_consent" },
-    { name: 'last_nickname_changed_at', query: "ALTER TABLE users ADD COLUMN last_nickname_changed_at DATETIME NULL AFTER sms_consent" }
+    { name: 'last_nickname_changed_at', query: "ALTER TABLE users ADD COLUMN last_nickname_changed_at DATETIME NULL AFTER sms_consent" },
+    { name: 'account_status', query: "ALTER TABLE users ADD COLUMN account_status ENUM('ACTIVE','SUSPENDED') NOT NULL DEFAULT 'ACTIVE' AFTER member_type" },
+    { name: 'login_restricted_until', query: "ALTER TABLE users ADD COLUMN login_restricted_until DATETIME NULL AFTER account_status" },
+    { name: 'is_login_restriction_permanent', query: "ALTER TABLE users ADD COLUMN is_login_restriction_permanent TINYINT(1) NOT NULL DEFAULT 0 AFTER login_restricted_until" }
   ];
 
   for (const column of userColumnDefinitions) {

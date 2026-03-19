@@ -3,22 +3,28 @@
  */
 const { getPool } = require('../config/database');
 const { pickUserRow } = require('../utils/response');
+const { ensureResolvedLoginRestriction } = require('./userModel');
 
 async function listUsers() {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT id, email, nickname, role, member_type AS memberType, total_points AS totalPoints, created_at AS createdAt
+    `SELECT *
      FROM users
      WHERE role = 'USER'
      ORDER BY created_at DESC, id DESC`
   );
-  return rows;
+  const resolvedRows = [];
+  for (const row of rows) {
+    const resolved = await ensureResolvedLoginRestriction(row);
+    resolvedRows.push(pickUserRow(resolved || row));
+  }
+  return resolvedRows;
 }
 
 async function findUserById(userId) {
   const pool = getPool();
   const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
-  return rows[0] || null;
+  return ensureResolvedLoginRestriction(rows[0] || null);
 }
 
 async function getUserDetail(userId) {
@@ -75,6 +81,21 @@ async function updateUserByAdmin(userId, payload) {
   if (Object.prototype.hasOwnProperty.call(payload, 'member_type')) {
     fields.push('member_type = ?');
     values.push(payload.member_type);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'account_status')) {
+    fields.push('account_status = ?');
+    values.push(payload.account_status);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'login_restricted_until')) {
+    fields.push('login_restricted_until = ?');
+    values.push(payload.login_restricted_until);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'is_login_restriction_permanent')) {
+    fields.push('is_login_restriction_permanent = ?');
+    values.push(payload.is_login_restriction_permanent ? 1 : 0);
   }
 
   if (Object.prototype.hasOwnProperty.call(payload, 'total_points')) {
