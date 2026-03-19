@@ -116,6 +116,19 @@ function sanitizePostForViewer(post) {
   return normalized;
 }
 
+function isHiddenPost(post) {
+  return Boolean(post?.is_hidden || post?.isHidden);
+}
+
+function ensurePostAccessible(post, res) {
+  if (!isHiddenPost(post)) {
+    return true;
+  }
+
+  res.status(403).json({ message: '제한된 게시글이라 확인할 수 없습니다.' });
+  return false;
+}
+
 function sanitizeCommentForViewer(comment, post, currentUser) {
   const normalized = {
     ...comment,
@@ -193,6 +206,7 @@ async function getPost(req, res, next) {
 
     const post = await postModel.findPostById(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
+    if (!ensurePostAccessible(post, res)) return;
 
     await postModel.incrementPostViewCount(postId);
 
@@ -393,6 +407,7 @@ async function listComments(req, res, next) {
 
     const post = await postModel.findPostById(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
+    if (!ensurePostAccessible(post, res)) return;
 
     const comments = await postModel.listComments(postId);
     const visibleComments = comments.map((comment) => sanitizeCommentForViewer(comment, post, req.user));
