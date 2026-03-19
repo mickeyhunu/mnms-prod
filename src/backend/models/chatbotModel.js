@@ -4,6 +4,22 @@
 const { getChatbotPool } = require('../config/database');
 
 const TABLE_NAME_PATTERN = /^[A-Za-z0-9_]+$/;
+const DEFAULT_LIMIT = 50;
+const MAX_LIMIT = 500;
+const SORT_COLUMN_CANDIDATES = [
+  'created_at',
+  'createdAt',
+  'updated_at',
+  'updatedAt',
+  'reg_date',
+  'regDate',
+  'registered_at',
+  'registeredAt',
+  'timestamp',
+  'time',
+  'datetime',
+  'id'
+];
 
 function ensureTableName(tableName) {
   const normalized = String(tableName || '').trim();
@@ -15,17 +31,49 @@ function ensureTableName(tableName) {
 
 function normalizeLimit(limit) {
   const parsed = Number.parseInt(limit, 10);
-  if (!Number.isInteger(parsed) || parsed <= 0) return 50;
-  return Math.min(parsed, 500);
+  if (!Number.isInteger(parsed) || parsed <= 0) return DEFAULT_LIMIT;
+  return Math.min(parsed, MAX_LIMIT);
 }
 
-async function listTableRows(tableName, limit = 50) {
+async function listTables() {
+  const pool = getChatbotPool();
+  const [rows] = await pool.query('SHOW TABLES');
+
+  return rows
+    .map((row) => Object.values(row)[0])
+    .filter((name) => TABLE_NAME_PATTERN.test(String(name || '')))
+    .sort((a, b) => String(a).localeCompare(String(b), 'ko-KR'));
+}
+
+async function getTableColumns(tableName) {
+  const pool = getChatbotPool();
+  const safeTableName = ensureTableName(tableName);
+  const [rows] = await pool.query(`SHOW COLUMNS FROM \`${safeTableName}\``);
+  return rows;
+}
+
+async function resolveSortColumn(tableName) {
+  const columns = await getTableColumns(tableName);
+  const columnNames = columns.map((column) => column.Field);
+
+  for (const candidate of SORT_COLUMN_CANDIDATES) {
+    if (columnNames.includes(candidate)) {
+      return candidate;
+    }
+  }
+
+  return columnNames[0] || null;
+}
+
+async function listTableRows(tableName, limit = DEFAULT_LIMIT) {
   const pool = getChatbotPool();
   const safeTableName = ensureTableName(tableName);
   const rowLimit = normalizeLimit(limit);
+  const sortColumn = await resolveSortColumn(safeTableName);
 
+  const orderClause = sortColumn ? `ORDER BY \`${sortColumn}\` DESC` : '';
   const [rows] = await pool.query(
-    `SELECT * FROM \`${safeTableName}\` ORDER BY 1 DESC LIMIT ?`,
+    `SELECT * FROM \`${safeTableName}\` ${orderClause} LIMIT ?`,
     [rowLimit]
   );
 
@@ -35,5 +83,8 @@ async function listTableRows(tableName, limit = 50) {
 module.exports = {
   ensureTableName,
   normalizeLimit,
+  listTables,
+  getTableColumns,
+  resolveSortColumn,
   listTableRows
 };

@@ -7,6 +7,9 @@ const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddlewa
 
 const router = express.Router();
 
+router.get('/live/tables', chatbotController.listAvailableTables);
+router.get('/live/table', chatbotController.listTableRows);
+
 router.use(authMiddleware, adminMiddleware);
 router.get('/table', chatbotController.listTableRows);
 

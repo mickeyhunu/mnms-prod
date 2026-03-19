@@ -14,11 +14,11 @@ const dbConfig = {
 };
 
 const chatbotDbConfig = {
-  host: process.env.CHATBOT_MYSQL_HOST || dbConfig.host,
-  port: Number(process.env.CHATBOT_MYSQL_PORT || dbConfig.port),
-  user: process.env.CHATBOT_MYSQL_USER || dbConfig.user,
-  password: process.env.CHATBOT_MYSQL_PASSWORD || dbConfig.password,
-  database: process.env.CHATBOT_MYSQL_DATABASE || 'chatbotdb',
+  host: process.env.CHATBOT_MYSQL_HOST || process.env.DB_HOST || dbConfig.host,
+  port: Number(process.env.CHATBOT_MYSQL_PORT || process.env.DB_PORT || dbConfig.port),
+  user: process.env.CHATBOT_MYSQL_USER || process.env.DB_USER || dbConfig.user,
+  password: process.env.CHATBOT_MYSQL_PASSWORD || process.env.DB_PASSWORD || dbConfig.password,
+  database: process.env.CHATBOT_MYSQL_DATABASE || process.env.DB_NAME || 'chatbotdb',
   connectionLimit: 10,
   charset: 'utf8mb4'
 };
