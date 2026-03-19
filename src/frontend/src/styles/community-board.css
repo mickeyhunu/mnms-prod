@@ -539,7 +539,7 @@
     cursor: pointer;
 }
 
-.community-section-header {
+header.community-section-header {
     position: sticky;
     top: 0;
     z-index: 10;
@@ -552,18 +552,18 @@
     color: #f8fafc;
 }
 
-.community-header-left,
-.community-actions {
+header.community-section-header .community-header-left,
+header.community-section-header .community-actions {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.community-header-left {
+header.community-section-header .community-header-left {
     position: relative;
 }
 
-.community-board-name {
+header.community-section-header .community-board-name {
     font-size: 16px;
     font-weight: 600;
     max-width: 220px;
@@ -572,7 +572,7 @@
     white-space: nowrap;
 }
 
-.board-menu-toggle {
+header.community-section-header .board-menu-toggle {
     width: 36px;
     height: 36px;
     border: 1px solid #5d6472;
@@ -588,11 +588,11 @@
     cursor: pointer;
 }
 
-.board-menu-toggle:hover {
+header.community-section-header .board-menu-toggle:hover {
     background: #313848;
 }
 
-.board-tabs {
+header.community-section-header .board-tabs {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
@@ -608,7 +608,7 @@
     z-index: 20;
 }
 
-.board-tab {
+header.community-section-header .board-tab {
     width: 100%;
     text-align: left;
     border: 1px solid #41495a;
@@ -623,14 +623,14 @@
     transition: all 0.2s ease;
 }
 
-.board-tab:hover {
+header.community-section-header .board-tab:hover {
     border-color: #b579df;
     color: #542274;
     transform: translateY(-1px);
     background: #353d4f;
 }
 
-.board-tab.active {
+header.community-section-header .board-tab.active {
     background: #6c2e96;
     color: #fff;
     border-color: #6c2e96;
