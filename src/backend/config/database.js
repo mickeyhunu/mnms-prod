@@ -4,11 +4,11 @@
 const mysql = require('mysql2/promise');
 
 const dbConfig = {
-  host: process.env.MYSQL_HOST || '127.0.0.1',
-  port: Number(process.env.MYSQL_PORT || 3306),
-  user: process.env.MYSQL_USER || 'root',
-  password: process.env.MYSQL_PASSWORD || 'root',
-  database: process.env.MYSQL_DATABASE || 'midnightmens',
+  host: process.env.MYSQL_HOST || process.env.DB_HOST || '127.0.0.1',
+  port: Number(process.env.MYSQL_PORT || process.env.DB_PORT || 3306),
+  user: process.env.MYSQL_USER || process.env.DB_USER || 'root',
+  password: process.env.MYSQL_PASSWORD || process.env.DB_PASSWORD || 'root',
+  database: process.env.MYSQL_DATABASE || process.env.DB_NAME || 'midnightmens',
   connectionLimit: 10,
   charset: 'utf8mb4'
 };
