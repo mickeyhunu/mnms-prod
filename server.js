@@ -1,9 +1,31 @@
 /**
  * 파일 역할: Node/Express 서버를 초기화하고 백엔드 라우트를 연결하는 진입점 파일.
  */
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+
+function loadEnvFile(envFilePath) {
+  if (!fs.existsSync(envFilePath)) return;
+
+  const content = fs.readFileSync(envFilePath, 'utf8');
+  content.split(/\r?\n/).forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return;
+
+    const separatorIndex = trimmed.indexOf('=');
+    if (separatorIndex === -1) return;
+
+    const key = trimmed.slice(0, separatorIndex).trim();
+    if (!key || Object.prototype.hasOwnProperty.call(process.env, key)) return;
+
+    const value = trimmed.slice(separatorIndex + 1).trim();
+    process.env[key] = value;
+  });
+}
+
+loadEnvFile(path.join(__dirname, 'src/backend/.env'));
 
 const { initDatabase, dbConfig } = require('./src/backend/config/database');
 const authRoutes = require('./src/backend/routes/authRoutes');
@@ -24,6 +46,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static(FRONTEND_DIR));
 
+app.use('/api/chatbot', chatbotRoutes);
+
 app.use('/api', (req, res, next) => {
   if (!isDatabaseReady) {
     return res.status(503).json({ message: '데이터베이스 연결이 준비되지 않았습니다.' });
@@ -36,7 +60,6 @@ app.use('/api/posts', postRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/support', supportRoutes);
-app.use('/api/chatbot', chatbotRoutes);
 
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ message: 'Not Found' });
