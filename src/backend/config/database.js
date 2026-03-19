@@ -4,21 +4,21 @@
 const mysql = require('mysql2/promise');
 
 const dbConfig = {
-  host: process.env.MYSQL_HOST || process.env.DB_HOST || '127.0.0.1',
-  port: Number(process.env.MYSQL_PORT || process.env.DB_PORT || 3306),
-  user: process.env.MYSQL_USER || process.env.DB_USER || 'root',
-  password: process.env.MYSQL_PASSWORD || process.env.DB_PASSWORD || 'root',
-  database: process.env.MYSQL_DATABASE || process.env.DB_NAME || 'midnightmens',
+  host: process.env.MNMS_MYSQL_HOST || process.env.MYSQL_HOST || process.env.DB_HOST || '127.0.0.1',
+  port: Number(process.env.MNMS_MYSQL_PORT || process.env.MYSQL_PORT || process.env.DB_PORT || 3306),
+  user: process.env.MNMS_MYSQL_USER || process.env.MYSQL_USER || process.env.DB_USER || 'root',
+  password: process.env.MNMS_MYSQL_PASSWORD || process.env.MYSQL_PASSWORD || process.env.DB_PASSWORD || 'root',
+  database: process.env.MNMS_MYSQL_DATABASE || process.env.MYSQL_DATABASE || process.env.DB_NAME || 'mnms_DB',
   connectionLimit: 10,
   charset: 'utf8mb4'
 };
 
 const chatbotDbConfig = {
-  host: process.env.CHATBOT_MYSQL_HOST || process.env.DB_HOST || dbConfig.host,
-  port: Number(process.env.CHATBOT_MYSQL_PORT || process.env.DB_PORT || dbConfig.port),
-  user: process.env.CHATBOT_MYSQL_USER || process.env.DB_USER || dbConfig.user,
-  password: process.env.CHATBOT_MYSQL_PASSWORD || process.env.DB_PASSWORD || dbConfig.password,
-  database: process.env.CHATBOT_MYSQL_DATABASE || process.env.DB_NAME || 'chatBot_DB',
+  host: process.env.CHATBOT_MYSQL_HOST || dbConfig.host,
+  port: Number(process.env.CHATBOT_MYSQL_PORT || dbConfig.port),
+  user: process.env.CHATBOT_MYSQL_USER || dbConfig.user,
+  password: process.env.CHATBOT_MYSQL_PASSWORD || dbConfig.password,
+  database: process.env.CHATBOT_MYSQL_DATABASE || 'chatBot_DB',
   connectionLimit: 10,
   charset: 'utf8mb4'
 };
@@ -33,7 +33,6 @@ let resolvedChatbotDbConfig;
 function getChatbotDatabaseCandidates() {
   return [...new Set([
     chatbotDbConfig.database,
-    process.env.DB_NAME,
     process.env.CHATBOT_MYSQL_DATABASE,
     ...CHATBOT_DATABASE_FALLBACKS
   ].map((value) => String(value || '').trim()).filter(Boolean))];
