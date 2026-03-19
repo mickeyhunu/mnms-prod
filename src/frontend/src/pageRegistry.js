@@ -772,22 +772,6 @@ const pageRegistry = {
                 <div class="area-filter area-filter--districts" id="live-category-filter" aria-label="LIVE 카테고리 선택"></div>
             </div>
 
-            <section class="live-current-selection" aria-label="현재 선택된 LIVE 조건">
-                <div class="live-current-selection__content">
-                    <p class="live-current-selection__eyebrow">현재 선택</p>
-                    <strong class="live-current-selection__title" id="live-selected-pair">-</strong>
-                    <p class="live-current-selection__meta">
-                        <span id="live-selected-store">-</span>
-                        <span aria-hidden="true">·</span>
-                        <span id="live-selected-category">-</span>
-                    </p>
-                </div>
-                <div class="live-current-selection__count">
-                    <span class="live-current-selection__count-label">총 항목</span>
-                    <strong class="live-current-selection__count-value"><span id="live-total-count">0</span>건</strong>
-                </div>
-            </section>
-
             <div class="live-loading-overlay hidden" id="live-loading" aria-live="polite" aria-busy="true">
                 <div class="live-loading-overlay__content">
                     <div class="spinner" aria-hidden="true"></div>

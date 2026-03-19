@@ -10,7 +10,6 @@ const LIVE_CATEGORIES = {
 const LIVE_FILTERS_CACHE_KEY = 'liveFiltersCache:v1';
 const LIVE_ENTRIES_CACHE_PREFIX = 'liveEntriesCache:v1:';
 const LIVE_REFRESH_INTERVAL_MS = 30000;
-const LIVE_ALL_STORES_LABEL = '전체';
 
 const liveState = {
     stores: [],
@@ -55,7 +54,7 @@ function bindLiveEvents() {
         const button = event.target.closest('[data-store-option]');
         if (!button) return;
 
-        const nextStoreName = button.dataset.storeOption ? decodeURIComponent(button.dataset.storeOption) : LIVE_ALL_STORES_LABEL;
+        const nextStoreName = button.dataset.storeOption ? decodeURIComponent(button.dataset.storeOption) : '';
         if (liveState.selectedStoreName === nextStoreName) return;
 
         liveState.selectedStoreName = nextStoreName;
@@ -112,13 +111,12 @@ function hydrateLiveFiltersCache() {
     if (!cachedFilters?.data) {
         renderStoreNameList();
         renderCategoryButtons([]);
-        renderLiveSummary();
         return false;
     }
 
     liveState.stores = Array.isArray(cachedFilters.data.stores) ? cachedFilters.data.stores : [];
     liveState.categories = Array.isArray(cachedFilters.data.categories) ? cachedFilters.data.categories : [];
-    syncSelectedFilters();
+    syncSelectedStoreName();
 
     renderStoreNameList();
     renderStoreButtons();
@@ -159,7 +157,7 @@ async function loadLiveFilters() {
 
     liveState.stores = Array.isArray(response?.stores) ? response.stores : [];
     liveState.categories = Array.isArray(response?.categories) ? response.categories : [];
-    syncSelectedFilters();
+    syncSelectedStoreName();
 
     writeLiveCache(LIVE_FILTERS_CACHE_KEY, {
         stores: liveState.stores,
@@ -190,7 +188,7 @@ async function loadLiveEntries({ showLoading = false } = {}) {
     try {
         const response = await APIClient.get('/live/entries', {
             category: liveState.selectedCategoryKey,
-            storeName: liveState.selectedStoreName === LIVE_ALL_STORES_LABEL ? '' : liveState.selectedStoreName,
+            storeName: liveState.selectedStoreName,
             limit: 30
         });
 
@@ -236,8 +234,7 @@ function renderStoreButtons() {
     const storeFilter = document.getElementById('live-store-filter');
     if (!storeFilter) return;
 
-    const items = [LIVE_ALL_STORES_LABEL, ...liveState.stores];
-    storeFilter.innerHTML = items.map((storeName) => `
+    storeFilter.innerHTML = liveState.stores.map((storeName) => `
         <button
             type="button"
             class="area-filter__button ${liveState.selectedStoreName === storeName ? 'is-active' : ''}"
@@ -273,27 +270,6 @@ function renderStoreNameList() {
     `).join('');
 }
 
-function syncSelectedFilters() {
-    const storeNames = Array.isArray(liveState.stores) ? liveState.stores : [];
-    const categoryKeys = new Set(
-        Array.isArray(liveState.categories)
-            ? liveState.categories.map((category) => category?.key).filter(Boolean)
-            : []
-    );
-
-    if (!storeNames.length) {
-        liveState.selectedStoreName = LIVE_ALL_STORES_LABEL;
-    } else if (!liveState.selectedStoreName || liveState.selectedStoreName === LIVE_ALL_STORES_LABEL) {
-        liveState.selectedStoreName = storeNames[0];
-    } else if (!storeNames.includes(liveState.selectedStoreName)) {
-        liveState.selectedStoreName = storeNames[0];
-    }
-
-    if (categoryKeys.size && !categoryKeys.has(liveState.selectedCategoryKey)) {
-        liveState.selectedCategoryKey = Array.from(categoryKeys)[0];
-    }
-}
-
 function renderCategoryButtons(categories) {
     const categoryFilter = document.getElementById('live-category-filter');
     if (!categoryFilter) return;
@@ -322,21 +298,14 @@ function renderCategoryButtons(categories) {
 function renderLiveSummary(response = null) {
     const selectedStore = document.getElementById('live-selected-store');
     const selectedCategory = document.getElementById('live-selected-category');
-    const selectedPair = document.getElementById('live-selected-pair');
     const totalCount = document.getElementById('live-total-count');
-    const resolvedStoreName = response?.selectedStoreName || liveState.selectedStoreName || LIVE_ALL_STORES_LABEL;
-    const resolvedCategoryLabel = response?.selectedCategory?.label || LIVE_CATEGORIES[liveState.selectedCategoryKey]?.label || '초이스톡';
 
     if (selectedStore) {
-        selectedStore.textContent = resolvedStoreName;
+        selectedStore.textContent = response?.selectedStoreName || liveState.selectedStoreName;
     }
 
     if (selectedCategory) {
-        selectedCategory.textContent = resolvedCategoryLabel;
-    }
-
-    if (selectedPair) {
-        selectedPair.textContent = `${resolvedStoreName} ${resolvedCategoryLabel}`;
+        selectedCategory.textContent = response?.selectedCategory?.label || LIVE_CATEGORIES[liveState.selectedCategoryKey]?.label || '초이스톡';
     }
 
     if (totalCount) {
