@@ -4,6 +4,7 @@
 const { getChatbotPool } = require('../config/database');
 
 const TABLE_NAME_PATTERN = /^[A-Za-z0-9_]+$/;
+const STORE_NO_CANDIDATES = ['storeNo', 'store_no', 'shopNo', 'shop_no', 'branchNo', 'branch_no'];
 const STORE_NAME_CANDIDATES = ['storeName', 'store_name', 'name', 'shopName', 'shop_name', 'branchName', 'branch_name'];
 const STORE_FILTER_CANDIDATES = ['storeName', 'store_name', 'name', 'shopName', 'shop_name', 'branchName', 'branch_name', 'store', 'storeNm'];
 const ORDER_CANDIDATES = ['updatedAt', 'updated_at', 'createdAt', 'created_at', 'regDate', 'reg_date', 'entryDate', 'entry_date', 'date'];
@@ -49,60 +50,107 @@ async function getTableColumns(tableName) {
   return rows.map((row) => row.Field);
 }
 
-async function listStoreNames() {
+async function listStores() {
   const pool = await getChatbotPool();
   const tableName = 'INFO_STORE';
   const columns = await getTableColumns(tableName);
+  const storeNoColumn = findColumn(columns, STORE_NO_CANDIDATES);
   const storeNameColumn = findColumn(columns, STORE_NAME_CANDIDATES);
 
   if (!storeNameColumn) {
     throw new Error('INFO_STORE에서 매장명 컬럼을 찾을 수 없습니다.');
   }
 
+  const selectStoreNo = storeNoColumn ? `\`${storeNoColumn}\` AS storeNo,` : 'NULL AS storeNo,';
+  const orderByClause = storeNoColumn
+    ? `ORDER BY \`${storeNoColumn}\` ASC, \`${storeNameColumn}\` ASC`
+    : `ORDER BY \`${storeNameColumn}\` ASC`;
+
   const [rows] = await pool.query(
-    `SELECT DISTINCT \`${storeNameColumn}\` AS storeName
-     FROM \`${tableName}\`
-     WHERE \`${storeNameColumn}\` IS NOT NULL
-       AND TRIM(\`${storeNameColumn}\`) <> ''
-     ORDER BY \`${storeNameColumn}\` ASC`
+    `SELECT DISTINCT ${selectStoreNo}
+            \`${storeNameColumn}\` AS storeName
+       FROM \`${tableName}\`
+      WHERE \`${storeNameColumn}\` IS NOT NULL
+        AND TRIM(\`${storeNameColumn}\`) <> ''
+      ${orderByClause}`
   );
 
-  return rows.map((row) => String(row.storeName).trim()).filter(Boolean);
+  return rows
+    .map((row) => ({
+      storeNo: Number.isFinite(Number(row.storeNo)) ? Number(row.storeNo) : null,
+      storeName: String(row.storeName || '').trim()
+    }))
+    .filter((row) => row.storeName)
+    .sort((a, b) => {
+      if (a.storeNo === null && b.storeNo === null) return a.storeName.localeCompare(b.storeName, 'ko');
+      if (a.storeNo === null) return 1;
+      if (b.storeNo === null) return -1;
+      return a.storeNo - b.storeNo;
+    });
 }
 
-async function countRows(tableName, storeName = '') {
+async function getStoreByNo(storeNo) {
+  const normalizedStoreNo = Number.parseInt(storeNo, 10);
+  if (!Number.isInteger(normalizedStoreNo) || normalizedStoreNo <= 0) {
+    return null;
+  }
+
+  const stores = await listStores();
+  return stores.find((store) => store.storeNo === normalizedStoreNo) || null;
+}
+
+function buildStoreFilter(columns, { storeNo = null, storeName = '' } = {}) {
+  const normalizedStoreNo = Number.parseInt(storeNo, 10);
+  const normalizedStoreName = String(storeName || '').trim();
+  const storeNoColumn = findColumn(columns, STORE_NO_CANDIDATES);
+  const storeNameColumn = findColumn(columns, STORE_FILTER_CANDIDATES);
+
+  if (Number.isInteger(normalizedStoreNo) && normalizedStoreNo > 0 && storeNoColumn) {
+    return { clause: `WHERE \`${storeNoColumn}\` = ?`, params: [normalizedStoreNo], column: storeNoColumn, type: 'storeNo' };
+  }
+
+  if (normalizedStoreName && storeNameColumn) {
+    return { clause: `WHERE \`${storeNameColumn}\` = ?`, params: [normalizedStoreName], column: storeNameColumn, type: 'storeName' };
+  }
+
+  return { clause: '', params: [], column: storeNoColumn || storeNameColumn || null, type: null };
+}
+
+async function countRows(tableName, { storeNo = null, storeName = '' } = {}) {
   const pool = await getChatbotPool();
   const safeTableName = ensureTableName(tableName);
   const columns = await getTableColumns(safeTableName);
-  const storeColumn = findColumn(columns, STORE_FILTER_CANDIDATES);
-  const hasStoreFilter = Boolean(storeName && storeColumn);
+  const storeFilter = buildStoreFilter(columns, { storeNo, storeName });
 
   const [rows] = await pool.query(
     `SELECT COUNT(*) AS total
-     FROM \`${safeTableName}\`
-     ${hasStoreFilter ? `WHERE \`${storeColumn}\` = ?` : ''}`,
-    hasStoreFilter ? [storeName] : []
+       FROM \`${safeTableName}\`
+       ${storeFilter.clause}`,
+    storeFilter.params
   );
 
   return Number(rows[0]?.total || 0);
 }
 
-async function listLiveEntries(categoryKey, { storeName = '', limit = 50 } = {}) {
+async function listLiveEntries(categoryKey, { storeNo = null, limit = 50 } = {}) {
   const pool = await getChatbotPool();
   const category = getCategoryConfig(categoryKey);
   const safeTableName = ensureTableName(category.tableName);
   const rowLimit = normalizeLimit(limit);
   const columns = await getTableColumns(safeTableName);
-  const storeColumn = findColumn(columns, STORE_FILTER_CANDIDATES);
   const orderColumn = findColumn(columns, ORDER_CANDIDATES);
   const titleColumn = findColumn(columns, DISPLAY_FIELD_CANDIDATES);
-  const whereClause = storeName && storeColumn ? `WHERE \`${storeColumn}\` = ?` : '';
+  const selectedStore = await getStoreByNo(storeNo);
+  const storeFilter = buildStoreFilter(columns, {
+    storeNo,
+    storeName: selectedStore?.storeName || ''
+  });
   const orderClause = orderColumn ? `ORDER BY \`${orderColumn}\` DESC` : '';
-  const params = storeName && storeColumn ? [storeName, rowLimit] : [rowLimit];
+  const params = [...storeFilter.params, rowLimit];
 
   const [rows] = await pool.query(
     `SELECT * FROM \`${safeTableName}\`
-     ${whereClause}
+     ${storeFilter.clause}
      ${orderClause}
      LIMIT ?`,
     params
@@ -110,7 +158,8 @@ async function listLiveEntries(categoryKey, { storeName = '', limit = 50 } = {})
 
   return {
     category,
-    storeFilterColumn: storeColumn,
+    selectedStore,
+    storeFilterColumn: storeFilter.column,
     titleColumn,
     columns,
     rows
@@ -118,7 +167,7 @@ async function listLiveEntries(categoryKey, { storeName = '', limit = 50 } = {})
 }
 
 async function getLiveFilters() {
-  const stores = await listStoreNames();
+  const stores = await listStores();
   const categories = await Promise.all(
     Object.values(LIVE_CATEGORY_MAP).map(async (category) => ({
       key: category.key,
@@ -138,6 +187,7 @@ module.exports = {
   getLiveFilters,
   getTableColumns,
   listLiveEntries,
-  listStoreNames,
+  getStoreByNo,
+  listStores,
   normalizeLimit
 };

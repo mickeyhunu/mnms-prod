@@ -762,13 +762,20 @@ const pageRegistry = {
                 </div>
             </header>
 
-            <div class="site-subheader__container">
-                <div class="site-subheader__top-row">
-                    <div class="site-subheader__filters">
-                        <nav class="area-filter area-filter--cities" id="live-store-filter" aria-label="매장 선택"></nav>
+            <div class="site-subheader__container live-subheader">
+                <div class="live-subheader__title-row">
+                    <div class="live-subheader__title-block">
+                        <span class="live-subheader__eyebrow"><span class="live-status-dot" aria-hidden="true"></span>실시간 현황</span>
+                        <h2 class="live-subheader__title">매장별 LIVE</h2>
+                    </div>
+                    <div class="live-summary-pills" aria-label="선택된 LIVE 정보">
+                        <span class="live-summary-pill">매장 <strong id="live-selected-store">-</strong></span>
+                        <span class="live-summary-pill">카테고리 <strong id="live-selected-category">초이스톡</strong></span>
+                        <span class="live-summary-pill">항목 <strong id="live-total-count">0</strong></span>
                     </div>
                 </div>
 
+                <nav class="area-filter area-filter--cities" id="live-store-filter" aria-label="매장 선택"></nav>
                 <div class="area-filter area-filter--districts" id="live-category-filter" aria-label="LIVE 카테고리 선택"></div>
             </div>
 
