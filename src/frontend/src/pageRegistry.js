@@ -18,17 +18,16 @@ const pageRegistry = {
     </header>
 
     <main class="main-content">
-        <div class="container">
-            <div class="community-section-header admin-page-section-header">
-                <div class="community-header-left admin-page-section-header-top">
-                    <a href="/" class="community-back-link admin-page-back-link" aria-label="홈으로 이동">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
-                    </a>
-                    <h1>관리자 페이지</h1>
-                </div>
-                <p>게시글, 댓글, 회원, 광고와 고객 지원 내역을 한 곳에서 관리하세요.</p>
+        <header class="community-section-header">
+            <div class="community-header-left">
+                <a href="/" class="community-back-link" aria-label="홈으로 이동">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                </a>
+                <span class="community-board-name">관리자 페이지</span>
             </div>
+        </header>
 
+        <div class="container">
 
             <div class="admin-tabs">
                 <button class="admin-tab active" data-tab="posts">게시글 관리</button>
