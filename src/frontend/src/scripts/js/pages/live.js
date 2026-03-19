@@ -248,6 +248,17 @@ function renderStoreButtons() {
     `).join('');
 }
 
+function syncSelectedStoreName() {
+    if (!Array.isArray(liveState.stores) || !liveState.stores.length) {
+        liveState.selectedStoreName = '';
+        return;
+    }
+
+    if (!liveState.stores.includes(liveState.selectedStoreName)) {
+        [liveState.selectedStoreName] = liveState.stores;
+    }
+}
+
 function renderStoreNameList() {
     const storeNameList = document.getElementById('live-store-name-list');
     if (!storeNameList) return;
