@@ -1,5 +1,5 @@
 /**
- * 파일 역할: chatbotdb 조회 요청을 처리하는 컨트롤러 파일.
+ * 파일 역할: chatBot_DB 조회 요청을 처리하는 컨트롤러 파일.
  */
 const chatbotModel = require('../models/chatbotModel');
 

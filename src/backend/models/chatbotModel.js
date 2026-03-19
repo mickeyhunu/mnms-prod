@@ -1,5 +1,5 @@
 /**
- * 파일 역할: chatbotdb 테이블을 안전하게 조회하는 모델 파일.
+ * 파일 역할: chatBot_DB 테이블을 읽기 전용으로 안전하게 조회하는 모델 파일.
  */
 const { getChatbotPool } = require('../config/database');
 

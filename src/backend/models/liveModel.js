@@ -1,5 +1,5 @@
 /**
- * 파일 역할: chatBot_DB 기반 LIVE 페이지 필터/목록 데이터를 조회하는 모델 파일.
+ * 파일 역할: chatBot_DB에서 룸/웨이팅/초이스톡/엔트리 데이터를 읽어오는 LIVE 페이지 조회 모델 파일.
  */
 const { getChatbotPool } = require('../config/database');
 
