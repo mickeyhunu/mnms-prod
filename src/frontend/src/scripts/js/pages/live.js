@@ -22,6 +22,7 @@ async function initLivePage() {
     }
 
     bindLiveEvents();
+    renderStoreNameList();
     renderCategoryButtons([]);
 
     try {
@@ -66,6 +67,7 @@ async function loadLiveFilters() {
     liveState.stores = Array.isArray(response?.stores) ? response.stores : [];
     liveState.categories = Array.isArray(response?.categories) ? response.categories : [];
 
+    renderStoreNameList();
     renderStoreButtons();
     renderCategoryButtons(liveState.categories);
 }
@@ -114,6 +116,20 @@ function renderStoreButtons() {
         >
             ${sanitizeHTML(storeName)}
         </button>
+    `).join('');
+}
+
+function renderStoreNameList() {
+    const storeNameList = document.getElementById('live-store-name-list');
+    if (!storeNameList) return;
+
+    if (!Array.isArray(liveState.stores) || !liveState.stores.length) {
+        storeNameList.innerHTML = '<p class="live-store-name-list__empty">등록된 매장명이 없습니다.</p>';
+        return;
+    }
+
+    storeNameList.innerHTML = liveState.stores.map((storeName) => `
+        <span class="live-store-name-list__item">${sanitizeHTML(storeName)}</span>
     `).join('');
 }
 
