@@ -7,11 +7,20 @@ const LIVE_CATEGORIES = {
     entry: { key: 'entry', label: '엔트리' }
 };
 
+const LIVE_FILTERS_CACHE_KEY = 'liveFiltersCache:v1';
+const LIVE_ENTRIES_CACHE_PREFIX = 'liveEntriesCache:v1:';
+const LIVE_REFRESH_INTERVAL_MS = 30000;
+
 const liveState = {
     stores: [],
     categories: [],
     selectedStoreName: '전체',
-    selectedCategoryKey: 'choice'
+    selectedCategoryKey: 'choice',
+    refreshTimerId: null,
+    entriesRequestId: 0,
+    filtersRequestId: 0,
+    hasBoundEvents: false,
+    hasCachedEntries: false
 };
 
 async function initLivePage() {
@@ -22,18 +31,23 @@ async function initLivePage() {
     }
 
     bindLiveEvents();
-    renderStoreNameList();
-    renderCategoryButtons([]);
+    hydrateLiveFiltersCache();
+    hydrateLiveEntriesCache();
+    startLiveAutoRefresh();
 
     try {
-        await loadLiveFilters();
-        await loadLiveEntries();
+        await refreshLiveData({ useLoading: !liveState.hasCachedEntries });
     } catch (error) {
-        showLiveError(error.message || 'LIVE 데이터를 불러오지 못했습니다.');
+        if (!liveState.hasCachedEntries) {
+            showLiveError(error.message || 'LIVE 데이터를 불러오지 못했습니다.');
+            updateLiveRefreshStatus('LIVE 데이터를 불러오지 못했습니다.', 'error');
+        }
     }
 }
 
 function bindLiveEvents() {
+    if (liveState.hasBoundEvents) return;
+
     const storeFilter = document.getElementById('live-store-filter');
     const categoryFilter = document.getElementById('live-category-filter');
 
@@ -46,7 +60,8 @@ function bindLiveEvents() {
 
         liveState.selectedStoreName = nextStoreName;
         renderStoreButtons();
-        await loadLiveEntries();
+        const hasCache = hydrateLiveEntriesCache();
+        await loadLiveEntries({ useLoading: !hasCache });
     });
 
     categoryFilter?.addEventListener('click', async (event) => {
@@ -58,29 +73,119 @@ function bindLiveEvents() {
 
         liveState.selectedCategoryKey = nextCategoryKey;
         renderCategoryButtons(liveState.categories);
-        await loadLiveEntries();
+        const hasCache = hydrateLiveEntriesCache();
+        await loadLiveEntries({ useLoading: !hasCache });
     });
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            refreshLiveData({ useLoading: false }).catch((error) => {
+                console.error('LIVE visibility refresh error:', error);
+            });
+        }
+    });
+
+    liveState.hasBoundEvents = true;
+}
+
+function startLiveAutoRefresh() {
+    if (liveState.refreshTimerId) {
+        clearInterval(liveState.refreshTimerId);
+    }
+
+    liveState.refreshTimerId = window.setInterval(() => {
+        if (document.hidden) return;
+
+        refreshLiveData({ useLoading: false }).catch((error) => {
+            console.error('LIVE auto refresh error:', error);
+        });
+    }, LIVE_REFRESH_INTERVAL_MS);
+}
+
+async function refreshLiveData({ useLoading = false } = {}) {
+    await loadLiveFilters();
+    await loadLiveEntries({ useLoading });
+}
+
+function hydrateLiveFiltersCache() {
+    const cachedFilters = readLiveCache(LIVE_FILTERS_CACHE_KEY);
+    if (!cachedFilters?.data) {
+        renderStoreNameList();
+        renderCategoryButtons([]);
+        return false;
+    }
+
+    liveState.stores = Array.isArray(cachedFilters.data.stores) ? cachedFilters.data.stores : [];
+    liveState.categories = Array.isArray(cachedFilters.data.categories) ? cachedFilters.data.categories : [];
+
+    renderStoreNameList();
+    renderStoreButtons();
+    renderCategoryButtons(liveState.categories);
+    return true;
+}
+
+function hydrateLiveEntriesCache() {
+    const cacheKey = getLiveEntriesCacheKey();
+    const cachedEntries = readLiveCache(cacheKey);
+    if (!cachedEntries?.data) {
+        liveState.hasCachedEntries = false;
+        renderLiveSummary();
+
+        const listElement = document.getElementById('live-entry-list');
+        const emptyElement = document.getElementById('live-empty');
+
+        if (listElement) {
+            listElement.innerHTML = '';
+        }
+
+        hideElement(emptyElement);
+        updateLiveRefreshStatus('표시할 저장 데이터가 없습니다. 최신 데이터를 가져오는 중입니다...', 'muted');
+        return false;
+    }
+
+    liveState.hasCachedEntries = true;
+    applyLiveEntriesResponse(cachedEntries.data, { cachedAt: cachedEntries.savedAt, isCached: true });
+    return true;
 }
 
 async function loadLiveFilters() {
+    const requestId = ++liveState.filtersRequestId;
     const response = await APIClient.get('/live/filters');
+
+    if (requestId !== liveState.filtersRequestId) {
+        return;
+    }
+
     liveState.stores = Array.isArray(response?.stores) ? response.stores : [];
     liveState.categories = Array.isArray(response?.categories) ? response.categories : [];
+
+    writeLiveCache(LIVE_FILTERS_CACHE_KEY, {
+        stores: liveState.stores,
+        categories: liveState.categories
+    });
 
     renderStoreNameList();
     renderStoreButtons();
     renderCategoryButtons(liveState.categories);
 }
 
-async function loadLiveEntries() {
+async function loadLiveEntries({ useLoading = false } = {}) {
     const loadingElement = document.getElementById('live-loading');
-    const emptyElement = document.getElementById('live-empty');
     const errorElement = document.getElementById('live-error');
+    const emptyElement = document.getElementById('live-empty');
     const listElement = document.getElementById('live-entry-list');
+    const hasVisibleEntries = Boolean(listElement?.children.length);
+    const requestId = ++liveState.entriesRequestId;
 
-    hideElement(emptyElement);
     hideElement(errorElement);
-    showElement(loadingElement);
+
+    if (useLoading && !hasVisibleEntries) {
+        hideElement(emptyElement);
+        showElement(loadingElement);
+    } else {
+        hideElement(loadingElement);
+        updateLiveRefreshStatus('저장된 데이터를 먼저 보여주고 있으며, 백그라운드에서 최신 데이터를 확인하고 있습니다...', 'refreshing');
+    }
 
     try {
         const response = await APIClient.get('/live/entries', {
@@ -89,18 +194,45 @@ async function loadLiveEntries() {
             limit: 30
         });
 
-        renderLiveSummary(response);
-        renderLiveEntries(response?.rows || [], response?.titleColumn);
-
-        if (!Array.isArray(response?.rows) || !response.rows.length) {
-            showElement(emptyElement);
+        if (requestId !== liveState.entriesRequestId) {
+            return;
         }
+
+        writeLiveCache(getLiveEntriesCacheKey(), response);
+        liveState.hasCachedEntries = true;
+        applyLiveEntriesResponse(response, { cachedAt: Date.now(), isCached: false });
     } catch (error) {
-        listElement.innerHTML = '';
-        showLiveError(error.message || 'LIVE 데이터를 불러오지 못했습니다.');
+        if (requestId !== liveState.entriesRequestId) {
+            return;
+        }
+
+        if (!hasVisibleEntries) {
+            renderLiveEntries([], null);
+            showLiveError(error.message || 'LIVE 데이터를 불러오지 못했습니다.');
+        }
+
+        updateLiveRefreshStatus('저장된 데이터를 표시 중입니다. 최신화에는 실패했습니다.', 'error');
+        console.error('LIVE entries load error:', error);
+        throw error;
     } finally {
         hideElement(loadingElement);
     }
+}
+
+function applyLiveEntriesResponse(response, { cachedAt = null, isCached = false } = {}) {
+    renderLiveSummary(response);
+    renderLiveEntries(response?.rows || [], response?.titleColumn);
+
+    const hasRows = Array.isArray(response?.rows) && response.rows.length > 0;
+    const emptyElement = document.getElementById('live-empty');
+
+    if (hasRows) {
+        hideElement(emptyElement);
+    } else {
+        showElement(emptyElement);
+    }
+
+    updateLiveRefreshStatus(buildLiveRefreshMessage(cachedAt, isCached), isCached ? 'muted' : 'fresh');
 }
 
 function renderStoreButtons() {
@@ -158,7 +290,7 @@ function renderCategoryButtons(categories) {
     `).join('');
 }
 
-function renderLiveSummary(response) {
+function renderLiveSummary(response = null) {
     const selectedStore = document.getElementById('live-selected-store');
     const selectedCategory = document.getElementById('live-selected-category');
     const totalCount = document.getElementById('live-total-count');
@@ -248,6 +380,65 @@ function formatFieldValue(value) {
     }
 
     return String(value);
+}
+
+function updateLiveRefreshStatus(message, tone = 'muted') {
+    const statusElement = document.getElementById('live-refresh-status');
+    if (!statusElement) return;
+
+    statusElement.textContent = message;
+    statusElement.className = `live-refresh-status live-refresh-status--${tone}`;
+}
+
+function buildLiveRefreshMessage(cachedAt, isCached) {
+    const formattedTime = formatLiveRefreshTime(cachedAt);
+    if (!formattedTime) {
+        return isCached
+            ? '저장된 데이터를 보여주고 있으며, 30초마다 자동으로 최신화를 시도합니다.'
+            : '최신 데이터를 불러왔습니다. 30초마다 자동으로 최신화를 시도합니다.';
+    }
+
+    return isCached
+        ? `저장된 데이터를 먼저 보여주고 있습니다. 마지막 저장 시각: ${formattedTime}`
+        : `최신 데이터를 갱신했습니다. 마지막 갱신 시각: ${formattedTime}`;
+}
+
+function formatLiveRefreshTime(timestamp) {
+    if (!timestamp) return '';
+
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return '';
+
+    return new Intl.DateTimeFormat('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    }).format(date);
+}
+
+function getLiveEntriesCacheKey() {
+    return `${LIVE_ENTRIES_CACHE_PREFIX}${liveState.selectedCategoryKey}:${liveState.selectedStoreName}`;
+}
+
+function readLiveCache(key) {
+    try {
+        const rawValue = window.localStorage.getItem(key);
+        return rawValue ? JSON.parse(rawValue) : null;
+    } catch (error) {
+        console.error('LIVE cache read error:', error);
+        return null;
+    }
+}
+
+function writeLiveCache(key, data) {
+    try {
+        window.localStorage.setItem(key, JSON.stringify({
+            savedAt: Date.now(),
+            data
+        }));
+    } catch (error) {
+        console.error('LIVE cache write error:', error);
+    }
 }
 
 function showLiveError(message) {
