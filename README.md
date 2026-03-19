@@ -41,21 +41,31 @@ npm run start
 - `MYSQL_PORT=3306`
 - `MYSQL_USER=root`
 - `MYSQL_PASSWORD=root`
-- `MYSQL_DATABASE=midnightmens`
+- `MYSQL_DATABASE=mnms_DB`
 
+## mnms_DB / chatBot_DB 분리
+- 사이트에서 생성/수정되는 회원, 게시글, 댓글, 문의 등의 데이터는 `mnms_DB`에 저장됩니다.
+- `chatBot_DB`는 룸, 웨이팅, 초이스톡, 엔트리 정보를 조회하는 읽기 전용 소스로만 사용합니다.
 
-## chatbotdb 동시 사용 (별도 DB 풀)
-미드나잇맨즈 DB(`MYSQL_DATABASE`)와 별개로 chatbot DB를 동시에 연결할 수 있습니다.
+메인 사이트 DB 환경변수(우선 사용):
+- `MNMS_MYSQL_HOST`
+- `MNMS_MYSQL_PORT`
+- `MNMS_MYSQL_USER`
+- `MNMS_MYSQL_PASSWORD`
+- `MNMS_MYSQL_DATABASE` (기본값: `mnms_DB`)
+
+## chatBot_DB 동시 사용 (별도 DB 풀)
+메인 사이트 DB와 별개로 `chatBot_DB`를 동시에 연결할 수 있습니다.
 
 - 관리자 전용 API: `GET /api/chatbot/table?table=<테이블명>&limit=100`
-- 응답: 지정한 chatbotdb 테이블의 최신 행 목록
+- 응답: 지정한 `chatBot_DB` 테이블의 최신 행 목록
 
 추가 환경변수(미지정 시 메인 DB 설정값 상속):
 - `CHATBOT_MYSQL_HOST`
 - `CHATBOT_MYSQL_PORT`
 - `CHATBOT_MYSQL_USER`
 - `CHATBOT_MYSQL_PASSWORD`
-- `CHATBOT_MYSQL_DATABASE` (기본값: `chatbotdb`)
+- `CHATBOT_MYSQL_DATABASE` (기본값: `chatBot_DB`)
 
 ## 기본 관리자 계정
 - email: `admin@company.com`
