@@ -244,7 +244,7 @@ function navigateBackFromRestrictedPost() {
 }
 
 function handleRestrictedPostAccess(error) {
-    const message = error?.data?.message || error?.message || '제한된 게시글이라 확인할 수 없습니다.';
+    const message = error?.data?.message || error?.message || '제한된 게시글 입니다.';
     alert(message);
     navigateBackFromRestrictedPost();
 }

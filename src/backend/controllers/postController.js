@@ -125,7 +125,7 @@ function ensurePostAccessible(post, res) {
     return true;
   }
 
-  res.status(403).json({ message: '제한된 게시글이라 확인할 수 없습니다.' });
+  res.status(403).json({ message: '제한된 게시글입니다.' });
   return false;
 }
 
