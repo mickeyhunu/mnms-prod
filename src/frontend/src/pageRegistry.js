@@ -754,41 +754,49 @@ const pageRegistry = {
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/pages/home.js", "scripts/js/components/footerNav.js"]
   },
   'live': {
-    template: `<header class="header">
-        <div class="header-container">
-            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
-            <nav class="nav" id="navigation">
-                <div class="nav-guest" id="nav-guest">
-                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
-                    <a href="register.html" class="btn btn-primary btn-sm">회원가입</a>
-                </div>
-                <div class="nav-user hidden" id="nav-user">
-                    <span class="user-nickname" id="user-nickname"></span>
-                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
-                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
-                </div>
-            </nav>
-        </div>
-    </header>
-
-    <main class="main-content">
-        <div class="container">
+    template: `<main class="main-content">
+        <div class="container live-page">
             <header class="community-section-header">
                 <div class="community-header-left">
                     <span class="community-board-name">LIVE</span>
+                    <p>매장 선택 버튼과 초이스톡/웨이팅/엔트리 데이터를 먼저 볼 수 있는 초안 화면입니다.</p>
                 </div>
             </header>
 
-            <div class="community-section-header">
-                <p>LIVE 서비스 준비 중입니다.</p>
-            </div>
-        </div>
-    </main>
+            <div class="container site-subheader__container">
+                <div class="site-subheader__top-row">
+                    <div class="site-subheader__filters">
+                        <nav class="area-filter area-filter--cities" id="live-store-filter" aria-label="매장 선택"></nav>
+                    </div>
+                </div>
 
-    <script src="scripts/js/components/sectionHeader.js"></script>
-    <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
+                <div class="area-filter area-filter--districts" id="live-category-filter" aria-label="LIVE 카테고리 선택"></div>
+            </div>
+
+            <section class="live-summary" aria-label="현재 선택 요약">
+                <article class="live-summary__item">
+                    <span class="live-summary__label">선택 매장</span>
+                    <strong class="live-summary__value" id="live-selected-store">전체</strong>
+                </article>
+                <article class="live-summary__item">
+                    <span class="live-summary__label">선택 구분</span>
+                    <strong class="live-summary__value" id="live-selected-category">초이스톡</strong>
+                </article>
+                <article class="live-summary__item">
+                    <span class="live-summary__label">조회 건수</span>
+                    <strong class="live-summary__value" id="live-total-count">0</strong>
+                </article>
+            </section>
+
+            <div class="live-feedback hidden" id="live-loading">LIVE 데이터를 불러오는 중입니다...</div>
+            <div class="live-feedback live-feedback--error hidden" id="live-error"></div>
+            <div class="live-feedback hidden" id="live-empty">선택한 조건에 해당하는 데이터가 없습니다.</div>
+
+            <section class="live-entry-list" id="live-entry-list" aria-label="LIVE 데이터 목록"></section>
+        </div>
+    </main>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/live.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/sectionHeader.js", "scripts/js/pages/live.js", "scripts/js/components/footerNav.js"]
   },
   'login': {
     template: `<header class="header">
