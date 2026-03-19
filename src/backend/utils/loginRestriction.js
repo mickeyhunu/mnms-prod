@@ -35,7 +35,9 @@ function formatRestrictionMessage(user, now = new Date()) {
   const state = getLoginRestrictionState(user, now);
   if (!state.isRestricted) return '';
   if (state.isPermanent) return '정지된 계정입니다. 로그인 제한이 영구적으로 적용되어 있습니다.';
-  return `정지된 계정입니다. ${state.restrictedUntil.toISOString()}까지 로그인이 제한되어 있습니다.`;
+
+  const restrictedUntilDate = state.restrictedUntil.toISOString().split('T')[0];
+  return `${restrictedUntilDate}까지 로그인이 제한되었습니다.`;
 }
 
 module.exports = {
