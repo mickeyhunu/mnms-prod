@@ -23,6 +23,34 @@ const liveState = {
     hasCachedEntries: false
 };
 
+function initializeScrollableFilter(element) {
+    if (!element || element.dataset.scrollCueBound === 'true') return;
+
+    const updateScrollState = () => {
+        window.requestAnimationFrame(() => {
+            syncScrollableFilterState(element);
+        });
+    };
+
+    element.addEventListener('scroll', updateScrollState, { passive: true });
+    window.addEventListener('resize', updateScrollState);
+    element.dataset.scrollCueBound = 'true';
+}
+
+function syncScrollableFilterState(element) {
+    if (!element) return;
+
+    const maxScrollLeft = Math.max(0, element.scrollWidth - element.clientWidth);
+    const scrollLeft = Math.max(0, element.scrollLeft);
+    const hasOverflow = maxScrollLeft > 4;
+    const canScrollLeft = scrollLeft > 4;
+    const canScrollRight = scrollLeft < maxScrollLeft - 4;
+
+    element.classList.toggle('has-overflow', hasOverflow);
+    element.classList.toggle('can-scroll-left', hasOverflow && canScrollLeft);
+    element.classList.toggle('can-scroll-right', hasOverflow && canScrollRight);
+}
+
 async function initLivePage() {
     Auth.updateHeaderUI();
 
@@ -49,6 +77,9 @@ function bindLiveEvents() {
 
     const storeFilter = document.getElementById('live-store-filter');
     const categoryFilter = document.getElementById('live-category-filter');
+
+    initializeScrollableFilter(storeFilter);
+    initializeScrollableFilter(categoryFilter);
 
     storeFilter?.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-store-option]');
@@ -257,6 +288,7 @@ function renderStoreButtons() {
             ${sanitizeHTML(store.storeName)}
         </button>
     `).join('');
+    syncScrollableFilterState(storeFilter);
 }
 
 function syncSelectedStoreNo() {
@@ -299,6 +331,7 @@ function renderCategoryButtons(categories) {
         };
     });
     categoryFilter.innerHTML = normalizedCategories.map((category) => `<button type="button" class="area-filter__button area-filter__button--district ${liveState.selectedCategoryKey === category.key ? 'is-active' : ''}" data-category-option="${category.key}">${sanitizeHTML(category.label)} </button>`).join('');
+    syncScrollableFilterState(categoryFilter);
 }
 
 function renderLiveSummary(response = null) {
