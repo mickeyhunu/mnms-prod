@@ -401,8 +401,7 @@ function createLiveEntryCard(row, index, titleColumn) {
 }
 
 function createChoiceLiveEntryCard(row, index, title, choiceMessage) {
-    const categoryLabel = LIVE_CATEGORIES[liveState.selectedCategoryKey]?.label || 'LIVE';
-    const storeNo = getRowValueByCandidates(row, ['storeNo', 'store_no', 'shopNo', 'shop_no', 'branchNo', 'branch_no']);
+    const storeName = resolveChoiceStoreName(row);
     const createdAt = getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date']);
     const timestamp = formatLiveEntryTime(createdAt);
     const detailItems = Object.entries(row || {})
@@ -422,10 +421,9 @@ function createChoiceLiveEntryCard(row, index, title, choiceMessage) {
     return `
         <article class="live-chat-card">
             <div class="live-chat-card__header">
-                <div class="live-chat-card__avatar" aria-hidden="true">${sanitizeHTML(getChoiceAvatarLabel(title, index))}</div>
+                <div class="live-chat-card__avatar" aria-hidden="true">${sanitizeHTML(getChoiceAvatarLabel(storeName, index))}</div>
                 <div class="live-chat-card__header-copy">
-                    <span class="live-chat-card__eyebrow">${sanitizeHTML(resolveChoiceEyebrow(categoryLabel, storeNo))}</span>
-                    <h3 class="live-chat-card__title">${sanitizeHTML(title)}</h3>
+                    <h3 class="live-chat-card__title">${sanitizeHTML(resolveChoiceCardTitle(storeName, title))}</h3>
                 </div>
             </div>
             <div class="live-chat-card__body">
@@ -477,12 +475,22 @@ function getChoiceAvatarLabel(title, index) {
     return normalizedTitle.slice(0, 1) || String(index + 1);
 }
 
-function resolveChoiceEyebrow(categoryLabel, storeNo) {
-    if (storeNo !== null && storeNo !== undefined && String(storeNo).trim() !== '') {
-        return `${categoryLabel} · STORE ${storeNo}`;
+function resolveChoiceStoreName(row) {
+    const detectedStoreName = getRowValueByCandidates(row, ['storeName', 'store_name', 'shopName', 'shop_name', 'branchName', 'branch_name', 'store', 'storeNm']);
+    if (detectedStoreName !== null && detectedStoreName !== undefined && String(detectedStoreName).trim() !== '') {
+        return String(detectedStoreName).trim();
     }
 
-    return `${categoryLabel} 실시간 메시지`;
+    return getSelectedStoreName();
+}
+
+function resolveChoiceCardTitle(storeName, fallbackTitle) {
+    const normalizedStoreName = String(storeName || '').trim();
+    if (normalizedStoreName) {
+        return `${normalizedStoreName} 초이스톡`;
+    }
+
+    return fallbackTitle;
 }
 
 function formatLiveEntryTime(value) {
