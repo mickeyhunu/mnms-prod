@@ -81,27 +81,25 @@
 }
 
 .area-filter {
-    display: grid;
-    gap: 10px;
-}
-
-.area-filter--cities {
     display: flex;
     flex-wrap: nowrap;
+    gap: 10px;
     align-items: stretch;
     overflow-x: auto;
     overflow-y: hidden;
-    scrollbar-width: thin;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     -webkit-overflow-scrolling: touch;
 }
 
-.area-filter--cities .area-filter__button {
-    flex: 0 0 auto;
-    width: auto;
+.area-filter::-webkit-scrollbar {
+    display: none;
 }
 
-.area-filter--districts {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+.area-filter--cities .area-filter__button,
+.area-filter--districts .area-filter__button {
+    flex: 0 0 auto;
+    width: auto;
 }
 
 .area-filter__button {
