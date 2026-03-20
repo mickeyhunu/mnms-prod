@@ -86,7 +86,18 @@
 }
 
 .area-filter--cities {
-    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+}
+
+.area-filter--cities .area-filter__button {
+    flex: 0 0 auto;
+    width: auto;
 }
 
 .area-filter--districts {
