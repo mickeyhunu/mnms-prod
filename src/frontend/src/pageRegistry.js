@@ -754,7 +754,7 @@ const pageRegistry = {
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/pages/home.js", "scripts/js/components/footerNav.js"]
   },
   'live': {
-    template: `<main class="main-content">
+    template: `<main class="main-content live-main-content">
         <div class="container live-page">
             <header class="community-section-header">
                 <div class="community-header-left">
