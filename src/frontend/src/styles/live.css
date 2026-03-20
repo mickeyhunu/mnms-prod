@@ -81,6 +81,7 @@
 }
 
 .area-filter {
+    position: relative;
     display: flex;
     flex-wrap: nowrap;
     gap: 10px;
@@ -90,6 +91,45 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
     -webkit-overflow-scrolling: touch;
+}
+
+.area-filter::before,
+.area-filter::after {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: calc(100% - 8px);
+    min-height: 36px;
+    border-radius: 999px;
+    color: rgba(226, 232, 240, 0.88);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1;
+}
+
+.area-filter::before {
+    content: '‹';
+    left: 0;
+    background: linear-gradient(90deg, rgba(2, 6, 23, 0.92) 0%, rgba(2, 6, 23, 0) 100%);
+}
+
+.area-filter::after {
+    content: '›';
+    right: 0;
+    background: linear-gradient(270deg, rgba(2, 6, 23, 0.92) 0%, rgba(2, 6, 23, 0) 100%);
+}
+
+.area-filter.has-overflow.can-scroll-left::before,
+.area-filter.has-overflow.can-scroll-right::after {
+    opacity: 1;
 }
 
 .area-filter::-webkit-scrollbar {
