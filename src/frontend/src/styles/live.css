@@ -138,19 +138,6 @@
     gap: 8px;
 }
 
-.live-filter-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 24px;
-    height: 24px;
-    padding: 0 8px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.16);
-    font-size: 12px;
-    font-weight: 700;
-}
-
 @media (max-width: 640px) {
     .area-filter {
         gap: 8px;
@@ -160,11 +147,6 @@
         padding: 8px 13px;
     }
 
-    .live-filter-count {
-        min-width: 22px;
-        height: 22px;
-        font-size: 11px;
-    }
 }
 
 .live-loading-overlay {

@@ -298,8 +298,7 @@ function renderCategoryButtons(categories) {
             totalCount: Number(matched?.totalCount || 0)
         };
     });
-
-    categoryFilter.innerHTML = normalizedCategories.map((category) => `<button type="button" class="area-filter__button area-filter__button--district ${liveState.selectedCategoryKey === category.key ? 'is-active' : ''}" data-category-option="${category.key}">${sanitizeHTML(category.label)} <span class="live-filter-count">${category.totalCount}</span></button>`).join('');
+    categoryFilter.innerHTML = normalizedCategories.map((category) => `<button type="button" class="area-filter__button area-filter__button--district ${liveState.selectedCategoryKey === category.key ? 'is-active' : ''}" data-category-option="${category.key}">${sanitizeHTML(category.label)} </button>`).join('');
 }
 
 function renderLiveSummary(response = null) {
