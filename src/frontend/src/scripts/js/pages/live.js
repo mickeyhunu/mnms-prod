@@ -370,6 +370,12 @@ function renderLiveEntries(rows, titleColumn) {
 function createLiveEntryCard(row, index, titleColumn) {
     const entries = Object.entries(row || {});
     const title = resolveEntryTitle(row, titleColumn, index);
+    const choiceMessage = getRowValueByCandidates(row, ['choiceMsg', 'choice_msg', 'choice msg', 'message', 'msg', 'content']);
+
+    if (liveState.selectedCategoryKey === 'choice' && choiceMessage) {
+        return createChoiceLiveEntryCard(row, index, title, choiceMessage);
+    }
+
     const detailItems = entries
         .filter(([key, value]) => value !== null && value !== undefined && String(value).trim() !== '')
         .slice(0, 6)
@@ -394,6 +400,47 @@ function createLiveEntryCard(row, index, titleColumn) {
     `;
 }
 
+function createChoiceLiveEntryCard(row, index, title, choiceMessage) {
+    const categoryLabel = LIVE_CATEGORIES[liveState.selectedCategoryKey]?.label || 'LIVE';
+    const storeNo = getRowValueByCandidates(row, ['storeNo', 'store_no', 'shopNo', 'shop_no', 'branchNo', 'branch_no']);
+    const createdAt = getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date']);
+    const timestamp = formatLiveEntryTime(createdAt);
+    const detailItems = Object.entries(row || {})
+        .filter(([key, value]) => {
+            if (value === null || value === undefined || String(value).trim() === '') return false;
+            return normalizeFieldKey(key) !== 'choicemsg';
+        })
+        .slice(0, 4)
+        .map(([key, value]) => `
+            <li class="live-chat-card__meta-item">
+                <span class="live-chat-card__meta-key">${sanitizeHTML(formatFieldLabel(key))}</span>
+                <span class="live-chat-card__meta-value">${sanitizeHTML(formatFieldValue(value))}</span>
+            </li>
+        `)
+        .join('');
+
+    return `
+        <article class="live-chat-card">
+            <div class="live-chat-card__header">
+                <div class="live-chat-card__avatar" aria-hidden="true">${sanitizeHTML(getChoiceAvatarLabel(title, index))}</div>
+                <div class="live-chat-card__header-copy">
+                    <span class="live-chat-card__eyebrow">${sanitizeHTML(resolveChoiceEyebrow(categoryLabel, storeNo))}</span>
+                    <h3 class="live-chat-card__title">${sanitizeHTML(title)}</h3>
+                </div>
+            </div>
+            <div class="live-chat-card__body">
+                <div class="live-chat-card__bubble-wrap">
+                    <div class="live-chat-card__bubble">
+                        <p class="live-chat-card__message">${sanitizeHTML(formatFieldValue(choiceMessage))}</p>
+                        ${detailItems ? `<ul class="live-chat-card__meta">${detailItems}</ul>` : ''}
+                    </div>
+                    ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(createdAt))}">${sanitizeHTML(timestamp)}</time>` : ''}
+                </div>
+            </div>
+        </article>
+    `;
+}
+
 function resolveEntryTitle(row, titleColumn, index) {
     if (titleColumn && row?.[titleColumn]) {
         return String(row[titleColumn]);
@@ -405,6 +452,50 @@ function resolveEntryTitle(row, titleColumn, index) {
     }
 
     return `${LIVE_CATEGORIES[liveState.selectedCategoryKey]?.label || 'LIVE'} 항목 ${index + 1}`;
+}
+
+function normalizeFieldKey(key) {
+    return String(key || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+}
+
+function getRowValueByCandidates(row, candidates = []) {
+    const entries = Object.entries(row || {});
+    const normalizedCandidates = candidates.map((candidate) => normalizeFieldKey(candidate));
+
+    for (const [key, value] of entries) {
+        if (value === null || value === undefined || String(value).trim() === '') continue;
+        if (normalizedCandidates.includes(normalizeFieldKey(key))) {
+            return value;
+        }
+    }
+
+    return '';
+}
+
+function getChoiceAvatarLabel(title, index) {
+    const normalizedTitle = String(title || '').replace(/\s+/g, '');
+    return normalizedTitle.slice(0, 1) || String(index + 1);
+}
+
+function resolveChoiceEyebrow(categoryLabel, storeNo) {
+    if (storeNo !== null && storeNo !== undefined && String(storeNo).trim() !== '') {
+        return `${categoryLabel} · STORE ${storeNo}`;
+    }
+
+    return `${categoryLabel} 실시간 메시지`;
+}
+
+function formatLiveEntryTime(value) {
+    if (!value) return '';
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+
+    return date.toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
 }
 
 function formatFieldLabel(key) {
