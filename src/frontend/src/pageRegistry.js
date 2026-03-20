@@ -355,8 +355,6 @@ const pageRegistry = {
                 </div>
             </header>
 
-            <div class="loading" id="loading">게시글을 불러오는 중...</div>
-
             <div class="error-banner hidden" id="error-banner">
                 <span id="error-message"></span>
                 <button id="retry-btn" class="btn btn-sm btn-outline">재시도</button>
@@ -376,6 +374,8 @@ const pageRegistry = {
             </section>
 
 <ul class="article-list" id="post-list"></ul>
+
+            <div class="loading" id="loading">게시글을 불러오는 중...</div>
 
             <div class="empty-state hidden" id="empty-state">
                 등록된 게시글이 없습니다.
