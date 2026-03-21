@@ -220,7 +220,7 @@ async function loadLiveEntries({ showLoading = false } = {}) {
         const response = await APIClient.get('/live/entries', {
             category: liveState.selectedCategoryKey,
             storeNo: liveState.selectedStoreNo,
-            limit: 30
+            limit: liveState.selectedCategoryKey === 'entry' ? 200 : 30
         });
 
         if (requestId !== liveState.entriesRequestId) {
@@ -364,6 +364,12 @@ function renderLiveEntries(rows, titleColumn) {
     }
 
     hideElement(emptyElement);
+
+    if (liveState.selectedCategoryKey === 'entry') {
+        listElement.innerHTML = createEntrySummaryLiveCard(rows, titleColumn);
+        return;
+    }
+
     listElement.innerHTML = rows.map((row, index) => createLiveEntryCard(row, index, titleColumn)).join('');
 }
 
@@ -419,6 +425,71 @@ function createStructuredLiveEntryCard(row, index, title) {
         rawTimestamp: createdAt,
         avatarLabel: getChoiceAvatarLabel(storeName, index)
     });
+}
+
+function createEntrySummaryLiveCard(rows, titleColumn) {
+    const entryNames = (Array.isArray(rows) ? rows : [])
+        .map((row, index) => resolveEntryWorkerName(row, titleColumn, index))
+        .filter(Boolean);
+    const totalWorkers = entryNames.length;
+    const rankedEntries = buildEntryRankings(rows, titleColumn);
+    const latestTimestamp = findLatestEntryTimestamp(rows);
+    const storeName = resolveChoiceStoreName(rows[0] || {});
+    const title = storeName ? `${storeName} 엔트리` : '엔트리';
+    const contentHtml = `
+        <div class="relative z-10 rounded-[calc(1rem-1px)] bg-slate-950/92 backdrop-blur-sm p-6 flex-1 flex flex-col"><div class="mb-4"><div class="flex items-center gap-2"><span class="text-sm text-white/70">총 출근인원</span><strong class="text-lg text-amber-200">${sanitizeHTML(String(totalWorkers))}</strong><span class="text-sm text-white/70">명</span></div></div><div class="mb-4"><h3 class="text-sm font-semibold uppercase tracking-widest text-white/60 mb-3">엔트리 목록</h3><div class="grid grid-cols-5 gap-2">${entryNames.map((name) => `<button class="rounded-lg bg-white/5 px-2 py-1 text-xs text-white/80 text-center hover:bg-white/15 hover:text-white transition-all duration-200 cursor-pointer">${sanitizeHTML(name)}</button>`).join('')}</div></div><div><h3 class="text-sm font-semibold uppercase tracking-widest text-white/60 mb-3">오늘의 인기 멤버 TOP 5</h3>${rankedEntries.length ? `<ol class="space-y-2">${rankedEntries.map((entry, index) => `<li class="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2"><button class="flex items-center gap-2 flex-1 text-left hover:opacity-80 transition-opacity cursor-pointer"><span class="text-sm font-bold text-amber-200">${sanitizeHTML(String(index + 1))}.</span><span class="text-sm text-white">${sanitizeHTML(entry.name)}</span></button><span class="text-xs text-white/70">합계 <strong class="text-amber-200">${sanitizeHTML(String(entry.score))}</strong></span></li>`).join('')}</ol>` : `<p class="text-sm text-white/60">표시할 인기 멤버가 없습니다.</p>`}</div></div>`;
+
+    return createLiveChatCard({
+        index: 0,
+        title,
+        body: contentHtml,
+        timestamp: latestTimestamp ? formatLiveEntryTime(latestTimestamp) : '',
+        rawTimestamp: latestTimestamp,
+        badge: LIVE_CATEGORIES.entry.label,
+        avatarLabel: getChoiceAvatarLabel(storeName || LIVE_CATEGORIES.entry.label, 0)
+    });
+}
+
+function resolveEntryWorkerName(row, titleColumn, index) {
+    const candidates = ['workerName', 'worker_name', 'nickName', 'nickname', 'name', 'entryName'];
+    const detectedName = getRowValueByCandidates(row, candidates);
+    if (detectedName !== null && detectedName !== undefined && String(detectedName).trim() !== '') {
+        return String(detectedName).trim();
+    }
+
+    return resolveEntryTitle(row, titleColumn, index).trim();
+}
+
+function buildEntryRankings(rows, titleColumn) {
+    return (Array.isArray(rows) ? rows : [])
+        .map((row, index) => {
+            const mentionCount = Number(getRowValueByCandidates(row, ['mentionCount', 'mention_count'])) || 0;
+            const insertCount = Number(getRowValueByCandidates(row, ['insertCount', 'insert_count'])) || 0;
+            const rawScore = (mentionCount * 5) + insertCount;
+
+            return {
+                name: resolveEntryWorkerName(row, titleColumn, index),
+                score: Math.max(0, rawScore - 6),
+                rawScore
+            };
+        })
+        .filter((entry) => entry.name)
+        .sort((a, b) => b.rawScore - a.rawScore || a.name.localeCompare(b.name, 'ko'))
+        .slice(0, 5);
+}
+
+function findLatestEntryTimestamp(rows) {
+    const candidates = ['updatedAt', 'updated_at', 'createdAt', 'created_at', 'regDate', 'reg_date', 'date'];
+
+    return (Array.isArray(rows) ? rows : [])
+        .map((row) => getRowValueByCandidates(row, candidates))
+        .filter(Boolean)
+        .map((value) => ({
+            raw: value,
+            time: new Date(value).getTime()
+        }))
+        .filter((item) => Number.isFinite(item.time))
+        .sort((a, b) => b.time - a.time)[0]?.raw || '';
 }
 
 function createWaitingLiveEntryCard(row, index, title) {
@@ -564,6 +635,16 @@ function resolveWaitingCardTitle(storeName, fallbackTitle) {
     const normalizedStoreName = String(storeName || '').trim();
     if (normalizedStoreName) {
         return `${normalizedStoreName} 웨이팅`;
+    }
+
+    return fallbackTitle;
+}
+
+
+function resolveStructuredCardTitle(storeName, fallbackTitle) {
+    const normalizedStoreName = String(storeName || '').trim();
+    if (normalizedStoreName) {
+        return `${normalizedStoreName} ${LIVE_CATEGORIES[liveState.selectedCategoryKey]?.label || 'LIVE'}`;
     }
 
     return fallbackTitle;
