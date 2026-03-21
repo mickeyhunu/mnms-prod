@@ -443,7 +443,6 @@ function createLiveChatCard({ index, title, message = '', details = [], emptyMes
                 <div class="live-chat-card__bubble-wrap">
                     <div class="live-chat-card__bubble">
                         ${contentHtml}
-                        ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(rawTimestamp))}">${sanitizeHTML(timestamp)}</time>` : ''}
                     </div>
                     ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(rawTimestamp))}">${sanitizeHTML(timestamp)}</time>` : ''}
                 </div>
