@@ -30,7 +30,8 @@ const pageRegistry = {
 
 
             <div class="admin-tabs">
-                <button class="admin-tab active" data-tab="posts">게시글 관리</button>
+                <button class="admin-tab active" data-tab="stats">통계 대시보드</button>
+                <button class="admin-tab" data-tab="posts">게시글 관리</button>
                 <button class="admin-tab" data-tab="comments">댓글 관리</button>
                 <button class="admin-tab" data-tab="users">회원 관리</button>
                 <button class="admin-tab" data-tab="entries">엔트리 관리</button>
@@ -40,7 +41,49 @@ const pageRegistry = {
             </div>
 
             <div class="tab-content">
-                <div id="posts-section" class="tab-pane active">
+                <div id="stats-section" class="tab-pane active">
+                    <div class="loading" id="stats-loading"><div class="spinner"></div><p>통계를 불러오는 중...</p></div>
+                    <div class="error-banner hidden" id="stats-error"><p id="stats-error-message"></p><button class="btn btn-sm btn-primary" id="stats-retry-btn">다시 시도</button></div>
+                    <div class="admin-table-container hidden admin-stats-content" id="stats-content">
+                        <section class="admin-stats-summary" id="stats-summary-cards"></section>
+                        <section class="admin-stats-grid">
+                            <article class="admin-stats-panel">
+                                <div class="admin-stats-panel__header">
+                                    <div>
+                                        <p class="admin-user-detail-eyebrow">최근 14일 추이</p>
+                                        <h3>방문/게시글/댓글/접속량</h3>
+                                    </div>
+                                </div>
+                                <div class="admin-stats-chart" id="stats-chart"></div>
+                            </article>
+                            <article class="admin-stats-panel">
+                                <div class="admin-stats-panel__header">
+                                    <div>
+                                        <p class="admin-user-detail-eyebrow">게시판 현황</p>
+                                        <h3>게시판별 게시글 수</h3>
+                                    </div>
+                                </div>
+                                <div class="admin-stats-board-list" id="stats-board-list"></div>
+                            </article>
+                        </section>
+                        <section class="admin-stats-panel">
+                            <div class="admin-stats-panel__header">
+                                <div>
+                                    <p class="admin-user-detail-eyebrow">일별 상세</p>
+                                    <h3>최근 14일 통계 테이블</h3>
+                                </div>
+                            </div>
+                            <div class="admin-table-container">
+                                <table class="admin-table">
+                                    <thead><tr><th>날짜</th><th>방문자수</th><th>접속량</th><th>게시글</th><th>댓글</th></tr></thead>
+                                    <tbody id="stats-daily-tbody"></tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <div id="posts-section" class="tab-pane hidden">
                     <div class="loading" id="posts-loading"><div class="spinner"></div><p>게시글을 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="posts-error"><p id="posts-error-message"></p><button class="btn btn-sm btn-primary" id="posts-retry-btn">다시 시도</button></div>
                     <div class="admin-list-toolbar">

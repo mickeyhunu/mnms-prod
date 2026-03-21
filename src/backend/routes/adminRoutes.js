@@ -14,6 +14,16 @@ const router = express.Router();
 
 router.use(authMiddleware, adminMiddleware);
 
+router.get('/stats/dashboard', async (req, res, next) => {
+  try {
+    const rangeDays = Number.parseInt(req.query.rangeDays || '14', 10);
+    const dashboard = await adminModel.getDashboardStats(rangeDays);
+    res.json(dashboard);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/posts', async (req, res, next) => {
   try {
     const { rows, total } = await postModel.listPosts(0, 10000, { boardType: 'ALL' });
