@@ -226,7 +226,19 @@ async function findEntryById(entryId) {
     [decoded.storeNo, decoded.workerName, decoded.createdAtKey]
   );
 
-  if (!rows.length) return null;
+  if (!rows.length) {
+    const fallbackRow = await findEntryByStoreAndName(decoded.storeNo, decoded.workerName);
+    if (!fallbackRow) return null;
+
+    return {
+      entryId: encodeEntryId(fallbackRow),
+      storeNo: Number(fallbackRow.storeNo),
+      workerName: String(fallbackRow.workerName || '').trim(),
+      mentionCount: Number(fallbackRow.mentionCount || 0),
+      insertCount: Number(fallbackRow.insertCount || 0),
+      createdAt: fallbackRow.createdAt
+    };
+  }
 
   return {
     entryId: encodeEntryId(rows[0]),
@@ -313,7 +325,18 @@ async function deleteEntry(entryId) {
     [decoded.storeNo, decoded.workerName, decoded.createdAtKey]
   );
 
-  return result.affectedRows > 0;
+  if (result.affectedRows > 0) {
+    return true;
+  }
+
+  const [fallbackResult] = await chatbotPool.query(
+    `DELETE FROM ENTRY_TODAY
+      WHERE storeNo = ?
+        AND workerName = ?`,
+    [decoded.storeNo, decoded.workerName]
+  );
+
+  return fallbackResult.affectedRows > 0;
 }
 
 module.exports = {
