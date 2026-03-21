@@ -450,6 +450,7 @@ function createEntrySummaryLiveCard(rows, titleColumn) {
     const latestTimestamp = findLatestEntryTimestamp(rows);
     const storeName = resolveChoiceStoreName(rows[0] || {});
     const title = storeName ? `${storeName} 엔트리` : '엔트리';
+    const entryNameRows = chunkEntryNames(entryNames, 5);
     const contentHtml = `
         <div class="entry-live-card">
             <section class="entry-live-card__section entry-live-card__section--count">
@@ -465,8 +466,12 @@ function createEntrySummaryLiveCard(rows, titleColumn) {
                     <h3 class="entry-live-card__section-title">엔트리 목록</h3>
                 </div>
                 <div class="entry-live-card__chips">
-                    ${entryNames.length
-                        ? entryNames.map((name) => `<span class="entry-live-card__chip">${sanitizeHTML(name)}</span>`).join('')
+                    ${entryNameRows.length
+                        ? entryNameRows.map((row) => `
+                            <div class="entry-live-card__chip-row">
+                                ${row.map((name) => `<span class="entry-live-card__chip">${sanitizeHTML(name)}</span>`).join('')}
+                            </div>
+                        `).join('')
                         : '<p class="entry-live-card__empty">표시할 엔트리 멤버가 없습니다.</p>'}
                 </div>
             </section>
@@ -500,11 +505,21 @@ function createEntrySummaryLiveCard(rows, titleColumn) {
         timestamp: latestTimestamp ? formatLiveEntryTime(latestTimestamp) : '',
         rawTimestamp: latestTimestamp,
         badge: LIVE_CATEGORIES.entry.label,
-        avatarLabel: getChoiceAvatarLabel(storeName || LIVE_CATEGORIES.entry.label, 0),
-        cardClassName: 'live-chat-card--entry-summary',
-        bubbleClassName: 'live-chat-card__bubble--entry-summary',
-        hideHeader: true
+        avatarLabel: getChoiceAvatarLabel(storeName || LIVE_CATEGORIES.entry.label, 0)
     });
+}
+
+function chunkEntryNames(entryNames, size = 5) {
+    if (!Array.isArray(entryNames) || size <= 0) {
+        return [];
+    }
+
+    const rows = [];
+    for (let index = 0; index < entryNames.length; index += size) {
+        rows.push(entryNames.slice(index, index + size));
+    }
+
+    return rows;
 }
 
 function resolveEntryWorkerName(row, titleColumn, index) {
