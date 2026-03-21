@@ -138,6 +138,36 @@ const pageRegistry = {
                                     <input type="text" id="admin-user-created-at" name="createdAt" readonly>
                                 </label>
                             </div>
+                            <section class="admin-user-activity" aria-labelledby="admin-user-activity-title">
+                                <div class="admin-user-activity__header">
+                                    <div>
+                                        <p class="admin-user-detail-eyebrow">회원 활동 내역</p>
+                                        <h4 id="admin-user-activity-title">최근 활동 및 접속 기록</h4>
+                                    </div>
+                                    <p class="admin-user-activity__caption">최근 10건 기준으로 관리자에게 표시됩니다.</p>
+                                </div>
+                                <div class="admin-user-activity-stats" id="admin-user-activity-stats">
+                                    <div class="admin-user-activity-empty">회원 활동 데이터를 불러오는 중...</div>
+                                </div>
+                                <div class="admin-user-activity-grid">
+                                    <section class="admin-user-activity-card">
+                                        <h5>최근 게시글</h5>
+                                        <div id="admin-user-activity-posts" class="admin-user-activity-list"></div>
+                                    </section>
+                                    <section class="admin-user-activity-card">
+                                        <h5>최근 댓글</h5>
+                                        <div id="admin-user-activity-comments" class="admin-user-activity-list"></div>
+                                    </section>
+                                    <section class="admin-user-activity-card">
+                                        <h5>최근 좋아요</h5>
+                                        <div id="admin-user-activity-likes" class="admin-user-activity-list"></div>
+                                    </section>
+                                    <section class="admin-user-activity-card">
+                                        <h5>접속 IP 기록</h5>
+                                        <div id="admin-user-login-history" class="admin-user-activity-list"></div>
+                                    </section>
+                                </div>
+                            </section>
                             <p id="admin-user-save-result" class="help-text admin-user-save-result" role="status"></p>
                             <div class="admin-user-detail-actions">
                                 <button class="btn btn-secondary" id="user-edit-cancel-btn-secondary" type="button">취소</button>

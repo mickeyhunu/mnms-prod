@@ -167,6 +167,18 @@ async function initDatabase() {
   `);
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS user_login_histories (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      user_id BIGINT NOT NULL,
+      ip_address VARCHAR(255) NOT NULL,
+      user_agent VARCHAR(500) NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_user_login_histories_user_created_at (user_id, created_at),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS posts (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       user_id BIGINT NULL,

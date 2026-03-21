@@ -2,12 +2,25 @@
  * 파일 역할: authController 관련 HTTP 요청을 처리하고 모델/응답 로직을 조합하는 컨트롤러 파일.
  */
 const crypto = require('crypto');
-const { createUser, findByEmail, findByNickname } = require('../models/userModel');
+const { createUser, findByEmail, findByNickname, recordUserLoginHistory } = require('../models/userModel');
 const { formatRestrictionMessage, getLoginRestrictionState } = require('../utils/loginRestriction');
 
 function normalizeMemberType(value) {
   const normalized = String(value || '').trim().toUpperCase();
   return normalized === 'ADVERTISER' ? 'ADVERTISER' : 'GENERAL';
+}
+
+function getClientIp(req) {
+  const forwardedFor = req.headers['x-forwarded-for'];
+  if (typeof forwardedFor === 'string' && forwardedFor.trim()) {
+    return forwardedFor.split(',')[0].trim();
+  }
+
+  if (Array.isArray(forwardedFor) && forwardedFor.length) {
+    return String(forwardedFor[0] || '').split(',')[0].trim();
+  }
+
+  return req.socket?.remoteAddress || req.ip || 'unknown';
 }
 const { createSession, deleteSession } = require('../models/sessionModel');
 const { awardPointByAction } = require('../models/pointModel');
@@ -55,6 +68,10 @@ async function login(req, res, next) {
 
     const token = crypto.randomBytes(32).toString('hex');
     await createSession(token, user.id);
+    await recordUserLoginHistory(user.id, {
+      ipAddress: getClientIp(req),
+      userAgent: req.headers['user-agent'] || null
+    });
     await awardPointByAction(user.id, 'LOGIN_DAILY');
 
     const refreshedUser = await findByEmail(resolvedLoginId);
