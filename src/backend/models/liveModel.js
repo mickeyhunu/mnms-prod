@@ -28,7 +28,7 @@ function ensureTableName(tableName) {
 function normalizeLimit(limit) {
   const parsed = Number.parseInt(limit, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) return 50;
-  return Math.min(parsed, 100);
+  return Math.min(parsed, 300);
 }
 
 function getCategoryConfig(categoryKey) {
