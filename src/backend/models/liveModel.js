@@ -150,16 +150,30 @@ async function listLiveEntries(categoryKey, { storeNo = null, limit = 50 } = {})
     storeNo,
     storeName: selectedStore?.storeName || ''
   });
-  const orderClause = orderColumn ? `ORDER BY \`${orderColumn}\` DESC` : '';
   const params = [...storeFilter.params, rowLimit];
 
-  const [rows] = await pool.query(
-    `SELECT * FROM \`${safeTableName}\`
-     ${storeFilter.clause}
-     ${orderClause}
-     LIMIT ?`,
-    params
-  );
+  const query = orderColumn
+    ? category.key === 'entry'
+      ? `SELECT *
+           FROM (
+             SELECT *
+               FROM \`${safeTableName}\`
+               ${storeFilter.clause}
+              ORDER BY \`${orderColumn}\` DESC
+              LIMIT ?
+           ) AS recent_entries
+          ORDER BY \`${orderColumn}\` ASC`
+      : `SELECT *
+           FROM \`${safeTableName}\`
+           ${storeFilter.clause}
+          ORDER BY \`${orderColumn}\` DESC
+          LIMIT ?`
+    : `SELECT *
+         FROM \`${safeTableName}\`
+         ${storeFilter.clause}
+         LIMIT ?`;
+
+  const [rows] = await pool.query(query, params);
 
   return {
     category,
