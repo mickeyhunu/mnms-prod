@@ -763,14 +763,16 @@ function createWaitingLiveEntryCard(row, index, title) {
     const roomInfo = getRoomStatus(row);
     const roomDetail = getRowValueByCandidates(row, ['roomDetail', 'room_detail', 'detail', 'details']);
     const updatedAt = getRowValueByCandidates(row, ['updatedAt', 'updated_at', 'createdAt', 'created_at', 'regDate', 'reg_date', 'date']);
-    const timestamp = formatLiveEntryTime(updatedAt);
+    const sourceUpdatedAt = getRowValueByCandidates(row, ['sourceUpdatedAt', 'source_updated_at']);
+    const displayUpdatedAt = sourceUpdatedAt || updatedAt;
+    const timestamp = formatLiveEntryTime(displayUpdatedAt);
     const waitingMessage = buildWaitingMessage({
         storeName,
         storeAddress: store?.storeAddress || '',
         waitInfo,
         roomInfo,
         roomDetail,
-        updatedAt
+        updatedAt: displayUpdatedAt
     });
 
     return createLiveChatCard({
@@ -778,7 +780,7 @@ function createWaitingLiveEntryCard(row, index, title) {
         title: resolveWaitingCardTitle(storeName, title),
         body: `<p class="live-chat-card__message">${convertTextToHtml(waitingMessage)}</p>`,
         timestamp,
-        rawTimestamp: updatedAt,
+        rawTimestamp: displayUpdatedAt,
         badge: LIVE_CATEGORIES.waiting.label,
         avatarLabel: getChoiceAvatarLabel(storeName || LIVE_CATEGORIES.waiting.label, index)
     });
