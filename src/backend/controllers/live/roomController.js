@@ -14,6 +14,34 @@ const ROOM_PAGE_TEXT = {
   summarySingle: '룸현황',
 };
 
+const KOREA_TIME_ZONE = 'Asia/Seoul';
+const MYSQL_DATETIME_FORMAT = '%Y-%m-%d %H:%i:%s';
+
+function parseKoreanDateTime(value) {
+  if (!value) return null;
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  const normalized = String(value).trim();
+  if (!normalized) return null;
+
+  const hasExplicitTimeZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized);
+  const isoLikeValue = normalized.includes('T') ? normalized : normalized.replace(' ', 'T');
+  const parseTarget = hasExplicitTimeZone ? isoLikeValue : `${isoLikeValue}+09:00`;
+  const parsed = new Date(parseTarget);
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatKoreanDateTime(value) {
+  const date = parseKoreanDateTime(value);
+  if (!date) return 'N/A';
+
+  return date.toLocaleString('ko-KR', { timeZone: KOREA_TIME_ZONE });
+}
+
 function escapeXml(value = '') {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -195,10 +223,7 @@ function normalizeRoomRow(room) {
   const waitInfoDisplay = room.waitInfo ?? 'N/A';
   const { obj: detailObj, text: detailRaw } = safeParseJSON(room.roomDetail);
 
-  const updatedAtDate = room.updatedAt ? new Date(room.updatedAt) : null;
-  const updatedAtDisplay = updatedAtDate
-    ? updatedAtDate.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
-    : 'N/A';
+  const updatedAtDisplay = formatKoreanDateTime(room.updatedAt);
 
   return {
     storeNo: room.storeNo,
@@ -228,7 +253,8 @@ function serializeRoomForPayload(room) {
 
 async function fetchSingleRoomStatus(storeNo) {
   const [[room]] = await pool.query(
-    `SELECT r.storeNo, s.storeName, r.roomInfo, r.waitInfo, r.roomDetail, r.updatedAt
+    `SELECT r.storeNo, s.storeName, r.roomInfo, r.waitInfo, r.roomDetail,
+            DATE_FORMAT(r.updatedAt, '${MYSQL_DATETIME_FORMAT}') AS updatedAt
          FROM INFO_ROOM r
          JOIN INFO_STORE s ON s.storeNo = r.storeNo
         WHERE r.storeNo=?`,
@@ -244,7 +270,8 @@ async function fetchSingleRoomStatus(storeNo) {
 
 async function fetchAllRoomStatuses() {
   const [rooms] = await pool.query(
-    `SELECT r.storeNo, s.storeName, r.roomInfo, r.waitInfo, r.roomDetail, r.updatedAt
+    `SELECT r.storeNo, s.storeName, r.roomInfo, r.waitInfo, r.roomDetail,
+            DATE_FORMAT(r.updatedAt, '${MYSQL_DATETIME_FORMAT}') AS updatedAt
          FROM INFO_ROOM r
          JOIN INFO_STORE s ON s.storeNo = r.storeNo
         ORDER BY r.storeNo ASC`

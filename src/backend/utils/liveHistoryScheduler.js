@@ -28,7 +28,19 @@ function formatMySqlDateTime(date) {
     return null;
   }
 
-  return date.toISOString().slice(0, 19).replace('T', ' ');
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23'
+  });
+  const parts = Object.fromEntries(formatter.formatToParts(date).map((part) => [part.type, part.value]));
+
+  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`;
 }
 
 async function ensureLiveHistoryTables() {
@@ -80,7 +92,7 @@ async function captureChoiceHistory() {
   const capturedAt = formatMySqlDateTime(new Date());
 
   for (const row of rows) {
-    const sourceCreatedAt = row.createdAt ? formatMySqlDateTime(new Date(row.createdAt)) : null;
+    const sourceCreatedAt = row.createdAt ? String(row.createdAt) : null;
     const createdAt = sourceCreatedAt || capturedAt;
     const dedupeKey = hashHistoryKey([
       'choice',
@@ -138,7 +150,7 @@ async function captureRoomHistory() {
           ? null
           : (typeof row.roomDetail === 'string' ? row.roomDetail : JSON.stringify(row.roomDetail)),
         snapshotAt,
-        row.sourceUpdatedAt ? formatMySqlDateTime(new Date(row.sourceUpdatedAt)) : null,
+        row.sourceUpdatedAt ? String(row.sourceUpdatedAt) : null,
         capturedAt
       ]
     );
