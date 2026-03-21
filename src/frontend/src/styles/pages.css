@@ -194,6 +194,52 @@
     flex-wrap: wrap;
 }
 
+.admin-entry-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 12px;
+    padding: 8px 8px 14px;
+    flex-wrap: wrap;
+}
+
+.admin-entry-toolbar__group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.admin-entry-toolbar__label {
+    font-size: 14px;
+    color: #495057;
+    font-weight: 600;
+}
+
+.admin-entry-editor {
+    margin: 0 8px 16px;
+    padding: 16px;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.admin-entry-editor__form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.admin-entry-editor__form .form-control {
+    flex: 1 1 240px;
+}
+
+.admin-entry-editor__actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
 .admin-user-modal-content {
     max-width: 860px;
 }

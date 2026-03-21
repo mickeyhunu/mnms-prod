@@ -347,6 +347,105 @@ router.delete('/ads/:id', async (req, res, next) => {
   }
 });
 
+router.get('/entries/stores', async (req, res, next) => {
+  try {
+    const stores = await adminModel.listEntryStores();
+    res.json({ content: stores, totalElements: stores.length });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/entries', async (req, res, next) => {
+  try {
+    const storeNo = Number.parseInt(req.query.storeNo, 10);
+    if (!Number.isInteger(storeNo) || storeNo <= 0) {
+      return res.status(400).json({ message: '유효한 매장을 선택해주세요.' });
+    }
+
+    const store = await adminModel.getStoreByNo(storeNo);
+    if (!store) return res.status(404).json({ message: '매장을 찾을 수 없습니다.' });
+
+    const rows = await adminModel.listEntries(storeNo);
+    res.json({
+      selectedStore: store,
+      content: rows,
+      totalElements: rows.length
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/entries', async (req, res, next) => {
+  try {
+    const storeNo = Number.parseInt(req.body?.storeNo, 10);
+    const workerName = String(req.body?.workerName || '').trim();
+
+    if (!Number.isInteger(storeNo) || storeNo <= 0) {
+      return res.status(400).json({ message: '유효한 매장을 선택해주세요.' });
+    }
+
+    if (!workerName || workerName.length < 1) {
+      return res.status(400).json({ message: '엔트리 이름을 입력해주세요.' });
+    }
+
+    const store = await adminModel.getStoreByNo(storeNo);
+    if (!store) return res.status(404).json({ message: '매장을 찾을 수 없습니다.' });
+
+    const duplicate = await adminModel.findEntryByStoreAndName(storeNo, workerName);
+    if (duplicate) {
+      return res.status(409).json({ message: '같은 매장에 동일한 엔트리 이름이 이미 등록되어 있습니다.' });
+    }
+
+    const entry = await adminModel.createEntry({ storeNo, workerName });
+    res.status(201).json({ success: true, entry });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/entries/:entryId', async (req, res, next) => {
+  try {
+    const entryId = String(req.params.entryId || '').trim();
+    const workerName = String(req.body?.workerName || '').trim();
+    if (!entryId) return res.status(400).json({ message: '유효하지 않은 엔트리 ID입니다.' });
+    if (!workerName) return res.status(400).json({ message: '엔트리 이름을 입력해주세요.' });
+
+    const target = await adminModel.findEntryById(entryId);
+    if (!target) return res.status(404).json({ message: '엔트리 항목을 찾을 수 없습니다.' });
+
+    if (target.workerName !== workerName) {
+      const duplicate = await adminModel.findEntryByStoreAndName(target.storeNo, workerName);
+      if (duplicate) {
+        return res.status(409).json({ message: '같은 매장에 동일한 엔트리 이름이 이미 등록되어 있습니다.' });
+      }
+    }
+
+    res.json({
+      success: true,
+      entry: await adminModel.updateEntry(entryId, { workerName })
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/entries/:entryId', async (req, res, next) => {
+  try {
+    const entryId = String(req.params.entryId || '').trim();
+    if (!entryId) return res.status(400).json({ message: '유효하지 않은 엔트리 ID입니다.' });
+
+    const target = await adminModel.findEntryById(entryId);
+    if (!target) return res.status(404).json({ message: '엔트리 항목을 찾을 수 없습니다.' });
+
+    await adminModel.deleteEntry(entryId);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/support', supportController.listAdminArticles);
 router.get('/support/article/:id', supportController.getAdminArticleDetail);
 router.get('/support/inquiries', supportController.listAdminInquiries);

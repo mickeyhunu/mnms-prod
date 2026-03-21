@@ -33,6 +33,7 @@ const pageRegistry = {
                 <button class="admin-tab active" data-tab="posts">게시글 관리</button>
                 <button class="admin-tab" data-tab="comments">댓글 관리</button>
                 <button class="admin-tab" data-tab="users">회원 관리</button>
+                <button class="admin-tab" data-tab="entries">엔트리 관리</button>
                 <button class="admin-tab" data-tab="ads">광고 관리</button>
                 <button class="admin-tab" data-tab="support">공지/FAQ 관리</button>
                 <button class="admin-tab" data-tab="inquiries">1:1 문의 관리</button>
@@ -138,6 +139,36 @@ const pageRegistry = {
                     <div class="error-banner hidden" id="users-error"><p id="users-error-message"></p><button class="btn btn-sm btn-primary" id="users-retry-btn">다시 시도</button></div>
                     <div class="admin-table-container hidden" id="users-content">
                         <table class="admin-table"><thead><tr><th>ID</th><th>이메일</th><th>닉네임</th><th>계정상태</th><th>포인트</th><th>가입일</th><th>권한</th><th>회원구분</th><th>관리</th></tr></thead><tbody id="users-tbody"></tbody></table>
+                    </div>
+                </div>
+
+                <div id="entries-section" class="tab-pane hidden">
+                    <div class="admin-entry-toolbar">
+                        <div class="admin-entry-toolbar__group">
+                            <label class="admin-entry-toolbar__label" for="entry-store-select">매장 선택</label>
+                            <select id="entry-store-select" class="form-control"></select>
+                        </div>
+                        <button class="btn btn-outline btn-sm" id="entries-retry-btn" type="button">새로고침</button>
+                    </div>
+                    <section class="admin-entry-editor">
+                        <div>
+                            <p class="admin-user-detail-eyebrow">엔트리 항목 관리</p>
+                            <h3 id="entry-editor-title">새 엔트리 추가</h3>
+                            <p class="admin-user-detail-description">선택한 매장의 엔트리 이름을 추가하거나 수정할 수 있습니다.</p>
+                        </div>
+                        <div class="admin-entry-editor__form">
+                            <input type="text" id="entry-name-input" class="form-control" maxlength="100" placeholder="엔트리 이름을 입력하세요">
+                            <div class="admin-entry-editor__actions">
+                                <button class="btn btn-secondary hidden" id="entry-cancel-btn" type="button">취소</button>
+                                <button class="btn btn-primary" id="entry-save-btn" type="button">추가</button>
+                            </div>
+                        </div>
+                        <p id="entry-form-help" class="help-text admin-user-save-result" role="status"></p>
+                    </section>
+                    <div class="loading" id="entries-loading"><div class="spinner"></div><p>엔트리 목록을 불러오는 중...</p></div>
+                    <div class="error-banner hidden" id="entries-error"><p id="entries-error-message"></p><button class="btn btn-sm btn-primary" id="entries-retry-btn-secondary">다시 시도</button></div>
+                    <div class="admin-table-container hidden" id="entries-content">
+                        <table class="admin-table"><thead><tr><th>이름</th><th>언급수</th><th>가산점</th><th>등록일</th><th>관리</th></tr></thead><tbody id="entries-tbody"></tbody></table>
                     </div>
                 </div>
 

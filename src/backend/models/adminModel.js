@@ -1,9 +1,10 @@
 /**
  * 파일 역할: 관리자 전용 회원/광고 데이터 조회 및 수정 쿼리를 담당하는 모델 파일.
  */
-const { getPool } = require('../config/database');
+const { getPool, getChatbotPool } = require('../config/database');
 const { pickUserRow } = require('../utils/response');
 const { ensureResolvedLoginRestriction } = require('./userModel');
+const { getStoreByNo, listStores } = require('./liveModel');
 
 async function listUsers() {
   const pool = getPool();
@@ -156,9 +157,176 @@ async function deleteAd(adId) {
   await pool.query('DELETE FROM ads WHERE id = ?', [adId]);
 }
 
+function encodeEntryId({ storeNo, workerName, createdAtKey }) {
+  return Buffer.from(JSON.stringify({
+    storeNo: Number(storeNo),
+    workerName: String(workerName || ''),
+    createdAtKey: Number.parseInt(createdAtKey, 10)
+  })).toString('base64url');
+}
+
+function decodeEntryId(entryId) {
+  try {
+    const raw = Buffer.from(String(entryId || ''), 'base64url').toString('utf8');
+    const parsed = JSON.parse(raw);
+    const storeNo = Number.parseInt(parsed.storeNo, 10);
+    const workerName = String(parsed.workerName || '').trim();
+    const createdAtKey = Number.parseInt(parsed.createdAtKey, 10);
+
+    if (!Number.isInteger(storeNo) || storeNo <= 0 || !workerName || !Number.isInteger(createdAtKey) || createdAtKey <= 0) {
+      return null;
+    }
+
+    return { storeNo, workerName, createdAtKey };
+  } catch (error) {
+    return null;
+  }
+}
+
+async function listEntryStores() {
+  const stores = await listStores();
+  return stores.filter((store) => Number.isInteger(store.storeNo) && store.storeNo > 0 && store.storeName);
+}
+
+async function listEntries(storeNo) {
+  const chatbotPool = await getChatbotPool();
+  const normalizedStoreNo = Number.parseInt(storeNo, 10);
+  const [rows] = await chatbotPool.query(
+    `SELECT storeNo, workerName, mentionCount, insertCount, createdAt,
+            UNIX_TIMESTAMP(createdAt) AS createdAtKey
+       FROM ENTRY_TODAY
+      WHERE storeNo = ?
+      ORDER BY createdAt DESC, workerName ASC`,
+    [normalizedStoreNo]
+  );
+
+  return rows.map((row) => ({
+    entryId: encodeEntryId(row),
+    storeNo: Number(row.storeNo),
+    workerName: String(row.workerName || '').trim(),
+    mentionCount: Number(row.mentionCount || 0),
+    insertCount: Number(row.insertCount || 0),
+    createdAt: row.createdAt
+  }));
+}
+
+async function findEntryById(entryId) {
+  const chatbotPool = await getChatbotPool();
+  const decoded = decodeEntryId(entryId);
+  if (!decoded) return null;
+
+  const [rows] = await chatbotPool.query(
+    `SELECT storeNo, workerName, mentionCount, insertCount, createdAt,
+            UNIX_TIMESTAMP(createdAt) AS createdAtKey
+       FROM ENTRY_TODAY
+      WHERE storeNo = ?
+        AND workerName = ?
+        AND UNIX_TIMESTAMP(createdAt) = ?
+      LIMIT 1`,
+    [decoded.storeNo, decoded.workerName, decoded.createdAtKey]
+  );
+
+  if (!rows.length) return null;
+
+  return {
+    entryId: encodeEntryId(rows[0]),
+    storeNo: Number(rows[0].storeNo),
+    workerName: String(rows[0].workerName || '').trim(),
+    mentionCount: Number(rows[0].mentionCount || 0),
+    insertCount: Number(rows[0].insertCount || 0),
+    createdAt: rows[0].createdAt
+  };
+}
+
+async function findEntryByStoreAndName(storeNo, workerName) {
+  const chatbotPool = await getChatbotPool();
+  const normalizedStoreNo = Number.parseInt(storeNo, 10);
+  const normalizedWorkerName = String(workerName || '').trim();
+  const [rows] = await chatbotPool.query(
+    `SELECT storeNo, workerName, mentionCount, insertCount, createdAt,
+            UNIX_TIMESTAMP(createdAt) AS createdAtKey
+       FROM ENTRY_TODAY
+      WHERE storeNo = ?
+        AND workerName = ?
+      ORDER BY createdAt DESC
+      LIMIT 1`,
+    [normalizedStoreNo, normalizedWorkerName]
+  );
+
+  return rows[0] || null;
+}
+
+async function createEntry({ storeNo, workerName }) {
+  const chatbotPool = await getChatbotPool();
+  await chatbotPool.query(
+    `INSERT INTO ENTRY_TODAY (storeNo, workerName, mentionCount, insertCount, createdAt)
+     VALUES (?, ?, 0, 0, NOW())`,
+    [storeNo, workerName]
+  );
+
+  const createdRow = await findEntryByStoreAndName(storeNo, workerName);
+  return createdRow ? {
+    entryId: encodeEntryId(createdRow),
+    storeNo: Number(createdRow.storeNo),
+    workerName: String(createdRow.workerName || '').trim(),
+    mentionCount: Number(createdRow.mentionCount || 0),
+    insertCount: Number(createdRow.insertCount || 0),
+    createdAt: createdRow.createdAt
+  } : null;
+}
+
+async function updateEntry(entryId, { workerName }) {
+  const chatbotPool = await getChatbotPool();
+  const decoded = decodeEntryId(entryId);
+  if (!decoded) return null;
+
+  await chatbotPool.query(
+    `UPDATE ENTRY_TODAY
+        SET workerName = ?
+      WHERE storeNo = ?
+        AND workerName = ?
+        AND UNIX_TIMESTAMP(createdAt) = ?`,
+    [workerName, decoded.storeNo, decoded.workerName, decoded.createdAtKey]
+  );
+
+  const updatedRow = await findEntryByStoreAndName(decoded.storeNo, workerName);
+  return updatedRow ? {
+    entryId: encodeEntryId(updatedRow),
+    storeNo: Number(updatedRow.storeNo),
+    workerName: String(updatedRow.workerName || '').trim(),
+    mentionCount: Number(updatedRow.mentionCount || 0),
+    insertCount: Number(updatedRow.insertCount || 0),
+    createdAt: updatedRow.createdAt
+  } : null;
+}
+
+async function deleteEntry(entryId) {
+  const chatbotPool = await getChatbotPool();
+  const decoded = decodeEntryId(entryId);
+  if (!decoded) return false;
+
+  const [result] = await chatbotPool.query(
+    `DELETE FROM ENTRY_TODAY
+      WHERE storeNo = ?
+        AND workerName = ?
+        AND UNIX_TIMESTAMP(createdAt) = ?`,
+    [decoded.storeNo, decoded.workerName, decoded.createdAtKey]
+  );
+
+  return result.affectedRows > 0;
+}
+
 module.exports = {
+  createEntry,
+  encodeEntryId,
+  decodeEntryId,
+  deleteEntry,
   listUsers,
+  listEntryStores,
+  listEntries,
   findUserById,
+  findEntryById,
+  findEntryByStoreAndName,
   getUserDetail,
   updateUserRole,
   updateUserMemberType,
@@ -167,6 +335,8 @@ module.exports = {
   listAds,
   createAd,
   findAdById,
+  getStoreByNo,
   updateAd,
-  deleteAd
+  deleteAd,
+  updateEntry
 };
