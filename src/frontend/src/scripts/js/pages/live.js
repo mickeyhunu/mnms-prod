@@ -9,6 +9,7 @@ const LIVE_CATEGORIES = {
 
 const LIVE_FILTERS_CACHE_KEY = 'liveFiltersCache:v1';
 const LIVE_ENTRIES_CACHE_PREFIX = 'liveEntriesCache:v1:';
+const LIVE_HISTORY_MAX_ROWS = 200;
 const LIVE_REFRESH_INTERVAL_MS = 30000;
 
 const liveState = {
@@ -227,9 +228,11 @@ async function loadLiveEntries({ showLoading = false } = {}) {
             return;
         }
 
-        writeLiveCache(getLiveEntriesCacheKey(), response);
+        const normalizedResponse = normalizeLiveEntriesResponse(response);
+
+        writeLiveCache(getLiveEntriesCacheKey(), normalizedResponse);
         liveState.hasCachedEntries = true;
-        applyLiveEntriesResponse(response);
+        applyLiveEntriesResponse(normalizedResponse);
     } catch (error) {
         if (requestId !== liveState.entriesRequestId) {
             return;
@@ -248,10 +251,12 @@ async function loadLiveEntries({ showLoading = false } = {}) {
 }
 
 function applyLiveEntriesResponse(response) {
-    renderLiveSummary(response);
-    renderLiveEntries(response?.rows || [], response?.titleColumn);
+    const normalizedResponse = normalizeLiveEntriesResponse(response);
 
-    const hasRows = Array.isArray(response?.rows) && response.rows.length > 0;
+    renderLiveSummary(normalizedResponse);
+    renderLiveEntries(normalizedResponse?.rows || [], normalizedResponse?.titleColumn);
+
+    const hasRows = Array.isArray(normalizedResponse?.rows) && normalizedResponse.rows.length > 0;
     const emptyElement = document.getElementById('live-empty');
 
     if (hasRows) {
@@ -366,10 +371,119 @@ function renderLiveSummary(response = null) {
     }
 }
 
+function normalizeLiveEntriesResponse(response = null) {
+    const baseResponse = response && typeof response === 'object' ? { ...response } : {};
+    const rows = Array.isArray(baseResponse.rows) ? baseResponse.rows : [];
+
+    if (!shouldPersistLiveHistory()) {
+        return {
+            ...baseResponse,
+            rows
+        };
+    }
+
+    const cacheKey = getLiveEntriesCacheKey();
+    const cachedEntries = readLiveCache(cacheKey);
+    const cachedRows = Array.isArray(cachedEntries?.data?.rows) ? cachedEntries.data.rows : [];
+    const mergedRows = mergeLiveHistoryRows(cachedRows, rows);
+
+    return {
+        ...baseResponse,
+        rows: mergedRows,
+        totalCount: mergedRows.length
+    };
+}
+
+function shouldPersistLiveHistory(categoryKey = liveState.selectedCategoryKey) {
+    return categoryKey === 'choice' || categoryKey === 'waiting';
+}
+
+function syncLiveListLayout(listElement) {
+    if (!listElement) return;
+
+    const isHistoryTimeline = shouldPersistLiveHistory();
+    listElement.classList.toggle('live-entry-list--timeline', isHistoryTimeline);
+    listElement.classList.toggle('live-entry-list--entry', liveState.selectedCategoryKey === 'entry');
+}
+
+function mergeLiveHistoryRows(previousRows = [], nextRows = []) {
+    const mergedMap = new Map();
+
+    [...previousRows, ...nextRows].forEach((row, index) => {
+        const normalizedRow = row && typeof row === 'object' ? row : {};
+        const signature = createLiveHistorySignature(normalizedRow, index);
+        const existingRow = mergedMap.get(signature);
+
+        if (!existingRow || compareLiveRows(existingRow, normalizedRow) <= 0) {
+            mergedMap.set(signature, normalizedRow);
+        }
+    });
+
+    return Array.from(mergedMap.values())
+        .sort(compareLiveRows)
+        .slice(-LIVE_HISTORY_MAX_ROWS);
+}
+
+function createLiveHistorySignature(row, index = 0) {
+    const createdAt = getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date']);
+    const storeNo = getRowValueByCandidates(row, ['storeNo', 'store_no', 'shopNo', 'shop_no', 'branchNo', 'branch_no']);
+    const storeName = resolveChoiceStoreName(row);
+
+    if (liveState.selectedCategoryKey === 'choice') {
+        const choiceMessage = getRowValueByCandidates(row, ['choiceMsg', 'choice_msg', 'choice msg', 'message', 'msg', 'content']);
+        return ['choice', storeNo, storeName, createdAt, choiceMessage].map(normalizeHistorySignaturePart).join('|');
+    }
+
+    if (liveState.selectedCategoryKey === 'waiting') {
+        const roomInfo = getRoomStatus(row);
+        const waitInfo = getWaitingStatus(row);
+        const roomDetail = getRowValueByCandidates(row, ['roomDetail', 'room_detail', 'detail', 'details']);
+        return ['waiting', storeNo, storeName, createdAt, roomInfo, waitInfo, stableSerializeValue(roomDetail)].map(normalizeHistorySignaturePart).join('|');
+    }
+
+    return ['row', storeNo, storeName, createdAt, stableSerializeValue(row), index].map(normalizeHistorySignaturePart).join('|');
+}
+
+function normalizeHistorySignaturePart(value) {
+    if (value === null || value === undefined) return '';
+    return String(value).trim();
+}
+
+function stableSerializeValue(value) {
+    if (value === null || value === undefined) return '';
+    if (typeof value !== 'object') return String(value);
+
+    if (Array.isArray(value)) {
+        return `[${value.map((item) => stableSerializeValue(item)).join(',')}]`;
+    }
+
+    return `{${Object.keys(value).sort().map((key) => `${key}:${stableSerializeValue(value[key])}`).join(',')}}`;
+}
+
+function compareLiveRows(leftRow, rightRow) {
+    const leftTime = getLiveRowSortTime(leftRow);
+    const rightTime = getLiveRowSortTime(rightRow);
+
+    if (leftTime !== rightTime) {
+        return leftTime - rightTime;
+    }
+
+    return createLiveHistorySignature(leftRow).localeCompare(createLiveHistorySignature(rightRow), 'ko');
+}
+
+function getLiveRowSortTime(row) {
+    const rawTimestamp = getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date']);
+    const timestamp = new Date(rawTimestamp).getTime();
+
+    return Number.isFinite(timestamp) ? timestamp : Number.MAX_SAFE_INTEGER;
+}
+
 function renderLiveEntries(rows, titleColumn) {
     const listElement = document.getElementById('live-entry-list');
     const emptyElement = document.getElementById('live-empty');
     if (!listElement) return;
+
+    syncLiveListLayout(listElement);
 
     if (!Array.isArray(rows) || !rows.length) {
         listElement.innerHTML = '';
