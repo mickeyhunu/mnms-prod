@@ -809,6 +809,118 @@ function formatAdminRestrictionStatus(user) {
     return '정지';
 }
 
+function formatAdminActivityBoardLabel(boardType) {
+    const normalized = String(boardType || '').toUpperCase();
+    if (normalized === 'FREE') return '자유';
+    if (normalized === 'ANON') return '익명';
+    if (normalized === 'REVIEW') return '후기';
+    if (normalized === 'STORY') return '썰';
+    if (normalized === 'QUESTION') return '질문';
+    return normalized || '-';
+}
+
+function escapeHtmlAndPreserveLineBreaks(value, maxLength = 120) {
+    const normalized = String(value || '').trim();
+    if (!normalized) return '-';
+    const truncated = normalized.length > maxLength ? `${normalized.slice(0, maxLength)}…` : normalized;
+    return sanitizeHTML(truncated).replace(/\n/g, '<br>');
+}
+
+function renderAdminActivityItems(containerId, items, renderItem, emptyMessage) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (!Array.isArray(items) || !items.length) {
+        container.innerHTML = `<div class="admin-user-activity-empty">${sanitizeHTML(emptyMessage)}</div>`;
+        return;
+    }
+
+    container.innerHTML = items.map(renderItem).join('');
+}
+
+function renderAdminUserActivity(activity = {}) {
+    const stats = activity.stats || {};
+    const statsContainer = document.getElementById('admin-user-activity-stats');
+    if (statsContainer) {
+        const statCards = [
+            { label: '게시글', value: Number(stats.postCount || 0) },
+            { label: '댓글', value: Number(stats.commentCount || 0) },
+            { label: '출석', value: Number(stats.attendanceCount || 0) },
+            { label: '후기', value: Number(stats.reviewCount || 0) },
+            { label: '받은/준 추천', value: Number(stats.recommendCount || 0) }
+        ];
+
+        statsContainer.innerHTML = statCards.map((item) => `
+            <article class="admin-user-activity-stat">
+                <span class="admin-user-activity-stat__label">${item.label}</span>
+                <strong class="admin-user-activity-stat__value">${item.value.toLocaleString()}</strong>
+            </article>
+        `).join('');
+    }
+
+    renderAdminActivityItems(
+        'admin-user-activity-posts',
+        activity.recentPosts,
+        (post) => `
+            <article class="admin-user-activity-item">
+                <div class="admin-user-activity-item__meta">${formatDate(post.createdAt)} · ${sanitizeHTML(formatAdminActivityBoardLabel(post.boardType))}</div>
+                <a class="admin-user-activity-item__title" href="/post-detail?id=${post.id}" target="_blank" rel="noopener noreferrer">${sanitizeHTML(post.title || `게시글 #${post.id}`)}</a>
+                <div class="admin-user-activity-item__sub">좋아요 ${Number(post.likeCount || 0).toLocaleString()} · 댓글 ${Number(post.commentCount || 0).toLocaleString()}</div>
+            </article>
+        `,
+        '최근 게시글이 없습니다.'
+    );
+
+    renderAdminActivityItems(
+        'admin-user-activity-comments',
+        activity.recentComments,
+        (comment) => `
+            <article class="admin-user-activity-item">
+                <div class="admin-user-activity-item__meta">${formatDate(comment.createdAt)} · ${sanitizeHTML(formatAdminActivityBoardLabel(comment.postBoardType))}</div>
+                <a class="admin-user-activity-item__title" href="/post-detail?id=${comment.postId}" target="_blank" rel="noopener noreferrer">${sanitizeHTML(comment.postTitle || `게시글 #${comment.postId}`)}</a>
+                <div class="admin-user-activity-item__sub">${escapeHtmlAndPreserveLineBreaks(comment.content, 100)}</div>
+            </article>
+        `,
+        '최근 댓글이 없습니다.'
+    );
+
+    renderAdminActivityItems(
+        'admin-user-activity-likes',
+        activity.recentLikedPosts,
+        (post) => `
+            <article class="admin-user-activity-item">
+                <div class="admin-user-activity-item__meta">${formatDate(post.likedAt)} · ${sanitizeHTML(formatAdminActivityBoardLabel(post.boardType))}</div>
+                <a class="admin-user-activity-item__title" href="/post-detail?id=${post.id}" target="_blank" rel="noopener noreferrer">${sanitizeHTML(post.title || `게시글 #${post.id}`)}</a>
+                <div class="admin-user-activity-item__sub">작성일 ${formatDate(post.createdAt)} · 전체 좋아요 ${Number(post.likeCount || 0).toLocaleString()}</div>
+            </article>
+        `,
+        '최근 좋아요 기록이 없습니다.'
+    );
+
+    renderAdminActivityItems(
+        'admin-user-login-history',
+        activity.loginHistories,
+        (history) => `
+            <article class="admin-user-activity-item">
+                <div class="admin-user-activity-item__meta">${formatDate(history.createdAt)}</div>
+                <div class="admin-user-activity-item__title admin-user-activity-item__title--plain">${sanitizeHTML(history.ipAddress || 'unknown')}</div>
+                <div class="admin-user-activity-item__sub">${escapeHtmlAndPreserveLineBreaks(history.userAgent || 'User-Agent 정보 없음', 140)}</div>
+            </article>
+        `,
+        '기록된 접속 IP가 없습니다.'
+    );
+}
+
+function resetAdminUserActivity() {
+    renderAdminUserActivity({
+        stats: { postCount: 0, commentCount: 0, attendanceCount: 0, reviewCount: 0, recommendCount: 0 },
+        recentPosts: [],
+        recentComments: [],
+        recentLikedPosts: [],
+        loginHistories: []
+    });
+}
+
 function bindUserEditForm() {
     const phoneInput = document.getElementById('admin-user-phone');
     const passwordInput = document.getElementById('admin-user-password');
@@ -891,6 +1003,7 @@ async function openUserEditModal(userId, options = {}) {
         editingUserId = userId;
         document.getElementById('user-edit-modal-title').textContent = `회원 정보 수정 #${userId}`;
         fillUserEditForm(user);
+        renderAdminUserActivity(response.activity || {});
         document.getElementById('user-edit-modal')?.classList.remove('hidden');
         document.getElementById('user-edit-modal')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
@@ -910,6 +1023,7 @@ function closeUserEditModal() {
     document.getElementById('user-edit-form')?.reset();
     document.getElementById('admin-user-password-match-result').textContent = '';
     setAdminUserHelpMessage('');
+    resetAdminUserActivity();
     document.getElementById('user-edit-modal')?.classList.add('hidden');
     syncAdminPageState({ activeTab: 'users', editUserId: null }, { replace: true });
 }

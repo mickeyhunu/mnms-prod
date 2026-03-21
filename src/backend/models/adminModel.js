@@ -3,7 +3,7 @@
  */
 const { getPool, getChatbotPool } = require('../config/database');
 const { pickUserRow } = require('../utils/response');
-const { ensureResolvedLoginRestriction } = require('./userModel');
+const { ensureResolvedLoginRestriction, getUserActivityStats, getUserActivityDetails, getUserLoginHistories } = require('./userModel');
 const { getStoreByNo, listStores } = require('./liveModel');
 
 async function listUsers() {
@@ -31,6 +31,56 @@ async function findUserById(userId) {
 async function getUserDetail(userId) {
   const user = await findUserById(userId);
   return user ? pickUserRow(user) : null;
+}
+
+async function getUserActivityOverview(userId, { limit = 10 } = {}) {
+  const safeLimit = Math.max(1, Math.min(20, Number(limit) || 10));
+  const [stats, activityDetails, loginHistories] = await Promise.all([
+    getUserActivityStats(userId),
+    getUserActivityDetails(userId, { limit: safeLimit }),
+    getUserLoginHistories(userId, { limit: safeLimit })
+  ]);
+
+  return {
+    stats: {
+      postCount: Number(stats.postCount || 0),
+      commentCount: Number(stats.commentCount || 0),
+      attendanceCount: Number(stats.attendanceCount || 0),
+      reviewCount: Number(stats.reviewCount || 0),
+      recommendCount: Number(stats.recommendCount || 0)
+    },
+    recentPosts: activityDetails.posts.map((post) => ({
+      id: Number(post.id),
+      title: post.title,
+      boardType: post.boardType,
+      createdAt: post.createdAt,
+      likeCount: Number(post.likeCount || 0),
+      commentCount: Number(post.commentCount || 0)
+    })),
+    recentComments: activityDetails.comments.map((comment) => ({
+      id: Number(comment.id),
+      postId: Number(comment.postId),
+      postTitle: comment.postTitle,
+      postBoardType: comment.postBoardType,
+      content: comment.content,
+      createdAt: comment.createdAt
+    })),
+    recentLikedPosts: activityDetails.likedPosts.map((post) => ({
+      id: Number(post.id),
+      title: post.title,
+      boardType: post.boardType,
+      createdAt: post.createdAt,
+      likedAt: post.likedAt,
+      likeCount: Number(post.likeCount || 0),
+      commentCount: Number(post.commentCount || 0)
+    })),
+    loginHistories: loginHistories.map((history) => ({
+      id: Number(history.id),
+      ipAddress: history.ipAddress,
+      userAgent: history.userAgent,
+      createdAt: history.createdAt
+    }))
+  };
 }
 
 async function updateUserRole(userId, role) {
@@ -351,6 +401,7 @@ module.exports = {
   findEntryById,
   findEntryByStoreAndName,
   getUserDetail,
+  getUserActivityOverview,
   updateUserRole,
   updateUserMemberType,
   updateUserByAdmin,
