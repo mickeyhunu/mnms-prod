@@ -284,6 +284,19 @@
     justify-content: center;
 }
 
+
+.live-chat-card__badge {
+    width: fit-content;
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(96, 165, 250, 0.18);
+    color: #bfdbfe;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+}
+
 .live-chat-card__title {
     margin: 0;
     color: #fafafa;
@@ -326,6 +339,39 @@
     font-size: 16px;
     line-height: 1.9;
     white-space: pre-wrap;
+    word-break: break-word;
+}
+
+
+.live-chat-card__details {
+    list-style: none;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.live-chat-card__detail-item {
+    display: grid;
+    grid-template-columns: minmax(88px, 120px) minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+}
+
+.live-chat-card__detail-key {
+    color: #93c5fd;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.live-chat-card__detail-value {
+    color: #f4f4f5;
+    font-size: 15px;
+    line-height: 1.8;
     word-break: break-word;
 }
 
@@ -422,6 +468,11 @@
 
     .live-chat-card__bubble {
         max-width: 100%;
+    }
+
+    .live-chat-card__detail-item {
+        grid-template-columns: 1fr;
+        gap: 4px;
     }
 }
 
