@@ -417,8 +417,8 @@ function createChoiceLiveEntryCard(row, index, title, choiceMessage) {
                 <div class="live-chat-card__bubble-wrap">
                     <div class="live-chat-card__bubble">
                         <p class="live-chat-card__message">${sanitizeHTML(formatFieldValue(choiceMessage))}</p>
-                        ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(createdAt))}">${sanitizeHTML(timestamp)}</time>` : ''}
                     </div>
+                    ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(createdAt))}">${sanitizeHTML(timestamp)}</time>` : ''}
                 </div>
             </div>
         </article>
