@@ -16,7 +16,7 @@ router.use(authMiddleware, adminMiddleware);
 
 router.get('/posts', async (req, res, next) => {
   try {
-    const { rows, total } = await postModel.listPosts(0, 200, { boardType: 'ALL' });
+    const { rows, total } = await postModel.listPosts(0, 10000, { boardType: 'ALL' });
     res.json({ content: rows, totalElements: total });
   } catch (error) {
     next(error);
