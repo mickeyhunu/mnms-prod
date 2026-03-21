@@ -368,7 +368,6 @@ function renderLiveEntries(rows, titleColumn) {
 }
 
 function createLiveEntryCard(row, index, titleColumn) {
-    const entries = Object.entries(row || {});
     const title = resolveEntryTitle(row, titleColumn, index);
     const choiceMessage = getRowValueByCandidates(row, ['choiceMsg', 'choice_msg', 'choice msg', 'message', 'msg', 'content']);
 
@@ -376,48 +375,75 @@ function createLiveEntryCard(row, index, titleColumn) {
         return createChoiceLiveEntryCard(row, index, title, choiceMessage);
     }
 
-    const detailItems = entries
-        .filter(([key, value]) => value !== null && value !== undefined && String(value).trim() !== '')
-        .slice(0, 6)
-        .map(([key, value]) => `
-            <li class="live-entry-card__detail-item">
-                <span class="live-entry-card__detail-key">${sanitizeHTML(formatFieldLabel(key))}</span>
-                <span class="live-entry-card__detail-value">${sanitizeHTML(formatFieldValue(value))}</span>
-            </li>
-        `)
-        .join('');
-
-    return `
-        <article class="live-entry-card">
-            <div class="live-entry-card__header">
-                <span class="live-entry-card__badge">${sanitizeHTML(LIVE_CATEGORIES[liveState.selectedCategoryKey]?.label || 'LIVE')}</span>
-                <h3 class="live-entry-card__title">${sanitizeHTML(title)}</h3>
-            </div>
-            <ul class="live-entry-card__details">
-                ${detailItems}
-            </ul>
-        </article>
-    `;
+    return createStructuredLiveEntryCard(row, index, title);
 }
 
-function createChoiceLiveEntryCard(row, index, title, choiceMessage) {
+function createChoiceLiveEntryCard(row, index, title, choiceMessage = '') {
     const storeName = resolveChoiceStoreName(row);
     const createdAt = getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date']);
     const timestamp = formatLiveEntryTime(createdAt);
 
+    return createLiveChatCard({
+        index,
+        title: resolveChoiceCardTitle(storeName, title),
+        message: formatFieldValue(choiceMessage),
+        timestamp,
+        rawTimestamp: createdAt,
+        avatarLabel: getChoiceAvatarLabel(storeName, index)
+    });
+}
+
+function createStructuredLiveEntryCard(row, index, title) {
+    const details = Object.entries(row || {})
+        .filter(([key, value]) => value !== null && value !== undefined && String(value).trim() !== '')
+        .slice(0, 6)
+        .map(([key, value]) => ({
+            key: formatFieldLabel(key),
+            value: formatFieldValue(value)
+        }));
+
+    const categoryLabel = LIVE_CATEGORIES[liveState.selectedCategoryKey]?.label || 'LIVE';
+    const createdAt = getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date']);
+    const timestamp = formatLiveEntryTime(createdAt);
+
+    return createLiveChatCard({
+        index,
+        title,
+        details,
+        emptyMessage: '표시할 정보가 없습니다.',
+        timestamp,
+        rawTimestamp: createdAt,
+        badge: categoryLabel,
+        avatarLabel: getChoiceAvatarLabel(categoryLabel, index)
+    });
+}
+
+function createLiveChatCard({ index, title, message = '', details = [], emptyMessage = '', timestamp = '', rawTimestamp = '', badge = '', avatarLabel = '' }) {
+    const normalizedAvatarLabel = avatarLabel || getChoiceAvatarLabel(title, index);
+    const normalizedDetails = Array.isArray(details) ? details : [];
+    const contentHtml = normalizedDetails.length
+        ? `<ul class="live-chat-card__details">${normalizedDetails.map((detail) => `
+            <li class="live-chat-card__detail-item">
+                <span class="live-chat-card__detail-key">${sanitizeHTML(detail.key)}</span>
+                <span class="live-chat-card__detail-value">${sanitizeHTML(detail.value)}</span>
+            </li>
+        `).join('')}</ul>`
+        : `<p class="live-chat-card__message">${sanitizeHTML(message || emptyMessage)}</p>`;
+
     return `
         <article class="live-chat-card">
             <div class="live-chat-card__header">
-                <div class="live-chat-card__avatar" aria-hidden="true">${sanitizeHTML(getChoiceAvatarLabel(storeName, index))}</div>
+                <div class="live-chat-card__avatar" aria-hidden="true">${sanitizeHTML(normalizedAvatarLabel)}</div>
                 <div class="live-chat-card__header-copy">
-                    <h3 class="live-chat-card__title">${sanitizeHTML(resolveChoiceCardTitle(storeName, title))}</h3>
+                    ${badge ? `<span class="live-chat-card__badge">${sanitizeHTML(badge)}</span>` : ''}
+                    <h3 class="live-chat-card__title">${sanitizeHTML(title)}</h3>
                 </div>
             </div>
             <div class="live-chat-card__body">
                 <div class="live-chat-card__bubble-wrap">
                     <div class="live-chat-card__bubble">
-                        <p class="live-chat-card__message">${sanitizeHTML(formatFieldValue(choiceMessage))}</p>
-                        ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(createdAt))}">${sanitizeHTML(timestamp)}</time>` : ''}
+                        ${contentHtml}
+                        ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(rawTimestamp))}">${sanitizeHTML(timestamp)}</time>` : ''}
                     </div>
                 </div>
             </div>
