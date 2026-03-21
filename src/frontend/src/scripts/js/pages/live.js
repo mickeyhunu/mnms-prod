@@ -442,13 +442,14 @@ function createStructuredLiveEntryCard(row, index, title) {
 }
 
 function createEntrySummaryLiveCard(rows, titleColumn) {
-    const entryNames = (Array.isArray(rows) ? rows : [])
+    const sortedRows = sortEntryRowsByCreatedOrder(rows);
+    const entryNames = sortedRows
         .map((row, index) => resolveEntryWorkerName(row, titleColumn, index))
         .filter(Boolean);
     const totalWorkers = entryNames.length;
-    const rankedEntries = buildEntryRankings(rows, titleColumn);
-    const latestTimestamp = findLatestEntryTimestamp(rows);
-    const storeName = resolveChoiceStoreName(rows[0] || {});
+    const rankedEntries = buildEntryRankings(sortedRows, titleColumn);
+    const latestTimestamp = findLatestEntryTimestamp(sortedRows);
+    const storeName = resolveChoiceStoreName(sortedRows[0] || rows[0] || {});
     const title = storeName ? `${storeName} 엔트리` : '엔트리';
     const entryNameRows = chunkEntryNames(entryNames, 5);
     const contentHtml = `
@@ -530,6 +531,24 @@ function resolveEntryWorkerName(row, titleColumn, index) {
     }
 
     return resolveEntryTitle(row, titleColumn, index).trim();
+}
+
+function sortEntryRowsByCreatedOrder(rows) {
+    const candidates = ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date'];
+
+    return (Array.isArray(rows) ? rows : [])
+        .map((row, index) => {
+            const rawTimestamp = getRowValueByCandidates(row, candidates);
+            const timestamp = new Date(rawTimestamp).getTime();
+
+            return {
+                row,
+                index,
+                timestamp: Number.isFinite(timestamp) ? timestamp : Number.POSITIVE_INFINITY
+            };
+        })
+        .sort((a, b) => a.timestamp - b.timestamp || a.index - b.index)
+        .map((item) => item.row);
 }
 
 function buildEntryRankings(rows, titleColumn) {
