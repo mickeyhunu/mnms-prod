@@ -261,18 +261,32 @@ function applyLiveEntriesResponse(response) {
     }
 }
 
+const WAITING_STORE_DECORATIONS = {
+    '달토': '🐰',
+    '엘리트': '🎆',
+    '퍼펙트': '💫',
+    '유앤미': '💟',
+    '도파민': '🌌',
+    '제우스': '🔱'
+};
+
 function normalizeStores(stores) {
     return (Array.isArray(stores) ? stores : [])
         .map((store) => ({
             storeNo: Number.parseInt(store?.storeNo, 10),
-            storeName: String(store?.storeName || '').trim()
+            storeName: String(store?.storeName || '').trim(),
+            storeAddress: String(store?.storeAddress || '').trim()
         }))
         .filter((store) => Number.isInteger(store.storeNo) && store.storeName)
         .sort((a, b) => a.storeNo - b.storeNo);
 }
 
+function getSelectedStore() {
+    return liveState.stores.find((store) => store.storeNo === liveState.selectedStoreNo) || null;
+}
+
 function getSelectedStoreName() {
-    return liveState.stores.find((store) => store.storeNo === liveState.selectedStoreNo)?.storeName || '전체';
+    return getSelectedStore()?.storeName || '전체';
 }
 
 function renderStoreButtons() {
@@ -422,15 +436,19 @@ function createStructuredLiveEntryCard(row, index, title) {
 }
 
 function createWaitingLiveEntryCard(row, index, title) {
-    const storeName = resolveWaitingStoreName(row);
+    const store = resolveWaitingStore(row);
+    const storeName = store?.storeName || getSelectedStoreName();
     const waitInfo = getWaitingStatus(row);
     const roomInfo = getRoomStatus(row);
+    const roomDetail = getRowValueByCandidates(row, ['roomDetail', 'room_detail', 'detail', 'details']);
     const updatedAt = getRowValueByCandidates(row, ['updatedAt', 'updated_at', 'createdAt', 'created_at', 'regDate', 'reg_date', 'date']);
     const timestamp = formatLiveEntryTime(updatedAt);
     const waitingMessage = buildWaitingMessage({
         storeName,
+        storeAddress: store?.storeAddress || '',
         waitInfo,
         roomInfo,
+        roomDetail,
         updatedAt
     });
 
@@ -543,21 +561,39 @@ function resolveChoiceCardTitle(storeName, fallbackTitle) {
     return fallbackTitle;
 }
 
-function resolveWaitingStoreName(row) {
+function resolveWaitingStore(row) {
     const detectedStoreName = getRowValueByCandidates(row, ['storeName', 'store_name', 'shopName', 'shop_name', 'branchName', 'branch_name', 'store', 'storeNm']);
     if (detectedStoreName !== null && detectedStoreName !== undefined && String(detectedStoreName).trim() !== '') {
-        return String(detectedStoreName).trim();
+        const normalizedStoreName = String(detectedStoreName).trim();
+        const matchedByName = liveState.stores.find((store) => store.storeName === normalizedStoreName);
+        if (matchedByName) {
+            return matchedByName;
+        }
+
+        return {
+            storeNo: Number.parseInt(getRowValueByCandidates(row, ['storeNo', 'store_no', 'shopNo', 'shop_no', 'branchNo', 'branch_no']), 10),
+            storeName: normalizedStoreName,
+            storeAddress: ''
+        };
     }
 
     const storeNo = Number.parseInt(getRowValueByCandidates(row, ['storeNo', 'store_no', 'shopNo', 'shop_no', 'branchNo', 'branch_no']), 10);
     if (Number.isInteger(storeNo)) {
         const matchedStore = liveState.stores.find((store) => store.storeNo === storeNo);
-        if (matchedStore?.storeName) {
-            return matchedStore.storeName;
+        if (matchedStore) {
+            return matchedStore;
         }
     }
 
-    return getSelectedStoreName();
+    return getSelectedStore() || {
+        storeNo: null,
+        storeName: '전체',
+        storeAddress: ''
+    };
+}
+
+function resolveWaitingStoreName(row) {
+    return resolveWaitingStore(row)?.storeName || getSelectedStoreName();
 }
 
 function resolveWaitingCardTitle(storeName, fallbackTitle) {
@@ -593,30 +629,176 @@ function formatWaitingUpdatedAt(value) {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '시간 정보 없음';
 
-    return `${date.toLocaleString('ko-KR', {
+    const formatter = new Intl.DateTimeFormat('ko-KR', {
         timeZone: 'Asia/Seoul',
         month: 'numeric',
-        day: 'numeric'
-    })} ${date.toLocaleString('ko-KR', {
-        timeZone: 'Asia/Seoul',
+        day: 'numeric',
         hour: 'numeric',
-        minute: '2-digit',
-        hour12: false
-    })} 기준`;
+        minute: 'numeric',
+        hourCycle: 'h23'
+    });
+    const parts = formatter.formatToParts(date);
+    const getPart = (type) => Number.parseInt(parts.find((part) => part.type === type)?.value || '', 10);
+    const month = getPart('month');
+    const day = getPart('day');
+    const hour = getPart('hour');
+    const minute = getPart('minute');
+
+    return `${month}월 ${day}일 ${hour}시 ${minute}분 기준`;
 }
 
-function buildWaitingMessage({ storeName, waitInfo, roomInfo, updatedAt }) {
+function formatWaitingStoreHeadline(storeName) {
     const normalizedStoreName = String(storeName || '전체').trim() || '전체';
+    const decoration = WAITING_STORE_DECORATIONS[normalizedStoreName];
+    if (!decoration) {
+        return `✨✨✨ ${normalizedStoreName} ✨✨✨`;
+    }
+
+    return `${decoration.repeat(3)} ${normalizedStoreName} ${decoration.repeat(3)}`;
+}
+
+function normalizeWaitingBulletValue(value) {
+    if (value === null || value === undefined) return '정보 없음';
+
+    const normalized = String(value).trim();
+    return normalized || '정보 없음';
+}
+
+function tryParseWaitingDetail(rawDetail) {
+    if (rawDetail === null || rawDetail === undefined || rawDetail === '') {
+        return { object: null, text: '' };
+    }
+
+    if (typeof rawDetail === 'object') {
+        return { object: rawDetail, text: '' };
+    }
+
+    const text = String(rawDetail).trim();
+    if (!text) {
+        return { object: null, text: '' };
+    }
+
+    try {
+        return { object: JSON.parse(text), text: '' };
+    } catch (error) {
+        // ignore JSON parse error
+    }
+
+    try {
+        const fixedText = text
+            .replace(/\r?\n|\r/g, ' ')
+            .replace(/([,{\s])(\w+)\s*:/g, '$1"$2":')
+            .replace(/'/g, '"');
+        return { object: JSON.parse(fixedText), text: '' };
+    } catch (error) {
+        // ignore JSON parse error
+    }
+
+    return { object: null, text };
+}
+
+function formatWaitingDetailKey(key) {
+    return String(key || '')
+        .replace(/_/g, ' ')
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function collectWaitingDetailLines(detail, depth = 0) {
+    if (detail === null || detail === undefined || detail === '') {
+        return [];
+    }
+
+    if (Array.isArray(detail)) {
+        return detail.flatMap((item) => collectWaitingDetailLines(item, depth));
+    }
+
+    if (typeof detail !== 'object') {
+        return String(detail)
+            .split(/\r?\n|\r/)
+            .map((line) => line.trim())
+            .filter(Boolean)
+            .map((line) => (depth > 0 ? `• ${line}` : line));
+    }
+
+    return Object.entries(detail).reduce((lines, [key, value], index) => {
+        const label = formatWaitingDetailKey(key);
+
+        if (value !== null && typeof value === 'object') {
+            const childLines = collectWaitingDetailLines(value, depth + 1);
+            if (depth === 0 && index > 0 && childLines.length) {
+                lines.push('');
+            }
+
+            if (!childLines.length) {
+                lines.push(`• ${label} : 정보 없음`);
+                return lines;
+            }
+
+            lines.push(label, ...childLines);
+            return lines;
+        }
+
+        lines.push(`• ${label} : ${normalizeWaitingBulletValue(value)}`);
+        return lines;
+    }, []);
+}
+
+function buildWaitingDetailLines(roomDetail) {
+    const { object, text } = tryParseWaitingDetail(roomDetail);
+
+    if (object) {
+        return collectWaitingDetailLines(object);
+    }
+
+    if (!text) {
+        return [];
+    }
+
+    return text
+        .split(/\r?\n|\r/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => {
+            if (/^[•●\-]/.test(line) || /^[0-9]+층/.test(line)) {
+                return line;
+            }
+
+            const [key, ...rest] = line.split(':');
+            if (!rest.length) {
+                return line;
+            }
+
+            return `• ${formatWaitingDetailKey(key)} : ${normalizeWaitingBulletValue(rest.join(':'))}`;
+        });
+}
+
+function buildWaitingMessage({ storeName, storeAddress, waitInfo, roomInfo, roomDetail, updatedAt }) {
+    const normalizedStoreName = String(storeName || '전체').trim() || '전체';
+    const normalizedStoreAddress = String(storeAddress || '').trim();
     const updatedText = formatWaitingUpdatedAt(updatedAt);
+    const detailLines = buildWaitingDetailLines(roomDetail);
     const lines = [
         updatedText,
-        `⏳ ${normalizedStoreName} ⏳`,
-        '    웨이팅 상황',
-        '➖➖➖➖➖➖➖➖➖',
-        `● 빈방 : ${roomInfo}`,
-        `● 웨이팅 : ${waitInfo}`,
-        '➖➖➖➖➖➖➖➖➖'
+        ` ${formatWaitingStoreHeadline(normalizedStoreName)}`,
+        '     룸/웨이팅 상황'
     ];
+
+    if (normalizedStoreAddress) {
+        lines.push(`     ${normalizedStoreAddress}`);
+    }
+
+    lines.push(
+        '➖➖➖➖➖➖➖➖➖',
+        `● 빈방 : ${roomInfo}`
+    );
+
+    if (detailLines.length) {
+        lines.push('', ...detailLines);
+    }
+
+    lines.push('', `● 웨이팅 : ${waitInfo}`, '➖➖➖➖➖➖➖➖➖');
 
     return lines.join('\n');
 }
