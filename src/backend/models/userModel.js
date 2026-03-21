@@ -25,6 +25,28 @@ async function findById(id) {
   return ensureResolvedLoginRestriction(rows[0] || null);
 }
 
+async function recordUserLoginHistory(userId, { ipAddress, userAgent }) {
+  const pool = getPool();
+  await pool.query(
+    `INSERT INTO user_login_histories (user_id, ip_address, user_agent)
+     VALUES (?, ?, ?)`,
+    [userId, String(ipAddress || 'unknown').slice(0, 255), userAgent ? String(userAgent).slice(0, 500) : null]
+  );
+}
+
+async function getUserLoginHistories(userId, { limit = 10 } = {}) {
+  const pool = getPool();
+  const safeLimit = Math.max(1, Math.min(100, Number(limit) || 10));
+  const [rows] = await pool.query(
+    `SELECT id, ip_address AS ipAddress, user_agent AS userAgent, created_at AS createdAt
+     FROM user_login_histories
+     WHERE user_id = ?
+     ORDER BY created_at DESC, id DESC
+     LIMIT ?`,
+    [userId, safeLimit]
+  );
+  return rows;
+}
 
 
 async function clearExpiredLoginRestriction(userId) {
@@ -273,6 +295,8 @@ module.exports = {
   findByNickname,
   findByNicknameExceptUser,
   updateUserProfile,
+  recordUserLoginHistory,
+  getUserLoginHistories,
   getUserActivityStats,
   getUserPointHistories,
   getUserActivityDetails,
