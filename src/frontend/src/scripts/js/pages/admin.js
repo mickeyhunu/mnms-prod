@@ -613,9 +613,69 @@ function renderEntriesTable() {
                 </td>
             </tr>
         `).join('');
+        bindEntryRowActionButtons(tbody);
     }
 
     renderAdminPagination('entries', totalPages, page);
+}
+
+function bindEntryRowActionButtons(container) {
+    if (!container) return;
+
+    const editButtons = container.querySelectorAll('[data-admin-action="edit-entry"]');
+    editButtons.forEach((button) => {
+        button.onclick = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const entryId = button.dataset.entryId || '';
+            const entryName = button.dataset.entryName || '';
+
+            if (!entryId) {
+                alert('엔트리 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
+                return;
+            }
+
+            startEntryEdit({ entryId, workerName: entryName });
+        };
+    });
+
+    const deleteButtons = container.querySelectorAll('[data-admin-action="delete"][data-target-type="entry"]');
+    deleteButtons.forEach((button) => {
+        button.onclick = async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const entryId = button.dataset.entryId || '';
+            const entryName = button.dataset.entryName || '';
+
+            if (!entryId) {
+                alert('엔트리 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
+                return;
+            }
+
+            const targetLabel = entryName || '선택한 엔트리';
+            const shouldDelete = window.confirm(`"${targetLabel}" 엔트리 이름을 삭제하시겠습니까?`);
+            if (!shouldDelete) return;
+
+            const originalText = button.textContent;
+            const originalDisabled = button.disabled;
+
+            try {
+                button.disabled = true;
+                button.textContent = '삭제 중...';
+                await APIClient.delete(`/admin/entries/${encodeURIComponent(entryId)}`);
+                if (editingEntryId === entryId) resetEntryEditor();
+                await loadEntries();
+                setEntryHelpMessage(`"${targetLabel}" 엔트리 이름을 삭제했습니다.`, '#198754');
+            } catch (error) {
+                alert(error.message || '엔트리 삭제에 실패했습니다.');
+            } finally {
+                button.disabled = originalDisabled;
+                button.textContent = originalText;
+            }
+        };
+    });
 }
 
 function renderAdsTable() {
