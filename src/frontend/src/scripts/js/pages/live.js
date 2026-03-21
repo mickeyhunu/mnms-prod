@@ -375,6 +375,10 @@ function createLiveEntryCard(row, index, titleColumn) {
         return createChoiceLiveEntryCard(row, index, title, choiceMessage);
     }
 
+    if (liveState.selectedCategoryKey === 'waiting') {
+        return createWaitingLiveEntryCard(row, index, title);
+    }
+
     return createStructuredLiveEntryCard(row, index, title);
 }
 
@@ -424,6 +428,30 @@ function createStructuredLiveEntryCard(row, index, title) {
     });
 }
 
+function createWaitingLiveEntryCard(row, index, title) {
+    const storeName = resolveWaitingStoreName(row);
+    const waitInfo = getWaitingStatus(row);
+    const roomInfo = getRoomStatus(row);
+    const updatedAt = getRowValueByCandidates(row, ['updatedAt', 'updated_at', 'createdAt', 'created_at', 'regDate', 'reg_date', 'date']);
+    const timestamp = formatLiveEntryTime(updatedAt);
+    const waitingMessage = buildWaitingMessage({
+        storeName,
+        waitInfo,
+        roomInfo,
+        updatedAt
+    });
+
+    return createLiveChatCard({
+        index,
+        title: resolveWaitingCardTitle(storeName, title),
+        body: `<p class="live-chat-card__message">${convertTextToHtml(waitingMessage)}</p>`,
+        timestamp,
+        rawTimestamp: updatedAt,
+        badge: LIVE_CATEGORIES.waiting.label,
+        avatarLabel: getChoiceAvatarLabel(storeName || LIVE_CATEGORIES.waiting.label, index)
+    });
+}
+
 function createLiveChatCard({ index, title, body, timestamp = '', rawTimestamp = '', badge = '', avatarLabel = '' }) {
     const normalizedAvatarLabel = avatarLabel || getChoiceAvatarLabel(title, index);
 
@@ -439,9 +467,9 @@ function createLiveChatCard({ index, title, body, timestamp = '', rawTimestamp =
             <div class="live-chat-card__body">
                 <div class="live-chat-card__bubble-wrap">
                     <div class="live-chat-card__bubble">
-                        <p class="live-chat-card__message">${sanitizeHTML(formatFieldValue(choiceMessage))}</p>
+                        ${body}
                     </div>
-                    ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(createdAt))}">${sanitizeHTML(timestamp)}</time>` : ''}
+                    ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(rawTimestamp))}">${sanitizeHTML(timestamp)}</time>` : ''}
                 </div>
             </div>
         </article>
@@ -500,6 +528,88 @@ function resolveChoiceCardTitle(storeName, fallbackTitle) {
     }
 
     return fallbackTitle;
+}
+
+function resolveWaitingStoreName(row) {
+    const detectedStoreName = getRowValueByCandidates(row, ['storeName', 'store_name', 'shopName', 'shop_name', 'branchName', 'branch_name', 'store', 'storeNm']);
+    if (detectedStoreName !== null && detectedStoreName !== undefined && String(detectedStoreName).trim() !== '') {
+        return String(detectedStoreName).trim();
+    }
+
+    const storeNo = Number.parseInt(getRowValueByCandidates(row, ['storeNo', 'store_no', 'shopNo', 'shop_no', 'branchNo', 'branch_no']), 10);
+    if (Number.isInteger(storeNo)) {
+        const matchedStore = liveState.stores.find((store) => store.storeNo === storeNo);
+        if (matchedStore?.storeName) {
+            return matchedStore.storeName;
+        }
+    }
+
+    return getSelectedStoreName();
+}
+
+function resolveWaitingCardTitle(storeName, fallbackTitle) {
+    const normalizedStoreName = String(storeName || '').trim();
+    if (normalizedStoreName) {
+        return `${normalizedStoreName} 웨이팅`;
+    }
+
+    return fallbackTitle;
+}
+
+function getRoomStatus(row) {
+    const roomInfo = getRowValueByCandidates(row, ['roomInfo', 'room_info']);
+    if (roomInfo === null || roomInfo === undefined || String(roomInfo).trim() === '') {
+        return '정보 없음';
+    }
+
+    return Number(roomInfo) === 999 ? '여유' : String(roomInfo).trim();
+}
+
+function getWaitingStatus(row) {
+    const waitInfo = getRowValueByCandidates(row, ['waitInfo', 'wait_info', 'waitingInfo', 'waiting_info']);
+    if (waitInfo === null || waitInfo === undefined || String(waitInfo).trim() === '') {
+        return '정보 없음';
+    }
+
+    return String(waitInfo).trim();
+}
+
+function formatWaitingUpdatedAt(value) {
+    if (!value) return '시간 정보 없음';
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '시간 정보 없음';
+
+    return `${date.toLocaleString('ko-KR', {
+        timeZone: 'Asia/Seoul',
+        month: 'numeric',
+        day: 'numeric'
+    })} ${date.toLocaleString('ko-KR', {
+        timeZone: 'Asia/Seoul',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: false
+    })} 기준`;
+}
+
+function buildWaitingMessage({ storeName, waitInfo, roomInfo, updatedAt }) {
+    const normalizedStoreName = String(storeName || '전체').trim() || '전체';
+    const updatedText = formatWaitingUpdatedAt(updatedAt);
+    const lines = [
+        updatedText,
+        `⏳ ${normalizedStoreName} ⏳`,
+        '    웨이팅 상황',
+        '➖➖➖➖➖➖➖➖➖',
+        `● 빈방 : ${roomInfo}`,
+        `● 웨이팅 : ${waitInfo}`,
+        '➖➖➖➖➖➖➖➖➖'
+    ];
+
+    return lines.join('\n');
+}
+
+function convertTextToHtml(value) {
+    return sanitizeHTML(String(value || '')).replace(/\n/g, '<br>');
 }
 
 function formatLiveEntryTime(value) {
