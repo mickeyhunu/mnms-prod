@@ -911,13 +911,13 @@ function buildWaitingMessage({ storeName, storeAddress, waitInfo, roomInfo, room
     const updatedText = formatWaitingUpdatedAt(updatedAt);
     const detailLines = buildWaitingDetailLines(roomDetail);
     const lines = [
-        updatedText,
+        `    ${updatedText}`,
         ` ${formatWaitingStoreHeadline(normalizedStoreName)}`,
-        '     룸/웨이팅 상황'
+        '        룸/웨이팅 상황'
     ];
 
     if (normalizedStoreAddress) {
-        lines.push(`     ${normalizedStoreAddress}`);
+        lines.push(`        ${normalizedStoreAddress}`);
     }
 
     lines.push(
