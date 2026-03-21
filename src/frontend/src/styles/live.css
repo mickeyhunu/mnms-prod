@@ -3,6 +3,7 @@
 }
 
 .live-page {
+    --live-sticky-header-offset: 56px;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -63,6 +64,9 @@
 }
 
 .site-subheader__container {
+    position: sticky;
+    top: var(--live-sticky-header-offset);
+    z-index: 9;
     display: flex;
     flex-direction: column;
     gap: 5px;
