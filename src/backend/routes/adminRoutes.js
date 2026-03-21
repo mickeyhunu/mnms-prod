@@ -131,11 +131,14 @@ router.get('/users/:id', async (req, res, next) => {
     const user = await adminModel.getUserDetail(id);
     if (!user || user.role !== 'USER') return res.status(404).json({ message: '일반 회원을 찾을 수 없습니다.' });
 
+    const activity = await adminModel.getUserActivityOverview(id, { limit: 10 });
+
     res.json({
       user: {
         ...user,
         isCurrentUser: Number(user.id) === Number(req.user.id)
-      }
+      },
+      activity
     });
   } catch (error) {
     next(error);
