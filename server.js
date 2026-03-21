@@ -1,6 +1,7 @@
 /**
  * 파일 역할: Node/Express 서버를 초기화하고 백엔드 라우트를 연결하는 진입점 파일.
  */
+const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -15,6 +16,7 @@ const adminRoutes = require('./src/backend/routes/adminRoutes');
 const supportRoutes = require('./src/backend/routes/supportRoutes');
 const chatbotRoutes = require('./src/backend/routes/chatbotRoutes');
 const liveRoutes = require('./src/backend/routes/liveRoutes');
+const adminModel = require('./src/backend/models/adminModel');
 const { startLiveHistoryScheduler } = require('./src/backend/utils/liveHistoryScheduler');
 
 const app = express();
@@ -25,6 +27,52 @@ let isDatabaseReady = false;
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+function parseCookies(cookieHeader = '') {
+  return String(cookieHeader || '')
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .reduce((acc, entry) => {
+      const separatorIndex = entry.indexOf('=');
+      if (separatorIndex <= 0) return acc;
+      const key = entry.slice(0, separatorIndex).trim();
+      const value = entry.slice(separatorIndex + 1).trim();
+      acc[key] = decodeURIComponent(value);
+      return acc;
+    }, {});
+}
+
+app.use((req, res, next) => {
+  if (req.method !== 'GET' || req.path.startsWith('/api/')) {
+    next();
+    return;
+  }
+
+  const acceptsHtml = String(req.headers.accept || '').includes('text/html');
+  const isStaticAssetRequest = path.extname(req.path || '') !== '';
+
+  if (!acceptsHtml || isStaticAssetRequest) {
+    next();
+    return;
+  }
+
+  const cookies = parseCookies(req.headers.cookie);
+  let visitorKey = String(cookies.mnms_visitor || '').trim();
+
+  if (!visitorKey) {
+    visitorKey = crypto.randomUUID();
+    res.append('Set-Cookie', `mnms_visitor=${encodeURIComponent(visitorKey)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`);
+  }
+
+  if (isDatabaseReady) {
+    adminModel.recordSiteVisit({ visitorKey, path: req.path || '/' }).catch((error) => {
+      console.error('site visit log failed:', error.message);
+    });
+  }
+
+  next();
+});
 
 app.use(express.static(FRONTEND_DIR));
 

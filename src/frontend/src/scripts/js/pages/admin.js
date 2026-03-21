@@ -14,8 +14,10 @@ let isGlobalAdminClickBound = false;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
-const ADMIN_TABS = ['posts', 'comments', 'users', 'entries', 'ads', 'support', 'inquiries'];
+const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'entries', 'ads', 'support', 'inquiries'];
 const ADMIN_PAGE_SIZE = 20;
+const ADMIN_STATS_RANGE_DAYS = 14;
+const ADMIN_DASHBOARD_STATE = { summary: null, daily: [], boardStats: [] };
 const ADMIN_LIST_STATE = {
     posts: { items: [], query: '', page: 1 },
     comments: { items: [], query: '', page: 1 },
@@ -38,7 +40,7 @@ const ADMIN_SEARCH_PLACEHOLDERS = {
 function getAdminPageState() {
     const params = new URLSearchParams(window.location.search);
     const requestedTab = params.get('tab');
-    const activeTab = ADMIN_TABS.includes(requestedTab) ? requestedTab : 'posts';
+    const activeTab = ADMIN_TABS.includes(requestedTab) ? requestedTab : 'stats';
     const editUserId = Number.parseInt(params.get('editUserId') || '', 10);
 
     return {
@@ -53,7 +55,7 @@ function syncAdminPageState(nextState = {}, { replace = true } = {}) {
     const activeTab = ADMIN_TABS.includes(nextState.activeTab) ? nextState.activeTab : currentState.activeTab;
     const editUserId = Object.prototype.hasOwnProperty.call(nextState, 'editUserId') ? nextState.editUserId : currentState.editUserId;
 
-    if (activeTab && activeTab !== 'posts') url.searchParams.set('tab', activeTab);
+    if (activeTab && activeTab !== 'stats') url.searchParams.set('tab', activeTab);
     else url.searchParams.delete('tab');
 
     if (Number.isInteger(editUserId) && editUserId > 0) url.searchParams.set('editUserId', String(editUserId));
@@ -65,7 +67,7 @@ function syncAdminPageState(nextState = {}, { replace = true } = {}) {
 
 async function activateAdminTab(tabKey, options = {}) {
     const { updateHistory = true, replaceHistory = true } = options;
-    const resolvedTabKey = ADMIN_TABS.includes(tabKey) ? tabKey : 'posts';
+    const resolvedTabKey = ADMIN_TABS.includes(tabKey) ? tabKey : 'stats';
     const tabs = document.querySelectorAll('.admin-tab');
 
     tabs.forEach((tab) => {
@@ -85,7 +87,8 @@ async function activateAdminTab(tabKey, options = {}) {
         }, { replace: replaceHistory });
     }
 
-    if (resolvedTabKey === 'posts') await loadPosts();
+    if (resolvedTabKey === 'stats') await loadStatsDashboard();
+    else if (resolvedTabKey === 'posts') await loadPosts();
     else if (resolvedTabKey === 'comments') await loadComments();
     else if (resolvedTabKey === 'users') await loadUsers();
     else if (resolvedTabKey === 'entries') await loadEntries();
@@ -141,6 +144,7 @@ function bindCommonEvents() {
         });
     });
 
+    document.getElementById('stats-retry-btn')?.addEventListener('click', loadStatsDashboard);
     document.getElementById('posts-retry-btn')?.addEventListener('click', loadPosts);
     document.getElementById('comments-retry-btn')?.addEventListener('click', loadComments);
     document.getElementById('users-retry-btn')?.addEventListener('click', loadUsers);
@@ -296,6 +300,125 @@ function renderAdminList(prefix) {
     else if (prefix === 'inquiries') renderInquiriesTable();
 }
 
+function formatStatsNumber(value) {
+    return Number(value || 0).toLocaleString();
+}
+
+function getBoardTypeLabel(boardType) {
+    const labels = {
+        FREE: '자유',
+        ANON: '익명',
+        REVIEW: '후기',
+        STORY: '썰',
+        QUESTION: '질문'
+    };
+    return labels[String(boardType || '').toUpperCase()] || (boardType || '기타');
+}
+
+function renderStatsSummaryCards(summary) {
+    const container = document.getElementById('stats-summary-cards');
+    if (!container || !summary) return;
+
+    const cards = [
+        { label: '전체 방문자수', value: summary.totalVisitors, delta: `오늘 ${formatStatsNumber(summary.todayVisitors)}명` },
+        { label: '전체 접속량', value: summary.totalPageViews, delta: `오늘 ${formatStatsNumber(summary.todayPageViews)}회` },
+        { label: '전체 게시글', value: summary.totalPosts, delta: `오늘 ${formatStatsNumber(summary.todayPosts)}건` },
+        { label: '전체 댓글', value: summary.totalComments, delta: `오늘 ${formatStatsNumber(summary.todayComments)}건` },
+        { label: '전체 회원', value: summary.totalUsers, delta: `오늘 가입 ${formatStatsNumber(summary.todaySignups)}명` }
+    ];
+
+    container.innerHTML = cards.map((card) => `
+        <article class="admin-stats-card">
+            <span class="admin-stats-card__label">${card.label}</span>
+            <strong class="admin-stats-card__value">${formatStatsNumber(card.value)}</strong>
+            <span class="admin-stats-card__delta">${card.delta}</span>
+        </article>
+    `).join('');
+}
+
+function renderStatsChart(dailyStats) {
+    const container = document.getElementById('stats-chart');
+    if (!container) return;
+
+    const items = Array.isArray(dailyStats) ? dailyStats : [];
+    if (!items.length) {
+        container.innerHTML = '<p class="text-muted">표시할 통계 데이터가 없습니다.</p>';
+        return;
+    }
+
+    const maxVisitors = Math.max(...items.map((item) => Number(item.visitors || 0)), 1);
+    const maxViews = Math.max(...items.map((item) => Number(item.pageViews || 0)), 1);
+    const maxPosts = Math.max(...items.map((item) => Number(item.posts || 0)), 1);
+    const maxComments = Math.max(...items.map((item) => Number(item.comments || 0)), 1);
+
+    container.innerHTML = items.map((item) => {
+        const dateLabel = String(item.date || '').slice(5).replace('-', '.');
+        return `
+            <div class="admin-stats-chart-row">
+                <strong>${dateLabel}</strong>
+                <div class="admin-stats-bar-track">
+                    <div class="admin-stats-bar-group">
+                        <div class="admin-stats-bar admin-stats-bar--visitors" title="방문자수 ${formatStatsNumber(item.visitors)}"><span style="width:${Math.max(8, (Number(item.visitors || 0) / maxVisitors) * 100)}%"></span></div>
+                        <div class="admin-stats-bar admin-stats-bar--views" title="접속량 ${formatStatsNumber(item.pageViews)}"><span style="width:${Math.max(8, (Number(item.pageViews || 0) / maxViews) * 100)}%"></span></div>
+                        <div class="admin-stats-bar admin-stats-bar--posts" title="게시글 ${formatStatsNumber(item.posts)}"><span style="width:${Math.max(8, (Number(item.posts || 0) / maxPosts) * 100)}%"></span></div>
+                        <div class="admin-stats-bar admin-stats-bar--comments" title="댓글 ${formatStatsNumber(item.comments)}"><span style="width:${Math.max(8, (Number(item.comments || 0) / maxComments) * 100)}%"></span></div>
+                    </div>
+                </div>
+                <div class="admin-stats-chart-meta">방문 ${formatStatsNumber(item.visitors)} · 접속 ${formatStatsNumber(item.pageViews)} · 글 ${formatStatsNumber(item.posts)} · 댓글 ${formatStatsNumber(item.comments)}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderBoardStats(boardStats) {
+    const container = document.getElementById('stats-board-list');
+    if (!container) return;
+
+    const items = Array.isArray(boardStats) ? boardStats : [];
+    if (!items.length) {
+        container.innerHTML = '<p class="text-muted">게시판 통계가 없습니다.</p>';
+        return;
+    }
+
+    container.innerHTML = items.map((item) => `
+        <div class="admin-stats-board-item">
+            <div>
+                <strong>${sanitizeHTML(getBoardTypeLabel(item.boardType))}</strong>
+                <span>오늘 ${formatStatsNumber(item.todayPosts)}건 작성</span>
+            </div>
+            <strong>${formatStatsNumber(item.totalPosts)}건</strong>
+        </div>
+    `).join('');
+}
+
+function renderStatsDailyTable(dailyStats) {
+    const tbody = document.getElementById('stats-daily-tbody');
+    if (!tbody) return;
+
+    const items = Array.isArray(dailyStats) ? dailyStats : [];
+    if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="5">표시할 일별 통계가 없습니다.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = items.map((item) => `
+        <tr>
+            <td>${item.date}</td>
+            <td>${formatStatsNumber(item.visitors)}</td>
+            <td>${formatStatsNumber(item.pageViews)}</td>
+            <td>${formatStatsNumber(item.posts)}</td>
+            <td>${formatStatsNumber(item.comments)}</td>
+        </tr>
+    `).join('');
+}
+
+function renderStatsDashboard() {
+    renderStatsSummaryCards(ADMIN_DASHBOARD_STATE.summary);
+    renderStatsChart(ADMIN_DASHBOARD_STATE.daily);
+    renderBoardStats(ADMIN_DASHBOARD_STATE.boardStats);
+    renderStatsDailyTable(ADMIN_DASHBOARD_STATE.daily);
+}
+
 async function handleGlobalAdminClick(event) {
     const pageButton = event.target.closest('[data-admin-page]');
     if (pageButton) {
@@ -355,6 +478,20 @@ async function loadUsers() {
         showContent('users');
     } catch (error) {
         showError('users', error.message || '회원 목록을 불러오지 못했습니다.');
+    }
+}
+
+async function loadStatsDashboard() {
+    toggleLoading('stats', true);
+    try {
+        const response = await APIClient.get('/admin/stats/dashboard', { rangeDays: ADMIN_STATS_RANGE_DAYS });
+        ADMIN_DASHBOARD_STATE.summary = response.summary || null;
+        ADMIN_DASHBOARD_STATE.daily = response.daily || [];
+        ADMIN_DASHBOARD_STATE.boardStats = response.boardStats || [];
+        renderStatsDashboard();
+        showContent('stats');
+    } catch (error) {
+        showError('stats', error.message || '통계 정보를 불러오지 못했습니다.');
     }
 }
 

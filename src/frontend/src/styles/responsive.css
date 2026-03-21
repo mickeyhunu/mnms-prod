@@ -318,3 +318,22 @@
         right: -24px;
     }
 }
+
+@media (max-width: 960px) {
+    .admin-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-stats-chart-row {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-stats-chart-meta {
+        text-align: left;
+        min-width: 0;
+    }
+
+    .admin-stats-bar-group {
+        grid-template-columns: 1fr;
+    }
+}

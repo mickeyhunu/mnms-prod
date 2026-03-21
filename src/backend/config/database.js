@@ -547,6 +547,21 @@ async function initDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS site_visit_logs (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      visitor_key VARCHAR(100) NOT NULL,
+      path VARCHAR(255) NOT NULL,
+      visit_date DATE NOT NULL,
+      page_views BIGINT NOT NULL DEFAULT 1,
+      first_visited_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      last_visited_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY uniq_site_visit_logs_visitor_date_path (visitor_key, visit_date, path),
+      INDEX idx_site_visit_logs_visit_date (visit_date),
+      INDEX idx_site_visit_logs_visitor (visitor_key)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
   const [supportAttachmentUrlsColumn] = await pool.query(
     `SELECT 1
      FROM INFORMATION_SCHEMA.COLUMNS
