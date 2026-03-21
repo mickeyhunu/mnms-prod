@@ -15,6 +15,7 @@ const adminRoutes = require('./src/backend/routes/adminRoutes');
 const supportRoutes = require('./src/backend/routes/supportRoutes');
 const chatbotRoutes = require('./src/backend/routes/chatbotRoutes');
 const liveRoutes = require('./src/backend/routes/liveRoutes');
+const { startLiveHistoryScheduler } = require('./src/backend/utils/liveHistoryScheduler');
 
 const app = express();
 const PORT = Number(process.env.PORT || 8080);
@@ -59,15 +60,27 @@ app.use((err, req, res, next) => {
 initDatabase()
   .then(() => {
     isDatabaseReady = true;
-    app.listen(PORT, () => {
-      console.log(`Express MVC server running on http://localhost:${PORT}`);
-      console.log(`MySQL: ${dbConfig.user}@${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`);
-    });
+    return startLiveHistoryScheduler()
+      .catch((error) => {
+        console.error('LIVE history scheduler start failed:', error.message);
+      })
+      .then(() => {
+        app.listen(PORT, () => {
+          console.log(`Express MVC server running on http://localhost:${PORT}`);
+          console.log(`MySQL: ${dbConfig.user}@${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`);
+        });
+      });
   })
   .catch((error) => {
     console.error('DB 초기화 실패:', error.message);
-    app.listen(PORT, () => {
-      console.log(`Express MVC server running on http://localhost:${PORT}`);
-      console.log('DB 연결 실패 상태로 실행 중입니다. API 요청은 503을 반환합니다.');
-    });
+    startLiveHistoryScheduler()
+      .catch((schedulerError) => {
+        console.error('LIVE history scheduler start failed:', schedulerError.message);
+      })
+      .finally(() => {
+        app.listen(PORT, () => {
+          console.log(`Express MVC server running on http://localhost:${PORT}`);
+          console.log('DB 연결 실패 상태로 실행 중입니다. API 요청은 503을 반환합니다.');
+        });
+      });
   });
