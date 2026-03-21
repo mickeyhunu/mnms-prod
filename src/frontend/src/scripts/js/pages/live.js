@@ -402,19 +402,18 @@ function createStructuredLiveEntryCard(row, index, title) {
             value: formatFieldValue(value)
         }));
 
-    const categoryLabel = LIVE_CATEGORIES[liveState.selectedCategoryKey]?.label || 'LIVE';
+    const storeName = resolveChoiceStoreName(row);
     const createdAt = getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date']);
     const timestamp = formatLiveEntryTime(createdAt);
 
     return createLiveChatCard({
         index,
-        title,
+        title: resolveStructuredCardTitle(storeName, title),
         details,
         emptyMessage: '표시할 정보가 없습니다.',
         timestamp,
         rawTimestamp: createdAt,
-        badge: categoryLabel,
-        avatarLabel: getChoiceAvatarLabel(categoryLabel, index)
+        avatarLabel: getChoiceAvatarLabel(storeName, index)
     });
 }
 
@@ -500,6 +499,17 @@ function resolveChoiceCardTitle(storeName, fallbackTitle) {
     const normalizedStoreName = String(storeName || '').trim();
     if (normalizedStoreName) {
         return `${normalizedStoreName} 초이스톡`;
+    }
+
+    return fallbackTitle;
+}
+
+function resolveStructuredCardTitle(storeName, fallbackTitle) {
+    const normalizedStoreName = String(storeName || '').trim();
+    const categoryLabel = LIVE_CATEGORIES[liveState.selectedCategoryKey]?.label || 'LIVE';
+
+    if (normalizedStoreName && liveState.selectedCategoryKey !== 'choice') {
+        return `${normalizedStoreName} ${categoryLabel}`;
     }
 
     return fallbackTitle;
