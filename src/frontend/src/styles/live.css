@@ -303,15 +303,13 @@
 }
 
 .live-chat-card__bubble-wrap {
-    display: flex;
-    align-items: flex-end;
-    gap: 10px;
     max-width: 100%;
 }
 
 .live-chat-card__bubble {
     display: flex;
     flex-direction: column;
+    align-items: flex-end;
     gap: 14px;
     width: min(100%, 760px);
     max-width: min(100%, 760px);
@@ -325,47 +323,23 @@
 }
 
 .live-chat-card__message {
+    width: 100%;
     margin: 0;
     color: #f4f4f5;
-    font-size: 15px;
-    line-height: 1.8;
+    font-size: 16px;
+    line-height: 1.9;
     white-space: pre-wrap;
     word-break: break-word;
 }
 
-.live-chat-card__meta {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 8px;
-}
-
-.live-chat-card__meta-item {
-    display: grid;
-    grid-template-columns: 88px minmax(0, 1fr);
-    gap: 10px;
-    font-size: 13px;
-}
-
-.live-chat-card__meta-key {
-    color: #a1a1aa;
-    font-weight: 700;
-}
-
-.live-chat-card__meta-value {
-    color: #fafafa;
-    word-break: break-word;
-}
-
 .live-chat-card__time {
-    color: #52525b;
-    font-size: 10px;
+    color: #a1a1aa;
+    font-size: 12px;
     font-weight: 700;
     line-height: 1;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
     flex-shrink: 0;
-    margin-bottom: 6px;
+    text-align: right;
 }
 
 .live-entry-card__header {
@@ -441,8 +415,7 @@
         grid-template-columns: 1fr;
     }
 
-    .live-entry-card__detail-item,
-    .live-chat-card__meta-item {
+    .live-entry-card__detail-item {
         grid-template-columns: 1fr;
     }
 
@@ -454,17 +427,8 @@
         padding-left: 0;
     }
 
-    .live-chat-card__bubble-wrap {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
     .live-chat-card__bubble {
         max-width: 100%;
-    }
-
-    .live-chat-card__time {
-        margin-left: 12px;
     }
 }
 
