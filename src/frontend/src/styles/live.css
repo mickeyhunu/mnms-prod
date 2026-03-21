@@ -244,6 +244,16 @@
     gap: 18px;
 }
 
+.live-entry-list--timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.live-entry-list--timeline .live-chat-card {
+    width: 100%;
+}
+
 .live-entry-card {
     padding: 18px;
     border-radius: 18px;

@@ -8,8 +8,10 @@ const LIVE_CATEGORIES = {
 };
 
 const LIVE_FILTERS_CACHE_KEY = 'liveFiltersCache:v1';
-const LIVE_ENTRIES_CACHE_PREFIX = 'liveEntriesCache:v1:';
+const LIVE_HISTORY_PAGE_SIZE = 30;
+const LIVE_ENTRY_PAGE_SIZE = 200;
 const LIVE_REFRESH_INTERVAL_MS = 30000;
+const LIVE_HISTORY_TOP_THRESHOLD_PX = 160;
 
 const liveState = {
     stores: [],
@@ -20,7 +22,13 @@ const liveState = {
     entriesRequestId: 0,
     filtersRequestId: 0,
     hasBoundEvents: false,
-    hasCachedEntries: false
+    hasCachedEntries: false,
+    rows: [],
+    totalCount: 0,
+    titleColumn: null,
+    hasMoreHistory: false,
+    nextOffset: 0,
+    isLoadingOlder: false
 };
 
 function initializeScrollableFilter(element) {
@@ -60,11 +68,11 @@ async function initLivePage() {
 
     bindLiveEvents();
     hydrateLiveFiltersCache();
-    hydrateLiveEntriesCache();
     startLiveAutoRefresh();
 
     try {
-        await refreshLiveData({ showLoading: true });
+        resetLiveEntriesState();
+        await refreshLiveData({ showLoading: true, syncToLatest: true });
     } catch (error) {
         if (!liveState.hasCachedEntries) {
             showLiveError(error.message || 'LIVE 데이터를 불러오지 못했습니다.');
@@ -90,8 +98,8 @@ function bindLiveEvents() {
 
         liveState.selectedStoreNo = nextStoreNo;
         renderStoreButtons();
-        hydrateLiveEntriesCache();
-        await loadLiveEntries({ showLoading: true });
+        resetLiveEntriesState();
+        await loadLiveEntries({ showLoading: true, syncToLatest: true });
     });
 
     categoryFilter?.addEventListener('click', async (event) => {
@@ -103,17 +111,23 @@ function bindLiveEvents() {
 
         liveState.selectedCategoryKey = nextCategoryKey;
         renderCategoryButtons(liveState.categories);
-        hydrateLiveEntriesCache();
-        await loadLiveEntries({ showLoading: true });
+        resetLiveEntriesState();
+        await loadLiveEntries({ showLoading: true, syncToLatest: true });
     });
 
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
-            refreshLiveData({ showLoading: false }).catch((error) => {
+            refreshLiveData({ showLoading: false, syncToLatest: isLiveViewportNearBottom() }).catch((error) => {
                 console.error('LIVE visibility refresh error:', error);
             });
         }
     });
+
+    window.addEventListener('scroll', () => {
+        maybeLoadOlderLiveHistory().catch((error) => {
+            console.error('LIVE history load error:', error);
+        });
+    }, { passive: true });
 
     liveState.hasBoundEvents = true;
 }
@@ -126,15 +140,15 @@ function startLiveAutoRefresh() {
     liveState.refreshTimerId = window.setInterval(() => {
         if (document.hidden) return;
 
-        refreshLiveData({ showLoading: false }).catch((error) => {
+        refreshLiveData({ showLoading: false, syncToLatest: isLiveViewportNearBottom() }).catch((error) => {
             console.error('LIVE auto refresh error:', error);
         });
     }, LIVE_REFRESH_INTERVAL_MS);
 }
 
-async function refreshLiveData({ showLoading = false } = {}) {
+async function refreshLiveData({ showLoading = false, syncToLatest = false } = {}) {
     await loadLiveFilters();
-    await loadLiveEntries({ showLoading });
+    await loadLiveEntries({ showLoading, syncToLatest });
 }
 
 function hydrateLiveFiltersCache() {
@@ -152,29 +166,6 @@ function hydrateLiveFiltersCache() {
     renderStoreNameList();
     renderStoreButtons();
     renderCategoryButtons(liveState.categories);
-    return true;
-}
-
-function hydrateLiveEntriesCache() {
-    const cacheKey = getLiveEntriesCacheKey();
-    const cachedEntries = readLiveCache(cacheKey);
-    if (!cachedEntries?.data) {
-        liveState.hasCachedEntries = false;
-        renderLiveSummary();
-
-        const listElement = document.getElementById('live-entry-list');
-        const emptyElement = document.getElementById('live-empty');
-
-        if (listElement) {
-            listElement.innerHTML = '';
-        }
-
-        hideElement(emptyElement);
-        return false;
-    }
-
-    liveState.hasCachedEntries = true;
-    applyLiveEntriesResponse(cachedEntries.data);
     return true;
 }
 
@@ -200,12 +191,13 @@ async function loadLiveFilters() {
     renderCategoryButtons(liveState.categories);
 }
 
-async function loadLiveEntries({ showLoading = false } = {}) {
+async function loadLiveEntries({ showLoading = false, appendOlder = false, syncToLatest = false } = {}) {
     const loadingElement = document.getElementById('live-loading');
     const errorElement = document.getElementById('live-error');
     const emptyElement = document.getElementById('live-empty');
     const listElement = document.getElementById('live-entry-list');
     const requestId = ++liveState.entriesRequestId;
+    const scrollAnchor = appendOlder ? createLiveScrollAnchor() : null;
 
     hideElement(errorElement);
 
@@ -217,19 +209,21 @@ async function loadLiveEntries({ showLoading = false } = {}) {
     }
 
     try {
-        const response = await APIClient.get('/live/entries', {
-            category: liveState.selectedCategoryKey,
-            storeNo: liveState.selectedStoreNo,
-            limit: liveState.selectedCategoryKey === 'entry' ? 200 : 30
-        });
+        const response = await APIClient.get('/live/entries', buildLiveEntriesQuery({ appendOlder }));
 
         if (requestId !== liveState.entriesRequestId) {
             return;
         }
 
-        writeLiveCache(getLiveEntriesCacheKey(), response);
+        updateLiveEntriesState(response, { appendOlder });
         liveState.hasCachedEntries = true;
-        applyLiveEntriesResponse(response);
+        applyLiveEntriesResponse();
+
+        if (appendOlder) {
+            restoreLiveScrollAnchor(scrollAnchor);
+        } else if (syncToLatest && shouldUseHistoryPagination()) {
+            scrollLiveToLatest();
+        }
     } catch (error) {
         if (requestId !== liveState.entriesRequestId) {
             return;
@@ -243,15 +237,20 @@ async function loadLiveEntries({ showLoading = false } = {}) {
         console.error('LIVE entries load error:', error);
         throw error;
     } finally {
+        if (appendOlder) {
+            liveState.isLoadingOlder = false;
+        }
         hideElement(loadingElement);
     }
 }
 
-function applyLiveEntriesResponse(response) {
-    renderLiveSummary(response);
-    renderLiveEntries(response?.rows || [], response?.titleColumn);
+function applyLiveEntriesResponse() {
+    renderLiveSummary({
+        totalCount: liveState.totalCount
+    });
+    renderLiveEntries(liveState.rows, liveState.titleColumn);
 
-    const hasRows = Array.isArray(response?.rows) && response.rows.length > 0;
+    const hasRows = Array.isArray(liveState.rows) && liveState.rows.length > 0;
     const emptyElement = document.getElementById('live-empty');
 
     if (hasRows) {
@@ -366,10 +365,135 @@ function renderLiveSummary(response = null) {
     }
 }
 
+function shouldUseHistoryPagination(categoryKey = liveState.selectedCategoryKey) {
+    return categoryKey === 'choice' || categoryKey === 'waiting';
+}
+
+function syncLiveListLayout(listElement) {
+    if (!listElement) return;
+
+    const isHistoryTimeline = shouldUseHistoryPagination();
+    listElement.classList.toggle('live-entry-list--timeline', isHistoryTimeline);
+    listElement.classList.toggle('live-entry-list--entry', liveState.selectedCategoryKey === 'entry');
+}
+
+function buildLiveEntriesQuery({ appendOlder = false } = {}) {
+    return {
+        category: liveState.selectedCategoryKey,
+        storeNo: liveState.selectedStoreNo,
+        limit: liveState.selectedCategoryKey === 'entry' ? LIVE_ENTRY_PAGE_SIZE : LIVE_HISTORY_PAGE_SIZE,
+        offset: appendOlder && shouldUseHistoryPagination() ? liveState.nextOffset : 0
+    };
+}
+
+function updateLiveEntriesState(response = {}, { appendOlder = false } = {}) {
+    const responseRows = Array.isArray(response?.rows) ? response.rows : [];
+    const mergedRows = shouldUseHistoryPagination()
+        ? mergeLiveHistoryRows(liveState.rows, responseRows)
+        : responseRows;
+
+    liveState.rows = mergedRows;
+    liveState.totalCount = Number(response?.totalCount || mergedRows.length || 0);
+    liveState.titleColumn = response?.titleColumn || null;
+    liveState.nextOffset = shouldUseHistoryPagination()
+        ? liveState.rows.length
+        : Number(response?.nextOffset || 0);
+    liveState.hasMoreHistory = Boolean(
+        shouldUseHistoryPagination() &&
+        (response?.hasMore || liveState.totalCount > liveState.rows.length)
+    );
+
+    if (!appendOlder && !shouldUseHistoryPagination()) {
+        liveState.hasMoreHistory = false;
+    }
+}
+
+function resetLiveEntriesState() {
+    liveState.rows = [];
+    liveState.totalCount = 0;
+    liveState.titleColumn = null;
+    liveState.hasMoreHistory = false;
+    liveState.nextOffset = 0;
+    liveState.isLoadingOlder = false;
+}
+
+function mergeLiveHistoryRows(previousRows = [], nextRows = []) {
+    const mergedMap = new Map();
+
+    [...previousRows, ...nextRows].forEach((row, index) => {
+        const normalizedRow = row && typeof row === 'object' ? row : {};
+        const signature = createLiveHistorySignature(normalizedRow, index);
+        const existingRow = mergedMap.get(signature);
+
+        if (!existingRow || compareLiveRows(existingRow, normalizedRow) <= 0) {
+            mergedMap.set(signature, normalizedRow);
+        }
+    });
+
+    return Array.from(mergedMap.values())
+        .sort(compareLiveRows);
+}
+
+function createLiveHistorySignature(row, index = 0) {
+    const createdAt = getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date']);
+    const storeNo = getRowValueByCandidates(row, ['storeNo', 'store_no', 'shopNo', 'shop_no', 'branchNo', 'branch_no']);
+    const storeName = resolveChoiceStoreName(row);
+
+    if (liveState.selectedCategoryKey === 'choice') {
+        const choiceMessage = getRowValueByCandidates(row, ['choiceMsg', 'choice_msg', 'choice msg', 'message', 'msg', 'content']);
+        return ['choice', storeNo, storeName, createdAt, choiceMessage].map(normalizeHistorySignaturePart).join('|');
+    }
+
+    if (liveState.selectedCategoryKey === 'waiting') {
+        const roomInfo = getRoomStatus(row);
+        const waitInfo = getWaitingStatus(row);
+        const roomDetail = getRowValueByCandidates(row, ['roomDetail', 'room_detail', 'detail', 'details']);
+        return ['waiting', storeNo, storeName, createdAt, roomInfo, waitInfo, stableSerializeValue(roomDetail)].map(normalizeHistorySignaturePart).join('|');
+    }
+
+    return ['row', storeNo, storeName, createdAt, stableSerializeValue(row), index].map(normalizeHistorySignaturePart).join('|');
+}
+
+function normalizeHistorySignaturePart(value) {
+    if (value === null || value === undefined) return '';
+    return String(value).trim();
+}
+
+function stableSerializeValue(value) {
+    if (value === null || value === undefined) return '';
+    if (typeof value !== 'object') return String(value);
+
+    if (Array.isArray(value)) {
+        return `[${value.map((item) => stableSerializeValue(item)).join(',')}]`;
+    }
+
+    return `{${Object.keys(value).sort().map((key) => `${key}:${stableSerializeValue(value[key])}`).join(',')}}`;
+}
+
+function compareLiveRows(leftRow, rightRow) {
+    const leftTime = getLiveRowSortTime(leftRow);
+    const rightTime = getLiveRowSortTime(rightRow);
+
+    if (leftTime !== rightTime) {
+        return leftTime - rightTime;
+    }
+
+    return createLiveHistorySignature(leftRow).localeCompare(createLiveHistorySignature(rightRow), 'ko');
+}
+
+function getLiveRowSortTime(row) {
+    const rawTimestamp = getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date']);
+    const timestamp = new Date(rawTimestamp).getTime();
+
+    return Number.isFinite(timestamp) ? timestamp : Number.MAX_SAFE_INTEGER;
+}
+
 function renderLiveEntries(rows, titleColumn) {
     const listElement = document.getElementById('live-entry-list');
     const emptyElement = document.getElementById('live-empty');
     if (!listElement) return;
+
+    syncLiveListLayout(listElement);
 
     if (!Array.isArray(rows) || !rows.length) {
         listElement.innerHTML = '';
@@ -385,6 +509,55 @@ function renderLiveEntries(rows, titleColumn) {
     }
 
     listElement.innerHTML = rows.map((row, index) => createLiveEntryCard(row, index, titleColumn)).join('');
+}
+
+async function maybeLoadOlderLiveHistory() {
+    if (!shouldUseHistoryPagination()) return;
+    if (!liveState.hasMoreHistory || liveState.isLoadingOlder) return;
+    if (window.scrollY > LIVE_HISTORY_TOP_THRESHOLD_PX) return;
+
+    liveState.isLoadingOlder = true;
+    await loadLiveEntries({ appendOlder: true });
+}
+
+function createLiveScrollAnchor() {
+    return {
+        scrollHeight: getLiveDocumentScrollHeight(),
+        scrollY: window.scrollY
+    };
+}
+
+function restoreLiveScrollAnchor(anchor) {
+    if (!anchor) return;
+
+    window.requestAnimationFrame(() => {
+        const scrollDelta = getLiveDocumentScrollHeight() - anchor.scrollHeight;
+        window.scrollTo({
+            top: Math.max(0, anchor.scrollY + scrollDelta),
+            behavior: 'auto'
+        });
+    });
+}
+
+function scrollLiveToLatest() {
+    window.requestAnimationFrame(() => {
+        window.scrollTo({
+            top: getLiveDocumentScrollHeight(),
+            behavior: 'auto'
+        });
+    });
+}
+
+function isLiveViewportNearBottom() {
+    const scrollBottom = window.scrollY + window.innerHeight;
+    return (getLiveDocumentScrollHeight() - scrollBottom) <= 160;
+}
+
+function getLiveDocumentScrollHeight() {
+    return Math.max(
+        document.body?.scrollHeight || 0,
+        document.documentElement?.scrollHeight || 0
+    );
 }
 
 function createLiveEntryCard(row, index, titleColumn) {
@@ -1001,10 +1174,6 @@ function formatFieldValue(value) {
     }
 
     return String(value);
-}
-
-function getLiveEntriesCacheKey() {
-    return `${LIVE_ENTRIES_CACHE_PREFIX}${liveState.selectedCategoryKey}:${liveState.selectedStoreNo ?? 'all'}`;
 }
 
 function readLiveCache(key) {

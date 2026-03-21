@@ -31,6 +31,12 @@ function normalizeLimit(limit) {
   return Math.min(parsed, 300);
 }
 
+function normalizeOffset(offset) {
+  const parsed = Number.parseInt(offset, 10);
+  if (!Number.isInteger(parsed) || parsed < 0) return 0;
+  return parsed;
+}
+
 function getCategoryConfig(categoryKey) {
   return LIVE_CATEGORY_MAP[String(categoryKey || '').trim()] || LIVE_CATEGORY_MAP.choice;
 }
@@ -137,11 +143,12 @@ async function countRows(tableName, { storeNo = null, storeName = '' } = {}) {
   return Number(rows[0]?.total || 0);
 }
 
-async function listLiveEntries(categoryKey, { storeNo = null, limit = 50 } = {}) {
+async function listLiveEntries(categoryKey, { storeNo = null, limit = 50, offset = 0 } = {}) {
   const pool = await getChatbotPool();
   const category = getCategoryConfig(categoryKey);
   const safeTableName = ensureTableName(category.tableName);
   const rowLimit = normalizeLimit(limit);
+  const rowOffset = normalizeOffset(offset);
   const columns = await getTableColumns(safeTableName);
   const orderColumn = findColumn(columns, ORDER_CANDIDATES);
   const titleColumn = findColumn(columns, DISPLAY_FIELD_CANDIDATES);
@@ -150,7 +157,9 @@ async function listLiveEntries(categoryKey, { storeNo = null, limit = 50 } = {})
     storeNo,
     storeName: selectedStore?.storeName || ''
   });
-  const params = [...storeFilter.params, rowLimit];
+  const params = category.key === 'entry'
+    ? [...storeFilter.params, rowLimit]
+    : [...storeFilter.params, rowLimit, rowOffset];
 
   const query = orderColumn
     ? category.key === 'entry'
@@ -164,14 +173,23 @@ async function listLiveEntries(categoryKey, { storeNo = null, limit = 50 } = {})
            ) AS recent_entries
           ORDER BY \`${orderColumn}\` ASC`
       : `SELECT *
+           FROM (
+             SELECT *
+               FROM \`${safeTableName}\`
+               ${storeFilter.clause}
+              ORDER BY \`${orderColumn}\` DESC
+              LIMIT ? OFFSET ?
+           ) AS history_entries
+          ORDER BY \`${orderColumn}\` ASC`
+    : category.key === 'entry'
+      ? `SELECT *
            FROM \`${safeTableName}\`
            ${storeFilter.clause}
-          ORDER BY \`${orderColumn}\` DESC
-          LIMIT ?`
-    : `SELECT *
-         FROM \`${safeTableName}\`
-         ${storeFilter.clause}
-         LIMIT ?`;
+           LIMIT ?`
+      : `SELECT *
+           FROM \`${safeTableName}\`
+           ${storeFilter.clause}
+           LIMIT ? OFFSET ?`;
 
   const [rows] = await pool.query(query, params);
 
@@ -181,7 +199,9 @@ async function listLiveEntries(categoryKey, { storeNo = null, limit = 50 } = {})
     storeFilterColumn: storeFilter.column,
     titleColumn,
     columns,
-    rows
+    rows,
+    rowLimit,
+    rowOffset
   };
 }
 
@@ -208,5 +228,6 @@ module.exports = {
   listLiveEntries,
   getStoreByNo,
   listStores,
-  normalizeLimit
+  normalizeLimit,
+  normalizeOffset
 };
