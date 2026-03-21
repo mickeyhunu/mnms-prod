@@ -3,7 +3,7 @@
  */
 const LIVE_CATEGORIES = {
     choice: { key: 'choice', label: '초이스톡' },
-    waiting: { key: 'waiting', label: '웨이팅' },
+    waiting: { key: 'waiting', label: '룸/웨이팅' },
     entry: { key: 'entry', label: '엔트리' }
 };
 
@@ -445,7 +445,7 @@ function createLiveChatCard({ index, title, message = '', details = [], emptyMes
                         ${contentHtml}
                         ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(rawTimestamp))}">${sanitizeHTML(timestamp)}</time>` : ''}
                     </div>
-                    ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(createdAt))}">${sanitizeHTML(timestamp)}</time>` : ''}
+                    ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(rawTimestamp))}">${sanitizeHTML(timestamp)}</time>` : ''}
                 </div>
             </div>
         </article>
