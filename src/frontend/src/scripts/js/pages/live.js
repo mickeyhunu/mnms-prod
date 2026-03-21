@@ -960,11 +960,29 @@ function getWaitingStatus(row) {
     return String(waitInfo).trim();
 }
 
+function parseWaitingDateTime(value) {
+    if (!value) return null;
+
+    if (value instanceof Date) {
+        return Number.isNaN(value.getTime()) ? null : value;
+    }
+
+    const normalized = String(value).trim();
+    if (!normalized) return null;
+
+    const hasExplicitTimeZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized);
+    const isoLikeValue = normalized.includes('T') ? normalized : normalized.replace(' ', 'T');
+    const parseTarget = hasExplicitTimeZone ? isoLikeValue : `${isoLikeValue}+09:00`;
+    const parsed = new Date(parseTarget);
+
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 function formatWaitingUpdatedAt(value) {
     if (!value) return '시간 정보 없음';
 
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '시간 정보 없음';
+    const date = parseWaitingDateTime(value);
+    if (!date) return '시간 정보 없음';
 
     const formatter = new Intl.DateTimeFormat('ko-KR', {
         timeZone: 'Asia/Seoul',
@@ -1147,10 +1165,11 @@ function convertTextToHtml(value) {
 function formatLiveEntryTime(value) {
     if (!value) return '';
 
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
+    const date = parseWaitingDateTime(value);
+    if (!date) return '';
 
     return date.toLocaleTimeString('ko-KR', {
+        timeZone: 'Asia/Seoul',
         hour: '2-digit',
         minute: '2-digit',
         hour12: false
