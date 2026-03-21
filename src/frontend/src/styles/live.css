@@ -300,15 +300,16 @@
 }
 
 .live-chat-card__bubble-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    width: min(100%, 760px);
     max-width: 100%;
 }
 
 .live-chat-card__bubble {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 14px;
-    width: min(100%, 760px);
+    width: 100%;
     max-width: min(100%, 760px);
     padding: 20px 22px;
     border-radius: 24px;
@@ -336,6 +337,7 @@
     line-height: 1;
     letter-spacing: -0.01em;
     flex-shrink: 0;
+    padding-right: 4px;
     text-align: right;
 }
 
