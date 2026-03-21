@@ -439,9 +439,9 @@ function createLiveChatCard({ index, title, body, timestamp = '', rawTimestamp =
             <div class="live-chat-card__body">
                 <div class="live-chat-card__bubble-wrap">
                     <div class="live-chat-card__bubble">
-                        ${body}
-                        ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(rawTimestamp))}">${sanitizeHTML(timestamp)}</time>` : ''}
+                        <p class="live-chat-card__message">${sanitizeHTML(formatFieldValue(choiceMessage))}</p>
                     </div>
+                    ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(createdAt))}">${sanitizeHTML(timestamp)}</time>` : ''}
                 </div>
             </div>
         </article>
