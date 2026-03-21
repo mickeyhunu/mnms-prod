@@ -15,6 +15,25 @@ let isGlobalAdminClickBound = false;
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
 const ADMIN_TABS = ['posts', 'comments', 'users', 'entries', 'ads', 'support', 'inquiries'];
+const ADMIN_PAGE_SIZE = 20;
+const ADMIN_LIST_STATE = {
+    posts: { items: [], query: '', page: 1 },
+    comments: { items: [], query: '', page: 1 },
+    users: { items: [], query: '', page: 1 },
+    entries: { items: [], query: '', page: 1 },
+    ads: { items: [], query: '', page: 1 },
+    support: { items: [], query: '', page: 1 },
+    inquiries: { items: [], query: '', page: 1 }
+};
+const ADMIN_SEARCH_PLACEHOLDERS = {
+    posts: '게시글 검색',
+    comments: '댓글 검색',
+    users: '회원 검색',
+    entries: '엔트리 검색',
+    ads: '광고 검색',
+    support: '공지/FAQ 검색',
+    inquiries: '1:1 문의 검색'
+};
 
 function getAdminPageState() {
     const params = new URLSearchParams(window.location.search);
@@ -137,6 +156,7 @@ function bindCommonEvents() {
     document.getElementById('user-edit-cancel-btn-secondary')?.addEventListener('click', closeUserEditModal);
     document.getElementById('user-edit-save-btn')?.addEventListener('click', saveUserDetail);
     bindUserEditForm();
+    bindAdminListControls();
 
     document.getElementById('support-category')?.addEventListener('change', async (event) => {
         currentSupportCategory = event.target.value;
@@ -167,7 +187,128 @@ function bindCommonEvents() {
     }
 }
 
+function bindAdminListControls() {
+    Object.entries(ADMIN_SEARCH_PLACEHOLDERS).forEach(([prefix, placeholder]) => {
+        const input = document.getElementById(`${prefix}-search-input`);
+        if (!input || input.dataset.bound === 'true') return;
+
+        input.placeholder = placeholder;
+        input.addEventListener('input', () => {
+            ADMIN_LIST_STATE[prefix].query = input.value || '';
+            ADMIN_LIST_STATE[prefix].page = 1;
+            renderAdminList(prefix);
+        });
+        input.dataset.bound = 'true';
+    });
+}
+
+function getAdminListState(prefix) {
+    return ADMIN_LIST_STATE[prefix] || { items: [], query: '', page: 1 };
+}
+
+function normalizeAdminSearchValue(value) {
+    return String(value || '').trim().toLowerCase();
+}
+
+function adminListMatchesQuery(item, query, fields = []) {
+    if (!query) return true;
+    return fields.some((field) => {
+        const value = typeof field === 'function' ? field(item) : item?.[field];
+        return normalizeAdminSearchValue(value).includes(query);
+    });
+}
+
+function getAdminFilteredItems(prefix) {
+    const state = getAdminListState(prefix);
+    const query = normalizeAdminSearchValue(state.query);
+    const items = Array.isArray(state.items) ? state.items : [];
+
+    const matchers = {
+        posts: ['id', 'title', 'authorNickname', 'user_id', 'userId'],
+        comments: ['id', 'content', 'authorNickname', 'user_id', 'userId', 'postId', 'post_id'],
+        users: ['id', 'email', 'nickname', 'role', 'memberType', 'member_type', 'phone'],
+        entries: ['workerName', 'entryId'],
+        ads: ['id', 'title', 'linkUrl', 'imageUrl', 'displayOrder'],
+        support: ['id', 'title', 'category', 'sourceType'],
+        inquiries: ['id', 'title', 'userNickname', 'userEmail', 'userId', 'type', 'status']
+    };
+
+    return items.filter((item) => adminListMatchesQuery(item, query, matchers[prefix] || []));
+}
+
+function getAdminPagination(prefix) {
+    const filteredItems = getAdminFilteredItems(prefix);
+    const state = getAdminListState(prefix);
+    const totalPages = Math.max(1, Math.ceil(filteredItems.length / ADMIN_PAGE_SIZE));
+    const page = Math.min(Math.max(1, state.page || 1), totalPages);
+    state.page = page;
+    const startIndex = (page - 1) * ADMIN_PAGE_SIZE;
+
+    return {
+        filteredItems,
+        pageItems: filteredItems.slice(startIndex, startIndex + ADMIN_PAGE_SIZE),
+        page,
+        totalPages
+    };
+}
+
+function updateAdminTotal(prefix, total) {
+    const totalElement = document.getElementById(`${prefix}-total`);
+    if (totalElement) totalElement.textContent = Number(total || 0).toLocaleString();
+}
+
+function renderAdminPagination(prefix, totalPages, currentPage) {
+    const container = document.getElementById(`${prefix}-pagination`);
+    if (!container) return;
+
+    if (totalPages <= 1) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+    }
+
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, startPage + 4);
+    const pages = [];
+    for (let page = startPage; page <= endPage; page += 1) {
+        pages.push(`
+            <button type="button" class="btn btn-sm ${page === currentPage ? 'btn-primary' : 'btn-outline'}" data-admin-page="${page}" data-admin-page-prefix="${prefix}">
+                ${page}
+            </button>
+        `);
+    }
+
+    container.classList.remove('hidden');
+    container.innerHTML = `
+        <button type="button" class="btn btn-sm btn-outline" data-admin-page="${currentPage - 1}" data-admin-page-prefix="${prefix}" ${currentPage <= 1 ? 'disabled' : ''}>이전</button>
+        <div class="admin-pagination__pages">${pages.join('')}</div>
+        <button type="button" class="btn btn-sm btn-outline" data-admin-page="${currentPage + 1}" data-admin-page-prefix="${prefix}" ${currentPage >= totalPages ? 'disabled' : ''}>다음</button>
+    `;
+}
+
+function renderAdminList(prefix) {
+    if (prefix === 'posts') renderPostsTable();
+    else if (prefix === 'comments') renderCommentsTable();
+    else if (prefix === 'users') renderUsersTable();
+    else if (prefix === 'entries') renderEntriesTable();
+    else if (prefix === 'ads') renderAdsTable();
+    else if (prefix === 'support') renderSupportTable();
+    else if (prefix === 'inquiries') renderInquiriesTable();
+}
+
 async function handleGlobalAdminClick(event) {
+    const pageButton = event.target.closest('[data-admin-page]');
+    if (pageButton) {
+        event.preventDefault();
+        const prefix = pageButton.dataset.adminPagePrefix;
+        const nextPage = Number.parseInt(pageButton.dataset.adminPage || '', 10);
+        if (prefix && Number.isInteger(nextPage) && nextPage > 0 && ADMIN_LIST_STATE[prefix]) {
+            ADMIN_LIST_STATE[prefix].page = nextPage;
+            renderAdminList(prefix);
+        }
+        return;
+    }
+
     const supportNewButton = event.target.closest('#support-new-btn');
     if (supportNewButton) {
         event.preventDefault();
@@ -185,37 +326,8 @@ async function loadPosts() {
     toggleLoading('posts', true);
     try {
         const response = await APIClient.get('/admin/posts');
-        const posts = response.content || [];
-        const postsTotal = document.getElementById('posts-total');
-        if (postsTotal) postsTotal.textContent = response.totalElements || posts.length;
-
-        const tbody = document.getElementById('posts-tbody');
-        if (!posts.length) {
-            tbody.innerHTML = '<tr><td colspan="7">게시글이 없습니다.</td></tr>';
-        } else {
-            tbody.innerHTML = posts.map(post => {
-                const isHidden = isHiddenPost(post);
-                return `
-                <tr class="${getAdminPostRowClass(post)}">
-                    <td>${post.id}</td>
-                    <td>
-                        <div class="admin-comment-cell">
-                            <div class="admin-comment-flags">${renderAdminPostFlags(post)}</div>
-                            <a href="/post-detail?id=${post.id}" target="_blank">${sanitizeHTML(post.title || '')}</a>
-                        </div>
-                    </td>
-                    <td>${sanitizeHTML(post.authorNickname || `사용자#${post.user_id || post.userId}`)}</td>
-                    <td>${formatDate(post.createdAt || post.created_at)}</td>
-                    <td>${post.likeCount || 0}</td>
-                    <td>${post.commentCount || 0}</td>
-                    <td>
-                        <button class="btn btn-sm ${isHidden ? 'btn-outline' : 'btn-secondary'}" type="button" data-admin-action="toggle-hide" data-target-type="post" data-target-id="${post.id}" data-current-hidden="${isHidden ? 'true' : 'false'}">${isHidden ? '가리기 해제' : '가리기'}</button>
-                    </td>
-                </tr>
-            `;}).join('');
-            bindAdminHideToggleButtons(tbody);
-        }
-
+        ADMIN_LIST_STATE.posts.items = response.content || [];
+        renderPostsTable();
         showContent('posts');
     } catch (error) {
         showError('posts', error.message || '게시글을 불러오지 못했습니다.');
@@ -226,34 +338,8 @@ async function loadComments() {
     toggleLoading('comments', true);
     try {
         const response = await APIClient.get('/admin/comments');
-        const comments = response.content || [];
-        const commentsTotal = document.getElementById('comments-total');
-        if (commentsTotal) commentsTotal.textContent = response.totalElements || comments.length;
-
-        const tbody = document.getElementById('comments-tbody');
-        if (!comments.length) {
-            tbody.innerHTML = '<tr><td colspan="6">댓글이 없습니다.</td></tr>';
-        } else {
-            tbody.innerHTML = comments.map(comment => {
-                const isHidden = isHiddenComment(comment);
-                return `
-                <tr class="${getAdminCommentRowClass(comment)}">
-                    <td>${comment.id}</td>
-                    <td>
-                        <div class="admin-comment-cell">
-                            <div class="admin-comment-flags">${renderAdminCommentFlags(comment)}</div>
-                            <div class="admin-comment-text">${sanitizeHTML((comment.content || '').slice(0, 100))}</div>
-                        </div>
-                    </td>
-                    <td><a href="/post-detail?id=${comment.postId || comment.post_id}" target="_blank">게시글 보기</a></td>
-                    <td>${sanitizeHTML(comment.authorNickname || `사용자#${comment.user_id || comment.userId}`)}</td>
-                    <td>${formatDate(comment.createdAt || comment.created_at)}</td>
-                    <td><button class="btn btn-sm ${isHidden ? 'btn-outline' : 'btn-secondary'}" type="button" data-admin-action="toggle-hide" data-target-type="comment" data-target-id="${comment.id}" data-current-hidden="${isHidden ? 'true' : 'false'}">${isHidden ? '가리기 해제' : '가리기'}</button></td>
-                </tr>
-            `;}).join('');
-            bindAdminHideToggleButtons(tbody);
-        }
-
+        ADMIN_LIST_STATE.comments.items = response.content || [];
+        renderCommentsTable();
         showContent('comments');
     } catch (error) {
         showError('comments', error.message || '댓글을 불러오지 못했습니다.');
@@ -264,34 +350,8 @@ async function loadUsers() {
     toggleLoading('users', true);
     try {
         const response = await APIClient.get('/admin/users');
-        const users = response.content || [];
-        const usersTotal = document.getElementById('users-total');
-        if (usersTotal) usersTotal.textContent = response.totalElements || users.length;
-
-        const tbody = document.getElementById('users-tbody');
-        if (!users.length) {
-            tbody.innerHTML = '<tr><td colspan="9">회원이 없습니다.</td></tr>';
-        } else {
-            tbody.innerHTML = users.map(user => `
-                <tr>
-                    <td>${user.id}</td>
-                    <td>${sanitizeHTML(user.email || '')}</td>
-                    <td>${sanitizeHTML(user.nickname || '')}</td>
-                    <td>${formatAdminRestrictionStatus(user)}</td>
-                    <td>${Number(user.totalPoints || 0).toLocaleString()} P</td>
-                    <td>${formatDate(user.createdAt || user.created_at)}</td>
-                    <td>${sanitizeHTML(user.role || 'USER')}</td>
-                    <td>${user.memberType === 'ADVERTISER' ? '광고 회원' : '일반 회원'}</td>
-                    <td>
-                        <div class="admin-user-actions">
-                            <a class="btn btn-sm btn-secondary" href="/admin?tab=users&editUserId=${user.id}" data-admin-action="edit-user" data-target-id="${user.id}">정보 수정</a>
-                            <button class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="user" data-target-id="${user.id}">삭제</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
+        ADMIN_LIST_STATE.users.items = response.content || [];
+        renderUsersTable();
         showContent('users');
     } catch (error) {
         showError('users', error.message || '회원 목록을 불러오지 못했습니다.');
@@ -374,34 +434,17 @@ async function loadEntries() {
 
         if (!currentEntryStoreNo) {
             const tbody = document.getElementById('entries-tbody');
+            ADMIN_LIST_STATE.entries.items = [];
+            updateAdminTotal('entries', 0);
+            renderAdminPagination('entries', 1, 1);
             if (tbody) tbody.innerHTML = '<tr><td colspan="5">관리할 매장이 없습니다.</td></tr>';
             showContent('entries');
             return;
         }
 
         const response = await APIClient.get('/admin/entries', { storeNo: currentEntryStoreNo });
-        const entries = response.content || [];
-        const tbody = document.getElementById('entries-tbody');
-
-        if (!entries.length) {
-            tbody.innerHTML = '<tr><td colspan="5">등록된 엔트리 항목이 없습니다.</td></tr>';
-        } else {
-            tbody.innerHTML = entries.map((entry) => `
-                <tr>
-                    <td>${sanitizeHTML(entry.workerName || '')}</td>
-                    <td>${Number(entry.mentionCount || 0).toLocaleString()}</td>
-                    <td>${Number(entry.insertCount || 0).toLocaleString()}</td>
-                    <td>${formatDate(entry.createdAt)}</td>
-                    <td>
-                        <div class="admin-user-actions">
-                            <button class="btn btn-sm btn-secondary" data-admin-action="edit-entry" data-entry-id="${sanitizeHTML(entry.entryId || '')}" data-entry-name="${sanitizeHTML(entry.workerName || '')}">수정</button>
-                            <button class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="entry" data-entry-id="${sanitizeHTML(entry.entryId || '')}">삭제</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
+        ADMIN_LIST_STATE.entries.items = response.content || [];
+        renderEntriesTable();
         showContent('entries');
     } catch (error) {
         showError('entries', error.message || '엔트리 목록을 불러오지 못했습니다.');
@@ -440,6 +483,225 @@ async function saveEntry() {
     } finally {
         if (saveButton) saveButton.disabled = false;
     }
+}
+
+function renderPostsTable() {
+    const tbody = document.getElementById('posts-tbody');
+    if (!tbody) return;
+
+    const { filteredItems, pageItems, page, totalPages } = getAdminPagination('posts');
+    updateAdminTotal('posts', filteredItems.length);
+
+    if (!pageItems.length) {
+        tbody.innerHTML = `<tr><td colspan="7">${filteredItems.length ? '현재 페이지에 표시할 게시글이 없습니다.' : '게시글이 없습니다.'}</td></tr>`;
+    } else {
+        tbody.innerHTML = pageItems.map((post) => {
+            const isHidden = isHiddenPost(post);
+            return `
+                <tr class="${getAdminPostRowClass(post)}">
+                    <td>${post.id}</td>
+                    <td>
+                        <div class="admin-comment-cell">
+                            <div class="admin-comment-flags">${renderAdminPostFlags(post)}</div>
+                            <a href="/post-detail?id=${post.id}" target="_blank">${sanitizeHTML(post.title || '')}</a>
+                        </div>
+                    </td>
+                    <td>${sanitizeHTML(post.authorNickname || `사용자#${post.user_id || post.userId}`)}</td>
+                    <td>${formatDate(post.createdAt || post.created_at)}</td>
+                    <td>${post.likeCount || 0}</td>
+                    <td>${post.commentCount || 0}</td>
+                    <td>
+                        <button class="btn btn-sm ${isHidden ? 'btn-outline' : 'btn-secondary'}" type="button" data-admin-action="toggle-hide" data-target-type="post" data-target-id="${post.id}" data-current-hidden="${isHidden ? 'true' : 'false'}">${isHidden ? '가리기 해제' : '가리기'}</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        bindAdminHideToggleButtons(tbody);
+    }
+
+    renderAdminPagination('posts', totalPages, page);
+}
+
+function renderCommentsTable() {
+    const tbody = document.getElementById('comments-tbody');
+    if (!tbody) return;
+
+    const { filteredItems, pageItems, page, totalPages } = getAdminPagination('comments');
+    updateAdminTotal('comments', filteredItems.length);
+
+    if (!pageItems.length) {
+        tbody.innerHTML = `<tr><td colspan="6">${filteredItems.length ? '현재 페이지에 표시할 댓글이 없습니다.' : '댓글이 없습니다.'}</td></tr>`;
+    } else {
+        tbody.innerHTML = pageItems.map((comment) => {
+            const isHidden = isHiddenComment(comment);
+            return `
+                <tr class="${getAdminCommentRowClass(comment)}">
+                    <td>${comment.id}</td>
+                    <td>
+                        <div class="admin-comment-cell">
+                            <div class="admin-comment-flags">${renderAdminCommentFlags(comment)}</div>
+                            <div class="admin-comment-text">${sanitizeHTML((comment.content || '').slice(0, 100))}</div>
+                        </div>
+                    </td>
+                    <td><a href="/post-detail?id=${comment.postId || comment.post_id}" target="_blank">게시글 보기</a></td>
+                    <td>${sanitizeHTML(comment.authorNickname || `사용자#${comment.user_id || comment.userId}`)}</td>
+                    <td>${formatDate(comment.createdAt || comment.created_at)}</td>
+                    <td><button class="btn btn-sm ${isHidden ? 'btn-outline' : 'btn-secondary'}" type="button" data-admin-action="toggle-hide" data-target-type="comment" data-target-id="${comment.id}" data-current-hidden="${isHidden ? 'true' : 'false'}">${isHidden ? '가리기 해제' : '가리기'}</button></td>
+                </tr>
+            `;
+        }).join('');
+        bindAdminHideToggleButtons(tbody);
+    }
+
+    renderAdminPagination('comments', totalPages, page);
+}
+
+function renderUsersTable() {
+    const tbody = document.getElementById('users-tbody');
+    if (!tbody) return;
+
+    const { filteredItems, pageItems, page, totalPages } = getAdminPagination('users');
+    updateAdminTotal('users', filteredItems.length);
+
+    if (!pageItems.length) {
+        tbody.innerHTML = `<tr><td colspan="9">${filteredItems.length ? '현재 페이지에 표시할 회원이 없습니다.' : '회원이 없습니다.'}</td></tr>`;
+    } else {
+        tbody.innerHTML = pageItems.map((user) => `
+            <tr>
+                <td>${user.id}</td>
+                <td>${sanitizeHTML(user.email || '')}</td>
+                <td>${sanitizeHTML(user.nickname || '')}</td>
+                <td>${formatAdminRestrictionStatus(user)}</td>
+                <td>${Number(user.totalPoints || 0).toLocaleString()} P</td>
+                <td>${formatDate(user.createdAt || user.created_at)}</td>
+                <td>${sanitizeHTML(user.role || 'USER')}</td>
+                <td>${user.memberType === 'ADVERTISER' ? '광고 회원' : '일반 회원'}</td>
+                <td>
+                    <div class="admin-user-actions">
+                        <a class="btn btn-sm btn-secondary" href="/admin?tab=users&editUserId=${user.id}" data-admin-action="edit-user" data-target-id="${user.id}">정보 수정</a>
+                        <button type="button" class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="user" data-target-id="${user.id}">삭제</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    renderAdminPagination('users', totalPages, page);
+}
+
+function renderEntriesTable() {
+    const tbody = document.getElementById('entries-tbody');
+    if (!tbody) return;
+
+    const { filteredItems, pageItems, page, totalPages } = getAdminPagination('entries');
+    updateAdminTotal('entries', filteredItems.length);
+
+    if (!pageItems.length) {
+        tbody.innerHTML = `<tr><td colspan="5">${filteredItems.length ? '현재 페이지에 표시할 엔트리가 없습니다.' : '등록된 엔트리 항목이 없습니다.'}</td></tr>`;
+    } else {
+        tbody.innerHTML = pageItems.map((entry) => `
+            <tr>
+                <td>${sanitizeHTML(entry.workerName || '')}</td>
+                <td>${Number(entry.mentionCount || 0).toLocaleString()}</td>
+                <td>${Number(entry.insertCount || 0).toLocaleString()}</td>
+                <td>${formatDate(entry.createdAt)}</td>
+                <td>
+                    <div class="admin-user-actions">
+                        <button type="button" class="btn btn-sm btn-secondary" data-admin-action="edit-entry" data-entry-id="${sanitizeHTML(entry.entryId || '')}" data-entry-name="${sanitizeHTML(entry.workerName || '')}">수정</button>
+                        <button type="button" class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="entry" data-entry-id="${sanitizeHTML(entry.entryId || '')}" data-entry-name="${sanitizeHTML(entry.workerName || '')}">삭제</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    renderAdminPagination('entries', totalPages, page);
+}
+
+function renderAdsTable() {
+    const tbody = document.getElementById('ads-tbody');
+    if (!tbody) return;
+
+    const { filteredItems, pageItems, page, totalPages } = getAdminPagination('ads');
+    updateAdminTotal('ads', filteredItems.length);
+
+    if (!pageItems.length) {
+        tbody.innerHTML = `<tr><td colspan="8">${filteredItems.length ? '현재 페이지에 표시할 광고가 없습니다.' : '등록된 광고가 없습니다.'}</td></tr>`;
+    } else {
+        tbody.innerHTML = pageItems.map((ad) => `
+            <tr>
+                <td>${ad.id}</td>
+                <td>${sanitizeHTML(ad.title || '')}</td>
+                <td><a href="${sanitizeHTML(normalizeExternalUrl(ad.linkUrl))}" target="_blank" rel="noopener noreferrer">링크 열기</a></td>
+                <td>${Number(ad.displayOrder || 0)}</td>
+                <td>${ad.isActive ? '노출' : '숨김'}</td>
+                <td>${formatDate(ad.createdAt || ad.created_at)}</td>
+                <td>${formatDate(ad.updatedAt || ad.updated_at)}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-secondary" data-admin-action="edit-ad" data-target-id="${ad.id}">수정</button>
+                    <button type="button" class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="ad" data-target-id="${ad.id}">삭제</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    renderAdminPagination('ads', totalPages, page);
+}
+
+function renderSupportTable() {
+    const tbody = document.getElementById('support-tbody');
+    if (!tbody) return;
+
+    const { filteredItems, pageItems, page, totalPages } = getAdminPagination('support');
+    updateAdminTotal('support', filteredItems.length);
+
+    if (!pageItems.length) {
+        tbody.innerHTML = `<tr><td colspan="5">${filteredItems.length ? '현재 페이지에 표시할 글이 없습니다.' : '등록된 글이 없습니다.'}</td></tr>`;
+    } else {
+        tbody.innerHTML = pageItems.map((article) => `
+            <tr>
+                <td>${article.id}</td>
+                <td>${article.category === 'FAQ' ? 'FAQ' : '공지사항'}</td>
+                <td>${sanitizeHTML(article.title || '')}</td>
+                <td>${formatDate(article.createdAt || article.created_at)}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-secondary" data-admin-action="edit-support" data-target-id="${article.sourceId || article.id}" data-source-type="${article.sourceType || 'SUPPORT'}">수정</button>
+                    <button type="button" class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="support" data-target-id="${article.sourceId || article.id}" data-source-type="${article.sourceType || 'SUPPORT'}">삭제</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    renderAdminPagination('support', totalPages, page);
+}
+
+function renderInquiriesTable() {
+    const tbody = document.getElementById('inquiries-tbody');
+    if (!tbody) return;
+
+    const { filteredItems, pageItems, page, totalPages } = getAdminPagination('inquiries');
+    updateAdminTotal('inquiries', filteredItems.length);
+
+    if (!pageItems.length) {
+        tbody.innerHTML = `<tr><td colspan="7">${filteredItems.length ? '현재 페이지에 표시할 문의가 없습니다.' : '접수된 문의가 없습니다.'}</td></tr>`;
+    } else {
+        tbody.innerHTML = pageItems.map((inquiry) => {
+            const status = toInquiryStatusInfo(inquiry.status);
+            return `
+                <tr>
+                    <td>${inquiry.id}</td>
+                    <td>${sanitizeHTML(inquiry.userNickname || inquiry.userEmail || `회원#${inquiry.userId}`)}</td>
+                    <td>${toInquiryTypeLabel(inquiry.type)}</td>
+                    <td>${sanitizeHTML(inquiry.title || '')}</td>
+                    <td><span class="my-inquiry-status ${status.className}">${status.text}</span></td>
+                    <td>${formatDate(inquiry.createdAt || inquiry.created_at)}</td>
+                    <td><a class="btn btn-sm btn-primary" href="/admin/inquiries/${inquiry.id}/answer">답변</a></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    renderAdminPagination('inquiries', totalPages, page);
 }
 
 function formatPhoneNumber(value) {
@@ -674,31 +936,8 @@ async function loadAds() {
     toggleLoading('ads', true);
     try {
         const response = await APIClient.get('/admin/ads');
-        const ads = response.content || [];
-        const adsTotal = document.getElementById('ads-total');
-        if (adsTotal) adsTotal.textContent = response.totalElements || ads.length;
-
-        const tbody = document.getElementById('ads-tbody');
-        if (!ads.length) {
-            tbody.innerHTML = '<tr><td colspan="8">등록된 광고가 없습니다.</td></tr>';
-        } else {
-            tbody.innerHTML = ads.map(ad => `
-                <tr>
-                    <td>${ad.id}</td>
-                    <td>${sanitizeHTML(ad.title || '')}</td>
-                    <td><a href="${sanitizeHTML(normalizeExternalUrl(ad.linkUrl))}" target="_blank" rel="noopener noreferrer">링크 열기</a></td>
-                    <td>${Number(ad.displayOrder || 0)}</td>
-                    <td>${ad.isActive ? '노출' : '숨김'}</td>
-                    <td>${formatDate(ad.createdAt || ad.created_at)}</td>
-                    <td>${formatDate(ad.updatedAt || ad.updated_at)}</td>
-                    <td>
-                        <button class="btn btn-sm btn-secondary" data-admin-action="edit-ad" data-target-id="${ad.id}">수정</button>
-                        <button class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="ad" data-target-id="${ad.id}">삭제</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
+        ADMIN_LIST_STATE.ads.items = response.content || [];
+        renderAdsTable();
         showContent('ads');
     } catch (error) {
         showError('ads', error.message || '광고 목록을 불러오지 못했습니다.');
@@ -779,27 +1018,8 @@ async function loadSupportArticles() {
     toggleLoading('support', true);
     try {
         const articles = await fetchSupportArticles();
-        const supportTotal = document.getElementById('support-total');
-        if (supportTotal) supportTotal.textContent = articles.length;
-
-        const tbody = document.getElementById('support-tbody');
-        if (!articles.length) {
-            tbody.innerHTML = '<tr><td colspan="5">등록된 글이 없습니다.</td></tr>';
-        } else {
-            tbody.innerHTML = articles.map(article => `
-                <tr>
-                    <td>${article.id}</td>
-                    <td>${article.category === 'FAQ' ? 'FAQ' : '공지사항'}</td>
-                    <td>${sanitizeHTML(article.title || '')}</td>
-                    <td>${formatDate(article.createdAt || article.created_at)}</td>
-                    <td>
-                        <button class="btn btn-sm btn-secondary" data-admin-action="edit-support" data-target-id="${article.sourceId || article.id}" data-source-type="${article.sourceType || 'SUPPORT'}">수정</button>
-                        <button class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="support" data-target-id="${article.sourceId || article.id}" data-source-type="${article.sourceType || 'SUPPORT'}">삭제</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
+        ADMIN_LIST_STATE.support.items = articles;
+        renderSupportTable();
         showContent('support');
     } catch (error) {
         showError('support', error.message || '공지/FAQ를 불러오지 못했습니다.');
@@ -1014,28 +1234,8 @@ async function loadInquiries() {
     try {
         const params = currentInquiryStatus ? { status: currentInquiryStatus } : {};
         const response = await APIClient.get('/admin/support/inquiries', params);
-        const inquiries = response.content || [];
-
-        const tbody = document.getElementById('inquiries-tbody');
-        if (!inquiries.length) {
-            tbody.innerHTML = '<tr><td colspan="7">접수된 문의가 없습니다.</td></tr>';
-        } else {
-            tbody.innerHTML = inquiries.map((inquiry) => {
-                const status = toInquiryStatusInfo(inquiry.status);
-                return `
-                <tr>
-                    <td>${inquiry.id}</td>
-                    <td>${sanitizeHTML(inquiry.userNickname || inquiry.userEmail || `회원#${inquiry.userId}`)}</td>
-                    <td>${toInquiryTypeLabel(inquiry.type)}</td>
-                    <td>${sanitizeHTML(inquiry.title || '')}</td>
-                    <td><span class="my-inquiry-status ${status.className}">${status.text}</span></td>
-                    <td>${formatDate(inquiry.createdAt || inquiry.created_at)}</td>
-                    <td><a class="btn btn-sm btn-primary" href="/admin/inquiries/${inquiry.id}/answer">답변</a></td>
-                </tr>
-                `;
-            }).join('');
-        }
-
+        ADMIN_LIST_STATE.inquiries.items = response.content || [];
+        renderInquiriesTable();
         showContent('inquiries');
     } catch (error) {
         showError('inquiries', error.message || '문의 목록을 불러오지 못했습니다.');
@@ -1244,31 +1444,47 @@ async function toggleAdminHiddenState(actionElement, target) {
 
 async function confirmDelete() {
     if (!adminActionTarget) return;
+    const confirmButton = document.getElementById('delete-confirm-btn');
+    const originalText = confirmButton?.textContent || '삭제';
 
     try {
+        if (confirmButton) {
+            confirmButton.disabled = true;
+            confirmButton.textContent = '삭제 중...';
+        }
         if (adminActionTarget.type === 'post') {
             await APIClient.delete(`/admin/posts/${adminActionTarget.id}`);
+            closeDeleteModal();
             await loadPosts();
         } else if (adminActionTarget.type === 'comment') {
             await APIClient.delete(`/admin/comments/${adminActionTarget.id}`);
+            closeDeleteModal();
             await loadComments();
         } else if (adminActionTarget.type === 'user') {
             await APIClient.delete(`/admin/users/${adminActionTarget.id}`);
+            closeDeleteModal();
             await loadUsers();
         } else if (adminActionTarget.type === 'ad') {
             await APIClient.delete(`/admin/ads/${adminActionTarget.id}`);
+            closeDeleteModal();
             await loadAds();
         } else if (adminActionTarget.type === 'entry') {
             await APIClient.delete(`/admin/entries/${encodeURIComponent(adminActionTarget.entryId)}`);
             if (editingEntryId === adminActionTarget.entryId) resetEntryEditor();
+            closeDeleteModal();
             await loadEntries();
         } else {
             await APIClient.delete(`/admin/support/${adminActionTarget.id}?sourceType=${encodeURIComponent(adminActionTarget.sourceType || 'SUPPORT')}`);
+            closeDeleteModal();
             await loadSupportArticles();
         }
-        closeDeleteModal();
     } catch (error) {
         const fallbackMessage = adminActionTarget.action === 'toggle-hide' ? '가리기 설정 변경에 실패했습니다.' : '삭제에 실패했습니다.';
         alert(error.message || fallbackMessage);
+    } finally {
+        if (confirmButton) {
+            confirmButton.disabled = false;
+            confirmButton.textContent = originalText;
+        }
     }
 }
