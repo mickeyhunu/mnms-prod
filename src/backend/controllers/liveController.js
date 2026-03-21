@@ -33,7 +33,8 @@ async function getLiveEntries(req, res, next) {
     const categoryKey = req.query.category;
     const storeNo = Number.parseInt(req.query.storeNo, 10);
     const limit = req.query.limit;
-    const data = await liveModel.listLiveEntries(categoryKey, { storeNo, limit });
+    const offset = req.query.offset;
+    const data = await liveModel.listLiveEntries(categoryKey, { storeNo, limit, offset });
     const totalCount = await liveModel.countRows(data.category.tableName, {
       storeNo,
       storeName: data.selectedStore?.storeName || ''
@@ -47,7 +48,11 @@ async function getLiveEntries(req, res, next) {
       columns: data.columns,
       titleColumn: data.titleColumn,
       storeFilterColumn: data.storeFilterColumn,
-      rows: data.rows
+      rows: data.rows,
+      limit: data.rowLimit,
+      offset: data.rowOffset,
+      hasMore: data.category.key !== 'entry' && totalCount > (data.rowOffset + data.rows.length),
+      nextOffset: data.category.key !== 'entry' ? data.rowOffset + data.rows.length : data.rowOffset
     });
   } catch (error) {
     return handleLiveError(error, next, res);
