@@ -445,17 +445,28 @@ function createWaitingLiveEntryCard(row, index, title) {
     });
 }
 
-function createLiveChatCard({ index, title, body, timestamp = '', rawTimestamp = '', badge = '', avatarLabel = '' }) {
+function createLiveChatCard({
+    index,
+    title,
+    body = '',
+    details = [],
+    message = '',
+    emptyMessage = '',
+    timestamp = '',
+    rawTimestamp = '',
+    badge = '',
+    avatarLabel = ''
+}) {
     const normalizedAvatarLabel = avatarLabel || getChoiceAvatarLabel(title, index);
     const normalizedDetails = Array.isArray(details) ? details : [];
-    const contentHtml = normalizedDetails.length
+    const contentHtml = body || (normalizedDetails.length
         ? `<ul class="live-chat-card__details">${normalizedDetails.map((detail) => `
             <li class="live-chat-card__detail-item">
                 <span class="live-chat-card__detail-key">${sanitizeHTML(detail.key)}</span>
                 <span class="live-chat-card__detail-value">${sanitizeHTML(detail.value)}</span>
             </li>
         `).join('')}</ul>`
-        : `<p class="live-chat-card__message">${sanitizeHTML(message || emptyMessage)}</p>`;
+        : `<p class="live-chat-card__message">${sanitizeHTML(message || emptyMessage)}</p>`);
 
     return `
         <article class="live-chat-card">
@@ -469,7 +480,7 @@ function createLiveChatCard({ index, title, body, timestamp = '', rawTimestamp =
             <div class="live-chat-card__body">
                 <div class="live-chat-card__bubble-wrap">
                     <div class="live-chat-card__bubble">
-                        ${body}
+                        ${contentHtml}
                     </div>
                     ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(rawTimestamp))}">${sanitizeHTML(timestamp)}</time>` : ''}
                 </div>
