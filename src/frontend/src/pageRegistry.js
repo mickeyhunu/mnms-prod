@@ -43,17 +43,27 @@ const pageRegistry = {
                 <div id="posts-section" class="tab-pane active">
                     <div class="loading" id="posts-loading"><div class="spinner"></div><p>게시글을 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="posts-error"><p id="posts-error-message"></p><button class="btn btn-sm btn-primary" id="posts-retry-btn">다시 시도</button></div>
+                    <div class="admin-list-toolbar">
+                        <p class="admin-list-toolbar__meta">총 <strong id="posts-total">0</strong>건</p>
+                        <input type="search" id="posts-search-input" class="form-control admin-list-toolbar__search" placeholder="게시글 검색" aria-label="게시글 검색">
+                    </div>
                     <div class="admin-table-container hidden" id="posts-content">
                         <table class="admin-table"><thead><tr><th>ID</th><th>제목</th><th>작성자</th><th>작성일</th><th>좋아요</th><th>댓글</th><th>관리</th></tr></thead><tbody id="posts-tbody"></tbody></table>
                     </div>
+                    <div class="admin-pagination hidden" id="posts-pagination"></div>
                 </div>
 
                 <div id="comments-section" class="tab-pane hidden">
                     <div class="loading" id="comments-loading"><div class="spinner"></div><p>댓글을 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="comments-error"><p id="comments-error-message"></p><button class="btn btn-sm btn-primary" id="comments-retry-btn">다시 시도</button></div>
+                    <div class="admin-list-toolbar">
+                        <p class="admin-list-toolbar__meta">총 <strong id="comments-total">0</strong>건</p>
+                        <input type="search" id="comments-search-input" class="form-control admin-list-toolbar__search" placeholder="댓글 검색" aria-label="댓글 검색">
+                    </div>
                     <div class="admin-table-container hidden" id="comments-content">
                         <table class="admin-table"><thead><tr><th>ID</th><th>내용</th><th>게시글</th><th>작성자</th><th>작성일</th><th>관리</th></tr></thead><tbody id="comments-tbody"></tbody></table>
                     </div>
+                    <div class="admin-pagination hidden" id="comments-pagination"></div>
                 </div>
 
                 <div id="users-section" class="tab-pane hidden">
@@ -137,9 +147,14 @@ const pageRegistry = {
                     </section>
                     <div class="loading" id="users-loading"><div class="spinner"></div><p>회원 정보를 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="users-error"><p id="users-error-message"></p><button class="btn btn-sm btn-primary" id="users-retry-btn">다시 시도</button></div>
+                    <div class="admin-list-toolbar">
+                        <p class="admin-list-toolbar__meta">총 <strong id="users-total">0</strong>건</p>
+                        <input type="search" id="users-search-input" class="form-control admin-list-toolbar__search" placeholder="회원 검색" aria-label="회원 검색">
+                    </div>
                     <div class="admin-table-container hidden" id="users-content">
                         <table class="admin-table"><thead><tr><th>ID</th><th>이메일</th><th>닉네임</th><th>계정상태</th><th>포인트</th><th>가입일</th><th>권한</th><th>회원구분</th><th>관리</th></tr></thead><tbody id="users-tbody"></tbody></table>
                     </div>
+                    <div class="admin-pagination hidden" id="users-pagination"></div>
                 </div>
 
                 <div id="entries-section" class="tab-pane hidden">
@@ -167,36 +182,56 @@ const pageRegistry = {
                     </section>
                     <div class="loading" id="entries-loading"><div class="spinner"></div><p>엔트리 목록을 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="entries-error"><p id="entries-error-message"></p><button class="btn btn-sm btn-primary" id="entries-retry-btn-secondary">다시 시도</button></div>
+                    <div class="admin-list-toolbar">
+                        <p class="admin-list-toolbar__meta">총 <strong id="entries-total">0</strong>건</p>
+                        <input type="search" id="entries-search-input" class="form-control admin-list-toolbar__search" placeholder="엔트리 검색" aria-label="엔트리 검색">
+                    </div>
                     <div class="admin-table-container hidden" id="entries-content">
                         <table class="admin-table"><thead><tr><th>이름</th><th>언급수</th><th>가산점</th><th>등록일</th><th>관리</th></tr></thead><tbody id="entries-tbody"></tbody></table>
                     </div>
+                    <div class="admin-pagination hidden" id="entries-pagination"></div>
                 </div>
 
                 <div id="ads-section" class="tab-pane hidden">
                     <div class="admin-support-toolbar admin-support-toolbar-right"><button class="btn btn-primary btn-sm" id="ads-new-btn">광고 등록</button></div>
                     <div class="loading" id="ads-loading"><div class="spinner"></div><p>광고를 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="ads-error"><p id="ads-error-message"></p><button class="btn btn-sm btn-primary" id="ads-retry-btn">다시 시도</button></div>
+                    <div class="admin-list-toolbar">
+                        <p class="admin-list-toolbar__meta">총 <strong id="ads-total">0</strong>건</p>
+                        <input type="search" id="ads-search-input" class="form-control admin-list-toolbar__search" placeholder="광고 검색" aria-label="광고 검색">
+                    </div>
                     <div class="admin-table-container hidden" id="ads-content">
                         <table class="admin-table"><thead><tr><th>ID</th><th>제목</th><th>링크</th><th>순서</th><th>노출</th><th>생성일</th><th>수정일</th><th>관리</th></tr></thead><tbody id="ads-tbody"></tbody></table>
                     </div>
+                    <div class="admin-pagination hidden" id="ads-pagination"></div>
                 </div>
 
                 <div id="support-section" class="tab-pane hidden">
                     <div class="admin-support-toolbar admin-support-toolbar-split"><div class="admin-support-toolbar-start"><select id="support-category" class="form-control"><option value="NOTICE">공지사항</option><option value="FAQ">FAQ</option></select></div><div class="admin-support-toolbar-end"><button class="btn btn-primary btn-sm" id="support-new-btn">새 글 작성</button></div></div>
                     <div class="loading" id="support-loading"><div class="spinner"></div><p>글을 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="support-error"><p id="support-error-message"></p><button class="btn btn-sm btn-primary" id="support-retry-btn">다시 시도</button></div>
+                    <div class="admin-list-toolbar">
+                        <p class="admin-list-toolbar__meta">총 <strong id="support-total">0</strong>건</p>
+                        <input type="search" id="support-search-input" class="form-control admin-list-toolbar__search" placeholder="공지/FAQ 검색" aria-label="공지/FAQ 검색">
+                    </div>
                     <div class="admin-table-container hidden" id="support-content">
                         <table class="admin-table"><thead><tr><th>ID</th><th>구분</th><th>제목</th><th>작성일</th><th>관리</th></tr></thead><tbody id="support-tbody"></tbody></table>
                     </div>
+                    <div class="admin-pagination hidden" id="support-pagination"></div>
                 </div>
 
                 <div id="inquiries-section" class="tab-pane hidden">
                     <div class="admin-support-toolbar"><select id="inquiries-status" class="form-control"><option value="">전체</option><option value="PENDING">대기</option><option value="ANSWERED">답변완료</option></select></div>
                     <div class="loading" id="inquiries-loading"><div class="spinner"></div><p>문의를 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="inquiries-error"><p id="inquiries-error-message"></p><button class="btn btn-sm btn-primary" id="inquiries-retry-btn">다시 시도</button></div>
+                    <div class="admin-list-toolbar">
+                        <p class="admin-list-toolbar__meta">총 <strong id="inquiries-total">0</strong>건</p>
+                        <input type="search" id="inquiries-search-input" class="form-control admin-list-toolbar__search" placeholder="1:1 문의 검색" aria-label="1:1 문의 검색">
+                    </div>
                     <div class="admin-table-container hidden" id="inquiries-content">
                         <table class="admin-table"><thead><tr><th>ID</th><th>회원</th><th>유형</th><th>제목</th><th>상태</th><th>접수일</th><th>관리</th></tr></thead><tbody id="inquiries-tbody"></tbody></table>
                     </div>
+                    <div class="admin-pagination hidden" id="inquiries-pagination"></div>
                 </div>
                 </div>
             </div>
