@@ -565,7 +565,7 @@ async function initDatabase() {
   if (!adminRows.length) {
     await pool.query(
       'INSERT INTO users (email, password, nickname, role, member_type) VALUES (?, ?, ?, ?, ?)',
-      ['admin@company.com', 'admin1234', '관리자001', 'ADMIN', 'GENERAL']
+      ['admin@admin.com', 'admin1234', '관리자', 'ADMIN', 'GENERAL']
     );
   }
 }
