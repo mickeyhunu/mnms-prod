@@ -14,6 +14,33 @@ const ROOM_PAGE_TEXT = {
   summarySingle: '룸현황',
 };
 
+const KOREA_TIME_ZONE = 'Asia/Seoul';
+
+function parseKoreanDateTime(value) {
+  if (!value) return null;
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  const normalized = String(value).trim();
+  if (!normalized) return null;
+
+  const hasExplicitTimeZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized);
+  const isoLikeValue = normalized.includes('T') ? normalized : normalized.replace(' ', 'T');
+  const parseTarget = hasExplicitTimeZone ? isoLikeValue : `${isoLikeValue}+09:00`;
+  const parsed = new Date(parseTarget);
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatKoreanDateTime(value) {
+  const date = parseKoreanDateTime(value);
+  if (!date) return 'N/A';
+
+  return date.toLocaleString('ko-KR', { timeZone: KOREA_TIME_ZONE });
+}
+
 function escapeXml(value = '') {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -195,10 +222,7 @@ function normalizeRoomRow(room) {
   const waitInfoDisplay = room.waitInfo ?? 'N/A';
   const { obj: detailObj, text: detailRaw } = safeParseJSON(room.roomDetail);
 
-  const updatedAtDate = room.updatedAt ? new Date(room.updatedAt) : null;
-  const updatedAtDisplay = updatedAtDate
-    ? updatedAtDate.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
-    : 'N/A';
+  const updatedAtDisplay = formatKoreanDateTime(room.updatedAt);
 
   return {
     storeNo: room.storeNo,
