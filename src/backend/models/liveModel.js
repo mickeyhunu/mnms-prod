@@ -15,6 +15,19 @@ const ROOM_INFO_CANDIDATES = ['roomInfo', 'room_info'];
 const WAIT_INFO_CANDIDATES = ['waitInfo', 'wait_info', 'waitingInfo', 'waiting_info'];
 const ROOM_DETAIL_CANDIDATES = ['roomDetail', 'room_detail', 'detail', 'details'];
 
+const MYSQL_DATETIME_FORMAT = '%Y-%m-%d %H:%i:%s';
+const TEMPORAL_COLUMN_CANDIDATES = new Set([
+  ...ORDER_CANDIDATES,
+  'snapshotAt',
+  'snapshot_at',
+  'sourceUpdatedAt',
+  'source_updated_at',
+  'capturedAt',
+  'captured_at',
+  'answeredAt',
+  'answered_at'
+].map((column) => String(column).toLowerCase()));
+
 const LIVE_CATEGORY_MAP = {
   choice: { key: 'choice', label: '초이스톡', tableName: 'LIVE_CHOICE_HISTORY', sourceTableName: 'INFO_CHOICE' },
   waiting: { key: 'waiting', label: '웨이팅', tableName: 'LIVE_ROOM_HISTORY', sourceTableName: 'INFO_ROOM' },
@@ -52,6 +65,20 @@ function findColumn(columns, candidates) {
     if (match) return match;
   }
   return null;
+}
+
+function buildTemporalSelect(columnName) {
+  return `DATE_FORMAT(\`${columnName}\`, '${MYSQL_DATETIME_FORMAT}') AS \`${columnName}\``;
+}
+
+function buildLiveSelectClause(columns = []) {
+  return columns.map((column) => {
+    if (TEMPORAL_COLUMN_CANDIDATES.has(String(column).toLowerCase())) {
+      return buildTemporalSelect(column);
+    }
+
+    return `\`${column}\``;
+  }).join(', ');
 }
 
 async function getTableColumns(tableName) {
@@ -179,20 +206,22 @@ async function listLiveEntries(categoryKey, { storeNo = null, limit = 50, offset
     ? [...storeFilter.params, rowLimit]
     : [...storeFilter.params, rowLimit, rowOffset];
 
+  const selectClause = buildLiveSelectClause(columns);
+
   const query = orderColumn
     ? category.key === 'entry'
-      ? `SELECT *
+      ? `SELECT ${selectClause}
            FROM (
-             SELECT *
+             SELECT ${selectClause}
                FROM \`${safeTableName}\`
                ${storeFilter.clause}
               ORDER BY \`${orderColumn}\` DESC
               LIMIT ?
            ) AS recent_entries
           ORDER BY \`${orderColumn}\` ASC`
-      : `SELECT *
+      : `SELECT ${selectClause}
            FROM (
-             SELECT *
+             SELECT ${selectClause}
                FROM \`${safeTableName}\`
                ${storeFilter.clause}
               ORDER BY \`${orderColumn}\` DESC
@@ -200,11 +229,11 @@ async function listLiveEntries(categoryKey, { storeNo = null, limit = 50, offset
            ) AS history_entries
           ORDER BY \`${orderColumn}\` ASC`
     : category.key === 'entry'
-      ? `SELECT *
+      ? `SELECT ${selectClause}
            FROM \`${safeTableName}\`
            ${storeFilter.clause}
            LIMIT ?`
-      : `SELECT *
+      : `SELECT ${selectClause}
            FROM \`${safeTableName}\`
            ${storeFilter.clause}
            LIMIT ? OFFSET ?`;
@@ -252,7 +281,7 @@ async function listLiveSourceRows(categoryKey, { since = null } = {}) {
       `SELECT ${storeNoColumn ? `\`${storeNoColumn}\`` : 'NULL'} AS storeNo,
               ${storeNameColumn ? `\`${storeNameColumn}\`` : "''"} AS storeName,
               \`${choiceMessageColumn}\` AS choiceMsg,
-              ${orderColumn ? `\`${orderColumn}\`` : 'NULL'} AS createdAt
+              ${orderColumn ? `DATE_FORMAT(\`${orderColumn}\`, '${MYSQL_DATETIME_FORMAT}')` : 'NULL'} AS createdAt
          FROM \`${sourceTableName}\`
         WHERE ${whereClauses.join(' AND ')}
         ${orderColumn ? `ORDER BY \`${orderColumn}\` ASC` : ''}`,
@@ -281,7 +310,7 @@ async function listLiveSourceRows(categoryKey, { since = null } = {}) {
               ${roomInfoColumn ? `\`${roomInfoColumn}\`` : 'NULL'} AS roomInfo,
               ${waitInfoColumn ? `\`${waitInfoColumn}\`` : 'NULL'} AS waitInfo,
               ${roomDetailColumn ? `\`${roomDetailColumn}\`` : 'NULL'} AS roomDetail,
-              ${orderColumn ? `\`${orderColumn}\`` : 'NULL'} AS sourceUpdatedAt
+              ${orderColumn ? `DATE_FORMAT(\`${orderColumn}\`, '${MYSQL_DATETIME_FORMAT}')` : 'NULL'} AS sourceUpdatedAt
          FROM \`${sourceTableName}\`
         ${storeNoColumn ? `ORDER BY \`${storeNoColumn}\` ASC` : storeNameColumn ? `ORDER BY \`${storeNameColumn}\` ASC` : ''}`
     );

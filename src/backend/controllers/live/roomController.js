@@ -15,6 +15,7 @@ const ROOM_PAGE_TEXT = {
 };
 
 const KOREA_TIME_ZONE = 'Asia/Seoul';
+const MYSQL_DATETIME_FORMAT = '%Y-%m-%d %H:%i:%s';
 
 function parseKoreanDateTime(value) {
   if (!value) return null;
@@ -252,7 +253,8 @@ function serializeRoomForPayload(room) {
 
 async function fetchSingleRoomStatus(storeNo) {
   const [[room]] = await pool.query(
-    `SELECT r.storeNo, s.storeName, r.roomInfo, r.waitInfo, r.roomDetail, r.updatedAt
+    `SELECT r.storeNo, s.storeName, r.roomInfo, r.waitInfo, r.roomDetail,
+            DATE_FORMAT(r.updatedAt, '${MYSQL_DATETIME_FORMAT}') AS updatedAt
          FROM INFO_ROOM r
          JOIN INFO_STORE s ON s.storeNo = r.storeNo
         WHERE r.storeNo=?`,
@@ -268,7 +270,8 @@ async function fetchSingleRoomStatus(storeNo) {
 
 async function fetchAllRoomStatuses() {
   const [rooms] = await pool.query(
-    `SELECT r.storeNo, s.storeName, r.roomInfo, r.waitInfo, r.roomDetail, r.updatedAt
+    `SELECT r.storeNo, s.storeName, r.roomInfo, r.waitInfo, r.roomDetail,
+            DATE_FORMAT(r.updatedAt, '${MYSQL_DATETIME_FORMAT}') AS updatedAt
          FROM INFO_ROOM r
          JOIN INFO_STORE s ON s.storeNo = r.storeNo
         ORDER BY r.storeNo ASC`
