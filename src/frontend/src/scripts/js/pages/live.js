@@ -404,19 +404,6 @@ function createChoiceLiveEntryCard(row, index, title, choiceMessage) {
     const storeName = resolveChoiceStoreName(row);
     const createdAt = getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date']);
     const timestamp = formatLiveEntryTime(createdAt);
-    const detailItems = Object.entries(row || {})
-        .filter(([key, value]) => {
-            if (value === null || value === undefined || String(value).trim() === '') return false;
-            return normalizeFieldKey(key) !== 'choicemsg';
-        })
-        .slice(0, 4)
-        .map(([key, value]) => `
-            <li class="live-chat-card__meta-item">
-                <span class="live-chat-card__meta-key">${sanitizeHTML(formatFieldLabel(key))}</span>
-                <span class="live-chat-card__meta-value">${sanitizeHTML(formatFieldValue(value))}</span>
-            </li>
-        `)
-        .join('');
 
     return `
         <article class="live-chat-card">
@@ -430,9 +417,8 @@ function createChoiceLiveEntryCard(row, index, title, choiceMessage) {
                 <div class="live-chat-card__bubble-wrap">
                     <div class="live-chat-card__bubble">
                         <p class="live-chat-card__message">${sanitizeHTML(formatFieldValue(choiceMessage))}</p>
-                        ${detailItems ? `<ul class="live-chat-card__meta">${detailItems}</ul>` : ''}
+                        ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(createdAt))}">${sanitizeHTML(timestamp)}</time>` : ''}
                     </div>
-                    ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(createdAt))}">${sanitizeHTML(timestamp)}</time>` : ''}
                 </div>
             </div>
         </article>
