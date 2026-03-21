@@ -7,11 +7,14 @@ let currentSupportCategory = 'NOTICE';
 let currentInquiryStatus = '';
 let inquiryAnswerTarget = null;
 let editingUserId = null;
+let editingEntryId = null;
+let currentEntryStoreNo = null;
+let entryStores = [];
 let isGlobalAdminClickBound = false;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
-const ADMIN_TABS = ['posts', 'comments', 'users', 'ads', 'support', 'inquiries'];
+const ADMIN_TABS = ['posts', 'comments', 'users', 'entries', 'ads', 'support', 'inquiries'];
 
 function getAdminPageState() {
     const params = new URLSearchParams(window.location.search);
@@ -66,6 +69,7 @@ async function activateAdminTab(tabKey, options = {}) {
     if (resolvedTabKey === 'posts') await loadPosts();
     else if (resolvedTabKey === 'comments') await loadComments();
     else if (resolvedTabKey === 'users') await loadUsers();
+    else if (resolvedTabKey === 'entries') await loadEntries();
     else if (resolvedTabKey === 'ads') await loadAds();
     else if (resolvedTabKey === 'support') await loadSupportArticles();
     else if (resolvedTabKey === 'inquiries') await loadInquiries();
@@ -121,6 +125,8 @@ function bindCommonEvents() {
     document.getElementById('posts-retry-btn')?.addEventListener('click', loadPosts);
     document.getElementById('comments-retry-btn')?.addEventListener('click', loadComments);
     document.getElementById('users-retry-btn')?.addEventListener('click', loadUsers);
+    document.getElementById('entries-retry-btn')?.addEventListener('click', loadEntries);
+    document.getElementById('entries-retry-btn-secondary')?.addEventListener('click', loadEntries);
     document.getElementById('ads-retry-btn')?.addEventListener('click', loadAds);
     document.getElementById('support-retry-btn')?.addEventListener('click', loadSupportArticles);
     document.getElementById('inquiries-retry-btn')?.addEventListener('click', loadInquiries);
@@ -140,6 +146,13 @@ function bindCommonEvents() {
     document.getElementById('support-save-btn')?.addEventListener('click', saveSupportArticle);
 
     document.getElementById('ads-new-btn')?.addEventListener('click', () => openAdEditor());
+    document.getElementById('entry-store-select')?.addEventListener('change', async (event) => {
+        currentEntryStoreNo = Number.parseInt(event.target.value || '', 10);
+        resetEntryEditor();
+        await loadEntries();
+    });
+    document.getElementById('entry-save-btn')?.addEventListener('click', saveEntry);
+    document.getElementById('entry-cancel-btn')?.addEventListener('click', resetEntryEditor);
 
     document.getElementById('inquiries-status')?.addEventListener('change', async (event) => {
         currentInquiryStatus = event.target.value || '';
@@ -282,6 +295,150 @@ async function loadUsers() {
         showContent('users');
     } catch (error) {
         showError('users', error.message || '회원 목록을 불러오지 못했습니다.');
+    }
+}
+
+function setEntryHelpMessage(message, color = '#6c757d') {
+    const help = document.getElementById('entry-form-help');
+    if (!help) return;
+    help.textContent = message;
+    help.style.color = color;
+}
+
+function renderEntryStoreOptions() {
+    const select = document.getElementById('entry-store-select');
+    if (!select) return;
+
+    if (!entryStores.length) {
+        select.innerHTML = '<option value="">매장 없음</option>';
+        select.disabled = true;
+        currentEntryStoreNo = null;
+        return;
+    }
+
+    if (!entryStores.some((store) => store.storeNo === currentEntryStoreNo)) {
+        currentEntryStoreNo = entryStores[0].storeNo;
+    }
+
+    select.disabled = false;
+    select.innerHTML = entryStores.map((store) => `
+        <option value="${store.storeNo}" ${store.storeNo === currentEntryStoreNo ? 'selected' : ''}>${sanitizeHTML(store.storeName)}</option>
+    `).join('');
+}
+
+async function ensureEntryStoresLoaded() {
+    const response = await APIClient.get('/admin/entries/stores');
+    entryStores = (response.content || []).map((store) => ({
+        storeNo: Number.parseInt(store.storeNo, 10),
+        storeName: String(store.storeName || '').trim()
+    })).filter((store) => Number.isInteger(store.storeNo) && store.storeName);
+    renderEntryStoreOptions();
+}
+
+function resetEntryEditor() {
+    editingEntryId = null;
+    const input = document.getElementById('entry-name-input');
+    const saveButton = document.getElementById('entry-save-btn');
+    const cancelButton = document.getElementById('entry-cancel-btn');
+    const title = document.getElementById('entry-editor-title');
+
+    if (input) input.value = '';
+    if (saveButton) saveButton.textContent = '추가';
+    if (cancelButton) cancelButton.classList.add('hidden');
+    if (title) title.textContent = '새 엔트리 추가';
+    setEntryHelpMessage('');
+}
+
+function startEntryEdit(entry) {
+    editingEntryId = entry.entryId;
+    const input = document.getElementById('entry-name-input');
+    const saveButton = document.getElementById('entry-save-btn');
+    const cancelButton = document.getElementById('entry-cancel-btn');
+    const title = document.getElementById('entry-editor-title');
+
+    if (input) {
+        input.value = entry.workerName || '';
+        input.focus();
+    }
+    if (saveButton) saveButton.textContent = '수정 저장';
+    if (cancelButton) cancelButton.classList.remove('hidden');
+    if (title) title.textContent = '엔트리 수정';
+    setEntryHelpMessage(`"${entry.workerName || ''}" 항목을 수정 중입니다.`);
+}
+
+async function loadEntries() {
+    toggleLoading('entries', true);
+
+    try {
+        await ensureEntryStoresLoaded();
+
+        if (!currentEntryStoreNo) {
+            const tbody = document.getElementById('entries-tbody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5">관리할 매장이 없습니다.</td></tr>';
+            showContent('entries');
+            return;
+        }
+
+        const response = await APIClient.get('/admin/entries', { storeNo: currentEntryStoreNo });
+        const entries = response.content || [];
+        const tbody = document.getElementById('entries-tbody');
+
+        if (!entries.length) {
+            tbody.innerHTML = '<tr><td colspan="5">등록된 엔트리 항목이 없습니다.</td></tr>';
+        } else {
+            tbody.innerHTML = entries.map((entry) => `
+                <tr>
+                    <td>${sanitizeHTML(entry.workerName || '')}</td>
+                    <td>${Number(entry.mentionCount || 0).toLocaleString()}</td>
+                    <td>${Number(entry.insertCount || 0).toLocaleString()}</td>
+                    <td>${formatDate(entry.createdAt)}</td>
+                    <td>
+                        <div class="admin-user-actions">
+                            <button class="btn btn-sm btn-secondary" data-admin-action="edit-entry" data-entry-id="${sanitizeHTML(entry.entryId || '')}" data-entry-name="${sanitizeHTML(entry.workerName || '')}">수정</button>
+                            <button class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="entry" data-entry-id="${sanitizeHTML(entry.entryId || '')}">삭제</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        showContent('entries');
+    } catch (error) {
+        showError('entries', error.message || '엔트리 목록을 불러오지 못했습니다.');
+    }
+}
+
+async function saveEntry() {
+    const input = document.getElementById('entry-name-input');
+    const saveButton = document.getElementById('entry-save-btn');
+    const workerName = input?.value?.trim() || '';
+
+    if (!currentEntryStoreNo) {
+        setEntryHelpMessage('먼저 매장을 선택해주세요.', '#dc3545');
+        return;
+    }
+
+    if (!workerName) {
+        setEntryHelpMessage('엔트리 이름을 입력해주세요.', '#dc3545');
+        return;
+    }
+
+    try {
+        if (saveButton) saveButton.disabled = true;
+        setEntryHelpMessage(editingEntryId ? '엔트리를 수정하는 중입니다...' : '엔트리를 추가하는 중입니다...');
+
+        if (editingEntryId) {
+            await APIClient.put(`/admin/entries/${encodeURIComponent(editingEntryId)}`, { workerName });
+        } else {
+            await APIClient.post('/admin/entries', { storeNo: currentEntryStoreNo, workerName });
+        }
+
+        resetEntryEditor();
+        await loadEntries();
+    } catch (error) {
+        setEntryHelpMessage(error.message || '엔트리 저장에 실패했습니다.', '#dc3545');
+    } finally {
+        if (saveButton) saveButton.disabled = false;
     }
 }
 
@@ -737,6 +894,18 @@ async function handleAdminTableActionClick(event) {
     const targetId = Number.parseInt(targetIdRaw, 10);
     const targetType = actionElement.dataset.targetType;
     const sourceType = actionElement.dataset.sourceType || 'SUPPORT';
+    const entryId = actionElement.dataset.entryId;
+    const entryName = actionElement.dataset.entryName || '';
+
+    if (action === 'delete' && targetType === 'entry' && entryId) {
+        openAdminActionModal({
+            action,
+            type: targetType,
+            entryId,
+            entryName
+        });
+        return;
+    }
 
     if (action === 'delete' && Number.isInteger(targetId) && targetType) {
         openAdminActionModal({
@@ -745,6 +914,11 @@ async function handleAdminTableActionClick(event) {
             id: targetId,
             sourceType
         });
+        return;
+    }
+
+    if (action === 'edit-entry' && entryId) {
+        startEntryEdit({ entryId, workerName: entryName });
         return;
     }
 
@@ -770,7 +944,12 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
-    if (['delete', 'toggle-hide', 'edit-ad', 'edit-support', 'edit-user', 'answer-inquiry'].includes(action) && !Number.isInteger(targetId)) {
+    if (action === 'edit-entry' && !entryId) {
+        alert('엔트리 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
+        return;
+    }
+
+    if (['delete', 'toggle-hide', 'edit-ad', 'edit-support', 'edit-user', 'answer-inquiry'].includes(action) && !entryId && !Number.isInteger(targetId)) {
         alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
     }
 }
@@ -1025,13 +1204,17 @@ function openAdminActionModal(target) {
         if (title) title.textContent = '광고 삭제';
         if (message) message.textContent = '이 광고를 삭제하시겠습니까?';
         if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
+    } else if (target.type === 'entry') {
+        if (title) title.textContent = '엔트리 삭제';
+        if (message) message.textContent = `"${target.entryName || '선택한 엔트리'}" 항목을 삭제하시겠습니까?`;
+        if (helpText) helpText.textContent = '삭제된 엔트리 이름은 복구할 수 없습니다.';
     } else {
         if (title) title.textContent = '공지/FAQ 삭제';
         if (message) message.textContent = '이 글을 삭제하시겠습니까?';
         if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
     }
 
-    if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
+    if (helpText && target.type !== 'entry') helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
     modal?.classList.remove('hidden');
 }
 
@@ -1075,6 +1258,10 @@ async function confirmDelete() {
         } else if (adminActionTarget.type === 'ad') {
             await APIClient.delete(`/admin/ads/${adminActionTarget.id}`);
             await loadAds();
+        } else if (adminActionTarget.type === 'entry') {
+            await APIClient.delete(`/admin/entries/${encodeURIComponent(adminActionTarget.entryId)}`);
+            if (editingEntryId === adminActionTarget.entryId) resetEntryEditor();
+            await loadEntries();
         } else {
             await APIClient.delete(`/admin/support/${adminActionTarget.id}?sourceType=${encodeURIComponent(adminActionTarget.sourceType || 'SUPPORT')}`);
             await loadSupportArticles();
