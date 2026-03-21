@@ -313,10 +313,6 @@
 }
 
 .live-chat-card__bubble-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    width: min(100%, 760px);
     max-width: 100%;
 }
 
