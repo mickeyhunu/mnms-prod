@@ -451,7 +451,47 @@ function createEntrySummaryLiveCard(rows, titleColumn) {
     const storeName = resolveChoiceStoreName(rows[0] || {});
     const title = storeName ? `${storeName} 엔트리` : '엔트리';
     const contentHtml = `
-        <div class="relative z-10 rounded-[calc(1rem-1px)] bg-slate-950/92 backdrop-blur-sm p-6 flex-1 flex flex-col"><div class="mb-4"><div class="flex items-center gap-2"><span class="text-sm text-white/70">총 출근인원</span><strong class="text-lg text-amber-200">${sanitizeHTML(String(totalWorkers))}</strong><span class="text-sm text-white/70">명</span></div></div><div class="mb-4"><h3 class="text-sm font-semibold uppercase tracking-widest text-white/60 mb-3">엔트리 목록</h3><div class="grid grid-cols-5 gap-2">${entryNames.map((name) => `<button class="rounded-lg bg-white/5 px-2 py-1 text-xs text-white/80 text-center hover:bg-white/15 hover:text-white transition-all duration-200 cursor-pointer">${sanitizeHTML(name)}</button>`).join('')}</div></div><div><h3 class="text-sm font-semibold uppercase tracking-widest text-white/60 mb-3">오늘의 인기 멤버 TOP 5</h3>${rankedEntries.length ? `<ol class="space-y-2">${rankedEntries.map((entry, index) => `<li class="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2"><button class="flex items-center gap-2 flex-1 text-left hover:opacity-80 transition-opacity cursor-pointer"><span class="text-sm font-bold text-amber-200">${sanitizeHTML(String(index + 1))}.</span><span class="text-sm text-white">${sanitizeHTML(entry.name)}</span></button><span class="text-xs text-white/70">합계 <strong class="text-amber-200">${sanitizeHTML(String(entry.score))}</strong></span></li>`).join('')}</ol>` : `<p class="text-sm text-white/60">표시할 인기 멤버가 없습니다.</p>`}</div></div>`;
+        <div class="entry-live-card">
+            <section class="entry-live-card__section entry-live-card__section--count">
+                <div class="entry-live-card__count-row">
+                    <span class="entry-live-card__count-label">총 출근인원</span>
+                    <strong class="entry-live-card__count-value">${sanitizeHTML(String(totalWorkers))}</strong>
+                    <span class="entry-live-card__count-unit">명</span>
+                </div>
+            </section>
+
+            <section class="entry-live-card__section">
+                <div class="entry-live-card__section-header">
+                    <h3 class="entry-live-card__section-title">엔트리 목록</h3>
+                </div>
+                <div class="entry-live-card__chips">
+                    ${entryNames.length
+                        ? entryNames.map((name) => `<span class="entry-live-card__chip">${sanitizeHTML(name)}</span>`).join('')
+                        : '<p class="entry-live-card__empty">표시할 엔트리 멤버가 없습니다.</p>'}
+                </div>
+            </section>
+
+            <section class="entry-live-card__section entry-live-card__section--ranking">
+                <div class="entry-live-card__section-header">
+                    <h3 class="entry-live-card__section-title">오늘의 인기 멤버 TOP 5</h3>
+                </div>
+                ${rankedEntries.length ? `
+                    <ol class="entry-live-card__ranking-list">
+                        ${rankedEntries.map((entry, index) => `
+                            <li class="entry-live-card__ranking-item">
+                                <div class="entry-live-card__ranking-main">
+                                    <span class="entry-live-card__ranking-rank">${sanitizeHTML(String(index + 1))}.</span>
+                                    <span class="entry-live-card__ranking-name">${sanitizeHTML(entry.name)}</span>
+                                </div>
+                                <span class="entry-live-card__ranking-score">합계 ${sanitizeHTML(String(entry.score))}</span>
+                            </li>
+                        `).join('')}
+                    </ol>
+                ` : `
+                    <p class="entry-live-card__empty">표시할 인기 멤버가 없습니다.</p>
+                `}
+            </section>
+        </div>`;
 
     return createLiveChatCard({
         index: 0,
@@ -460,7 +500,10 @@ function createEntrySummaryLiveCard(rows, titleColumn) {
         timestamp: latestTimestamp ? formatLiveEntryTime(latestTimestamp) : '',
         rawTimestamp: latestTimestamp,
         badge: LIVE_CATEGORIES.entry.label,
-        avatarLabel: getChoiceAvatarLabel(storeName || LIVE_CATEGORIES.entry.label, 0)
+        avatarLabel: getChoiceAvatarLabel(storeName || LIVE_CATEGORIES.entry.label, 0),
+        cardClassName: 'live-chat-card--entry-summary',
+        bubbleClassName: 'live-chat-card__bubble--entry-summary',
+        hideHeader: true
     });
 }
 
@@ -544,10 +587,15 @@ function createLiveChatCard({
     timestamp = '',
     rawTimestamp = '',
     badge = '',
-    avatarLabel = ''
+    avatarLabel = '',
+    cardClassName = '',
+    bubbleClassName = '',
+    hideHeader = false
 }) {
     const normalizedAvatarLabel = avatarLabel || getChoiceAvatarLabel(title, index);
     const normalizedDetails = Array.isArray(details) ? details : [];
+    const normalizedCardClassName = ['live-chat-card', cardClassName].filter(Boolean).join(' ');
+    const normalizedBubbleClassName = ['live-chat-card__bubble', bubbleClassName].filter(Boolean).join(' ');
     const contentHtml = body || (normalizedDetails.length
         ? `<ul class="live-chat-card__details">${normalizedDetails.map((detail) => `
             <li class="live-chat-card__detail-item">
@@ -558,16 +606,19 @@ function createLiveChatCard({
         : `<p class="live-chat-card__message">${sanitizeHTML(message || emptyMessage)}</p>`);
 
     return `
-        <article class="live-chat-card">
-            <div class="live-chat-card__header">
-                <div class="live-chat-card__avatar" aria-hidden="true">${sanitizeHTML(normalizedAvatarLabel)}</div>
-                <div class="live-chat-card__header-copy">
-                    <h3 class="live-chat-card__title">${sanitizeHTML(title)}</h3>
+        <article class="${normalizedCardClassName}">
+            ${hideHeader ? '' : `
+                <div class="live-chat-card__header">
+                    <div class="live-chat-card__avatar" aria-hidden="true">${sanitizeHTML(normalizedAvatarLabel)}</div>
+                    <div class="live-chat-card__header-copy">
+                        ${badge ? `<span class="live-chat-card__badge">${sanitizeHTML(badge)}</span>` : ''}
+                        <h3 class="live-chat-card__title">${sanitizeHTML(title)}</h3>
+                    </div>
                 </div>
-            </div>
+            `}
             <div class="live-chat-card__body">
                 <div class="live-chat-card__bubble-wrap">
-                    <div class="live-chat-card__bubble">
+                    <div class="${normalizedBubbleClassName}">
                         ${contentHtml}
                     </div>
                     ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(rawTimestamp))}">${sanitizeHTML(timestamp)}</time>` : ''}
