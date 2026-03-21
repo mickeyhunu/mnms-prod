@@ -562,7 +562,6 @@ function createLiveChatCard({
             <div class="live-chat-card__header">
                 <div class="live-chat-card__avatar" aria-hidden="true">${sanitizeHTML(normalizedAvatarLabel)}</div>
                 <div class="live-chat-card__header-copy">
-                    ${badge ? `<span class="live-chat-card__badge">${sanitizeHTML(badge)}</span>` : ''}
                     <h3 class="live-chat-card__title">${sanitizeHTML(title)}</h3>
                 </div>
             </div>
@@ -861,13 +860,13 @@ function buildWaitingMessage({ storeName, storeAddress, waitInfo, roomInfo, room
     const updatedText = formatWaitingUpdatedAt(updatedAt);
     const detailLines = buildWaitingDetailLines(roomDetail);
     const lines = [
-        updatedText,
+        `    ${updatedText}`,
         ` ${formatWaitingStoreHeadline(normalizedStoreName)}`,
-        '     룸/웨이팅 상황'
+        '        룸/웨이팅 상황'
     ];
 
     if (normalizedStoreAddress) {
-        lines.push(`     ${normalizedStoreAddress}`);
+        lines.push(`        ${normalizedStoreAddress}`);
     }
 
     lines.push(
