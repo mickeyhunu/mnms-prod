@@ -445,6 +445,7 @@ function createLiveChatCard({ index, title, message = '', details = [], emptyMes
                         ${contentHtml}
                         ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(rawTimestamp))}">${sanitizeHTML(timestamp)}</time>` : ''}
                     </div>
+                    ${timestamp ? `<time class="live-chat-card__time" datetime="${sanitizeHTML(String(createdAt))}">${sanitizeHTML(timestamp)}</time>` : ''}
                 </div>
             </div>
         </article>
