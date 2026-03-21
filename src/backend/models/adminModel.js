@@ -339,6 +339,138 @@ async function deleteEntry(entryId) {
   return fallbackResult.affectedRows > 0;
 }
 
+async function recordSiteVisit({ visitorKey, path }) {
+  const pool = getPool();
+  const normalizedVisitorKey = String(visitorKey || '').trim();
+  const normalizedPath = String(path || '/').trim() || '/';
+
+  if (!normalizedVisitorKey) return;
+
+  await pool.query(
+    `INSERT INTO site_visit_logs (visitor_key, path, visit_date, page_views, first_visited_at, last_visited_at)
+     VALUES (?, ?, CURRENT_DATE(), 1, NOW(), NOW())
+     ON DUPLICATE KEY UPDATE
+       page_views = page_views + 1,
+       last_visited_at = NOW()`,
+    [normalizedVisitorKey, normalizedPath]
+  );
+}
+
+function toDailySeriesMap(rows, valueMapper) {
+  return new Map(rows.map((row) => [String(row.statsDate), valueMapper(row)]));
+}
+
+function formatStatsDate(date) {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+async function getDashboardStats(rangeDays = 14) {
+  const pool = getPool();
+  const normalizedRangeDays = Math.max(7, Math.min(30, Number.parseInt(rangeDays, 10) || 14));
+
+  const [summaryRows] = await pool.query(
+    `SELECT
+        (SELECT COUNT(DISTINCT visitor_key) FROM site_visit_logs) AS totalVisitors,
+        (SELECT COUNT(DISTINCT visitor_key) FROM site_visit_logs WHERE visit_date = CURRENT_DATE()) AS todayVisitors,
+        (SELECT COALESCE(SUM(page_views), 0) FROM site_visit_logs) AS totalPageViews,
+        (SELECT COALESCE(SUM(page_views), 0) FROM site_visit_logs WHERE visit_date = CURRENT_DATE()) AS todayPageViews,
+        (SELECT COUNT(*) FROM posts WHERE is_deleted = 0) AS totalPosts,
+        (SELECT COUNT(*) FROM posts WHERE is_deleted = 0 AND DATE(created_at) = CURRENT_DATE()) AS todayPosts,
+        (SELECT COUNT(*) FROM comments WHERE is_deleted = 0) AS totalComments,
+        (SELECT COUNT(*) FROM comments WHERE is_deleted = 0 AND DATE(created_at) = CURRENT_DATE()) AS todayComments,
+        (SELECT COUNT(*) FROM users WHERE role = 'USER') AS totalUsers,
+        (SELECT COUNT(*) FROM users WHERE role = 'USER' AND DATE(created_at) = CURRENT_DATE()) AS todaySignups`
+  );
+
+  const [visitRows, postRows, commentRows, boardRows] = await Promise.all([
+    pool.query(
+      `SELECT visit_date AS statsDate,
+              COUNT(DISTINCT visitor_key) AS visitors,
+              COALESCE(SUM(page_views), 0) AS pageViews
+         FROM site_visit_logs
+        WHERE visit_date >= DATE_SUB(CURRENT_DATE(), INTERVAL ? DAY)
+        GROUP BY visit_date
+        ORDER BY visit_date ASC`,
+      [normalizedRangeDays - 1]
+    ).then(([rows]) => rows),
+    pool.query(
+      `SELECT DATE(created_at) AS statsDate, COUNT(*) AS postCount
+         FROM posts
+        WHERE is_deleted = 0
+          AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL ? DAY)
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at) ASC`,
+      [normalizedRangeDays - 1]
+    ).then(([rows]) => rows),
+    pool.query(
+      `SELECT DATE(created_at) AS statsDate, COUNT(*) AS commentCount
+         FROM comments
+        WHERE is_deleted = 0
+          AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL ? DAY)
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at) ASC`,
+      [normalizedRangeDays - 1]
+    ).then(([rows]) => rows),
+    pool.query(
+      `SELECT board_type AS boardType,
+              COUNT(*) AS totalPosts,
+              SUM(CASE WHEN DATE(created_at) = CURRENT_DATE() THEN 1 ELSE 0 END) AS todayPosts
+         FROM posts
+        WHERE is_deleted = 0
+        GROUP BY board_type
+        ORDER BY totalPosts DESC, board_type ASC`
+    ).then(([rows]) => rows)
+  ]);
+
+  const visitMap = toDailySeriesMap(visitRows, (row) => ({
+    visitors: Number(row.visitors || 0),
+    pageViews: Number(row.pageViews || 0)
+  }));
+  const postMap = toDailySeriesMap(postRows, (row) => Number(row.postCount || 0));
+  const commentMap = toDailySeriesMap(commentRows, (row) => Number(row.commentCount || 0));
+
+  const daily = [];
+  for (let offset = normalizedRangeDays - 1; offset >= 0; offset -= 1) {
+    const currentDate = new Date();
+    currentDate.setUTCHours(0, 0, 0, 0);
+    currentDate.setUTCDate(currentDate.getUTCDate() - offset);
+    const dateKey = formatStatsDate(currentDate);
+    const visitEntry = visitMap.get(dateKey) || { visitors: 0, pageViews: 0 };
+
+    daily.push({
+      date: dateKey,
+      visitors: visitEntry.visitors,
+      pageViews: visitEntry.pageViews,
+      posts: postMap.get(dateKey) || 0,
+      comments: commentMap.get(dateKey) || 0
+    });
+  }
+
+  return {
+    summary: {
+      totalVisitors: Number(summaryRows[0]?.totalVisitors || 0),
+      todayVisitors: Number(summaryRows[0]?.todayVisitors || 0),
+      totalPageViews: Number(summaryRows[0]?.totalPageViews || 0),
+      todayPageViews: Number(summaryRows[0]?.todayPageViews || 0),
+      totalPosts: Number(summaryRows[0]?.totalPosts || 0),
+      todayPosts: Number(summaryRows[0]?.todayPosts || 0),
+      totalComments: Number(summaryRows[0]?.totalComments || 0),
+      todayComments: Number(summaryRows[0]?.todayComments || 0),
+      totalUsers: Number(summaryRows[0]?.totalUsers || 0),
+      todaySignups: Number(summaryRows[0]?.todaySignups || 0)
+    },
+    boardStats: boardRows.map((row) => ({
+      boardType: row.boardType,
+      totalPosts: Number(row.totalPosts || 0),
+      todayPosts: Number(row.todayPosts || 0)
+    })),
+    daily
+  };
+}
+
 module.exports = {
   createEntry,
   encodeEntryId,
@@ -361,5 +493,7 @@ module.exports = {
   getStoreByNo,
   updateAd,
   deleteAd,
-  updateEntry
+  updateEntry,
+  recordSiteVisit,
+  getDashboardStats
 };
