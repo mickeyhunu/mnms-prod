@@ -3,6 +3,10 @@
  */
 export const liveStickyHeaderTemplate = `
 <div class="live-page__sticky-stack">
+                <header class="community-section-header">
+                    <div class="community-header-left"></div>
+                </header>
+
                 <div class="site-subheader__container">
                     <div class="site-subheader__top-row">
                         <div class="site-subheader__filters">
