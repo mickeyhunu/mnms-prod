@@ -2,20 +2,13 @@
     background: #000;
 }
 
-.page-shell--live {
-    margin-top: calc(var(--app-header-offset) * -1);
-}
-
-.page-shell--live > .header {
-    position: static;
-}
-
 .page-shell--live .live-page__sticky-stack {
     position: sticky;
-    top: 0;
+    top: var(--app-header-offset);
     z-index: 90;
     display: flex;
     flex-direction: column;
+    background: #000;
 }
 
 .page-shell--live .live-page__sticky-stack > .community-section-header {
