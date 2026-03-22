@@ -1,3 +1,11 @@
+body[data-page="live"] {
+    padding-top: 0;
+}
+
+body[data-page="live"] .header {
+    position: static;
+}
+
 .live-main-content {
     background: #000;
 }
@@ -16,7 +24,7 @@
 .live-page__sticky-stack {
     position: -webkit-sticky;
     position: sticky;
-    top: var(--app-header-offset);
+    top: 0;
     z-index: 90;
     display: flex;
     width: 100%;
