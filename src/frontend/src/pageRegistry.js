@@ -31,11 +31,11 @@ const pageRegistry = {
 
             <div class="admin-tabs">
                 <button class="admin-tab active" data-tab="stats">통계 대시보드</button>
+                <button class="admin-tab" data-tab="users">회원 관리</button>
                 <button class="admin-tab" data-tab="posts">게시글 관리</button>
                 <button class="admin-tab" data-tab="comments">댓글 관리</button>
-                <button class="admin-tab" data-tab="users">회원 관리</button>
-                <button class="admin-tab" data-tab="entries">엔트리 관리</button>
                 <button class="admin-tab" data-tab="ads">광고 관리</button>
+                <button class="admin-tab" data-tab="entries">엔트리 관리</button>
                 <button class="admin-tab" data-tab="support">공지/FAQ 관리</button>
                 <button class="admin-tab" data-tab="inquiries">1:1 문의 관리</button>
             </div>
