@@ -2,8 +2,21 @@
     background: #000;
 }
 
+body[data-page="live"] {
+    padding-top: 0;
+}
+
+body[data-page="live"] .header {
+    position: static;
+}
+
+body[data-page="live"] .live-page > .community-section-header {
+    top: 0;
+    z-index: 90;
+}
+
 .live-page {
-    --live-sticky-header-offset: 56px;
+    --live-sticky-header-offset: var(--community-section-header-height);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -123,7 +136,7 @@
 .site-subheader__container {
     position: sticky;
     top: var(--live-sticky-header-offset);
-    z-index: 9;
+    z-index: 80;
     display: flex;
     flex-direction: column;
     gap: 5px;
