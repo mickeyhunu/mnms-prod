@@ -7,16 +7,20 @@
     display: flex;
     flex-direction: column;
     border-radius: 24px;
+    overflow: visible;
     background: #000;
     color: #f8fafc;
     min-height: 60vh;
 }
 
 .live-page__sticky-stack {
+    position: -webkit-sticky;
     position: sticky;
     top: var(--app-header-offset);
     z-index: 90;
     display: flex;
+    width: 100%;
+    align-self: stretch;
     flex-direction: column;
     gap: 0;
     background: #000;
