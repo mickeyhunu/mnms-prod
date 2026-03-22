@@ -131,9 +131,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
             p.is_hidden AS isHidden,
             p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
-            COALESCE(u.role, 'USER') AS authorRole,
-            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS commentCount,
-            (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
+            COALESCE(u.role, 'USER') AS authorRole
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
      ${whereClause}
@@ -144,10 +142,44 @@ async function listPosts(page = 0, size = 10, options = {}) {
      LIMIT ? OFFSET ?`,
     [...whereParams, size, offset]
   );
+
+  const postIds = rows.map((row) => row.id);
+  const commentCountMap = new Map();
+  const likeCountMap = new Map();
+
+  if (postIds.length) {
+    const [commentCountRows, likeCountRows] = await Promise.all([
+      pool.query(
+        `SELECT c.post_id AS postId, COUNT(*) AS commentCount
+         FROM comments c
+         WHERE c.post_id IN (?)
+         GROUP BY c.post_id`,
+        [postIds]
+      ),
+      pool.query(
+        `SELECT pl.post_id AS postId, COUNT(DISTINCT pl.user_id) AS likeCount
+         FROM post_likes pl
+         WHERE pl.post_id IN (?)
+         GROUP BY pl.post_id`,
+        [postIds]
+      )
+    ]);
+
+    commentCountRows[0].forEach((row) => {
+      commentCountMap.set(Number(row.postId), Number(row.commentCount || 0));
+    });
+
+    likeCountRows[0].forEach((row) => {
+      likeCountMap.set(Number(row.postId), Number(row.likeCount || 0));
+    });
+  }
+
   return {
     rows: rows.map((row) => normalizePostImages({
       ...row,
-      noticeTargetBoards: parseNoticeTargetBoards(row.noticeTargetBoards)
+      noticeTargetBoards: parseNoticeTargetBoards(row.noticeTargetBoards),
+      commentCount: commentCountMap.get(Number(row.id)) || 0,
+      likeCount: likeCountMap.get(Number(row.id)) || 0
     })),
     total: Number(countRows[0].total)
   };
