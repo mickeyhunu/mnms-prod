@@ -117,31 +117,32 @@ async function listPosts(page = 0, size = 10, options = {}) {
 
   const whereClause = `WHERE ${whereConditions.join(' AND ')}`;
 
-  const [countRows] = await pool.query(
-    `SELECT COUNT(*) AS total
-     FROM posts p
-     ${whereClause}`,
-    whereParams
-  );
-
-  const [rows] = await pool.query(
-    `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
-            p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
-            p.notice_target_boards AS noticeTargetBoards,
-            p.is_hidden AS isHidden,
-            p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
-            COALESCE(u.nickname, '비회원') AS authorNickname,
-            COALESCE(u.role, 'USER') AS authorRole
-     FROM posts p
-     LEFT JOIN users u ON u.id = p.user_id
-     ${whereClause}
-     ORDER BY p.is_pinned DESC,
-              CASE WHEN p.is_notice = 1 AND p.notice_type = 'IMPORTANT' THEN 1 ELSE 0 END DESC,
-              p.is_notice DESC,
-              p.created_at DESC
-     LIMIT ? OFFSET ?`,
-    [...whereParams, size, offset]
-  );
+  const [[countRows], [rows]] = await Promise.all([
+    pool.query(
+      `SELECT COUNT(*) AS total
+       FROM posts p
+       ${whereClause}`,
+      whereParams
+    ),
+    pool.query(
+      `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
+              p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
+              p.notice_target_boards AS noticeTargetBoards,
+              p.is_hidden AS isHidden,
+              p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
+              COALESCE(u.nickname, '비회원') AS authorNickname,
+              COALESCE(u.role, 'USER') AS authorRole
+       FROM posts p
+       LEFT JOIN users u ON u.id = p.user_id
+       ${whereClause}
+       ORDER BY p.is_pinned DESC,
+                CASE WHEN p.is_notice = 1 AND p.notice_type = 'IMPORTANT' THEN 1 ELSE 0 END DESC,
+                p.is_notice DESC,
+                p.created_at DESC
+       LIMIT ? OFFSET ?`,
+      [...whereParams, size, offset]
+    )
+  ]);
 
   const postIds = rows.map((row) => row.id);
   const commentCountMap = new Map();
@@ -153,6 +154,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
         `SELECT c.post_id AS postId, COUNT(*) AS commentCount
          FROM comments c
          WHERE c.post_id IN (?)
+           AND c.is_deleted = 0
          GROUP BY c.post_id`,
         [postIds]
       ),
