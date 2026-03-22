@@ -24,6 +24,7 @@ const liveState = {
     filtersRequestId: 0,
     hasBoundEvents: false,
     hasCachedEntries: false,
+    rawRows: [],
     rows: [],
     totalCount: 0,
     titleColumn: null,
@@ -400,18 +401,21 @@ function buildLiveEntriesQuery({ appendOlder = false } = {}) {
 function updateLiveEntriesState(response = {}, { appendOlder = false } = {}) {
     const responseRows = Array.isArray(response?.rows) ? response.rows : [];
     const mergedRows = shouldUseHistoryPagination()
-        ? mergeLiveHistoryRows(liveState.rows, responseRows)
+        ? mergeLiveHistoryRows(liveState.rawRows, responseRows)
         : responseRows;
 
-    liveState.rows = mergedRows;
+    liveState.rawRows = mergedRows;
+    liveState.rows = shouldUseHistoryPagination()
+        ? collapseDuplicateLiveHistoryRows(mergedRows)
+        : mergedRows;
     liveState.totalCount = Number(response?.totalCount || mergedRows.length || 0);
     liveState.titleColumn = response?.titleColumn || null;
     liveState.nextOffset = shouldUseHistoryPagination()
-        ? liveState.rows.length
+        ? liveState.rawRows.length
         : Number(response?.nextOffset || 0);
     liveState.hasMoreHistory = Boolean(
         shouldUseHistoryPagination() &&
-        (response?.hasMore || liveState.totalCount > liveState.rows.length)
+        (response?.hasMore || liveState.totalCount > liveState.rawRows.length)
     );
 
     if (!appendOlder && !shouldUseHistoryPagination()) {
@@ -420,6 +424,7 @@ function updateLiveEntriesState(response = {}, { appendOlder = false } = {}) {
 }
 
 function resetLiveEntriesState() {
+    liveState.rawRows = [];
     liveState.rows = [];
     liveState.totalCount = 0;
     liveState.titleColumn = null;
@@ -433,7 +438,7 @@ function mergeLiveHistoryRows(previousRows = [], nextRows = []) {
 
     [...previousRows, ...nextRows].forEach((row, index) => {
         const normalizedRow = row && typeof row === 'object' ? row : {};
-        const signature = createLiveHistorySignature(normalizedRow, index);
+        const signature = createLiveHistoryRowIdentitySignature(normalizedRow, index);
         const existingRow = mergedMap.get(signature);
 
         if (!existingRow || compareLiveRows(existingRow, normalizedRow) <= 0) {
@@ -443,6 +448,37 @@ function mergeLiveHistoryRows(previousRows = [], nextRows = []) {
 
     return Array.from(mergedMap.values())
         .sort(compareLiveRows);
+}
+
+function collapseDuplicateLiveHistoryRows(rows = []) {
+    return rows.reduce((collapsedRows, row) => {
+        const normalizedRow = row && typeof row === 'object' ? row : {};
+        const nextSignature = createLiveHistoryContentSignature(normalizedRow);
+        const previousRow = collapsedRows[collapsedRows.length - 1];
+        const previousSignature = previousRow ? createLiveHistoryContentSignature(previousRow) : null;
+
+        if (previousSignature === nextSignature) {
+            collapsedRows[collapsedRows.length - 1] = normalizedRow;
+            return collapsedRows;
+        }
+
+        collapsedRows.push(normalizedRow);
+        return collapsedRows;
+    }, []);
+}
+
+function createLiveHistoryRowIdentitySignature(row, index = 0) {
+    const historyId = getRowValueByCandidates(row, ['id']);
+    if (historyId !== null && historyId !== undefined && String(historyId).trim() !== '') {
+        return `id:${String(historyId).trim()}`;
+    }
+
+    const dedupeKey = getRowValueByCandidates(row, ['dedupeKey', 'dedupe_key']);
+    if (dedupeKey !== null && dedupeKey !== undefined && String(dedupeKey).trim() !== '') {
+        return `dedupeKey:${String(dedupeKey).trim()}`;
+    }
+
+    return `${createLiveHistorySignature(row, index)}|${index}`;
 }
 
 function createLiveHistorySignature(row, index = 0) {
@@ -463,6 +499,25 @@ function createLiveHistorySignature(row, index = 0) {
     }
 
     return ['row', storeNo, storeName, createdAt, stableSerializeValue(row), index].map(normalizeHistorySignaturePart).join('|');
+}
+
+function createLiveHistoryContentSignature(row) {
+    const storeNo = getRowValueByCandidates(row, ['storeNo', 'store_no', 'shopNo', 'shop_no', 'branchNo', 'branch_no']);
+    const storeName = resolveChoiceStoreName(row);
+
+    if (liveState.selectedCategoryKey === 'choice') {
+        const choiceMessage = getRowValueByCandidates(row, ['choiceMsg', 'choice_msg', 'choice msg', 'message', 'msg', 'content']);
+        return ['choice', storeNo, storeName, choiceMessage].map(normalizeHistorySignaturePart).join('|');
+    }
+
+    if (liveState.selectedCategoryKey === 'waiting') {
+        const roomInfo = getRoomStatus(row);
+        const waitInfo = getWaitingStatus(row);
+        const roomDetail = getRowValueByCandidates(row, ['roomDetail', 'room_detail', 'detail', 'details']);
+        return ['waiting', storeNo, storeName, roomInfo, waitInfo, stableSerializeValue(roomDetail)].map(normalizeHistorySignaturePart).join('|');
+    }
+
+    return createLiveHistorySignature(row);
 }
 
 function normalizeHistorySignaturePart(value) {
