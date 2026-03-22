@@ -10,13 +10,21 @@
     position: static;
 }
 
-.page-shell--live .live-page > .community-section-header {
+.page-shell--live .live-page__sticky-stack {
+    position: sticky;
     top: 0;
     z-index: 90;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-shell--live .live-page__sticky-stack > .community-section-header {
+    position: static;
+    top: auto;
+    z-index: auto;
 }
 
 .live-page {
-    --live-sticky-header-offset: var(--community-section-header-height);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -134,9 +142,6 @@
 }
 
 .site-subheader__container {
-    position: sticky;
-    top: var(--live-sticky-header-offset);
-    z-index: 80;
     display: flex;
     flex-direction: column;
     gap: 5px;
