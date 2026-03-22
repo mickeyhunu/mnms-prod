@@ -4,7 +4,5 @@
 import { createApp } from 'vue';
 import router from './router/index.js';
 import App from './App.js';
-import { initializeContentProtection } from './utils/contentProtection.js';
 
-initializeContentProtection();
 createApp(App).use(router).mount('#app');
