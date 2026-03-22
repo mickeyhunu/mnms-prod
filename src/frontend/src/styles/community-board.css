@@ -519,24 +519,63 @@
 
 .board-search-form {
     display: flex;
+    flex-wrap: nowrap;
     gap: 6px;
     align-items: center;
+    width: min(100%, 620px);
+}
+
+.board-search-form select,
+.board-search-form input,
+.board-search-btn,
+.board-search-reset {
+    min-width: 0;
+    font-size: clamp(12px, 2.8vw, 14px);
+    white-space: nowrap;
 }
 
 .board-search-form select,
 .board-search-form input {
     border: 1px solid #dbdbdb;
-    padding: 7px 8px;
+    padding: clamp(6px, 1.5vw, 7px) clamp(6px, 1.6vw, 8px);
     border-radius: 4px;
+}
+
+.board-search-form select {
+    flex: 0 1 110px;
+}
+
+.board-search-form input {
+    flex: 1 1 0;
 }
 
 .board-search-btn,
 .board-search-reset {
+    flex: 0 1 auto;
     border: 1px solid #9f9f9f;
     background: #f7f7f7;
     border-radius: 4px;
-    padding: 7px 10px;
+    padding: clamp(6px, 1.5vw, 7px) clamp(8px, 2vw, 10px);
     cursor: pointer;
+}
+
+@media (max-width: 520px) {
+    .board-search-wrap {
+        margin-bottom: 60px;
+    }
+
+    .board-search-form {
+        gap: 4px;
+    }
+
+    .board-search-form select {
+        flex-basis: 86px;
+    }
+
+    .board-search-btn,
+    .board-search-reset {
+        padding-inline: 7px;
+    }
 }
 
 header.community-section-header {
