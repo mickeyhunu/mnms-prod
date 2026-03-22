@@ -96,15 +96,10 @@ function bindLiveEvents() {
         const button = event.target.closest('[data-store-option]');
         if (!button) return;
 
-        const rawStoreOption = String(button.dataset.storeOption || '').trim();
-        const nextStoreNo = rawStoreOption === 'all' ? null : Number.parseInt(rawStoreOption, 10);
-        const hasSameSelection = rawStoreOption === 'all'
-            ? liveState.selectedStoreNo === null
-            : liveState.selectedStoreNo === nextStoreNo;
+        const nextStoreNo = Number.parseInt(button.dataset.storeOption || '', 10);
+        if (!Number.isInteger(nextStoreNo) || liveState.selectedStoreNo === nextStoreNo) return;
 
-        if ((rawStoreOption !== 'all' && !Number.isInteger(nextStoreNo)) || hasSameSelection) return;
-
-        liveState.selectedStoreNo = rawStoreOption === 'all' ? null : nextStoreNo;
+        liveState.selectedStoreNo = nextStoreNo;
         renderStoreButtons();
         resetLiveEntriesState();
         await loadLiveEntries({ showLoading: true, syncToLatest: true });
@@ -302,10 +297,6 @@ function getSelectedStore() {
 }
 
 function getSelectedStoreName() {
-    if (!Number.isInteger(liveState.selectedStoreNo)) {
-        return '전체';
-    }
-
     return getSelectedStore()?.storeName || '전체';
 }
 
@@ -313,16 +304,7 @@ function renderStoreButtons() {
     const storeFilter = document.getElementById('live-store-filter');
     if (!storeFilter) return;
 
-    const allStoresButtonHtml = `
-        <button
-            type="button"
-            class="area-filter__button ${liveState.selectedStoreNo === null ? 'is-active' : ''}"
-            data-store-option="all"
-        >
-            전체
-        </button>
-    `;
-    const storeButtonsHtml = liveState.stores.map((store) => `
+    storeFilter.innerHTML = liveState.stores.map((store) => `
         <button
             type="button"
             class="area-filter__button ${liveState.selectedStoreNo === store.storeNo ? 'is-active' : ''}"
@@ -331,8 +313,6 @@ function renderStoreButtons() {
             ${sanitizeHTML(store.storeName)}
         </button>
     `).join('');
-
-    storeFilter.innerHTML = allStoresButtonHtml + storeButtonsHtml;
     syncScrollableFilterState(storeFilter);
 }
 
@@ -342,13 +322,9 @@ function syncSelectedStoreNo() {
         return;
     }
 
-    if (liveState.selectedStoreNo === null) {
-        return;
-    }
-
     const hasSelectedStore = liveState.stores.some((store) => store.storeNo === liveState.selectedStoreNo);
     if (!hasSelectedStore) {
-        liveState.selectedStoreNo = null;
+        liveState.selectedStoreNo = liveState.stores[0].storeNo;
     }
 }
 
@@ -414,17 +390,12 @@ function syncLiveListLayout(listElement) {
 }
 
 function buildLiveEntriesQuery({ appendOlder = false } = {}) {
-    const query = {
+    return {
         category: liveState.selectedCategoryKey,
+        storeNo: liveState.selectedStoreNo,
         limit: liveState.selectedCategoryKey === 'entry' ? LIVE_ENTRY_PAGE_SIZE : LIVE_HISTORY_PAGE_SIZE,
         offset: appendOlder && shouldUseHistoryPagination() ? liveState.nextOffset : 0
     };
-
-    if (Number.isInteger(liveState.selectedStoreNo)) {
-        query.storeNo = liveState.selectedStoreNo;
-    }
-
-    return query;
 }
 
 function updateLiveEntriesState(response = {}, { appendOlder = false } = {}) {
@@ -605,7 +576,7 @@ function renderLiveEntries(rows, titleColumn) {
     hideElement(emptyElement);
 
     if (liveState.selectedCategoryKey === 'entry') {
-        listElement.innerHTML = createEntrySummaryLiveCards(rows, titleColumn);
+        listElement.innerHTML = createEntrySummaryLiveCard(rows, titleColumn);
         return;
     }
 
@@ -728,7 +699,7 @@ function createStructuredLiveEntryCard(row, index, title) {
     });
 }
 
-function createEntrySummaryLiveCard(rows, titleColumn, options = {}) {
+function createEntrySummaryLiveCard(rows, titleColumn) {
     const sortedRows = sortEntryRowsByCreatedOrder(rows);
     const entryNames = sortedRows
         .map((row, index) => resolveEntryWorkerName(row, titleColumn, index))
@@ -736,7 +707,7 @@ function createEntrySummaryLiveCard(rows, titleColumn, options = {}) {
     const totalWorkers = entryNames.length;
     const rankedEntries = buildEntryRankings(sortedRows, titleColumn);
     const latestTimestamp = findLatestEntryTimestamp(sortedRows);
-    const storeName = String(options.storeName || '').trim() || resolveChoiceStoreName(sortedRows[0] || rows[0] || {}) || getSelectedStoreName();
+    const storeName = resolveChoiceStoreName(sortedRows[0] || rows[0] || {}) || getSelectedStoreName();
     const title = storeName ? `${storeName} 엔트리` : '엔트리';
     const entryNameRows = chunkEntryNames(entryNames, 5);
     const hasEntryRows = entryNameRows.length > 0;
@@ -795,53 +766,6 @@ function createEntrySummaryLiveCard(rows, titleColumn, options = {}) {
         badge: LIVE_CATEGORIES.entry.label,
         avatarLabel: getChoiceAvatarLabel(storeName || LIVE_CATEGORIES.entry.label, 0)
     });
-}
-
-function createEntrySummaryLiveCards(rows, titleColumn) {
-    if (Number.isInteger(liveState.selectedStoreNo)) {
-        return createEntrySummaryLiveCard(rows, titleColumn);
-    }
-
-    const groupedStores = groupEntryRowsByStore(rows);
-    if (!groupedStores.length) {
-        return createEntrySummaryLiveCard([], titleColumn, { storeName: '전체' });
-    }
-
-    return groupedStores
-        .map((group) => createEntrySummaryLiveCard(group.rows, titleColumn, { storeName: group.storeName }))
-        .join('');
-}
-
-function groupEntryRowsByStore(rows) {
-    const groupedMap = new Map();
-
-    (Array.isArray(rows) ? rows : []).forEach((row, index) => {
-        const rawStoreNo = getRowValueByCandidates(row, ['storeNo', 'store_no', 'shopNo', 'shop_no', 'branchNo', 'branch_no']);
-        const normalizedStoreNo = Number.parseInt(rawStoreNo, 10);
-        const storeName = resolveChoiceStoreName(row) || `매장 ${index + 1}`;
-        const storeKey = Number.isInteger(normalizedStoreNo) ? `store:${normalizedStoreNo}` : `name:${storeName}`;
-
-        if (!groupedMap.has(storeKey)) {
-            groupedMap.set(storeKey, {
-                storeNo: Number.isInteger(normalizedStoreNo) ? normalizedStoreNo : null,
-                storeName,
-                rows: []
-            });
-        }
-
-        groupedMap.get(storeKey).rows.push(row);
-    });
-
-    return Array.from(groupedMap.values())
-        .sort((left, right) => {
-            if (Number.isInteger(left.storeNo) && Number.isInteger(right.storeNo)) {
-                return left.storeNo - right.storeNo;
-            }
-
-            if (Number.isInteger(left.storeNo)) return -1;
-            if (Number.isInteger(right.storeNo)) return 1;
-            return left.storeName.localeCompare(right.storeName, 'ko');
-        });
 }
 
 function chunkEntryNames(entryNames, size = 5) {
