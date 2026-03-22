@@ -3,22 +3,87 @@
  */
 const mysql = require('mysql2/promise');
 
+function isEnabled(value) {
+  return ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
+}
+
+const useLocalDb = isEnabled(process.env.MNMS_USE_LOCAL_DB || process.env.USE_LOCAL_DB);
+
+function readDbValue(options) {
+  const { localKeys = [], remoteKeys = [], fallback } = options;
+  const keys = useLocalDb ? [...localKeys, ...remoteKeys] : remoteKeys;
+
+  for (const key of keys) {
+    const value = process.env[key];
+
+    if (value !== undefined && value !== null && String(value).trim() !== '') {
+      return value;
+    }
+  }
+
+  return fallback;
+}
+
+function readDbPort(options) {
+  return Number(readDbValue(options));
+}
+
 const dbConfig = {
-  host: process.env.MNMS_MYSQL_HOST || process.env.MYSQL_HOST || process.env.DB_HOST || '127.0.0.1',
-  port: Number(process.env.MNMS_MYSQL_PORT || process.env.MYSQL_PORT || process.env.DB_PORT || 3306),
-  user: process.env.MNMS_MYSQL_USER || process.env.MYSQL_USER || process.env.DB_USER || 'root',
-  password: process.env.MNMS_MYSQL_PASSWORD || process.env.MYSQL_PASSWORD || process.env.DB_PASSWORD || 'root',
-  database: process.env.MNMS_MYSQL_DATABASE || process.env.MYSQL_DATABASE || process.env.DB_NAME || 'mnms_DB',
+  host: readDbValue({
+    localKeys: ['MNMS_LOCAL_MYSQL_HOST', 'LOCAL_MYSQL_HOST'],
+    remoteKeys: ['MNMS_MYSQL_HOST', 'MYSQL_HOST', 'DB_HOST'],
+    fallback: '127.0.0.1'
+  }),
+  port: readDbPort({
+    localKeys: ['MNMS_LOCAL_MYSQL_PORT', 'LOCAL_MYSQL_PORT'],
+    remoteKeys: ['MNMS_MYSQL_PORT', 'MYSQL_PORT', 'DB_PORT'],
+    fallback: 3306
+  }),
+  user: readDbValue({
+    localKeys: ['MNMS_LOCAL_MYSQL_USER', 'LOCAL_MYSQL_USER'],
+    remoteKeys: ['MNMS_MYSQL_USER', 'MYSQL_USER', 'DB_USER'],
+    fallback: 'root'
+  }),
+  password: readDbValue({
+    localKeys: ['MNMS_LOCAL_MYSQL_PASSWORD', 'LOCAL_MYSQL_PASSWORD'],
+    remoteKeys: ['MNMS_MYSQL_PASSWORD', 'MYSQL_PASSWORD', 'DB_PASSWORD'],
+    fallback: 'root'
+  }),
+  database: readDbValue({
+    localKeys: ['MNMS_LOCAL_MYSQL_DATABASE', 'LOCAL_MYSQL_DATABASE'],
+    remoteKeys: ['MNMS_MYSQL_DATABASE', 'MYSQL_DATABASE', 'DB_NAME'],
+    fallback: useLocalDb ? 'mnms_DB_local' : 'mnms_DB'
+  }),
   connectionLimit: 10,
   charset: 'utf8mb4'
 };
 
 const chatbotDbConfig = {
-  host: process.env.CHATBOT_MYSQL_HOST || dbConfig.host,
-  port: Number(process.env.CHATBOT_MYSQL_PORT || dbConfig.port),
-  user: process.env.CHATBOT_MYSQL_USER || dbConfig.user,
-  password: process.env.CHATBOT_MYSQL_PASSWORD || dbConfig.password,
-  database: process.env.CHATBOT_MYSQL_DATABASE || 'chatBot_DB',
+  host: readDbValue({
+    localKeys: ['CHATBOT_LOCAL_MYSQL_HOST'],
+    remoteKeys: ['CHATBOT_MYSQL_HOST'],
+    fallback: dbConfig.host
+  }),
+  port: readDbPort({
+    localKeys: ['CHATBOT_LOCAL_MYSQL_PORT'],
+    remoteKeys: ['CHATBOT_MYSQL_PORT'],
+    fallback: dbConfig.port
+  }),
+  user: readDbValue({
+    localKeys: ['CHATBOT_LOCAL_MYSQL_USER'],
+    remoteKeys: ['CHATBOT_MYSQL_USER'],
+    fallback: dbConfig.user
+  }),
+  password: readDbValue({
+    localKeys: ['CHATBOT_LOCAL_MYSQL_PASSWORD'],
+    remoteKeys: ['CHATBOT_MYSQL_PASSWORD'],
+    fallback: dbConfig.password
+  }),
+  database: readDbValue({
+    localKeys: ['CHATBOT_LOCAL_MYSQL_DATABASE'],
+    remoteKeys: ['CHATBOT_MYSQL_DATABASE'],
+    fallback: useLocalDb ? 'chatBot_DB_local' : 'chatBot_DB'
+  }),
   connectionLimit: 10,
   charset: 'utf8mb4'
 };
@@ -623,6 +688,7 @@ async function getChatbotPool() {
 module.exports = {
   dbConfig,
   chatbotDbConfig,
+  useLocalDb,
   initDatabase,
   getPool,
   getChatbotPool
