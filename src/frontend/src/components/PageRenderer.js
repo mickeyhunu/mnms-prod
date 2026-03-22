@@ -58,15 +58,24 @@ const GLOBAL_HEADER_TEMPLATE = `<header class="header">
   </div>
 </header>`;
 
+const GLOBAL_STYLES = [
+  'styles/common.css',
+  'styles/layout.css',
+  'styles/components.css'
+];
+
 const GLOBAL_SCRIPTS = [
   'scripts/js/utils/constants.js',
   'scripts/js/utils/helpers.js',
   'scripts/js/utils/auth.js',
   'scripts/js/api/apiClient.js',
   'scripts/js/api/authAPI.js',
-  'scripts/js/components/header.js',
-  'scripts/js/components/footerNav.js'
+  'scripts/js/components/header.js'
 ];
+
+const persistentStyleNodes = new Map();
+const persistentScriptNodes = new Map();
+const persistentScriptPromises = new Map();
 
 function mapHtmlPath(rawPath) {
   const normalizedPath = rawPath.replace(/^\.\//, '');
@@ -91,6 +100,82 @@ function toPublicAssetPath(assetPath) {
   return `/src/${assetPath.replace(/^\.\//, '')}`;
 }
 
+function ensureStyle(href, { persistent = false } = {}) {
+  const publicHref = toPublicAssetPath(href);
+  const registry = persistent ? persistentStyleNodes : null;
+
+  if (registry?.has(publicHref)) {
+    return registry.get(publicHref);
+  }
+
+  const existingNode = document.head.querySelector(`link[rel="stylesheet"][href="${publicHref}"]`);
+  if (existingNode) {
+    if (registry) registry.set(publicHref, existingNode);
+    return existingNode;
+  }
+
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = publicHref;
+  link.dataset.assetType = persistent ? 'persistent-style' : 'page-style';
+  document.head.appendChild(link);
+
+  if (registry) registry.set(publicHref, link);
+  return link;
+}
+
+function ensureScript(src, { persistent = false } = {}) {
+  const publicSrc = toPublicAssetPath(src);
+
+  if (persistent) {
+    if (persistentScriptPromises.has(publicSrc)) {
+      return persistentScriptPromises.get(publicSrc);
+    }
+
+    const existingNode = document.body.querySelector(`script[src="${publicSrc}"]`);
+    if (existingNode?.dataset.loaded === 'true') {
+      persistentScriptNodes.set(publicSrc, existingNode);
+      const promise = Promise.resolve(existingNode);
+      persistentScriptPromises.set(publicSrc, promise);
+      return promise;
+    }
+
+    const script = existingNode || document.createElement('script');
+    script.src = publicSrc;
+    script.defer = true;
+    script.dataset.assetType = 'persistent-script';
+
+    const promise = new Promise((resolve) => {
+      script.addEventListener('load', () => {
+        script.dataset.loaded = 'true';
+        resolve(script);
+      }, { once: true });
+      script.addEventListener('error', () => resolve(script), { once: true });
+    });
+
+    if (!existingNode) {
+      document.body.appendChild(script);
+    }
+
+    persistentScriptNodes.set(publicSrc, script);
+    persistentScriptPromises.set(publicSrc, promise);
+    return promise;
+  }
+
+  const script = document.createElement('script');
+  script.src = publicSrc;
+  script.defer = true;
+  script.dataset.assetType = 'page-script';
+
+  const promise = new Promise((resolve) => {
+    script.addEventListener('load', () => resolve(script), { once: true });
+    script.addEventListener('error', () => resolve(script), { once: true });
+  });
+
+  document.body.appendChild(script);
+  return promise.then(() => script);
+}
+
 export default {
   props: {
     page: {
@@ -110,33 +195,38 @@ export default {
     };
 
     const injectStyles = () => {
-      (pageConfig.value.styles || []).forEach((href) => {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = toPublicAssetPath(href);
-        link.dataset.page = props.page;
-        document.head.appendChild(link);
-        injectedNodes.push(link);
+      GLOBAL_STYLES.forEach((href) => {
+        ensureStyle(href, { persistent: true });
       });
+
+      (pageConfig.value.styles || [])
+        .filter((href) => !GLOBAL_STYLES.includes(href))
+        .forEach((href) => {
+          const link = ensureStyle(href);
+          link.dataset.page = props.page;
+          injectedNodes.push(link);
+        });
     };
 
     const injectScripts = async () => {
+      for (const src of GLOBAL_SCRIPTS) {
+        await ensureScript(src, { persistent: true });
+      }
+
       const pageScripts = (pageConfig.value.scripts || []).filter(
         (src) => !GLOBAL_SCRIPTS.includes(src)
       );
-      const orderedScripts = [...GLOBAL_SCRIPTS, ...pageScripts];
 
-      for (const src of orderedScripts) {
-        const script = document.createElement('script');
-        script.src = toPublicAssetPath(src);
-        script.defer = true;
+      for (const src of pageScripts) {
+        const script = await ensureScript(src);
         script.dataset.page = props.page;
-        document.body.appendChild(script);
         injectedNodes.push(script);
-        await new Promise((resolve) => {
-          script.addEventListener('load', resolve, { once: true });
-          script.addEventListener('error', resolve, { once: true });
-        });
+      }
+    };
+
+    const runPersistentInitializers = () => {
+      if (typeof window.initHeader === 'function') {
+        window.initHeader();
       }
     };
 
@@ -145,6 +235,7 @@ export default {
       await nextTick();
       injectStyles();
       await injectScripts();
+      runPersistentInitializers();
     };
 
     onMounted(async () => {
