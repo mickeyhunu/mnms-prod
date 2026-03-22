@@ -373,7 +373,8 @@ function renderStatsSummaryCards(summary) {
     if (!container || !summary) return;
 
     const cards = [
-        { label: '전체 접속자수', value: summary.totalVisitors, delta: `오늘 ${formatStatsNumber(summary.todayVisitors)}명` },
+        { label: '전체 방문자수', value: summary.totalVisitors, delta: `오늘 ${formatStatsNumber(summary.todayVisitors)}명` },
+        { label: '전체 접속자수', value: summary.totalAccessUsers, delta: `오늘 ${formatStatsNumber(summary.todayAccessUsers)}명` },
         { label: '전체 접속량', value: summary.totalPageViews, delta: `오늘 ${formatStatsNumber(summary.todayPageViews)}회` },
         { label: '전체 게시글', value: summary.totalPosts, delta: `오늘 ${formatStatsNumber(summary.todayPosts)}건` },
         { label: '전체 댓글', value: summary.totalComments, delta: `오늘 ${formatStatsNumber(summary.todayComments)}건` },
@@ -412,13 +413,14 @@ function renderStatsChart(dailyStats) {
                 <strong>${dateLabel}</strong>
                 <div class="admin-stats-bar-track">
                     <div class="admin-stats-bar-group">
-                        <div class="admin-stats-bar admin-stats-bar--visitors" title="접속자수 ${formatStatsNumber(item.visitors)}"><span style="width:${Math.max(8, (Number(item.visitors || 0) / maxVisitors) * 100)}%"></span></div>
+                        <div class="admin-stats-bar admin-stats-bar--visitors" title="방문자수 ${formatStatsNumber(item.visitors)}"><span style="width:${Math.max(8, (Number(item.visitors || 0) / maxVisitors) * 100)}%"></span></div>
+                        <div class="admin-stats-bar admin-stats-bar--access-users" title="접속자수 ${formatStatsNumber(item.accessUsers)}"><span style="width:${Math.max(8, (Number(item.accessUsers || 0) / maxAccessUsers) * 100)}%"></span></div>
                         <div class="admin-stats-bar admin-stats-bar--views" title="접속량 ${formatStatsNumber(item.pageViews)}"><span style="width:${Math.max(8, (Number(item.pageViews || 0) / maxViews) * 100)}%"></span></div>
                         <div class="admin-stats-bar admin-stats-bar--posts" title="게시글 ${formatStatsNumber(item.posts)}"><span style="width:${Math.max(8, (Number(item.posts || 0) / maxPosts) * 100)}%"></span></div>
                         <div class="admin-stats-bar admin-stats-bar--comments" title="댓글 ${formatStatsNumber(item.comments)}"><span style="width:${Math.max(8, (Number(item.comments || 0) / maxComments) * 100)}%"></span></div>
                     </div>
                 </div>
-                <div class="admin-stats-chart-meta">접속자 ${formatStatsNumber(item.visitors)} · 접속 ${formatStatsNumber(item.pageViews)} · 글 ${formatStatsNumber(item.posts)} · 댓글 ${formatStatsNumber(item.comments)}</div>
+                <div class="admin-stats-chart-meta">방문 ${formatStatsNumber(item.visitors)} · 접속자 ${formatStatsNumber(item.accessUsers)} · 접속 ${formatStatsNumber(item.pageViews)} · 글 ${formatStatsNumber(item.posts)} · 댓글 ${formatStatsNumber(item.comments)}</div>
             </div>
         `;
     }).join('');
