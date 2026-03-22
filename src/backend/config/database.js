@@ -95,6 +95,22 @@ let chatbotPool;
 let chatbotPoolPromise;
 let resolvedChatbotDbConfig;
 
+async function ensureIndex(poolInstance, tableName, indexName, createQuery) {
+  const [rows] = await poolInstance.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.STATISTICS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = ?
+       AND INDEX_NAME = ?
+     LIMIT 1`,
+    [dbConfig.database, tableName, indexName]
+  );
+
+  if (!rows.length) {
+    await poolInstance.query(createQuery);
+  }
+}
+
 function getChatbotDatabaseCandidates() {
   return [...new Set([
     chatbotDbConfig.database,
@@ -263,6 +279,20 @@ async function initDatabase() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  await ensureIndex(
+    pool,
+    'posts',
+    'idx_posts_listing_all',
+    'CREATE INDEX idx_posts_listing_all ON posts (is_deleted, is_notice, notice_type, is_pinned, created_at, id)'
+  );
+
+  await ensureIndex(
+    pool,
+    'posts',
+    'idx_posts_listing_board',
+    'CREATE INDEX idx_posts_listing_board ON posts (is_deleted, board_type, is_notice, created_at, id)'
+  );
 
   const [viewCountColumn] = await pool.query(
     `SELECT 1
@@ -451,6 +481,13 @@ async function initDatabase() {
       FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  await ensureIndex(
+    pool,
+    'comments',
+    'idx_comments_post_deleted_created',
+    'CREATE INDEX idx_comments_post_deleted_created ON comments (post_id, is_deleted, created_at)'
+  );
 
   const [parentIdColumn] = await pool.query(
     `SELECT 1
