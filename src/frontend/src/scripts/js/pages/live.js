@@ -265,7 +265,7 @@ function applyLiveEntriesResponse() {
     const hasRows = Array.isArray(liveState.rows) && liveState.rows.length > 0;
     const emptyElement = document.getElementById('live-empty');
 
-    if (hasRows || liveState.selectedCategoryKey === 'entry') {
+    if (hasRows) {
         hideElement(emptyElement);
     } else {
         showElement(emptyElement);
@@ -564,7 +564,7 @@ function renderLiveEntries(rows, titleColumn) {
     if (!Array.isArray(rows) || !rows.length) {
         if (liveState.selectedCategoryKey === 'entry') {
             listElement.innerHTML = createEntrySummaryLiveCard([], titleColumn);
-            hideElement(emptyElement);
+            showElement(emptyElement);
             return;
         }
 
