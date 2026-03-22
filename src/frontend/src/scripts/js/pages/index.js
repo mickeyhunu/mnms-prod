@@ -22,10 +22,15 @@ async function initIndexPage() {
     setupCommunityActions();
     initBoardTabs();
     initSearchEvents();
-    await loadBestPosts();
     updateBestPostsVisibility();
-    await loadPosts(0);
     initCommonEvents();
+
+    const postsPromise = loadPosts(0);
+    loadBestPosts().catch(() => {
+        // 베스트 게시글은 개별적으로 실패 처리하므로 초기 게시글 로딩을 막지 않는다.
+    });
+
+    await postsPromise;
 }
 
 function updateBestPostsVisibility() {
