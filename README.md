@@ -43,6 +43,29 @@ npm run start
 - `MYSQL_PASSWORD=root`
 - `MYSQL_DATABASE=mnms_DB`
 
+## 배포 DB / 로컬 DB 분리
+- 기본값은 **배포 DB 설정 사용**입니다.
+- 로컬에서만 `src/backend/.env.local` 파일을 만들어 `MNMS_USE_LOCAL_DB=true`를 넣으면 로컬 DB 설정이 우선 적용됩니다.
+- `.env.local`은 `.gitignore`에 추가되어 있어, 배포 서버 설정과 분리된 상태로 로컬 테스트를 진행할 수 있습니다.
+- 예시 파일은 `src/backend/.env.local.example`입니다.
+
+```bash
+cp src/backend/.env.local.example src/backend/.env.local
+```
+
+로컬 모드 전용 환경변수:
+- `MNMS_USE_LOCAL_DB=true`
+- `MNMS_LOCAL_MYSQL_HOST`
+- `MNMS_LOCAL_MYSQL_PORT`
+- `MNMS_LOCAL_MYSQL_USER`
+- `MNMS_LOCAL_MYSQL_PASSWORD`
+- `MNMS_LOCAL_MYSQL_DATABASE`
+- `CHATBOT_LOCAL_MYSQL_HOST`
+- `CHATBOT_LOCAL_MYSQL_PORT`
+- `CHATBOT_LOCAL_MYSQL_USER`
+- `CHATBOT_LOCAL_MYSQL_PASSWORD`
+- `CHATBOT_LOCAL_MYSQL_DATABASE`
+
 ## mnms_DB / chatBot_DB 분리
 - 사이트에서 생성/수정되는 회원, 게시글, 댓글, 문의 등의 데이터는 `mnms_DB`에 저장됩니다.
 - `chatBot_DB`는 룸, 웨이팅, 초이스톡, 엔트리 정보를 조회하는 읽기 전용 소스로만 사용합니다.

@@ -14,9 +14,17 @@ function stripWrappingQuotes(value) {
 }
 
 function loadEnvFile(filePath = path.join(process.cwd(), '.env')) {
-  if (!fs.existsSync(filePath)) return false;
+  let override = false;
+  let targetPath = filePath;
 
-  const raw = fs.readFileSync(filePath, 'utf8');
+  if (typeof filePath === 'object' && filePath !== null) {
+    targetPath = filePath.filePath;
+    override = Boolean(filePath.override);
+  }
+
+  if (!fs.existsSync(targetPath)) return false;
+
+  const raw = fs.readFileSync(targetPath, 'utf8');
   raw.split(/\r?\n/).forEach((line) => {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) return;
@@ -25,7 +33,8 @@ function loadEnvFile(filePath = path.join(process.cwd(), '.env')) {
     if (separatorIndex < 0) return;
 
     const key = trimmed.slice(0, separatorIndex).trim();
-    if (!key || Object.prototype.hasOwnProperty.call(process.env, key)) return;
+    if (!key) return;
+    if (!override && Object.prototype.hasOwnProperty.call(process.env, key)) return;
 
     const value = stripWrappingQuotes(trimmed.slice(separatorIndex + 1));
     process.env[key] = value;
@@ -36,8 +45,10 @@ function loadEnvFile(filePath = path.join(process.cwd(), '.env')) {
 
 function loadDefaultEnvFiles() {
   const candidates = [
-    path.join(process.cwd(), '.env'),
-    path.resolve(__dirname, '..', '.env')
+    { filePath: path.join(process.cwd(), '.env') },
+    { filePath: path.resolve(__dirname, '..', '.env') },
+    { filePath: path.join(process.cwd(), '.env.local'), override: true },
+    { filePath: path.resolve(__dirname, '..', '.env.local'), override: true }
   ];
 
   candidates.forEach((candidatePath) => {

@@ -12,3 +12,6 @@ logs/
 .idea/
 .vscode/
 node_modules/
+.env.local
+.env.*.local
+src/backend/.env.local
