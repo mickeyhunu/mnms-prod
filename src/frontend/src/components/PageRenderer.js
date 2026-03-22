@@ -189,6 +189,10 @@ export default {
     const pageConfig = computed(() => pageRegistry[props.page] || { template: '<div>페이지를 찾을 수 없습니다.</div>', styles: [], scripts: [] });
     const pageBodyContent = computed(() => normalizeTemplateLinks(stripLegacyHeader(pageConfig.value.template || '')));
 
+    const applyPageMarker = () => {
+      document.body.dataset.page = props.page || '';
+    };
+
     const clearInjectedNodes = () => {
       injectedNodes.forEach((node) => node.remove());
       injectedNodes.length = 0;
@@ -232,6 +236,7 @@ export default {
 
     const loadPageAssets = async () => {
       clearInjectedNodes();
+      applyPageMarker();
       await nextTick();
       injectStyles();
       await injectScripts();
@@ -252,6 +257,7 @@ export default {
 
     onBeforeUnmount(() => {
       clearInjectedNodes();
+      delete document.body.dataset.page;
     });
 
     return { pageBodyContent, globalHeaderTemplate: GLOBAL_HEADER_TEMPLATE };
