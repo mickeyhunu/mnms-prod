@@ -2,15 +2,15 @@
     background: #000;
 }
 
-body[data-page="live"] {
-    padding-top: 0;
+.page-shell--live {
+    margin-top: calc(var(--app-header-offset) * -1);
 }
 
-body[data-page="live"] .header {
+.page-shell--live > .header {
     position: static;
 }
 
-body[data-page="live"] .live-page > .community-section-header {
+.page-shell--live .live-page > .community-section-header {
     top: 0;
     z-index: 90;
 }
