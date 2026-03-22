@@ -234,10 +234,10 @@ async function loadLiveEntries({ showLoading = false, appendOlder = false, syncT
         if (appendOlder) {
             restoreLiveScrollAnchor(scrollAnchor);
         } else if (syncToLatest && shouldUseHistoryPagination()) {
-            const shouldAlignToLatestCard = !liveState.hasAlignedInitialViewport;
+            const isInitialViewportSync = !liveState.hasAlignedInitialViewport;
             scrollLiveToLatest({
-                behavior: shouldAlignToLatestCard ? 'auto' : 'smooth',
-                alignToCard: shouldAlignToLatestCard
+                behavior: isInitialViewportSync ? 'auto' : 'smooth',
+                alignToBottom: isInitialViewportSync
             });
             liveState.hasAlignedInitialViewport = true;
         }
@@ -619,20 +619,22 @@ function restoreLiveScrollAnchor(anchor) {
     });
 }
 
-function scrollLiveToLatest({ behavior = 'smooth', alignToCard = false } = {}) {
+function scrollLiveToLatest({ behavior = 'smooth', alignToBottom = false } = {}) {
     window.requestAnimationFrame(() => {
-        if (alignToCard) {
-            const latestCard = document.querySelector('#live-entry-list .live-chat-card:last-of-type');
-            if (latestCard) {
-                const stickyStackHeight = document.querySelector('.live-page__sticky-stack')?.offsetHeight || 0;
-                const latestCardTop = window.scrollY + latestCard.getBoundingClientRect().top;
+        const latestCard = document.querySelector('#live-entry-list .live-chat-card:last-of-type');
+        if (latestCard) {
+            const stickyStackHeight = document.querySelector('.live-page__sticky-stack')?.offsetHeight || 0;
+            const latestCardTop = window.scrollY + latestCard.getBoundingClientRect().top;
+            const latestCardBottom = latestCardTop + latestCard.offsetHeight;
+            const bottomViewportOffset = alignToBottom
+                ? Math.max(stickyStackHeight + 24, window.innerHeight - 24)
+                : window.innerHeight;
 
-                window.scrollTo({
-                    top: Math.max(0, latestCardTop - stickyStackHeight - 12),
-                    behavior
-                });
-                return;
-            }
+            window.scrollTo({
+                top: Math.max(0, latestCardBottom - bottomViewportOffset),
+                behavior
+            });
+            return;
         }
 
         window.scrollTo({
