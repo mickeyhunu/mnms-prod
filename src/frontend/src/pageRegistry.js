@@ -941,7 +941,13 @@ const pageRegistry = {
                 aria-label="LIVE 컨텐츠 맨 아래로 이동"
                 title="맨 아래로 이동"
             >
-                <span class="live-scroll-bottom-button__icon" aria-hidden="true"></span>
+                <span class="live-scroll-bottom-button__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M12 4v9"></path>
+                        <path d="m7.5 10.5 4.5 4.5 4.5-4.5"></path>
+                        <path d="m7.5 15 4.5 4.5 4.5-4.5"></path>
+                    </svg>
+                </span>
             </button>
         </div>
     </main>`,
