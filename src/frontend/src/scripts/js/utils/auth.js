@@ -69,8 +69,12 @@ const Auth = {
         const user = this.getUser();
         const navGuest = document.getElementById('nav-guest');
         const navUser = document.getElementById('nav-user');
-        const userNickname = document.getElementById('user-nickname');
+        const userNickname = document.getElementById('user-nickname-label');
         const adminLink = document.getElementById('admin-link');
+
+        if (typeof HeaderUserMenu !== 'undefined') {
+            HeaderUserMenu.setOpenState(false);
+        }
 
         if (user && this.isAuthenticated()) {
             if (navGuest) navGuest.classList.add('hidden');
@@ -86,6 +90,9 @@ const Auth = {
         } else {
             if (navGuest) navGuest.classList.remove('hidden');
             if (navUser) navUser.classList.add('hidden');
+            if (userNickname) {
+                userNickname.textContent = '';
+            }
         }
 
         this.bindLogoutButton();
