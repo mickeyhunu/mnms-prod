@@ -726,13 +726,11 @@ function createEntrySummaryLiveCard(rows, titleColumn) {
                     <h3 class="entry-live-card__section-title">엔트리 목록</h3>
                 </div>
                 <div class="entry-live-card__chips">
-                    ${hasEntryRows
-                        ? entryNameRows.map((row) => `
-                            <div class="entry-live-card__chip-row">
-                                ${row.map((name) => `<span class="entry-live-card__chip">${sanitizeHTML(name)}</span>`).join('')}
-                            </div>
-                        `).join('')
-                        : '<p class="entry-live-card__empty">선택한 조건에 해당하는 데이터가 없습니다.</p>'}
+                    ${entryNameRows.map((row) => `
+                        <div class="entry-live-card__chip-row">
+                            ${row.map((name) => `<span class="entry-live-card__chip">${sanitizeHTML(name)}</span>`).join('')}
+                        </div>
+                    `).join('')}
                 </div>
             </section>
 
