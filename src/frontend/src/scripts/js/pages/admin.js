@@ -400,6 +400,7 @@ function renderStatsChart(dailyStats) {
     }
 
     const maxVisitors = Math.max(...items.map((item) => Number(item.visitors || 0)), 1);
+    const maxAccessUsers = Math.max(...items.map((item) => Number(item.accessUsers || 0)), 1);
     const maxViews = Math.max(...items.map((item) => Number(item.pageViews || 0)), 1);
     const maxPosts = Math.max(...items.map((item) => Number(item.posts || 0)), 1);
     const maxComments = Math.max(...items.map((item) => Number(item.comments || 0)), 1);
@@ -450,7 +451,7 @@ function renderStatsDailyTable(dailyStats) {
 
     const items = Array.isArray(dailyStats) ? dailyStats : [];
     if (!items.length) {
-        tbody.innerHTML = '<tr><td colspan="5">표시할 일별 통계가 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6">표시할 일별 통계가 없습니다.</td></tr>';
         return;
     }
 
@@ -458,6 +459,7 @@ function renderStatsDailyTable(dailyStats) {
         <tr>
             <td>${item.date}</td>
             <td>${formatStatsNumber(item.visitors)}</td>
+            <td>${formatStatsNumber(item.accessUsers)}</td>
             <td>${formatStatsNumber(item.pageViews)}</td>
             <td>${formatStatsNumber(item.posts)}</td>
             <td>${formatStatsNumber(item.comments)}</td>

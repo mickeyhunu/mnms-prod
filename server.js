@@ -8,7 +8,7 @@ const path = require('path');
 
 require('./src/backend/config/loadEnv');
 
-const { initDatabase, dbConfig } = require('./src/backend/config/database');
+const { initDatabase, dbConfig, useLocalDb } = require('./src/backend/config/database');
 const authRoutes = require('./src/backend/routes/authRoutes');
 const postRoutes = require('./src/backend/routes/postRoutes');
 const userRoutes = require('./src/backend/routes/userRoutes');
@@ -115,6 +115,7 @@ initDatabase()
       .then(() => {
         app.listen(PORT, () => {
           console.log(`Express MVC server running on http://localhost:${PORT}`);
+          console.log(`DB mode: ${useLocalDb ? 'local' : 'deployed'}`);
           console.log(`MySQL: ${dbConfig.user}@${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`);
         });
       });
@@ -128,6 +129,7 @@ initDatabase()
       .finally(() => {
         app.listen(PORT, () => {
           console.log(`Express MVC server running on http://localhost:${PORT}`);
+          console.log(`DB mode: ${useLocalDb ? 'local' : 'deployed'}`);
           console.log('DB 연결 실패 상태로 실행 중입니다. API 요청은 503을 반환합니다.');
         });
       });

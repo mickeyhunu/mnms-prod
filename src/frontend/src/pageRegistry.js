@@ -31,11 +31,11 @@ const pageRegistry = {
 
             <div class="admin-tabs">
                 <button class="admin-tab active" data-tab="stats">통계 대시보드</button>
+                <button class="admin-tab" data-tab="users">회원 관리</button>
                 <button class="admin-tab" data-tab="posts">게시글 관리</button>
                 <button class="admin-tab" data-tab="comments">댓글 관리</button>
-                <button class="admin-tab" data-tab="users">회원 관리</button>
-                <button class="admin-tab" data-tab="entries">엔트리 관리</button>
                 <button class="admin-tab" data-tab="ads">광고 관리</button>
+                <button class="admin-tab" data-tab="entries">엔트리 관리</button>
                 <button class="admin-tab" data-tab="support">공지/FAQ 관리</button>
                 <button class="admin-tab" data-tab="inquiries">1:1 문의 관리</button>
             </div>
@@ -933,6 +933,22 @@ const pageRegistry = {
             <div class="live-feedback hidden" id="live-empty">선택한 조건에 해당하는 데이터가 없습니다.</div>
 
             <section class="live-entry-list" id="live-entry-list" aria-label="LIVE 데이터 목록"></section>
+
+            <button
+                type="button"
+                class="live-scroll-bottom-button hidden"
+                id="live-scroll-bottom-button"
+                aria-label="LIVE 컨텐츠 맨 아래로 이동"
+                title="맨 아래로 이동"
+            >
+                <span class="live-scroll-bottom-button__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M12 4v9"></path>
+                        <path d="m7.5 10.5 4.5 4.5 4.5-4.5"></path>
+                        <path d="m7.5 15 4.5 4.5 4.5-4.5"></path>
+                    </svg>
+                </span>
+            </button>
         </div>
     </main>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/live.css"],

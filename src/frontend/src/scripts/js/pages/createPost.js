@@ -313,7 +313,7 @@ async function handleSubmit(event) {
         }
 
         alert(isEditMode ? '글이 수정되었습니다!' : '글이 작성되었습니다!');
-        window.location.href = isEditMode ? `/post-detail?id=${editingPostId}` : '/';
+        window.location.href = '/community';
     } catch (error) {
         console.error('글 작성 에러:', error);
         if (error.status === 401) {
