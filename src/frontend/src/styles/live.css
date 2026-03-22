@@ -16,7 +16,9 @@
 }
 
 .live-page {
-    --live-sticky-header-offset: var(--community-section-header-height);
+    --live-sticky-section-header-height: var(--community-section-header-height);
+    --live-sticky-stack-gap: 1px;
+    --live-sticky-header-offset: calc(var(--live-sticky-section-header-height) + var(--live-sticky-stack-gap));
     position: relative;
     display: flex;
     flex-direction: column;
@@ -137,6 +139,7 @@
     position: sticky;
     top: var(--live-sticky-header-offset);
     z-index: 80;
+    margin-top: var(--live-sticky-stack-gap);
     display: flex;
     flex-direction: column;
     gap: 5px;
