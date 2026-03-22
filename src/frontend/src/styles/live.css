@@ -13,6 +13,75 @@
     min-height: 60vh;
 }
 
+.live-scroll-bottom-button {
+    position: fixed;
+    right: clamp(16px, 4vw, 32px);
+    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    border: 1px solid rgba(115, 115, 115, 0.52);
+    border-radius: 999px;
+    background: linear-gradient(180deg, #4a4a4a 0%, #111111 100%);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+    color: #f3f4f6;
+    cursor: pointer;
+    z-index: 30;
+    transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.live-scroll-bottom-button:hover {
+    border-color: rgba(229, 231, 235, 0.52);
+    background: linear-gradient(180deg, #5f5f5f 0%, #1a1a1a 100%);
+    transform: translateY(-2px);
+}
+
+.live-scroll-bottom-button:active {
+    transform: translateY(0);
+}
+
+.live-scroll-bottom-button:focus-visible {
+    outline: 2px solid rgba(243, 244, 246, 0.92);
+    outline-offset: 3px;
+}
+
+.live-scroll-bottom-button.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
+}
+
+.live-scroll-bottom-button__icon {
+    position: relative;
+    width: 18px;
+    height: 18px;
+}
+
+.live-scroll-bottom-button__icon::before,
+.live-scroll-bottom-button__icon::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    width: 11px;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
+}
+
+.live-scroll-bottom-button__icon::before {
+    left: 0;
+    transform: rotate(45deg);
+    transform-origin: left center;
+}
+
+.live-scroll-bottom-button__icon::after {
+    right: 0;
+    transform: rotate(-45deg);
+    transform-origin: right center;
+}
+
 .live-store-name-list {
     display: flex;
     flex-direction: column;
@@ -196,6 +265,13 @@
     .area-filter__button {
         min-height: 30px;
         padding: 7px 12px;
+    }
+
+    .live-scroll-bottom-button {
+        right: 14px;
+        bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+        width: 54px;
+        height: 54px;
     }
 
 }
