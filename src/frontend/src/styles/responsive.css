@@ -346,8 +346,7 @@
     }
 
     .header-notification-panel {
-        right: -12px;
-        width: min(92vw, 320px);
+        width: min(calc(100vw - 24px), 320px);
     }
 }
 

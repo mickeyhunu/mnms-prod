@@ -5,6 +5,7 @@ const HeaderNotificationCenter = {
     storageKey: 'readNotifications',
     refreshTimer: null,
     outsideClickHandler: null,
+    viewportHandler: null,
 
     async init() {
         const user = Auth.getUser();
@@ -30,6 +31,12 @@ const HeaderNotificationCenter = {
         if (this.outsideClickHandler) {
             document.removeEventListener('click', this.outsideClickHandler);
             this.outsideClickHandler = null;
+        }
+
+        if (this.viewportHandler) {
+            window.removeEventListener('resize', this.viewportHandler);
+            window.removeEventListener('scroll', this.viewportHandler, true);
+            this.viewportHandler = null;
         }
     },
 
@@ -57,10 +64,13 @@ const HeaderNotificationCenter = {
                 if (isHidden) {
                     panel.classList.remove('hidden');
                     button.setAttribute('aria-expanded', 'true');
+                    this.updatePanelPosition();
                     await this.refresh();
+                    this.updatePanelPosition();
                 } else {
                     panel.classList.add('hidden');
                     button.setAttribute('aria-expanded', 'false');
+                    this.resetPanelPosition();
                 }
             });
         }
@@ -95,6 +105,7 @@ const HeaderNotificationCenter = {
                 }
                 if (panel && !panel.classList.contains('hidden')) {
                     panel.classList.add('hidden');
+                    this.resetPanelPosition();
                 }
                 if (button) {
                     button.setAttribute('aria-expanded', 'false');
@@ -102,6 +113,46 @@ const HeaderNotificationCenter = {
             };
             document.addEventListener('click', this.outsideClickHandler);
         }
+
+        if (!this.viewportHandler) {
+            this.viewportHandler = () => {
+                this.updatePanelPosition();
+            };
+            window.addEventListener('resize', this.viewportHandler);
+            window.addEventListener('scroll', this.viewportHandler, true);
+        }
+    },
+
+    updatePanelPosition() {
+        const button = document.getElementById('header-notification-button');
+        const panel = document.getElementById('header-notification-panel');
+        if (!button || !panel || panel.classList.contains('hidden')) {
+            return;
+        }
+
+        const gutter = 12;
+        const spacing = 10;
+        const buttonRect = button.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const panelWidth = Math.min(panel.offsetWidth || 0, Math.max(viewportWidth - gutter * 2, 0));
+        const preferredLeft = buttonRect.right - panelWidth;
+        const clampedLeft = Math.min(
+            Math.max(preferredLeft, gutter),
+            Math.max(viewportWidth - panelWidth - gutter, gutter)
+        );
+
+        panel.style.top = `${Math.round(buttonRect.bottom + spacing)}px`;
+        panel.style.left = `${Math.round(clampedLeft)}px`;
+    },
+
+    resetPanelPosition() {
+        const panel = document.getElementById('header-notification-panel');
+        if (!panel) {
+            return;
+        }
+
+        panel.style.top = '';
+        panel.style.left = '';
     },
 
     getReadMap() {
@@ -159,6 +210,7 @@ const HeaderNotificationCenter = {
 
         if (!notifications.length) {
             list.innerHTML = '<div class="header-notification-empty">새로운 알림이 없습니다.</div>';
+            this.updatePanelPosition();
             return;
         }
 
@@ -175,12 +227,14 @@ const HeaderNotificationCenter = {
                 </button>
             `;
         }).join('');
+        this.updatePanelPosition();
     },
 
     renderErrorState() {
         const list = document.getElementById('header-notification-list');
         if (!list) return;
         list.innerHTML = '<div class="header-notification-empty">알림을 불러오지 못했습니다.</div>';
+        this.updatePanelPosition();
         const dot = document.getElementById('header-notification-dot');
         if (dot) {
             dot.classList.add('hidden');
