@@ -76,6 +76,10 @@
     height: 24px;
 }
 
+#share-btn svg,
+#share-btn svg * {
+    pointer-events: none;
+}
 
 #post-more-btn svg {
     width: 20px;
