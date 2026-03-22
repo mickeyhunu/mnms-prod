@@ -188,6 +188,7 @@ export default {
 
     const pageConfig = computed(() => pageRegistry[props.page] || { template: '<div>페이지를 찾을 수 없습니다.</div>', styles: [], scripts: [] });
     const pageBodyContent = computed(() => normalizeTemplateLinks(stripLegacyHeader(pageConfig.value.template || '')));
+    const pageShellClass = computed(() => `page-shell page-shell--${props.page || 'unknown'}`);
 
     const clearInjectedNodes = () => {
       injectedNodes.forEach((node) => node.remove());
@@ -254,7 +255,7 @@ export default {
       clearInjectedNodes();
     });
 
-    return { pageBodyContent, globalHeaderTemplate: GLOBAL_HEADER_TEMPLATE };
+    return { pageBodyContent, globalHeaderTemplate: GLOBAL_HEADER_TEMPLATE, pageShellClass };
   },
-  template: `<div><div v-html="globalHeaderTemplate"></div><div v-html="pageBodyContent"></div></div>`
+  template: `<div :class="pageShellClass"><div v-html="globalHeaderTemplate"></div><div v-html="pageBodyContent"></div></div>`
 };
