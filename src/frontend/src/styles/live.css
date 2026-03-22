@@ -2,19 +2,9 @@
     background: #000;
 }
 
-.page-shell--live .live-page__sticky-stack {
-    position: sticky;
+.page-shell--live .live-page > .community-section-header {
     top: var(--app-header-offset);
     z-index: 90;
-    display: flex;
-    flex-direction: column;
-    background: #000;
-}
-
-.page-shell--live .live-page__sticky-stack > .community-section-header {
-    position: static;
-    top: auto;
-    z-index: auto;
 }
 
 .live-page {
@@ -135,6 +125,9 @@
 }
 
 .site-subheader__container {
+    position: sticky;
+    top: calc(var(--app-header-offset) + var(--community-section-header-height));
+    z-index: 89;
     display: flex;
     flex-direction: column;
     gap: 5px;
