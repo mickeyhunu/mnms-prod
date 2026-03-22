@@ -705,11 +705,12 @@
 }
 
 .header-notification-panel {
-    position: absolute;
-    top: calc(100% + 10px);
-    right: 0;
-    width: min(92vw, 360px);
-    max-height: 480px;
+    position: fixed;
+    top: 0;
+    left: 12px;
+    width: min(calc(100vw - 24px), 360px);
+    max-width: calc(100vw - 24px);
+    max-height: min(480px, calc(100vh - 24px));
     overflow: hidden;
     border: 1px solid var(--border-color);
     border-radius: 18px;
