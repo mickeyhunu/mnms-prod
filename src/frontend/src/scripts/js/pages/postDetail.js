@@ -71,6 +71,11 @@ function setupEventListeners() {
         });
     }
 
+    const shareBtn = document.getElementById('share-btn');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', handleSharePost);
+    }
+
     const moreBtn = document.getElementById('post-more-btn');
     if (moreBtn) {
         moreBtn.addEventListener('click', togglePostMoreMenu);
@@ -96,8 +101,6 @@ function setupEventListeners() {
         }
         hideActiveCommentActionMenu();
     });
-
-    document.addEventListener('click', handlePostDetailDelegatedClick);
 
     setupMessageModal();
     setupShareSheet();
@@ -450,48 +453,17 @@ function togglePostMoreMenu() {
     menu.classList.toggle('hidden');
 }
 
-function handlePostDetailDelegatedClick(event) {
-    const shareTrigger = event.target.closest('#share-btn');
-    if (shareTrigger) {
-        event.preventDefault();
-        handleSharePost();
-        return;
-    }
-
-    const shareSheetOverlay = event.target.closest('#share-sheet-overlay');
-    const shareSheetCloseButton = event.target.closest('#share-sheet-close');
-    if (shareSheetOverlay || shareSheetCloseButton) {
-        event.preventDefault();
-        closeShareSheet();
-        return;
-    }
-
-    const kakaoShareButton = event.target.closest('#share-kakao-btn');
-    if (kakaoShareButton) {
-        event.preventDefault();
-        handleKakaoShare();
-        return;
-    }
-
-    const smsShareButton = event.target.closest('#share-sms-btn');
-    if (smsShareButton) {
-        event.preventDefault();
-        handleSmsShare();
-        return;
-    }
-
-    const copyShareButton = event.target.closest('#share-copy-btn');
-    if (copyShareButton) {
-        event.preventDefault();
-        handleCopyShareLink();
-    }
-}
-
 function setupShareSheet() {
     const shareSheet = document.getElementById('share-sheet');
     if (!shareSheet) {
         return;
     }
+
+    document.getElementById('share-sheet-overlay')?.addEventListener('click', closeShareSheet);
+    document.getElementById('share-sheet-close')?.addEventListener('click', closeShareSheet);
+    document.getElementById('share-kakao-btn')?.addEventListener('click', handleKakaoShare);
+    document.getElementById('share-sms-btn')?.addEventListener('click', handleSmsShare);
+    document.getElementById('share-copy-btn')?.addEventListener('click', handleCopyShareLink);
 
     document.addEventListener('keydown', handleShareSheetKeydown);
 }
@@ -613,7 +585,6 @@ async function copyTextToClipboard(text) {
         await navigator.clipboard.writeText(text);
         return;
     }
-}
 
     const textarea = document.createElement('textarea');
     textarea.value = text;
