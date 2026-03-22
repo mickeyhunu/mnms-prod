@@ -710,6 +710,7 @@ function createEntrySummaryLiveCard(rows, titleColumn) {
     const storeName = resolveChoiceStoreName(sortedRows[0] || rows[0] || {}) || getSelectedStoreName();
     const title = storeName ? `${storeName} 엔트리` : '엔트리';
     const entryNameRows = chunkEntryNames(entryNames, 5);
+    const rankingRows = rankedEntries.length ? rankedEntries : [{ name: '', score: 0 }];
     const contentHtml = `
         <div class="entry-live-card">
             <section class="entry-live-card__section entry-live-card__section--count">
@@ -740,10 +741,10 @@ function createEntrySummaryLiveCard(rows, titleColumn) {
                     <h3 class="entry-live-card__section-title">오늘의 인기 멤버 TOP 5</h3>
                 </div>
                 <ol class="entry-live-card__ranking-list">
-                    ${rankedEntries.map((entry, index) => `
+                    ${rankingRows.map((entry, index) => `
                         <li class="entry-live-card__ranking-item">
                             <div class="entry-live-card__ranking-main">
-                                <span class="entry-live-card__ranking-rank">${sanitizeHTML(String(index + 1))}.</span>
+                                <span class="entry-live-card__ranking-rank">${entry.name ? sanitizeHTML(String(index + 1)) : ''}${entry.name ? '.' : ''}</span>
                                 <span class="entry-live-card__ranking-name">${sanitizeHTML(entry.name)}</span>
                             </div>
                             <span class="entry-live-card__ranking-score">합계 ${sanitizeHTML(String(entry.score))}</span>
