@@ -56,6 +56,10 @@ function stripLegacyHeader(template) {
   return template.replace(/^\s*<header class="header">[\s\S]*?<\/header>\s*/i, '');
 }
 
+function stripTemplateScripts(template) {
+  return template.replace(/<script\b[^>]*>[\s\S]*?<\/script>\s*/gi, '');
+}
+
 function toPublicAssetPath(assetPath) {
   if (!assetPath) return assetPath;
   if (assetPath.startsWith('http') || assetPath.startsWith('/')) return assetPath;
@@ -149,7 +153,7 @@ export default {
     const injectedNodes = [];
 
     const pageConfig = computed(() => pageRegistry[props.page] || { template: '<div>페이지를 찾을 수 없습니다.</div>', styles: [], scripts: [] });
-    const pageBodyContent = computed(() => normalizeTemplateLinks(stripLegacyHeader(pageConfig.value.template || '')));
+    const pageBodyContent = computed(() => normalizeTemplateLinks(stripTemplateScripts(stripLegacyHeader(pageConfig.value.template || ''))));
     const pageShellClass = computed(() => `page-shell page-shell--${props.page || 'unknown'}`);
 
     const applyPageMarker = () => {
