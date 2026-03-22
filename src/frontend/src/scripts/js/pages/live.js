@@ -263,9 +263,10 @@ function applyLiveEntriesResponse() {
     updateLiveScrollBottomButton();
 
     const hasRows = Array.isArray(liveState.rows) && liveState.rows.length > 0;
+    const shouldShowSummaryCard = liveState.selectedCategoryKey === 'entry';
     const emptyElement = document.getElementById('live-empty');
 
-    if (hasRows) {
+    if (hasRows || shouldShowSummaryCard) {
         hideElement(emptyElement);
     } else {
         showElement(emptyElement);
@@ -562,6 +563,12 @@ function renderLiveEntries(rows, titleColumn) {
     syncLiveListLayout(listElement);
 
     if (!Array.isArray(rows) || !rows.length) {
+        if (liveState.selectedCategoryKey === 'entry') {
+            listElement.innerHTML = createEntrySummaryLiveCard([], titleColumn);
+            hideElement(emptyElement);
+            return;
+        }
+
         listElement.innerHTML = '';
         showElement(emptyElement);
         return;
@@ -701,7 +708,7 @@ function createEntrySummaryLiveCard(rows, titleColumn) {
     const totalWorkers = entryNames.length;
     const rankedEntries = buildEntryRankings(sortedRows, titleColumn);
     const latestTimestamp = findLatestEntryTimestamp(sortedRows);
-    const storeName = resolveChoiceStoreName(sortedRows[0] || rows[0] || {});
+    const storeName = resolveChoiceStoreName(sortedRows[0] || rows[0] || {}) || getSelectedStoreName();
     const title = storeName ? `${storeName} 엔트리` : '엔트리';
     const entryNameRows = chunkEntryNames(entryNames, 5);
     const contentHtml = `
