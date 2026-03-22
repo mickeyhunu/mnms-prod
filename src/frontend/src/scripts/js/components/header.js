@@ -225,9 +225,62 @@ const HeaderNotificationCenter = {
     }
 };
 
+
+const HeaderUserMenu = {
+    outsideClickHandler: null,
+
+    init() {
+        const button = document.getElementById('user-nickname');
+        const dropdown = document.getElementById('header-user-dropdown');
+        const menu = document.getElementById('header-user-menu');
+
+        if (!button || !dropdown || !menu) {
+            this.teardown();
+            return;
+        }
+
+        if (button.dataset.boundUserMenu !== 'true') {
+            button.dataset.boundUserMenu = 'true';
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const willOpen = dropdown.classList.contains('hidden');
+                this.setOpenState(willOpen);
+            });
+        }
+
+        if (!this.outsideClickHandler) {
+            this.outsideClickHandler = (event) => {
+                if (menu.contains(event.target)) {
+                    return;
+                }
+                this.setOpenState(false);
+            };
+            document.addEventListener('click', this.outsideClickHandler);
+        }
+    },
+
+    setOpenState(isOpen) {
+        const button = document.getElementById('user-nickname');
+        const dropdown = document.getElementById('header-user-dropdown');
+        if (!button || !dropdown) return;
+
+        dropdown.classList.toggle('hidden', !isOpen);
+        button.setAttribute('aria-expanded', String(isOpen));
+    },
+
+    teardown() {
+        if (this.outsideClickHandler) {
+            document.removeEventListener('click', this.outsideClickHandler);
+            this.outsideClickHandler = null;
+        }
+    }
+};
+
 function initHeader() {
     Auth.updateHeaderUI();
     Auth.bindLogoutButton();
+    HeaderUserMenu.init();
     HeaderNotificationCenter.init();
 }
 
@@ -235,7 +288,8 @@ function autoInitHeader() {
     const hasHeaderAuthTargets = document.getElementById('nav-guest')
         || document.getElementById('nav-user')
         || document.getElementById('logout-btn')
-        || document.getElementById('user-nickname');
+        || document.getElementById('user-nickname')
+        || document.getElementById('header-user-dropdown');
 
     if (!hasHeaderAuthTargets || typeof Auth === 'undefined') {
         return;
@@ -247,7 +301,7 @@ function autoInitHeader() {
 function updateHeaderForUser(user) {
     const navGuest = document.getElementById('nav-guest');
     const navUser = document.getElementById('nav-user');
-    const userNickname = document.getElementById('user-nickname');
+    const userNickname = document.getElementById('user-nickname-label');
     const adminLink = document.getElementById('admin-link');
 
     if (user) {
@@ -258,13 +312,17 @@ function updateHeaderForUser(user) {
             userNickname.textContent = Auth.formatNicknameWithLevel(user);
         }
 
+        HeaderUserMenu.setOpenState(false);
+
         if (adminLink) {
             toggleElement(adminLink, user.isAdmin);
         }
     } else {
+        HeaderUserMenu.setOpenState(false);
         showElement(navGuest);
         hideElement(navUser);
     }
 }
+
 
 autoInitHeader();

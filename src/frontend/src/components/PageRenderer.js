@@ -28,7 +28,16 @@ const GLOBAL_HEADER_TEMPLATE = `<header class="header">
         <a href="/register" class="btn btn-primary btn-sm">회원가입</a>
       </div>
       <div class="nav-user hidden" id="nav-user">
-        <span class="user-nickname" id="user-nickname"></span>
+        <div class="header-user-menu" id="header-user-menu">
+          <button class="user-nickname-button" id="user-nickname" type="button" aria-haspopup="menu" aria-expanded="false">
+            <span class="user-nickname-text" id="user-nickname-label"></span>
+            <span class="user-nickname-caret" aria-hidden="true">▾</span>
+          </button>
+          <div class="header-user-dropdown hidden" id="header-user-dropdown" role="menu" aria-label="사용자 메뉴">
+            <a href="/my-page/profile" class="header-user-dropdown-link" role="menuitem">회원정보</a>
+            <button class="header-user-dropdown-link header-user-dropdown-action" id="logout-btn" type="button" role="menuitem">로그아웃</button>
+          </div>
+        </div>
         <div class="header-notification-wrapper">
           <button class="header-notification-button" id="header-notification-button" type="button" aria-label="알림 열기" aria-haspopup="dialog" aria-expanded="false">
             <span class="header-notification-icon" aria-hidden="true">🔔</span>
@@ -44,7 +53,6 @@ const GLOBAL_HEADER_TEMPLATE = `<header class="header">
           </section>
         </div>
         <a href="/admin" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
-        <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
       </div>
     </nav>
   </div>

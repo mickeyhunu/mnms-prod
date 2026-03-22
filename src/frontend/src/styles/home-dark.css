@@ -23,7 +23,7 @@ body.home-dark {
 }
 
 .home-dark div.community-section-header p,
-.home-dark .user-nickname {
+.home-dark .user-nickname-button {
     color: var(--text-subtle);
 }
 

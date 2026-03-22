@@ -36,9 +36,15 @@
         font-size: 17px;
     }
 
-    .user-nickname {
-        max-width: 92px;
+    .user-nickname-button {
+        gap: 4px;
+        max-width: 108px;
         font-size: 12px;
+    }
+
+    .header-user-dropdown {
+        right: -8px;
+        min-width: 124px;
     }
 
     div.community-section-header h1 {
