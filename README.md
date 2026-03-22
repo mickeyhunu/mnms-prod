@@ -36,6 +36,16 @@ npm run start
 실행 후 접속
 - http://localhost:8080
 
+### 로컬 개발 모드에서 콘텐츠 보호 끄기
+개발 중에는 `F12`와 브라우저 개발자도구가 필요하므로, 프로젝트 루트의 `.env.local`에 아래 값을 넣으면 프론트엔드 보호 기능이 비활성화됩니다.
+
+```bash
+echo "MNMS_DISABLE_CONTENT_PROTECTION=true" >> .env.local
+```
+
+- 이 값은 서버가 `/app-config.js`로 프론트엔드에 전달합니다.
+- `.env.local`은 `.gitignore`에 포함되어 있으므로 로컬 설정만 따로 유지할 수 있습니다.
+
 ## MySQL 기본 환경변수
 - `MYSQL_HOST=127.0.0.1`
 - `MYSQL_PORT=3306`

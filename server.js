@@ -9,6 +9,10 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 require('./src/backend/config/loadEnv');
 
+function isEnabled(value) {
+  return ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
+}
+
 const { initDatabase, dbConfig, useLocalDb } = require('./src/backend/config/database');
 const authRoutes = require('./src/backend/routes/authRoutes');
 const postRoutes = require('./src/backend/routes/postRoutes');
@@ -28,6 +32,16 @@ let isDatabaseReady = false;
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+app.get('/app-config.js', (req, res) => {
+  const appConfig = {
+    contentProtectionEnabled: !isEnabled(process.env.MNMS_DISABLE_CONTENT_PROTECTION)
+  };
+
+  res.type('application/javascript');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.send(`window.__APP_CONFIG__ = ${JSON.stringify(appConfig)};`);
+});
 
 function parseCookies(cookieHeader = '') {
   return String(cookieHeader || '')
