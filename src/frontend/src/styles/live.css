@@ -2,25 +2,33 @@
     background: #000;
 }
 
-.page-shell--live .live-page > .community-section-header {
-    position: fixed;
-    top: var(--app-header-offset);
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(calc(100vw - 24px), var(--main-content-unified-max-width, 920px));
-    z-index: 90;
-}
-
 .live-page {
-    --live-fixed-subheader-height: 92px;
     position: relative;
     display: flex;
     flex-direction: column;
-    padding-top: calc(var(--community-section-header-height) + var(--live-fixed-subheader-height));
     border-radius: 24px;
     background: #000;
     color: #f8fafc;
     min-height: 60vh;
+}
+
+.live-page__sticky-stack {
+    position: sticky;
+    top: var(--app-header-offset);
+    z-index: 90;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: #000;
+}
+
+.page-shell--live .live-page .community-section-header {
+    position: static;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: 100%;
+    flex-shrink: 0;
 }
 
 .live-scroll-bottom-button {
@@ -131,17 +139,16 @@
 }
 
 .site-subheader__container {
-    position: fixed;
-    top: calc(var(--app-header-offset) + var(--community-section-header-height));
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(calc(100vw - 24px), var(--main-content-unified-max-width, 920px));
-    z-index: 89;
+    position: static;
+    width: 100%;
+    z-index: auto;
     display: flex;
     flex-direction: column;
     gap: 5px;
-    padding: 10px;
+    padding: 10px 10px 12px;
     border: 1px solid rgba(115, 115, 115, 0.34);
+    border-top: 0;
+    border-radius: 0 0 18px 18px;
     background: linear-gradient(180deg, rgba(26, 26, 26, 0.96) 0%, rgba(10, 10, 10, 0.96) 100%);
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
 }
@@ -670,13 +677,13 @@
 }
 
 @media (max-width: 768px) {
-    .live-page {
-        --live-fixed-subheader-height: 84px;
-    }
-
     .live-store-name-list,
     .site-subheader__container {
         padding: 8px;
+    }
+
+    .site-subheader__container {
+        padding: 8px 8px 10px;
     }
 
     .live-entry-list {
