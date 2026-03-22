@@ -68,20 +68,6 @@
     stroke-linecap: round;
     stroke-linejoin: round;
     filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
-    animation: live-scroll-cue-bounce 1.4s ease-in-out infinite;
-}
-
-@keyframes live-scroll-cue-bounce {
-    0%,
-    100% {
-        transform: translateY(-1px);
-        opacity: 0.92;
-    }
-
-    50% {
-        transform: translateY(3px);
-        opacity: 1;
-    }
 }
 
 .live-store-name-list {
