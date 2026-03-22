@@ -35,26 +35,6 @@ body {
     padding-top: var(--app-header-offset);
 }
 
-html.content-protection-enabled,
-body.content-protection-enabled {
-    overflow: hidden;
-    overscroll-behavior: none;
-}
-
-body.content-protection-enabled :not(input):not(textarea) {
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-touch-callout: none;
-}
-
-body.content-protection-enabled input,
-body.content-protection-enabled textarea,
-body.content-protection-enabled [contenteditable="true"],
-body.content-protection-enabled [contenteditable=""] {
-    -webkit-user-select: text;
-    user-select: text;
-}
-
 a {
     color: var(--primary-color);
     text-decoration: none;
