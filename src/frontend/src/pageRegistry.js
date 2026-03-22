@@ -907,20 +907,22 @@ const pageRegistry = {
   'live': {
     template: `<main class="main-content live-main-content">
         <div class="container live-page">
-            <header class="community-section-header">
-                <div class="community-header-left">
-                    <span class="community-board-name community-board-name--live"><span class="live-status-dot" aria-hidden="true"></span><span>LIVE</span></span>
-                </div>
-            </header>
-
-            <div class="site-subheader__container">
-                <div class="site-subheader__top-row">
-                    <div class="site-subheader__filters">
-                        <nav class="area-filter area-filter--cities" id="live-store-filter" aria-label="매장 선택"></nav>
+            <div class="live-page__sticky-stack">
+                <header class="community-section-header">
+                    <div class="community-header-left">
+                        <span class="community-board-name community-board-name--live"><span class="live-status-dot" aria-hidden="true"></span><span>LIVE</span></span>
                     </div>
-                </div>
+                </header>
 
-                <div class="area-filter area-filter--districts" id="live-category-filter" aria-label="LIVE 카테고리 선택"></div>
+                <div class="site-subheader__container">
+                    <div class="site-subheader__top-row">
+                        <div class="site-subheader__filters">
+                            <nav class="area-filter area-filter--cities" id="live-store-filter" aria-label="매장 선택"></nav>
+                        </div>
+                    </div>
+
+                    <div class="area-filter area-filter--districts" id="live-category-filter" aria-label="LIVE 카테고리 선택"></div>
+                </div>
             </div>
 
             <div class="live-loading-overlay hidden" id="live-loading" aria-live="polite" aria-busy="true">
