@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 require('./src/backend/config/loadEnv');
 
@@ -74,7 +75,22 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.static(FRONTEND_DIR));
+app.use(express.static(FRONTEND_DIR, {
+  etag: true,
+  lastModified: true,
+  maxAge: '1h',
+  setHeaders: (res, filePath) => {
+    const extension = path.extname(filePath || '').toLowerCase();
+    if (extension === '.html') {
+      res.setHeader('Cache-Control', 'no-cache');
+      return;
+    }
+
+    if (['.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico'].includes(extension)) {
+      res.setHeader('Cache-Control', `public, max-age=${ONE_HOUR_IN_SECONDS}, must-revalidate`);
+    }
+  }
+}));
 
 app.use('/api', (req, res, next) => {
   if (req.path.startsWith('/live')) {
