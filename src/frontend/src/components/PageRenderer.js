@@ -155,7 +155,6 @@ export default {
     const pageConfig = computed(() => pageRegistry[props.page] || { template: '<div>페이지를 찾을 수 없습니다.</div>', styles: [], scripts: [] });
     const pageBodyContent = computed(() => normalizeTemplateLinks(stripTemplateScripts(stripLegacyHeader(pageConfig.value.template || ''))));
     const pageShellClass = computed(() => `page-shell page-shell--${props.page || 'unknown'}`);
-    const showGlobalHeader = computed(() => pageConfig.value.showGlobalHeader !== false);
 
     const applyPageMarker = () => {
       document.body.dataset.page = props.page || '';
@@ -228,7 +227,7 @@ export default {
       delete document.body.dataset.page;
     });
 
-    return { pageBodyContent, globalHeaderTemplate: GLOBAL_HEADER_TEMPLATE, pageShellClass, showGlobalHeader };
+    return { pageBodyContent, globalHeaderTemplate: GLOBAL_HEADER_TEMPLATE, pageShellClass };
   },
-  template: `<div :class="pageShellClass"><div v-if="showGlobalHeader" v-html="globalHeaderTemplate"></div><div v-html="pageBodyContent"></div></div>`
+  template: `<div :class="pageShellClass"><div v-html="globalHeaderTemplate"></div><div v-html="pageBodyContent"></div></div>`
 };
