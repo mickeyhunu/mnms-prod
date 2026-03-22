@@ -30,7 +30,8 @@ const liveState = {
     titleColumn: null,
     hasMoreHistory: false,
     nextOffset: 0,
-    isLoadingOlder: false
+    isLoadingOlder: false,
+    hasAlignedInitialViewport: false
 };
 
 function initializeScrollableFilter(element) {
@@ -233,7 +234,12 @@ async function loadLiveEntries({ showLoading = false, appendOlder = false, syncT
         if (appendOlder) {
             restoreLiveScrollAnchor(scrollAnchor);
         } else if (syncToLatest && shouldUseHistoryPagination()) {
-            scrollLiveToLatest();
+            const shouldAlignToLatestCard = !liveState.hasAlignedInitialViewport;
+            scrollLiveToLatest({
+                behavior: shouldAlignToLatestCard ? 'auto' : 'smooth',
+                alignToCard: shouldAlignToLatestCard
+            });
+            liveState.hasAlignedInitialViewport = true;
         }
     } catch (error) {
         if (requestId !== liveState.entriesRequestId) {
@@ -432,6 +438,7 @@ function resetLiveEntriesState() {
     liveState.hasMoreHistory = false;
     liveState.nextOffset = 0;
     liveState.isLoadingOlder = false;
+    liveState.hasAlignedInitialViewport = false;
 }
 
 function mergeLiveHistoryRows(previousRows = [], nextRows = []) {
@@ -612,11 +619,25 @@ function restoreLiveScrollAnchor(anchor) {
     });
 }
 
-function scrollLiveToLatest() {
+function scrollLiveToLatest({ behavior = 'smooth', alignToCard = false } = {}) {
     window.requestAnimationFrame(() => {
+        if (alignToCard) {
+            const latestCard = document.querySelector('#live-entry-list .live-chat-card:last-of-type');
+            if (latestCard) {
+                const stickyStackHeight = document.querySelector('.live-page__sticky-stack')?.offsetHeight || 0;
+                const latestCardTop = window.scrollY + latestCard.getBoundingClientRect().top;
+
+                window.scrollTo({
+                    top: Math.max(0, latestCardTop - stickyStackHeight - 12),
+                    behavior
+                });
+                return;
+            }
+        }
+
         window.scrollTo({
             top: getLiveDocumentScrollHeight(),
-            behavior: 'smooth'
+            behavior
         });
     });
 }
