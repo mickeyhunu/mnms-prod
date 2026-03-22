@@ -8,6 +8,7 @@ let currentPostBoardType = '';
 let selectedMessageRecipient = null;
 let replyingTo = null;
 let activeCommentActionId = null;
+let shareSheetOpen = false;
 
 function initPostDetailPage() {
     if (typeof Auth !== 'undefined') {
@@ -70,11 +71,6 @@ function setupEventListeners() {
         });
     }
 
-    const shareBtn = document.getElementById('share-btn');
-    if (shareBtn) {
-        shareBtn.addEventListener('click', handleSharePost);
-    }
-
     const moreBtn = document.getElementById('post-more-btn');
     if (moreBtn) {
         moreBtn.addEventListener('click', togglePostMoreMenu);
@@ -101,7 +97,10 @@ function setupEventListeners() {
         hideActiveCommentActionMenu();
     });
 
+    document.addEventListener('click', handlePostDetailDelegatedClick);
+
     setupMessageModal();
+    setupShareSheet();
 }
 
 function setupMessageModal() {
@@ -451,29 +450,185 @@ function togglePostMoreMenu() {
     menu.classList.toggle('hidden');
 }
 
-async function handleSharePost() {
-    const shareData = {
-        title: document.getElementById('post-title')?.textContent || '게시글',
+function handlePostDetailDelegatedClick(event) {
+    const shareTrigger = event.target.closest('#share-btn');
+    if (shareTrigger) {
+        event.preventDefault();
+        handleSharePost();
+        return;
+    }
+
+    const shareSheetOverlay = event.target.closest('#share-sheet-overlay');
+    const shareSheetCloseButton = event.target.closest('#share-sheet-close');
+    if (shareSheetOverlay || shareSheetCloseButton) {
+        event.preventDefault();
+        closeShareSheet();
+        return;
+    }
+
+    const kakaoShareButton = event.target.closest('#share-kakao-btn');
+    if (kakaoShareButton) {
+        event.preventDefault();
+        handleKakaoShare();
+        return;
+    }
+
+    const smsShareButton = event.target.closest('#share-sms-btn');
+    if (smsShareButton) {
+        event.preventDefault();
+        handleSmsShare();
+        return;
+    }
+
+    const copyShareButton = event.target.closest('#share-copy-btn');
+    if (copyShareButton) {
+        event.preventDefault();
+        handleCopyShareLink();
+    }
+}
+
+function setupShareSheet() {
+    const shareSheet = document.getElementById('share-sheet');
+    if (!shareSheet) {
+        return;
+    }
+
+    document.addEventListener('keydown', handleShareSheetKeydown);
+}
+
+function handleShareSheetKeydown(event) {
+    if (event.key === 'Escape' && shareSheetOpen) {
+        closeShareSheet();
+    }
+}
+
+function getShareData() {
+    return {
+        title: document.getElementById('post-title')?.textContent?.trim() || '게시글',
         text: '게시글을 공유합니다.',
         url: window.location.href
     };
+}
 
-    try {
-        if (navigator.share) {
-            await navigator.share(shareData);
-            return;
-        }
-
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(window.location.href);
-            alert('게시글 링크가 복사되었습니다.');
-            return;
-        }
-    } catch (error) {
-        console.error('공유 실패:', error);
+function openShareSheet() {
+    const shareSheet = document.getElementById('share-sheet');
+    if (!shareSheet) {
+        return;
     }
 
-    prompt('아래 링크를 복사하세요.', window.location.href);
+    shareSheet.classList.remove('hidden');
+    shareSheet.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('share-sheet-open');
+    shareSheetOpen = true;
+}
+
+function closeShareSheet() {
+    const shareSheet = document.getElementById('share-sheet');
+    if (!shareSheet) {
+        return;
+    }
+
+    shareSheet.classList.add('hidden');
+    shareSheet.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('share-sheet-open');
+    shareSheetOpen = false;
+}
+
+async function handleSharePost() {
+    openShareSheet();
+}
+
+async function handleKakaoShare() {
+    const shareData = getShareData();
+
+    try {
+        if (window.Kakao && window.Kakao.Share && typeof window.Kakao.Share.sendDefault === 'function') {
+            window.Kakao.Share.sendDefault({
+                objectType: 'feed',
+                content: {
+                    title: shareData.title,
+                    description: shareData.text,
+                    link: {
+                        mobileWebUrl: shareData.url,
+                        webUrl: shareData.url
+                    }
+                },
+                buttons: [
+                    {
+                        title: '게시글 보기',
+                        link: {
+                            mobileWebUrl: shareData.url,
+                            webUrl: shareData.url
+                        }
+                    }
+                ]
+            });
+            closeShareSheet();
+            return;
+        }
+
+        if (navigator.share) {
+            await navigator.share(shareData);
+            closeShareSheet();
+            return;
+        }
+
+        await copyTextToClipboard(shareData.url);
+        closeShareSheet();
+        alert('카카오톡 공유를 직접 열 수 없어 링크를 복사했습니다. 카카오톡에 붙여넣어 공유해주세요.');
+    } catch (error) {
+        if (error?.name === 'AbortError') {
+            return;
+        }
+
+        console.error('카카오톡 공유 실패:', error);
+        alert('카카오톡 공유에 실패했습니다.');
+    }
+}
+
+function handleSmsShare() {
+    const shareData = getShareData();
+    const message = `${shareData.title}
+${shareData.url}`;
+    const isAppleDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const separator = isAppleDevice ? '&' : '?';
+    window.location.href = `sms:${separator}body=${encodeURIComponent(message)}`;
+    closeShareSheet();
+}
+
+async function handleCopyShareLink() {
+    try {
+        await copyTextToClipboard(getShareData().url);
+        closeShareSheet();
+        alert('게시글 링크가 복사되었습니다.');
+    } catch (error) {
+        console.error('링크 복사 실패:', error);
+        closeShareSheet();
+        prompt('아래 링크를 복사하세요.', getShareData().url);
+    }
+}
+
+async function copyTextToClipboard(text) {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(text);
+        return;
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', 'readonly');
+    textarea.style.position = 'fixed';
+    textarea.style.top = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    const success = document.execCommand('copy');
+    textarea.remove();
+
+    if (!success) {
+        throw new Error('clipboard copy failed');
+    }
 }
 
 function reportPost() {

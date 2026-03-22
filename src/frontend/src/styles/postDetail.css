@@ -76,6 +76,10 @@
     height: 24px;
 }
 
+#share-btn svg,
+#share-btn svg * {
+    pointer-events: none;
+}
 
 #post-more-btn svg {
     width: 20px;
@@ -585,4 +589,133 @@
     #post-title { font-size: 22px; }
     .comment-meta { flex-direction: row; align-items: flex-start; }
     .comment-meta-actions { margin-left: 8px; }
+}
+
+body.share-sheet-open {
+    overflow: hidden;
+}
+
+.share-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+}
+
+.share-sheet-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.58);
+}
+
+.share-sheet-panel {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: min(100%, 470px);
+    background: #26252a;
+    color: #ffffff;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.28);
+}
+
+.share-sheet-handle {
+    display: block;
+    width: 36px;
+    height: 5px;
+    margin: 10px auto 0;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+}
+
+.share-sheet-content {
+    margin: 12px;
+    padding: 16px 16px 22px;
+    border-radius: 12px 12px 0 0;
+    background: #27262b;
+}
+
+.share-sheet-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.share-sheet-actions {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-evenly;
+    gap: 10px;
+    padding-top: 24px;
+}
+
+.share-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    background: transparent;
+    color: #f8fafc;
+    cursor: pointer;
+    min-width: 84px;
+}
+
+.share-action-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 21px;
+    font-weight: 800;
+}
+
+.share-action-icon svg {
+    width: 25px;
+    height: 25px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.share-action-icon-kakao {
+    background: #fee500;
+    color: #1b1b1d;
+}
+
+.share-action-icon-sms {
+    background: #6366f1;
+}
+
+.share-action-icon-copy {
+    background: #68666c;
+}
+
+.share-action-label {
+    color: #9ca3af;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    .share-sheet-panel {
+        width: 100%;
+    }
+
+    .share-sheet-content {
+        margin: 0;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .share-sheet-actions {
+        justify-content: space-around;
+    }
 }
