@@ -613,6 +613,7 @@ async function copyTextToClipboard(text) {
         await navigator.clipboard.writeText(text);
         return;
     }
+}
 
     const textarea = document.createElement('textarea');
     textarea.value = text;
