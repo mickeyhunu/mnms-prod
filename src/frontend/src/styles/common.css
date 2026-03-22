@@ -1,5 +1,6 @@
 /* 파일 역할: common 화면 스타일(레이아웃/컴포넌트/반응형 등)을 정의하는 스타일시트 파일. */
 :root {
+    --app-header-offset: 65px;
     --bg-color: #ffffff;
     --surface-color: #ffffff;
     --surface-muted: #ffffff;
@@ -29,6 +30,8 @@ body {
     line-height: 1.6;
     color: var(--text-color);
     background: #ffffff;
+    overflow-x: hidden;
+    padding-top: var(--app-header-offset);
 }
 
 a {
