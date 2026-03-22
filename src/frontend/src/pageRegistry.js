@@ -88,7 +88,13 @@ const pageRegistry = {
                     <div class="error-banner hidden" id="posts-error"><p id="posts-error-message"></p><button class="btn btn-sm btn-primary" id="posts-retry-btn">다시 시도</button></div>
                     <div class="admin-list-toolbar">
                         <p class="admin-list-toolbar__meta">총 <strong id="posts-total">0</strong>건</p>
-                        <input type="search" id="posts-search-input" class="form-control admin-list-toolbar__search" placeholder="게시글 검색" aria-label="게시글 검색">
+                        <div class="admin-list-toolbar__search-group">
+                            <select id="posts-search-type" class="form-control admin-list-toolbar__filter" aria-label="게시글 관리 검색 구분">
+                                <option value="post">게시글검색</option>
+                                <option value="author">작성자검색</option>
+                            </select>
+                            <input type="search" id="posts-search-input" class="form-control admin-list-toolbar__search" placeholder="게시글 검색" aria-label="게시글 관리 검색어">
+                        </div>
                     </div>
                     <div class="admin-table-container hidden" id="posts-content">
                         <table class="admin-table"><thead><tr><th>ID</th><th>제목</th><th>작성자</th><th>작성일</th><th>좋아요</th><th>댓글</th><th>관리</th></tr></thead><tbody id="posts-tbody"></tbody></table>
@@ -101,7 +107,13 @@ const pageRegistry = {
                     <div class="error-banner hidden" id="comments-error"><p id="comments-error-message"></p><button class="btn btn-sm btn-primary" id="comments-retry-btn">다시 시도</button></div>
                     <div class="admin-list-toolbar">
                         <p class="admin-list-toolbar__meta">총 <strong id="comments-total">0</strong>건</p>
-                        <input type="search" id="comments-search-input" class="form-control admin-list-toolbar__search" placeholder="댓글 검색" aria-label="댓글 검색">
+                        <div class="admin-list-toolbar__search-group">
+                            <select id="comments-search-type" class="form-control admin-list-toolbar__filter" aria-label="댓글 관리 검색 구분">
+                                <option value="post">게시글검색</option>
+                                <option value="author">작성자검색</option>
+                            </select>
+                            <input type="search" id="comments-search-input" class="form-control admin-list-toolbar__search" placeholder="게시글 검색" aria-label="댓글 관리 검색어">
+                        </div>
                     </div>
                     <div class="admin-table-container hidden" id="comments-content">
                         <table class="admin-table"><thead><tr><th>ID</th><th>내용</th><th>게시글</th><th>작성자</th><th>작성일</th><th>관리</th></tr></thead><tbody id="comments-tbody"></tbody></table>

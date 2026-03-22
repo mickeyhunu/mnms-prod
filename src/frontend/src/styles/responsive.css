@@ -148,6 +148,14 @@
         align-items: stretch;
     }
 
+    .admin-list-toolbar__search-group {
+        max-width: none;
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-list-toolbar__filter,
     .admin-list-toolbar__search {
         max-width: none;
         width: 100%;

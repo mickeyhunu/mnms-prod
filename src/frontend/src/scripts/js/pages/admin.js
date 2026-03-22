@@ -19,8 +19,8 @@ const ADMIN_PAGE_SIZE = 20;
 const ADMIN_STATS_RANGE_DAYS = 14;
 const ADMIN_DASHBOARD_STATE = { summary: null, daily: [], boardStats: [] };
 const ADMIN_LIST_STATE = {
-    posts: { items: [], query: '', page: 1 },
-    comments: { items: [], query: '', page: 1 },
+    posts: { items: [], query: '', searchType: 'post', page: 1 },
+    comments: { items: [], query: '', searchType: 'post', page: 1 },
     users: { items: [], query: '', page: 1 },
     entries: { items: [], query: '', page: 1 },
     ads: { items: [], query: '', page: 1 },
@@ -35,6 +35,16 @@ const ADMIN_SEARCH_PLACEHOLDERS = {
     ads: '광고 검색',
     support: '공지/FAQ 검색',
     inquiries: '1:1 문의 검색'
+};
+const ADMIN_SEARCH_TYPE_OPTIONS = {
+    posts: {
+        post: { placeholder: '게시글 검색', matcher: ['id', 'title'] },
+        author: { placeholder: '작성자 검색', matcher: ['authorNickname', 'user_id', 'userId'] }
+    },
+    comments: {
+        post: { placeholder: '게시글 검색', matcher: ['postTitle', 'postId', 'post_id'] },
+        author: { placeholder: '작성자 검색', matcher: ['authorNickname', 'user_id', 'userId'] }
+    }
 };
 
 function getAdminPageState() {
@@ -194,20 +204,60 @@ function bindCommonEvents() {
 function bindAdminListControls() {
     Object.entries(ADMIN_SEARCH_PLACEHOLDERS).forEach(([prefix, placeholder]) => {
         const input = document.getElementById(`${prefix}-search-input`);
+        const typeSelect = document.getElementById(`${prefix}-search-type`);
         if (!input || input.dataset.bound === 'true') return;
 
-        input.placeholder = placeholder;
+        updateAdminSearchInput(prefix, placeholder);
         input.addEventListener('input', () => {
             ADMIN_LIST_STATE[prefix].query = input.value || '';
             ADMIN_LIST_STATE[prefix].page = 1;
             renderAdminList(prefix);
         });
+
+        if (typeSelect && typeSelect.dataset.bound !== 'true') {
+            const availableTypes = ADMIN_SEARCH_TYPE_OPTIONS[prefix];
+            const nextSearchType = availableTypes?.[typeSelect.value] ? typeSelect.value : Object.keys(availableTypes || {})[0];
+            if (nextSearchType) {
+                typeSelect.value = nextSearchType;
+                ADMIN_LIST_STATE[prefix].searchType = nextSearchType;
+                updateAdminSearchInput(prefix, placeholder);
+            }
+
+            typeSelect.addEventListener('change', () => {
+                const resolvedSearchType = availableTypes?.[typeSelect.value] ? typeSelect.value : 'post';
+                ADMIN_LIST_STATE[prefix].searchType = resolvedSearchType;
+                ADMIN_LIST_STATE[prefix].page = 1;
+                updateAdminSearchInput(prefix, placeholder);
+                renderAdminList(prefix);
+            });
+            typeSelect.dataset.bound = 'true';
+        }
+
         input.dataset.bound = 'true';
     });
 }
 
 function getAdminListState(prefix) {
     return ADMIN_LIST_STATE[prefix] || { items: [], query: '', page: 1 };
+}
+
+function getAdminSearchConfig(prefix) {
+    const searchTypes = ADMIN_SEARCH_TYPE_OPTIONS[prefix];
+    if (!searchTypes) return null;
+
+    const state = getAdminListState(prefix);
+    const searchType = searchTypes[state.searchType] ? state.searchType : Object.keys(searchTypes)[0];
+    return searchTypes[searchType] || null;
+}
+
+function updateAdminSearchInput(prefix, fallbackPlaceholder = '') {
+    const input = document.getElementById(`${prefix}-search-input`);
+    if (!input) return;
+
+    const config = getAdminSearchConfig(prefix);
+    const placeholder = config?.placeholder || fallbackPlaceholder;
+    input.placeholder = placeholder;
+    input.setAttribute('aria-label', placeholder);
 }
 
 function normalizeAdminSearchValue(value) {
@@ -237,7 +287,10 @@ function getAdminFilteredItems(prefix) {
         inquiries: ['id', 'title', 'userNickname', 'userEmail', 'userId', 'type', 'status']
     };
 
-    return items.filter((item) => adminListMatchesQuery(item, query, matchers[prefix] || []));
+    const searchConfig = getAdminSearchConfig(prefix);
+    const fields = searchConfig?.matcher || matchers[prefix] || [];
+
+    return items.filter((item) => adminListMatchesQuery(item, query, fields));
 }
 
 function getAdminPagination(prefix) {

@@ -179,9 +179,21 @@
     font-weight: 600;
 }
 
+.admin-list-toolbar__search-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 360px;
+    max-width: 520px;
+}
+
+.admin-list-toolbar__filter {
+    flex: 0 0 140px;
+}
+
 .admin-list-toolbar__search {
     flex: 1 1 260px;
-    max-width: 360px;
+    max-width: none;
 }
 
 .admin-pagination {
