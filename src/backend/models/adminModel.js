@@ -425,6 +425,8 @@ async function getDashboardStats(rangeDays = 14) {
     `SELECT
         (SELECT COUNT(DISTINCT visitor_key) FROM site_visit_logs) AS totalVisitors,
         (SELECT COUNT(DISTINCT visitor_key) FROM site_visit_logs WHERE visit_date = CURRENT_DATE()) AS todayVisitors,
+        (SELECT COUNT(DISTINCT user_id) FROM user_login_histories) AS totalAccessUsers,
+        (SELECT COUNT(DISTINCT user_id) FROM user_login_histories WHERE DATE(created_at) = CURRENT_DATE()) AS todayAccessUsers,
         (SELECT COALESCE(SUM(page_views), 0) FROM site_visit_logs) AS totalPageViews,
         (SELECT COALESCE(SUM(page_views), 0) FROM site_visit_logs WHERE visit_date = CURRENT_DATE()) AS todayPageViews,
         (SELECT COUNT(*) FROM posts WHERE is_deleted = 0) AS totalPosts,
@@ -435,7 +437,7 @@ async function getDashboardStats(rangeDays = 14) {
         (SELECT COUNT(*) FROM users WHERE role = 'USER' AND DATE(created_at) = CURRENT_DATE()) AS todaySignups`
   );
 
-  const [visitRows, postRows, commentRows, boardRows] = await Promise.all([
+  const [visitRows, accessUserRows, postRows, commentRows, boardRows] = await Promise.all([
     pool.query(
       `SELECT visit_date AS statsDate,
               COUNT(DISTINCT visitor_key) AS visitors,
@@ -444,6 +446,15 @@ async function getDashboardStats(rangeDays = 14) {
         WHERE visit_date >= DATE_SUB(CURRENT_DATE(), INTERVAL ? DAY)
         GROUP BY visit_date
         ORDER BY visit_date ASC`,
+      [normalizedRangeDays - 1]
+    ).then(([rows]) => rows),
+    pool.query(
+      `SELECT DATE(created_at) AS statsDate,
+              COUNT(DISTINCT user_id) AS accessUsers
+         FROM user_login_histories
+        WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL ? DAY)
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at) ASC`,
       [normalizedRangeDays - 1]
     ).then(([rows]) => rows),
     pool.query(
@@ -479,6 +490,7 @@ async function getDashboardStats(rangeDays = 14) {
     visitors: Number(row.visitors || 0),
     pageViews: Number(row.pageViews || 0)
   }));
+  const accessUserMap = toDailySeriesMap(accessUserRows, (row) => Number(row.accessUsers || 0));
   const postMap = toDailySeriesMap(postRows, (row) => Number(row.postCount || 0));
   const commentMap = toDailySeriesMap(commentRows, (row) => Number(row.commentCount || 0));
 
@@ -493,6 +505,7 @@ async function getDashboardStats(rangeDays = 14) {
     daily.push({
       date: dateKey,
       visitors: visitEntry.visitors,
+      accessUsers: accessUserMap.get(dateKey) || 0,
       pageViews: visitEntry.pageViews,
       posts: postMap.get(dateKey) || 0,
       comments: commentMap.get(dateKey) || 0
@@ -503,6 +516,8 @@ async function getDashboardStats(rangeDays = 14) {
     summary: {
       totalVisitors: Number(summaryRows[0]?.totalVisitors || 0),
       todayVisitors: Number(summaryRows[0]?.todayVisitors || 0),
+      totalAccessUsers: Number(summaryRows[0]?.totalAccessUsers || 0),
+      todayAccessUsers: Number(summaryRows[0]?.todayAccessUsers || 0),
       totalPageViews: Number(summaryRows[0]?.totalPageViews || 0),
       todayPageViews: Number(summaryRows[0]?.todayPageViews || 0),
       totalPosts: Number(summaryRows[0]?.totalPosts || 0),

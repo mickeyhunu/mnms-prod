@@ -2141,6 +2141,7 @@
 }
 
 .admin-stats-bar--visitors span { background: #7c5cff; }
+.admin-stats-bar--access-users span { background: #f04488; }
 .admin-stats-bar--views span { background: #17a2b8; }
 .admin-stats-bar--posts span { background: #ff8c42; }
 .admin-stats-bar--comments span { background: #3ecf8e; }
