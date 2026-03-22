@@ -11,6 +11,98 @@ const LIVE_HISTORY_INTERVAL_MS = 5 * 60 * 1000;
 let liveHistoryTimer = null;
 let liveHistoryRunPromise = null;
 
+function normalizeStoreHistoryKey(storeNo, storeName = '') {
+  const normalizedStoreNo = Number.parseInt(storeNo, 10);
+  if (Number.isInteger(normalizedStoreNo) && normalizedStoreNo > 0) {
+    return `storeNo:${normalizedStoreNo}`;
+  }
+
+  return `storeName:${String(storeName || '').trim()}`;
+}
+
+function normalizeComparableValue(value) {
+  if (value === null || value === undefined) return '';
+
+  if (typeof value === 'object') {
+    return stableSerializeValue(value);
+  }
+
+  return String(value).trim();
+}
+
+function stableSerializeValue(value) {
+  if (value === null || value === undefined) return '';
+  if (typeof value !== 'object') return String(value).trim();
+
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableSerializeValue(item)).join(',')}]`;
+  }
+
+  return `{${Object.keys(value).sort().map((key) => `${key}:${stableSerializeValue(value[key])}`).join(',')}}`;
+}
+
+function createChoiceContentSignature(row = {}) {
+  return [
+    normalizeStoreHistoryKey(row.storeNo, row.storeName),
+    normalizeComparableValue(row.choiceMsg)
+  ].join('|');
+}
+
+function createWaitingContentSignature(row = {}) {
+  return [
+    normalizeStoreHistoryKey(row.storeNo, row.storeName),
+    normalizeComparableValue(row.roomInfo),
+    normalizeComparableValue(row.waitInfo),
+    normalizeComparableValue(row.roomDetail)
+  ].join('|');
+}
+
+function buildLatestHistoryMap(rows = []) {
+  return rows.reduce((historyMap, row) => {
+    const key = normalizeStoreHistoryKey(row.storeNo, row.storeName);
+    historyMap.set(key, row);
+    return historyMap;
+  }, new Map());
+}
+
+async function getLatestChoiceHistoryMap() {
+  const pool = await getChatbotPool();
+  const [rows] = await pool.query(`
+    SELECT history.storeNo, history.storeName, history.choiceMsg
+      FROM LIVE_CHOICE_HISTORY AS history
+      INNER JOIN (
+        SELECT MAX(id) AS latestId
+          FROM LIVE_CHOICE_HISTORY
+         GROUP BY CASE
+           WHEN storeNo IS NOT NULL THEN CONCAT('storeNo:', storeNo)
+           ELSE CONCAT('storeName:', TRIM(storeName))
+         END
+      ) AS latest_history
+        ON latest_history.latestId = history.id
+  `);
+
+  return buildLatestHistoryMap(rows);
+}
+
+async function getLatestRoomHistoryMap() {
+  const pool = await getChatbotPool();
+  const [rows] = await pool.query(`
+    SELECT history.storeNo, history.storeName, history.roomInfo, history.waitInfo, history.roomDetail
+      FROM LIVE_ROOM_HISTORY AS history
+      INNER JOIN (
+        SELECT MAX(id) AS latestId
+          FROM LIVE_ROOM_HISTORY
+         GROUP BY CASE
+           WHEN storeNo IS NOT NULL THEN CONCAT('storeNo:', storeNo)
+           ELSE CONCAT('storeName:', TRIM(storeName))
+         END
+      ) AS latest_history
+        ON latest_history.latestId = history.id
+  `);
+
+  return buildLatestHistoryMap(rows);
+}
+
 function hashHistoryKey(parts = []) {
   return crypto
     .createHash('sha256')
@@ -89,9 +181,16 @@ async function captureChoiceHistory() {
   const pool = await getChatbotPool();
   const latestCreatedAt = await getLatestChoiceHistoryCreatedAt();
   const rows = await liveModel.listLiveSourceRows('choice', { since: latestCreatedAt });
+  const latestHistoryMap = await getLatestChoiceHistoryMap();
   const capturedAt = formatMySqlDateTime(new Date());
 
   for (const row of rows) {
+    const storeHistoryKey = normalizeStoreHistoryKey(row.storeNo, row.storeName);
+    const previousRow = latestHistoryMap.get(storeHistoryKey);
+
+    if (previousRow && createChoiceContentSignature(previousRow) === createChoiceContentSignature(row)) {
+      continue;
+    }
     const sourceCreatedAt = row.createdAt ? String(row.createdAt) : null;
     const createdAt = sourceCreatedAt || capturedAt;
     const dedupeKey = hashHistoryKey([
@@ -102,7 +201,7 @@ async function captureChoiceHistory() {
       sourceCreatedAt || ''
     ]);
 
-    await pool.query(
+    const [result] = await pool.query(
       `INSERT IGNORE INTO LIVE_CHOICE_HISTORY
         (dedupeKey, storeNo, storeName, choiceMsg, createdAt, capturedAt)
        VALUES (?, ?, ?, ?, ?, ?)`,
@@ -115,6 +214,10 @@ async function captureChoiceHistory() {
         capturedAt
       ]
     );
+
+    if (result?.affectedRows) {
+      latestHistoryMap.set(storeHistoryKey, row);
+    }
   }
 }
 
@@ -123,8 +226,15 @@ async function captureRoomHistory() {
   const snapshotAt = formatMySqlDateTime(getBucketDate());
   const capturedAt = formatMySqlDateTime(new Date());
   const rows = await liveModel.listLiveSourceRows('waiting');
+  const latestHistoryMap = await getLatestRoomHistoryMap();
 
   for (const row of rows) {
+    const storeHistoryKey = normalizeStoreHistoryKey(row.storeNo, row.storeName);
+    const previousRow = latestHistoryMap.get(storeHistoryKey);
+
+    if (previousRow && createWaitingContentSignature(previousRow) === createWaitingContentSignature(row)) {
+      continue;
+    }
     const dedupeKey = hashHistoryKey([
       'waiting',
       snapshotAt,
@@ -135,7 +245,11 @@ async function captureRoomHistory() {
       row.roomDetail
     ]);
 
-    await pool.query(
+    const serializedRoomDetail = row.roomDetail == null
+      ? null
+      : (typeof row.roomDetail === 'string' ? row.roomDetail : JSON.stringify(row.roomDetail));
+
+    const [result] = await pool.query(
       `INSERT IGNORE INTO LIVE_ROOM_HISTORY
         (dedupeKey, snapshotAt, storeNo, storeName, roomInfo, waitInfo, roomDetail, updatedAt, sourceUpdatedAt, capturedAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -146,14 +260,19 @@ async function captureRoomHistory() {
         row.storeName || '',
         row.roomInfo == null ? null : String(row.roomInfo),
         row.waitInfo == null ? null : String(row.waitInfo),
-        row.roomDetail == null
-          ? null
-          : (typeof row.roomDetail === 'string' ? row.roomDetail : JSON.stringify(row.roomDetail)),
+        serializedRoomDetail,
         snapshotAt,
         row.sourceUpdatedAt ? String(row.sourceUpdatedAt) : null,
         capturedAt
       ]
     );
+
+    if (result?.affectedRows) {
+      latestHistoryMap.set(storeHistoryKey, {
+        ...row,
+        roomDetail: serializedRoomDetail
+      });
+    }
   }
 }
 
