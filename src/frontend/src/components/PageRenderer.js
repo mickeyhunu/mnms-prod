@@ -190,6 +190,10 @@ export default {
     const pageBodyContent = computed(() => normalizeTemplateLinks(stripLegacyHeader(pageConfig.value.template || '')));
     const pageShellClass = computed(() => `page-shell page-shell--${props.page || 'unknown'}`);
 
+    const applyPageMarker = () => {
+      document.body.dataset.page = props.page || '';
+    };
+
     const clearInjectedNodes = () => {
       injectedNodes.forEach((node) => node.remove());
       injectedNodes.length = 0;
@@ -233,6 +237,7 @@ export default {
 
     const loadPageAssets = async () => {
       clearInjectedNodes();
+      applyPageMarker();
       await nextTick();
       injectStyles();
       await injectScripts();
@@ -253,6 +258,7 @@ export default {
 
     onBeforeUnmount(() => {
       clearInjectedNodes();
+      delete document.body.dataset.page;
     });
 
     return { pageBodyContent, globalHeaderTemplate: GLOBAL_HEADER_TEMPLATE, pageShellClass };
