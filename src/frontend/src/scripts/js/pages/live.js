@@ -12,6 +12,7 @@ const LIVE_HISTORY_PAGE_SIZE = 30;
 const LIVE_ENTRY_PAGE_SIZE = 200;
 const LIVE_REFRESH_INTERVAL_MS = 30000;
 const LIVE_HISTORY_TOP_THRESHOLD_PX = 160;
+const LIVE_BOTTOM_BUTTON_THRESHOLD_PX = 220;
 
 const liveState = {
     stores: [],
@@ -85,6 +86,7 @@ function bindLiveEvents() {
 
     const storeFilter = document.getElementById('live-store-filter');
     const categoryFilter = document.getElementById('live-category-filter');
+    const scrollBottomButton = document.getElementById('live-scroll-bottom-button');
 
     initializeScrollableFilter(storeFilter);
     initializeScrollableFilter(categoryFilter);
@@ -124,12 +126,20 @@ function bindLiveEvents() {
     });
 
     window.addEventListener('scroll', () => {
+        updateLiveScrollBottomButton();
         maybeLoadOlderLiveHistory().catch((error) => {
             console.error('LIVE history load error:', error);
         });
     }, { passive: true });
 
+    window.addEventListener('resize', updateLiveScrollBottomButton, { passive: true });
+
+    scrollBottomButton?.addEventListener('click', () => {
+        scrollLiveToLatest();
+    });
+
     liveState.hasBoundEvents = true;
+    updateLiveScrollBottomButton();
 }
 
 function startLiveAutoRefresh() {
@@ -249,6 +259,7 @@ function applyLiveEntriesResponse() {
         totalCount: liveState.totalCount
     });
     renderLiveEntries(liveState.rows, liveState.titleColumn);
+    updateLiveScrollBottomButton();
 
     const hasRows = Array.isArray(liveState.rows) && liveState.rows.length > 0;
     const emptyElement = document.getElementById('live-empty');
@@ -543,7 +554,7 @@ function scrollLiveToLatest() {
     window.requestAnimationFrame(() => {
         window.scrollTo({
             top: getLiveDocumentScrollHeight(),
-            behavior: 'auto'
+            behavior: 'smooth'
         });
     });
 }
@@ -551,6 +562,19 @@ function scrollLiveToLatest() {
 function isLiveViewportNearBottom() {
     const scrollBottom = window.scrollY + window.innerHeight;
     return (getLiveDocumentScrollHeight() - scrollBottom) <= 160;
+}
+
+function updateLiveScrollBottomButton() {
+    const button = document.getElementById('live-scroll-bottom-button');
+    if (!button) return;
+
+    const scrollHeight = getLiveDocumentScrollHeight();
+    const viewportBottom = window.scrollY + window.innerHeight;
+    const remainingDistance = scrollHeight - viewportBottom;
+    const hasScrollableContent = scrollHeight > (window.innerHeight + 120);
+    const shouldShowButton = hasScrollableContent && remainingDistance > LIVE_BOTTOM_BUTTON_THRESHOLD_PX;
+
+    button.classList.toggle('hidden', !shouldShowButton);
 }
 
 function getLiveDocumentScrollHeight() {
