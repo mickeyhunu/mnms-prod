@@ -104,12 +104,22 @@ async function initLivePage() {
 function bindLiveEvents() {
     if (liveState.hasBoundEvents) return;
 
+    const backBtn = document.getElementById('back-btn');
     const storeFilter = document.getElementById('live-store-filter');
     const categoryFilter = document.getElementById('live-category-filter');
     const scrollBottomButton = document.getElementById('live-scroll-bottom-button');
 
     initializeScrollableFilter(storeFilter);
     initializeScrollableFilter(categoryFilter);
+
+    backBtn?.addEventListener('click', () => {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+
+        window.location.href = '/';
+    });
 
     storeFilter?.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-store-option]');

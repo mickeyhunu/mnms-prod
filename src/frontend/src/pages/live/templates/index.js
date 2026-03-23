@@ -5,6 +5,11 @@ export const liveStickyHeaderTemplate = `
 <div class="live-page__sticky-stack">
                 <header class="community-section-header">
                     <div class="community-header-left">
+                        <button type="button" class="icon-btn icon-btn-square" id="back-btn" aria-label="뒤로가기">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="m15 18-6-6 6-6"></path>
+                            </svg>
+                        </button>
                         <span class="community-board-name community-board-name--live"><span class="live-status-dot" aria-hidden="true"></span><span>LIVE</span></span>
                     </div>
                 </header>
