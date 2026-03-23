@@ -4,6 +4,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, watch } from 'vue';
 import { pageRegistry } from '../pageRegistry.js';
 import { GLOBAL_HEADER_TEMPLATE } from './GLOBAL_HEADER_TEMPLATE.js';
+import { BRAND_ASSETS, createBrandLogoMarkup } from '../brandAssets.js';
 
 const LINK_MAP = {
   'index.html': '/',
@@ -67,6 +68,22 @@ function toPublicAssetPath(assetPath) {
   if (!assetPath) return assetPath;
   if (assetPath.startsWith('http') || assetPath.startsWith('/')) return assetPath;
   return `/src/${assetPath.replace(/^\.\//, '')}`;
+}
+
+function syncBrandAssets(root = document) {
+  const faviconLink = document.head.querySelector('link[rel="icon"]') || document.createElement('link');
+  faviconLink.rel = 'icon';
+  faviconLink.type = 'image/png';
+  faviconLink.href = BRAND_ASSETS.faviconPath;
+
+  if (!faviconLink.parentNode) {
+    document.head.appendChild(faviconLink);
+  }
+
+  root.querySelectorAll('.logo').forEach((logoNode) => {
+    const href = logoNode.getAttribute('href') || '/';
+    logoNode.outerHTML = createBrandLogoMarkup({ homePath: href });
+  });
 }
 
 function ensureStyle(href, { persistent = false } = {}) {
@@ -225,6 +242,7 @@ export default {
       await nextTick();
       injectStyles();
       await injectScripts();
+      syncBrandAssets();
       runPersistentInitializers();
     };
 

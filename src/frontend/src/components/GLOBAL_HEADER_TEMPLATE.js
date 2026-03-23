@@ -1,6 +1,8 @@
+import { createBrandLogoMarkup } from '../brandAssets.js';
+
 export const GLOBAL_HEADER_TEMPLATE = `<header class="header">
   <div class="header-container">
-    <a href="/" class="logo"><h1>미드나잇 맨즈</h1></a>
+    ${createBrandLogoMarkup()}
     <nav class="nav" id="navigation">
       <div class="nav-guest" id="nav-guest">
         <a href="/login" class="btn btn-outline btn-sm">로그인</a>

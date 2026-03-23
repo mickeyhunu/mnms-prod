@@ -45,8 +45,8 @@ body[data-page="live"] .header {
 
 .live-scroll-bottom-button {
     position: fixed;
-    right: clamp(16px, 4vw, 32px);
-    bottom: calc(94px + env(safe-area-inset-bottom, 0px));
+    right: clamp(24px, 4vw, 32px);
+    bottom: calc(28px + env(safe-area-inset-bottom, 0px));
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -287,8 +287,8 @@ body[data-page="live"] .header {
     }
 
     .live-scroll-bottom-button {
-        right: 14px;
-        bottom: calc(98px + env(safe-area-inset-bottom, 0px));
+        right: 24px;
+        bottom: calc(28px + env(safe-area-inset-bottom, 0px));
         width: 54px;
         height: 54px;
     }
