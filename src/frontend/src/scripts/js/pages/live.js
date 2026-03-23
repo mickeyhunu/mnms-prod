@@ -13,6 +13,7 @@ const LIVE_ENTRY_PAGE_SIZE = 200;
 const LIVE_REFRESH_INTERVAL_MS = 30000;
 const LIVE_HISTORY_TOP_THRESHOLD_PX = 160;
 const LIVE_BOTTOM_BUTTON_THRESHOLD_PX = 220;
+const LIVE_AVATAR_IMAGE_BASE_PATH = '/src/assets/live-avatars';
 
 function removeLivePageSharedChrome() {
     document.querySelectorAll('body > .bottom-nav-footer, .page-shell--live > .bottom-nav-footer, .page-shell--live > .header').forEach((element) => {
@@ -600,6 +601,7 @@ function renderLiveEntries(rows, titleColumn) {
     if (!Array.isArray(rows) || !rows.length) {
         if (liveState.selectedCategoryKey === 'entry') {
             listElement.innerHTML = createEntrySummaryLiveCard([], titleColumn);
+            enhanceLiveAvatarImages(listElement);
             hideElement(emptyElement);
             return;
         }
@@ -613,10 +615,12 @@ function renderLiveEntries(rows, titleColumn) {
 
     if (liveState.selectedCategoryKey === 'entry') {
         listElement.innerHTML = createEntrySummaryLiveCard(rows, titleColumn);
+        enhanceLiveAvatarImages(listElement);
         return;
     }
 
     listElement.innerHTML = rows.map((row, index) => createLiveEntryCard(row, index, titleColumn)).join('');
+    enhanceLiveAvatarImages(listElement);
 }
 
 async function maybeLoadOlderLiveHistory() {
@@ -951,11 +955,15 @@ function createLiveChatCard({
         `).join('')}</ul>`
         : `<p class="live-chat-card__message">${sanitizeHTML(message || emptyMessage)}</p>`);
 
+    const avatarImageName = resolveLiveAvatarImageName(title);
+
     return `
         <article class="${normalizedCardClassName}">
             ${hideHeader ? '' : `
                 <div class="live-chat-card__header">
-                    <div class="live-chat-card__avatar" aria-hidden="true">${sanitizeHTML(normalizedAvatarLabel)}</div>
+                    <div class="live-chat-card__avatar" aria-hidden="true" ${avatarImageName ? `data-avatar-name="${sanitizeHTML(avatarImageName)}"` : ''}>
+                        <span class="live-chat-card__avatar-fallback">${sanitizeHTML(normalizedAvatarLabel)}</span>
+                    </div>
                     <div class="live-chat-card__header-copy">
                         <h3 class="live-chat-card__title">${sanitizeHTML(title)}</h3>
                     </div>
@@ -971,6 +979,52 @@ function createLiveChatCard({
             </div>
         </article>
     `;
+}
+
+function enhanceLiveAvatarImages(root = document) {
+    root.querySelectorAll('.live-chat-card__avatar[data-avatar-name]').forEach((avatarElement) => {
+        if (avatarElement.dataset.avatarInitialized === 'true') return;
+
+        const avatarName = String(avatarElement.dataset.avatarName || '').trim();
+        if (!avatarName) return;
+
+        const imageElement = document.createElement('img');
+        imageElement.className = 'live-chat-card__avatar-image';
+        imageElement.alt = '';
+        imageElement.loading = 'lazy';
+        imageElement.decoding = 'async';
+        imageElement.src = getLiveAvatarImagePath(avatarName);
+        imageElement.addEventListener('load', () => {
+            avatarElement.classList.add('has-image');
+        }, { once: true });
+        imageElement.addEventListener('error', () => {
+            imageElement.remove();
+        }, { once: true });
+
+        avatarElement.prepend(imageElement);
+        avatarElement.dataset.avatarInitialized = 'true';
+    });
+}
+
+function getLiveAvatarImagePath(avatarName) {
+    return `${LIVE_AVATAR_IMAGE_BASE_PATH}/${encodeURIComponent(avatarName)}프로필이미지.png`;
+}
+
+function resolveLiveAvatarImageName(title) {
+    const normalizedTitle = String(title || '').trim();
+    if (!normalizedTitle) return '';
+
+    const matchedStore = liveState.stores.find((store) => normalizedTitle.includes(String(store.storeName || '').trim()));
+    if (matchedStore?.storeName) {
+        return String(matchedStore.storeName).trim();
+    }
+
+    const titleWithoutSuffix = normalizedTitle
+        .replace(/\s+(초이스톡|엔트리)$/u, '')
+        .replace(/\s+룸\/웨이팅$/u, '')
+        .trim();
+
+    return titleWithoutSuffix;
 }
 
 function resolveEntryTitle(row, titleColumn, index) {
