@@ -14,6 +14,23 @@ const LIVE_REFRESH_INTERVAL_MS = 30000;
 const LIVE_HISTORY_TOP_THRESHOLD_PX = 160;
 const LIVE_BOTTOM_BUTTON_THRESHOLD_PX = 220;
 
+function removeLivePageSharedChrome() {
+    document.querySelectorAll('body > .bottom-nav-footer, .page-shell--live > .bottom-nav-footer, .page-shell--live > .header').forEach((element) => {
+        element.remove();
+    });
+
+    const sharedHeader = document.querySelector('.page-shell--live > div:first-child > .header');
+    if (sharedHeader) {
+        const wrapper = sharedHeader.parentElement;
+        sharedHeader.remove();
+        if (wrapper && !wrapper.childElementCount && !wrapper.textContent.trim()) {
+            wrapper.remove();
+        }
+    }
+
+    document.body.classList.remove('has-bottom-nav');
+}
+
 const liveState = {
     stores: [],
     categories: [],
@@ -63,6 +80,7 @@ function syncScrollableFilterState(element) {
 }
 
 async function initLivePage() {
+    removeLivePageSharedChrome();
     Auth.updateHeaderUI();
 
     if (typeof initHeader === 'function') {
