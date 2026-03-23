@@ -378,6 +378,8 @@ body[data-page="live"] .header {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
     border-radius: 16px;
     flex-shrink: 0;
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -387,6 +389,30 @@ body[data-page="live"] .header {
     font-weight: 900;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
     transform: rotate(3deg);
+}
+
+.live-chat-card__avatar-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.live-chat-card__avatar-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.live-chat-card__avatar.has-image {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.live-chat-card__avatar.has-image .live-chat-card__avatar-fallback {
+    opacity: 0;
 }
 
 .live-chat-card__header-copy {
