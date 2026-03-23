@@ -2,8 +2,8 @@
  * 파일 역할: 브랜드 로고/파비콘 경로와 공통 마크업을 관리하는 파일.
  */
 export const BRAND_ASSETS = {
-  logoPath: '/src/assets/brand-logo.png',
-  faviconPath: '/src/assets/favicon.png'
+  logoPath: '/src/assets/live-avatars/brand-logo.png',
+  faviconPath: '/src/assets/live-avatars/favicon.png'
 };
 
 export function createBrandLogoMarkup({ homePath = '/', title = '미드나잇 맨즈' } = {}) {
