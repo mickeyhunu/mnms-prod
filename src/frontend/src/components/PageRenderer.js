@@ -35,6 +35,9 @@ const GLOBAL_SCRIPTS = [
   'scripts/js/components/header.js'
 ];
 
+const PAGES_WITHOUT_GLOBAL_HEADER = new Set(['live']);
+const PAGES_WITHOUT_BOTTOM_NAV = new Set(['live']);
+
 const persistentStyleNodes = new Map();
 const persistentScriptNodes = new Map();
 const persistentScriptPromises = new Map();
@@ -155,6 +158,7 @@ export default {
     const pageConfig = computed(() => pageRegistry[props.page] || { template: '<div>페이지를 찾을 수 없습니다.</div>', styles: [], scripts: [] });
     const pageBodyContent = computed(() => normalizeTemplateLinks(stripTemplateScripts(stripLegacyHeader(pageConfig.value.template || ''))));
     const pageShellClass = computed(() => `page-shell page-shell--${props.page || 'unknown'}`);
+    const shouldRenderGlobalHeader = computed(() => !PAGES_WITHOUT_GLOBAL_HEADER.has(props.page));
 
     const applyPageMarker = () => {
       document.body.dataset.page = props.page || '';
@@ -163,6 +167,19 @@ export default {
     const clearInjectedNodes = () => {
       injectedNodes.forEach((node) => node.remove());
       injectedNodes.length = 0;
+    };
+
+    const syncBottomNavVisibility = () => {
+      if (!PAGES_WITHOUT_BOTTOM_NAV.has(props.page)) {
+        return;
+      }
+
+      const existingFooter = document.querySelector('.bottom-nav-footer');
+      if (existingFooter) {
+        existingFooter.remove();
+      }
+
+      document.body.classList.remove('has-bottom-nav');
     };
 
     const injectStyles = () => {
@@ -204,6 +221,7 @@ export default {
     const loadPageAssets = async () => {
       clearInjectedNodes();
       applyPageMarker();
+      syncBottomNavVisibility();
       await nextTick();
       injectStyles();
       await injectScripts();
@@ -227,7 +245,12 @@ export default {
       delete document.body.dataset.page;
     });
 
-    return { pageBodyContent, globalHeaderTemplate: GLOBAL_HEADER_TEMPLATE, pageShellClass };
+    return {
+      pageBodyContent,
+      globalHeaderTemplate: GLOBAL_HEADER_TEMPLATE,
+      pageShellClass,
+      shouldRenderGlobalHeader
+    };
   },
-  template: `<div :class="pageShellClass"><div v-html="globalHeaderTemplate"></div><div v-html="pageBodyContent"></div></div>`
+  template: `<div :class="pageShellClass"><div v-if="shouldRenderGlobalHeader" v-html="globalHeaderTemplate"></div><div v-html="pageBodyContent"></div></div>`
 };
