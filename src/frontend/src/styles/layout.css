@@ -28,11 +28,22 @@
     color: var(--text-color);
     flex: 0 1 auto;
     min-width: 0;
+    display: inline-flex;
+    align-items: center;
 }
 
-.logo h1 {
-    margin: 0;
+.logo-image {
+    display: block;
+    width: clamp(36px, 4vw, 44px);
+    height: clamp(36px, 4vw, 44px);
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.logo-text {
+    margin-left: 10px;
     font-size: clamp(18px, 1.7vw, 24px);
+    font-weight: 800;
     color: var(--primary-color);
     letter-spacing: -0.4px;
     white-space: nowrap;
