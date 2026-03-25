@@ -370,23 +370,12 @@ function initSearchEvents() {
     const searchForm = document.getElementById('search_frm');
     const searchTypeEl = document.getElementById('search-type');
     const searchKeywordEl = document.getElementById('search-keyword');
-    const resetBtn = document.getElementById('search-reset-btn');
 
     if (searchForm) {
         searchForm.addEventListener('submit', (event) => {
             event.preventDefault();
             searchState.searchType = searchTypeEl.value;
             searchState.keyword = searchKeywordEl.value.trim();
-            loadPosts(0);
-        });
-    }
-
-    if (resetBtn) {
-        resetBtn.addEventListener('click', () => {
-            searchState.searchType = 'bbs_title';
-            searchState.keyword = '';
-            searchTypeEl.value = 'bbs_title';
-            searchKeywordEl.value = '';
             loadPosts(0);
         });
     }
