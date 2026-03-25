@@ -527,8 +527,7 @@
 
 .board-search-form select,
 .board-search-form input,
-.board-search-btn,
-.board-search-reset {
+.board-search-btn {
     min-width: 0;
     font-size: clamp(12px, 2.8vw, 14px);
     white-space: nowrap;
@@ -549,8 +548,7 @@
     flex: 1 1 0;
 }
 
-.board-search-btn,
-.board-search-reset {
+.board-search-btn {
     flex: 0 1 auto;
     border: 1px solid #9f9f9f;
     background: #f7f7f7;
@@ -572,8 +570,7 @@
         flex-basis: 86px;
     }
 
-    .board-search-btn,
-    .board-search-reset {
+    .board-search-btn {
         padding-inline: 7px;
     }
 }

@@ -80,7 +80,6 @@ const communityTemplate = `
                     </select>
                     <input type="text" name="keyword" id="search-keyword" placeholder="검색어를 입력하세요">
                     <button type="submit" id="search-btn" class="board-search-btn">검색</button>
-                    <button type="button" id="search-reset-btn" class="board-search-reset">초기화</button>
                 </form>
             </div>
         </div>
