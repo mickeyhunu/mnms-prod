@@ -52,9 +52,15 @@ export const adminTemplate = `
                             <article class="admin-stats-panel">
                                 <div class="admin-stats-panel__header">
                                     <div>
-                                        <p class="admin-user-detail-eyebrow">최근 14일 추이</p>
-                                        <h3>방문/게시글/댓글/접속량</h3>
+                                        <p class="admin-user-detail-eyebrow" id="stats-period-caption">최근 14일 추이</p>
+                                        <h3 id="stats-period-title">방문/게시글/댓글/접속량</h3>
                                     </div>
+                                    <select id="stats-period-select" class="form-control admin-list-toolbar__filter" aria-label="통계 기간 선택">
+                                        <option value="daily">일별</option>
+                                        <option value="weekly">주별</option>
+                                        <option value="monthly">월별</option>
+                                        <option value="yearly">연도별</option>
+                                    </select>
                                 </div>
                                 <div class="admin-stats-chart" id="stats-chart"></div>
                             </article>
@@ -71,8 +77,8 @@ export const adminTemplate = `
                         <section class="admin-stats-panel">
                             <div class="admin-stats-panel__header">
                                 <div>
-                                    <p class="admin-user-detail-eyebrow">일별 상세</p>
-                                    <h3>최근 14일 통계 테이블</h3>
+                                    <p class="admin-user-detail-eyebrow" id="stats-table-caption">일별 상세</p>
+                                    <h3 id="stats-table-title">최근 14일 통계 테이블</h3>
                                 </div>
                             </div>
                             <div class="admin-table-container">

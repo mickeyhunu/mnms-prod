@@ -17,7 +17,13 @@ const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
 const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'entries', 'ads', 'support', 'inquiries'];
 const ADMIN_PAGE_SIZE = 20;
 const ADMIN_STATS_RANGE_DAYS = 14;
-const ADMIN_DASHBOARD_STATE = { summary: null, daily: [], boardStats: [] };
+const ADMIN_DASHBOARD_STATE = { summary: null, daily: [], series: [], period: 'daily', boardStats: [] };
+const ADMIN_STATS_PERIOD_META = {
+    daily: { caption: '최근 14일 추이', title: '일별 방문/게시글/댓글/접속량', tableCaption: '일별 상세', tableTitle: '최근 14일 통계 테이블' },
+    weekly: { caption: '최근 12주 추이', title: '주별 방문/게시글/댓글/접속량', tableCaption: '주별 상세', tableTitle: '최근 12주 통계 테이블' },
+    monthly: { caption: '최근 12개월 추이', title: '월별 방문/게시글/댓글/접속량', tableCaption: '월별 상세', tableTitle: '최근 12개월 통계 테이블' },
+    yearly: { caption: '최근 5년 추이', title: '연도별 방문/게시글/댓글/접속량', tableCaption: '연도별 상세', tableTitle: '최근 5년 통계 테이블' }
+};
 const ADMIN_LIST_STATE = {
     posts: { items: [], query: '', searchType: 'post', page: 1 },
     comments: { items: [], query: '', searchType: 'post', page: 1 },
@@ -155,6 +161,10 @@ function bindCommonEvents() {
     });
 
     document.getElementById('stats-retry-btn')?.addEventListener('click', loadStatsDashboard);
+    document.getElementById('stats-period-select')?.addEventListener('change', async (event) => {
+        ADMIN_DASHBOARD_STATE.period = String(event.target.value || 'daily').toLowerCase();
+        await loadStatsDashboard();
+    });
     document.getElementById('posts-retry-btn')?.addEventListener('click', loadPosts);
     document.getElementById('comments-retry-btn')?.addEventListener('click', loadComments);
     document.getElementById('users-retry-btn')?.addEventListener('click', loadUsers);
@@ -405,7 +415,7 @@ function renderStatsChart(dailyStats) {
     const maxComments = Math.max(...items.map((item) => Number(item.comments || 0)), 1);
 
     container.innerHTML = items.map((item) => {
-        const dateLabel = String(item.date || '').slice(5).replace('-', '.');
+        const dateLabel = sanitizeHTML(item.label || String(item.date || '').slice(5).replace('-', '.'));
         return `
             <div class="admin-stats-chart-row">
                 <strong>${dateLabel}</strong>
@@ -456,7 +466,7 @@ function renderStatsDailyTable(dailyStats) {
 
     tbody.innerHTML = items.map((item) => `
         <tr>
-            <td>${item.date}</td>
+            <td>${sanitizeHTML(item.label || item.date)}</td>
             <td>${formatStatsNumber(item.visitors)}</td>
             <td>${formatStatsNumber(item.pageViews)}</td>
             <td>${formatStatsNumber(item.posts)}</td>
@@ -465,11 +475,27 @@ function renderStatsDailyTable(dailyStats) {
     `).join('');
 }
 
+function renderStatsPeriodMeta(period = 'daily') {
+    const meta = ADMIN_STATS_PERIOD_META[period] || ADMIN_STATS_PERIOD_META.daily;
+    const caption = document.getElementById('stats-period-caption');
+    const title = document.getElementById('stats-period-title');
+    const tableCaption = document.getElementById('stats-table-caption');
+    const tableTitle = document.getElementById('stats-table-title');
+    const periodSelect = document.getElementById('stats-period-select');
+
+    if (caption) caption.textContent = meta.caption;
+    if (title) title.textContent = meta.title;
+    if (tableCaption) tableCaption.textContent = meta.tableCaption;
+    if (tableTitle) tableTitle.textContent = meta.tableTitle;
+    if (periodSelect) periodSelect.value = period;
+}
+
 function renderStatsDashboard() {
+    renderStatsPeriodMeta(ADMIN_DASHBOARD_STATE.period);
     renderStatsSummaryCards(ADMIN_DASHBOARD_STATE.summary);
-    renderStatsChart(ADMIN_DASHBOARD_STATE.daily);
+    renderStatsChart(ADMIN_DASHBOARD_STATE.series);
     renderBoardStats(ADMIN_DASHBOARD_STATE.boardStats);
-    renderStatsDailyTable(ADMIN_DASHBOARD_STATE.daily);
+    renderStatsDailyTable(ADMIN_DASHBOARD_STATE.series);
 }
 
 async function handleGlobalAdminClick(event) {
@@ -537,9 +563,11 @@ async function loadUsers() {
 async function loadStatsDashboard() {
     toggleLoading('stats', true);
     try {
-        const response = await APIClient.get('/admin/stats/dashboard', { rangeDays: ADMIN_STATS_RANGE_DAYS });
+        const response = await APIClient.get('/admin/stats/dashboard', { rangeDays: ADMIN_STATS_RANGE_DAYS, period: ADMIN_DASHBOARD_STATE.period });
         ADMIN_DASHBOARD_STATE.summary = response.summary || null;
         ADMIN_DASHBOARD_STATE.daily = response.daily || [];
+        ADMIN_DASHBOARD_STATE.series = response.series || response.daily || [];
+        ADMIN_DASHBOARD_STATE.period = String(response.period || ADMIN_DASHBOARD_STATE.period || 'daily').toLowerCase();
         ADMIN_DASHBOARD_STATE.boardStats = response.boardStats || [];
         renderStatsDashboard();
         showContent('stats');

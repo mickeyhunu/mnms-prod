@@ -17,7 +17,8 @@ router.use(authMiddleware, adminMiddleware);
 router.get('/stats/dashboard', async (req, res, next) => {
   try {
     const rangeDays = Number.parseInt(req.query.rangeDays || '14', 10);
-    const dashboard = await adminModel.getDashboardStats(rangeDays);
+    const period = String(req.query.period || 'daily').toLowerCase();
+    const dashboard = await adminModel.getDashboardStats(rangeDays, { period });
     res.json(dashboard);
   } catch (error) {
     next(error);

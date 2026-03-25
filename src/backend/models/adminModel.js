@@ -417,9 +417,93 @@ function formatStatsDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-async function getDashboardStats(rangeDays = 14) {
+function normalizeStatsPeriod(period) {
+  const allowedPeriods = new Set(['daily', 'weekly', 'monthly', 'yearly']);
+  return allowedPeriods.has(period) ? period : 'daily';
+}
+
+function formatYearMonth(date) {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
+function formatWeekRangeLabel(startDate) {
+  const endDate = new Date(startDate);
+  endDate.setUTCDate(startDate.getUTCDate() + 6);
+  return `${formatStatsDate(startDate)} ~ ${formatStatsDate(endDate)}`;
+}
+
+function aggregateDailyStatsByPeriod(dailyStats, period = 'daily') {
+  const resolvedPeriod = normalizeStatsPeriod(period);
+  if (resolvedPeriod === 'daily') {
+    return dailyStats.map((item) => ({ ...item, label: item.date }));
+  }
+
+  const map = new Map();
+  for (const row of dailyStats) {
+    const currentDate = new Date(`${row.date}T00:00:00.000Z`);
+    let key = row.date;
+    let sortKey = row.date;
+    let label = row.date;
+
+    if (resolvedPeriod === 'weekly') {
+      const day = currentDate.getUTCDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      const weekStart = new Date(currentDate);
+      weekStart.setUTCDate(currentDate.getUTCDate() + diffToMonday);
+      key = formatStatsDate(weekStart);
+      sortKey = key;
+      label = formatWeekRangeLabel(weekStart);
+    } else if (resolvedPeriod === 'monthly') {
+      key = formatYearMonth(currentDate);
+      sortKey = key;
+      label = `${key}월`;
+    } else if (resolvedPeriod === 'yearly') {
+      key = String(currentDate.getUTCFullYear());
+      sortKey = key;
+      label = `${key}년`;
+    }
+
+    const existing = map.get(key) || {
+      key,
+      label,
+      sortKey,
+      visitors: 0,
+      pageViews: 0,
+      posts: 0,
+      comments: 0
+    };
+
+    existing.visitors += Number(row.visitors || 0);
+    existing.pageViews += Number(row.pageViews || 0);
+    existing.posts += Number(row.posts || 0);
+    existing.comments += Number(row.comments || 0);
+    map.set(key, existing);
+  }
+
+  return Array.from(map.values())
+    .sort((a, b) => String(a.sortKey).localeCompare(String(b.sortKey)))
+    .map((item) => ({
+      date: item.key,
+      label: item.label,
+      visitors: item.visitors,
+      pageViews: item.pageViews,
+      posts: item.posts,
+      comments: item.comments
+    }));
+}
+
+async function getDashboardStats(rangeDays = 14, { period = 'daily' } = {}) {
   const pool = getPool();
-  const normalizedRangeDays = Math.max(7, Math.min(30, Number.parseInt(rangeDays, 10) || 14));
+  const resolvedPeriod = normalizeStatsPeriod(period);
+  const periodRangeByType = {
+    daily: Math.max(7, Math.min(31, Number.parseInt(rangeDays, 10) || 14)),
+    weekly: 7 * 12,
+    monthly: 31 * 12,
+    yearly: 366 * 5
+  };
+  const normalizedRangeDays = periodRangeByType[resolvedPeriod] || periodRangeByType.daily;
 
   const [summaryRows] = await pool.query(
     `SELECT
@@ -499,7 +583,10 @@ async function getDashboardStats(rangeDays = 14) {
     });
   }
 
+  const periodSeries = aggregateDailyStatsByPeriod(daily, resolvedPeriod);
+
   return {
+    period: resolvedPeriod,
     summary: {
       totalVisitors: Number(summaryRows[0]?.totalVisitors || 0),
       todayVisitors: Number(summaryRows[0]?.todayVisitors || 0),
@@ -517,7 +604,8 @@ async function getDashboardStats(rangeDays = 14) {
       totalPosts: Number(row.totalPosts || 0),
       todayPosts: Number(row.todayPosts || 0)
     })),
-    daily
+    daily,
+    series: periodSeries
   };
 }
 
