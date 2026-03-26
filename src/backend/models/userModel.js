@@ -31,6 +31,18 @@ async function findByKakaoId(kakaoId) {
   return ensureResolvedLoginRestriction(rows[0] || null);
 }
 
+async function attachKakaoIdToUser(userId, kakaoId) {
+  const pool = getPool();
+  await pool.query(
+    `UPDATE users
+     SET kakao_id = ?
+     WHERE id = ?
+       AND (kakao_id IS NULL OR kakao_id = '')`,
+    [kakaoId, userId]
+  );
+  return findById(userId);
+}
+
 async function recordUserLoginHistory(userId, { ipAddress, userAgent }) {
   const pool = getPool();
   await pool.query(
@@ -297,6 +309,7 @@ module.exports = {
   ensureResolvedLoginRestriction,
   createUser,
   findByKakaoId,
+  attachKakaoIdToUser,
   findByEmail,
   findById,
   findByNickname,
