@@ -406,8 +406,29 @@ async function recordSiteVisit({ visitorKey, path }) {
   );
 }
 
+function normalizeStatsDateKey(value) {
+  if (value == null) return '';
+
+  if (value instanceof Date) {
+    return formatStatsDate(value);
+  }
+
+  const raw = String(value).trim();
+  if (!raw) return '';
+
+  const simpleMatch = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (simpleMatch) return simpleMatch[1];
+
+  const parsedDate = new Date(raw);
+  if (!Number.isNaN(parsedDate.getTime())) {
+    return formatStatsDate(parsedDate);
+  }
+
+  return raw;
+}
+
 function toDailySeriesMap(rows, valueMapper) {
-  return new Map(rows.map((row) => [String(row.statsDate), valueMapper(row)]));
+  return new Map(rows.map((row) => [normalizeStatsDateKey(row.statsDate), valueMapper(row)]));
 }
 
 function formatStatsDate(date) {
