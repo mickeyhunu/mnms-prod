@@ -108,4 +108,24 @@ async function checkNickname(req, res, next) {
   }
 }
 
-module.exports = { register, login, me, logout, checkNickname };
+function kakaoCallback(req, res) {
+  const { code, state, error, error_description: errorDescription } = req.query;
+
+  res.json({
+    success: !error,
+    message: error
+      ? '카카오 로그인 콜백에서 오류가 전달되었습니다.'
+      : '카카오 로그인 콜백 데이터를 수신했습니다.',
+    provider: 'kakao',
+    receivedAt: new Date().toISOString(),
+    data: {
+      code: code || null,
+      state: state || null,
+      error: error || null,
+      errorDescription: errorDescription || null,
+      rawQuery: req.query
+    }
+  });
+}
+
+module.exports = { register, login, me, logout, checkNickname, kakaoCallback };

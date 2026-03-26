@@ -12,5 +12,6 @@ router.post('/login', controller.login);
 router.get('/check-nickname', controller.checkNickname);
 router.post('/logout', authMiddleware, controller.logout);
 router.get('/me', authMiddleware, controller.me);
+router.get('/kakao/callback', controller.kakaoCallback);
 
 module.exports = router;
