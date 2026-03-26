@@ -1,7 +1,7 @@
 /**
  * 파일 역할: login 페이지의 이벤트/데이터 흐름을 초기화하는 페이지 스크립트 파일.
  */
-const KAKAO_JAVASCRIPT_KEY = '';
+const KAKAO_JAVASCRIPT_KEY = '9c6517d32bf031bea029433274697a11';
 
 function initLoginPage() {
     if (Auth.redirectIfAuthenticated()) {
@@ -38,7 +38,7 @@ function setupKakaoLogin() {
     const isReady = initializeKakaoSdk();
     if (!isReady) {
         kakaoLoginBtn.disabled = true;
-        kakaoLoginBtn.title = 'login.js의 KAKAO_JAVASCRIPT_KEY에 API 키를 입력하세요.';
+        kakaoLoginBtn.title = '카카오 SDK 로드 또는 초기화에 실패했습니다. 잠시 후 다시 시도해주세요.';
         return;
     }
 
