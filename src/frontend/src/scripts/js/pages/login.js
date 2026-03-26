@@ -73,18 +73,7 @@ async function handleKakaoLogin() {
             });
         });
 
-        const userInfo = await new Promise((resolve, reject) => {
-            window.Kakao.API.request({
-                url: '/v2/user/me',
-                success: resolve,
-                fail: reject
-            });
-        });
-
-        localStorage.setItem('kakao_auth', JSON.stringify({
-            accessToken: authObj.access_token,
-            user: userInfo
-        }));
+        await AuthAPI.kakaoLogin(authObj.access_token);
 
         showNotification('카카오 로그인이 완료되었습니다.', 'success');
         window.location.href = 'http://localhost:8080/';

@@ -2,7 +2,7 @@
  * 파일 역할: authController 관련 HTTP 요청을 처리하고 모델/응답 로직을 조합하는 컨트롤러 파일.
  */
 const crypto = require('crypto');
-const { createUser, findByEmail, findByNickname, recordUserLoginHistory } = require('../models/userModel');
+const { createUser, findByEmail, findByNickname, findByKakaoId, recordUserLoginHistory } = require('../models/userModel');
 const { formatRestrictionMessage, getLoginRestrictionState } = require('../utils/loginRestriction');
 
 function normalizeMemberType(value) {
@@ -25,6 +25,7 @@ function getClientIp(req) {
 const { createSession, deleteSession } = require('../models/sessionModel');
 const { awardPointByAction } = require('../models/pointModel');
 const { pickUserRow } = require('../utils/response');
+const { issueJwt } = require('../utils/jwt');
 
 async function register(req, res, next) {
   try {
@@ -66,7 +67,7 @@ async function login(req, res, next) {
       return res.status(403).json({ message: formatRestrictionMessage(user) });
     }
 
-    const token = crypto.randomBytes(32).toString('hex');
+    const token = issueJwt({ sub: String(user.id), type: 'access' });
     await createSession(token, user.id);
     await recordUserLoginHistory(user.id, {
       ipAddress: getClientIp(req),
@@ -78,6 +79,100 @@ async function login(req, res, next) {
     res.json({ success: true, token, ...pickUserRow(refreshedUser || user) });
   } catch (error) {
     next(error);
+  }
+}
+
+async function fetchKakaoUserInfo(accessToken) {
+  const response = await fetch('https://kapi.kakao.com/v2/user/me', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+    }
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    const message = payload?.msg || payload?.error_description || '카카오 사용자 정보 조회에 실패했습니다.';
+    const error = new Error(message);
+    error.statusCode = 401;
+    throw error;
+  }
+
+  return payload;
+}
+
+function sanitizeKakaoNickname(profileNickname, kakaoId) {
+  const fallbackNickname = `kakao_${String(kakaoId || '').slice(-6) || 'user'}`;
+  return String(profileNickname || fallbackNickname).trim().slice(0, 30) || fallbackNickname;
+}
+
+async function createUniqueNickname(baseNickname) {
+  let nickname = baseNickname;
+  let suffix = 0;
+  while (await findByNickname(nickname)) {
+    suffix += 1;
+    nickname = `${baseNickname}_${suffix}`.slice(0, 30);
+  }
+  return nickname;
+}
+
+function buildKakaoPlaceholderEmail(kakaoId) {
+  return `kakao_${kakaoId}@kakao.local`;
+}
+
+async function kakaoLogin(req, res, next) {
+  try {
+    const accessToken = String(req.body.accessToken || '').trim();
+    if (!accessToken) {
+      return res.status(400).json({ message: '카카오 액세스 토큰이 필요합니다.' });
+    }
+
+    const kakaoUser = await fetchKakaoUserInfo(accessToken);
+    const kakaoId = String(kakaoUser.id || '').trim();
+    if (!kakaoId) {
+      return res.status(401).json({ message: '카카오 사용자 식별값을 확인할 수 없습니다.' });
+    }
+
+    let user = await findByKakaoId(kakaoId);
+
+    if (!user) {
+      const kakaoAccount = kakaoUser.kakao_account || {};
+      const email = String(kakaoAccount.email || '').trim() || buildKakaoPlaceholderEmail(kakaoId);
+      const nicknameCandidate = sanitizeKakaoNickname(kakaoAccount.profile?.nickname, kakaoId);
+      const nickname = await createUniqueNickname(nicknameCandidate);
+      const randomPassword = crypto.randomBytes(24).toString('hex');
+      const userId = await createUser({
+        email,
+        password: randomPassword,
+        nickname,
+        memberType: 'GENERAL',
+        kakaoId
+      });
+      await awardPointByAction(userId, 'REGISTER');
+      user = await findByKakaoId(kakaoId);
+    }
+
+    const restrictionState = getLoginRestrictionState(user);
+    if (restrictionState.isRestricted) {
+      return res.status(403).json({ message: formatRestrictionMessage(user) });
+    }
+
+    const token = issueJwt({ sub: String(user.id), type: 'access' });
+    await createSession(token, user.id);
+    await recordUserLoginHistory(user.id, {
+      ipAddress: getClientIp(req),
+      userAgent: req.headers['user-agent'] || null
+    });
+    await awardPointByAction(user.id, 'LOGIN_DAILY');
+
+    const refreshedUser = await findByKakaoId(kakaoId);
+    return res.json({ success: true, token, ...pickUserRow(refreshedUser || user) });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
   }
 }
 
@@ -128,4 +223,4 @@ function kakaoCallback(req, res) {
   });
 }
 
-module.exports = { register, login, me, logout, checkNickname, kakaoCallback };
+module.exports = { register, login, kakaoLogin, me, logout, checkNickname, kakaoCallback };

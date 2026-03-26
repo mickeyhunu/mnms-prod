@@ -4,11 +4,11 @@
 const { getPool } = require('../config/database');
 const { getLoginRestrictionState, LOGIN_STATUS } = require('../utils/loginRestriction');
 
-async function createUser({ email, password, nickname, memberType = 'GENERAL' }) {
+async function createUser({ email, password, nickname, memberType = 'GENERAL', kakaoId = null }) {
   const pool = getPool();
   const [result] = await pool.query(
-    'INSERT INTO users (email, password, nickname, role, member_type, total_points) VALUES (?, ?, ?, ?, ?, ?)',
-    [email, password, nickname, 'USER', memberType, 0]
+    'INSERT INTO users (email, kakao_id, password, nickname, role, member_type, total_points) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [email, kakaoId, password, nickname, 'USER', memberType, 0]
   );
   return result.insertId;
 }
@@ -22,6 +22,12 @@ async function findByEmail(email) {
 async function findById(id) {
   const pool = getPool();
   const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
+  return ensureResolvedLoginRestriction(rows[0] || null);
+}
+
+async function findByKakaoId(kakaoId) {
+  const pool = getPool();
+  const [rows] = await pool.query('SELECT * FROM users WHERE kakao_id = ?', [kakaoId]);
   return ensureResolvedLoginRestriction(rows[0] || null);
 }
 
@@ -290,6 +296,7 @@ module.exports = {
   clearExpiredLoginRestriction,
   ensureResolvedLoginRestriction,
   createUser,
+  findByKakaoId,
   findByEmail,
   findById,
   findByNickname,
