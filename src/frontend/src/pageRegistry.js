@@ -505,6 +505,7 @@ const pageRegistry = {
                     </div>
 
                     <button type="submit" class="btn btn-primary w-full" id="submit-btn">로그인</button>
+                    <button type="button" class="btn btn-kakao w-full mt-2" id="kakao-login-btn">카카오 로그인</button>
                 </form>
 
                 <div class="text-center mt-3">
@@ -526,6 +527,7 @@ const pageRegistry = {
     <script src="scripts/js/utils/auth.js"></script>
     <script src="scripts/js/api/apiClient.js"></script>
     <script src="scripts/js/api/authAPI.js"></script>
+    <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
     <script src="scripts/js/pages/login.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],

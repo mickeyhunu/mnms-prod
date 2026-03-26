@@ -208,6 +208,18 @@ a:hover {
     display: block;
 }
 
+.btn-kakao {
+    background: #fee500;
+    border: 1px solid #fee500;
+    color: #191919;
+    font-weight: 700;
+}
+
+.btn-kakao:hover {
+    background: #f5dc00;
+    border-color: #f5dc00;
+}
+
 .auth-container { max-width: 500px; }
 .auth-container.auth-login { max-width: 420px; }
 
