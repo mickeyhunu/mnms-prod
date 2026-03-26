@@ -4,11 +4,35 @@
 const { getPool } = require('../config/database');
 const { getLoginRestrictionState, LOGIN_STATUS } = require('../utils/loginRestriction');
 
+
+async function hasUserColumn(columnName) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = 'users'
+       AND COLUMN_NAME = ?
+     LIMIT 1`,
+    [columnName]
+  );
+  return rows.length > 0;
+}
+
 async function createUser({ email, password, nickname, memberType = 'GENERAL', kakaoId = null }) {
   const pool = getPool();
+  const columns = ['email', 'kakao_id', 'password', 'nickname', 'role', 'member_type', 'total_points'];
+  const values = [email, kakaoId, password, nickname, 'USER', memberType, 0];
+
+  if (await hasUserColumn('company')) {
+    columns.push('company');
+    values.push('');
+  }
+
+  const placeholders = columns.map(() => '?').join(', ');
   const [result] = await pool.query(
-    'INSERT INTO users (email, kakao_id, password, nickname, role, member_type, total_points) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [email, kakaoId, password, nickname, 'USER', memberType, 0]
+    `INSERT INTO users (${columns.join(', ')}) VALUES (${placeholders})`,
+    values
   );
   return result.insertId;
 }
