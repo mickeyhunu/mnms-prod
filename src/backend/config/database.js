@@ -169,6 +169,7 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS users (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       email VARCHAR(255) NOT NULL UNIQUE,
+      kakao_id VARCHAR(100) NULL UNIQUE,
       password VARCHAR(255) NOT NULL,
       nickname VARCHAR(255) NOT NULL UNIQUE,
       role ENUM('USER','ADMIN') NOT NULL DEFAULT 'USER',
@@ -211,6 +212,7 @@ async function initDatabase() {
   }
 
   const userColumnDefinitions = [
+    { name: 'kakao_id', query: "ALTER TABLE users ADD COLUMN kakao_id VARCHAR(100) NULL UNIQUE AFTER email" },
     { name: 'name', query: "ALTER TABLE users ADD COLUMN name VARCHAR(100) NULL AFTER nickname" },
     { name: 'birth_date', query: "ALTER TABLE users ADD COLUMN birth_date DATE NULL AFTER name" },
     { name: 'phone', query: "ALTER TABLE users ADD COLUMN phone VARCHAR(30) NULL AFTER birth_date" },

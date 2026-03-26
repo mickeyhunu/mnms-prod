@@ -46,6 +46,36 @@ const AuthAPI = {
         }
     },
 
+    async kakaoLogin(accessToken) {
+        try {
+            const response = await APIClient.post('/auth/kakao/login', { accessToken });
+
+            if (response.token) {
+                Auth.setToken(response.token);
+                Auth.setUser({
+                    id: response.id,
+                    email: response.email,
+                    nickname: response.nickname,
+                    isAdmin: response.isAdmin,
+                    totalPoints: response.totalPoints,
+                    level: response.level,
+                    levelEmoji: response.levelEmoji,
+                    levelTitle: response.levelTitle,
+                    levelLabel: response.levelLabel,
+                    accountStatus: response.accountStatus,
+                    isLoginRestricted: response.isLoginRestricted,
+                    loginRestrictedUntil: response.loginRestrictedUntil,
+                    isLoginRestrictionPermanent: response.isLoginRestrictionPermanent
+                });
+            }
+
+            return response;
+        } catch (error) {
+            console.error('AuthAPI.kakaoLogin 에러:', error);
+            throw error;
+        }
+    },
+
 
     async checkNickname(nickname) {
         try {
