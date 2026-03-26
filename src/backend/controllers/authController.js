@@ -2,7 +2,7 @@
  * 파일 역할: authController 관련 HTTP 요청을 처리하고 모델/응답 로직을 조합하는 컨트롤러 파일.
  */
 const crypto = require('crypto');
-const { createUser, findByEmail, findByNickname, findByKakaoId, recordUserLoginHistory } = require('../models/userModel');
+const { createUser, findByEmail, findByNickname, findByKakaoId, attachKakaoIdToUser, recordUserLoginHistory } = require('../models/userModel');
 const { formatRestrictionMessage, getLoginRestrictionState } = require('../utils/loginRestriction');
 
 function normalizeMemberType(value) {
@@ -138,19 +138,26 @@ async function kakaoLogin(req, res, next) {
 
     if (!user) {
       const kakaoAccount = kakaoUser.kakao_account || {};
-      const email = String(kakaoAccount.email || '').trim() || buildKakaoPlaceholderEmail(kakaoId);
+      const kakaoEmail = String(kakaoAccount.email || '').trim();
+      const email = kakaoEmail || buildKakaoPlaceholderEmail(kakaoId);
       const nicknameCandidate = sanitizeKakaoNickname(kakaoAccount.profile?.nickname, kakaoId);
-      const nickname = await createUniqueNickname(nicknameCandidate);
-      const randomPassword = crypto.randomBytes(24).toString('hex');
-      const userId = await createUser({
-        email,
-        password: randomPassword,
-        nickname,
-        memberType: 'GENERAL',
-        kakaoId
-      });
-      await awardPointByAction(userId, 'REGISTER');
-      user = await findByKakaoId(kakaoId);
+      const existingEmailUser = kakaoEmail ? await findByEmail(kakaoEmail) : null;
+
+      if (existingEmailUser) {
+        user = await attachKakaoIdToUser(existingEmailUser.id, kakaoId);
+      } else {
+        const nickname = await createUniqueNickname(nicknameCandidate);
+        const randomPassword = crypto.randomBytes(24).toString('hex');
+        const userId = await createUser({
+          email,
+          password: randomPassword,
+          nickname,
+          memberType: 'GENERAL',
+          kakaoId
+        });
+        await awardPointByAction(userId, 'REGISTER');
+        user = await findByKakaoId(kakaoId);
+      }
     }
 
     const restrictionState = getLoginRestrictionState(user);
