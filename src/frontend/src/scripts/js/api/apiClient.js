@@ -36,7 +36,11 @@ const APIClient = {
                     console.error('Error parsing error response:', e);
                 }
                 
-                const error = new Error(errorData.message || '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                const fallbackMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                const serverMessage = typeof errorData.message === 'string' ? errorData.message.trim() : '';
+                const serverDetail = typeof errorData.detail === 'string' ? errorData.detail.trim() : '';
+                const resolvedMessage = serverMessage || (response.status >= 500 && serverDetail ? `${fallbackMessage} (${serverDetail})` : fallbackMessage);
+                const error = new Error(resolvedMessage);
                 error.status = response.status;
                 error.data = errorData;
                 throw error;
@@ -49,7 +53,12 @@ const APIClient = {
             if (error.name === 'TypeError' || error.message.includes('fetch')) {
                 error.message = '네트워크 연결에 문제가 발생했습니다.';
             }
-            console.error('API Client error:', error);
+            console.error('API Client error:', {
+                endpoint: url,
+                status: error.status,
+                message: error.message,
+                detail: error.data?.detail || null
+            });
             throw error;
         }
     },
@@ -83,7 +92,11 @@ const APIClient = {
                     console.error('Error parsing error response:', e);
                 }
                 
-                const error = new Error(errorData.message || '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                const fallbackMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                const serverMessage = typeof errorData.message === 'string' ? errorData.message.trim() : '';
+                const serverDetail = typeof errorData.detail === 'string' ? errorData.detail.trim() : '';
+                const resolvedMessage = serverMessage || (response.status >= 500 && serverDetail ? `${fallbackMessage} (${serverDetail})` : fallbackMessage);
+                const error = new Error(resolvedMessage);
                 error.status = response.status;
                 error.data = errorData;
                 throw error;
@@ -96,7 +109,12 @@ const APIClient = {
             if (error.name === 'TypeError' || error.message.includes('fetch')) {
                 error.message = '네트워크 연결에 문제가 발생했습니다.';
             }
-            console.error('API Client error:', error);
+            console.error('API Client error:', {
+                endpoint: url,
+                status: error.status,
+                message: error.message,
+                detail: error.data?.detail || null
+            });
             throw error;
         }
     },

@@ -79,7 +79,7 @@ async function handleKakaoLogin() {
         window.location.href = 'http://localhost:8080/';
     } catch (error) {
         console.error('카카오 로그인 에러:', error);
-        showNotification('카카오 로그인에 실패했습니다.', 'error');
+        showNotification(error.message || '카카오 로그인에 실패했습니다.', 'error');
     }
 }
 
