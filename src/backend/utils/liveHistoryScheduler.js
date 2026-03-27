@@ -48,6 +48,13 @@ function createChoiceContentSignature(row = {}) {
   ].join('|');
 }
 
+function createChojoongContentSignature(row = {}) {
+  return [
+    normalizeStoreHistoryKey(row.storeNo, row.storeName),
+    normalizeComparableValue(row.chojoongMsg)
+  ].join('|');
+}
+
 function createWaitingContentSignature(row = {}) {
   return [
     normalizeStoreHistoryKey(row.storeNo, row.storeName),
@@ -73,6 +80,25 @@ async function getLatestChoiceHistoryMap() {
       INNER JOIN (
         SELECT MAX(id) AS latestId
           FROM LIVE_CHOICE_HISTORY
+         GROUP BY CASE
+           WHEN storeNo IS NOT NULL THEN CONCAT('storeNo:', storeNo)
+           ELSE CONCAT('storeName:', TRIM(storeName))
+         END
+      ) AS latest_history
+        ON latest_history.latestId = history.id
+  `);
+
+  return buildLatestHistoryMap(rows);
+}
+
+async function getLatestChojoongHistoryMap() {
+  const pool = await getChatbotPool();
+  const [rows] = await pool.query(`
+    SELECT history.storeNo, history.storeName, history.chojoongMsg
+      FROM LIVE_CHOJOONG_HISTORY AS history
+      INNER JOIN (
+        SELECT MAX(id) AS latestId
+          FROM LIVE_CHOJOONG_HISTORY
          GROUP BY CASE
            WHEN storeNo IS NOT NULL THEN CONCAT('storeNo:', storeNo)
            ELSE CONCAT('storeName:', TRIM(storeName))
@@ -169,6 +195,20 @@ async function ensureLiveHistoryTables() {
       INDEX idx_live_room_history_store_name_updated_at (storeName, updatedAt)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS LIVE_CHOJOONG_HISTORY (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      dedupeKey CHAR(64) NOT NULL UNIQUE,
+      storeNo INT NULL,
+      storeName VARCHAR(255) NOT NULL DEFAULT '',
+      chojoongMsg LONGTEXT NOT NULL,
+      createdAt DATETIME NULL,
+      capturedAt DATETIME NOT NULL,
+      INDEX idx_live_chojoong_history_store_created_at (storeNo, createdAt),
+      INDEX idx_live_chojoong_history_store_name_created_at (storeName, createdAt)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
 }
 
 async function getLatestChoiceHistoryCreatedAt() {
@@ -210,6 +250,56 @@ async function captureChoiceHistory() {
         row.storeNo,
         row.storeName || '',
         row.choiceMsg || '',
+        createdAt,
+        capturedAt
+      ]
+    );
+
+    if (result?.affectedRows) {
+      latestHistoryMap.set(storeHistoryKey, row);
+    }
+  }
+}
+
+async function getLatestChojoongHistoryCreatedAt() {
+  const pool = await getChatbotPool();
+  const [rows] = await pool.query('SELECT MAX(createdAt) AS latestCreatedAt FROM LIVE_CHOJOONG_HISTORY');
+  return rows[0]?.latestCreatedAt || null;
+}
+
+async function captureChojoongHistory() {
+  const pool = await getChatbotPool();
+  const latestCreatedAt = await getLatestChojoongHistoryCreatedAt();
+  const rows = await liveModel.listLiveSourceRows('chojoong', { since: latestCreatedAt });
+  const latestHistoryMap = await getLatestChojoongHistoryMap();
+  const capturedAt = formatMySqlDateTime(new Date());
+
+  for (const row of rows) {
+    const storeHistoryKey = normalizeStoreHistoryKey(row.storeNo, row.storeName);
+    const previousRow = latestHistoryMap.get(storeHistoryKey);
+
+    if (previousRow && createChojoongContentSignature(previousRow) === createChojoongContentSignature(row)) {
+      continue;
+    }
+    const sourceCreatedAt = row.createdAt ? String(row.createdAt) : null;
+    const createdAt = sourceCreatedAt || capturedAt;
+    const dedupeKey = hashHistoryKey([
+      'chojoong',
+      row.storeNo,
+      row.storeName,
+      row.chojoongMsg,
+      sourceCreatedAt || ''
+    ]);
+
+    const [result] = await pool.query(
+      `INSERT IGNORE INTO LIVE_CHOJOONG_HISTORY
+        (dedupeKey, storeNo, storeName, chojoongMsg, createdAt, capturedAt)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        dedupeKey,
+        row.storeNo,
+        row.storeName || '',
+        row.chojoongMsg || '',
         createdAt,
         capturedAt
       ]
@@ -284,6 +374,7 @@ async function runLiveHistorySnapshot() {
   liveHistoryRunPromise = (async () => {
     await ensureLiveHistoryTables();
     await captureChoiceHistory();
+    await captureChojoongHistory();
     await captureRoomHistory();
   })();
 

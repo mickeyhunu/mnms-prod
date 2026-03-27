@@ -3,6 +3,7 @@
  */
 const LIVE_CATEGORIES = {
     choice: { key: 'choice', label: '초이스톡' },
+    chojoong: { key: 'chojoong', label: '초중' },
     waiting: { key: 'waiting', label: '룸/웨이팅' },
     entry: { key: 'entry', label: '엔트리' }
 };
@@ -414,7 +415,19 @@ function renderLiveSummary(response = null) {
 }
 
 function shouldUseHistoryPagination(categoryKey = liveState.selectedCategoryKey) {
-    return categoryKey === 'choice' || categoryKey === 'waiting';
+    return categoryKey === 'choice' || categoryKey === 'chojoong' || categoryKey === 'waiting';
+}
+
+function isChoiceLikeCategory(categoryKey = liveState.selectedCategoryKey) {
+    return categoryKey === 'choice' || categoryKey === 'chojoong';
+}
+
+function getChoiceLikeMessageCandidates() {
+    if (liveState.selectedCategoryKey === 'chojoong') {
+        return ['chojoongMsg', 'chojoong_msg', 'message', 'msg', 'content'];
+    }
+
+    return ['choiceMsg', 'choice_msg', 'choice msg', 'message', 'msg', 'content'];
 }
 
 function syncLiveListLayout(listElement) {
@@ -523,8 +536,8 @@ function createLiveHistorySignature(row, index = 0) {
     const storeNo = getRowValueByCandidates(row, ['storeNo', 'store_no', 'shopNo', 'shop_no', 'branchNo', 'branch_no']);
     const storeName = resolveChoiceStoreName(row);
 
-    if (liveState.selectedCategoryKey === 'choice') {
-        const choiceMessage = getRowValueByCandidates(row, ['choiceMsg', 'choice_msg', 'choice msg', 'message', 'msg', 'content']);
+    if (isChoiceLikeCategory()) {
+        const choiceMessage = getRowValueByCandidates(row, getChoiceLikeMessageCandidates());
         return ['choice', storeNo, storeName, createdAt, choiceMessage].map(normalizeHistorySignaturePart).join('|');
     }
 
@@ -542,8 +555,8 @@ function createLiveHistoryContentSignature(row) {
     const storeNo = getRowValueByCandidates(row, ['storeNo', 'store_no', 'shopNo', 'shop_no', 'branchNo', 'branch_no']);
     const storeName = resolveChoiceStoreName(row);
 
-    if (liveState.selectedCategoryKey === 'choice') {
-        const choiceMessage = getRowValueByCandidates(row, ['choiceMsg', 'choice_msg', 'choice msg', 'message', 'msg', 'content']);
+    if (isChoiceLikeCategory()) {
+        const choiceMessage = getRowValueByCandidates(row, getChoiceLikeMessageCandidates());
         return ['choice', storeNo, storeName, choiceMessage].map(normalizeHistorySignaturePart).join('|');
     }
 
@@ -703,9 +716,9 @@ function getLiveDocumentScrollHeight() {
 
 function createLiveEntryCard(row, index, titleColumn) {
     const title = resolveEntryTitle(row, titleColumn, index);
-    const choiceMessage = getRowValueByCandidates(row, ['choiceMsg', 'choice_msg', 'choice msg', 'message', 'msg', 'content']);
+    const choiceMessage = getRowValueByCandidates(row, getChoiceLikeMessageCandidates());
 
-    if (liveState.selectedCategoryKey === 'choice' && choiceMessage) {
+    if (isChoiceLikeCategory() && choiceMessage) {
         return createChoiceLiveEntryCard(row, index, title, choiceMessage);
     }
 
@@ -1020,7 +1033,7 @@ function resolveLiveAvatarImageName(title) {
     }
 
     const titleWithoutSuffix = normalizedTitle
-        .replace(/\s+(초이스톡|엔트리)$/u, '')
+        .replace(/\s+(초이스톡|초중|엔트리)$/u, '')
         .replace(/\s+룸\/웨이팅$/u, '')
         .trim();
 
@@ -1074,8 +1087,9 @@ function resolveChoiceStoreName(row) {
 
 function resolveChoiceCardTitle(storeName, fallbackTitle) {
     const normalizedStoreName = String(storeName || '').trim();
+    const categoryLabel = LIVE_CATEGORIES[liveState.selectedCategoryKey]?.label || '초이스톡';
     if (normalizedStoreName) {
-        return `${normalizedStoreName} 초이스톡`;
+        return `${normalizedStoreName} ${categoryLabel}`;
     }
 
     return fallbackTitle;
