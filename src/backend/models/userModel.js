@@ -19,10 +19,28 @@ async function hasUserColumn(columnName) {
   return rows.length > 0;
 }
 
-async function createUser({ email, password, nickname, memberType = 'GENERAL', kakaoId = null }) {
+async function createUser({
+  email,
+  password,
+  nickname,
+  memberType = 'GENERAL',
+  kakaoId = null,
+  birthDate = null,
+  gender = null
+}) {
   const pool = getPool();
   const columns = ['email', 'kakao_id', 'password', 'nickname', 'role', 'member_type', 'total_points'];
   const values = [email, kakaoId, password, nickname, 'USER', memberType, 0];
+
+  if (await hasUserColumn('birth_date')) {
+    columns.push('birth_date');
+    values.push(birthDate);
+  }
+
+  if (await hasUserColumn('gender')) {
+    columns.push('gender');
+    values.push(gender);
+  }
 
   if (await hasUserColumn('company')) {
     columns.push('company');
