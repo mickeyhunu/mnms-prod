@@ -11,6 +11,7 @@ const STORE_FILTER_CANDIDATES = ['storeName', 'store_name', 'name', 'shopName', 
 const ORDER_CANDIDATES = ['updatedAt', 'updated_at', 'createdAt', 'created_at', 'regDate', 'reg_date', 'entryDate', 'entry_date', 'date'];
 const DISPLAY_FIELD_CANDIDATES = ['title', 'subject', 'name', 'nickName', 'nickname', 'roomName', 'choiceName', 'entryName', 'message'];
 const CHOICE_MESSAGE_CANDIDATES = ['choiceMsg', 'choice_msg', 'message', 'msg', 'content'];
+const CHOJOONG_MESSAGE_CANDIDATES = ['chojoongMsg', 'chojoong_msg', 'message', 'msg', 'content'];
 const ROOM_INFO_CANDIDATES = ['roomInfo', 'room_info'];
 const WAIT_INFO_CANDIDATES = ['waitInfo', 'wait_info', 'waitingInfo', 'waiting_info'];
 const ROOM_DETAIL_CANDIDATES = ['roomDetail', 'room_detail', 'detail', 'details'];
@@ -30,6 +31,7 @@ const TEMPORAL_COLUMN_CANDIDATES = new Set([
 
 const LIVE_CATEGORY_MAP = {
   choice: { key: 'choice', label: '초이스톡', tableName: 'LIVE_CHOICE_HISTORY', sourceTableName: 'INFO_CHOICE' },
+  chojoong: { key: 'chojoong', label: '초중', tableName: 'LIVE_CHOJOONG_HISTORY', sourceTableName: 'INFO_CHOJOONG' },
   waiting: { key: 'waiting', label: '웨이팅', tableName: 'LIVE_ROOM_HISTORY', sourceTableName: 'INFO_ROOM' },
   entry: { key: 'entry', label: '엔트리', tableName: 'ENTRY_TODAY' }
 };
@@ -262,11 +264,15 @@ async function listLiveSourceRows(categoryKey, { since = null } = {}) {
   const orderColumn = findColumn(columns, ORDER_CANDIDATES);
   const storeLookup = await buildStoreLookupMap();
 
-  if (category.key === 'choice') {
-    const choiceMessageColumn = findColumn(columns, CHOICE_MESSAGE_CANDIDATES);
+  if (category.key === 'choice' || category.key === 'chojoong') {
+    const messageCandidates = category.key === 'chojoong'
+      ? CHOJOONG_MESSAGE_CANDIDATES
+      : CHOICE_MESSAGE_CANDIDATES;
+    const choiceMessageColumn = findColumn(columns, messageCandidates);
+    const messageAlias = category.key === 'chojoong' ? 'chojoongMsg' : 'choiceMsg';
 
     if (!choiceMessageColumn) {
-      throw new Error('INFO_CHOICE에서 초이스 메시지 컬럼을 찾을 수 없습니다.');
+      throw new Error(`${sourceTableName}에서 메시지 컬럼을 찾을 수 없습니다.`);
     }
 
     const whereClauses = [`\`${choiceMessageColumn}\` IS NOT NULL`, `TRIM(\`${choiceMessageColumn}\`) <> ''`];
@@ -280,7 +286,7 @@ async function listLiveSourceRows(categoryKey, { since = null } = {}) {
     const [rows] = await pool.query(
       `SELECT ${storeNoColumn ? `\`${storeNoColumn}\`` : 'NULL'} AS storeNo,
               ${storeNameColumn ? `\`${storeNameColumn}\`` : "''"} AS storeName,
-              \`${choiceMessageColumn}\` AS choiceMsg,
+              \`${choiceMessageColumn}\` AS ${messageAlias},
               ${orderColumn ? `DATE_FORMAT(\`${orderColumn}\`, '${MYSQL_DATETIME_FORMAT}')` : 'NULL'} AS createdAt
          FROM \`${sourceTableName}\`
         WHERE ${whereClauses.join(' AND ')}
@@ -293,7 +299,7 @@ async function listLiveSourceRows(categoryKey, { since = null } = {}) {
       return {
         storeNo: normalizedStoreNo,
         storeName: normalizeNullableString(row.storeName) || storeLookup.get(normalizedStoreNo) || '',
-        choiceMsg: normalizeNullableString(row.choiceMsg),
+        [messageAlias]: normalizeNullableString(row[messageAlias]),
         createdAt: row.createdAt || null
       };
     });
