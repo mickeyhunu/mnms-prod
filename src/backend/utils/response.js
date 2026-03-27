@@ -21,6 +21,8 @@ function pickUserRow(user) {
     isLoginRestrictionPermanent: restrictionState.isPermanent,
     isAdmin: user.role === 'ADMIN',
     isAdvertiser: (user.member_type || user.memberType) === 'ADVERTISER',
+    gender: user.gender || 'UNKNOWN',
+    isMale: (user.gender || '').toUpperCase() === 'MALE',
     totalPoints,
     level: memberLevel.level,
     levelEmoji: memberLevel.emoji,

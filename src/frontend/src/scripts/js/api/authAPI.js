@@ -56,6 +56,22 @@ const AuthAPI = {
         }
     },
 
+    async kakaoRegister(payload) {
+        try {
+            const response = await APIClient.post('/auth/kakao/register', payload);
+
+            if (response.token) {
+                Auth.setToken(response.token);
+                Auth.setUser(this.toClientUser(response));
+            }
+
+            return response;
+        } catch (error) {
+            console.error('AuthAPI.kakaoRegister 에러:', error);
+            throw error;
+        }
+    },
+
 
     async checkNickname(nickname) {
         try {

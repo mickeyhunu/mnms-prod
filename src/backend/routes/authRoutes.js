@@ -10,6 +10,7 @@ const router = express.Router();
 router.post('/register', controller.register);
 router.post('/login', controller.login);
 router.post('/kakao/login', controller.kakaoLogin);
+router.post('/kakao/register', controller.kakaoRegister);
 router.get('/check-nickname', controller.checkNickname);
 router.post('/logout', authMiddleware, controller.logout);
 router.get('/me', authMiddleware, controller.me);

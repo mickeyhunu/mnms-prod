@@ -3,6 +3,7 @@
  */
 let generatedVerificationCode = null;
 let verifiedPhoneNumber = null;
+let kakaoSignupContext = null;
 
 function initRegisterPage() {
 
@@ -13,6 +14,55 @@ function initRegisterPage() {
     setupRegisterForm();
     setupPhoneVerification();
     setupNicknameCheck();
+    setupKakaoPrefill();
+}
+
+function setupKakaoPrefill() {
+    try {
+        const raw = sessionStorage.getItem('kakaoSignupData');
+        if (!raw) {
+            return;
+        }
+
+        kakaoSignupContext = JSON.parse(raw);
+        if (!kakaoSignupContext?.accessToken) {
+            kakaoSignupContext = null;
+            return;
+        }
+
+        const profile = kakaoSignupContext.profile || {};
+        const loginIdInput = document.getElementById('loginId');
+        const nicknameInput = document.getElementById('nickname');
+        const genderDigitInput = document.getElementById('genderDigit');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+
+        if (loginIdInput && profile.email) {
+            loginIdInput.value = profile.email;
+            loginIdInput.readOnly = true;
+        }
+
+        if (nicknameInput && profile.nickname) {
+            nicknameInput.value = profile.nickname;
+            setNicknameChecked(true, true);
+        }
+
+        if (genderDigitInput) {
+            genderDigitInput.value = '1';
+            genderDigitInput.readOnly = true;
+        }
+
+        const tempPassword = `kakao_${Math.random().toString(36).slice(2, 12)}`;
+        if (passwordInput && confirmPasswordInput) {
+            passwordInput.value = tempPassword;
+            confirmPasswordInput.value = tempPassword;
+            passwordInput.readOnly = true;
+            confirmPasswordInput.readOnly = true;
+        }
+    } catch (error) {
+        console.error('카카오 회원가입 사전정보 파싱 실패:', error);
+        kakaoSignupContext = null;
+    }
 }
 
 function setupRegisterForm() {
@@ -211,15 +261,23 @@ async function handleRegister(e) {
         setLoading(submitBtn, true);
         hideElement(errorBanner);
 
-        const response = await AuthAPI.register({
-            loginId: formData.loginId,
-            password: formData.password,
-            phone: formData.phone,
-            genderDigit: formData.genderDigit,
-            nickname: formData.nickname
-        });
+        const response = kakaoSignupContext
+            ? await AuthAPI.kakaoRegister({
+                accessToken: kakaoSignupContext.accessToken,
+                nickname: formData.nickname
+            })
+            : await AuthAPI.register({
+                loginId: formData.loginId,
+                password: formData.password,
+                phone: formData.phone,
+                genderDigit: formData.genderDigit,
+                nickname: formData.nickname
+            });
 
         showNotification('회원가입이 완료되었습니다!', 'success');
+        if (kakaoSignupContext) {
+            sessionStorage.removeItem('kakaoSignupData');
+        }
 
         setTimeout(() => {
             window.location.href = '/login';

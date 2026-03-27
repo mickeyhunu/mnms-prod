@@ -67,13 +67,23 @@ async function handleKakaoLogin() {
     try {
         const authObj = await new Promise((resolve, reject) => {
             window.Kakao.Auth.login({
-                scope: 'profile_nickname,account_email',
+                scope: 'profile_nickname,account_email,gender,birthday,birthyear',
                 success: resolve,
                 fail: reject
             });
         });
 
-        await AuthAPI.kakaoLogin(authObj.access_token);
+        const response = await AuthAPI.kakaoLogin(authObj.access_token);
+
+        if (response.requiresSignup) {
+            sessionStorage.setItem('kakaoSignupData', JSON.stringify({
+                accessToken: authObj.access_token,
+                profile: response.profile || {}
+            }));
+            showNotification('카카오 기본정보를 불러왔습니다. 회원가입을 완료해주세요.', 'success');
+            window.location.href = '/register';
+            return;
+        }
 
         showNotification('카카오 로그인이 완료되었습니다.', 'success');
         window.location.href = 'http://localhost:8080/';
