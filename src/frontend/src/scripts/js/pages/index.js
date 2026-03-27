@@ -395,12 +395,36 @@ function initCommonEvents() {
             const targetLink = event.target.closest('.article-main');
             if (!targetLink) return;
 
+            if (!Auth.isAuthenticated()) {
+                event.preventDefault();
+                redirectToLoginForPostAccess();
+                return;
+            }
+
             const targetPostId = targetLink.dataset.postId;
             markPostAsViewed(targetPostId);
         });
     }
 
+    const bestPostsSection = document.querySelector('.best-posts-section');
+    if (bestPostsSection) {
+        bestPostsSection.addEventListener('click', (event) => {
+            const bestPostLink = event.target.closest('.best-post-link');
+            if (!bestPostLink) return;
+
+            if (!Auth.isAuthenticated()) {
+                event.preventDefault();
+                redirectToLoginForPostAccess();
+            }
+        });
+    }
+
     window.addEventListener('pageshow', syncViewedPostStyles);
+}
+
+function redirectToLoginForPostAccess() {
+    alert('로그인 후 게시글을 볼 수 있습니다.');
+    window.location.href = '/login';
 }
 
 function showErrorBanner(message) {
