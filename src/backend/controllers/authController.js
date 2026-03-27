@@ -26,6 +26,46 @@ const { createSession, deleteSession } = require('../models/sessionModel');
 const { awardPointByAction } = require('../models/pointModel');
 const { pickUserRow } = require('../utils/response');
 const { issueJwt } = require('../utils/jwt');
+const AUTH_COOKIE_NAME = String(process.env.AUTH_COOKIE_NAME || 'mnms_auth').trim() || 'mnms_auth';
+
+function getAuthCookieOptions() {
+  const maxAgeSecondsRaw = Number(process.env.AUTH_COOKIE_MAX_AGE_SECONDS);
+  const maxAgeSeconds = Number.isFinite(maxAgeSecondsRaw) && maxAgeSecondsRaw > 0
+    ? Math.floor(maxAgeSecondsRaw)
+    : 60 * 60 * 24 * 7;
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  return {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: isProduction,
+    path: '/',
+    maxAge: maxAgeSeconds * 1000
+  };
+}
+
+function appendSetCookie(res, value, options = {}) {
+  const attributes = [
+    `${AUTH_COOKIE_NAME}=${encodeURIComponent(value)}`,
+    `Path=${options.path || '/'}`,
+    `SameSite=${options.sameSite || 'Lax'}`,
+    options.httpOnly ? 'HttpOnly' : null,
+    options.secure ? 'Secure' : null,
+    Number.isFinite(options.maxAge) ? `Max-Age=${Math.max(0, Math.floor(options.maxAge / 1000))}` : null
+  ].filter(Boolean);
+  res.append('Set-Cookie', attributes.join('; '));
+}
+
+function setAuthCookie(res, token) {
+  appendSetCookie(res, token, getAuthCookieOptions());
+}
+
+function clearAuthCookie(res) {
+  appendSetCookie(res, '', {
+    ...getAuthCookieOptions(),
+    maxAge: 0
+  });
+}
 
 async function register(req, res, next) {
   try {
@@ -69,6 +109,7 @@ async function login(req, res, next) {
 
     const token = issueJwt({ sub: String(user.id), type: 'access' });
     await createSession(token, user.id);
+    setAuthCookie(res, token);
     await recordUserLoginHistory(user.id, {
       ipAddress: getClientIp(req),
       userAgent: req.headers['user-agent'] || null
@@ -167,6 +208,7 @@ async function kakaoLogin(req, res, next) {
 
     const token = issueJwt({ sub: String(user.id), type: 'access' });
     await createSession(token, user.id);
+    setAuthCookie(res, token);
     await recordUserLoginHistory(user.id, {
       ipAddress: getClientIp(req),
       userAgent: req.headers['user-agent'] || null
@@ -190,6 +232,7 @@ async function me(req, res) {
 async function logout(req, res, next) {
   try {
     await deleteSession(req.token);
+    clearAuthCookie(res);
     res.json({ success: true, message: '로그아웃되었습니다.' });
   } catch (error) {
     next(error);

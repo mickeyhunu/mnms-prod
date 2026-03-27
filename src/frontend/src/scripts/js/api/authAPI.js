@@ -2,6 +2,16 @@
  * 파일 역할: authAPI 관련 서버 API 호출 로직을 캡슐화한 클라이언트 API 모듈.
  */
 const AuthAPI = {
+    toClientUser(response) {
+        return {
+            id: response.id,
+            nickname: response.nickname,
+            role: response.role,
+            isAdmin: response.isAdmin,
+            levelEmoji: response.levelEmoji,
+            levelLabel: response.levelLabel
+        };
+    },
     async login(credentials) {
         try {
             const response = await APIClient.post('/auth/login', credentials);
@@ -9,23 +19,7 @@ const AuthAPI = {
 
             if (response.token) {
                 Auth.setToken(response.token);
-
-                const userData = {
-                    id: response.id,
-                    email: response.email,
-                    nickname: response.nickname,
-                    isAdmin: response.isAdmin,
-                    totalPoints: response.totalPoints,
-                    level: response.level,
-                    levelEmoji: response.levelEmoji,
-                    levelTitle: response.levelTitle,
-                    levelLabel: response.levelLabel,
-                    accountStatus: response.accountStatus,
-                    isLoginRestricted: response.isLoginRestricted,
-                    loginRestrictedUntil: response.loginRestrictedUntil,
-                    isLoginRestrictionPermanent: response.isLoginRestrictionPermanent
-                };
-                Auth.setUser(userData);
+                Auth.setUser(this.toClientUser(response));
             } else {
                 console.error('응답에 토큰이 없습니다!');
             }
@@ -52,21 +46,7 @@ const AuthAPI = {
 
             if (response.token) {
                 Auth.setToken(response.token);
-                Auth.setUser({
-                    id: response.id,
-                    email: response.email,
-                    nickname: response.nickname,
-                    isAdmin: response.isAdmin,
-                    totalPoints: response.totalPoints,
-                    level: response.level,
-                    levelEmoji: response.levelEmoji,
-                    levelTitle: response.levelTitle,
-                    levelLabel: response.levelLabel,
-                    accountStatus: response.accountStatus,
-                    isLoginRestricted: response.isLoginRestricted,
-                    loginRestrictedUntil: response.loginRestrictedUntil,
-                    isLoginRestrictionPermanent: response.isLoginRestrictionPermanent
-                });
+                Auth.setUser(this.toClientUser(response));
             }
 
             return response;
@@ -100,21 +80,7 @@ const AuthAPI = {
             const response = await APIClient.get('/auth/me');
 
             if (response) {
-                Auth.setUser({
-                    id: response.id,
-                    email: response.email,
-                    nickname: response.nickname,
-                    isAdmin: response.isAdmin,
-                    totalPoints: response.totalPoints,
-                    level: response.level,
-                    levelEmoji: response.levelEmoji,
-                    levelTitle: response.levelTitle,
-                    levelLabel: response.levelLabel,
-                    accountStatus: response.accountStatus,
-                    isLoginRestricted: response.isLoginRestricted,
-                    loginRestrictedUntil: response.loginRestrictedUntil,
-                    isLoginRestrictionPermanent: response.isLoginRestrictionPermanent
-                });
+                Auth.setUser(this.toClientUser(response));
             }
 
             return response;
