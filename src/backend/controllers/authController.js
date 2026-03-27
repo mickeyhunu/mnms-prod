@@ -162,6 +162,42 @@ function buildKakaoPlaceholderEmail(kakaoId) {
   return `kakao_${kakaoId}@kakao.local`;
 }
 
+function parseKakaoBirthDate(kakaoAccount) {
+  const birthyear = String(kakaoAccount?.birthyear || '').trim();
+  const birthdayRaw = String(kakaoAccount?.birthday || '').trim();
+  const birthday = birthdayRaw.replace(/[^0-9]/g, '');
+
+  if (!/^\d{4}$/.test(birthyear) || !/^\d{4}$/.test(birthday)) {
+    return null;
+  }
+
+  const month = birthday.slice(0, 2);
+  const day = birthday.slice(2, 4);
+  const candidate = `${birthyear}-${month}-${day}`;
+  const date = new Date(`${candidate}T00:00:00Z`);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  if (date.toISOString().slice(0, 10) !== candidate) {
+    return null;
+  }
+
+  return candidate;
+}
+
+function parseKakaoGender(kakaoAccount) {
+  const rawGender = String(kakaoAccount?.gender || '').trim().toLowerCase();
+  if (rawGender === 'male') {
+    return 'MALE';
+  }
+  if (rawGender === 'female') {
+    return 'FEMALE';
+  }
+  return null;
+}
+
 async function kakaoLogin(req, res, next) {
   try {
     const accessToken = String(req.body.accessToken || '').trim();
@@ -174,31 +210,31 @@ async function kakaoLogin(req, res, next) {
     if (!kakaoId) {
       return res.status(401).json({ message: '카카오 사용자 식별값을 확인할 수 없습니다.' });
     }
+    const kakaoAccount = kakaoUser.kakao_account || {};
+    const birthDate = parseKakaoBirthDate(kakaoAccount);
+    const gender = parseKakaoGender(kakaoAccount);
 
-    let user = await findByKakaoId(kakaoId);
+    if (!birthDate) {
+      return res.status(400).json({ message: '카카오 생년월일 정보를 확인할 수 없습니다. 카카오에서 생년월일 제공 동의 후 다시 시도해주세요.' });
+    }
+
+    if (gender !== 'MALE') {
+      return res.status(403).json({ message: '남성 회원만 가입 및 로그인할 수 있습니다.' });
+    }
+
+    const user = await findByKakaoId(kakaoId);
 
     if (!user) {
-      const kakaoAccount = kakaoUser.kakao_account || {};
-      const kakaoEmail = String(kakaoAccount.email || '').trim();
-      const email = kakaoEmail || buildKakaoPlaceholderEmail(kakaoId);
-      const nicknameCandidate = sanitizeKakaoNickname(kakaoAccount.profile?.nickname, kakaoId);
-      const existingEmailUser = kakaoEmail ? await findByEmail(kakaoEmail) : null;
-
-      if (existingEmailUser) {
-        user = await attachKakaoIdToUser(existingEmailUser.id, kakaoId);
-      } else {
-        const nickname = await createUniqueNickname(nicknameCandidate);
-        const randomPassword = crypto.randomBytes(24).toString('hex');
-        const userId = await createUser({
-          email,
-          password: randomPassword,
-          nickname,
-          memberType: 'GENERAL',
-          kakaoId
-        });
-        await awardPointByAction(userId, 'REGISTER');
-        user = await findByKakaoId(kakaoId);
-      }
+      return res.json({
+        success: true,
+        requiresSignup: true,
+        profile: {
+          email: String(kakaoAccount.email || '').trim() || '',
+          nickname: sanitizeKakaoNickname(kakaoAccount.profile?.nickname, kakaoId),
+          birthDate,
+          gender
+        }
+      });
     }
 
     const restrictionState = getLoginRestrictionState(user);
@@ -213,6 +249,76 @@ async function kakaoLogin(req, res, next) {
       ipAddress: getClientIp(req),
       userAgent: req.headers['user-agent'] || null
     });
+    await awardPointByAction(user.id, 'LOGIN_DAILY');
+
+    const refreshedUser = await findByKakaoId(kakaoId);
+    return res.json({ success: true, token, ...pickUserRow(refreshedUser || user) });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+}
+
+async function kakaoRegister(req, res, next) {
+  try {
+    const accessToken = String(req.body.accessToken || '').trim();
+    const nicknameInput = String(req.body.nickname || '').trim();
+    if (!accessToken) {
+      return res.status(400).json({ message: '카카오 액세스 토큰이 필요합니다.' });
+    }
+
+    const kakaoUser = await fetchKakaoUserInfo(accessToken);
+    const kakaoId = String(kakaoUser.id || '').trim();
+    if (!kakaoId) {
+      return res.status(401).json({ message: '카카오 사용자 식별값을 확인할 수 없습니다.' });
+    }
+
+    const kakaoAccount = kakaoUser.kakao_account || {};
+    const birthDate = parseKakaoBirthDate(kakaoAccount);
+    const gender = parseKakaoGender(kakaoAccount);
+    if (!birthDate) {
+      return res.status(400).json({ message: '카카오 생년월일 정보를 확인할 수 없습니다. 카카오에서 생년월일 제공 동의 후 다시 시도해주세요.' });
+    }
+    if (gender !== 'MALE') {
+      return res.status(403).json({ message: '남성 회원만 가입 및 로그인할 수 있습니다.' });
+    }
+
+    let user = await findByKakaoId(kakaoId);
+    if (!user) {
+      const kakaoEmail = String(kakaoAccount.email || '').trim();
+      const email = kakaoEmail || buildKakaoPlaceholderEmail(kakaoId);
+      const nicknameCandidate = nicknameInput || sanitizeKakaoNickname(kakaoAccount.profile?.nickname, kakaoId);
+      const existingEmailUser = kakaoEmail ? await findByEmail(kakaoEmail) : null;
+
+      if (existingEmailUser) {
+        user = await attachKakaoIdToUser(existingEmailUser.id, kakaoId);
+      } else {
+        const nickname = await createUniqueNickname(nicknameCandidate);
+        const randomPassword = crypto.randomBytes(24).toString('hex');
+        const userId = await createUser({
+          email,
+          password: randomPassword,
+          nickname,
+          memberType: 'GENERAL',
+          kakaoId,
+          birthDate,
+          gender
+        });
+        await awardPointByAction(userId, 'REGISTER');
+        user = await findByKakaoId(kakaoId);
+      }
+    }
+
+    const restrictionState = getLoginRestrictionState(user);
+    if (restrictionState.isRestricted) {
+      return res.status(403).json({ message: formatRestrictionMessage(user) });
+    }
+
+    const token = issueJwt({ sub: String(user.id), type: 'access' });
+    await createSession(token, user.id);
+    setAuthCookie(res, token);
     await awardPointByAction(user.id, 'LOGIN_DAILY');
 
     const refreshedUser = await findByKakaoId(kakaoId);
@@ -273,4 +379,4 @@ function kakaoCallback(req, res) {
   });
 }
 
-module.exports = { register, login, kakaoLogin, me, logout, checkNickname, kakaoCallback };
+module.exports = { register, login, kakaoLogin, kakaoRegister, me, logout, checkNickname, kakaoCallback };
