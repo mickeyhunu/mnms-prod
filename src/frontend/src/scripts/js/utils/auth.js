@@ -2,6 +2,7 @@
  * 파일 역할: auth에서 사용하는 공통 보조 함수/상수를 제공하는 유틸리티 파일.
  */
 const Auth = {
+    tokenInMemory: null,
     formatNicknameWithLevel(user) {
         if (!user) return '';
 
@@ -11,10 +12,11 @@ const Auth = {
         return levelEmoji ? `${nickname} ${levelEmoji}` : nickname;
     },
     getToken() {
-        return localStorage.getItem(STORAGE_KEYS.TOKEN);
+        return this.tokenInMemory;
     },
     setToken(token) {
-        localStorage.setItem(STORAGE_KEYS.TOKEN, token);
+        this.tokenInMemory = String(token || '').trim() || null;
+        localStorage.removeItem(STORAGE_KEYS.TOKEN);
     },
     getUser() {
         const userData = localStorage.getItem(STORAGE_KEYS.USER);
@@ -25,7 +27,7 @@ const Auth = {
         this.updateHeaderUI();
     },
     isAuthenticated() {
-        return !!this.getToken();
+        return !!this.getUser();
     },
     requireAuth() {
         if (!this.isAuthenticated()) {
@@ -36,6 +38,7 @@ const Auth = {
         return true;
     },
     logout() {
+        this.tokenInMemory = null;
         localStorage.removeItem(STORAGE_KEYS.TOKEN);
         localStorage.removeItem(STORAGE_KEYS.USER);
         this.updateHeaderUI();
@@ -120,4 +123,3 @@ const Auth = {
         });
     }
 };
-
