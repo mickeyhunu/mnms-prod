@@ -242,12 +242,27 @@ async function initDatabase() {
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS sessions (
-      token VARCHAR(128) PRIMARY KEY,
+      token VARCHAR(512) PRIMARY KEY,
       user_id BIGINT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  const [sessionTokenColumn] = await pool.query(
+    `SELECT CHARACTER_MAXIMUM_LENGTH AS max_length
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'sessions'
+       AND COLUMN_NAME = 'token'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  const tokenMaxLength = Number(sessionTokenColumn?.[0]?.max_length || 0);
+  if (!Number.isFinite(tokenMaxLength) || tokenMaxLength < 512) {
+    await pool.query('ALTER TABLE sessions MODIFY COLUMN token VARCHAR(512) NOT NULL');
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS user_login_histories (
