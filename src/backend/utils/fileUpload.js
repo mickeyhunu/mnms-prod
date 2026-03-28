@@ -64,12 +64,32 @@ async function uploadDataUrlToS3({ dataUrl, folder = 'uploads', fileName = '', a
   const key = `${folder.replace(/^\/+|\/+$/g, '')}/${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}-${safeName}`;
 
   const client = getS3Client();
-  await client.send(new PutObjectCommand({
-    Bucket: s3BucketName,
-    Key: key,
-    Body: bodyBuffer,
-    ContentType: parsed.mimeType
-  }));
+
+  try {
+    await client.send(new PutObjectCommand({
+      Bucket: s3BucketName,
+      Key: key,
+      Body: bodyBuffer,
+      ContentType: parsed.mimeType
+    }));
+  } catch (error) {
+    const statusCode = Number(error?.$metadata?.httpStatusCode || 0);
+    const errorCode = String(error?.name || '').trim();
+
+    if (statusCode === 403 || errorCode === 'AccessDenied') {
+      throw new Error('S3 업로드 권한이 없습니다. IAM 정책(s3:PutObject)과 버킷 정책을 확인해주세요.');
+    }
+
+    if (errorCode === 'InvalidAccessKeyId' || errorCode === 'SignatureDoesNotMatch') {
+      throw new Error('AWS 자격증명이 올바르지 않습니다. AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY/AWS_REGION 설정을 확인해주세요.');
+    }
+
+    if (errorCode === 'NoSuchBucket') {
+      throw new Error(`S3 버킷(${s3BucketName})을 찾을 수 없습니다. 버킷명/리전 설정을 확인해주세요.`);
+    }
+
+    throw new Error(`S3 업로드 실패: ${error.message}`);
+  }
 
   return {
     key,
