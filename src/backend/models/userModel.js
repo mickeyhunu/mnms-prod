@@ -237,6 +237,53 @@ async function getUserNotifications(userId, { limit = 50 } = {}) {
   }));
 }
 
+
+async function getUserNotificationReadMap(userId, notificationKeys = []) {
+  const uniqueKeys = [...new Set((Array.isArray(notificationKeys) ? notificationKeys : [])
+    .map((key) => String(key || '').trim())
+    .filter(Boolean))];
+
+  if (!uniqueKeys.length) {
+    return {};
+  }
+
+  const pool = getPool();
+  const placeholders = uniqueKeys.map(() => '?').join(', ');
+  const [rows] = await pool.query(
+    `SELECT notification_key AS notificationKey, read_at AS readAt
+     FROM user_notification_reads
+     WHERE user_id = ?
+       AND notification_key IN (${placeholders})`,
+    [userId, ...uniqueKeys]
+  );
+
+  return rows.reduce((acc, row) => {
+    acc[row.notificationKey] = row.readAt;
+    return acc;
+  }, {});
+}
+
+async function markNotificationsAsRead(userId, notificationKeys = []) {
+  const uniqueKeys = [...new Set((Array.isArray(notificationKeys) ? notificationKeys : [])
+    .map((key) => String(key || '').trim())
+    .filter(Boolean))];
+
+  if (!uniqueKeys.length) {
+    return 0;
+  }
+
+  const pool = getPool();
+  const values = uniqueKeys.map((key) => [userId, key]);
+  await pool.query(
+    `INSERT INTO user_notification_reads (user_id, notification_key)
+     VALUES ?
+     ON DUPLICATE KEY UPDATE read_at = CURRENT_TIMESTAMP`,
+    [values]
+  );
+
+  return uniqueKeys.length;
+}
+
 async function findByNickname(nickname) {
   const pool = getPool();
   const [rows] = await pool.query('SELECT id FROM users WHERE nickname = ?', [nickname]);
@@ -300,5 +347,7 @@ module.exports = {
   getUserActivityStats,
   getUserPointHistories,
   getUserActivityDetails,
-  getUserNotifications
+  getUserNotifications,
+  getUserNotificationReadMap,
+  markNotificationsAsRead
 };

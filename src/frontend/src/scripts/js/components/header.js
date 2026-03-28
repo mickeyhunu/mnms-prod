@@ -2,7 +2,6 @@
  * 파일 역할: header UI 상호작용을 담당하는 재사용 컴포넌트 스크립트 파일.
  */
 const HeaderNotificationCenter = {
-    storageKey: 'readNotifications',
     refreshTimer: null,
     outsideClickHandler: null,
 
@@ -75,11 +74,11 @@ const HeaderNotificationCenter = {
         const list = document.getElementById('header-notification-list');
         if (list && list.dataset.boundNotificationList !== 'true') {
             list.dataset.boundNotificationList = 'true';
-            list.addEventListener('click', (event) => {
+            list.addEventListener('click', async (event) => {
                 const item = event.target.closest('[data-notification-key]');
                 if (!item) return;
                 const notificationKey = item.dataset.notificationKey;
-                this.markAsRead(notificationKey);
+                await this.markAsRead(notificationKey);
                 const targetUrl = item.dataset.notificationUrl;
                 if (targetUrl) {
                     window.location.href = targetUrl;
@@ -104,34 +103,40 @@ const HeaderNotificationCenter = {
         }
     },
 
-    getReadMap() {
+    async markAsRead(notificationKey) {
+        if (!notificationKey) return;
         try {
-            return JSON.parse(localStorage.getItem(this.storageKey) || '{}');
+            await APIClient.post('/users/me/notifications/read', {
+                notificationKeys: [notificationKey]
+            });
+            if (Array.isArray(this.currentNotifications)) {
+                this.currentNotifications = this.currentNotifications.map((item) => (
+                    item.notificationKey === notificationKey
+                        ? { ...item, isRead: true, readAt: new Date().toISOString() }
+                        : item
+                ));
+            }
+            this.renderCurrentState();
         } catch (error) {
-            return {};
+            console.error('Failed to mark notification as read:', error);
         }
     },
 
-    saveReadMap(readMap) {
-        localStorage.setItem(this.storageKey, JSON.stringify(readMap));
-    },
-
-    markAsRead(notificationKey) {
-        if (!notificationKey) return;
-        const readMap = this.getReadMap();
-        readMap[notificationKey] = true;
-        this.saveReadMap(readMap);
-        this.renderCurrentState();
-    },
-
-    markAllAsRead() {
-        const notifications = this.currentNotifications || [];
-        const readMap = this.getReadMap();
-        notifications.forEach((item) => {
-            readMap[item.notificationKey] = true;
-        });
-        this.saveReadMap(readMap);
-        this.renderCurrentState();
+    async markAllAsRead() {
+        try {
+            await APIClient.post('/users/me/notifications/read-all', { limit: 100 });
+            if (Array.isArray(this.currentNotifications)) {
+                const readAt = new Date().toISOString();
+                this.currentNotifications = this.currentNotifications.map((item) => ({
+                    ...item,
+                    isRead: true,
+                    readAt
+                }));
+            }
+            this.renderCurrentState();
+        } catch (error) {
+            console.error('Failed to mark all notifications as read:', error);
+        }
     },
 
     async refresh() {
@@ -152,8 +157,7 @@ const HeaderNotificationCenter = {
         if (!list || !dot) return;
 
         const notifications = this.currentNotifications || [];
-        const readMap = this.getReadMap();
-        const hasUnread = notifications.some((item) => !readMap[item.notificationKey]);
+        const hasUnread = notifications.some((item) => !item.isRead);
 
         dot.classList.toggle('hidden', !hasUnread);
 
@@ -163,7 +167,7 @@ const HeaderNotificationCenter = {
         }
 
         list.innerHTML = notifications.map((item) => {
-            const isUnread = !readMap[item.notificationKey];
+            const isUnread = !item.isRead;
             return `
                 <button type="button" class="header-notification-item ${isUnread ? 'is-unread' : ''}" data-notification-key="${item.notificationKey}" data-notification-url="${item.targetUrl || ''}">
                     <div class="header-notification-item-top">
