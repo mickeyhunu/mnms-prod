@@ -1,7 +1,17 @@
 /**
  * 파일 역할: userController 관련 HTTP 요청을 처리하고 모델/응답 로직을 조합하는 컨트롤러 파일.
  */
-const { getUserActivityStats, getUserPointHistories, getUserActivityDetails, getUserNotifications, findByNicknameExceptUser, updateUserProfile, findById } = require('../models/userModel');
+const {
+  getUserActivityStats,
+  getUserPointHistories,
+  getUserActivityDetails,
+  getUserNotifications,
+  getUserNotificationReadMap,
+  markNotificationsAsRead,
+  findByNicknameExceptUser,
+  updateUserProfile,
+  findById
+} = require('../models/userModel');
 const { resolveMemberLevel, MEMBER_LEVELS } = require('../utils/memberLevel');
 const { POINT_RULES } = require('../models/pointModel');
 const supportModel = require('../models/supportModel');
@@ -243,9 +253,59 @@ async function myNotifications(req, res, next) {
       .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
       .slice(0, limit);
 
+    const readMap = await getUserNotificationReadMap(
+      req.user.id,
+      normalizedNotifications.map((item) => item.notificationKey)
+    );
+    const content = normalizedNotifications.map((item) => ({
+      ...item,
+      isRead: Boolean(readMap[item.notificationKey]),
+      readAt: readMap[item.notificationKey] || null
+    }));
+    const unreadCount = content.filter((item) => !item.isRead).length;
+
     res.json({
-      content: normalizedNotifications,
-      totalElements: normalizedNotifications.length
+      content,
+      totalElements: content.length,
+      unreadCount
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function markMyNotificationsRead(req, res, next) {
+  try {
+    const notificationKeys = Array.isArray(req.body.notificationKeys) ? req.body.notificationKeys : [];
+    const markedCount = await markNotificationsAsRead(req.user.id, notificationKeys);
+    res.json({
+      success: true,
+      markedCount
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function markMyNotificationsReadAll(req, res, next) {
+  try {
+    const limit = Math.max(1, Math.min(100, Number(req.body.limit) || 100));
+    const [commentNotifications, notices, answeredInquiries] = await Promise.all([
+      getUserNotifications(req.user.id, { limit }),
+      supportModel.listArticles(supportModel.SUPPORT_CATEGORIES.NOTICE, false),
+      supportModel.listAnsweredInquiriesByUser(req.user.id, { limit })
+    ]);
+
+    const allNotificationKeys = [
+      ...commentNotifications.map((item) => item.notificationKey),
+      ...notices.map((notice) => `admin-notice-${notice.sourceType || 'SUPPORT'}-${notice.sourceId || notice.id}`),
+      ...answeredInquiries.map((item) => `inquiry-answer-${item.id}`)
+    ];
+
+    const markedCount = await markNotificationsAsRead(req.user.id, allNotificationKeys);
+    res.json({
+      success: true,
+      markedCount
     });
   } catch (error) {
     next(error);
@@ -290,4 +350,12 @@ async function myPointHistories(req, res, next) {
   }
 }
 
-module.exports = { myStats, myPointHistories, myActivity, myNotifications, updateMyProfile };
+module.exports = {
+  myStats,
+  myPointHistories,
+  myActivity,
+  myNotifications,
+  markMyNotificationsRead,
+  markMyNotificationsReadAll,
+  updateMyProfile
+};
