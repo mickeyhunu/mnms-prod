@@ -17,12 +17,19 @@ const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
 const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'entries', 'ads', 'support', 'inquiries'];
 const ADMIN_PAGE_SIZE = 20;
 const ADMIN_STATS_RANGE_DAYS = 14;
-const ADMIN_DASHBOARD_STATE = { summary: null, daily: [], series: [], period: 'daily', boardStats: [] };
+const ADMIN_DASHBOARD_STATE = { summary: null, daily: [], series: [], period: 'daily', boardStats: [], selectedMetric: 'visitors' };
 const ADMIN_STATS_PERIOD_META = {
-    daily: { caption: '최근 14일 추이', title: '일별 방문/게시글/댓글/접속량', tableCaption: '일별 상세', tableTitle: '최근 14일 통계 테이블' },
-    weekly: { caption: '최근 12주 추이', title: '주별 방문/게시글/댓글/접속량', tableCaption: '주별 상세', tableTitle: '최근 12주 통계 테이블' },
-    monthly: { caption: '최근 12개월 추이', title: '월별 방문/게시글/댓글/접속량', tableCaption: '월별 상세', tableTitle: '최근 12개월 통계 테이블' },
-    yearly: { caption: '최근 5년 추이', title: '연도별 방문/게시글/댓글/접속량', tableCaption: '연도별 상세', tableTitle: '최근 5년 통계 테이블' }
+    daily: { caption: '최근 14일 추이', tableCaption: '일별 상세', tableTitle: '최근 14일 통계 테이블' },
+    weekly: { caption: '최근 12주 추이', tableCaption: '주별 상세', tableTitle: '최근 12주 통계 테이블' },
+    monthly: { caption: '최근 12개월 추이', tableCaption: '월별 상세', tableTitle: '최근 12개월 통계 테이블' },
+    yearly: { caption: '최근 5년 추이', tableCaption: '연도별 상세', tableTitle: '최근 5년 통계 테이블' }
+};
+const ADMIN_STATS_METRIC_META = {
+    visitors: { key: 'visitors', label: '방문자수', colorClass: 'admin-stats-bar--visitors', unit: '명' },
+    pageViews: { key: 'pageViews', label: '접속량', colorClass: 'admin-stats-bar--views', unit: '회' },
+    posts: { key: 'posts', label: '게시글', colorClass: 'admin-stats-bar--posts', unit: '건' },
+    comments: { key: 'comments', label: '댓글', colorClass: 'admin-stats-bar--comments', unit: '건' },
+    signups: { key: 'signups', label: '가입자수', colorClass: 'admin-stats-bar--signups', unit: '명' }
 };
 const ADMIN_LIST_STATE = {
     posts: { items: [], query: '', searchType: 'post', page: 1 },
@@ -165,6 +172,8 @@ function bindCommonEvents() {
         ADMIN_DASHBOARD_STATE.period = String(event.target.value || 'daily').toLowerCase();
         await loadStatsDashboard();
     });
+    document.getElementById('stats-summary-cards')?.addEventListener('click', handleStatsCardInteraction);
+    document.getElementById('stats-summary-cards')?.addEventListener('keydown', handleStatsCardKeyboard);
     document.getElementById('posts-retry-btn')?.addEventListener('click', loadPosts);
     document.getElementById('comments-retry-btn')?.addEventListener('click', loadComments);
     document.getElementById('users-retry-btn')?.addEventListener('click', loadUsers);
@@ -383,15 +392,15 @@ function renderStatsSummaryCards(summary) {
     if (!container || !summary) return;
 
     const cards = [
-        { label: '전체 방문자수', value: summary.totalVisitors, delta: `오늘 ${formatStatsNumber(summary.todayVisitors)}명` },
-        { label: '전체 접속량', value: summary.totalPageViews, delta: `오늘 ${formatStatsNumber(summary.todayPageViews)}회` },
-        { label: '전체 게시글', value: summary.totalPosts, delta: `오늘 ${formatStatsNumber(summary.todayPosts)}건` },
-        { label: '전체 댓글', value: summary.totalComments, delta: `오늘 ${formatStatsNumber(summary.todayComments)}건` },
-        { label: '전체 회원', value: summary.totalUsers, delta: `오늘 가입 ${formatStatsNumber(summary.todaySignups)}명` }
+        { label: '전체 방문자수', value: summary.totalVisitors, delta: `오늘 ${formatStatsNumber(summary.todayVisitors)}명`, metricKey: 'visitors' },
+        { label: '전체 접속량', value: summary.totalPageViews, delta: `오늘 ${formatStatsNumber(summary.todayPageViews)}회`, metricKey: 'pageViews' },
+        { label: '전체 게시글', value: summary.totalPosts, delta: `오늘 ${formatStatsNumber(summary.todayPosts)}건`, metricKey: 'posts' },
+        { label: '전체 댓글', value: summary.totalComments, delta: `오늘 ${formatStatsNumber(summary.todayComments)}건`, metricKey: 'comments' },
+        { label: '전체 회원', value: summary.totalUsers, delta: `오늘 가입 ${formatStatsNumber(summary.todaySignups)}명`, metricKey: 'signups' }
     ];
 
     container.innerHTML = cards.map((card) => `
-        <article class="admin-stats-card">
+        <article class="admin-stats-card ${ADMIN_DASHBOARD_STATE.selectedMetric === card.metricKey ? 'is-active' : ''}" data-admin-stats-metric="${card.metricKey}" role="button" tabindex="0" aria-label="${card.label} 기준 대시보드 보기">
             <span class="admin-stats-card__label">${card.label}</span>
             <strong class="admin-stats-card__value">${formatStatsNumber(card.value)}</strong>
             <span class="admin-stats-card__delta">${card.delta}</span>
@@ -399,35 +408,37 @@ function renderStatsSummaryCards(summary) {
     `).join('');
 }
 
+function getStatsMetricMeta(metricKey = ADMIN_DASHBOARD_STATE.selectedMetric) {
+    return ADMIN_STATS_METRIC_META[metricKey] || ADMIN_STATS_METRIC_META.visitors;
+}
+
 function renderStatsChart(dailyStats) {
     const container = document.getElementById('stats-chart');
     if (!container) return;
 
     const items = Array.isArray(dailyStats) ? dailyStats : [];
+    const metric = getStatsMetricMeta();
     if (!items.length) {
         container.innerHTML = '<p class="text-muted">표시할 통계 데이터가 없습니다.</p>';
         return;
     }
 
-    const maxVisitors = Math.max(...items.map((item) => Number(item.visitors || 0)), 1);
-    const maxViews = Math.max(...items.map((item) => Number(item.pageViews || 0)), 1);
-    const maxPosts = Math.max(...items.map((item) => Number(item.posts || 0)), 1);
-    const maxComments = Math.max(...items.map((item) => Number(item.comments || 0)), 1);
+    const maxValue = Math.max(...items.map((item) => Number(item[metric.key] || 0)), 1);
 
     container.innerHTML = items.map((item) => {
         const dateLabel = sanitizeHTML(item.label || String(item.date || '').slice(5).replace('-', '.'));
+        const value = Number(item[metric.key] || 0);
         return `
             <div class="admin-stats-chart-row">
                 <strong>${dateLabel}</strong>
                 <div class="admin-stats-bar-track">
                     <div class="admin-stats-bar-group">
-                        <div class="admin-stats-bar admin-stats-bar--visitors" title="방문자수 ${formatStatsNumber(item.visitors)}"><span style="width:${Math.max(8, (Number(item.visitors || 0) / maxVisitors) * 100)}%"></span></div>
-                        <div class="admin-stats-bar admin-stats-bar--views" title="접속량 ${formatStatsNumber(item.pageViews)}"><span style="width:${Math.max(8, (Number(item.pageViews || 0) / maxViews) * 100)}%"></span></div>
-                        <div class="admin-stats-bar admin-stats-bar--posts" title="게시글 ${formatStatsNumber(item.posts)}"><span style="width:${Math.max(8, (Number(item.posts || 0) / maxPosts) * 100)}%"></span></div>
-                        <div class="admin-stats-bar admin-stats-bar--comments" title="댓글 ${formatStatsNumber(item.comments)}"><span style="width:${Math.max(8, (Number(item.comments || 0) / maxComments) * 100)}%"></span></div>
+                        <div class="admin-stats-bar ${metric.colorClass}" title="${metric.label} ${formatStatsNumber(value)}">
+                            <span style="width:${Math.max(8, (value / maxValue) * 100)}%"></span>
+                        </div>
                     </div>
                 </div>
-                <div class="admin-stats-chart-meta">방문 ${formatStatsNumber(item.visitors)} · 접속 ${formatStatsNumber(item.pageViews)} · 글 ${formatStatsNumber(item.posts)} · 댓글 ${formatStatsNumber(item.comments)}</div>
+                <div class="admin-stats-chart-meta">${metric.label} ${formatStatsNumber(value)}${metric.unit}</div>
             </div>
         `;
     }).join('');
@@ -459,24 +470,26 @@ function renderStatsDailyTable(dailyStats) {
     if (!tbody) return;
 
     const items = Array.isArray(dailyStats) ? dailyStats : [];
+    const metric = getStatsMetricMeta();
+    const valueHeader = document.querySelector('#stats-section table thead th:last-child');
+    if (valueHeader) valueHeader.textContent = metric.label;
+
     if (!items.length) {
-        tbody.innerHTML = '<tr><td colspan="5">표시할 일별 통계가 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="2">표시할 통계 데이터가 없습니다.</td></tr>';
         return;
     }
 
     tbody.innerHTML = items.map((item) => `
         <tr>
             <td>${sanitizeHTML(item.label || item.date)}</td>
-            <td>${formatStatsNumber(item.visitors)}</td>
-            <td>${formatStatsNumber(item.pageViews)}</td>
-            <td>${formatStatsNumber(item.posts)}</td>
-            <td>${formatStatsNumber(item.comments)}</td>
+            <td>${formatStatsNumber(item[metric.key])}${metric.unit}</td>
         </tr>
     `).join('');
 }
 
 function renderStatsPeriodMeta(period = 'daily') {
     const meta = ADMIN_STATS_PERIOD_META[period] || ADMIN_STATS_PERIOD_META.daily;
+    const metric = getStatsMetricMeta();
     const caption = document.getElementById('stats-period-caption');
     const title = document.getElementById('stats-period-title');
     const tableCaption = document.getElementById('stats-table-caption');
@@ -484,7 +497,7 @@ function renderStatsPeriodMeta(period = 'daily') {
     const periodSelect = document.getElementById('stats-period-select');
 
     if (caption) caption.textContent = meta.caption;
-    if (title) title.textContent = meta.title;
+    if (title) title.textContent = `${metric.label} (${period === 'daily' ? '일별' : period === 'weekly' ? '주별' : period === 'monthly' ? '월별' : '연도별'})`;
     if (tableCaption) tableCaption.textContent = meta.tableCaption;
     if (tableTitle) tableTitle.textContent = meta.tableTitle;
     if (periodSelect) periodSelect.value = period;
@@ -522,6 +535,26 @@ async function handleGlobalAdminClick(event) {
     const actionButton = event.target.closest('[data-admin-action]');
     if (!actionButton) return;
     await handleAdminTableActionClick(event);
+}
+
+function setAdminStatsMetric(metricKey) {
+    if (!Object.prototype.hasOwnProperty.call(ADMIN_STATS_METRIC_META, metricKey)) return;
+    ADMIN_DASHBOARD_STATE.selectedMetric = metricKey;
+    renderStatsDashboard();
+}
+
+function handleStatsCardInteraction(event) {
+    const card = event.target.closest('[data-admin-stats-metric]');
+    if (!card) return;
+    setAdminStatsMetric(String(card.dataset.adminStatsMetric || 'visitors'));
+}
+
+function handleStatsCardKeyboard(event) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const card = event.target.closest('[data-admin-stats-metric]');
+    if (!card) return;
+    event.preventDefault();
+    setAdminStatsMetric(String(card.dataset.adminStatsMetric || 'visitors'));
 }
 
 async function loadPosts() {

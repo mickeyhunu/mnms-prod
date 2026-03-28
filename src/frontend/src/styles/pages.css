@@ -2050,6 +2050,23 @@
     border-radius: 16px;
     padding: 18px;
     background: rgba(255, 255, 255, 0.02);
+    cursor: pointer;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-stats-card:hover {
+    border-color: rgba(124, 92, 255, 0.45);
+    transform: translateY(-1px);
+}
+
+.admin-stats-card:focus-visible {
+    outline: 2px solid rgba(124, 92, 255, 0.7);
+    outline-offset: 2px;
+}
+
+.admin-stats-card.is-active {
+    border-color: rgba(124, 92, 255, 0.7);
+    box-shadow: 0 8px 20px rgba(124, 92, 255, 0.16);
 }
 
 .admin-stats-card__label {
@@ -2122,7 +2139,7 @@
 
 .admin-stats-bar-group {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
 }
 
@@ -2144,6 +2161,7 @@
 .admin-stats-bar--views span { background: #17a2b8; }
 .admin-stats-bar--posts span { background: #ff8c42; }
 .admin-stats-bar--comments span { background: #3ecf8e; }
+.admin-stats-bar--signups span { background: #f4b400; }
 
 .admin-stats-chart-meta {
     min-width: 120px;
