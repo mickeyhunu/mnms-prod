@@ -4,7 +4,7 @@
 let isSubmitting = false;
 let isEditMode = false;
 let editingPostId = null;
-let existingImageUrl = null;
+let existingImageUrls = [];
 let isAdminUser = false;
 
 function getModeFromQuery() {
@@ -122,22 +122,38 @@ function setupImageUpload() {
 
     imageInput.addEventListener('change', function(event) {
         const files = event.target.files;
-        if (files.length > 5) {
-            alert('이미지는 최대 5개까지 선택할 수 있습니다.');
+        const maxNewImageCount = 5 - existingImageUrls.length;
+
+        if (files.length > maxNewImageCount) {
+            alert(`현재 기존 이미지를 포함해 최대 5개까지 업로드할 수 있습니다. (추가 가능: ${Math.max(0, maxNewImageCount)}개)`);
             imageInput.value = '';
-            displayImagePreview([]);
+            renderImagePreview();
             return;
         }
 
-        displayImagePreview(files);
+        renderImagePreview();
     });
 }
 
-function displayImagePreview(files) {
+function renderImagePreview() {
     const previewContainer = document.getElementById('image-preview');
     if (!previewContainer) return;
 
     previewContainer.innerHTML = '';
+
+    existingImageUrls.forEach((imageUrl, index) => {
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'image-preview-item';
+        previewDiv.style.cssText = 'position: relative; display:inline-block; margin:5px;';
+        previewDiv.innerHTML = `
+            <img src="${sanitizeHTML(imageUrl)}" alt="기존 이미지 ${index + 1}" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid #ddd;">
+            <button type="button" onclick="removeExistingImage(${index})" class="remove-image-btn" aria-label="기존 이미지 삭제" style="position:absolute;top:4px;right:4px;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;">×</button>
+            <small style="display:block;text-align:center;margin-top:4px;color:#666;">기존 이미지</small>
+        `;
+        previewContainer.appendChild(previewDiv);
+    });
+
+    const files = document.getElementById('image-files')?.files || [];
 
     Array.from(files).forEach((file, index) => {
         if (!file.type.startsWith('image/')) return;
@@ -150,25 +166,13 @@ function displayImagePreview(files) {
             previewDiv.innerHTML = `
                 <img src="${e.target.result}" alt="미리보기 ${index + 1}" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid #ddd;">
                 <button type="button" onclick="removeImage(${index})" class="remove-image-btn" style="position:absolute;top:4px;right:4px;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;">×</button>
+                <small style="display:block;text-align:center;margin-top:4px;color:#666;">새 이미지</small>
             `;
             previewContainer.appendChild(previewDiv);
         };
         reader.readAsDataURL(file);
     });
 }
-
-function displayExistingImagePreview(imageUrl) {
-    const previewContainer = document.getElementById('image-preview');
-    if (!previewContainer || !imageUrl) return;
-
-    previewContainer.innerHTML = `
-        <div class="image-preview-item" style="position: relative; display:inline-block; margin:5px;">
-            <img src="${sanitizeHTML(imageUrl)}" alt="기존 이미지" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid #ddd;">
-            <small style="display:block;text-align:center;margin-top:4px;color:#666;">기존 이미지</small>
-        </div>
-    `;
-}
-
 
 function isUploadDebugMode() {
     const params = new URLSearchParams(window.location.search || '');
@@ -206,7 +210,12 @@ function removeImage(index) {
     });
 
     imageInput.files = dt.files;
-    displayImagePreview(imageInput.files);
+    renderImagePreview();
+}
+
+function removeExistingImage(index) {
+    existingImageUrls = existingImageUrls.filter((_, i) => i !== index);
+    renderImagePreview();
 }
 
 function updateCharCount(fieldId, maxLength) {
@@ -263,10 +272,17 @@ async function loadPostForEdit() {
         if (titleInput) titleInput.value = post.title || '';
         if (contentInput) contentInput.value = post.content || '';
 
-        existingImageUrl = post.imageUrl || (Array.isArray(post.imageUrls) ? post.imageUrls[0] : null) || (post.images && post.images[0]) || null;
-        if (existingImageUrl) {
-            displayExistingImagePreview(existingImageUrl);
-        }
+        const normalizedImageUrls = Array.isArray(post.imageUrls)
+            ? post.imageUrls
+            : Array.isArray(post.images)
+                ? post.images
+                : (post.imageUrl ? [post.imageUrl] : []);
+
+        existingImageUrls = normalizedImageUrls
+            .map((url) => String(url || '').trim())
+            .filter((url) => url.length > 0)
+            .slice(0, 5);
+        renderImagePreview();
 
         updateCharCount('title', 255);
         updateCharCount('content', 1000);
@@ -330,7 +346,7 @@ async function handleSubmit(event) {
             isNotice,
             noticeType: isNotice ? 'IMPORTANT' : null,
             noticeTargetBoards,
-            imageUrls: imageUrls.length > 0 ? imageUrls : (existingImageUrl ? [existingImageUrl] : [])
+            imageUrls: [...existingImageUrls, ...imageUrls].slice(0, 5)
         };
 
         let submitResult;
