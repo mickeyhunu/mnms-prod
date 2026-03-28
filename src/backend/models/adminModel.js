@@ -493,13 +493,15 @@ function aggregateDailyStatsByPeriod(dailyStats, period = 'daily') {
       visitors: 0,
       pageViews: 0,
       posts: 0,
-      comments: 0
+      comments: 0,
+      signups: 0
     };
 
     existing.visitors += Number(row.visitors || 0);
     existing.pageViews += Number(row.pageViews || 0);
     existing.posts += Number(row.posts || 0);
     existing.comments += Number(row.comments || 0);
+    existing.signups += Number(row.signups || 0);
     map.set(key, existing);
   }
 
@@ -511,7 +513,8 @@ function aggregateDailyStatsByPeriod(dailyStats, period = 'daily') {
       visitors: item.visitors,
       pageViews: item.pageViews,
       posts: item.posts,
-      comments: item.comments
+      comments: item.comments,
+      signups: item.signups
     }));
 }
 
@@ -540,7 +543,7 @@ async function getDashboardStats(rangeDays = 14, { period = 'daily' } = {}) {
         (SELECT COUNT(*) FROM users WHERE role = 'USER' AND DATE(created_at) = CURRENT_DATE()) AS todaySignups`
   );
 
-  const [visitRows, postRows, commentRows, boardRows] = await Promise.all([
+  const [visitRows, postRows, commentRows, signupRows, boardRows] = await Promise.all([
     pool.query(
       `SELECT visit_date AS statsDate,
               COUNT(DISTINCT visitor_key) AS visitors,
@@ -570,6 +573,15 @@ async function getDashboardStats(rangeDays = 14, { period = 'daily' } = {}) {
       [normalizedRangeDays - 1]
     ).then(([rows]) => rows),
     pool.query(
+      `SELECT DATE(created_at) AS statsDate, COUNT(*) AS signupCount
+         FROM users
+        WHERE role = 'USER'
+          AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL ? DAY)
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at) ASC`,
+      [normalizedRangeDays - 1]
+    ).then(([rows]) => rows),
+    pool.query(
       `SELECT board_type AS boardType,
               COUNT(*) AS totalPosts,
               SUM(CASE WHEN DATE(created_at) = CURRENT_DATE() THEN 1 ELSE 0 END) AS todayPosts
@@ -586,6 +598,7 @@ async function getDashboardStats(rangeDays = 14, { period = 'daily' } = {}) {
   }));
   const postMap = toDailySeriesMap(postRows, (row) => Number(row.postCount || 0));
   const commentMap = toDailySeriesMap(commentRows, (row) => Number(row.commentCount || 0));
+  const signupMap = toDailySeriesMap(signupRows, (row) => Number(row.signupCount || 0));
 
   const daily = [];
   for (let offset = normalizedRangeDays - 1; offset >= 0; offset -= 1) {
@@ -600,7 +613,8 @@ async function getDashboardStats(rangeDays = 14, { period = 'daily' } = {}) {
       visitors: visitEntry.visitors,
       pageViews: visitEntry.pageViews,
       posts: postMap.get(dateKey) || 0,
-      comments: commentMap.get(dateKey) || 0
+      comments: commentMap.get(dateKey) || 0,
+      signups: signupMap.get(dateKey) || 0
     });
   }
 
