@@ -83,7 +83,7 @@ export const adminTemplate = `
                             </div>
                             <div class="admin-table-container">
                                 <table class="admin-table">
-                                    <thead><tr><th>날짜</th><th>방문자수</th><th>접속량</th><th>게시글</th><th>댓글</th></tr></thead>
+                                    <thead><tr><th>날짜</th><th>지표 값</th></tr></thead>
                                     <tbody id="stats-daily-tbody"></tbody>
                                 </table>
                             </div>
