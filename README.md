@@ -93,3 +93,45 @@ cp src/backend/.env.local.example src/backend/.env.local
 ## 기본 관리자 계정
 - email: `admin@company.com`
 - password: `admin1234`
+
+## S3 파일 업로드 전환 (게시글 이미지 / 문의 첨부)
+
+이 프로젝트는 업로드 파일의 바이너리를 DB에 직접 넣지 않고, S3에 저장한 뒤 DB에는 URL만 저장하도록 구성되어 있습니다.
+
+### 1) 필수 환경변수
+- `AWS_REGION` (예: `ap-northeast-2`)
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `S3_BUCKET_NAME`
+
+선택 환경변수:
+- `S3_PUBLIC_BASE_URL` (CloudFront 도메인 등을 사용하는 경우)
+- `S3_AUTO_CREATE_BUCKET=true` (서버 시작 시 버킷이 없으면 자동 생성)
+
+### 2) 버킷 생성
+자동 생성을 쓰지 않을 경우, AWS CLI로 먼저 생성하세요.
+
+```bash
+aws s3api create-bucket \
+  --bucket <버킷명> \
+  --region <리전> \
+  --create-bucket-configuration LocationConstraint=<리전>
+```
+
+`us-east-1` 리전은 `--create-bucket-configuration` 없이 생성해야 합니다.
+
+### 3) 업로드 API
+- 게시글 이미지 업로드: `POST /api/uploads/posts/images`
+- 문의 첨부 업로드: `POST /api/uploads/support/attachments`
+
+두 API 모두 인증 필요(Bearer 토큰), body 예시는 다음과 같습니다.
+
+```json
+{
+  "files": [
+    { "fileName": "photo.png", "dataUrl": "data:image/png;base64,..." }
+  ]
+}
+```
+
+기존처럼 `POST /api/posts`, `POST /api/support/inquiries`로 data URL을 보내도 서버가 내부적으로 S3 업로드 후 URL로 변환해 저장합니다.
