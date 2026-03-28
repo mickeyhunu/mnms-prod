@@ -3,7 +3,12 @@
  */
 const postModel = require('../models/postModel');
 const { awardPointByAction, revokePointByAction } = require('../models/pointModel');
-const { normalizeExistingFileUrls, parseDataUrl, uploadDataUrlToS3 } = require('../utils/fileUpload');
+const {
+  deleteS3ObjectsByUrls,
+  normalizeExistingFileUrls,
+  parseDataUrl,
+  uploadDataUrlToS3
+} = require('../utils/fileUpload');
 
 const BOARD_TYPES = postModel.BOARD_TYPES || { FREE: 'FREE', ANON: 'ANON', REVIEW: 'REVIEW', STORY: 'STORY', QUESTION: 'QUESTION' };
 
@@ -76,6 +81,34 @@ async function resolveImageUrls(payload) {
   }
 
   return [...existingUrls, ...uploadedUrls].slice(0, 5);
+}
+
+function extractImageUrlsFromPost(post) {
+  if (!post) return [];
+
+  if (Array.isArray(post.imageUrls)) {
+    return normalizeExistingFileUrls(post.imageUrls, { maxCount: 5 });
+  }
+
+  if (typeof post.image_urls === 'string') {
+    try {
+      const parsed = JSON.parse(post.image_urls);
+      return normalizeExistingFileUrls(parsed, { maxCount: 5 });
+    } catch (error) {
+      return [];
+    }
+  }
+
+  if (typeof post.imageUrls === 'string') {
+    try {
+      const parsed = JSON.parse(post.imageUrls);
+      return normalizeExistingFileUrls(parsed, { maxCount: 5 });
+    } catch (error) {
+      return normalizeExistingFileUrls([post.imageUrls], { maxCount: 5 });
+    }
+  }
+
+  return normalizeExistingFileUrls([post.imageUrl], { maxCount: 5 });
 }
 
 function canViewSecretComment(comment, post, currentUser) {
@@ -346,10 +379,14 @@ async function updatePost(req, res, next) {
       return res.status(403).json({ message: '수정 권한이 없습니다.' });
     }
 
+    const previousImageUrls = extractImageUrlsFromPost(post);
+
+    const nextImageUrls = await resolveImageUrls(req.body);
+
     await postModel.updatePost(postId, {
       title: req.body.title ?? post.title,
       content: req.body.content ?? post.content,
-      imageUrls: await resolveImageUrls(req.body),
+      imageUrls: nextImageUrls,
       isNotice: req.user.role === 'ADMIN' ? Boolean(req.body.isNotice) : Boolean(post.is_notice),
       noticeType: req.user.role === 'ADMIN'
         ? (Boolean(req.body.isNotice) ? (parseNoticeType(req.body.noticeType) || 'NOTICE') : null)
@@ -363,6 +400,9 @@ async function updatePost(req, res, next) {
           : [])
         : parseNoticeTargetBoards(post.notice_target_boards || post.noticeTargetBoards, post.board_type || post.boardType)
     });
+
+    const removedImageUrls = previousImageUrls.filter((url) => !nextImageUrls.includes(url));
+    await deleteS3ObjectsByUrls(removedImageUrls);
 
     const updated = await postModel.findPostById(postId);
     res.json({ success: true, post: updated });
@@ -407,9 +447,14 @@ async function deletePost(req, res, next) {
       await revokePointByAction(post.user_id, 'CREATE_REVIEW_BONUS');
     }
 
+    const imageUrls = extractImageUrlsFromPost(post);
+
     await postModel.deletePostLikesByPostId(postId);
     await postModel.markCommentsDeletedByPostId(postId);
     await postModel.deletePost(postId);
+
+    await deleteS3ObjectsByUrls(imageUrls);
+
     res.json({ success: true });
   } catch (error) {
     next(error);
