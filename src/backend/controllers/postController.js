@@ -83,6 +83,34 @@ async function resolveImageUrls(payload) {
   return [...existingUrls, ...uploadedUrls].slice(0, 5);
 }
 
+function extractImageUrlsFromPost(post) {
+  if (!post) return [];
+
+  if (Array.isArray(post.imageUrls)) {
+    return normalizeExistingFileUrls(post.imageUrls, { maxCount: 5 });
+  }
+
+  if (typeof post.image_urls === 'string') {
+    try {
+      const parsed = JSON.parse(post.image_urls);
+      return normalizeExistingFileUrls(parsed, { maxCount: 5 });
+    } catch (error) {
+      return [];
+    }
+  }
+
+  if (typeof post.imageUrls === 'string') {
+    try {
+      const parsed = JSON.parse(post.imageUrls);
+      return normalizeExistingFileUrls(parsed, { maxCount: 5 });
+    } catch (error) {
+      return normalizeExistingFileUrls([post.imageUrls], { maxCount: 5 });
+    }
+  }
+
+  return normalizeExistingFileUrls([post.imageUrl], { maxCount: 5 });
+}
+
 function canViewSecretComment(comment, post, currentUser) {
   if (!comment.isSecret) {
     return true;
@@ -351,9 +379,7 @@ async function updatePost(req, res, next) {
       return res.status(403).json({ message: '수정 권한이 없습니다.' });
     }
 
-    const previousImageUrls = Array.isArray(post.imageUrls)
-      ? post.imageUrls
-      : normalizeExistingFileUrls([post.imageUrl], { maxCount: 5 });
+    const previousImageUrls = extractImageUrlsFromPost(post);
 
     const nextImageUrls = await resolveImageUrls(req.body);
 
@@ -421,7 +447,7 @@ async function deletePost(req, res, next) {
       await revokePointByAction(post.user_id, 'CREATE_REVIEW_BONUS');
     }
 
-    const imageUrls = normalizeExistingFileUrls(post.imageUrls || [post.imageUrl], { maxCount: 5 });
+    const imageUrls = extractImageUrlsFromPost(post);
 
     await postModel.deletePostLikesByPostId(postId);
     await postModel.markCommentsDeletedByPostId(postId);

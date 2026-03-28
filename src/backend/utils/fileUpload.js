@@ -4,7 +4,7 @@
 const crypto = require('crypto');
 const path = require('path');
 const { DeleteObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
-const { buildS3ObjectUrl, getS3Client, isS3UploadEnabled, s3BucketName } = require('../config/s3');
+const { awsRegion, buildS3ObjectUrl, getS3Client, isS3UploadEnabled, s3BucketName } = require('../config/s3');
 
 const EXTENSION_BY_MIME = {
   'image/jpeg': 'jpg',
@@ -45,11 +45,37 @@ function extractS3KeyFromUrl(url) {
   const targetUrl = String(url || '').trim();
   if (!targetUrl) return null;
 
+  const managedBaseUrls = [
+    buildS3ObjectUrl(''),
+    `https://${s3BucketName}.s3.${awsRegion}.amazonaws.com/`,
+    `https://${s3BucketName}.s3.amazonaws.com/`,
+    `https://s3.${awsRegion}.amazonaws.com/${s3BucketName}/`,
+    `https://s3.amazonaws.com/${s3BucketName}/`
+  ].map((baseUrl) => String(baseUrl || '').replace(/\/+$/, '/') );
+
+  const baseMatched = managedBaseUrls.find((baseUrl) => targetUrl.startsWith(baseUrl));
+  if (baseMatched) {
+    return decodeURIComponent(targetUrl.slice(baseMatched.length).replace(/^\/+/, '')) || null;
+  }
+
   try {
     const parsed = new URL(targetUrl);
-    const bucketHost = `${s3BucketName}.s3.`;
-    if (!parsed.hostname.includes(bucketHost)) return null;
-    return decodeURIComponent(parsed.pathname.replace(/^\/+/, '')) || null;
+    const host = String(parsed.hostname || '').toLowerCase();
+    const pathname = String(parsed.pathname || '');
+
+    if (host.startsWith(`${s3BucketName.toLowerCase()}.s3`)) {
+      return decodeURIComponent(pathname.replace(/^\/+/, '')) || null;
+    }
+
+    if (host === 's3.amazonaws.com' || host.startsWith('s3.')) {
+      const trimmedPath = pathname.replace(/^\/+/, '');
+      const [bucketInPath, ...keyParts] = trimmedPath.split('/');
+      if (bucketInPath === s3BucketName && keyParts.length) {
+        return decodeURIComponent(keyParts.join('/')) || null;
+      }
+    }
+
+    return null;
   } catch (error) {
     return null;
   }
