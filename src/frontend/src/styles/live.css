@@ -708,9 +708,7 @@ body[data-page="live"] .header {
 
 .live-feedback {
     padding: 14px 16px;
-    border-radius: 14px;
     border: 1px solid rgba(148, 163, 184, 0.16);
-    background: rgba(15, 23, 42, 0.6);
     color: #cbd5e1;
 }
 
