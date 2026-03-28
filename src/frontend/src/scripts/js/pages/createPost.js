@@ -169,6 +169,33 @@ function displayExistingImagePreview(imageUrl) {
     `;
 }
 
+
+function isUploadDebugMode() {
+    const params = new URLSearchParams(window.location.search || '');
+    if (params.get('debugUpload') === '1') return true;
+
+    try {
+        return window.localStorage.getItem('mnms_debug_upload') === '1';
+    } catch (error) {
+        return false;
+    }
+}
+
+function handlePostSubmitSuccess(result, { isEdit = false } = {}) {
+    if (isUploadDebugMode()) {
+        console.group('[S3 Upload Debug] 게시글 저장 결과');
+        console.log('mode:', isEdit ? 'edit' : 'create');
+        console.log('result:', result);
+        console.log('post image urls:', result?.post?.image_urls || result?.post?.imageUrls || []);
+        console.groupEnd();
+
+        alert('디버그 모드: 업로드 결과를 콘솔에 출력했습니다. 확인 후 직접 이동해주세요.');
+        return;
+    }
+
+    window.location.href = '/community';
+}
+
 function removeImage(index) {
     const imageInput = document.getElementById('image-files');
     if (!imageInput || !imageInput.files) return;
@@ -306,14 +333,15 @@ async function handleSubmit(event) {
             imageUrls: imageUrls.length > 0 ? imageUrls : (existingImageUrl ? [existingImageUrl] : [])
         };
 
+        let submitResult;
         if (isEditMode) {
-            await APIClient.put(`/posts/${editingPostId}`, payload);
+            submitResult = await APIClient.put(`/posts/${editingPostId}`, payload);
         } else {
-            await APIClient.post('/posts', payload);
+            submitResult = await APIClient.post('/posts', payload);
         }
 
         alert(isEditMode ? '글이 수정되었습니다!' : '글이 작성되었습니다!');
-        window.location.href = '/community';
+        handlePostSubmitSuccess(submitResult, { isEdit: isEditMode });
     } catch (error) {
         console.error('글 작성 에러:', error);
         if (error.status === 401) {
