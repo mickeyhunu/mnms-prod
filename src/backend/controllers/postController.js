@@ -3,7 +3,12 @@
  */
 const postModel = require('../models/postModel');
 const { awardPointByAction, revokePointByAction } = require('../models/pointModel');
-const { normalizeExistingFileUrls, parseDataUrl, uploadDataUrlToS3 } = require('../utils/fileUpload');
+const {
+  deleteS3ObjectsByUrls,
+  normalizeExistingFileUrls,
+  parseDataUrl,
+  uploadDataUrlToS3
+} = require('../utils/fileUpload');
 
 const BOARD_TYPES = postModel.BOARD_TYPES || { FREE: 'FREE', ANON: 'ANON', REVIEW: 'REVIEW', STORY: 'STORY', QUESTION: 'QUESTION' };
 
@@ -346,10 +351,16 @@ async function updatePost(req, res, next) {
       return res.status(403).json({ message: '수정 권한이 없습니다.' });
     }
 
+    const previousImageUrls = Array.isArray(post.imageUrls)
+      ? post.imageUrls
+      : normalizeExistingFileUrls([post.imageUrl], { maxCount: 5 });
+
+    const nextImageUrls = await resolveImageUrls(req.body);
+
     await postModel.updatePost(postId, {
       title: req.body.title ?? post.title,
       content: req.body.content ?? post.content,
-      imageUrls: await resolveImageUrls(req.body),
+      imageUrls: nextImageUrls,
       isNotice: req.user.role === 'ADMIN' ? Boolean(req.body.isNotice) : Boolean(post.is_notice),
       noticeType: req.user.role === 'ADMIN'
         ? (Boolean(req.body.isNotice) ? (parseNoticeType(req.body.noticeType) || 'NOTICE') : null)
@@ -363,6 +374,9 @@ async function updatePost(req, res, next) {
           : [])
         : parseNoticeTargetBoards(post.notice_target_boards || post.noticeTargetBoards, post.board_type || post.boardType)
     });
+
+    const removedImageUrls = previousImageUrls.filter((url) => !nextImageUrls.includes(url));
+    await deleteS3ObjectsByUrls(removedImageUrls);
 
     const updated = await postModel.findPostById(postId);
     res.json({ success: true, post: updated });
@@ -407,9 +421,14 @@ async function deletePost(req, res, next) {
       await revokePointByAction(post.user_id, 'CREATE_REVIEW_BONUS');
     }
 
+    const imageUrls = normalizeExistingFileUrls(post.imageUrls || [post.imageUrl], { maxCount: 5 });
+
     await postModel.deletePostLikesByPostId(postId);
     await postModel.markCommentsDeletedByPostId(postId);
     await postModel.deletePost(postId);
+
+    await deleteS3ObjectsByUrls(imageUrls);
+
     res.json({ success: true });
   } catch (error) {
     next(error);
