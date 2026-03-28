@@ -3,8 +3,8 @@
  */
 const crypto = require('crypto');
 const path = require('path');
-const { PutObjectCommand } = require('@aws-sdk/client-s3');
-const { buildS3ObjectUrl, getS3Client, isS3UploadEnabled, s3BucketName } = require('../config/s3');
+const { DeleteObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { awsRegion, buildS3ObjectUrl, getS3Client, isS3UploadEnabled, s3BucketName } = require('../config/s3');
 
 const EXTENSION_BY_MIME = {
   'image/jpeg': 'jpg',
@@ -39,6 +39,46 @@ function normalizeExistingFileUrls(values = [], { maxCount, allowedPrefixes = ['
     .map((url) => String(url || '').trim())
     .filter((url) => allowedPrefixes.some((prefix) => url.startsWith(prefix)))
     .slice(0, maxCount);
+}
+
+function extractS3KeyFromUrl(url) {
+  const targetUrl = String(url || '').trim();
+  if (!targetUrl) return null;
+
+  const managedBaseUrls = [
+    buildS3ObjectUrl(''),
+    `https://${s3BucketName}.s3.${awsRegion}.amazonaws.com/`,
+    `https://${s3BucketName}.s3.amazonaws.com/`,
+    `https://s3.${awsRegion}.amazonaws.com/${s3BucketName}/`,
+    `https://s3.amazonaws.com/${s3BucketName}/`
+  ].map((baseUrl) => String(baseUrl || '').replace(/\/+$/, '/') );
+
+  const baseMatched = managedBaseUrls.find((baseUrl) => targetUrl.startsWith(baseUrl));
+  if (baseMatched) {
+    return decodeURIComponent(targetUrl.slice(baseMatched.length).replace(/^\/+/, '')) || null;
+  }
+
+  try {
+    const parsed = new URL(targetUrl);
+    const host = String(parsed.hostname || '').toLowerCase();
+    const pathname = String(parsed.pathname || '');
+
+    if (host.startsWith(`${s3BucketName.toLowerCase()}.s3`)) {
+      return decodeURIComponent(pathname.replace(/^\/+/, '')) || null;
+    }
+
+    if (host === 's3.amazonaws.com' || host.startsWith('s3.')) {
+      const trimmedPath = pathname.replace(/^\/+/, '');
+      const [bucketInPath, ...keyParts] = trimmedPath.split('/');
+      if (bucketInPath === s3BucketName && keyParts.length) {
+        return decodeURIComponent(keyParts.join('/')) || null;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    return null;
+  }
 }
 
 async function uploadDataUrlToS3({ dataUrl, folder = 'uploads', fileName = '', allowedMimeTypes = [], maxBytes = 10 * 1024 * 1024 }) {
@@ -100,7 +140,39 @@ async function uploadDataUrlToS3({ dataUrl, folder = 'uploads', fileName = '', a
   };
 }
 
+async function deleteS3ObjectByUrl(url) {
+  if (!isS3UploadEnabled()) return { deleted: false, skipped: 'S3 disabled' };
+
+  const key = extractS3KeyFromUrl(url);
+  if (!key) return { deleted: false, skipped: 'Not managed S3 object URL' };
+
+  const client = getS3Client();
+  await client.send(new DeleteObjectCommand({
+    Bucket: s3BucketName,
+    Key: key
+  }));
+
+  return { deleted: true, key };
+}
+
+async function deleteS3ObjectsByUrls(urls = []) {
+  const results = [];
+  for (const url of urls) {
+    try {
+      const result = await deleteS3ObjectByUrl(url);
+      results.push({ url, ...result });
+    } catch (error) {
+      results.push({ url, deleted: false, error: error.message });
+    }
+  }
+
+  return results;
+}
+
 module.exports = {
+  deleteS3ObjectByUrl,
+  deleteS3ObjectsByUrls,
+  extractS3KeyFromUrl,
   normalizeExistingFileUrls,
   parseDataUrl,
   uploadDataUrlToS3
