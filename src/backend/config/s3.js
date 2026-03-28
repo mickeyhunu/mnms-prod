@@ -10,6 +10,30 @@ const s3AutoCreateBucket = String(process.env.S3_AUTO_CREATE_BUCKET || 'false').
 
 let s3Client = null;
 
+function getS3CredentialsConfig() {
+  const accessKeyId = String(process.env.AWS_ACCESS_KEY_ID || '').trim();
+  const secretAccessKey = String(process.env.AWS_SECRET_ACCESS_KEY || '').trim();
+  const sessionToken = String(process.env.AWS_SESSION_TOKEN || '').trim();
+
+  const hasAccessKeyId = Boolean(accessKeyId);
+  const hasSecretAccessKey = Boolean(secretAccessKey);
+
+  if (hasAccessKeyId !== hasSecretAccessKey) {
+    throw new Error('AWS 자격증명은 AWS_ACCESS_KEY_ID와 AWS_SECRET_ACCESS_KEY를 함께 설정해야 합니다.');
+  }
+
+  if (!hasAccessKeyId) {
+    return null;
+  }
+
+  const credentials = { accessKeyId, secretAccessKey };
+  if (sessionToken) {
+    credentials.sessionToken = sessionToken;
+  }
+
+  return { credentials };
+}
+
 function isS3UploadEnabled() {
   return Boolean(s3BucketName);
 }
@@ -17,11 +41,12 @@ function isS3UploadEnabled() {
 function getS3Client() {
   if (s3Client) return s3Client;
 
-  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-    throw new Error('AWS 인증 환경변수(AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY)가 설정되지 않았습니다.');
-  }
+  const credentialsConfig = getS3CredentialsConfig();
 
-  s3Client = new S3Client({ region: awsRegion });
+  s3Client = new S3Client({
+    region: awsRegion,
+    ...(credentialsConfig || {})
+  });
   return s3Client;
 }
 

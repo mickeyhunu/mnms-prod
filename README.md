@@ -100,9 +100,11 @@ cp src/backend/.env.local.example src/backend/.env.local
 
 ### 1) 필수 환경변수
 - `AWS_REGION` (예: `ap-northeast-2`)
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
 - `S3_BUCKET_NAME`
+
+자격증명 설정 방식(둘 중 하나):
+- 환경변수 직접 설정: `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` (필요 시 `AWS_SESSION_TOKEN`)
+- 또는 IAM Role/인스턴스 프로파일 등 AWS SDK 기본 자격증명 체인 사용
 
 선택 환경변수:
 - `S3_PUBLIC_BASE_URL` (CloudFront 도메인 등을 사용하는 경우)
@@ -135,3 +137,10 @@ aws s3api create-bucket \
 ```
 
 기존처럼 `POST /api/posts`, `POST /api/support/inquiries`로 data URL을 보내도 서버가 내부적으로 S3 업로드 후 URL로 변환해 저장합니다.
+
+
+### 4) 업로드 실패 점검 포인트
+- `AccessDenied` 에러: IAM 정책에 `s3:PutObject` 권한이 있는지 확인
+- `NoSuchBucket` 에러: `S3_BUCKET_NAME`와 `AWS_REGION` 조합 확인
+- 이미지 URL 접근 불가: 버킷/CloudFront 공개 정책 또는 서명 URL 전략 확인
+
