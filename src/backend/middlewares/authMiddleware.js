@@ -3,6 +3,7 @@
  */
 const { findUserByToken, deleteSessionsByUserId } = require('../models/sessionModel');
 const { formatRestrictionMessage, getLoginRestrictionState } = require('../utils/loginRestriction');
+const { verifyAuthToken } = require('../utils/jwt');
 
 async function authMiddleware(req, res, next) {
   try {
@@ -10,8 +11,18 @@ async function authMiddleware(req, res, next) {
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
     if (!token) return res.status(401).json({ message: '인증이 필요합니다.' });
 
+    let payload;
+    try {
+      payload = verifyAuthToken(token);
+    } catch (_error) {
+      return res.status(401).json({ message: '토큰이 유효하지 않거나 만료되었습니다.' });
+    }
+
     const user = await findUserByToken(token);
     if (!user) return res.status(401).json({ message: '세션이 유효하지 않습니다.' });
+    if (String(user.id) !== String(payload.sub || '')) {
+      return res.status(401).json({ message: '세션이 유효하지 않습니다.' });
+    }
 
     const restrictionState = getLoginRestrictionState(user);
     if (restrictionState.isRestricted) {
@@ -35,9 +46,17 @@ function optionalAuthMiddleware(req, _res, next) {
     return next();
   }
 
+  let payload;
+  try {
+    payload = verifyAuthToken(token);
+  } catch (_error) {
+    req.user = null;
+    return next();
+  }
+
   findUserByToken(token)
     .then((user) => {
-      req.user = user;
+      req.user = user && String(user.id) === String(payload.sub || '') ? user : null;
       next();
     })
     .catch(next);
