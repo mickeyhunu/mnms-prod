@@ -338,6 +338,10 @@ const pageRegistry = {
                         <div id="admin-inquiry-content" class="form-control admin-inquiry-readonly admin-inquiry-content-box"></div>
                     </div>
                     <div class="form-group">
+                        <label class="form-label">첨부파일</label>
+                        <div id="admin-inquiry-attachments" class="form-control admin-inquiry-readonly admin-inquiry-attachments-box">첨부파일이 없습니다.</div>
+                    </div>
+                    <div class="form-group">
                         <label for="admin-inquiry-answer-content" class="form-label">답변 내용</label>
                         <textarea id="admin-inquiry-answer-content" class="form-control" rows="8" placeholder="답변 내용을 입력해주세요." required></textarea>
                     </div>

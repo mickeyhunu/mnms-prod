@@ -38,6 +38,45 @@ function formatDateTime(value) {
     });
 }
 
+function escapeHtml(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function renderAttachmentList(attachmentUrls = []) {
+    if (!Array.isArray(attachmentUrls) || attachmentUrls.length === 0) {
+        return '<p class="admin-inquiry-attachments-empty">첨부파일이 없습니다.</p>';
+    }
+
+    const items = attachmentUrls.map((url, index) => {
+        const normalizedUrl = String(url || '').trim();
+        if (!normalizedUrl) return '';
+
+        const safeUrl = escapeHtml(normalizedUrl);
+        const isPdf = normalizedUrl.startsWith('data:application/pdf') || normalizedUrl.toLowerCase().endsWith('.pdf');
+        if (isPdf) {
+            return `
+                <li class="admin-inquiry-attachment-item">
+                    <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">첨부파일 ${index + 1} (PDF)</a>
+                </li>
+            `;
+        }
+
+        return `
+            <li class="admin-inquiry-attachment-item">
+                <img class="admin-inquiry-attachment-image" src="${safeUrl}" alt="첨부 이미지 ${index + 1}">
+            </li>
+        `;
+    }).filter(Boolean).join('');
+
+    if (!items) return '<p class="admin-inquiry-attachments-empty">첨부파일이 없습니다.</p>';
+    return `<ul class="admin-inquiry-attachments">${items}</ul>`;
+}
+
 
 function applyPageTitle(isEditMode) {
     const heading = document.querySelector('.community-board-name');
@@ -76,6 +115,7 @@ function renderInquiryInfo(inquiry) {
     const titleEl = document.getElementById('admin-inquiry-title');
     const metaEl = document.getElementById('admin-inquiry-meta');
     const contentEl = document.getElementById('admin-inquiry-content');
+    const attachmentsEl = document.getElementById('admin-inquiry-attachments');
     const answerEl = document.getElementById('admin-inquiry-answer-content');
 
     if (titleEl) titleEl.textContent = inquiry.title || '(제목 없음)';
@@ -95,6 +135,7 @@ function renderInquiryInfo(inquiry) {
         ].join('');
     }
     if (contentEl) contentEl.textContent = inquiry.content || '-';
+    if (attachmentsEl) attachmentsEl.innerHTML = renderAttachmentList(inquiry.attachmentUrls);
     const hasExistingAnswer = Boolean((inquiry.answerContent || '').trim());
     if (answerEl) answerEl.value = inquiry.answerContent || '';
 
