@@ -48,7 +48,8 @@ function renderAttachmentList(attachmentUrls = []) {
 
         return `
             <li class="my-inquiry-attachment-item">
-                <img class="my-inquiry-attachment-image" src="${safeUrl}" alt="첨부 이미지 ${index + 1}">
+                <img class="my-inquiry-attachment-image" src="${safeUrl}" alt="첨부 이미지 ${index + 1}" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
+                <a class="hidden" href="${safeUrl}" target="_blank" rel="noopener noreferrer">첨부파일 ${index + 1} (열기)</a>
             </li>
         `;
     }).join('');
