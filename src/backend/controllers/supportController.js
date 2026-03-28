@@ -12,6 +12,14 @@ const BOARD_TYPES = {
   QUESTION: 'QUESTION'
 };
 
+const EXTENSION_BY_MIME = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'application/pdf': 'pdf'
+};
+
 function parseId(value) {
   const id = Number.parseInt(value, 10);
   return Number.isInteger(id) && id > 0 ? id : null;
@@ -31,9 +39,11 @@ async function resolveAttachmentUrls(payload) {
 
   const uploadedUrls = [];
   for (const [index, dataUrl] of newDataUrls.entries()) {
+    const mimeType = parseDataUrl(dataUrl)?.mimeType || '';
+    const extension = EXTENSION_BY_MIME[mimeType] || 'bin';
     const uploadResult = await uploadDataUrlToS3({
       dataUrl,
-      fileName: `support-attachment-${index + 1}`,
+      fileName: `support-attachment-${index + 1}.${extension}`,
       folder: 'support',
       allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'],
       maxBytes: 12 * 1024 * 1024
