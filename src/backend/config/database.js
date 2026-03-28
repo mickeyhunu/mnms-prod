@@ -260,6 +260,23 @@ async function initDatabase() {
   `);
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS auth_events (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      event_type VARCHAR(50) NOT NULL,
+      reason VARCHAR(120) NULL,
+      user_id BIGINT NULL,
+      login_id_hash CHAR(64) NULL,
+      ip_address_masked VARCHAR(64) NOT NULL,
+      user_agent VARCHAR(500) NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_auth_events_created_at (created_at),
+      INDEX idx_auth_events_type_created_at (event_type, created_at),
+      INDEX idx_auth_events_user_created_at (user_id, created_at),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS posts (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       user_id BIGINT NULL,

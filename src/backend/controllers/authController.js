@@ -4,6 +4,8 @@
 const crypto = require('crypto');
 const { createUser, findByEmail, findByNickname, recordUserLoginHistory } = require('../models/userModel');
 const { formatRestrictionMessage, getLoginRestrictionState } = require('../utils/loginRestriction');
+const { recordAuthEvent } = require('../models/authEventModel');
+const { recordLoginAttemptResult } = require('../middlewares/loginRateLimitMiddleware');
 
 function normalizeMemberType(value) {
   const normalized = String(value || '').trim().toUpperCase();
@@ -11,16 +13,7 @@ function normalizeMemberType(value) {
 }
 
 function getClientIp(req) {
-  const forwardedFor = req.headers['x-forwarded-for'];
-  if (typeof forwardedFor === 'string' && forwardedFor.trim()) {
-    return forwardedFor.split(',')[0].trim();
-  }
-
-  if (Array.isArray(forwardedFor) && forwardedFor.length) {
-    return String(forwardedFor[0] || '').split(',')[0].trim();
-  }
-
-  return req.socket?.remoteAddress || req.ip || 'unknown';
+  return req.ip || req.socket?.remoteAddress || 'unknown';
 }
 const { createSession, deleteSession } = require('../models/sessionModel');
 const { awardPointByAction } = require('../models/pointModel');
@@ -56,21 +49,50 @@ async function login(req, res, next) {
   try {
     const { loginId, email, password } = req.body;
     const resolvedLoginId = (loginId || email || '').trim();
+    const ipAddress = getClientIp(req);
+    const userAgent = req.headers['user-agent'] || null;
     const user = await findByEmail(resolvedLoginId);
     if (!user || user.password !== password) {
+      recordLoginAttemptResult(req, { success: false });
+      await recordAuthEvent({
+        eventType: 'LOGIN_FAIL',
+        reason: 'INVALID_CREDENTIAL',
+        userId: user?.id || null,
+        loginId: resolvedLoginId,
+        ipAddress,
+        userAgent
+      });
       return res.status(401).json({ message: '아이디 또는 비밀번호가 올바르지 않습니다.' });
     }
 
     const restrictionState = getLoginRestrictionState(user);
     if (restrictionState.isRestricted) {
+      recordLoginAttemptResult(req, { success: false });
+      await recordAuthEvent({
+        eventType: 'LOGIN_BLOCKED',
+        reason: 'ACCOUNT_RESTRICTED',
+        userId: user.id,
+        loginId: resolvedLoginId,
+        ipAddress,
+        userAgent
+      });
       return res.status(403).json({ message: formatRestrictionMessage(user) });
     }
 
     const token = crypto.randomBytes(32).toString('hex');
     await createSession(token, user.id);
     await recordUserLoginHistory(user.id, {
-      ipAddress: getClientIp(req),
-      userAgent: req.headers['user-agent'] || null
+      ipAddress,
+      userAgent
+    });
+    recordLoginAttemptResult(req, { success: true });
+    await recordAuthEvent({
+      eventType: 'LOGIN_SUCCESS',
+      reason: 'OK',
+      userId: user.id,
+      loginId: resolvedLoginId,
+      ipAddress,
+      userAgent
     });
     await awardPointByAction(user.id, 'LOGIN_DAILY');
 
