@@ -198,13 +198,17 @@ function createArticleItem(post) {
     );
     const shouldShowNewBadge = isNewPost || isNewComment || post.isNew || post.newPost;
     const isViewedPost = hasViewedPost(post.id);
+    const hasPhotoAttachment = hasPostImageAttachment(post);
+    const photoBadge = hasPhotoAttachment
+        ? '<span class="article-photo-badge" role="img" aria-label="사진 첨부">📷</span>'
+        : '';
 
     return `
         <li class="article-item ${isViewedPost ? 'article-item-viewed' : 'article-item-unviewed'} ${isNoticePost ? 'article-item-notice' : ''} ${isNoticePost && noticeType === 'IMPORTANT' ? 'article-item-important' : ''}">
             <a class="article-main" href="/post-detail?id=${post.id}" data-post-id="${post.id}">
                 <div class="article-title-row">
                     <span class="article-inline-icon" aria-hidden="true">💬</span>
-                    <h3 class="article-title"><span class="${boardLabelClass}">[${boardLabel}]</span> ${sanitizeHTML(post.title || '제목 없음')}</h3>
+                    <h3 class="article-title"><span class="${boardLabelClass}">[${boardLabel}]</span> ${sanitizeHTML(post.title || '제목 없음')} ${photoBadge}</h3>
                     <span class="article-comment-inline">[${commentCount}]</span>
                     ${shouldShowNewBadge ? '<span class="article-new-badge">NEW</span>' : ''}
                 </div>
@@ -221,6 +225,35 @@ function createArticleItem(post) {
             </div>
         </li>
     `;
+}
+
+function hasPostImageAttachment(post) {
+    const imageUrls = post?.imageUrls;
+    if (Array.isArray(imageUrls)) {
+        return imageUrls.some((url) => typeof url === 'string' && url.trim().length > 0);
+    }
+
+    if (typeof imageUrls === 'string') {
+        const trimmed = imageUrls.trim();
+        if (!trimmed) return false;
+
+        try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+                return parsed.some((url) => typeof url === 'string' && url.trim().length > 0);
+            }
+        } catch (error) {
+            // JSON 문자열이 아니라면 단일 URL 문자열로 간주
+        }
+
+        return true;
+    }
+
+    if (typeof post?.imageUrl === 'string') {
+        return post.imageUrl.trim().length > 0;
+    }
+
+    return false;
 }
 
 function getViewedPostIdSet() {
