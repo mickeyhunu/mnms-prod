@@ -143,4 +143,5 @@ aws s3api create-bucket \
 - `AccessDenied` 에러: IAM 정책에 `s3:PutObject` 권한이 있는지 확인
 - `NoSuchBucket` 에러: `S3_BUCKET_NAME`와 `AWS_REGION` 조합 확인
 - 이미지 URL 접근 불가: 버킷/CloudFront 공개 정책 또는 서명 URL 전략 확인
+- 게시글 작성 디버그가 필요하면 `/create-post?debugUpload=1`로 접속하면 성공 후 자동 이동 대신 콘솔에 업로드 결과를 남깁니다.
 
