@@ -1,11 +1,11 @@
 /**
  * 파일 역할: authController 관련 HTTP 요청을 처리하고 모델/응답 로직을 조합하는 컨트롤러 파일.
  */
-const crypto = require('crypto');
 const { createUser, findByEmail, findByNickname, recordUserLoginHistory } = require('../models/userModel');
 const { formatRestrictionMessage, getLoginRestrictionState } = require('../utils/loginRestriction');
 const { recordAuthEvent } = require('../models/authEventModel');
 const { recordLoginAttemptResult } = require('../middlewares/loginRateLimitMiddleware');
+const { signAuthToken, DEFAULT_EXPIRES_IN } = require('../utils/jwt');
 
 function normalizeMemberType(value) {
   const normalized = String(value || '').trim().toUpperCase();
@@ -79,7 +79,7 @@ async function login(req, res, next) {
       return res.status(403).json({ message: formatRestrictionMessage(user) });
     }
 
-    const token = crypto.randomBytes(32).toString('hex');
+    const token = signAuthToken(user);
     await createSession(token, user.id);
     await recordUserLoginHistory(user.id, {
       ipAddress,
@@ -97,7 +97,7 @@ async function login(req, res, next) {
     await awardPointByAction(user.id, 'LOGIN_DAILY');
 
     const refreshedUser = await findByEmail(resolvedLoginId);
-    res.json({ success: true, token, ...pickUserRow(refreshedUser || user) });
+    res.json({ success: true, token, tokenExpiresIn: DEFAULT_EXPIRES_IN, ...pickUserRow(refreshedUser || user) });
   } catch (error) {
     next(error);
   }
