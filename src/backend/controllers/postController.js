@@ -3,6 +3,7 @@
  */
 const postModel = require('../models/postModel');
 const { awardPointByAction, revokePointByAction } = require('../models/pointModel');
+const { normalizeExistingFileUrls, parseDataUrl, uploadDataUrlToS3 } = require('../utils/fileUpload');
 
 const BOARD_TYPES = postModel.BOARD_TYPES || { FREE: 'FREE', ANON: 'ANON', REVIEW: 'REVIEW', STORY: 'STORY', QUESTION: 'QUESTION' };
 
@@ -51,15 +52,30 @@ function parseNoticeTargetBoards(value, fallbackBoardType = BOARD_TYPES.FREE) {
 }
 
 
-function normalizeImageUrls(payload) {
+async function resolveImageUrls(payload) {
   const arrayValue = Array.isArray(payload?.imageUrls)
     ? payload.imageUrls
     : (payload?.imageUrl ? [payload.imageUrl] : []);
 
-  return arrayValue
+  const existingUrls = normalizeExistingFileUrls(arrayValue, { maxCount: 5 });
+  const newDataUrls = arrayValue
     .map((url) => String(url || '').trim())
-    .filter((url) => url.startsWith('data:image/'))
+    .filter((url) => parseDataUrl(url)?.mimeType?.startsWith('image/'))
     .slice(0, 5);
+
+  const uploadedUrls = [];
+  for (const [index, dataUrl] of newDataUrls.entries()) {
+    const uploadResult = await uploadDataUrlToS3({
+      dataUrl,
+      fileName: `post-image-${index + 1}.png`,
+      folder: 'posts',
+      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+      maxBytes: 8 * 1024 * 1024
+    });
+    uploadedUrls.push(uploadResult.url);
+  }
+
+  return [...existingUrls, ...uploadedUrls].slice(0, 5);
 }
 
 function canViewSecretComment(comment, post, currentUser) {
@@ -293,7 +309,7 @@ async function createPost(req, res, next) {
       title,
       content,
       boardType,
-      imageUrls: normalizeImageUrls(req.body),
+      imageUrls: await resolveImageUrls(req.body),
       isNotice,
       noticeType,
       isPinned,
@@ -333,7 +349,7 @@ async function updatePost(req, res, next) {
     await postModel.updatePost(postId, {
       title: req.body.title ?? post.title,
       content: req.body.content ?? post.content,
-      imageUrls: normalizeImageUrls(req.body),
+      imageUrls: await resolveImageUrls(req.body),
       isNotice: req.user.role === 'ADMIN' ? Boolean(req.body.isNotice) : Boolean(post.is_notice),
       noticeType: req.user.role === 'ADMIN'
         ? (Boolean(req.body.isNotice) ? (parseNoticeType(req.body.noticeType) || 'NOTICE') : null)

@@ -17,8 +17,10 @@ const adminRoutes = require('./src/backend/routes/adminRoutes');
 const supportRoutes = require('./src/backend/routes/supportRoutes');
 const chatbotRoutes = require('./src/backend/routes/chatbotRoutes');
 const liveRoutes = require('./src/backend/routes/liveRoutes');
+const uploadRoutes = require('./src/backend/routes/uploadRoutes');
 const adminModel = require('./src/backend/models/adminModel');
 const { startLiveHistoryScheduler } = require('./src/backend/utils/liveHistoryScheduler');
+const { ensureS3BucketExists, isS3UploadEnabled, s3BucketName } = require('./src/backend/config/s3');
 
 const app = express();
 const PORT = Number(process.env.PORT || 8080);
@@ -26,7 +28,7 @@ const FRONTEND_DIR = path.join(__dirname, 'src/frontend');
 let isDatabaseReady = false;
 
 app.use(cors());
-app.use(express.json({ limit: '5mb' }));
+app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 function parseCookies(cookieHeader = '') {
@@ -110,6 +112,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/live', liveRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ message: 'Not Found' });
@@ -121,7 +124,20 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: '서버 오류가 발생했습니다.', detail: err.message });
 });
 
-initDatabase()
+Promise.resolve()
+  .then(() => ensureS3BucketExists())
+  .then((result) => {
+    if (result?.enabled) {
+      console.log(`S3 bucket ready: ${result.bucketName}${result.created ? ' (created)' : ''}`);
+    } else {
+      console.log('S3 upload disabled: S3_BUCKET_NAME 미설정');
+    }
+  })
+  .catch((error) => {
+    console.error('S3 초기화 실패:', error.message);
+    console.log('S3가 비활성화된 상태로 계속 진행합니다.');
+  })
+  .then(() => initDatabase())
   .then(() => {
     isDatabaseReady = true;
     return startLiveHistoryScheduler()
@@ -133,6 +149,9 @@ initDatabase()
           console.log(`Express MVC server running on http://localhost:${PORT}`);
           console.log(`DB mode: ${useLocalDb ? 'local' : 'deployed'}`);
           console.log(`MySQL: ${dbConfig.user}@${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`);
+          if (isS3UploadEnabled()) {
+            console.log(`S3 uploads: enabled (${s3BucketName})`);
+          }
         });
       });
   })
@@ -147,6 +166,9 @@ initDatabase()
           console.log(`Express MVC server running on http://localhost:${PORT}`);
           console.log(`DB mode: ${useLocalDb ? 'local' : 'deployed'}`);
           console.log('DB 연결 실패 상태로 실행 중입니다. API 요청은 503을 반환합니다.');
+          if (isS3UploadEnabled()) {
+            console.log(`S3 uploads: enabled (${s3BucketName})`);
+          }
         });
       });
   });

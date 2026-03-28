@@ -50,7 +50,7 @@ function normalizeImageUrls(imageUrls) {
   if (!Array.isArray(imageUrls)) return [];
   return imageUrls
     .map((url) => String(url || '').trim())
-    .filter((url) => url.startsWith('data:image/'))
+    .filter((url) => url.startsWith('http://') || url.startsWith('https://'))
     .slice(0, 5);
 }
 

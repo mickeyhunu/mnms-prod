@@ -2,6 +2,7 @@
  * 파일 역할: 공지사항/FAQ 요청을 처리하는 컨트롤러 파일.
  */
 const supportModel = require('../models/supportModel');
+const { normalizeExistingFileUrls, parseDataUrl, uploadDataUrlToS3 } = require('../utils/fileUpload');
 
 const BOARD_TYPES = {
   FREE: 'FREE',
@@ -17,12 +18,30 @@ function parseId(value) {
 }
 
 
-function normalizeAttachmentUrls(payload) {
+async function resolveAttachmentUrls(payload) {
   const candidate = Array.isArray(payload?.attachmentUrls) ? payload.attachmentUrls : [];
-  return candidate
+  const existingUrls = normalizeExistingFileUrls(candidate, { maxCount: 3 });
+  const newDataUrls = candidate
     .map((url) => String(url || '').trim())
-    .filter((url) => url.startsWith('data:image/') || url.startsWith('data:application/pdf'))
+    .filter((url) => {
+      const mimeType = parseDataUrl(url)?.mimeType;
+      return typeof mimeType === 'string' && (mimeType.startsWith('image/') || mimeType === 'application/pdf');
+    })
     .slice(0, 3);
+
+  const uploadedUrls = [];
+  for (const [index, dataUrl] of newDataUrls.entries()) {
+    const uploadResult = await uploadDataUrlToS3({
+      dataUrl,
+      fileName: `support-attachment-${index + 1}`,
+      folder: 'support',
+      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'],
+      maxBytes: 12 * 1024 * 1024
+    });
+    uploadedUrls.push(uploadResult.url);
+  }
+
+  return [...existingUrls, ...uploadedUrls].slice(0, 3);
 }
 
 function parseBoardType(value) {
@@ -248,7 +267,7 @@ async function createInquiry(req, res, next) {
       content,
       targetType,
       targetId,
-      attachmentUrls: normalizeAttachmentUrls(req.body)
+      attachmentUrls: await resolveAttachmentUrls(req.body)
     });
 
     res.status(201).json({ success: true, id });

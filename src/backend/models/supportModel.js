@@ -67,7 +67,7 @@ function normalizeAttachmentUrls(attachmentUrls) {
   if (!Array.isArray(attachmentUrls)) return [];
   return attachmentUrls
     .map((url) => String(url || '').trim())
-    .filter((url) => url.startsWith('data:image/') || url.startsWith('data:application/pdf'))
+    .filter((url) => url.startsWith('http://') || url.startsWith('https://'))
     .slice(0, 3);
 }
 
