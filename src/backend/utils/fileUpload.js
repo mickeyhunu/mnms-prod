@@ -3,7 +3,7 @@
  */
 const crypto = require('crypto');
 const path = require('path');
-const { PutObjectCommand } = require('@aws-sdk/client-s3');
+const { DeleteObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { buildS3ObjectUrl, getS3Client, isS3UploadEnabled, s3BucketName } = require('../config/s3');
 
 const EXTENSION_BY_MIME = {
@@ -39,6 +39,20 @@ function normalizeExistingFileUrls(values = [], { maxCount, allowedPrefixes = ['
     .map((url) => String(url || '').trim())
     .filter((url) => allowedPrefixes.some((prefix) => url.startsWith(prefix)))
     .slice(0, maxCount);
+}
+
+function extractS3KeyFromUrl(url) {
+  const targetUrl = String(url || '').trim();
+  if (!targetUrl) return null;
+
+  try {
+    const parsed = new URL(targetUrl);
+    const bucketHost = `${s3BucketName}.s3.`;
+    if (!parsed.hostname.includes(bucketHost)) return null;
+    return decodeURIComponent(parsed.pathname.replace(/^\/+/, '')) || null;
+  } catch (error) {
+    return null;
+  }
 }
 
 async function uploadDataUrlToS3({ dataUrl, folder = 'uploads', fileName = '', allowedMimeTypes = [], maxBytes = 10 * 1024 * 1024 }) {
@@ -100,7 +114,39 @@ async function uploadDataUrlToS3({ dataUrl, folder = 'uploads', fileName = '', a
   };
 }
 
+async function deleteS3ObjectByUrl(url) {
+  if (!isS3UploadEnabled()) return { deleted: false, skipped: 'S3 disabled' };
+
+  const key = extractS3KeyFromUrl(url);
+  if (!key) return { deleted: false, skipped: 'Not managed S3 object URL' };
+
+  const client = getS3Client();
+  await client.send(new DeleteObjectCommand({
+    Bucket: s3BucketName,
+    Key: key
+  }));
+
+  return { deleted: true, key };
+}
+
+async function deleteS3ObjectsByUrls(urls = []) {
+  const results = [];
+  for (const url of urls) {
+    try {
+      const result = await deleteS3ObjectByUrl(url);
+      results.push({ url, ...result });
+    } catch (error) {
+      results.push({ url, deleted: false, error: error.message });
+    }
+  }
+
+  return results;
+}
+
 module.exports = {
+  deleteS3ObjectByUrl,
+  deleteS3ObjectsByUrls,
+  extractS3KeyFromUrl,
   normalizeExistingFileUrls,
   parseDataUrl,
   uploadDataUrlToS3
