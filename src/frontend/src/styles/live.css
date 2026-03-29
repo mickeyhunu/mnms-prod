@@ -886,7 +886,6 @@ body[data-page="live"] .header {
 .live-ads__track {
     display: flex;
     align-items: stretch;
-    gap: 12px;
     width: 100%;
     scroll-snap-type: x mandatory;
 }
