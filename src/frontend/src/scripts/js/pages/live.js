@@ -845,10 +845,11 @@ function isLatestLiveCardVisible() {
 
     const rect = latestCard.getBoundingClientRect();
     const stickyStackHeight = document.querySelector('.live-page__sticky-stack')?.offsetHeight || 0;
-    const visibleTop = Math.max(stickyStackHeight, 0);
-    const visibleBottom = window.innerHeight;
+    const visibleTop = Math.max(stickyStackHeight, 0) + 16;
+    const visibleBottom = window.innerHeight - 16;
+    const intersectsViewport = rect.bottom > visibleTop && rect.top < visibleBottom;
 
-    return rect.bottom <= visibleBottom && rect.top >= visibleTop - 12;
+    return intersectsViewport;
 }
 
 function markLatestCardAsSeen() {
