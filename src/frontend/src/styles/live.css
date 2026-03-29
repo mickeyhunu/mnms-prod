@@ -858,11 +858,11 @@ body[data-page="live"] .header {
 
 .live-ads-wrap {
     position: fixed;
-    left: 0;
+    left: -1px;
     right: 0;
-    bottom: 0;
+    bottom: -1px;
     z-index: 28;
-    width: min(920px, 100%);
+    width: min(920px, 101%);
     margin: 0 auto;
 }
 
