@@ -374,19 +374,11 @@ function renderLiveAds(ads = []) {
         `;
     }).join('');
 
-    const controlsMarkup = ads.length > 1
-        ? `
-            <button type="button" class="live-ads__control live-ads__control--prev" data-live-ads-nav="prev" aria-label="이전 광고 보기">‹</button>
-            <button type="button" class="live-ads__control live-ads__control--next" data-live-ads-nav="next" aria-label="다음 광고 보기">›</button>
-        `
-        : '';
-
     container.innerHTML = `
         <div class="live-ads__viewport" tabindex="0" aria-label="LIVE 광고 목록">
             <div class="live-ads__track" role="list">
                 ${bannerItems}
             </div>
-            ${controlsMarkup}
             <p class="live-ads__indicator" aria-live="polite">1/${ads.length}</p>
         </div>
     `;
@@ -403,9 +395,11 @@ function clearLiveAdsAutoPlay() {
 function bindLiveAdsCarousel(container, totalCount) {
     const viewport = container.querySelector('.live-ads__viewport');
     const indicator = container.querySelector('.live-ads__indicator');
-    const prevButton = container.querySelector('[data-live-ads-nav="prev"]');
-    const nextButton = container.querySelector('[data-live-ads-nav="next"]');
     if (!viewport || !indicator) return;
+    let isPointerDragging = false;
+    let pointerDragStartX = 0;
+    let pointerDragStartScrollLeft = 0;
+    let didPointerMove = false;
 
     const getCurrentIndex = () => {
         const pageWidth = viewport.clientWidth || 1;
@@ -443,8 +437,33 @@ function bindLiveAdsCarousel(container, totalCount) {
         return;
     }
 
-    prevButton?.addEventListener('click', () => moveByStep(-1));
-    nextButton?.addEventListener('click', () => moveByStep(1));
+    const handlePointerDragStart = (event) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        isPointerDragging = true;
+        didPointerMove = false;
+        pointerDragStartX = event.clientX;
+        pointerDragStartScrollLeft = viewport.scrollLeft;
+        viewport.classList.add('is-dragging');
+        viewport.setPointerCapture(event.pointerId);
+    };
+
+    const handlePointerDragMove = (event) => {
+        if (!isPointerDragging) return;
+        const deltaX = event.clientX - pointerDragStartX;
+        if (!didPointerMove && Math.abs(deltaX) > 4) {
+            didPointerMove = true;
+        }
+        viewport.scrollLeft = pointerDragStartScrollLeft - deltaX;
+    };
+
+    const handlePointerDragEnd = (event) => {
+        if (!isPointerDragging) return;
+        isPointerDragging = false;
+        viewport.classList.remove('is-dragging');
+        if (viewport.hasPointerCapture(event.pointerId)) {
+            viewport.releasePointerCapture(event.pointerId);
+        }
+    };
 
     const restartAutoPlay = () => {
         clearLiveAdsAutoPlay();
@@ -454,13 +473,34 @@ function bindLiveAdsCarousel(container, totalCount) {
         }, LIVE_AD_AUTOPLAY_INTERVAL_MS);
     };
 
-    viewport.addEventListener('pointerdown', clearLiveAdsAutoPlay);
-    viewport.addEventListener('pointerup', restartAutoPlay);
-    viewport.addEventListener('touchend', restartAutoPlay);
+    viewport.addEventListener('pointerdown', (event) => {
+        clearLiveAdsAutoPlay();
+        handlePointerDragStart(event);
+    });
+    viewport.addEventListener('pointermove', handlePointerDragMove);
+    viewport.addEventListener('pointerup', (event) => {
+        handlePointerDragEnd(event);
+        restartAutoPlay();
+    });
+    viewport.addEventListener('pointercancel', (event) => {
+        handlePointerDragEnd(event);
+        restartAutoPlay();
+    });
+    viewport.addEventListener('pointerleave', (event) => {
+        if (!isPointerDragging) return;
+        handlePointerDragEnd(event);
+        restartAutoPlay();
+    });
     viewport.addEventListener('mouseenter', clearLiveAdsAutoPlay);
     viewport.addEventListener('mouseleave', restartAutoPlay);
     viewport.addEventListener('focusin', clearLiveAdsAutoPlay);
     viewport.addEventListener('focusout', restartAutoPlay);
+    viewport.addEventListener('click', (event) => {
+        if (!didPointerMove) return;
+        event.preventDefault();
+        event.stopPropagation();
+        didPointerMove = false;
+    }, true);
 
     updateIndicator();
     restartAutoPlay();
