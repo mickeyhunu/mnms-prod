@@ -856,7 +856,7 @@ body[data-page="live"] .header {
     color: #fecaca;
 }
 
-.live-ads {
+.live-ads-wrap {
     position: fixed;
     left: 0;
     right: 0;
@@ -864,6 +864,10 @@ body[data-page="live"] .header {
     z-index: 28;
     width: min(640px, 100vw);
     margin: 0 auto;
+}
+
+.live-ads {
+    width: 100%;
     padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
     background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.85) 22%, #000 100%);
 }
