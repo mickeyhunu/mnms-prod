@@ -2,6 +2,7 @@
  * 파일 역할: LIVE 페이지용 필터/목록 조회 요청을 처리하는 컨트롤러 파일.
  */
 const liveModel = require('../models/liveModel');
+const adminModel = require('../models/adminModel');
 
 function handleLiveError(error, next, res) {
   if (error.code === 'ER_NO_SUCH_TABLE') {
@@ -59,7 +60,26 @@ async function getLiveEntries(req, res, next) {
   }
 }
 
+async function getLiveAds(req, res, next) {
+  try {
+    const storeNo = Number.parseInt(req.query.storeNo, 10);
+    if (!Number.isInteger(storeNo) || storeNo <= 0) {
+      return res.status(400).json({ message: '유효한 매장 번호가 필요합니다.' });
+    }
+
+    const ads = await adminModel.listLiveAdsByStore(storeNo);
+    return res.json({
+      storeNo,
+      content: ads,
+      totalElements: ads.length
+    });
+  } catch (error) {
+    return handleLiveError(error, next, res);
+  }
+}
+
 module.exports = {
   getLiveFilters,
-  getLiveEntries
+  getLiveEntries,
+  getLiveAds
 };

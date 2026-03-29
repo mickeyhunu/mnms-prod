@@ -20,6 +20,7 @@ const liveTemplate = `
             <div class="live-feedback hidden" id="live-empty">선택한 조건에 해당하는 데이터가 없습니다.</div>
 
             <section class="live-entry-list" id="live-entry-list" aria-label="LIVE 데이터 목록"></section>
+            <section class="live-ads hidden" id="live-ads-container" aria-label="LIVE 하단 광고 배너"></section>
 
             ${liveScrollBottomButtonTemplate}
         </div>

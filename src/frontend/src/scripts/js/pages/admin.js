@@ -301,7 +301,7 @@ function getAdminFilteredItems(prefix) {
         comments: ['id', 'content', 'authorNickname', 'user_id', 'userId', 'postId', 'post_id'],
         users: ['id', 'email', 'nickname', 'role', 'memberType', 'member_type', 'phone'],
         entries: ['workerName', 'entryId'],
-        ads: ['id', 'title', 'linkUrl', 'imageUrl', 'displayOrder'],
+        ads: ['id', 'title', 'adType', 'storeNo', 'linkUrl', 'imageUrl', 'displayOrder'],
         support: ['id', 'title', 'category', 'sourceType'],
         inquiries: ['id', 'title', 'userNickname', 'userEmail', 'userId', 'type', 'status']
     };
@@ -937,11 +937,13 @@ function renderAdsTable() {
     updateAdminTotal('ads', filteredItems.length);
 
     if (!pageItems.length) {
-        tbody.innerHTML = `<tr><td colspan="8">${filteredItems.length ? '현재 페이지에 표시할 광고가 없습니다.' : '등록된 광고가 없습니다.'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10">${filteredItems.length ? '현재 페이지에 표시할 광고가 없습니다.' : '등록된 광고가 없습니다.'}</td></tr>`;
     } else {
         tbody.innerHTML = pageItems.map((ad) => `
             <tr>
                 <td>${ad.id}</td>
+                <td>${sanitizeHTML(ad.adType || 'LIVE')}</td>
+                <td>${Number.isInteger(Number(ad.storeNo)) ? Number(ad.storeNo) : '-'}</td>
                 <td>${sanitizeHTML(ad.title || '')}</td>
                 <td><a href="${sanitizeHTML(normalizeExternalUrl(ad.linkUrl))}" target="_blank" rel="noopener noreferrer">링크 열기</a></td>
                 <td>${Number(ad.displayOrder || 0)}</td>
@@ -1370,7 +1372,7 @@ async function loadAds() {
 }
 
 async function openAdEditor(adId = null) {
-    let base = { title: '', imageUrl: '', linkUrl: '', displayOrder: 0, isActive: true };
+    let base = { title: '', imageUrl: '', linkUrl: '', adType: 'LIVE', storeNo: '', displayOrder: 0, isActive: true };
 
     if (adId) {
         try {
@@ -1396,6 +1398,22 @@ async function openAdEditor(adId = null) {
     const linkUrl = window.prompt('광고 클릭 링크 URL을 입력해주세요.', base.linkUrl || '');
     if (linkUrl == null || !linkUrl.trim()) return;
 
+    const adTypeRaw = window.prompt('광고 유형을 입력해주세요. (LIVE / BUSINESS / TOP)', base.adType || 'LIVE');
+    if (adTypeRaw == null) return;
+    const adType = String(adTypeRaw || '').trim().toUpperCase();
+    if (!['LIVE', 'BUSINESS', 'TOP'].includes(adType)) {
+        alert('광고 유형은 LIVE, BUSINESS, TOP 중 하나여야 합니다.');
+        return;
+    }
+
+    const storeNoRaw = window.prompt('매장 번호(storeNo)를 입력해주세요. LIVE 광고는 필수입니다.', String(base.storeNo || ''));
+    if (storeNoRaw == null) return;
+    const storeNo = String(storeNoRaw || '').trim() ? Number.parseInt(storeNoRaw, 10) : null;
+    if (adType === 'LIVE' && (!Number.isInteger(storeNo) || storeNo <= 0)) {
+        alert('LIVE 광고는 유효한 매장 번호(storeNo)가 필요합니다.');
+        return;
+    }
+
     const displayOrderRaw = window.prompt('노출 순서를 입력해주세요(숫자).', String(base.displayOrder || 0));
     if (displayOrderRaw == null) return;
 
@@ -1411,6 +1429,8 @@ async function openAdEditor(adId = null) {
         title: title.trim(),
         imageUrl: imageUrl.trim(),
         linkUrl: linkUrl.trim(),
+        adType,
+        storeNo,
         displayOrder: Number(displayOrderRaw) || 0,
         isActive: ['y', 'yes', '1', 'true'].includes(String(isActiveRaw).trim().toLowerCase())
     };
