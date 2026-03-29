@@ -799,11 +799,13 @@ function scrollLiveToLatest({ behavior = 'smooth', alignToBottom = false } = {})
         const latestCard = document.querySelector('#live-entry-list .live-chat-card:last-of-type');
         if (latestCard) {
             const stickyStackHeight = document.querySelector('.live-page__sticky-stack')?.offsetHeight || 0;
+            const adsHeight = getLiveAdsOffsetHeight();
+            const visibleViewportHeight = Math.max(window.innerHeight - adsHeight, 0);
             const latestCardTop = window.scrollY + latestCard.getBoundingClientRect().top;
             const latestCardBottom = latestCardTop + latestCard.offsetHeight;
             const bottomViewportOffset = alignToBottom
-                ? Math.max(stickyStackHeight + 24, window.innerHeight - 24)
-                : window.innerHeight;
+                ? Math.max(stickyStackHeight + 24, visibleViewportHeight - 24)
+                : visibleViewportHeight;
 
             window.scrollTo({
                 top: Math.max(0, latestCardBottom - bottomViewportOffset),
@@ -820,7 +822,7 @@ function scrollLiveToLatest({ behavior = 'smooth', alignToBottom = false } = {})
 }
 
 function isLiveViewportNearBottom() {
-    const scrollBottom = window.scrollY + window.innerHeight;
+    const scrollBottom = window.scrollY + Math.max(window.innerHeight - getLiveAdsOffsetHeight(), 0);
     return (getLiveDocumentScrollHeight() - scrollBottom) <= 160;
 }
 
@@ -830,9 +832,10 @@ function updateLiveScrollBottomButton() {
     if (!scrollBottomButton && !scrollMessageButton) return;
 
     const scrollHeight = getLiveDocumentScrollHeight();
-    const viewportBottom = window.scrollY + window.innerHeight;
+    const visibleViewportHeight = Math.max(window.innerHeight - getLiveAdsOffsetHeight(), 0);
+    const viewportBottom = window.scrollY + visibleViewportHeight;
     const remainingDistance = scrollHeight - viewportBottom;
-    const hasScrollableContent = scrollHeight > (window.innerHeight + 120);
+    const hasScrollableContent = scrollHeight > (visibleViewportHeight + 120);
     const isLatestCardVisible = isLatestLiveCardVisible();
     const shouldShowFloatingButtons = hasScrollableContent && remainingDistance > LIVE_BOTTOM_BUTTON_THRESHOLD_PX;
 
@@ -919,11 +922,20 @@ function isLatestLiveCardVisible() {
 
     const rect = latestCard.getBoundingClientRect();
     const stickyStackHeight = document.querySelector('.live-page__sticky-stack')?.offsetHeight || 0;
+    const adsHeight = getLiveAdsOffsetHeight();
     const visibleTop = Math.max(stickyStackHeight, 0) + 16;
-    const visibleBottom = window.innerHeight - 16;
+    const visibleBottom = Math.max(window.innerHeight - adsHeight - 16, 0);
     const intersectsViewport = rect.bottom > visibleTop && rect.top < visibleBottom;
 
     return intersectsViewport;
+}
+
+function getLiveAdsOffsetHeight() {
+    const adsContainer = document.getElementById('live-ads-container');
+    if (!adsContainer || adsContainer.classList.contains('hidden')) return 0;
+
+    const adsWrap = document.querySelector('.live-ads-wrap');
+    return Math.max(adsWrap?.offsetHeight || 0, adsContainer.offsetHeight || 0);
 }
 
 function markLatestCardAsSeen() {
