@@ -368,14 +368,14 @@ function renderLiveAds(ads = []) {
         const title = sanitizeHTML(ad.title || 'LIVE 광고');
         const linkUrl = sanitizeHTML(normalizeExternalUrl(ad.linkUrl));
         return `
-            <a class="live-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer" aria-label="${title}">
+            <a class="live-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer" role="group" aria-roledescription="slide" aria-label="${index + 1} / ${ads.length}: ${title}">
                 <img class="live-ad-banner__image" src="${imageUrl}" alt="${title}" loading="${index === 0 ? 'eager' : 'lazy'}">
             </a>
         `;
     }).join('');
 
     container.innerHTML = `
-        <div class="live-ads__viewport" tabindex="0" aria-label="LIVE 광고 목록">
+        <div class="live-ads__viewport" tabindex="0" role="region" aria-roledescription="carousel" aria-label="LIVE 광고 목록">
             <div class="live-ads__track" role="list">
                 ${bannerItems}
             </div>
@@ -463,6 +463,19 @@ function bindLiveAdsCarousel(container, totalCount) {
         if (viewport.hasPointerCapture(event.pointerId)) {
             viewport.releasePointerCapture(event.pointerId);
         }
+
+        const pageWidth = viewport.clientWidth || 1;
+        const dragDistance = pointerDragStartScrollLeft - viewport.scrollLeft;
+        const direction = dragDistance > 0 ? 1 : -1;
+        const dragThreshold = pageWidth * 0.18;
+        const currentIndex = getCurrentIndex();
+
+        if (Math.abs(dragDistance) >= dragThreshold) {
+            moveToIndex(currentIndex + direction);
+            return;
+        }
+
+        moveToIndex(currentIndex);
     };
 
     const restartAutoPlay = () => {
