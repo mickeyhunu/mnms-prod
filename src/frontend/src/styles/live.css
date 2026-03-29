@@ -880,6 +880,8 @@ body[data-page="live"] .header {
     cursor: grab;
     user-select: none;
     touch-action: pan-y;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
 }
 
 .live-ads__viewport::-webkit-scrollbar {
@@ -894,7 +896,6 @@ body[data-page="live"] .header {
     display: flex;
     align-items: stretch;
     width: 100%;
-    scroll-snap-type: x mandatory;
 }
 
 .live-ad-banner {
