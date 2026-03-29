@@ -8,6 +8,8 @@ const {
   getUserNotifications,
   getUserNotificationReadMap,
   markNotificationsAsRead,
+  getUserReadPostIdSet,
+  markPostsAsRead,
   findByNicknameExceptUser,
   updateUserProfile,
   findById
@@ -312,6 +314,32 @@ async function markMyNotificationsReadAll(req, res, next) {
   }
 }
 
+async function myReadPosts(req, res, next) {
+  try {
+    const limit = Math.max(1, Math.min(1000, Number(req.query.limit) || 500));
+    const postIds = await getUserReadPostIdSet(req.user.id, { limit });
+    res.json({
+      content: postIds,
+      totalElements: postIds.length
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function markMyPostsRead(req, res, next) {
+  try {
+    const postIds = Array.isArray(req.body.postIds) ? req.body.postIds : [];
+    const markedCount = await markPostsAsRead(req.user.id, postIds);
+    res.json({
+      success: true,
+      markedCount
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function myPointHistories(req, res, next) {
   try {
     const page = Math.max(1, Number(req.query.page) || 1);
@@ -357,5 +385,7 @@ module.exports = {
   myNotifications,
   markMyNotificationsRead,
   markMyNotificationsReadAll,
+  myReadPosts,
+  markMyPostsRead,
   updateMyProfile
 };

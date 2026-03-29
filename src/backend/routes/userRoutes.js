@@ -10,6 +10,8 @@ const {
   myNotifications,
   markMyNotificationsRead,
   markMyNotificationsReadAll,
+  myReadPosts,
+  markMyPostsRead,
   updateMyProfile
 } = require('../controllers/userController');
 
@@ -21,6 +23,8 @@ router.get('/me/activity', authMiddleware, myActivity);
 router.get('/me/notifications', authMiddleware, myNotifications);
 router.post('/me/notifications/read', authMiddleware, markMyNotificationsRead);
 router.post('/me/notifications/read-all', authMiddleware, markMyNotificationsReadAll);
+router.get('/me/posts/read', authMiddleware, myReadPosts);
+router.post('/me/posts/read', authMiddleware, markMyPostsRead);
 router.put('/me', authMiddleware, updateMyProfile);
 
 module.exports = router;
