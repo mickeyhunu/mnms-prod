@@ -168,8 +168,6 @@ function bindLiveEvents() {
     window.addEventListener('resize', updateLiveScrollBottomButton, { passive: true });
 
     scrollBottomButton?.addEventListener('click', () => {
-        liveState.newMessageNotice = null;
-        syncLiveNewMessageNoticeUI();
         scrollLiveToLatest();
     });
 
@@ -739,8 +737,7 @@ function updateLiveScrollBottomButton() {
     const viewportBottom = window.scrollY + window.innerHeight;
     const remainingDistance = scrollHeight - viewportBottom;
     const hasScrollableContent = scrollHeight > (window.innerHeight + 120);
-    const hasNotice = Boolean(liveState.newMessageNotice);
-    const shouldShowButton = hasScrollableContent && (remainingDistance > LIVE_BOTTOM_BUTTON_THRESHOLD_PX || hasNotice);
+    const shouldShowButton = hasScrollableContent && remainingDistance > LIVE_BOTTOM_BUTTON_THRESHOLD_PX;
 
     button.classList.toggle('hidden', !shouldShowButton);
 }
