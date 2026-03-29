@@ -50,7 +50,11 @@ const liveState = {
     hasMoreHistory: false,
     nextOffset: 0,
     isLoadingOlder: false,
-    hasAlignedInitialViewport: false
+    hasAlignedInitialViewport: false,
+    lastSeenLatestSignature: '',
+    pendingLatestSignature: '',
+    pendingLatestStoreName: '',
+    hasUnseenLatestCard: false
 };
 
 function initializeScrollableFilter(element) {
@@ -301,6 +305,7 @@ function applyLiveEntriesResponse() {
         totalCount: liveState.totalCount
     });
     renderLiveEntries(liveState.rows, liveState.titleColumn);
+    syncLiveLatestCardNotificationState();
     updateLiveScrollBottomButton();
 
     const hasRows = Array.isArray(liveState.rows) && liveState.rows.length > 0;
@@ -487,6 +492,10 @@ function resetLiveEntriesState() {
     liveState.nextOffset = 0;
     liveState.isLoadingOlder = false;
     liveState.hasAlignedInitialViewport = false;
+    liveState.lastSeenLatestSignature = '';
+    liveState.pendingLatestSignature = '';
+    liveState.pendingLatestStoreName = '';
+    liveState.hasUnseenLatestCard = false;
 }
 
 function mergeLiveHistoryRows(previousRows = [], nextRows = []) {
@@ -742,28 +751,114 @@ function isLiveViewportNearBottom() {
 }
 
 function updateLiveScrollBottomButton() {
-    const buttons = [
-        document.getElementById('live-scroll-bottom-button'),
-        document.getElementById('live-scroll-message-button')
-    ].filter(Boolean);
-    if (!buttons.length) return;
+    const scrollBottomButton = document.getElementById('live-scroll-bottom-button');
+    const scrollMessageButton = document.getElementById('live-scroll-message-button');
+    if (!scrollBottomButton && !scrollMessageButton) return;
 
     const scrollHeight = getLiveDocumentScrollHeight();
     const viewportBottom = window.scrollY + window.innerHeight;
     const remainingDistance = scrollHeight - viewportBottom;
     const hasScrollableContent = scrollHeight > (window.innerHeight + 120);
-    const shouldShowButton = hasScrollableContent && remainingDistance > LIVE_BOTTOM_BUTTON_THRESHOLD_PX;
+    const isLatestCardVisible = isLatestLiveCardVisible();
+    const shouldShowFloatingButtons = hasScrollableContent && remainingDistance > LIVE_BOTTOM_BUTTON_THRESHOLD_PX;
 
-    buttons.forEach((button) => {
-        button.classList.toggle('hidden', !shouldShowButton);
-    });
+    if (isLatestCardVisible) {
+        markLatestCardAsSeen();
+    }
+
+    if (scrollMessageButton) {
+        const shouldShowMessageButton = shouldShowFloatingButtons && liveState.hasUnseenLatestCard;
+        scrollMessageButton.classList.toggle('hidden', !shouldShowMessageButton);
+    }
+
+    if (scrollBottomButton) {
+        const shouldShowBottomButton = shouldShowFloatingButtons && !liveState.hasUnseenLatestCard;
+        scrollBottomButton.classList.toggle('hidden', !shouldShowBottomButton);
+    }
 }
 
 function updateLiveScrollMessageStoreName() {
     const storeNameElement = document.getElementById('live-scroll-message-store-name');
-    if (!storeNameElement) return;
+    const storeAvatarElement = document.getElementById('live-scroll-message-store-avatar');
+    const notificationStoreName = String(liveState.pendingLatestStoreName || '').trim() || getSelectedStoreName();
 
-    storeNameElement.textContent = getSelectedStoreName();
+    if (storeNameElement) {
+        storeNameElement.textContent = notificationStoreName;
+    }
+
+    if (storeAvatarElement) {
+        if (notificationStoreName) {
+            storeAvatarElement.src = getLiveAvatarImagePath(notificationStoreName);
+            storeAvatarElement.loading = 'lazy';
+            storeAvatarElement.decoding = 'async';
+        } else {
+            storeAvatarElement.removeAttribute('src');
+        }
+    }
+}
+
+function syncLiveLatestCardNotificationState() {
+    const latestRow = getLatestRenderedLiveRow();
+    if (!latestRow) {
+        liveState.pendingLatestSignature = '';
+        liveState.pendingLatestStoreName = '';
+        liveState.hasUnseenLatestCard = false;
+        updateLiveScrollMessageStoreName();
+        return;
+    }
+
+    const latestSignature = createLiveHistorySignature(latestRow);
+    const latestStoreName = resolveChoiceStoreName(latestRow);
+
+    if (!liveState.lastSeenLatestSignature) {
+        liveState.lastSeenLatestSignature = latestSignature;
+        liveState.pendingLatestSignature = '';
+        liveState.pendingLatestStoreName = '';
+        liveState.hasUnseenLatestCard = false;
+        updateLiveScrollMessageStoreName();
+        return;
+    }
+
+    const hasNewLatestCard = latestSignature !== liveState.lastSeenLatestSignature;
+    if (hasNewLatestCard) {
+        liveState.pendingLatestSignature = latestSignature;
+        liveState.pendingLatestStoreName = latestStoreName;
+        liveState.hasUnseenLatestCard = true;
+        updateLiveScrollMessageStoreName();
+        return;
+    }
+
+    liveState.pendingLatestSignature = '';
+    liveState.pendingLatestStoreName = '';
+    liveState.hasUnseenLatestCard = false;
+    updateLiveScrollMessageStoreName();
+}
+
+function getLatestRenderedLiveRow() {
+    if (!Array.isArray(liveState.rows) || !liveState.rows.length) return null;
+    return liveState.rows[liveState.rows.length - 1] || null;
+}
+
+function isLatestLiveCardVisible() {
+    const latestCard = document.querySelector('#live-entry-list .live-chat-card:last-of-type');
+    if (!latestCard) return isLiveViewportNearBottom();
+
+    const rect = latestCard.getBoundingClientRect();
+    const stickyStackHeight = document.querySelector('.live-page__sticky-stack')?.offsetHeight || 0;
+    const visibleTop = Math.max(stickyStackHeight, 0);
+    const visibleBottom = window.innerHeight;
+
+    return rect.bottom <= visibleBottom && rect.top >= visibleTop - 12;
+}
+
+function markLatestCardAsSeen() {
+    if (!liveState.pendingLatestSignature) return;
+
+    liveState.lastSeenLatestSignature = liveState.pendingLatestSignature;
+    liveState.pendingLatestSignature = '';
+    liveState.pendingLatestStoreName = '';
+    liveState.hasUnseenLatestCard = false;
+    updateLiveScrollMessageStoreName();
 }
 
 function getLiveDocumentScrollHeight() {
