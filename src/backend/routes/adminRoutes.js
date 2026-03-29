@@ -9,6 +9,7 @@ const { findByNicknameExceptUser } = require('../models/userModel');
 const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddleware');
 const { LOGIN_STATUS } = require('../utils/loginRestriction');
 const { deleteSessionsByUserId } = require('../models/sessionModel');
+const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
 
 const router = express.Router();
 
@@ -372,6 +373,9 @@ router.put('/ads/:id', async (req, res, next) => {
     }
 
     await adminModel.updateAd(id, { title, imageUrl, linkUrl, adType, storeNo, displayOrder, isActive });
+    if (target.imageUrl && target.imageUrl !== imageUrl) {
+      await deleteS3ObjectByUrl(target.imageUrl);
+    }
     res.json({ success: true });
   } catch (error) {
     next(error);
@@ -387,6 +391,9 @@ router.delete('/ads/:id', async (req, res, next) => {
     if (!target) return res.status(404).json({ message: '광고를 찾을 수 없습니다.' });
 
     await adminModel.deleteAd(id);
+    if (target.imageUrl) {
+      await deleteS3ObjectByUrl(target.imageUrl);
+    }
     res.json({ success: true });
   } catch (error) {
     next(error);

@@ -189,7 +189,12 @@ async function createAd({ title, imageUrl, linkUrl, adType = 'LIVE', storeNo = n
 
 async function findAdById(adId) {
   const pool = getPool();
-  const [rows] = await pool.query('SELECT id FROM ads WHERE id = ?', [adId]);
+  const [rows] = await pool.query(
+    `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl, ad_type AS adType, store_no AS storeNo
+       FROM ads
+      WHERE id = ?`,
+    [adId]
+  );
   return rows[0] || null;
 }
 

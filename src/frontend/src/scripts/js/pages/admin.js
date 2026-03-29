@@ -8,8 +8,10 @@ let currentInquiryStatus = '';
 let inquiryAnswerTarget = null;
 let editingUserId = null;
 let editingEntryId = null;
+let editingAdId = null;
 let currentEntryStoreNo = null;
 let entryStores = [];
+let adStores = [];
 let isGlobalAdminClickBound = false;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
@@ -198,7 +200,9 @@ function bindCommonEvents() {
     document.getElementById('support-cancel-btn')?.addEventListener('click', closeSupportModal);
     document.getElementById('support-save-btn')?.addEventListener('click', saveSupportArticle);
 
-    document.getElementById('ads-new-btn')?.addEventListener('click', () => openAdEditor());
+    document.getElementById('ads-save-btn')?.addEventListener('click', saveAd);
+    document.getElementById('ads-cancel-btn')?.addEventListener('click', resetAdEditor);
+    document.getElementById('ads-image-upload-btn')?.addEventListener('click', uploadAdImage);
     document.getElementById('entry-store-select')?.addEventListener('change', async (event) => {
         currentEntryStoreNo = Number.parseInt(event.target.value || '', 10);
         resetEntryEditor();
@@ -213,6 +217,7 @@ function bindCommonEvents() {
     });
     document.getElementById('inquiry-answer-cancel-btn')?.addEventListener('click', closeInquiryAnswerModal);
     document.getElementById('inquiry-answer-save-btn')?.addEventListener('click', saveInquiryAnswer);
+    resetAdEditor();
 
     if (!isGlobalAdminClickBound) {
         document.addEventListener('click', handleGlobalAdminClick);
@@ -1362,6 +1367,7 @@ async function saveUserDetail() {
 async function loadAds() {
     toggleLoading('ads', true);
     try {
+        await ensureAdStoresLoaded();
         const response = await APIClient.get('/admin/ads');
         ADMIN_LIST_STATE.ads.items = response.content || [];
         renderAdsTable();
@@ -1371,77 +1377,156 @@ async function loadAds() {
     }
 }
 
-async function openAdEditor(adId = null) {
-    let base = { title: '', imageUrl: '', linkUrl: '', adType: 'LIVE', storeNo: '', displayOrder: 0, isActive: true };
+async function ensureAdStoresLoaded() {
+    if (adStores.length) return;
+    const response = await APIClient.get('/admin/entries/stores');
+    adStores = Array.isArray(response.content) ? response.content : [];
+    renderAdStoreOptions();
+}
 
-    if (adId) {
-        try {
-            const response = await APIClient.get('/admin/ads');
-            const target = (response.content || []).find((item) => Number(item.id) === Number(adId));
-            if (!target) {
-                alert('광고를 찾을 수 없습니다.');
-                return;
-            }
-            base = target;
-        } catch (error) {
-            alert(error.message || '광고 정보를 불러오지 못했습니다.');
-            return;
-        }
+function renderAdStoreOptions() {
+    const select = document.getElementById('ads-form-store-no');
+    if (!select) return;
+
+    select.innerHTML = ['<option value="">전체/미지정</option>', ...adStores.map((store) => (
+        `<option value="${store.storeNo}">#${store.storeNo} ${sanitizeHTML(store.storeName || '')}</option>`
+    ))].join('');
+}
+
+function setAdHelpMessage(message, color = '#6c757d') {
+    const help = document.getElementById('ads-form-help');
+    if (!help) return;
+    help.textContent = message;
+    help.style.color = color;
+}
+
+function fillAdEditorForm(ad = null) {
+    const isEdit = Boolean(ad && Number.isInteger(Number(ad.id)));
+    editingAdId = isEdit ? Number(ad.id) : null;
+
+    document.getElementById('ads-editor-title').textContent = isEdit ? `광고 수정 #${ad.id}` : '새 광고 등록';
+    document.getElementById('ads-save-btn').textContent = isEdit ? '광고 수정 저장' : '광고 등록';
+    document.getElementById('ads-cancel-btn')?.classList.toggle('hidden', !isEdit);
+    document.getElementById('ads-form-title').value = ad?.title || '';
+    document.getElementById('ads-form-link-url').value = ad?.linkUrl || '';
+    document.getElementById('ads-form-ad-type').value = ad?.adType || 'LIVE';
+    document.getElementById('ads-form-store-no').value = ad?.storeNo ? String(ad.storeNo) : '';
+    document.getElementById('ads-form-image-url').value = ad?.imageUrl || '';
+    document.getElementById('ads-form-display-order').value = Number(ad?.displayOrder || 0);
+    document.getElementById('ads-form-is-active').value = String(Boolean(ad?.isActive));
+    document.getElementById('ads-form-image-file').value = '';
+    document.getElementById('ads-form-image-help').textContent = ad?.imageUrl ? '현재 이미지를 사용 중입니다. 새 파일 업로드 시 교체됩니다.' : '이미지를 선택하고 업로드 버튼을 누르세요.';
+    setAdHelpMessage('');
+}
+
+function resetAdEditor() {
+    fillAdEditorForm(null);
+}
+
+async function openAdEditor(adId) {
+    const target = (ADMIN_LIST_STATE.ads.items || []).find((item) => Number(item.id) === Number(adId));
+    if (!target) {
+        alert('광고 정보를 찾을 수 없습니다.');
+        return;
     }
+    fillAdEditorForm(target);
+    document.getElementById('ads-editor-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
-    const title = window.prompt('광고 제목을 입력해주세요.', base.title || '');
-    if (title == null || !title.trim()) return;
+async function uploadAdImage() {
+    const fileInput = document.getElementById('ads-form-image-file');
+    const help = document.getElementById('ads-form-image-help');
+    const imageUrlInput = document.getElementById('ads-form-image-url');
+    const uploadButton = document.getElementById('ads-image-upload-btn');
+    const file = fileInput?.files?.[0];
 
-    const imageUrl = window.prompt('광고 이미지 URL을 입력해주세요.', base.imageUrl || '');
-    if (imageUrl == null || !imageUrl.trim()) return;
-
-    const linkUrl = window.prompt('광고 클릭 링크 URL을 입력해주세요.', base.linkUrl || '');
-    if (linkUrl == null || !linkUrl.trim()) return;
-
-    const adTypeRaw = window.prompt('광고 유형을 입력해주세요. (LIVE / BUSINESS / TOP)', base.adType || 'LIVE');
-    if (adTypeRaw == null) return;
-    const adType = String(adTypeRaw || '').trim().toUpperCase();
-    if (!['LIVE', 'BUSINESS', 'TOP'].includes(adType)) {
-        alert('광고 유형은 LIVE, BUSINESS, TOP 중 하나여야 합니다.');
+    if (!file) {
+        setAdHelpMessage('먼저 업로드할 이미지를 선택해주세요.', '#dc3545');
         return;
     }
 
-    const storeNoRaw = window.prompt('매장 번호(storeNo)를 입력해주세요. LIVE 광고는 필수입니다.', String(base.storeNo || ''));
-    if (storeNoRaw == null) return;
-    const storeNo = String(storeNoRaw || '').trim() ? Number.parseInt(storeNoRaw, 10) : null;
-    if (adType === 'LIVE' && (!Number.isInteger(storeNo) || storeNo <= 0)) {
-        alert('LIVE 광고는 유효한 매장 번호(storeNo)가 필요합니다.');
+    if (!String(file.type || '').startsWith('image/')) {
+        setAdHelpMessage('이미지 파일만 업로드할 수 있습니다.', '#dc3545');
         return;
     }
 
-    const displayOrderRaw = window.prompt('노출 순서를 입력해주세요(숫자).', String(base.displayOrder || 0));
-    if (displayOrderRaw == null) return;
-
-    const isActiveRaw = window.prompt('노출 여부를 입력해주세요 (Y/N).', base.isActive ? 'Y' : 'N');
-    if (isActiveRaw == null) return;
-
-    if (!isValidExternalUrl(linkUrl.trim())) {
-        alert('광고 클릭 링크 URL은 http:// 또는 https:// 형식이어야 합니다.');
-        return;
-    }
-
-    const payload = {
-        title: title.trim(),
-        imageUrl: imageUrl.trim(),
-        linkUrl: linkUrl.trim(),
-        adType,
-        storeNo,
-        displayOrder: Number(displayOrderRaw) || 0,
-        isActive: ['y', 'yes', '1', 'true'].includes(String(isActiveRaw).trim().toLowerCase())
-    };
+    const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('이미지 파일을 읽지 못했습니다.'));
+        reader.readAsDataURL(file);
+    });
 
     try {
-        if (adId) await APIClient.put(`/admin/ads/${adId}`, payload);
-        else await APIClient.post('/admin/ads', payload);
+        if (uploadButton) {
+            uploadButton.disabled = true;
+            uploadButton.textContent = '업로드 중...';
+        }
+        const response = await APIClient.post('/upload/ads/images', {
+            files: [{ dataUrl, fileName: file.name }]
+        });
+        const uploaded = Array.isArray(response.files) ? response.files[0] : null;
+        if (!uploaded?.url) throw new Error('업로드 URL을 받지 못했습니다.');
 
-        await loadAds();
+        if (imageUrlInput) imageUrlInput.value = uploaded.url;
+        if (help) help.textContent = '이미지 업로드가 완료되었습니다.';
+        setAdHelpMessage('광고 이미지가 S3에 업로드되었습니다.', '#198754');
     } catch (error) {
-        alert(error.message || '광고 저장에 실패했습니다.');
+        setAdHelpMessage(error.message || '광고 이미지 업로드에 실패했습니다.', '#dc3545');
+    } finally {
+        if (uploadButton) {
+            uploadButton.disabled = false;
+            uploadButton.textContent = '이미지 업로드';
+        }
+    }
+}
+
+async function saveAd() {
+    const saveButton = document.getElementById('ads-save-btn');
+    const wasEdit = Boolean(editingAdId);
+    const payload = {
+        title: document.getElementById('ads-form-title')?.value?.trim() || '',
+        imageUrl: document.getElementById('ads-form-image-url')?.value?.trim() || '',
+        linkUrl: document.getElementById('ads-form-link-url')?.value?.trim() || '',
+        adType: String(document.getElementById('ads-form-ad-type')?.value || 'LIVE').trim().toUpperCase(),
+        storeNo: (() => {
+            const raw = document.getElementById('ads-form-store-no')?.value || '';
+            return raw ? Number.parseInt(raw, 10) : null;
+        })(),
+        displayOrder: Number(document.getElementById('ads-form-display-order')?.value || 0) || 0,
+        isActive: String(document.getElementById('ads-form-is-active')?.value || 'true') === 'true'
+    };
+
+    if (!payload.title || !payload.imageUrl || !payload.linkUrl) {
+        setAdHelpMessage('제목, 이미지 URL, 링크 URL은 필수입니다.', '#dc3545');
+        return;
+    }
+    if (!isValidExternalUrl(payload.linkUrl)) {
+        setAdHelpMessage('광고 링크 URL은 http:// 또는 https:// 형식이어야 합니다.', '#dc3545');
+        return;
+    }
+    if (payload.adType === 'LIVE' && (!Number.isInteger(payload.storeNo) || payload.storeNo <= 0)) {
+        setAdHelpMessage('LIVE 광고는 매장을 선택해야 합니다.', '#dc3545');
+        return;
+    }
+
+    try {
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.textContent = '저장 중...';
+        }
+        if (wasEdit) await APIClient.put(`/admin/ads/${editingAdId}`, payload);
+        else await APIClient.post('/admin/ads', payload);
+        resetAdEditor();
+        await loadAds();
+        setAdHelpMessage('광고가 저장되었습니다.', '#198754');
+    } catch (error) {
+        setAdHelpMessage(error.message || '광고 저장에 실패했습니다.', '#dc3545');
+    } finally {
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.textContent = wasEdit ? '광고 수정 저장' : '광고 등록';
+        }
     }
 }
 

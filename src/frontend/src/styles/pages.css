@@ -288,6 +288,11 @@
     flex-wrap: wrap;
 }
 
+#ads-form-ad-type,
+#ads-form-store-no {
+    overflow-y: auto;
+}
+
 .admin-user-modal-content {
     max-width: 860px;
 }
