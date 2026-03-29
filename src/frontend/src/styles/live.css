@@ -106,6 +106,102 @@ body[data-page="live"] .header {
     filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
 }
 
+.live-scroll-message-button {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: min(343px, calc(100vw - 24px));
+    height: 36px;
+    margin: 0 auto;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #f8fafc;
+    cursor: pointer;
+    z-index: 29;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.live-scroll-message-button:hover {
+    transform: translateY(-1px);
+}
+
+.live-scroll-message-button:active {
+    transform: translateY(0);
+}
+
+.live-scroll-message-button:focus-visible {
+    outline: 2px solid rgba(243, 244, 246, 0.92);
+    outline-offset: 3px;
+}
+
+.live-scroll-message-button.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
+}
+
+.live-scroll-message-button .live-scroll-bottom-button__icon {
+    display: flex;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    align-items: center;
+    justify-content: center;
+}
+
+.live-scroll-message-button .live-scroll-bottom-button__icon svg {
+    stroke-width: 2;
+    filter: none;
+}
+
+.live-scroll-bottom-button__avatar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.live-scroll-bottom-button__avatar {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.4);
+    object-fit: cover;
+}
+
+.live-scroll-bottom-button__name {
+    color: #f8fafc;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 150%;
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+}
+
+.live-scroll-bottom-button__message {
+    flex: 1 0 0;
+    min-width: 0;
+    margin-left: 4px;
+    overflow: hidden;
+    color: #f8fafc;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 150%;
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+}
+
 .live-store-name-list {
     display: flex;
     flex-direction: column;
@@ -297,6 +393,10 @@ body[data-page="live"] .header {
         bottom: calc(28px + env(safe-area-inset-bottom, 0px));
         width: 54px;
         height: 54px;
+    }
+
+    .live-scroll-message-button {
+        width: min(343px, calc(100vw - 24px));
     }
 
 }
