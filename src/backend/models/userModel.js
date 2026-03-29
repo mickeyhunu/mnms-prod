@@ -284,6 +284,44 @@ async function markNotificationsAsRead(userId, notificationKeys = []) {
   return uniqueKeys.length;
 }
 
+async function getUserReadPostIdSet(userId, options = {}) {
+  const safeLimit = Math.max(1, Math.min(1000, Number(options.limit) || 500));
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT post_id AS postId
+     FROM user_post_reads
+     WHERE user_id = ?
+     ORDER BY read_at DESC
+     LIMIT ?`,
+    [userId, safeLimit]
+  );
+
+  return rows
+    .map((row) => Number(row.postId))
+    .filter((postId) => Number.isInteger(postId) && postId > 0);
+}
+
+async function markPostsAsRead(userId, postIds = []) {
+  const uniquePostIds = [...new Set((Array.isArray(postIds) ? postIds : [])
+    .map((postId) => Number(postId))
+    .filter((postId) => Number.isInteger(postId) && postId > 0))];
+
+  if (!uniquePostIds.length) {
+    return 0;
+  }
+
+  const pool = getPool();
+  const values = uniquePostIds.map((postId) => [userId, postId]);
+  await pool.query(
+    `INSERT INTO user_post_reads (user_id, post_id)
+     VALUES ?
+     ON DUPLICATE KEY UPDATE read_at = CURRENT_TIMESTAMP`,
+    [values]
+  );
+
+  return uniquePostIds.length;
+}
+
 async function findByNickname(nickname) {
   const pool = getPool();
   const [rows] = await pool.query('SELECT id FROM users WHERE nickname = ?', [nickname]);
@@ -349,5 +387,7 @@ module.exports = {
   getUserActivityDetails,
   getUserNotifications,
   getUserNotificationReadMap,
-  markNotificationsAsRead
+  markNotificationsAsRead,
+  getUserReadPostIdSet,
+  markPostsAsRead
 };
