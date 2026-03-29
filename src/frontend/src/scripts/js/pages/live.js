@@ -110,6 +110,7 @@ function bindLiveEvents() {
     const storeFilter = document.getElementById('live-store-filter');
     const categoryFilter = document.getElementById('live-category-filter');
     const scrollBottomButton = document.getElementById('live-scroll-bottom-button');
+    const scrollMessageButton = document.getElementById('live-scroll-message-button');
 
     initializeScrollableFilter(storeFilter);
     initializeScrollableFilter(categoryFilter);
@@ -167,6 +168,10 @@ function bindLiveEvents() {
     window.addEventListener('resize', updateLiveScrollBottomButton, { passive: true });
 
     scrollBottomButton?.addEventListener('click', () => {
+        scrollLiveToLatest();
+    });
+
+    scrollMessageButton?.addEventListener('click', () => {
         scrollLiveToLatest();
     });
 
@@ -351,6 +356,7 @@ function renderStoreButtons() {
         </button>
     `).join('');
     syncScrollableFilterState(storeFilter);
+    updateLiveScrollMessageStoreName();
 }
 
 function syncSelectedStoreNo() {
@@ -736,8 +742,11 @@ function isLiveViewportNearBottom() {
 }
 
 function updateLiveScrollBottomButton() {
-    const button = document.getElementById('live-scroll-bottom-button');
-    if (!button) return;
+    const buttons = [
+        document.getElementById('live-scroll-bottom-button'),
+        document.getElementById('live-scroll-message-button')
+    ].filter(Boolean);
+    if (!buttons.length) return;
 
     const scrollHeight = getLiveDocumentScrollHeight();
     const viewportBottom = window.scrollY + window.innerHeight;
@@ -745,7 +754,16 @@ function updateLiveScrollBottomButton() {
     const hasScrollableContent = scrollHeight > (window.innerHeight + 120);
     const shouldShowButton = hasScrollableContent && remainingDistance > LIVE_BOTTOM_BUTTON_THRESHOLD_PX;
 
-    button.classList.toggle('hidden', !shouldShowButton);
+    buttons.forEach((button) => {
+        button.classList.toggle('hidden', !shouldShowButton);
+    });
+}
+
+function updateLiveScrollMessageStoreName() {
+    const storeNameElement = document.getElementById('live-scroll-message-store-name');
+    if (!storeNameElement) return;
+
+    storeNameElement.textContent = getSelectedStoreName();
 }
 
 function getLiveDocumentScrollHeight() {
