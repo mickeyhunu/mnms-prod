@@ -598,7 +598,7 @@ function compareLiveRows(leftRow, rightRow) {
 }
 
 function getLiveRowSortTime(row) {
-    const rawTimestamp = getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date']);
+    const rawTimestamp = getLiveRowRawTimestamp(row);
     const timestamp = new Date(rawTimestamp).getTime();
 
     return Number.isFinite(timestamp) ? timestamp : Number.MAX_SAFE_INTEGER;
@@ -632,8 +632,49 @@ function renderLiveEntries(rows, titleColumn) {
         return;
     }
 
-    listElement.innerHTML = rows.map((row, index) => createLiveEntryCard(row, index, titleColumn)).join('');
+    listElement.innerHTML = createLiveTimelineMarkup(rows, titleColumn);
     enhanceLiveAvatarImages(listElement);
+}
+
+function createLiveTimelineMarkup(rows, titleColumn) {
+    const timelineRows = Array.isArray(rows) ? rows : [];
+    if (!timelineRows.length) return '';
+
+    let previousDateLabel = '';
+
+    return timelineRows.map((row, index) => {
+        const dateLabel = formatLiveDateDividerLabel(getLiveRowRawTimestamp(row));
+        const showDateDivider = Boolean(dateLabel && dateLabel !== previousDateLabel);
+        previousDateLabel = dateLabel || previousDateLabel;
+
+        return `${showDateDivider ? createLiveDateDivider(dateLabel) : ''}${createLiveEntryCard(row, index, titleColumn)}`;
+    }).join('');
+}
+
+function getLiveRowRawTimestamp(row) {
+    return getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date']);
+}
+
+function createLiveDateDivider(dateLabel) {
+    return `
+        <div class="live-chat-date-divider" role="presentation" aria-hidden="true">
+            <p class="live-chat-date-divider__label">${sanitizeHTML(dateLabel)}</p>
+        </div>
+    `;
+}
+
+function formatLiveDateDividerLabel(rawTimestamp) {
+    const timestamp = new Date(rawTimestamp).getTime();
+    if (!Number.isFinite(timestamp)) return '';
+
+    const date = new Date(timestamp);
+    const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const weekday = weekdays[date.getDay()] || '';
+
+    return `${year}년 ${month}월 ${day}일(${weekday})`;
 }
 
 async function maybeLoadOlderLiveHistory() {
