@@ -31,12 +31,17 @@ export const liveScrollBottomButtonTemplate = `
                 type="button"
                 class="live-scroll-bottom-button hidden"
                 id="live-scroll-bottom-button"
-                aria-label="LIVE 컨텐츠 맨 아래로 이동"
-                title="맨 아래로 이동"
+                aria-label="새 메시지로 이동"
+                title="새 메시지로 이동"
             >
+                <span class="live-scroll-bottom-button__sender">
+                    <img class="live-scroll-bottom-button__avatar" id="live-scroll-bottom-avatar" alt="" />
+                    <span class="live-scroll-bottom-button__name" id="live-scroll-bottom-name">LIVE</span>
+                </span>
+                <span class="live-scroll-bottom-button__message" id="live-scroll-bottom-message">새 메시지가 도착했습니다</span>
                 <span class="live-scroll-bottom-button__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" focusable="false">
-                        <path d="m7.5 10.5 4.5 4.5 4.5-4.5"></path>
+                        <path d="m6 9 6 6 6-6"></path>
                     </svg>
                 </span>
             </button>
