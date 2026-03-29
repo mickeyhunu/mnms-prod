@@ -168,7 +168,8 @@ async function deleteUser(userId) {
 async function listAds() {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl, display_order AS displayOrder,
+    `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl,
+            ad_type AS adType, store_no AS storeNo, display_order AS displayOrder,
             is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
      FROM ads
      ORDER BY display_order ASC, id DESC`
@@ -176,12 +177,12 @@ async function listAds() {
   return rows;
 }
 
-async function createAd({ title, imageUrl, linkUrl, displayOrder = 0, isActive = true }) {
+async function createAd({ title, imageUrl, linkUrl, adType = 'LIVE', storeNo = null, displayOrder = 0, isActive = true }) {
   const pool = getPool();
   const [result] = await pool.query(
-    `INSERT INTO ads (title, image_url, link_url, display_order, is_active)
-     VALUES (?, ?, ?, ?, ?)`,
-    [title, imageUrl, linkUrl, displayOrder, isActive ? 1 : 0]
+    `INSERT INTO ads (title, image_url, link_url, ad_type, store_no, display_order, is_active)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [title, imageUrl, linkUrl, adType, storeNo, displayOrder, isActive ? 1 : 0]
   );
   return result.insertId;
 }
@@ -192,14 +193,33 @@ async function findAdById(adId) {
   return rows[0] || null;
 }
 
-async function updateAd(adId, { title, imageUrl, linkUrl, displayOrder = 0, isActive = true }) {
+async function updateAd(adId, { title, imageUrl, linkUrl, adType = 'LIVE', storeNo = null, displayOrder = 0, isActive = true }) {
   const pool = getPool();
   await pool.query(
     `UPDATE ads
-     SET title = ?, image_url = ?, link_url = ?, display_order = ?, is_active = ?
+     SET title = ?, image_url = ?, link_url = ?, ad_type = ?, store_no = ?, display_order = ?, is_active = ?
      WHERE id = ?`,
-    [title, imageUrl, linkUrl, displayOrder, isActive ? 1 : 0, adId]
+    [title, imageUrl, linkUrl, adType, storeNo, displayOrder, isActive ? 1 : 0, adId]
   );
+}
+
+async function listLiveAdsByStore(storeNo) {
+  const pool = getPool();
+  const normalizedStoreNo = Number.parseInt(storeNo, 10);
+  if (!Number.isInteger(normalizedStoreNo) || normalizedStoreNo <= 0) return [];
+
+  const [rows] = await pool.query(
+    `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl,
+            ad_type AS adType, store_no AS storeNo, display_order AS displayOrder
+       FROM ads
+      WHERE is_active = 1
+        AND ad_type = 'LIVE'
+        AND store_no = ?
+      ORDER BY display_order ASC, id DESC`,
+    [normalizedStoreNo]
+  );
+
+  return rows;
 }
 
 async function deleteAd(adId) {
@@ -662,6 +682,7 @@ module.exports = {
   updateUserByAdmin,
   deleteUser,
   listAds,
+  listLiveAdsByStore,
   createAd,
   findAdById,
   getStoreByNo,

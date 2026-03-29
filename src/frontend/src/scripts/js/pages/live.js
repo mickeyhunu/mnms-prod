@@ -54,7 +54,9 @@ const liveState = {
     lastSeenLatestSignature: '',
     pendingLatestSignature: '',
     pendingLatestStoreName: '',
-    hasUnseenLatestCard: false
+    hasUnseenLatestCard: false,
+    ads: [],
+    adsRequestId: 0
 };
 
 function initializeScrollableFilter(element) {
@@ -138,6 +140,7 @@ function bindLiveEvents() {
         liveState.selectedStoreNo = nextStoreNo;
         renderStoreButtons();
         resetLiveEntriesState();
+        await loadLiveAds();
         await loadLiveEntries({ showLoading: true, syncToLatest: true });
     });
 
@@ -199,6 +202,7 @@ function startLiveAutoRefresh() {
 
 async function refreshLiveData({ showLoading = false, syncToLatest = false } = {}) {
     await loadLiveFilters();
+    await loadLiveAds();
     await loadLiveEntries({ showLoading, syncToLatest });
 }
 
@@ -317,6 +321,66 @@ function applyLiveEntriesResponse() {
     } else {
         showElement(emptyElement);
     }
+}
+
+async function loadLiveAds() {
+    const requestId = ++liveState.adsRequestId;
+    const storeNo = Number.parseInt(liveState.selectedStoreNo, 10);
+
+    if (!Number.isInteger(storeNo) || storeNo <= 0) {
+        liveState.ads = [];
+        renderLiveAds([]);
+        return;
+    }
+
+    try {
+        const response = await APIClient.get('/live/ads', { storeNo });
+        if (requestId !== liveState.adsRequestId) return;
+        liveState.ads = Array.isArray(response?.content) ? response.content : [];
+        renderLiveAds(liveState.ads);
+    } catch (error) {
+        if (requestId !== liveState.adsRequestId) return;
+        liveState.ads = [];
+        renderLiveAds([]);
+        console.error('LIVE ads load error:', error);
+    }
+}
+
+function renderLiveAds(ads = []) {
+    const container = document.getElementById('live-ads-container');
+    if (!container) return;
+
+    if (!Array.isArray(ads) || !ads.length) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+    }
+
+    container.classList.remove('hidden');
+    container.innerHTML = ads.map((ad) => {
+        const imageUrl = sanitizeHTML(ad.imageUrl || '');
+        const title = sanitizeHTML(ad.title || 'LIVE 광고');
+        const linkUrl = sanitizeHTML(normalizeExternalUrl(ad.linkUrl));
+        return `
+            <a class="live-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer">
+                <img class="live-ad-banner__image" src="${imageUrl}" alt="${title}">
+            </a>
+        `;
+    }).join('');
+}
+
+function isValidExternalUrl(url) {
+    try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch (error) {
+        return false;
+    }
+}
+
+function normalizeExternalUrl(url) {
+    const target = String(url || '').trim();
+    return isValidExternalUrl(target) ? target : '#';
 }
 
 const WAITING_STORE_DECORATIONS = {

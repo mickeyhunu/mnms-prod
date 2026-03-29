@@ -187,7 +187,7 @@ export const adminTemplate = `
                         <input type="search" id="ads-search-input" class="form-control admin-list-toolbar__search" placeholder="광고 검색" aria-label="광고 검색">
                     </div>
                     <div class="admin-table-container hidden" id="ads-content">
-                        <table class="admin-table"><thead><tr><th>ID</th><th>제목</th><th>링크</th><th>순서</th><th>노출</th><th>생성일</th><th>수정일</th><th>관리</th></tr></thead><tbody id="ads-tbody"></tbody></table>
+                        <table class="admin-table"><thead><tr><th>ID</th><th>유형</th><th>매장번호</th><th>제목</th><th>링크</th><th>순서</th><th>노출</th><th>생성일</th><th>수정일</th><th>관리</th></tr></thead><tbody id="ads-tbody"></tbody></table>
                     </div>
                     <div class="admin-pagination hidden" id="ads-pagination"></div>
                 </div>

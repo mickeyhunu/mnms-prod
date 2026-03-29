@@ -307,14 +307,30 @@ router.post('/ads', async (req, res, next) => {
     const title = String(req.body?.title || '').trim();
     const imageUrl = String(req.body?.imageUrl || '').trim();
     const linkUrl = String(req.body?.linkUrl || '').trim();
+    const adType = String(req.body?.adType || 'LIVE').trim().toUpperCase();
+    const storeNoRaw = req.body?.storeNo;
+    const storeNo = storeNoRaw == null || storeNoRaw === '' ? null : Number.parseInt(storeNoRaw, 10);
     const displayOrder = Number(req.body?.displayOrder) || 0;
     const isActive = Boolean(req.body?.isActive);
+
+    if (!['LIVE', 'BUSINESS', 'TOP'].includes(adType)) {
+      return res.status(400).json({ message: '유효하지 않은 광고 유형입니다.' });
+    }
+
+    if (adType === 'LIVE' && (!Number.isInteger(storeNo) || storeNo <= 0)) {
+      return res.status(400).json({ message: 'LIVE 광고는 매장 번호(storeNo)가 필요합니다.' });
+    }
+
+    if (Number.isInteger(storeNo) && storeNo > 0) {
+      const store = await adminModel.getStoreByNo(storeNo);
+      if (!store) return res.status(404).json({ message: '매장을 찾을 수 없습니다.' });
+    }
 
     if (!title || !imageUrl || !linkUrl) {
       return res.status(400).json({ message: '제목, 이미지 URL, 링크 URL은 필수입니다.' });
     }
 
-    const insertId = await adminModel.createAd({ title, imageUrl, linkUrl, displayOrder, isActive });
+    const insertId = await adminModel.createAd({ title, imageUrl, linkUrl, adType, storeNo, displayOrder, isActive });
     res.status(201).json({ id: insertId });
   } catch (error) {
     next(error);
@@ -332,14 +348,30 @@ router.put('/ads/:id', async (req, res, next) => {
     const title = String(req.body?.title || '').trim();
     const imageUrl = String(req.body?.imageUrl || '').trim();
     const linkUrl = String(req.body?.linkUrl || '').trim();
+    const adType = String(req.body?.adType || 'LIVE').trim().toUpperCase();
+    const storeNoRaw = req.body?.storeNo;
+    const storeNo = storeNoRaw == null || storeNoRaw === '' ? null : Number.parseInt(storeNoRaw, 10);
     const displayOrder = Number(req.body?.displayOrder) || 0;
     const isActive = Boolean(req.body?.isActive);
+
+    if (!['LIVE', 'BUSINESS', 'TOP'].includes(adType)) {
+      return res.status(400).json({ message: '유효하지 않은 광고 유형입니다.' });
+    }
+
+    if (adType === 'LIVE' && (!Number.isInteger(storeNo) || storeNo <= 0)) {
+      return res.status(400).json({ message: 'LIVE 광고는 매장 번호(storeNo)가 필요합니다.' });
+    }
+
+    if (Number.isInteger(storeNo) && storeNo > 0) {
+      const store = await adminModel.getStoreByNo(storeNo);
+      if (!store) return res.status(404).json({ message: '매장을 찾을 수 없습니다.' });
+    }
 
     if (!title || !imageUrl || !linkUrl) {
       return res.status(400).json({ message: '제목, 이미지 URL, 링크 URL은 필수입니다.' });
     }
 
-    await adminModel.updateAd(id, { title, imageUrl, linkUrl, displayOrder, isActive });
+    await adminModel.updateAd(id, { title, imageUrl, linkUrl, adType, storeNo, displayOrder, isActive });
     res.json({ success: true });
   } catch (error) {
     next(error);
