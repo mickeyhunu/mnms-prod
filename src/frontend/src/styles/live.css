@@ -877,10 +877,17 @@ body[data-page="live"] .header {
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    cursor: grab;
+    user-select: none;
+    touch-action: pan-y;
 }
 
 .live-ads__viewport::-webkit-scrollbar {
     display: none;
+}
+
+.live-ads__viewport.is-dragging {
+    cursor: grabbing;
 }
 
 .live-ads__track {
@@ -923,38 +930,6 @@ body[data-page="live"] .header {
     background: rgba(2, 6, 23, 0.75);
     border: 1px solid rgba(148, 163, 184, 0.45);
     pointer-events: none;
-}
-
-.live-ads__control {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 1;
-    width: 28px;
-    height: 28px;
-    border: 1px solid rgba(148, 163, 184, 0.5);
-    border-radius: 999px;
-    color: #f8fafc;
-    background: rgba(2, 6, 23, 0.64);
-    font-size: 20px;
-    line-height: 1;
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.live-ads__control--prev {
-    left: 10px;
-}
-
-.live-ads__control--next {
-    right: 10px;
-}
-
-.live-ads__control:focus-visible {
-    outline: 2px solid #60a5fa;
-    outline-offset: 1px;
 }
 
 @media (max-width: 768px) {
