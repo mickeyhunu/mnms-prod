@@ -56,7 +56,7 @@ body[data-page="live"] .header {
 
 .live-scroll-bottom-button {
     position: fixed;
-    right: clamp(24px, 4vw, 32px);
+    right: max(24px, calc(((100vw - 920px) / 2) + 24px));
     bottom: calc(var(--live-ads-height) + env(safe-area-inset-bottom, 0px));
     display: inline-flex;
     align-items: center;
