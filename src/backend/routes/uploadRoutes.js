@@ -9,5 +9,6 @@ const router = express.Router();
 
 router.post('/posts/images', authMiddleware, uploadController.uploadPostImages);
 router.post('/support/attachments', authMiddleware, uploadController.uploadSupportAttachments);
+router.post('/ads/images', authMiddleware, uploadController.uploadAdImages);
 
 module.exports = router;
