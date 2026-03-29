@@ -41,3 +41,11 @@ export const liveScrollBottomButtonTemplate = `
                 </span>
             </button>
 `;
+
+export const liveChatPaneHandleTemplate = `
+<div class="live-chat-pane-handle" aria-hidden="true">
+                <div class="live-chat-pane-handle__inner">
+                    <img src="/icon/leftArrow.svg" alt="열기" loading="lazy" width="7" height="11" decoding="async">
+                </div>
+            </div>
+`;
