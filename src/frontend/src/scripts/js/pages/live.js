@@ -351,22 +351,32 @@ function renderLiveAds(ads = []) {
     if (!container) return;
 
     if (!Array.isArray(ads) || !ads.length) {
+        document.body?.classList.remove('live-has-ads');
         container.classList.add('hidden');
         container.innerHTML = '';
         return;
     }
 
+    document.body?.classList.add('live-has-ads');
     container.classList.remove('hidden');
-    container.innerHTML = ads.map((ad) => {
+    const bannerItems = ads.map((ad, index) => {
         const imageUrl = sanitizeHTML(ad.imageUrl || '');
         const title = sanitizeHTML(ad.title || 'LIVE 광고');
         const linkUrl = sanitizeHTML(normalizeExternalUrl(ad.linkUrl));
         return `
-            <a class="live-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer">
-                <img class="live-ad-banner__image" src="${imageUrl}" alt="${title}">
+            <a class="live-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer" aria-label="${title}">
+                <img class="live-ad-banner__image" src="${imageUrl}" alt="${title}" loading="${index === 0 ? 'eager' : 'lazy'}">
             </a>
         `;
     }).join('');
+
+    container.innerHTML = `
+        <div class="live-ads__viewport">
+            <div class="live-ads__track" role="list">
+                ${bannerItems}
+            </div>
+        </div>
+    `;
 }
 
 function isValidExternalUrl(url) {
