@@ -50,9 +50,10 @@ export const liveScrollBottomButtonTemplate = `
             >
                 <span class="live-scroll-bottom-button__avatar-wrap">
                     <img
-                        src="https://image.12terrace.com/chat/q0nYpFRDwpInvdvxj5eq/221a1331-74dc-4cb0-9927-61318eb18428.png"
+                        src=""
                         alt=""
                         class="live-scroll-bottom-button__avatar"
+                        id="live-scroll-message-store-avatar"
                     />
                     <span class="live-scroll-bottom-button__name" id="live-scroll-message-store-name">전체</span>
                 </span>
