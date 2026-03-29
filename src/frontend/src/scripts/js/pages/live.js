@@ -111,7 +111,6 @@ function bindLiveEvents() {
     const storeFilter = document.getElementById('live-store-filter');
     const categoryFilter = document.getElementById('live-category-filter');
     const scrollBottomButton = document.getElementById('live-scroll-bottom-button');
-    const newMessageToastButton = document.getElementById('live-new-message-toast');
 
     initializeScrollableFilter(storeFilter);
     initializeScrollableFilter(categoryFilter);
@@ -169,12 +168,6 @@ function bindLiveEvents() {
     window.addEventListener('resize', updateLiveScrollBottomButton, { passive: true });
 
     scrollBottomButton?.addEventListener('click', () => {
-        liveState.newMessageNotice = null;
-        syncLiveNewMessageNoticeUI();
-        scrollLiveToLatest();
-    });
-
-    newMessageToastButton?.addEventListener('click', () => {
         liveState.newMessageNotice = null;
         syncLiveNewMessageNoticeUI();
         scrollLiveToLatest();
@@ -493,7 +486,6 @@ function resetLiveEntriesState() {
     liveState.isLoadingOlder = false;
     liveState.hasAlignedInitialViewport = false;
     liveState.newMessageNotice = null;
-    syncLiveNewMessageNoticeUI();
 }
 
 function mergeLiveHistoryRows(previousRows = [], nextRows = []) {
@@ -784,24 +776,26 @@ function updateLiveNewMessageNotice() {
 }
 
 function syncLiveNewMessageNoticeUI() {
-    const toastElement = document.getElementById('live-new-message-toast');
-    const nameElement = document.getElementById('live-new-message-toast-name');
-    const avatarElement = document.getElementById('live-new-message-toast-avatar');
+    const nameElement = document.getElementById('live-scroll-bottom-name');
+    const messageElement = document.getElementById('live-scroll-bottom-message');
+    const avatarElement = document.getElementById('live-scroll-bottom-avatar');
     const notice = liveState.newMessageNotice;
-
-    if (toastElement) {
-        toastElement.classList.toggle('hidden', !notice?.senderName);
-    }
 
     if (nameElement) {
         nameElement.textContent = notice?.senderName || 'LIVE';
+    }
+
+    if (messageElement) {
+        messageElement.textContent = notice?.senderName ? '새 메시지가 도착했습니다' : '최신 메시지로 이동';
     }
 
     if (avatarElement) {
         const avatarImageName = notice?.avatarImageName;
         if (avatarImageName) {
             avatarElement.src = getLiveAvatarImagePath(avatarImageName);
+            avatarElement.classList.remove('hidden');
         } else {
+            avatarElement.classList.add('hidden');
             avatarElement.removeAttribute('src');
         }
     }

@@ -46,18 +46,3 @@ export const liveScrollBottomButtonTemplate = `
                 </span>
             </button>
 `;
-
-export const liveNewMessageToastTemplate = `
-<button type="button" class="live-new-message-toast hidden" id="live-new-message-toast" aria-label="새 메시지로 이동" title="새 메시지로 이동">
-                <span class="live-new-message-toast__sender">
-                    <img class="live-new-message-toast__avatar" id="live-new-message-toast-avatar" alt="" />
-                    <span class="live-new-message-toast__name" id="live-new-message-toast-name">LIVE</span>
-                </span>
-                <span class="live-new-message-toast__message">새 메시지가 도착했습니다</span>
-                <span class="live-new-message-toast__icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" focusable="false">
-                        <path d="m6 9 6 6 6-6"></path>
-                    </svg>
-                </span>
-            </button>
-`;

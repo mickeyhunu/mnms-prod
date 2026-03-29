@@ -2,7 +2,7 @@
  * 파일 역할: LIVE 페이지의 렌더링 설정을 정의하는 파일.
  */
 import { createPageConfig } from '../shared/createPageConfig.js';
-import { liveStickyHeaderTemplate, liveScrollBottomButtonTemplate, liveNewMessageToastTemplate } from './templates/index.js';
+import { liveStickyHeaderTemplate, liveScrollBottomButtonTemplate } from './templates/index.js';
 
 const liveTemplate = `
 <main class="main-content live-main-content">
@@ -22,7 +22,6 @@ const liveTemplate = `
             <section class="live-entry-list" id="live-entry-list" aria-label="LIVE 데이터 목록"></section>
 
             ${liveScrollBottomButtonTemplate}
-            ${liveNewMessageToastTemplate}
         </div>
     </main>
 `;
