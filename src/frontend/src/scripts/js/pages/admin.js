@@ -1462,7 +1462,7 @@ async function uploadAdImage() {
             uploadButton.disabled = true;
             uploadButton.textContent = '업로드 중...';
         }
-        const response = await APIClient.post('/upload/ads/images', {
+        const response = await APIClient.post('/uploads/ads/images', {
             files: [{ dataUrl, fileName: file.name }]
         });
         const uploaded = Array.isArray(response.files) ? response.files[0] : null;
