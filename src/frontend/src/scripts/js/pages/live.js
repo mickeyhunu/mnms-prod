@@ -15,6 +15,7 @@ const LIVE_REFRESH_INTERVAL_MS = 30000;
 const LIVE_HISTORY_TOP_THRESHOLD_PX = 160;
 const LIVE_BOTTOM_BUTTON_THRESHOLD_PX = 220;
 const LIVE_AVATAR_IMAGE_BASE_PATH = '/src/assets/live-avatars';
+const LIVE_AD_AUTOPLAY_INTERVAL_MS = 5000;
 
 function removeLivePageSharedChrome() {
     document.querySelectorAll('body > .bottom-nav-footer, .page-shell--live > .bottom-nav-footer, .page-shell--live > .header').forEach((element) => {
@@ -56,7 +57,8 @@ const liveState = {
     pendingLatestStoreName: '',
     hasUnseenLatestCard: false,
     ads: [],
-    adsRequestId: 0
+    adsRequestId: 0,
+    adAutoPlayTimerId: null
 };
 
 function initializeScrollableFilter(element) {
@@ -350,6 +352,8 @@ function renderLiveAds(ads = []) {
     const container = document.getElementById('live-ads-container');
     if (!container) return;
 
+    clearLiveAdsAutoPlay();
+
     if (!Array.isArray(ads) || !ads.length) {
         document.body?.classList.remove('live-has-ads');
         container.classList.add('hidden');
@@ -370,13 +374,96 @@ function renderLiveAds(ads = []) {
         `;
     }).join('');
 
+    const controlsMarkup = ads.length > 1
+        ? `
+            <button type="button" class="live-ads__control live-ads__control--prev" data-live-ads-nav="prev" aria-label="이전 광고 보기">‹</button>
+            <button type="button" class="live-ads__control live-ads__control--next" data-live-ads-nav="next" aria-label="다음 광고 보기">›</button>
+        `
+        : '';
+
     container.innerHTML = `
-        <div class="live-ads__viewport">
+        <div class="live-ads__viewport" tabindex="0" aria-label="LIVE 광고 목록">
             <div class="live-ads__track" role="list">
                 ${bannerItems}
             </div>
+            ${controlsMarkup}
+            <p class="live-ads__indicator" aria-live="polite">1/${ads.length}</p>
         </div>
     `;
+
+    bindLiveAdsCarousel(container, ads.length);
+}
+
+function clearLiveAdsAutoPlay() {
+    if (!liveState.adAutoPlayTimerId) return;
+    window.clearInterval(liveState.adAutoPlayTimerId);
+    liveState.adAutoPlayTimerId = null;
+}
+
+function bindLiveAdsCarousel(container, totalCount) {
+    const viewport = container.querySelector('.live-ads__viewport');
+    const indicator = container.querySelector('.live-ads__indicator');
+    const prevButton = container.querySelector('[data-live-ads-nav="prev"]');
+    const nextButton = container.querySelector('[data-live-ads-nav="next"]');
+    if (!viewport || !indicator) return;
+
+    const getCurrentIndex = () => {
+        const pageWidth = viewport.clientWidth || 1;
+        return Math.min(totalCount - 1, Math.max(0, Math.round(viewport.scrollLeft / pageWidth)));
+    };
+
+    const updateIndicator = () => {
+        const index = getCurrentIndex();
+        indicator.textContent = `${index + 1}/${totalCount}`;
+    };
+
+    const moveToIndex = (nextIndex) => {
+        const pageWidth = viewport.clientWidth;
+        if (!pageWidth) return;
+        const clampedIndex = Math.min(totalCount - 1, Math.max(0, nextIndex));
+        viewport.scrollTo({
+            left: clampedIndex * pageWidth,
+            behavior: 'smooth'
+        });
+        window.requestAnimationFrame(updateIndicator);
+    };
+
+    const moveByStep = (step) => {
+        const current = getCurrentIndex();
+        const next = (current + step + totalCount) % totalCount;
+        moveToIndex(next);
+    };
+
+    viewport.addEventListener('scroll', () => {
+        window.requestAnimationFrame(updateIndicator);
+    }, { passive: true });
+
+    if (totalCount <= 1) {
+        updateIndicator();
+        return;
+    }
+
+    prevButton?.addEventListener('click', () => moveByStep(-1));
+    nextButton?.addEventListener('click', () => moveByStep(1));
+
+    const restartAutoPlay = () => {
+        clearLiveAdsAutoPlay();
+        liveState.adAutoPlayTimerId = window.setInterval(() => {
+            if (document.hidden) return;
+            moveByStep(1);
+        }, LIVE_AD_AUTOPLAY_INTERVAL_MS);
+    };
+
+    viewport.addEventListener('pointerdown', clearLiveAdsAutoPlay);
+    viewport.addEventListener('pointerup', restartAutoPlay);
+    viewport.addEventListener('touchend', restartAutoPlay);
+    viewport.addEventListener('mouseenter', clearLiveAdsAutoPlay);
+    viewport.addEventListener('mouseleave', restartAutoPlay);
+    viewport.addEventListener('focusin', clearLiveAdsAutoPlay);
+    viewport.addEventListener('focusout', restartAutoPlay);
+
+    updateIndicator();
+    restartAutoPlay();
 }
 
 function isValidExternalUrl(url) {
