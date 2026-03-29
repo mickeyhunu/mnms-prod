@@ -6,6 +6,10 @@ let totalPages = 0;
 let isLoading = false;
 const pageSize = 20;
 const VIEWED_POST_IDS_STORAGE_KEY = 'communityViewedPostIds';
+let viewedPostIdSetCache = null;
+let viewedPostSyncPromise = null;
+const pendingViewedPostIds = new Set();
+let flushViewedPostTimerId = null;
 const searchState = {
     searchType: 'bbs_title',
     keyword: ''
@@ -24,6 +28,7 @@ async function initIndexPage() {
     initSearchEvents();
     updateBestPostsVisibility();
     initCommonEvents();
+    syncViewedPostsFromServer();
 
     const postsPromise = loadPosts(0);
     loadBestPosts().catch(() => {
@@ -257,13 +262,22 @@ function hasPostImageAttachment(post) {
 }
 
 function getViewedPostIdSet() {
+    if (viewedPostIdSetCache) {
+        return viewedPostIdSetCache;
+    }
+
     try {
         const raw = localStorage.getItem(VIEWED_POST_IDS_STORAGE_KEY);
         const parsed = JSON.parse(raw || '[]');
-        if (!Array.isArray(parsed)) return new Set();
-        return new Set(parsed.map((id) => String(id)));
+        if (!Array.isArray(parsed)) {
+            viewedPostIdSetCache = new Set();
+            return viewedPostIdSetCache;
+        }
+        viewedPostIdSetCache = new Set(parsed.map((id) => String(id)));
+        return viewedPostIdSetCache;
     } catch (error) {
-        return new Set();
+        viewedPostIdSetCache = new Set();
+        return viewedPostIdSetCache;
     }
 }
 
@@ -273,11 +287,8 @@ function markPostAsViewed(postId) {
     const viewedPostIds = getViewedPostIdSet();
     viewedPostIds.add(String(postId));
 
-    try {
-        localStorage.setItem(VIEWED_POST_IDS_STORAGE_KEY, JSON.stringify([...viewedPostIds]));
-    } catch (error) {
-        // localStorage 접근 제한 등 브라우저 예외 상황은 무시
-    }
+    persistViewedPostIds(viewedPostIds);
+    enqueueViewedPostSync(postId);
 
     updatePostViewedStyle(postId, true);
 }
@@ -302,6 +313,68 @@ function syncViewedPostStyles() {
         const postId = postLink.dataset.postId;
         updatePostViewedStyle(postId, hasViewedPost(postId));
     });
+}
+
+function persistViewedPostIds(viewedPostIds) {
+    try {
+        localStorage.setItem(VIEWED_POST_IDS_STORAGE_KEY, JSON.stringify([...viewedPostIds]));
+    } catch (error) {
+        // localStorage 접근 제한 등 브라우저 예외 상황은 무시
+    }
+}
+
+async function syncViewedPostsFromServer() {
+    if (!Auth.isAuthenticated()) return;
+    if (viewedPostSyncPromise) return viewedPostSyncPromise;
+
+    viewedPostSyncPromise = (async () => {
+        try {
+            const response = await APIClient.get('/users/me/posts/read', { limit: 500 });
+            const remoteIds = Array.isArray(response?.content) ? response.content : [];
+            if (!remoteIds.length) return;
+
+            const viewedPostIds = getViewedPostIdSet();
+            remoteIds.forEach((postId) => {
+                if (postId) viewedPostIds.add(String(postId));
+            });
+            persistViewedPostIds(viewedPostIds);
+            syncViewedPostStyles();
+        } catch (error) {
+            console.error('Failed to sync read posts:', error);
+        }
+    })().finally(() => {
+        viewedPostSyncPromise = null;
+    });
+
+    return viewedPostSyncPromise;
+}
+
+function enqueueViewedPostSync(postId) {
+    if (!Auth.isAuthenticated() || !postId) return;
+    pendingViewedPostIds.add(Number(postId));
+
+    if (flushViewedPostTimerId) return;
+    flushViewedPostTimerId = window.setTimeout(() => {
+        flushViewedPostTimerId = null;
+        flushViewedPostsToServer();
+    }, 300);
+}
+
+async function flushViewedPostsToServer() {
+    if (!Auth.isAuthenticated() || !pendingViewedPostIds.size) return;
+
+    const postIds = [...pendingViewedPostIds]
+        .map((id) => Number(id))
+        .filter((id) => Number.isInteger(id) && id > 0);
+    pendingViewedPostIds.clear();
+
+    if (!postIds.length) return;
+
+    try {
+        await APIClient.post('/users/me/posts/read', { postIds });
+    } catch (error) {
+        console.error('Failed to persist read posts:', error);
+    }
 }
 
 function isWithin12Hours(dateValue) {
@@ -453,6 +526,7 @@ function initCommonEvents() {
     }
 
     window.addEventListener('pageshow', syncViewedPostStyles);
+    window.addEventListener('beforeunload', flushViewedPostsToServer);
 }
 
 function redirectToLoginForPostAccess() {

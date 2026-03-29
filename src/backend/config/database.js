@@ -705,6 +705,19 @@ async function initDatabase() {
   `);
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS user_post_reads (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      user_id BIGINT NOT NULL,
+      post_id BIGINT NOT NULL,
+      read_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY uniq_user_post_reads_user_post (user_id, post_id),
+      INDEX idx_user_post_reads_user_read_at (user_id, read_at),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS site_visit_logs (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       visitor_key VARCHAR(100) NOT NULL,
