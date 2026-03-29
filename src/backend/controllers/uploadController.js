@@ -52,7 +52,27 @@ async function uploadSupportAttachments(req, res, next) {
   }
 }
 
+async function uploadAdImages(req, res, next) {
+  try {
+    const files = Array.isArray(req.body.files) ? req.body.files : [];
+    if (!files.length) return res.status(400).json({ message: '업로드할 파일이 없습니다.' });
+
+    const uploadedItem = await uploadDataUrlToS3({
+      dataUrl: files[0]?.dataUrl,
+      fileName: files[0]?.fileName,
+      folder: 'ads',
+      allowedMimeTypes: IMAGE_MIME_TYPES,
+      maxBytes: 8 * 1024 * 1024
+    });
+
+    res.status(201).json({ success: true, files: [uploadedItem] });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   uploadPostImages,
-  uploadSupportAttachments
+  uploadSupportAttachments,
+  uploadAdImages
 };

@@ -415,12 +415,42 @@ async function initDatabase() {
       title VARCHAR(255) NOT NULL,
       image_url VARCHAR(1000) NOT NULL,
       link_url VARCHAR(1000) NOT NULL,
+      ad_type VARCHAR(30) NOT NULL DEFAULT 'LIVE',
+      store_no INT NULL,
       display_order INT NOT NULL DEFAULT 0,
       is_active TINYINT(1) NOT NULL DEFAULT 1,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  const [adsAdTypeColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'ads'
+       AND COLUMN_NAME = 'ad_type'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!adsAdTypeColumn.length) {
+    await pool.query("ALTER TABLE ads ADD COLUMN ad_type VARCHAR(30) NOT NULL DEFAULT 'LIVE' AFTER link_url");
+  }
+
+  const [adsStoreNoColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'ads'
+       AND COLUMN_NAME = 'store_no'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!adsStoreNoColumn.length) {
+    await pool.query('ALTER TABLE ads ADD COLUMN store_no INT NULL AFTER ad_type');
+  }
 
   const [boardTypeColumn] = await pool.query(
     `SELECT 1

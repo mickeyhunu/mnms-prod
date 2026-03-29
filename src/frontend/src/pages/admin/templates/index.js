@@ -179,7 +179,61 @@ export const adminTemplate = `
                 </div>
 
                 <div id="ads-section" class="tab-pane hidden">
-                    <div class="admin-support-toolbar admin-support-toolbar-right"><button class="btn btn-primary btn-sm" id="ads-new-btn">광고 등록</button></div>
+                    <section class="admin-entry-editor">
+                        <div>
+                            <p class="admin-user-detail-eyebrow">광고 등록/수정</p>
+                            <h3 id="ads-editor-title">새 광고 등록</h3>
+                            <p class="admin-user-detail-description">이미지를 첨부하면 S3에 저장되며, LIVE 광고는 매장 선택이 필요합니다.</p>
+                        </div>
+                        <div class="admin-user-form-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px;">
+                            <div class="form-group">
+                                <label class="form-label" for="ads-form-title">광고 제목</label>
+                                <input type="text" id="ads-form-title" class="form-control" maxlength="255" placeholder="광고 제목을 입력하세요">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="ads-form-link-url">광고 링크 URL</label>
+                                <input type="url" id="ads-form-link-url" class="form-control" placeholder="https://">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="ads-form-ad-type">광고 유형(스크롤 선택)</label>
+                                <select id="ads-form-ad-type" class="form-control" size="3">
+                                    <option value="LIVE">LIVE 광고</option>
+                                    <option value="BUSINESS">업체 광고</option>
+                                    <option value="TOP">상단 광고</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="ads-form-store-no">매장 선택(storeNo, 스크롤 선택)</label>
+                                <select id="ads-form-store-no" class="form-control" size="6"></select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="ads-form-image-file">광고 배너 이미지 첨부</label>
+                                <input type="file" id="ads-form-image-file" class="form-control" accept="image/*">
+                                <p class="help-text text-muted" id="ads-form-image-help">이미지를 선택하고 업로드 버튼을 누르세요.</p>
+                                <button class="btn btn-outline btn-sm" id="ads-image-upload-btn" type="button">이미지 업로드</button>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="ads-form-image-url">업로드된 이미지 URL</label>
+                                <input type="text" id="ads-form-image-url" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="ads-form-display-order">노출 순서</label>
+                                <input type="number" id="ads-form-display-order" class="form-control" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="ads-form-is-active">노출 여부</label>
+                                <select id="ads-form-is-active" class="form-control">
+                                    <option value="true">노출</option>
+                                    <option value="false">숨김</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="admin-entry-editor__actions" style="margin-top:12px;">
+                            <button class="btn btn-secondary hidden" id="ads-cancel-btn" type="button">수정 취소</button>
+                            <button class="btn btn-primary" id="ads-save-btn" type="button">광고 등록</button>
+                        </div>
+                        <p id="ads-form-help" class="help-text admin-user-save-result" role="status"></p>
+                    </section>
                     <div class="loading" id="ads-loading"><div class="spinner"></div><p>광고를 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="ads-error"><p id="ads-error-message"></p><button class="btn btn-sm btn-primary" id="ads-retry-btn">다시 시도</button></div>
                     <div class="admin-list-toolbar">
@@ -187,7 +241,7 @@ export const adminTemplate = `
                         <input type="search" id="ads-search-input" class="form-control admin-list-toolbar__search" placeholder="광고 검색" aria-label="광고 검색">
                     </div>
                     <div class="admin-table-container hidden" id="ads-content">
-                        <table class="admin-table"><thead><tr><th>ID</th><th>제목</th><th>링크</th><th>순서</th><th>노출</th><th>생성일</th><th>수정일</th><th>관리</th></tr></thead><tbody id="ads-tbody"></tbody></table>
+                        <table class="admin-table"><thead><tr><th>ID</th><th>유형</th><th>매장번호</th><th>제목</th><th>링크</th><th>순서</th><th>노출</th><th>생성일</th><th>수정일</th><th>관리</th></tr></thead><tbody id="ads-tbody"></tbody></table>
                     </div>
                     <div class="admin-pagination hidden" id="ads-pagination"></div>
                 </div>
