@@ -50,7 +50,8 @@ const liveState = {
     hasMoreHistory: false,
     nextOffset: 0,
     isLoadingOlder: false,
-    hasAlignedInitialViewport: false
+    hasAlignedInitialViewport: false,
+    newMessageNotice: null
 };
 
 function initializeScrollableFilter(element) {
@@ -167,6 +168,8 @@ function bindLiveEvents() {
     window.addEventListener('resize', updateLiveScrollBottomButton, { passive: true });
 
     scrollBottomButton?.addEventListener('click', () => {
+        liveState.newMessageNotice = null;
+        syncLiveNewMessageNoticeUI();
         scrollLiveToLatest();
     });
 
@@ -292,6 +295,7 @@ async function loadLiveEntries({ showLoading = false, appendOlder = false, syncT
 }
 
 function applyLiveEntriesResponse() {
+    updateLiveNewMessageNotice();
     renderLiveSummary({
         totalCount: liveState.totalCount
     });
@@ -481,6 +485,7 @@ function resetLiveEntriesState() {
     liveState.nextOffset = 0;
     liveState.isLoadingOlder = false;
     liveState.hasAlignedInitialViewport = false;
+    liveState.newMessageNotice = null;
 }
 
 function mergeLiveHistoryRows(previousRows = [], nextRows = []) {
@@ -632,8 +637,40 @@ function renderLiveEntries(rows, titleColumn) {
         return;
     }
 
-    listElement.innerHTML = rows.map((row, index) => createLiveEntryCard(row, index, titleColumn)).join('');
+    const isHistoryTimeline = shouldUseHistoryPagination();
+    listElement.innerHTML = isHistoryTimeline
+        ? createTimelineLiveEntries(rows, titleColumn)
+        : rows.map((row, index) => createLiveEntryCard(row, index, titleColumn)).join('');
     enhanceLiveAvatarImages(listElement);
+}
+
+function createTimelineLiveEntries(rows, titleColumn) {
+    let previousDateKey = '';
+
+    return rows.map((row, index) => {
+        const entryCardHtml = createLiveEntryCard(row, index, titleColumn);
+        const rawTimestamp = getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date']);
+        const dateKey = formatLiveDateKey(rawTimestamp);
+        const shouldShowDateSeparator = Boolean(dateKey) && dateKey !== previousDateKey;
+        previousDateKey = dateKey || previousDateKey;
+
+        if (!shouldShowDateSeparator) {
+            return entryCardHtml;
+        }
+
+        return `${createLiveDateSeparator(rawTimestamp)}${entryCardHtml}`;
+    }).join('');
+}
+
+function createLiveDateSeparator(value) {
+    const label = formatLiveDateLabel(value);
+    if (!label) return '';
+
+    return `
+        <div class="live-chat-date-separator" role="presentation">
+            <span class="live-chat-date-separator__label">${sanitizeHTML(label)}</span>
+        </div>
+    `;
 }
 
 async function maybeLoadOlderLiveHistory() {
@@ -702,9 +739,66 @@ function updateLiveScrollBottomButton() {
     const viewportBottom = window.scrollY + window.innerHeight;
     const remainingDistance = scrollHeight - viewportBottom;
     const hasScrollableContent = scrollHeight > (window.innerHeight + 120);
-    const shouldShowButton = hasScrollableContent && remainingDistance > LIVE_BOTTOM_BUTTON_THRESHOLD_PX;
+    const hasNotice = Boolean(liveState.newMessageNotice);
+    const shouldShowButton = hasScrollableContent && (remainingDistance > LIVE_BOTTOM_BUTTON_THRESHOLD_PX || hasNotice);
 
     button.classList.toggle('hidden', !shouldShowButton);
+}
+
+function updateLiveNewMessageNotice() {
+    const latestRow = liveState.rows[liveState.rows.length - 1];
+    const latestSignature = latestRow ? createLiveHistoryContentSignature(latestRow) : '';
+    const previousSignature = liveState.newMessageNotice?.latestSignature || '';
+    const hasNewLatestMessage = Boolean(latestSignature) && previousSignature && previousSignature !== latestSignature;
+
+    if (isLiveViewportNearBottom()) {
+        liveState.newMessageNotice = latestSignature
+            ? { latestSignature, senderName: '', avatarImageName: '' }
+            : null;
+        syncLiveNewMessageNoticeUI();
+        return;
+    }
+
+    if (!liveState.newMessageNotice && latestSignature) {
+        liveState.newMessageNotice = { latestSignature, senderName: '', avatarImageName: '' };
+    }
+
+    if (hasNewLatestMessage) {
+        const senderName = resolveChoiceStoreName(latestRow) || LIVE_CATEGORIES[liveState.selectedCategoryKey]?.label || 'LIVE';
+        liveState.newMessageNotice = {
+            latestSignature,
+            senderName,
+            avatarImageName: resolveLiveAvatarImageName(senderName)
+        };
+    }
+
+    syncLiveNewMessageNoticeUI();
+}
+
+function syncLiveNewMessageNoticeUI() {
+    const nameElement = document.getElementById('live-scroll-bottom-name');
+    const messageElement = document.getElementById('live-scroll-bottom-message');
+    const avatarElement = document.getElementById('live-scroll-bottom-avatar');
+    const notice = liveState.newMessageNotice;
+
+    if (nameElement) {
+        nameElement.textContent = notice?.senderName || 'LIVE';
+    }
+
+    if (messageElement) {
+        messageElement.textContent = notice?.senderName ? '새 메시지가 도착했습니다' : '최신 메시지로 이동';
+    }
+
+    if (avatarElement) {
+        const avatarImageName = notice?.avatarImageName;
+        if (avatarImageName) {
+            avatarElement.src = getLiveAvatarImagePath(avatarImageName);
+            avatarElement.classList.remove('hidden');
+        } else {
+            avatarElement.classList.add('hidden');
+            avatarElement.removeAttribute('src');
+        }
+    }
 }
 
 function getLiveDocumentScrollHeight() {
@@ -1381,6 +1475,33 @@ function formatLiveEntryTime(value) {
         minute: '2-digit',
         hour12: false
     });
+}
+
+function formatLiveDateKey(value) {
+    const date = parseWaitingDateTime(value);
+    if (!date) return '';
+
+    const formatter = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: 'Asia/Seoul',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+    return formatter.format(date);
+}
+
+function formatLiveDateLabel(value) {
+    const date = parseWaitingDateTime(value);
+    if (!date) return '';
+
+    const formatter = new Intl.DateTimeFormat('ko-KR', {
+        timeZone: 'Asia/Seoul',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'short'
+    });
+    return formatter.format(date);
 }
 
 function formatFieldLabel(key) {
