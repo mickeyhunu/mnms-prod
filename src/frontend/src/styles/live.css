@@ -862,7 +862,7 @@ body[data-page="live"] .header {
     right: 0;
     bottom: 0;
     z-index: 28;
-    width: min(920px, 100vw);
+    width: min(920px, 100%);
     margin: 0 auto;
 }
 
