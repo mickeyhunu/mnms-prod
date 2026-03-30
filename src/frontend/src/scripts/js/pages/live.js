@@ -426,8 +426,7 @@ function bindLiveAdsCarousel(container, totalCount) {
     let pointerDragStartX = 0;
     let pointerDragStartScrollLeft = 0;
     let didPointerMove = false;
-    let lastDragMoveAt = 0;
-    let lastDragMoveX = 0;
+    let pointerDragStartAt = 0;
     let wheelDeltaAccumulator = 0;
     let wheelResetTimerId = null;
 
@@ -475,8 +474,7 @@ function bindLiveAdsCarousel(container, totalCount) {
         didPointerMove = false;
         pointerDragStartX = event.clientX;
         pointerDragStartScrollLeft = viewport.scrollLeft;
-        lastDragMoveAt = event.timeStamp;
-        lastDragMoveX = event.clientX;
+        pointerDragStartAt = event.timeStamp;
         viewport.classList.add('is-dragging');
         viewport.setPointerCapture(event.pointerId);
     };
@@ -487,8 +485,6 @@ function bindLiveAdsCarousel(container, totalCount) {
         if (!didPointerMove && Math.abs(deltaX) > 4) {
             didPointerMove = true;
         }
-        lastDragMoveAt = event.timeStamp;
-        lastDragMoveX = event.clientX;
         viewport.scrollLeft = pointerDragStartScrollLeft - deltaX;
     };
 
@@ -501,15 +497,16 @@ function bindLiveAdsCarousel(container, totalCount) {
         }
 
         const pageWidth = viewport.clientWidth || 1;
-        const dragDistance = pointerDragStartScrollLeft - viewport.scrollLeft;
-        const direction = dragDistance >= 0 ? 1 : -1;
+        const dragDeltaX = event.clientX - pointerDragStartX;
+        const dragDistance = Math.abs(dragDeltaX);
+        const direction = dragDeltaX > 0 ? -1 : (dragDeltaX < 0 ? 1 : 0);
         const dragThreshold = pageWidth * 0.18;
         const currentIndex = getCurrentIndex();
-        const elapsedMs = Math.max(1, event.timeStamp - lastDragMoveAt);
-        const velocityPxPerMs = (lastDragMoveX - event.clientX) / elapsedMs;
+        const elapsedMs = Math.max(1, event.timeStamp - pointerDragStartAt);
+        const velocityPxPerMs = dragDistance / elapsedMs;
         const velocityThreshold = 0.45;
 
-        if (Math.abs(dragDistance) >= dragThreshold || Math.abs(velocityPxPerMs) >= velocityThreshold) {
+        if (direction !== 0 && (dragDistance >= dragThreshold || velocityPxPerMs >= velocityThreshold)) {
             moveToIndex(currentIndex + direction);
             return;
         }
