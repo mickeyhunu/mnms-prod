@@ -409,6 +409,7 @@ function bindLiveAdsCarousel(container, totalCount) {
     const updateIndicator = () => {
         const index = getCurrentIndex();
         indicator.textContent = `${index + 1}/${totalCount}`;
+        indicator.classList.remove('hidden');
     };
 
     const moveToIndex = (nextIndex) => {
@@ -432,8 +433,9 @@ function bindLiveAdsCarousel(container, totalCount) {
         window.requestAnimationFrame(updateIndicator);
     }, { passive: true });
 
+    updateIndicator();
+
     if (totalCount <= 1) {
-        updateIndicator();
         return;
     }
 
