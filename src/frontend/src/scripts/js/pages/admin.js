@@ -10,7 +10,6 @@ let editingUserId = null;
 let editingEntryId = null;
 let editingAdId = null;
 let currentEntryStoreNo = null;
-let currentAdsTabScope = 'BANNER';
 let entryStores = [];
 let adStores = [];
 let isGlobalAdminClickBound = false;
@@ -95,13 +94,8 @@ async function activateAdminTab(tabKey, options = {}) {
     const { updateHistory = true, replaceHistory = true } = options;
     const resolvedTabKey = ADMIN_TABS.includes(tabKey) ? tabKey : 'stats';
     const tabs = document.querySelectorAll('.admin-tab');
-
     tabs.forEach((tab) => {
-        const isSameTab = tab.dataset.tab === resolvedTabKey;
-        const adsScope = String(tab.dataset.adsScope || '').toUpperCase();
-        const isAdsTabMatch = resolvedTabKey === 'ads' && isSameTab && adsScope && adsScope === currentAdsTabScope;
-        const isActive = resolvedTabKey === 'ads' ? isAdsTabMatch : isSameTab;
-        tab.classList.toggle('active', isActive);
+        tab.classList.toggle('active', tab.dataset.tab === resolvedTabKey);
     });
 
     ADMIN_TABS.forEach((key) => {
@@ -170,11 +164,6 @@ function bindCommonEvents() {
     const tabs = document.querySelectorAll('.admin-tab');
     tabs.forEach(tab => {
         tab.addEventListener('click', async () => {
-            const nextAdsScope = String(tab.dataset.adsScope || '').toUpperCase();
-            if (tab.dataset.tab === 'ads' && nextAdsScope) {
-                currentAdsTabScope = nextAdsScope;
-                resetAdEditor();
-            }
             await activateAdminTab(tab.dataset.tab, { updateHistory: true, replaceHistory: false });
         });
     });
@@ -327,15 +316,7 @@ function getAdminFilteredItems(prefix) {
     const queryMatchedItems = items.filter((item) => adminListMatchesQuery(item, query, fields));
     if (prefix !== 'ads') return queryMatchedItems;
 
-    if (currentAdsTabScope === 'BUSINESS') {
-        return queryMatchedItems.filter((item) => String(item?.adType || '').toUpperCase() === 'BUSINESS');
-    }
-
-    if (currentAdsTabScope === 'BANNER') {
-        return queryMatchedItems.filter((item) => String(item?.adType || '').toUpperCase() !== 'BUSINESS');
-    }
-
-    return queryMatchedItems;
+    return queryMatchedItems.filter((item) => String(item?.adType || '').toUpperCase() !== 'BUSINESS');
 }
 
 function getAdminPagination(prefix) {
@@ -1430,7 +1411,7 @@ function fillAdEditorForm(ad = null) {
     document.getElementById('ads-cancel-btn')?.classList.toggle('hidden', !isEdit);
     document.getElementById('ads-form-title').value = ad?.title || '';
     document.getElementById('ads-form-link-url').value = ad?.linkUrl || '';
-    document.getElementById('ads-form-ad-type').value = ad?.adType || (currentAdsTabScope === 'BUSINESS' ? 'BUSINESS' : 'LIVE');
+    document.getElementById('ads-form-ad-type').value = ad?.adType || 'LIVE';
     document.getElementById('ads-form-store-no').value = ad?.storeNo ? String(ad.storeNo) : '';
     document.getElementById('ads-form-image-url').value = ad?.imageUrl || '';
     document.getElementById('ads-form-display-order').value = Number(ad?.displayOrder || 0);

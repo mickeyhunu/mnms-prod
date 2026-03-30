@@ -314,7 +314,7 @@ router.post('/ads', async (req, res, next) => {
     const displayOrder = Number(req.body?.displayOrder) || 0;
     const isActive = Boolean(req.body?.isActive);
 
-    if (!['LIVE', 'BUSINESS', 'TOP'].includes(adType)) {
+    if (!['LIVE', 'TOP'].includes(adType)) {
       return res.status(400).json({ message: '유효하지 않은 광고 유형입니다.' });
     }
 
@@ -355,7 +355,7 @@ router.put('/ads/:id', async (req, res, next) => {
     const displayOrder = Number(req.body?.displayOrder) || 0;
     const isActive = Boolean(req.body?.isActive);
 
-    if (!['LIVE', 'BUSINESS', 'TOP'].includes(adType)) {
+    if (!['LIVE', 'TOP'].includes(adType)) {
       return res.status(400).json({ message: '유효하지 않은 광고 유형입니다.' });
     }
 

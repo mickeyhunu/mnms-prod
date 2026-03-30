@@ -17,6 +17,8 @@ const {
 const { resolveMemberLevel, MEMBER_LEVELS } = require('../utils/memberLevel');
 const { POINT_RULES } = require('../models/pointModel');
 const supportModel = require('../models/supportModel');
+const adminModel = require('../models/adminModel');
+const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
 
 
 function isNicknameChangeLocked(lastChangedAt) {
@@ -378,6 +380,91 @@ async function myPointHistories(req, res, next) {
   }
 }
 
+async function listMyBusinessAds(req, res, next) {
+  try {
+    const ads = await adminModel.listBusinessAdsByOwner(req.user.id);
+    res.json({ content: ads, totalElements: ads.length });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function createMyBusinessAd(req, res, next) {
+  try {
+    const title = String(req.body?.title || '').trim();
+    const imageUrl = String(req.body?.imageUrl || '').trim();
+    const linkUrl = String(req.body?.linkUrl || '').trim();
+    const displayOrder = Number(req.body?.displayOrder) || 0;
+    const isActive = Boolean(req.body?.isActive);
+
+    if (!title || !imageUrl || !linkUrl) {
+      return res.status(400).json({ message: '제목, 이미지 URL, 링크 URL은 필수입니다.' });
+    }
+
+    const insertId = await adminModel.createBusinessAd({
+      ownerUserId: req.user.id,
+      title,
+      imageUrl,
+      linkUrl,
+      displayOrder,
+      isActive
+    });
+    res.status(201).json({ id: insertId });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateMyBusinessAd(req, res, next) {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 광고 ID입니다.' });
+
+    const target = await adminModel.findBusinessAdById(id);
+    if (!target || Number(target.ownerUserId) !== Number(req.user.id)) {
+      return res.status(404).json({ message: '광고를 찾을 수 없습니다.' });
+    }
+
+    const title = String(req.body?.title || '').trim();
+    const imageUrl = String(req.body?.imageUrl || '').trim();
+    const linkUrl = String(req.body?.linkUrl || '').trim();
+    const displayOrder = Number(req.body?.displayOrder) || 0;
+    const isActive = Boolean(req.body?.isActive);
+
+    if (!title || !imageUrl || !linkUrl) {
+      return res.status(400).json({ message: '제목, 이미지 URL, 링크 URL은 필수입니다.' });
+    }
+
+    await adminModel.updateBusinessAd(id, { title, imageUrl, linkUrl, displayOrder, isActive });
+    if (target.imageUrl && target.imageUrl !== imageUrl) {
+      await deleteS3ObjectByUrl(target.imageUrl);
+    }
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function deleteMyBusinessAd(req, res, next) {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 광고 ID입니다.' });
+
+    const target = await adminModel.findBusinessAdById(id);
+    if (!target || Number(target.ownerUserId) !== Number(req.user.id)) {
+      return res.status(404).json({ message: '광고를 찾을 수 없습니다.' });
+    }
+
+    await adminModel.deleteBusinessAd(id);
+    if (target.imageUrl) {
+      await deleteS3ObjectByUrl(target.imageUrl);
+    }
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   myStats,
   myPointHistories,
@@ -387,5 +474,9 @@ module.exports = {
   markMyNotificationsReadAll,
   myReadPosts,
   markMyPostsRead,
-  updateMyProfile
+  updateMyProfile,
+  listMyBusinessAds,
+  createMyBusinessAd,
+  updateMyBusinessAd,
+  deleteMyBusinessAd
 };
