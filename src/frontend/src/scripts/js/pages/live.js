@@ -379,8 +379,8 @@ function renderLiveAds(ads = []) {
             <div class="live-ads__track" role="list">
                 ${bannerItems}
             </div>
-            <p class="live-ads__indicator" aria-live="polite">1/${ads.length}</p>
         </div>
+        <p class="live-ads__indicator" aria-live="polite">1/${ads.length}</p>
     `;
 
     bindLiveAdsCarousel(container, ads.length);
