@@ -12,6 +12,10 @@ let editingAdId = null;
 let currentEntryStoreNo = null;
 let entryStores = [];
 let adStores = [];
+const TOP_AD_PLACEMENT_OPTIONS = [
+    { value: '1', label: '홈 상단' },
+    { value: '2', label: '커뮤니티 상단' }
+];
 let isGlobalAdminClickBound = false;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
@@ -202,6 +206,7 @@ function bindCommonEvents() {
     document.getElementById('ads-save-btn')?.addEventListener('click', saveAd);
     document.getElementById('ads-cancel-btn')?.addEventListener('click', resetAdEditor);
     document.getElementById('ads-image-upload-btn')?.addEventListener('click', uploadAdImage);
+    document.getElementById('ads-form-ad-type')?.addEventListener('change', handleAdTypeChange);
     document.getElementById('entry-store-select')?.addEventListener('change', async (event) => {
         currentEntryStoreNo = Number.parseInt(event.target.value || '', 10);
         resetEntryEditor();
@@ -1388,11 +1393,29 @@ async function ensureAdStoresLoaded() {
 
 function renderAdStoreOptions() {
     const select = document.getElementById('ads-form-store-no');
+    const adType = String(document.getElementById('ads-form-ad-type')?.value || 'LIVE').trim().toUpperCase();
+    const storeLabel = document.querySelector('label[for="ads-form-store-no"]');
     if (!select) return;
 
+    if (adType === 'TOP') {
+        if (storeLabel) storeLabel.textContent = '노출 위치(스크롤 선택)';
+        select.innerHTML = ['<option value="">전체/미지정</option>', ...TOP_AD_PLACEMENT_OPTIONS.map((placement) => (
+            `<option value="${placement.value}">${placement.label}</option>`
+        ))].join('');
+        return;
+    }
+
+    if (storeLabel) storeLabel.textContent = '매장 선택(storeNo, 스크롤 선택)';
     select.innerHTML = ['<option value="">전체/미지정</option>', ...adStores.map((store) => (
         `<option value="${store.storeNo}">#${store.storeNo} ${sanitizeHTML(store.storeName || '')}</option>`
     ))].join('');
+}
+
+function handleAdTypeChange() {
+    const select = document.getElementById('ads-form-store-no');
+    if (!select) return;
+    select.value = '';
+    renderAdStoreOptions();
 }
 
 function setAdHelpMessage(message, color = '#6c757d') {
@@ -1412,6 +1435,7 @@ function fillAdEditorForm(ad = null) {
     document.getElementById('ads-form-title').value = ad?.title || '';
     document.getElementById('ads-form-link-url').value = ad?.linkUrl || '';
     document.getElementById('ads-form-ad-type').value = ad?.adType || 'LIVE';
+    renderAdStoreOptions();
     document.getElementById('ads-form-store-no').value = ad?.storeNo ? String(ad.storeNo) : '';
     document.getElementById('ads-form-image-url').value = ad?.imageUrl || '';
     document.getElementById('ads-form-display-order').value = Number(ad?.displayOrder || 0);
