@@ -418,7 +418,10 @@ function bindLiveAdsCarousel(container, totalCount) {
     const viewport = container.querySelector('.live-ads__viewport');
     const indicator = container.querySelector('.live-ads__indicator');
     if (!viewport || !indicator) return;
-    const wheelStepThresholdPx = 40;
+    const wheelStepThresholdPx = {
+        horizontal: 12,
+        vertical: 40
+    };
     let isPointerDragging = false;
     let pointerDragStartX = 0;
     let pointerDragStartScrollLeft = 0;
@@ -523,7 +526,9 @@ function bindLiveAdsCarousel(container, totalCount) {
     };
 
     const handleWheelStep = (event) => {
-        const dominantDelta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+        const isHorizontalIntent = Math.abs(event.deltaX) >= Math.abs(event.deltaY);
+        const dominantDelta = isHorizontalIntent ? event.deltaX : event.deltaY;
+        const threshold = isHorizontalIntent ? wheelStepThresholdPx.horizontal : wheelStepThresholdPx.vertical;
         if (Math.abs(dominantDelta) < 1) return;
 
         event.preventDefault();
@@ -539,7 +544,7 @@ function bindLiveAdsCarousel(container, totalCount) {
             restartAutoPlay();
         }, 150);
 
-        if (Math.abs(wheelDeltaAccumulator) < wheelStepThresholdPx) {
+        if (Math.abs(wheelDeltaAccumulator) < threshold) {
             return;
         }
 
