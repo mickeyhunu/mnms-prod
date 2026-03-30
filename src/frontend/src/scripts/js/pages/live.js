@@ -425,6 +425,7 @@ function bindLiveAdsCarousel(container, totalCount) {
     let isPointerDragging = false;
     let pointerDragStartX = 0;
     let pointerDragStartScrollLeft = 0;
+    let pointerDragStartIndex = 0;
     let didPointerMove = false;
     let pointerDragStartAt = 0;
     let wheelDeltaAccumulator = 0;
@@ -474,6 +475,7 @@ function bindLiveAdsCarousel(container, totalCount) {
         didPointerMove = false;
         pointerDragStartX = event.clientX;
         pointerDragStartScrollLeft = viewport.scrollLeft;
+        pointerDragStartIndex = getCurrentIndex();
         pointerDragStartAt = event.timeStamp;
         viewport.classList.add('is-dragging');
         viewport.setPointerCapture(event.pointerId);
@@ -501,17 +503,16 @@ function bindLiveAdsCarousel(container, totalCount) {
         const dragDistance = Math.abs(dragDeltaX);
         const direction = dragDeltaX > 0 ? -1 : (dragDeltaX < 0 ? 1 : 0);
         const dragThreshold = pageWidth * 0.18;
-        const currentIndex = getCurrentIndex();
         const elapsedMs = Math.max(1, event.timeStamp - pointerDragStartAt);
         const velocityPxPerMs = dragDistance / elapsedMs;
         const velocityThreshold = 0.45;
 
         if (direction !== 0 && (dragDistance >= dragThreshold || velocityPxPerMs >= velocityThreshold)) {
-            moveToIndex(currentIndex + direction);
+            moveToIndex(pointerDragStartIndex + direction);
             return;
         }
 
-        moveToIndex(currentIndex);
+        moveToIndex(pointerDragStartIndex);
     };
 
     const restartAutoPlay = () => {
