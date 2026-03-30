@@ -422,6 +422,8 @@ function bindLiveAdsCarousel(container, totalCount) {
     let pointerDragStartX = 0;
     let pointerDragStartScrollLeft = 0;
     let didPointerMove = false;
+    let lastDragMoveAt = 0;
+    let lastDragMoveX = 0;
 
     const getCurrentIndex = () => {
         const pageWidth = viewport.clientWidth || 1;
@@ -467,6 +469,8 @@ function bindLiveAdsCarousel(container, totalCount) {
         didPointerMove = false;
         pointerDragStartX = event.clientX;
         pointerDragStartScrollLeft = viewport.scrollLeft;
+        lastDragMoveAt = event.timeStamp;
+        lastDragMoveX = event.clientX;
         viewport.classList.add('is-dragging');
         viewport.setPointerCapture(event.pointerId);
     };
@@ -477,6 +481,8 @@ function bindLiveAdsCarousel(container, totalCount) {
         if (!didPointerMove && Math.abs(deltaX) > 4) {
             didPointerMove = true;
         }
+        lastDragMoveAt = event.timeStamp;
+        lastDragMoveX = event.clientX;
         viewport.scrollLeft = pointerDragStartScrollLeft - deltaX;
     };
 
@@ -490,11 +496,14 @@ function bindLiveAdsCarousel(container, totalCount) {
 
         const pageWidth = viewport.clientWidth || 1;
         const dragDistance = pointerDragStartScrollLeft - viewport.scrollLeft;
-        const direction = dragDistance > 0 ? 1 : -1;
+        const direction = dragDistance >= 0 ? 1 : -1;
         const dragThreshold = pageWidth * 0.18;
         const currentIndex = getCurrentIndex();
+        const elapsedMs = Math.max(1, event.timeStamp - lastDragMoveAt);
+        const velocityPxPerMs = (lastDragMoveX - event.clientX) / elapsedMs;
+        const velocityThreshold = 0.45;
 
-        if (Math.abs(dragDistance) >= dragThreshold) {
+        if (Math.abs(dragDistance) >= dragThreshold || Math.abs(velocityPxPerMs) >= velocityThreshold) {
             moveToIndex(currentIndex + direction);
             return;
         }
