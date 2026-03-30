@@ -390,8 +390,8 @@ function renderLiveAds(ads = []) {
         const title = sanitizeHTML(ad.title || 'LIVE 광고');
         const linkUrl = sanitizeHTML(normalizeExternalUrl(ad.linkUrl));
         return `
-            <a class="live-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer" role="group" aria-roledescription="slide" aria-label="${index + 1} / ${ads.length}: ${title}">
-                <img class="live-ad-banner__image" src="${imageUrl}" alt="${title}" loading="${index === 0 ? 'eager' : 'lazy'}">
+            <a class="live-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer" draggable="false" role="group" aria-roledescription="slide" aria-label="${index + 1} / ${ads.length}: ${title}">
+                <img class="live-ad-banner__image" src="${imageUrl}" alt="${title}" loading="${index === 0 ? 'eager' : 'lazy'}" draggable="false">
             </a>
         `;
     }).join('');
@@ -471,6 +471,7 @@ function bindLiveAdsCarousel(container, totalCount) {
 
     const handlePointerDragStart = (event) => {
         if (event.pointerType === 'mouse' && event.button !== 0) return;
+        event.preventDefault();
         isPointerDragging = true;
         didPointerMove = false;
         pointerDragStartX = event.clientX;
@@ -499,9 +500,9 @@ function bindLiveAdsCarousel(container, totalCount) {
         }
 
         const pageWidth = viewport.clientWidth || 1;
-        const dragDeltaX = event.clientX - pointerDragStartX;
-        const dragDistance = Math.abs(dragDeltaX);
-        const direction = dragDeltaX > 0 ? -1 : (dragDeltaX < 0 ? 1 : 0);
+        const scrollDelta = viewport.scrollLeft - pointerDragStartScrollLeft;
+        const dragDistance = Math.abs(scrollDelta);
+        const direction = scrollDelta > 0 ? 1 : (scrollDelta < 0 ? -1 : 0);
         const dragThreshold = pageWidth * 0.18;
         const elapsedMs = Math.max(1, event.timeStamp - pointerDragStartAt);
         const velocityPxPerMs = dragDistance / elapsedMs;
