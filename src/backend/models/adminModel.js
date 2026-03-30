@@ -171,7 +171,7 @@ async function listAds() {
     `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl,
             ad_type AS adType, store_no AS storeNo, display_order AS displayOrder,
             is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
-     FROM ads
+     FROM banner_ads
      ORDER BY display_order ASC, id DESC`
   );
   return rows;
@@ -180,7 +180,7 @@ async function listAds() {
 async function createAd({ title, imageUrl, linkUrl, adType = 'LIVE', storeNo = null, displayOrder = 0, isActive = true }) {
   const pool = getPool();
   const [result] = await pool.query(
-    `INSERT INTO ads (title, image_url, link_url, ad_type, store_no, display_order, is_active)
+    `INSERT INTO banner_ads (title, image_url, link_url, ad_type, store_no, display_order, is_active)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [title, imageUrl, linkUrl, adType, storeNo, displayOrder, isActive ? 1 : 0]
   );
@@ -191,7 +191,7 @@ async function findAdById(adId) {
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl, ad_type AS adType, store_no AS storeNo
-       FROM ads
+       FROM banner_ads
       WHERE id = ?`,
     [adId]
   );
@@ -201,7 +201,7 @@ async function findAdById(adId) {
 async function updateAd(adId, { title, imageUrl, linkUrl, adType = 'LIVE', storeNo = null, displayOrder = 0, isActive = true }) {
   const pool = getPool();
   await pool.query(
-    `UPDATE ads
+    `UPDATE banner_ads
      SET title = ?, image_url = ?, link_url = ?, ad_type = ?, store_no = ?, display_order = ?, is_active = ?
      WHERE id = ?`,
     [title, imageUrl, linkUrl, adType, storeNo, displayOrder, isActive ? 1 : 0, adId]
@@ -216,7 +216,7 @@ async function listLiveAdsByStore(storeNo) {
   const [rows] = await pool.query(
     `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl,
             ad_type AS adType, store_no AS storeNo, display_order AS displayOrder
-       FROM ads
+       FROM banner_ads
       WHERE is_active = 1
         AND ad_type = 'LIVE'
         AND store_no = ?
@@ -229,7 +229,57 @@ async function listLiveAdsByStore(storeNo) {
 
 async function deleteAd(adId) {
   const pool = getPool();
-  await pool.query('DELETE FROM ads WHERE id = ?', [adId]);
+  await pool.query('DELETE FROM banner_ads WHERE id = ?', [adId]);
+}
+
+async function listBusinessAdsByOwner(ownerUserId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT id, owner_user_id AS ownerUserId, title, image_url AS imageUrl, link_url AS linkUrl,
+            display_order AS displayOrder, is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
+       FROM business_ads
+      WHERE owner_user_id = ?
+      ORDER BY display_order ASC, id DESC`,
+    [ownerUserId]
+  );
+  return rows;
+}
+
+async function createBusinessAd({ ownerUserId, title, imageUrl, linkUrl, displayOrder = 0, isActive = true }) {
+  const pool = getPool();
+  const [result] = await pool.query(
+    `INSERT INTO business_ads (owner_user_id, title, image_url, link_url, display_order, is_active)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [ownerUserId, title, imageUrl, linkUrl, displayOrder, isActive ? 1 : 0]
+  );
+  return result.insertId;
+}
+
+async function findBusinessAdById(adId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT id, owner_user_id AS ownerUserId, title, image_url AS imageUrl, link_url AS linkUrl,
+            display_order AS displayOrder, is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
+       FROM business_ads
+      WHERE id = ?`,
+    [adId]
+  );
+  return rows[0] || null;
+}
+
+async function updateBusinessAd(adId, { title, imageUrl, linkUrl, displayOrder = 0, isActive = true }) {
+  const pool = getPool();
+  await pool.query(
+    `UPDATE business_ads
+     SET title = ?, image_url = ?, link_url = ?, display_order = ?, is_active = ?
+     WHERE id = ?`,
+    [title, imageUrl, linkUrl, displayOrder, isActive ? 1 : 0, adId]
+  );
+}
+
+async function deleteBusinessAd(adId) {
+  const pool = getPool();
+  await pool.query('DELETE FROM business_ads WHERE id = ?', [adId]);
 }
 
 function encodeEntryId({ storeNo, workerName, createdAtKey }) {
@@ -693,6 +743,11 @@ module.exports = {
   getStoreByNo,
   updateAd,
   deleteAd,
+  listBusinessAdsByOwner,
+  createBusinessAd,
+  findBusinessAdById,
+  updateBusinessAd,
+  deleteBusinessAd,
   updateEntry,
   recordSiteVisit,
   getDashboardStats

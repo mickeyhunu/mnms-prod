@@ -12,7 +12,11 @@ const {
   markMyNotificationsReadAll,
   myReadPosts,
   markMyPostsRead,
-  updateMyProfile
+  updateMyProfile,
+  listMyBusinessAds,
+  createMyBusinessAd,
+  updateMyBusinessAd,
+  deleteMyBusinessAd
 } = require('../controllers/userController');
 
 const router = express.Router();
@@ -26,5 +30,9 @@ router.post('/me/notifications/read-all', authMiddleware, markMyNotificationsRea
 router.get('/me/posts/read', authMiddleware, myReadPosts);
 router.post('/me/posts/read', authMiddleware, markMyPostsRead);
 router.put('/me', authMiddleware, updateMyProfile);
+router.get('/me/business-ads', authMiddleware, listMyBusinessAds);
+router.post('/me/business-ads', authMiddleware, createMyBusinessAd);
+router.put('/me/business-ads/:id', authMiddleware, updateMyBusinessAd);
+router.delete('/me/business-ads/:id', authMiddleware, deleteMyBusinessAd);
 
 module.exports = router;
