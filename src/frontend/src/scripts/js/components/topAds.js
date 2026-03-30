@@ -50,9 +50,6 @@ function renderTopAds(container, ads = []) {
                 ${bannerItems}
             </div>
         </div>
-        <button type="button" class="top-ads__nav top-ads__nav--prev" aria-label="이전 광고"></button>
-        <button type="button" class="top-ads__nav top-ads__nav--next" aria-label="다음 광고"></button>
-        <div class="top-ads__pagination" role="tablist" aria-label="상단 광고 페이지"></div>
         <p class="top-ads__indicator" aria-live="polite">1/${ads.length}</p>
     `;
 
@@ -68,10 +65,7 @@ function clearTopAdsAutoPlay() {
 function bindTopAdsCarousel(container, totalCount) {
     const viewport = container.querySelector('.top-ads__viewport');
     const indicator = container.querySelector('.top-ads__indicator');
-    const pagination = container.querySelector('.top-ads__pagination');
-    const prevButton = container.querySelector('.top-ads__nav--prev');
-    const nextButton = container.querySelector('.top-ads__nav--next');
-    if (!viewport || !indicator || !pagination || !prevButton || !nextButton) return;
+    if (!viewport || !indicator) return;
     const wheelStepThresholdPx = {
         horizontal: 12,
         vertical: 40
@@ -93,10 +87,6 @@ function bindTopAdsCarousel(container, totalCount) {
     const updateIndicator = () => {
         const activeIndex = getCurrentIndex();
         indicator.textContent = `${activeIndex + 1}/${totalCount}`;
-        pagination.querySelectorAll('.top-ads__bullet').forEach((bullet, index) => {
-            bullet.classList.toggle('is-active', index === activeIndex);
-            bullet.setAttribute('aria-selected', index === activeIndex ? 'true' : 'false');
-        });
     };
 
     const moveToIndex = (nextIndex) => {
@@ -116,29 +106,13 @@ function bindTopAdsCarousel(container, totalCount) {
         moveToIndex(next);
     };
 
-    pagination.innerHTML = Array.from({ length: totalCount }, (_, index) => `
-        <button
-            type="button"
-            class="top-ads__bullet${index === 0 ? ' is-active' : ''}"
-            role="tab"
-            aria-selected="${index === 0 ? 'true' : 'false'}"
-            aria-label="${index + 1}번 광고로 이동"
-            data-index="${index}"
-        >${index + 1}</button>
-    `).join('');
-
     viewport.addEventListener('scroll', () => {
         window.requestAnimationFrame(updateIndicator);
     }, { passive: true });
 
     updateIndicator();
 
-    if (totalCount <= 1) {
-        prevButton.classList.add('hidden');
-        nextButton.classList.add('hidden');
-        pagination.classList.add('hidden');
-        return;
-    }
+    if (totalCount <= 1) return;
 
     const handlePointerDragStart = (event) => {
         if (event.pointerType === 'mouse' && event.button !== 0) return;
@@ -252,26 +226,6 @@ function bindTopAdsCarousel(container, totalCount) {
         event.stopPropagation();
         didPointerMove = false;
     }, true);
-    prevButton.addEventListener('click', () => {
-        clearTopAdsAutoPlay();
-        moveByStep(-1);
-        restartAutoPlay();
-    });
-    nextButton.addEventListener('click', () => {
-        clearTopAdsAutoPlay();
-        moveByStep(1);
-        restartAutoPlay();
-    });
-    pagination.addEventListener('click', (event) => {
-        const bullet = event.target.closest('.top-ads__bullet');
-        if (!bullet) return;
-        const nextIndex = Number.parseInt(bullet.dataset.index, 10);
-        if (!Number.isInteger(nextIndex)) return;
-        clearTopAdsAutoPlay();
-        moveToIndex(nextIndex);
-        restartAutoPlay();
-    });
-
     restartAutoPlay();
 }
 
