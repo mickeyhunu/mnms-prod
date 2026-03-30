@@ -390,8 +390,8 @@ function renderLiveAds(ads = []) {
         const title = sanitizeHTML(ad.title || 'LIVE 광고');
         const linkUrl = sanitizeHTML(normalizeExternalUrl(ad.linkUrl));
         return `
-            <a class="live-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer" role="group" aria-roledescription="slide" aria-label="${index + 1} / ${ads.length}: ${title}">
-                <img class="live-ad-banner__image" src="${imageUrl}" alt="${title}" loading="${index === 0 ? 'eager' : 'lazy'}">
+            <a class="live-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer" draggable="false" role="group" aria-roledescription="slide" aria-label="${index + 1} / ${ads.length}: ${title}">
+                <img class="live-ad-banner__image" src="${imageUrl}" alt="${title}" loading="${index === 0 ? 'eager' : 'lazy'}" draggable="false">
             </a>
         `;
     }).join('');
@@ -425,9 +425,9 @@ function bindLiveAdsCarousel(container, totalCount) {
     let isPointerDragging = false;
     let pointerDragStartX = 0;
     let pointerDragStartScrollLeft = 0;
+    let pointerDragStartIndex = 0;
     let didPointerMove = false;
-    let lastDragMoveAt = 0;
-    let lastDragMoveX = 0;
+    let pointerDragStartAt = 0;
     let wheelDeltaAccumulator = 0;
     let wheelResetTimerId = null;
 
@@ -471,12 +471,13 @@ function bindLiveAdsCarousel(container, totalCount) {
 
     const handlePointerDragStart = (event) => {
         if (event.pointerType === 'mouse' && event.button !== 0) return;
+        event.preventDefault();
         isPointerDragging = true;
         didPointerMove = false;
         pointerDragStartX = event.clientX;
         pointerDragStartScrollLeft = viewport.scrollLeft;
-        lastDragMoveAt = event.timeStamp;
-        lastDragMoveX = event.clientX;
+        pointerDragStartIndex = getCurrentIndex();
+        pointerDragStartAt = event.timeStamp;
         viewport.classList.add('is-dragging');
         viewport.setPointerCapture(event.pointerId);
     };
@@ -487,8 +488,6 @@ function bindLiveAdsCarousel(container, totalCount) {
         if (!didPointerMove && Math.abs(deltaX) > 4) {
             didPointerMove = true;
         }
-        lastDragMoveAt = event.timeStamp;
-        lastDragMoveX = event.clientX;
         viewport.scrollLeft = pointerDragStartScrollLeft - deltaX;
     };
 
@@ -501,20 +500,20 @@ function bindLiveAdsCarousel(container, totalCount) {
         }
 
         const pageWidth = viewport.clientWidth || 1;
-        const dragDistance = pointerDragStartScrollLeft - viewport.scrollLeft;
-        const direction = dragDistance >= 0 ? 1 : -1;
+        const scrollDelta = viewport.scrollLeft - pointerDragStartScrollLeft;
+        const dragDistance = Math.abs(scrollDelta);
+        const direction = scrollDelta > 0 ? 1 : (scrollDelta < 0 ? -1 : 0);
         const dragThreshold = pageWidth * 0.18;
-        const currentIndex = getCurrentIndex();
-        const elapsedMs = Math.max(1, event.timeStamp - lastDragMoveAt);
-        const velocityPxPerMs = (lastDragMoveX - event.clientX) / elapsedMs;
+        const elapsedMs = Math.max(1, event.timeStamp - pointerDragStartAt);
+        const velocityPxPerMs = dragDistance / elapsedMs;
         const velocityThreshold = 0.45;
 
-        if (Math.abs(dragDistance) >= dragThreshold || Math.abs(velocityPxPerMs) >= velocityThreshold) {
-            moveToIndex(currentIndex + direction);
+        if (direction !== 0 && (dragDistance >= dragThreshold || velocityPxPerMs >= velocityThreshold)) {
+            moveToIndex(pointerDragStartIndex + direction);
             return;
         }
 
-        moveToIndex(currentIndex);
+        moveToIndex(pointerDragStartIndex);
     };
 
     const restartAutoPlay = () => {
