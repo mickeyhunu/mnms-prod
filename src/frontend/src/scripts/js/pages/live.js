@@ -385,13 +385,15 @@ function renderLiveAds(ads = []) {
 
     document.body?.classList.add('live-has-ads');
     container.classList.remove('hidden');
+    primeLiveAdsNetworkHints(ads);
     const bannerItems = ads.map((ad, index) => {
         const imageUrl = sanitizeHTML(ad.imageUrl || '');
         const title = sanitizeHTML(ad.title || 'LIVE 광고');
         const linkUrl = sanitizeHTML(normalizeExternalUrl(ad.linkUrl));
+        const fetchPriority = index === 0 ? 'high' : 'low';
         return `
             <a class="live-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer" draggable="false" role="group" aria-roledescription="slide" aria-label="${index + 1} / ${ads.length}: ${title}">
-                <img class="live-ad-banner__image" src="${imageUrl}" alt="${title}" loading="${index === 0 ? 'eager' : 'lazy'}" draggable="false">
+                <img class="live-ad-banner__image" src="${imageUrl}" alt="${title}" loading="${index === 0 ? 'eager' : 'lazy'}" fetchpriority="${fetchPriority}" decoding="async" draggable="false">
             </a>
         `;
     }).join('');
@@ -406,6 +408,43 @@ function renderLiveAds(ads = []) {
     `;
 
     bindLiveAdsCarousel(container, ads.length);
+}
+
+function primeLiveAdsNetworkHints(ads = []) {
+    if (!Array.isArray(ads) || !ads.length) return;
+
+    const firstImageUrl = `${ads[0]?.imageUrl || ''}`.trim();
+    if (!firstImageUrl) return;
+
+    try {
+        const firstImageOrigin = new URL(firstImageUrl).origin;
+        const preconnectSelector = `link[data-live-ads-preconnect="${firstImageOrigin}"]`;
+        if (!document.head.querySelector(preconnectSelector)) {
+            const preconnectLink = document.createElement('link');
+            preconnectLink.rel = 'preconnect';
+            preconnectLink.href = firstImageOrigin;
+            preconnectLink.crossOrigin = 'anonymous';
+            preconnectLink.dataset.liveAdsPreconnect = firstImageOrigin;
+            document.head.appendChild(preconnectLink);
+        }
+    } catch (error) {
+        console.warn('LIVE ads preconnect skipped:', error);
+    }
+
+    const preloadSelector = 'link[data-live-ads-preload="hero"]';
+    const existingPreload = document.head.querySelector(preloadSelector);
+    if (existingPreload?.href === firstImageUrl) return;
+    if (existingPreload) {
+        existingPreload.remove();
+    }
+
+    const preloadLink = document.createElement('link');
+    preloadLink.rel = 'preload';
+    preloadLink.as = 'image';
+    preloadLink.href = firstImageUrl;
+    preloadLink.fetchPriority = 'high';
+    preloadLink.dataset.liveAdsPreload = 'hero';
+    document.head.appendChild(preloadLink);
 }
 
 function clearLiveAdsAutoPlay() {
