@@ -58,6 +58,7 @@ const liveState = {
     hasUnseenLatestCard: false,
     ads: [],
     adsRequestId: 0,
+    adsLoadedStoreNo: null,
     adAutoPlayTimerId: null
 };
 
@@ -204,7 +205,7 @@ function startLiveAutoRefresh() {
 
 async function refreshLiveData({ showLoading = false, syncToLatest = false } = {}) {
     await loadLiveFilters();
-    await loadLiveAds();
+    await ensureLiveAdsLoadedForSelectedStore();
     await loadLiveEntries({ showLoading, syncToLatest });
 }
 
@@ -325,11 +326,31 @@ function applyLiveEntriesResponse() {
     }
 }
 
+
+async function ensureLiveAdsLoadedForSelectedStore() {
+    const storeNo = Number.parseInt(liveState.selectedStoreNo, 10);
+    if (!Number.isInteger(storeNo) || storeNo <= 0) {
+        if (liveState.adsLoadedStoreNo !== null) {
+            liveState.adsLoadedStoreNo = null;
+            liveState.ads = [];
+            renderLiveAds([]);
+        }
+        return;
+    }
+
+    if (liveState.adsLoadedStoreNo === storeNo) {
+        return;
+    }
+
+    await loadLiveAds();
+}
+
 async function loadLiveAds() {
     const requestId = ++liveState.adsRequestId;
     const storeNo = Number.parseInt(liveState.selectedStoreNo, 10);
 
     if (!Number.isInteger(storeNo) || storeNo <= 0) {
+        liveState.adsLoadedStoreNo = null;
         liveState.ads = [];
         renderLiveAds([]);
         return;
@@ -339,6 +360,7 @@ async function loadLiveAds() {
         const response = await APIClient.get('/live/ads', { storeNo });
         if (requestId !== liveState.adsRequestId) return;
         liveState.ads = Array.isArray(response?.content) ? response.content : [];
+        liveState.adsLoadedStoreNo = storeNo;
         renderLiveAds(liveState.ads);
     } catch (error) {
         if (requestId !== liveState.adsRequestId) return;
