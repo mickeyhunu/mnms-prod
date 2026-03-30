@@ -891,6 +891,8 @@ body[data-page="live"] .header {
 
 .live-ads__viewport.is-dragging {
     cursor: grabbing;
+    scroll-snap-type: none;
+    scroll-behavior: auto;
 }
 
 .live-ads__track {
