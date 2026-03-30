@@ -36,7 +36,8 @@ export const adminTemplate = `
                 <button class="admin-tab" data-tab="users">회원 관리</button>
                 <button class="admin-tab" data-tab="posts">게시글 관리</button>
                 <button class="admin-tab" data-tab="comments">댓글 관리</button>
-                <button class="admin-tab" data-tab="ads">광고 관리</button>
+                <button class="admin-tab" data-tab="ads" data-ads-scope="BANNER">배너광고관리</button>
+                <button class="admin-tab" data-tab="ads" data-ads-scope="BUSINESS">업체 광고 관리</button>
                 <button class="admin-tab" data-tab="entries">엔트리 관리</button>
                 <button class="admin-tab" data-tab="support">공지/FAQ 관리</button>
                 <button class="admin-tab" data-tab="inquiries">1:1 문의 관리</button>
