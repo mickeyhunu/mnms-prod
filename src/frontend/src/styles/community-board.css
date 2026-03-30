@@ -174,6 +174,59 @@
     padding: 35px;
 }
 
+.top-ads {
+    width: 100%;
+    margin: 0 auto 14px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f2f2f2;
+}
+
+.top-ads__viewport {
+    position: relative;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.top-ads__viewport::-webkit-scrollbar {
+    display: none;
+}
+
+.top-ads__track {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 100%;
+}
+
+.top-ad-banner {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 6;
+    scroll-snap-align: start;
+}
+
+.top-ad-banner__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: #f4f4f4;
+}
+
+.top-ads__indicator {
+    margin: 0;
+    padding: 6px 10px;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 700;
+    color: #4a4a4a;
+    background: rgba(255, 255, 255, 0.92);
+}
+
 
 .service-category-grid {
     display: grid;

@@ -227,6 +227,31 @@ async function listLiveAdsByStore(storeNo) {
   return rows;
 }
 
+async function listTopAdsByPlacement(placement = 'HOME') {
+  const pool = getPool();
+  const normalizedPlacement = String(placement || 'HOME').trim().toUpperCase();
+  const placementStoreNoMap = {
+    HOME: 1,
+    COMMUNITY: 2
+  };
+  const placementStoreNo = placementStoreNoMap[normalizedPlacement];
+
+  if (!placementStoreNo) return [];
+
+  const [rows] = await pool.query(
+    `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl,
+            ad_type AS adType, store_no AS storeNo, display_order AS displayOrder
+       FROM banner_ads
+      WHERE is_active = 1
+        AND ad_type = 'TOP'
+        AND store_no = ?
+      ORDER BY display_order ASC, id DESC`,
+    [placementStoreNo]
+  );
+
+  return rows;
+}
+
 async function deleteAd(adId) {
   const pool = getPool();
   await pool.query('DELETE FROM banner_ads WHERE id = ?', [adId]);
@@ -738,6 +763,7 @@ module.exports = {
   deleteUser,
   listAds,
   listLiveAdsByStore,
+  listTopAdsByPlacement,
   createAd,
   findAdById,
   getStoreByNo,
