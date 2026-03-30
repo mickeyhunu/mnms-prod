@@ -42,6 +42,7 @@ const communityTemplate = `
                     <a href="create-post.html" class="btn btn-primary btn-sm">글쓰기</a>
                 </div>
             </header>
+            <section class="top-ads hidden" id="top-ads-container" data-top-ad-placement="COMMUNITY" aria-label="커뮤니티 상단 광고"></section>
 
             <div class="error-banner hidden" id="error-banner">
                 <span id="error-message"></span>
@@ -93,6 +94,7 @@ const communityTemplate = `
     <script src="scripts/js/api/authAPI.js"></script>
     <script src="scripts/js/api/postAPI.js"></script>
     <script src="scripts/js/components/postCard.js"></script>
+    <script src="scripts/js/components/topAds.js"></script>
     <script src="scripts/js/components/header.js"></script>
     <script src="scripts/js/pages/index.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>
@@ -101,5 +103,5 @@ const communityTemplate = `
 export const communityPageConfig = createPageConfig({
   template: communityTemplate,
   styles: ['styles/common.css', 'styles/layout.css', 'styles/components.css', 'styles/community-board.css'],
-  scripts: ['scripts/js/utils/constants.js', 'scripts/js/utils/helpers.js', 'scripts/js/utils/auth.js', 'scripts/js/utils/notifications.js', 'scripts/js/api/apiClient.js', 'scripts/js/api/authAPI.js', 'scripts/js/api/postAPI.js', 'scripts/js/components/postCard.js', 'scripts/js/components/header.js', 'scripts/js/pages/index.js', 'scripts/js/components/footerNav.js']
+  scripts: ['scripts/js/utils/constants.js', 'scripts/js/utils/helpers.js', 'scripts/js/utils/auth.js', 'scripts/js/utils/notifications.js', 'scripts/js/api/apiClient.js', 'scripts/js/api/authAPI.js', 'scripts/js/api/postAPI.js', 'scripts/js/components/postCard.js', 'scripts/js/components/topAds.js', 'scripts/js/components/header.js', 'scripts/js/pages/index.js', 'scripts/js/components/footerNav.js']
 });

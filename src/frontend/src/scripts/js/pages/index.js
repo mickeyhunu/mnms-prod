@@ -29,6 +29,12 @@ async function initIndexPage() {
     updateBestPostsVisibility();
     initCommonEvents();
     syncViewedPostsFromServer();
+    if (typeof initTopAds === 'function') {
+        initTopAds({
+            containerId: 'top-ads-container',
+            placement: 'COMMUNITY'
+        });
+    }
 
     const postsPromise = loadPosts(0);
     loadBestPosts().catch(() => {
