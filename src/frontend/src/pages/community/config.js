@@ -21,6 +21,8 @@ const communityTemplate = `
         </div>
     </header>
 
+    <section class="top-ads hidden" id="top-ads-container" data-top-ad-placement="COMMUNITY" aria-label="커뮤니티 상단 광고"></section>
+
     <main class="main-content">
         <div class="container community-container">
             <header class="community-section-header">
@@ -42,7 +44,6 @@ const communityTemplate = `
                     <a href="create-post.html" class="btn btn-primary btn-sm">글쓰기</a>
                 </div>
             </header>
-            <section class="top-ads hidden" id="top-ads-container" data-top-ad-placement="COMMUNITY" aria-label="커뮤니티 상단 광고"></section>
 
             <div class="error-banner hidden" id="error-banner">
                 <span id="error-message"></span>
