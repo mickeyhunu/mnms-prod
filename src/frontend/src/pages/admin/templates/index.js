@@ -36,8 +36,7 @@ export const adminTemplate = `
                 <button class="admin-tab" data-tab="users">회원 관리</button>
                 <button class="admin-tab" data-tab="posts">게시글 관리</button>
                 <button class="admin-tab" data-tab="comments">댓글 관리</button>
-                <button class="admin-tab" data-tab="ads" data-ads-scope="BANNER">배너광고관리</button>
-                <button class="admin-tab" data-tab="ads" data-ads-scope="BUSINESS">업체 광고 관리</button>
+                <button class="admin-tab" data-tab="ads">배너광고관리</button>
                 <button class="admin-tab" data-tab="entries">엔트리 관리</button>
                 <button class="admin-tab" data-tab="support">공지/FAQ 관리</button>
                 <button class="admin-tab" data-tab="inquiries">1:1 문의 관리</button>
@@ -199,7 +198,6 @@ export const adminTemplate = `
                                 <label class="form-label" for="ads-form-ad-type">광고 유형(스크롤 선택)</label>
                                 <select id="ads-form-ad-type" class="form-control" size="3">
                                     <option value="LIVE">LIVE 광고</option>
-                                    <option value="BUSINESS">업체 광고</option>
                                     <option value="TOP">상단 광고</option>
                                 </select>
                             </div>
