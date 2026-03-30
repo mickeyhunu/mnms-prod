@@ -66,6 +66,18 @@ function bindTopAdsCarousel(container, totalCount) {
     const viewport = container.querySelector('.top-ads__viewport');
     const indicator = container.querySelector('.top-ads__indicator');
     if (!viewport || !indicator) return;
+    const wheelStepThresholdPx = {
+        horizontal: 12,
+        vertical: 40
+    };
+    let isPointerDragging = false;
+    let pointerDragStartX = 0;
+    let pointerDragStartScrollLeft = 0;
+    let pointerDragStartIndex = 0;
+    let didPointerMove = false;
+    let pointerDragStartAt = 0;
+    let wheelDeltaAccumulator = 0;
+    let wheelResetTimerId = null;
 
     const getCurrentIndex = () => {
         const pageWidth = viewport.clientWidth || 1;
@@ -103,6 +115,53 @@ function bindTopAdsCarousel(container, totalCount) {
         return;
     }
 
+    const handlePointerDragStart = (event) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        event.preventDefault();
+        isPointerDragging = true;
+        didPointerMove = false;
+        pointerDragStartX = event.clientX;
+        pointerDragStartScrollLeft = viewport.scrollLeft;
+        pointerDragStartIndex = getCurrentIndex();
+        pointerDragStartAt = event.timeStamp;
+        viewport.classList.add('is-dragging');
+        viewport.setPointerCapture(event.pointerId);
+    };
+
+    const handlePointerDragMove = (event) => {
+        if (!isPointerDragging) return;
+        const deltaX = event.clientX - pointerDragStartX;
+        if (!didPointerMove && Math.abs(deltaX) > 4) {
+            didPointerMove = true;
+        }
+        viewport.scrollLeft = pointerDragStartScrollLeft - deltaX;
+    };
+
+    const handlePointerDragEnd = (event) => {
+        if (!isPointerDragging) return;
+        isPointerDragging = false;
+        viewport.classList.remove('is-dragging');
+        if (viewport.hasPointerCapture(event.pointerId)) {
+            viewport.releasePointerCapture(event.pointerId);
+        }
+
+        const pageWidth = viewport.clientWidth || 1;
+        const scrollDelta = viewport.scrollLeft - pointerDragStartScrollLeft;
+        const dragDistance = Math.abs(scrollDelta);
+        const direction = scrollDelta > 0 ? 1 : (scrollDelta < 0 ? -1 : 0);
+        const dragThreshold = pageWidth * 0.18;
+        const elapsedMs = Math.max(1, event.timeStamp - pointerDragStartAt);
+        const velocityPxPerMs = dragDistance / elapsedMs;
+        const velocityThreshold = 0.45;
+
+        if (direction !== 0 && (dragDistance >= dragThreshold || velocityPxPerMs >= velocityThreshold)) {
+            moveToIndex(pointerDragStartIndex + direction);
+            return;
+        }
+
+        moveToIndex(pointerDragStartIndex);
+    };
+
     const restartAutoPlay = () => {
         clearTopAdsAutoPlay();
         topAdsState.autoPlayTimerId = window.setInterval(() => {
@@ -111,10 +170,63 @@ function bindTopAdsCarousel(container, totalCount) {
         }, TOP_AD_AUTOPLAY_INTERVAL_MS);
     };
 
+    const handleWheelStep = (event) => {
+        const isHorizontalIntent = Math.abs(event.deltaX) >= Math.abs(event.deltaY);
+        const dominantDelta = isHorizontalIntent ? event.deltaX : event.deltaY;
+        const threshold = isHorizontalIntent ? wheelStepThresholdPx.horizontal : wheelStepThresholdPx.vertical;
+        if (Math.abs(dominantDelta) < 1) return;
+
+        event.preventDefault();
+        clearTopAdsAutoPlay();
+        wheelDeltaAccumulator += dominantDelta;
+
+        if (wheelResetTimerId) {
+            window.clearTimeout(wheelResetTimerId);
+        }
+
+        wheelResetTimerId = window.setTimeout(() => {
+            wheelDeltaAccumulator = 0;
+            restartAutoPlay();
+        }, 150);
+
+        if (Math.abs(wheelDeltaAccumulator) < threshold) {
+            return;
+        }
+
+        const direction = wheelDeltaAccumulator > 0 ? 1 : -1;
+        wheelDeltaAccumulator = 0;
+        moveByStep(direction);
+    };
+
+    viewport.addEventListener('pointerdown', (event) => {
+        clearTopAdsAutoPlay();
+        handlePointerDragStart(event);
+    });
+    viewport.addEventListener('pointermove', handlePointerDragMove);
+    viewport.addEventListener('pointerup', (event) => {
+        handlePointerDragEnd(event);
+        restartAutoPlay();
+    });
+    viewport.addEventListener('pointercancel', (event) => {
+        handlePointerDragEnd(event);
+        restartAutoPlay();
+    });
+    viewport.addEventListener('pointerleave', (event) => {
+        if (!isPointerDragging) return;
+        handlePointerDragEnd(event);
+        restartAutoPlay();
+    });
     viewport.addEventListener('mouseenter', clearTopAdsAutoPlay);
     viewport.addEventListener('mouseleave', restartAutoPlay);
     viewport.addEventListener('focusin', clearTopAdsAutoPlay);
     viewport.addEventListener('focusout', restartAutoPlay);
+    viewport.addEventListener('wheel', handleWheelStep, { passive: false });
+    viewport.addEventListener('click', (event) => {
+        if (!didPointerMove) return;
+        event.preventDefault();
+        event.stopPropagation();
+        didPointerMove = false;
+    }, true);
 
     restartAutoPlay();
 }
