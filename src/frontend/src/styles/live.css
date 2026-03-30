@@ -57,7 +57,7 @@ body[data-page="live"] .header {
 .live-scroll-bottom-button {
     position: fixed;
     right: max(24px, calc(((100vw - 920px) / 2) + 24px));
-    bottom: calc(var(--live-ads-height) + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--live-ads-height) + 15px + env(safe-area-inset-bottom, 0px));
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -115,7 +115,7 @@ body[data-page="live"] .header {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: calc(var(--live-ads-height) + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--live-ads-height) + 15px + env(safe-area-inset-bottom, 0px));
     display: flex;
     align-items: center;
     gap: 8px;
@@ -395,7 +395,7 @@ body[data-page="live"] .header {
 
     .live-scroll-bottom-button {
         right: 24px;
-        bottom: calc(var(--live-ads-height) + env(safe-area-inset-bottom, 0px));
+        bottom: calc(var(--live-ads-height) + 15px + env(safe-area-inset-bottom, 0px));
         width: 54px;
         height: 54px;
     }
