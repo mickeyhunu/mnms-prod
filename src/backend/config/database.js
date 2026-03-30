@@ -776,7 +776,7 @@ async function initDatabase() {
     await pool.query('ALTER TABLE support_inquiries ADD COLUMN attachment_urls LONGTEXT NULL AFTER content');
   }
 
-  const [adminRows] = await pool.query('SELECT id FROM users WHERE email = ?', ['admin@company.com']);
+  const [adminRows] = await pool.query('SELECT id FROM users WHERE email = ?', ['admin@admin.com']);
   if (!adminRows.length) {
     await pool.query(
       'INSERT INTO users (email, password, nickname, role, member_type) VALUES (?, ?, ?, ?, ?)',
