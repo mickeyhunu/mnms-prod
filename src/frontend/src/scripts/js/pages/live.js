@@ -418,12 +418,15 @@ function bindLiveAdsCarousel(container, totalCount) {
     const viewport = container.querySelector('.live-ads__viewport');
     const indicator = container.querySelector('.live-ads__indicator');
     if (!viewport || !indicator) return;
+    const wheelStepThresholdPx = 40;
     let isPointerDragging = false;
     let pointerDragStartX = 0;
     let pointerDragStartScrollLeft = 0;
     let didPointerMove = false;
     let lastDragMoveAt = 0;
     let lastDragMoveX = 0;
+    let wheelDeltaAccumulator = 0;
+    let wheelResetTimerId = null;
 
     const getCurrentIndex = () => {
         const pageWidth = viewport.clientWidth || 1;
@@ -519,6 +522,32 @@ function bindLiveAdsCarousel(container, totalCount) {
         }, LIVE_AD_AUTOPLAY_INTERVAL_MS);
     };
 
+    const handleWheelStep = (event) => {
+        const dominantDelta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+        if (Math.abs(dominantDelta) < 1) return;
+
+        event.preventDefault();
+        clearLiveAdsAutoPlay();
+        wheelDeltaAccumulator += dominantDelta;
+
+        if (wheelResetTimerId) {
+            window.clearTimeout(wheelResetTimerId);
+        }
+
+        wheelResetTimerId = window.setTimeout(() => {
+            wheelDeltaAccumulator = 0;
+            restartAutoPlay();
+        }, 150);
+
+        if (Math.abs(wheelDeltaAccumulator) < wheelStepThresholdPx) {
+            return;
+        }
+
+        const direction = wheelDeltaAccumulator > 0 ? 1 : -1;
+        wheelDeltaAccumulator = 0;
+        moveByStep(direction);
+    };
+
     viewport.addEventListener('pointerdown', (event) => {
         clearLiveAdsAutoPlay();
         handlePointerDragStart(event);
@@ -541,6 +570,7 @@ function bindLiveAdsCarousel(container, totalCount) {
     viewport.addEventListener('mouseleave', restartAutoPlay);
     viewport.addEventListener('focusin', clearLiveAdsAutoPlay);
     viewport.addEventListener('focusout', restartAutoPlay);
+    viewport.addEventListener('wheel', handleWheelStep, { passive: false });
     viewport.addEventListener('click', (event) => {
         if (!didPointerMove) return;
         event.preventDefault();
