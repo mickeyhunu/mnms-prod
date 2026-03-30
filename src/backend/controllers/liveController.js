@@ -78,8 +78,27 @@ async function getLiveAds(req, res, next) {
   }
 }
 
+async function getTopAds(req, res, next) {
+  try {
+    const placement = String(req.query.placement || 'HOME').trim().toUpperCase();
+    if (!['HOME', 'COMMUNITY'].includes(placement)) {
+      return res.status(400).json({ message: '유효한 상단 광고 위치값이 필요합니다.' });
+    }
+
+    const ads = await adminModel.listTopAdsByPlacement(placement);
+    return res.json({
+      placement,
+      content: ads,
+      totalElements: ads.length
+    });
+  } catch (error) {
+    return handleLiveError(error, next, res);
+  }
+}
+
 module.exports = {
   getLiveFilters,
   getLiveEntries,
-  getLiveAds
+  getLiveAds,
+  getTopAds
 };

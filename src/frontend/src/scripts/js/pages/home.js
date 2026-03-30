@@ -4,6 +4,12 @@
 function initHomePage() {
     Auth.updateHeaderUI();
     Auth.bindLogoutButton();
+    if (typeof initTopAds === 'function') {
+        initTopAds({
+            containerId: 'top-ads-container',
+            placement: 'HOME'
+        });
+    }
 }
 
 if (document.readyState === 'loading') {
