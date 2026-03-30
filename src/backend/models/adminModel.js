@@ -172,7 +172,7 @@ async function listAds() {
             ad_type AS adType, store_no AS storeNo, display_order AS displayOrder,
             is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
      FROM banner_ads
-     ORDER BY display_order ASC, id DESC`
+     ORDER BY store_no IS NULL ASC, store_no ASC, display_order ASC, id DESC`
   );
   return rows;
 }
