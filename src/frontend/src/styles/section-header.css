@@ -7,8 +7,8 @@ header.community-section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #0f766e;
-    color: #f0fdfa;
+    background: #171a1f;
+    color: #f8fafc;
 }
 
 header.community-section-header .community-header-left,
@@ -53,10 +53,10 @@ header.community-section-header .community-board-name {
 header.community-section-header .board-menu-toggle {
     width: 36px;
     height: 36px;
-    border: 1px solid #7fd1c8;
+    border: 1px solid #5d6472;
     border-radius: 6px;
-    background: #0e8b80;
-    color: #f0fdfa;
+    background: #242933;
+    color: #f8fafc;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -67,7 +67,7 @@ header.community-section-header .board-menu-toggle {
 }
 
 header.community-section-header .board-menu-toggle:hover {
-    background: #0b7268;
+    background: #313848;
 }
 
 header.community-section-header .board-tabs {
@@ -80,18 +80,18 @@ header.community-section-header .board-tabs {
     gap: 6px;
     padding: 10px;
     border-radius: 8px;
-    background: #0f5f59;
-    border: 1px solid #1b8b81;
-    box-shadow: 0 10px 20px rgba(7, 43, 41, 0.32);
+    background: #1f2430;
+    border: 1px solid #3a4150;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
     z-index: 20;
 }
 
 header.community-section-header .board-tab {
     width: 100%;
     text-align: left;
-    border: 1px solid #2e8c84;
-    background: #14776f;
-    color: #d9faf5;
+    border: 1px solid #41495a;
+    background: #2a3040;
+    color: #dbe2f1;
     border-radius: 6px;
     padding: 8px 10px;
     font-size: 13px;
@@ -100,11 +100,11 @@ header.community-section-header .board-tab {
 }
 
 header.community-section-header .board-tab:hover {
-    background: #115f59;
+    background: #353d4f;
 }
 
 header.community-section-header .board-tab.active {
-    border-color: #b4f3ec;
-    background: #0b4e49;
+    border-color: #8f9bc1;
+    background: #3c455a;
     color: #ffffff;
 }

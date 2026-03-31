@@ -50,7 +50,7 @@
 }
 
 .post-content {
-    color: var(--text-subtle);
+    color: #4b5563;
     line-height: 1.6;
     margin-bottom: 15px;
 }
@@ -129,7 +129,7 @@
 
 .like-btn {
     background: none;
-    border: 1px solid var(--border-color);
+    border: 1px solid #ddd;
     border-radius: 20px;
     padding: 8px 16px;
     cursor: pointer;
@@ -141,13 +141,13 @@
 }
 
 .like-btn:hover {
-    background: var(--surface-muted);
+    background: #ffffff;
 }
 
 .like-btn.liked {
-    background: #fff1f4;
-    border-color: var(--danger-color);
-    color: var(--danger-color);
+    background: #fff5f5;
+    border-color: #dc3545;
+    color: #dc3545;
 }
 
 .bookmark-btn {
@@ -161,7 +161,7 @@
 }
 
 .bookmark-btn:hover {
-    background-color: var(--surface-muted);
+    background-color: #f8f9fa;
 }
 
 .bookmark-btn.bookmarked {
@@ -170,7 +170,7 @@
 
 .comment-item {
     padding: 16px 0;
-    border-bottom: 1px solid #e6eeeb;
+    border-bottom: 1px solid #f1f3f5;
 }
 
 .comment-item:last-child {
@@ -191,12 +191,12 @@
 
 .comment-date {
     font-size: 14px;
-    color: var(--text-subtle);
+    color: #6c757d;
     margin-left: 0px;
 }
 
 .comment-content {
-    color: var(--text-subtle);
+    color: #495057;
     line-height: 1.6;
     margin-bottom: 8px;
 }
@@ -208,20 +208,20 @@
 
 .reply-item {
     margin-left: 40px;
-    border-left: 3px solid #dce8e3;
+    border-left: 3px solid #e9ecef;
     padding-left: 16px;
-    background: var(--surface-muted);
+    background: #ffffff;
     border-radius: 0 4px 4px 0;
 }
 
 .empty-state {
     text-align: center;
     padding: 60px 20px;
-    color: var(--text-subtle);
+    color: #6c757d;
 }
 
 .empty-state h3 {
-    color: var(--text-color);
+    color: #495057;
     margin-bottom: 8px;
 }
 
