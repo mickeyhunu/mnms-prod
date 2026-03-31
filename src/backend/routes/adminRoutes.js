@@ -4,6 +4,7 @@
 const express = require('express');
 const postModel = require('../models/postModel');
 const adminModel = require('../models/adminModel');
+const liveModel = require('../models/liveModel');
 const supportController = require('../controllers/supportController');
 const { findByNicknameExceptUser } = require('../models/userModel');
 const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddleware');
@@ -496,6 +497,24 @@ router.delete('/entries/:entryId', async (req, res, next) => {
     res.json({ success: true });
   } catch (error) {
     next(error);
+  }
+});
+
+router.delete('/live/chojoong/:id', async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ message: '유효하지 않은 초중 메시지 ID입니다.' });
+    }
+
+    const deletedRows = await liveModel.deleteLiveHistoryRow('chojoong', id);
+    if (!deletedRows) {
+      return res.status(404).json({ message: '삭제할 초중 메시지를 찾을 수 없습니다.' });
+    }
+
+    return res.json({ success: true, id });
+  } catch (error) {
+    return next(error);
   }
 });
 

@@ -59,7 +59,8 @@ const liveState = {
     ads: [],
     adsRequestId: 0,
     adsLoadedStoreNo: null,
-    adAutoPlayTimerId: null
+    adAutoPlayTimerId: null,
+    canDeleteChojoong: false
 };
 
 function initializeScrollableFilter(element) {
@@ -93,6 +94,7 @@ function syncScrollableFilterState(element) {
 async function initLivePage() {
     removeLivePageSharedChrome();
     Auth.updateHeaderUI();
+    liveState.canDeleteChojoong = Boolean(Auth.getUser()?.isAdmin);
 
     if (typeof initHeader === 'function') {
         initHeader();
@@ -118,6 +120,7 @@ function bindLiveEvents() {
     const backBtn = document.getElementById('back-btn');
     const storeFilter = document.getElementById('live-store-filter');
     const categoryFilter = document.getElementById('live-category-filter');
+    const listElement = document.getElementById('live-entry-list');
     const scrollBottomButton = document.getElementById('live-scroll-bottom-button');
     const scrollMessageButton = document.getElementById('live-scroll-message-button');
 
@@ -158,6 +161,29 @@ function bindLiveEvents() {
         renderCategoryButtons(liveState.categories);
         resetLiveEntriesState();
         await loadLiveEntries({ showLoading: true, syncToLatest: true });
+    });
+
+    listElement?.addEventListener('click', async (event) => {
+        const deleteButton = event.target.closest('[data-live-chojoong-delete]');
+        if (!deleteButton || !liveState.canDeleteChojoong) return;
+
+        const targetId = Number.parseInt(deleteButton.dataset.liveChojoongDelete || '', 10);
+        if (!Number.isInteger(targetId) || targetId <= 0) return;
+
+        if (!window.confirm('이 초중 메시지를 삭제할까요? 삭제 후 복구할 수 없습니다.')) {
+            return;
+        }
+
+        deleteButton.disabled = true;
+
+        try {
+            await APIClient.delete(`/admin/live/chojoong/${targetId}`);
+            await loadLiveEntries({ showLoading: false, syncToLatest: false });
+        } catch (error) {
+            alert(error.message || '초중 메시지 삭제에 실패했습니다.');
+        } finally {
+            deleteButton.disabled = false;
+        }
     });
 
     document.addEventListener('visibilitychange', () => {
@@ -1220,13 +1246,22 @@ function createChoiceLiveEntryCard(row, index, title, choiceMessage = '') {
     const createdAt = getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date']);
     const timestamp = formatLiveEntryTime(createdAt);
 
+    const rowId = Number.parseInt(getRowValueByCandidates(row, ['id']), 10);
+    const actionHtml = liveState.canDeleteChojoong
+        && liveState.selectedCategoryKey === 'chojoong'
+        && Number.isInteger(rowId)
+        && rowId > 0
+        ? `<button type="button" class="live-chat-card__delete-button" data-live-chojoong-delete="${rowId}">삭제</button>`
+        : '';
+
     return createLiveChatCard({
         index,
         title: resolveChoiceCardTitle(storeName, title),
         message: formatFieldValue(choiceMessage),
         timestamp,
         rawTimestamp: createdAt,
-        avatarLabel: getChoiceAvatarLabel(storeName, index)
+        avatarLabel: getChoiceAvatarLabel(storeName, index),
+        actionHtml
     });
 }
 
@@ -1439,7 +1474,8 @@ function createLiveChatCard({
     avatarLabel = '',
     cardClassName = '',
     bubbleClassName = '',
-    hideHeader = false
+    hideHeader = false,
+    actionHtml = ''
 }) {
     const normalizedAvatarLabel = avatarLabel || getChoiceAvatarLabel(title, index);
     const normalizedDetails = Array.isArray(details) ? details : [];
@@ -1466,6 +1502,7 @@ function createLiveChatCard({
                     <div class="live-chat-card__header-copy">
                         <h3 class="live-chat-card__title">${sanitizeHTML(title)}</h3>
                     </div>
+                    ${actionHtml || ''}
                 </div>
             `}
             <div class="live-chat-card__body">

@@ -351,6 +351,20 @@ async function getLiveFilters() {
   return { stores, categories };
 }
 
+async function deleteLiveHistoryRow(categoryKey, rowId) {
+  const pool = await getChatbotPool();
+  const category = getCategoryConfig(categoryKey);
+  const normalizedRowId = Number.parseInt(rowId, 10);
+
+  if (!Number.isInteger(normalizedRowId) || normalizedRowId <= 0) {
+    throw new Error('유효하지 않은 LIVE 이력 ID입니다.');
+  }
+
+  const safeTableName = ensureTableName(category.tableName);
+  const [result] = await pool.query(`DELETE FROM \`${safeTableName}\` WHERE id = ?`, [normalizedRowId]);
+  return Number(result?.affectedRows || 0);
+}
+
 module.exports = {
   CHOICE_MESSAGE_CANDIDATES,
   LIVE_CATEGORY_MAP,
@@ -370,5 +384,6 @@ module.exports = {
   getStoreByNo,
   listStores,
   normalizeLimit,
-  normalizeOffset
+  normalizeOffset,
+  deleteLiveHistoryRow
 };
