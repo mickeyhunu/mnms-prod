@@ -9,6 +9,50 @@ let selectedMessageRecipient = null;
 let replyingTo = null;
 let activeCommentActionId = null;
 let shareSheetOpen = false;
+const POST_DETAIL_DEFAULT_DESCRIPTION = '미드나잇 맨즈 커뮤니티 게시글 상세 페이지입니다.';
+
+function upsertHeadMeta(selector, attributes) {
+    let element = document.head.querySelector(selector);
+    if (!element) {
+        element = document.createElement('meta');
+        document.head.appendChild(element);
+    }
+    Object.entries(attributes).forEach(([key, value]) => {
+        element.setAttribute(key, value);
+    });
+}
+
+function upsertCanonical(href) {
+    let canonical = document.head.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', href);
+}
+
+function updatePostSeo(post, boardName) {
+    const safeTitle = String(post?.title || '').trim();
+    const safeContent = String(post?.content || '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 140);
+    const pageTitle = safeTitle ? `${safeTitle} | 미드나잇 맨즈` : '게시글 상세 | 미드나잇 맨즈';
+    const description = safeContent || `${boardName || '커뮤니티'} 게시글 상세 내용을 확인하세요.`;
+    const canonicalUrl = new URL('/post-detail', window.location.origin);
+    if (postId) canonicalUrl.searchParams.set('id', String(postId));
+
+    document.title = pageTitle;
+    upsertHeadMeta('meta[name="description"]', { name: 'description', content: description || POST_DETAIL_DEFAULT_DESCRIPTION });
+    upsertHeadMeta('meta[property="og:title"]', { property: 'og:title', content: pageTitle });
+    upsertHeadMeta('meta[property="og:description"]', { property: 'og:description', content: description || POST_DETAIL_DEFAULT_DESCRIPTION });
+    upsertHeadMeta('meta[property="og:type"]', { property: 'og:type', content: 'article' });
+    upsertHeadMeta('meta[property="og:url"]', { property: 'og:url', content: canonicalUrl.toString() });
+    upsertHeadMeta('meta[name="twitter:title"]', { name: 'twitter:title', content: pageTitle });
+    upsertHeadMeta('meta[name="twitter:description"]', { name: 'twitter:description', content: description || POST_DETAIL_DEFAULT_DESCRIPTION });
+    upsertCanonical(canonicalUrl.toString());
+}
 
 function initPostDetailPage() {
     if (typeof Auth !== 'undefined') {
@@ -377,6 +421,7 @@ function renderPostDetail(post) {
     }
     const boardNameEl = document.getElementById('post-board-name');
     if (boardNameEl) boardNameEl.textContent = boardNameMap[boardType] || '게시판';
+    updatePostSeo(post, boardNameMap[boardType]);
 
     if (authorElement) authorElement.textContent = postAuthorLabel;
     if (dateElement) dateElement.textContent = formatDateTime(post.createdAt) || '';
