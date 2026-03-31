@@ -517,6 +517,23 @@ body[data-page="live"] .header {
     gap: 14px;
 }
 
+.live-chat-card__delete-button {
+    margin-left: auto;
+    border: 1px solid rgba(248, 113, 113, 0.45);
+    background: rgba(127, 29, 29, 0.26);
+    color: #fecaca;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.live-chat-card__delete-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
 .live-chat-card__avatar {
     width: 40px;
     height: 40px;
