@@ -213,7 +213,7 @@ a:hover {
     gap: 16px;
     background: #eeeeee;
     border-radius: var(--radius-md);
-    padding: 14px 18px;
+    padding: 14px 50px;
     margin: 0 auto 20px;
     max-width: 420px;
 }
@@ -221,7 +221,7 @@ a:hover {
 .age-notice-icon {
     width: 76px;
     height: 76px;
-    border: 6px solid #e70063;
+    border: 6px solid #ff0000;
     border-radius: 50%;
     background: #ffffff;
     color: #333333;
@@ -231,7 +231,6 @@ a:hover {
     flex-shrink: 0;
     font-size: 54px;
     line-height: 1;
-    font-style: italic;
     font-family: Georgia, "Times New Roman", serif;
 }
 
@@ -249,14 +248,14 @@ a:hover {
 }
 
 .age-notice-text .age-notice-warning {
-    color: #e70063;
+    color: #ff0000;
     font-weight: 700;
 }
 
 @media (max-width: 768px) {
     .age-notice-banner {
         gap: 12px;
-        padding: 12px;
+        padding: 50px;
     }
 
     .age-notice-icon {
