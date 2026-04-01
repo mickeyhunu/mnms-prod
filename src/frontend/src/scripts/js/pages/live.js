@@ -841,7 +841,7 @@ function getLiveCategoryDeniedReason(categoryKey) {
         if (level < 3) {
             return '엔트리는 빠꼼이 등급부터 열람할 수 있습니다.';
         }
-        return '엔트리는 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.';
+        return '엔트리는 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.\n\n룸박사 등급이 되면 제한이 해제됩니다.';
     }
 
     return '';
