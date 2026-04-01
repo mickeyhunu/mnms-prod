@@ -60,7 +60,20 @@ const liveState = {
     adsRequestId: 0,
     adsLoadedStoreNo: null,
     adAutoPlayTimerId: null,
-    canDeleteChojoong: false
+    canDeleteChojoong: false,
+    accessRules: {
+        level: 0,
+        levelLabel: '',
+        todayPostCount: 0,
+        todayCommentCount: 0,
+        hasDailyActivity: false,
+        access: {
+            choice: true,
+            chojoong: false,
+            waiting: false,
+            entry: false
+        }
+    }
 };
 
 function initializeScrollableFilter(element) {
@@ -95,6 +108,7 @@ async function initLivePage() {
     removeLivePageSharedChrome();
     Auth.updateHeaderUI();
     liveState.canDeleteChojoong = Boolean(Auth.getUser()?.isAdmin);
+    await loadLiveAccessRules();
 
     if (typeof initHeader === 'function') {
         initHeader();
@@ -112,6 +126,52 @@ async function initLivePage() {
             showLiveError(error.message || 'LIVE 데이터를 불러오지 못했습니다.');
         }
     }
+}
+
+function getDefaultLiveAccessRules() {
+    const level = Number(Auth.getUser()?.level || 0);
+    return {
+        level,
+        levelLabel: String(Auth.getUser()?.levelLabel || ''),
+        todayPostCount: 0,
+        todayCommentCount: 0,
+        hasDailyActivity: false,
+        access: {
+            choice: true,
+            chojoong: level >= 3,
+            waiting: level >= 3,
+            entry: level >= 4
+        }
+    };
+}
+
+async function loadLiveAccessRules() {
+    liveState.accessRules = getDefaultLiveAccessRules();
+
+    if (!Auth.isAuthenticated()) {
+        return liveState.accessRules;
+    }
+
+    try {
+        const response = await APIClient.get('/users/me/live-access');
+        liveState.accessRules = {
+            level: Number(response?.level || 0),
+            levelLabel: String(response?.levelLabel || ''),
+            todayPostCount: Number(response?.todayPostCount || 0),
+            todayCommentCount: Number(response?.todayCommentCount || 0),
+            hasDailyActivity: Boolean(response?.hasDailyActivity),
+            access: {
+                choice: Boolean(response?.access?.choice ?? true),
+                chojoong: Boolean(response?.access?.chojoong),
+                waiting: Boolean(response?.access?.waiting),
+                entry: Boolean(response?.access?.entry)
+            }
+        };
+    } catch (error) {
+        console.error('LIVE access rules load error:', error);
+    }
+
+    return liveState.accessRules;
 }
 
 function bindLiveEvents() {
@@ -153,6 +213,10 @@ function bindLiveEvents() {
     categoryFilter?.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-category-option]');
         if (!button) return;
+        if (button.dataset.locked === 'true') {
+            showLiveAccessConditionMessage(button.dataset.deniedReason || '열람 조건을 충족해야 합니다.');
+            return;
+        }
 
         const nextCategoryKey = button.dataset.categoryOption || 'choice';
         if (liveState.selectedCategoryKey === nextCategoryKey) return;
@@ -230,6 +294,7 @@ function startLiveAutoRefresh() {
 }
 
 async function refreshLiveData({ showLoading = false, syncToLatest = false } = {}) {
+    await loadLiveAccessRules();
     await loadLiveFilters();
     await ensureLiveAdsLoadedForSelectedStore();
     await loadLiveEntries({ showLoading, syncToLatest });
@@ -748,8 +813,60 @@ function renderCategoryButtons(categories) {
             totalCount: Number(matched?.totalCount || 0)
         };
     });
-    categoryFilter.innerHTML = normalizedCategories.map((category) => `<button type="button" class="area-filter__button area-filter__button--district ${liveState.selectedCategoryKey === category.key ? 'is-active' : ''}" data-category-option="${category.key}">${sanitizeHTML(category.label)} </button>`).join('');
+    const selectedHasAccess = Boolean(liveState.accessRules?.access?.[liveState.selectedCategoryKey] ?? true);
+    if (!selectedHasAccess) {
+        liveState.selectedCategoryKey = 'choice';
+    }
+
+    categoryFilter.innerHTML = normalizedCategories.map((category) => {
+        const hasAccess = Boolean(liveState.accessRules?.access?.[category.key] ?? true);
+        const deniedReason = getLiveCategoryDeniedReason(category.key);
+        return `<button type="button" class="area-filter__button area-filter__button--district ${liveState.selectedCategoryKey === category.key ? 'is-active' : ''} ${hasAccess ? '' : 'is-locked'}" data-category-option="${category.key}" data-locked="${hasAccess ? 'false' : 'true'}" aria-disabled="${hasAccess ? 'false' : 'true'}" ${!hasAccess && deniedReason ? `data-denied-reason="${sanitizeHTML(deniedReason)}"` : ''}>${sanitizeHTML(category.label)}</button>`;
+    }).join('');
     syncScrollableFilterState(categoryFilter);
+}
+
+function getLiveCategoryDeniedReason(categoryKey) {
+    const level = Number(liveState.accessRules?.level || 0);
+
+    if (categoryKey === 'chojoong' || categoryKey === 'waiting') {
+        if (level >= 3) return '';
+        return '초중/룸웨이팅은 빠꼼이 미만 등급의 경우 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.';
+    }
+
+    if (categoryKey === 'entry') {
+        if (level >= 4) {
+            return '';
+        }
+        if (level < 3) {
+            return '엔트리는 빠꼼이 등급부터 열람할 수 있습니다.';
+        }
+        return '엔트리는 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.';
+    }
+
+    return '';
+}
+
+function showLiveAccessConditionMessage(message) {
+    const normalizedMessage = String(message || '').trim();
+    if (!normalizedMessage) return;
+
+    const existing = document.querySelector('.live-access-condition-toast');
+    existing?.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'live-access-condition-toast';
+    toast.textContent = normalizedMessage;
+    document.body.appendChild(toast);
+
+    window.setTimeout(() => {
+        toast.classList.add('is-visible');
+    }, 10);
+
+    window.setTimeout(() => {
+        toast.classList.remove('is-visible');
+        window.setTimeout(() => toast.remove(), 240);
+    }, 2200);
 }
 
 function renderLiveSummary(response = null) {
