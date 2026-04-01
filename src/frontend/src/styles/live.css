@@ -377,6 +377,10 @@ body[data-page="live"] .header {
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
 }
 
+.area-filter__button.is-locked {
+    opacity: 0.58;
+}
+
 .area-filter__button--district {
     display: inline-flex;
     align-items: center;
@@ -871,6 +875,33 @@ body[data-page="live"] .header {
 .live-feedback--error {
     border-color: rgba(248, 113, 113, 0.26);
     color: #fecaca;
+}
+
+.live-access-condition-toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.96);
+    z-index: 1200;
+    min-width: 240px;
+    max-width: min(92vw, 420px);
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: rgba(10, 14, 26, 0.92);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    pointer-events: none;
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+}
+
+.live-access-condition-toast.is-visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
 }
 
 .live-ads-wrap {

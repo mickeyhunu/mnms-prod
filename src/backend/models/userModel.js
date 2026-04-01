@@ -85,6 +85,29 @@ async function getUserActivityStats(userId) {
   return rows[0] || {};
 }
 
+
+async function getUserDailyActivityStats(userId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT
+        (SELECT COUNT(*)
+           FROM posts p
+          WHERE p.user_id = ?
+            AND p.is_deleted = 0
+            AND p.created_at >= CURDATE()
+            AND p.created_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY)) AS todayPostCount,
+        (SELECT COUNT(*)
+           FROM comments c
+          WHERE c.user_id = ?
+            AND c.is_deleted = 0
+            AND c.created_at >= CURDATE()
+            AND c.created_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY)) AS todayCommentCount`,
+    [userId, userId]
+  );
+
+  return rows[0] || {};
+}
+
 async function getUserPointHistories(userId, { limit = 20, page = 1 } = {}) {
   const pool = getPool();
   const safeLimit = Math.max(1, Math.min(100, Number(limit) || 20));
@@ -383,6 +406,7 @@ module.exports = {
   recordUserLoginHistory,
   getUserLoginHistories,
   getUserActivityStats,
+  getUserDailyActivityStats,
   getUserPointHistories,
   getUserActivityDetails,
   getUserNotifications,

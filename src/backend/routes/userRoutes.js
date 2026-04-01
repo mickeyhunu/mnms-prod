@@ -7,6 +7,7 @@ const {
   myStats,
   myPointHistories,
   myActivity,
+  myLiveAccessStatus,
   myNotifications,
   markMyNotificationsRead,
   markMyNotificationsReadAll,
@@ -24,6 +25,7 @@ const router = express.Router();
 router.get('/me/stats', authMiddleware, myStats);
 router.get('/me/points', authMiddleware, myPointHistories);
 router.get('/me/activity', authMiddleware, myActivity);
+router.get('/me/live-access', authMiddleware, myLiveAccessStatus);
 router.get('/me/notifications', authMiddleware, myNotifications);
 router.post('/me/notifications/read', authMiddleware, markMyNotificationsRead);
 router.post('/me/notifications/read-all', authMiddleware, markMyNotificationsReadAll);
