@@ -2,7 +2,6 @@
 .header {
     --header-height: var(--app-header-offset);
     background: #ffffff;
-    border-bottom: 1px solid var(--border-color);
     padding: 0;
     position: fixed;
     top: 0;
@@ -44,9 +43,14 @@
     margin-left: 10px;
     font-size: clamp(18px, 1.7vw, 24px);
     font-weight: 800;
-    color: var(--primary-color);
+    color: gold;
     letter-spacing: -0.4px;
     white-space: nowrap;
+      text-shadow:
+    -0.5px -0.5px 0 black,
+     0.5px -0.5px 0 black,
+    -0.5px  0.5px 0 black,
+     0.5px  0.5px 0 black;
 }
 
 .nav,
