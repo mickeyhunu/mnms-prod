@@ -574,6 +574,22 @@ const pageRegistry = {
                 </div>
             </div>
         </div>
+
+        <footer class="company-footer-slot" aria-label="마이페이지 하단 정보">
+            <div class="company-footer-top">
+                <strong class="company-footer-logo">MIDNIGHT MENS</strong>
+            </div>
+            <div class="company-footer-links-row">
+                <a href="/board/terms">이용약관</a>
+                <span class="footer-divider" aria-hidden="true"></span>
+                <a href="/board/terms">개인정보처리방침</a>
+                <span class="footer-divider" aria-hidden="true"></span>
+                <button type="button" class="mypage-footer-logout" data-bound-logout="true">로그아웃</button>
+            </div>
+            <p class="company-footer-notice">미드나잇 맨즈는 커뮤니티 서비스 제공 플랫폼입니다.</p>
+            <p class="company-footer-notice">상호명 : MN컴퍼니 | 사업자번호 : 355-18-02505 | 대표자명 : 이상훈 | 대표번호 : 010-6567-4519</p>
+            <p class="company-footer-copyright">© MIDNIGHT MENS. ALL RIGHTS RESERVED.</p>
+        </footer>
     </main>
 
     <script src="scripts/js/utils/constants.js"></script>
@@ -584,7 +600,7 @@ const pageRegistry = {
     <script src="scripts/js/api/authAPI.js"></script>
     <script src="scripts/js/pages/login.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/validation.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/login.js", "scripts/js/components/footerNav.js"]
   },
   'my-page': {
@@ -953,6 +969,22 @@ const pageRegistry = {
                 </div>
             </div>
         </div>
+
+        <footer class="company-footer-slot" aria-label="마이페이지 하단 정보">
+            <div class="company-footer-top">
+                <strong class="company-footer-logo">MIDNIGHT MENS</strong>
+            </div>
+            <div class="company-footer-links-row">
+                <a href="/board/terms">이용약관</a>
+                <span class="footer-divider" aria-hidden="true"></span>
+                <a href="/board/terms">개인정보처리방침</a>
+                <span class="footer-divider" aria-hidden="true"></span>
+                <button type="button" class="mypage-footer-logout" data-bound-logout="true">로그아웃</button>
+            </div>
+            <p class="company-footer-notice">미드나잇 맨즈는 커뮤니티 서비스 제공 플랫폼입니다.</p>
+            <p class="company-footer-notice">상호명 : MN컴퍼니 | 사업자번호 : 355-18-02505 | 대표자명 : 이상훈 | 대표번호 : 010-6567-4519</p>
+            <p class="company-footer-copyright">© MIDNIGHT MENS. ALL RIGHTS RESERVED.</p>
+        </footer>
     </main>
 
     <script src="scripts/js/utils/constants.js"></script>
@@ -963,7 +995,7 @@ const pageRegistry = {
     <script src="scripts/js/api/authAPI.js"></script>
     <script src="scripts/js/pages/register.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/validation.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/register.js", "scripts/js/components/footerNav.js"]
   },
   'terms-policy': {
