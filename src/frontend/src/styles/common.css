@@ -1,6 +1,6 @@
 /* 파일 역할: common 화면 스타일(레이아웃/컴포넌트/반응형 등)을 정의하는 스타일시트 파일. */
 :root {
-    --app-header-offset: 80px;
+    --app-header-offset: 79px;
     --community-section-header-height: 56px;
     --bg-color: #ffffff;
     --surface-color: #ffffff;
@@ -96,10 +96,6 @@ a:hover {
 
 .btn.btn-danger:hover {
     background: var(--danger-color-hover);
-}
-
-.btn.btn-outline {
-    background: transparent;
 }
 
 .btn.btn-outline-primary {
@@ -565,7 +561,6 @@ body,
 .bookmarks-page .error-banner {
     border-radius: 0;
     box-shadow: none;
-    border: 1px solid var(--border-color);
 }
 
 .card:hover,
