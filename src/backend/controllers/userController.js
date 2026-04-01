@@ -104,7 +104,7 @@ const POINT_ACTION_LABELS = {
   REGISTER: '회원가입',
   LOGIN_DAILY: '출석 체크',
   CREATE_POST: '게시글 작성',
-  CREATE_REVIEW_BONUS: '후기 게시글 보너스',
+  CREATE_REVIEW_BONUS: '후기 게시글 보너스 (+20P)',
   CREATE_COMMENT: '댓글 작성',
   LIKE_POST: '좋아요 누름',
   RECEIVE_POST_LIKE: '내 게시글 좋아요 받음',
