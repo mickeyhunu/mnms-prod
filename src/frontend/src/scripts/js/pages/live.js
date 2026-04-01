@@ -831,7 +831,7 @@ function getLiveCategoryDeniedReason(categoryKey) {
 
     if (categoryKey === 'chojoong' || categoryKey === 'waiting') {
         if (level >= 3) return '';
-        return '초중/룸웨이팅은 빠꼼이 미만 등급의 경우 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.';
+        return '초중/룸웨이팅은 빠꼼이 미만 등급의 경우 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.\n\n빠꼼이 등급이 되면 제한이 해제됩니다.';
     }
 
     if (categoryKey === 'entry') {
@@ -851,22 +851,27 @@ function showLiveAccessConditionMessage(message) {
     const normalizedMessage = String(message || '').trim();
     if (!normalizedMessage) return;
 
-    const existing = document.querySelector('.live-access-condition-toast');
+    const existing = document.querySelector('.live-access-condition-box');
     existing?.remove();
 
-    const toast = document.createElement('div');
-    toast.className = 'live-access-condition-toast';
-    toast.textContent = normalizedMessage;
-    document.body.appendChild(toast);
+    const box = document.createElement('div');
+    box.className = 'live-access-condition-box';
+    box.innerHTML = `
+        <button type="button" class="live-access-condition-box__close" aria-label="안내창 닫기">×</button>
+        <p class="live-access-condition-box__message">${sanitizeHTML(normalizedMessage).replace(/\n/g, '<br>')}</p>
+        <div class="live-access-condition-box__actions">
+            <a class="live-access-condition-box__link" href="/community">커뮤니티 바로가기</a>
+            <a class="live-access-condition-box__link" href="/my-page/points">회원등급 바로가기</a>
+        </div>
+    `;
+    document.body.appendChild(box);
 
     window.setTimeout(() => {
-        toast.classList.add('is-visible');
+        box.classList.add('is-visible');
     }, 10);
-
-    window.setTimeout(() => {
-        toast.classList.remove('is-visible');
-        window.setTimeout(() => toast.remove(), 240);
-    }, 2200);
+    box.querySelector('.live-access-condition-box__close')?.addEventListener('click', () => {
+        box.remove();
+    });
 }
 
 function renderLiveSummary(response = null) {

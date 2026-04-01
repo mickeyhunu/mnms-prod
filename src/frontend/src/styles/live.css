@@ -877,7 +877,7 @@ body[data-page="live"] .header {
     color: #fecaca;
 }
 
-.live-access-condition-toast {
+.live-access-condition-box {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -885,23 +885,60 @@ body[data-page="live"] .header {
     z-index: 1200;
     min-width: 240px;
     max-width: min(92vw, 420px);
-    padding: 14px 16px;
+    padding: 18px 16px 16px;
     border-radius: 14px;
     background: rgba(10, 14, 26, 0.92);
     color: #fff;
     font-size: 14px;
     font-weight: 600;
     line-height: 1.45;
-    text-align: center;
+    text-align: left;
     opacity: 0;
     transition: opacity 0.22s ease, transform 0.22s ease;
-    pointer-events: none;
+    pointer-events: auto;
     box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
 }
 
-.live-access-condition-toast.is-visible {
+.live-access-condition-box.is-visible {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+}
+
+.live-access-condition-box__close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    border: 0;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.live-access-condition-box__message {
+    margin: 0;
+    padding-right: 18px;
+    white-space: normal;
+}
+
+.live-access-condition-box__actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.live-access-condition-box__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    color: #e2e8f0;
+    font-size: 12px;
+    text-decoration: none;
 }
 
 .live-ads-wrap {
