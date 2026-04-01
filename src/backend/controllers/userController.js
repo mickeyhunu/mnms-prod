@@ -3,6 +3,7 @@
  */
 const {
   getUserActivityStats,
+  getUserDailyActivityStats,
   getUserPointHistories,
   getUserActivityDetails,
   getUserNotifications,
@@ -202,6 +203,35 @@ async function myActivity(req, res, next) {
         likeCount: Number(post.likeCount || 0),
         commentCount: Number(post.commentCount || 0)
       }))
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+
+async function myLiveAccessStatus(req, res, next) {
+  try {
+    const dailyStats = await getUserDailyActivityStats(req.user.id);
+    const todayPostCount = Number(dailyStats.todayPostCount || 0);
+    const todayCommentCount = Number(dailyStats.todayCommentCount || 0);
+    const levelInfo = resolveMemberLevel(req.user.total_points || 0);
+    const isPpakkomLevel = Number(levelInfo.level || 0) >= 3;
+    const isRoomDoctorLevel = Number(levelInfo.level || 0) >= 4;
+    const hasDailyActivity = todayPostCount >= 1 || todayCommentCount >= 5;
+
+    res.json({
+      level: Number(levelInfo.level || 0),
+      levelLabel: levelInfo.label,
+      todayPostCount,
+      todayCommentCount,
+      hasDailyActivity,
+      access: {
+        choice: true,
+        chojoong: isPpakkomLevel || hasDailyActivity,
+        waiting: isPpakkomLevel || hasDailyActivity,
+        entry: isRoomDoctorLevel || (isPpakkomLevel && hasDailyActivity)
+      }
     });
   } catch (error) {
     next(error);
@@ -469,6 +499,7 @@ module.exports = {
   myStats,
   myPointHistories,
   myActivity,
+  myLiveAccessStatus,
   myNotifications,
   markMyNotificationsRead,
   markMyNotificationsReadAll,
