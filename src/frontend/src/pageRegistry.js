@@ -474,9 +474,9 @@ const pageRegistry = {
         </div>
     </header>
 
-    <section class="top-ads hidden" id="top-ads-container" data-top-ad-placement="HOME" aria-label="홈 상단 광고"></section>
-
+    
     <main class="main-content">
+        <div class="container"><section class="top-ads hidden" id="top-ads-container" data-top-ad-placement="HOME" aria-label="홈 상단 광고"></section></div>
         <div class="container home-service-wrap">
             <section class="service-category-grid" aria-label="홈 카테고리">
                 <a class="service-item" href="live.html">
