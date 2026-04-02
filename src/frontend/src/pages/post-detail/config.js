@@ -146,6 +146,7 @@ const postDetailTemplate = `
     </main>
 
     <script src="scripts/js/utils/constants.js"></script>
+    <script src="scripts/js/libs/koProfanityFilter.js"></script>
     <script src="scripts/js/utils/helpers.js"></script>
     <script src="scripts/js/utils/auth.js"></script>
     <script src="scripts/js/api/apiClient.js"></script>
@@ -159,5 +160,5 @@ const postDetailTemplate = `
 export const postDetailPageConfig = createPageConfig({
   template: postDetailTemplate,
   styles: ['styles/common.css', 'styles/layout.css', 'styles/components.css', 'styles/postDetail.css'],
-  scripts: ['scripts/js/utils/constants.js', 'scripts/js/utils/helpers.js', 'scripts/js/utils/auth.js', 'scripts/js/api/apiClient.js', 'scripts/js/api/authAPI.js', 'scripts/js/api/postAPI.js', 'scripts/js/api/commentAPI.js', 'scripts/js/pages/postDetail.js', 'scripts/js/components/footerNav.js']
+  scripts: ['scripts/js/utils/constants.js', 'scripts/js/libs/koProfanityFilter.js', 'scripts/js/utils/helpers.js', 'scripts/js/utils/auth.js', 'scripts/js/api/apiClient.js', 'scripts/js/api/authAPI.js', 'scripts/js/api/postAPI.js', 'scripts/js/api/commentAPI.js', 'scripts/js/pages/postDetail.js', 'scripts/js/components/footerNav.js']
 });

@@ -130,7 +130,44 @@ const notificationStyles = `
 if (!document.querySelector('#notification-styles')) {
    const styleSheet = document.createElement('style');
    styleSheet.id = 'notification-styles';
-   styleSheet.textContent = notificationStyles;
+   styleSheet.textContent = `
+${notificationStyles}
+#blocked-expression-modal {
+   position: fixed;
+   inset: 0;
+   display: none;
+   align-items: center;
+   justify-content: center;
+   z-index: 100000;
+}
+
+.blocked-expression-modal-backdrop {
+   position: absolute;
+   inset: 0;
+   background: rgba(0, 0, 0, 0.55);
+}
+
+.blocked-expression-modal-content {
+   position: relative;
+   width: min(420px, calc(100vw - 32px));
+   background: #fff;
+   border-radius: 12px;
+   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+   padding: 24px 20px;
+   z-index: 1;
+}
+
+.blocked-expression-modal-content h3 {
+   margin: 0 0 12px;
+   font-size: 18px;
+}
+
+.blocked-expression-modal-content p {
+   margin: 0 0 16px;
+   line-height: 1.5;
+   color: #333;
+}
+`;
    document.head.appendChild(styleSheet);
 }
 
@@ -172,6 +209,61 @@ function sanitizeHTML(str) {
    return temp.innerHTML;
 }
 
+function findBlockedExpression(text) {
+   const profanityFilter = window.KoProfanityFilter;
+   if (profanityFilter && typeof profanityFilter.findProfanity === 'function') {
+      return profanityFilter.findProfanity(text);
+   }
+
+   const fallbackTerms = ['시발', '씨발', '병신', '지랄', '개새끼', '좆'];
+   const normalizedText = String(text || '').toLowerCase().trim().replace(/\s+/g, '');
+   if (!normalizedText) return null;
+   return fallbackTerms.find(expression => normalizedText.includes(expression)) || null;
+}
+
+function showBlockedExpressionModal(fieldLabel = '입력값', expression = '') {
+   let modal = document.getElementById('blocked-expression-modal');
+   const safeExpression = sanitizeHTML(expression);
+   const modalMessage = `${fieldLabel}에 부적절한 표현${safeExpression ? `(${safeExpression})` : ''}이 포함되어 등록할 수 없습니다.`;
+
+   if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'blocked-expression-modal';
+      modal.innerHTML = `
+         <div class="blocked-expression-modal-backdrop"></div>
+         <div class="blocked-expression-modal-content" role="dialog" aria-modal="true" aria-labelledby="blocked-expression-modal-title">
+            <h3 id="blocked-expression-modal-title">부적절한 표현이 감지되었습니다</h3>
+            <p id="blocked-expression-modal-message"></p>
+            <button type="button" id="blocked-expression-modal-close-btn" class="btn btn-primary">확인</button>
+         </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      const closeModal = () => {
+         modal.style.display = 'none';
+      };
+
+      modal.querySelector('#blocked-expression-modal-close-btn')?.addEventListener('click', closeModal);
+      modal.querySelector('.blocked-expression-modal-backdrop')?.addEventListener('click', closeModal);
+   }
+
+   const messageElement = modal.querySelector('#blocked-expression-modal-message');
+   if (messageElement) {
+      messageElement.innerHTML = modalMessage;
+   }
+
+   modal.style.display = 'flex';
+}
+
+function validateNoBlockedExpression(value, fieldLabel = '입력값') {
+   const blockedExpression = findBlockedExpression(value);
+   if (!blockedExpression) return true;
+
+   showBlockedExpressionModal(fieldLabel, blockedExpression);
+   return false;
+}
+
 function formatDate(dateString) {
    if (!dateString) return '';
 
@@ -210,4 +302,3 @@ function getURLParams() {
    
    return params;
 }
-
