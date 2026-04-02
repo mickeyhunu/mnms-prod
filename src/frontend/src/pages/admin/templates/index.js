@@ -36,7 +36,8 @@ export const adminTemplate = `
                 <button class="admin-tab" data-tab="users">회원 관리</button>
                 <button class="admin-tab" data-tab="posts">게시글 관리</button>
                 <button class="admin-tab" data-tab="comments">댓글 관리</button>
-                <button class="admin-tab" data-tab="ads">배너광고관리</button>
+                <button class="admin-tab" data-tab="banner-ads">배너광고관리</button>
+                <button class="admin-tab" data-tab="business-ads">업체광고관리</button>
                 <button class="admin-tab" data-tab="entries">엔트리 관리</button>
                 <button class="admin-tab" data-tab="support">공지/FAQ 관리</button>
                 <button class="admin-tab" data-tab="inquiries">1:1 문의 관리</button>
@@ -178,7 +179,7 @@ export const adminTemplate = `
                     <div class="admin-pagination hidden" id="entries-pagination"></div>
                 </div>
 
-                <div id="ads-section" class="tab-pane hidden">
+                <div id="banner-ads-section" class="tab-pane hidden">
                     <section class="admin-entry-editor">
                         <div>
                             <p class="admin-user-detail-eyebrow">광고 등록/수정</p>
@@ -243,6 +244,62 @@ export const adminTemplate = `
                         <table class="admin-table"><thead><tr><th>ID</th><th>유형</th><th>매장번호</th><th>제목</th><th>링크</th><th>순서</th><th>노출</th><th>생성일</th><th>수정일</th><th>관리</th></tr></thead><tbody id="ads-tbody"></tbody></table>
                     </div>
                     <div class="admin-pagination hidden" id="ads-pagination"></div>
+                </div>
+
+                <div id="business-ads-section" class="tab-pane hidden">
+                    <section class="admin-entry-editor">
+                        <div>
+                            <p class="admin-user-detail-eyebrow">업체 광고 등록/수정</p>
+                            <h3 id="business-ads-editor-title">새 업체 광고 등록</h3>
+                            <p class="admin-user-detail-description">업체 광고는 배너광고 DB와 분리되어 저장됩니다.</p>
+                        </div>
+                        <div class="admin-user-form-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px;">
+                            <div class="form-group">
+                                <label class="form-label" for="business-ads-form-title">광고 제목</label>
+                                <input type="text" id="business-ads-form-title" class="form-control" maxlength="255" placeholder="광고 제목을 입력하세요">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="business-ads-form-link-url">광고 링크 URL</label>
+                                <input type="url" id="business-ads-form-link-url" class="form-control" placeholder="https://">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="business-ads-form-image-file">광고 이미지 첨부</label>
+                                <input type="file" id="business-ads-form-image-file" class="form-control" accept="image/*">
+                                <p class="help-text text-muted" id="business-ads-form-image-help">이미지를 선택하고 업로드 버튼을 누르세요.</p>
+                                <button class="btn btn-outline btn-sm" id="business-ads-image-upload-btn" type="button">이미지 업로드</button>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="business-ads-form-image-url">업로드된 이미지 URL</label>
+                                <input type="text" id="business-ads-form-image-url" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="business-ads-form-display-order">노출 순서</label>
+                                <input type="number" id="business-ads-form-display-order" class="form-control" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="business-ads-form-is-active">노출 여부</label>
+                                <select id="business-ads-form-is-active" class="form-control">
+                                    <option value="true">노출</option>
+                                    <option value="false">숨김</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="admin-entry-editor__actions" style="margin-top:12px;">
+                            <button class="btn btn-secondary hidden" id="business-ads-cancel-btn" type="button">수정 취소</button>
+                            <button class="btn btn-primary" id="business-ads-save-btn" type="button">광고 등록</button>
+                        </div>
+                        <p id="business-ads-form-help" class="help-text admin-user-save-result" role="status"></p>
+                    </section>
+
+                    <div class="admin-list-toolbar">
+                        <p class="admin-list-toolbar__meta">총 <strong id="business-ads-total">0</strong>건</p>
+                    </div>
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead><tr><th>ID</th><th>제목</th><th>링크</th><th>순서</th><th>노출</th><th>생성일</th><th>수정일</th><th>관리</th></tr></thead>
+                            <tbody id="business-ads-tbody"></tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div id="support-section" class="tab-pane hidden">

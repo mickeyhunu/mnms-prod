@@ -27,7 +27,7 @@ const routes = [
   { path: '/admin/support/create', component: PageView, meta: { pageKey: 'support-create', title: '공지/FAQ 작성', description: '관리자 전용 공지사항/FAQ 작성 페이지입니다.', noindex: true } },
   { path: '/admin/inquiries/:id/answer', component: PageView, meta: { pageKey: 'admin-inquiry-answer', title: '문의 답변', description: '관리자 전용 문의 답변 페이지입니다.', noindex: true } },
   { path: '/find-account', component: PageView, meta: { pageKey: 'find-account', title: '아이디/비밀번호 찾기', description: '아이디 또는 비밀번호를 안전하게 찾을 수 있습니다.', noindex: true } },
-  { path: '/business-info', component: PageView, meta: { pageKey: 'business-info', title: '업체정보 관리', description: '관리자 전용 업체 광고 관리 페이지입니다.', noindex: true } },
+  { path: '/business-info', component: PageView, meta: { pageKey: 'business-info', title: '업체정보', description: '업체정보 메뉴 준비중 안내 페이지입니다.', noindex: true } },
   { path: '/live', component: PageView, meta: { pageKey: 'live', title: '라이브', description: '실시간 라이브 소식과 엔트리 정보를 확인하세요.' } },
   { path: '/support', component: PageView, meta: { pageKey: 'support-board', title: '고객지원', description: '공지사항, 고객센터 안내, 자주 묻는 질문을 확인하세요.' } },
   { path: '/support/faq', component: PageView, meta: { pageKey: 'support-board', title: 'FAQ', description: '자주 묻는 질문과 답변을 모아볼 수 있습니다.' } },

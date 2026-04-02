@@ -20,7 +20,7 @@ let isGlobalAdminClickBound = false;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
-const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'entries', 'ads', 'support', 'inquiries'];
+const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'entries', 'banner-ads', 'business-ads', 'support', 'inquiries'];
 const ADMIN_PAGE_SIZE = 20;
 const ADMIN_STATS_RANGE_DAYS = 14;
 const ADMIN_DASHBOARD_STATE = { summary: null, daily: [], series: [], period: 'daily', boardStats: [], selectedMetric: 'visitors' };
@@ -120,7 +120,10 @@ async function activateAdminTab(tabKey, options = {}) {
     else if (resolvedTabKey === 'comments') await loadComments();
     else if (resolvedTabKey === 'users') await loadUsers();
     else if (resolvedTabKey === 'entries') await loadEntries();
-    else if (resolvedTabKey === 'ads') await loadAds();
+    else if (resolvedTabKey === 'banner-ads') await loadAds();
+    else if (resolvedTabKey === 'business-ads') {
+        // 업체광고 관리는 businessInfo.js에서 독립적으로 데이터를 초기화한다.
+    }
     else if (resolvedTabKey === 'support') await loadSupportArticles();
     else if (resolvedTabKey === 'inquiries') await loadInquiries();
 }
