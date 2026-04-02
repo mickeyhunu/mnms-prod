@@ -131,7 +131,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
               p.is_hidden AS isHidden,
               p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
               COALESCE(u.nickname, '비회원') AS authorNickname,
-              COALESCE(u.role, 'USER') AS authorRole
+              COALESCE(u.role, 'MEMBER') AS authorRole
        FROM posts p
        LEFT JOIN users u ON u.id = p.user_id
        ${whereClause}
@@ -223,7 +223,7 @@ async function findPostDetailById(id) {
             p.is_hidden AS isHidden,
             p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
-            COALESCE(u.role, 'USER') AS authorRole,
+            COALESCE(u.role, 'MEMBER') AS authorRole,
             CASE
               WHEN u.id IS NULL THEN NULL
               WHEN COALESCE(u.total_points, 0) >= 15000 THEN 7
@@ -473,7 +473,7 @@ async function listBestPosts() {
             p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
             p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
-            COALESCE(u.role, 'USER') AS authorRole,
+            COALESCE(u.role, 'MEMBER') AS authorRole,
             COALESCE(stats.commentCount, 0) AS commentCount,
             COALESCE(stats.likeCount, 0) AS likeCount,
             ((COALESCE(stats.likeCount, 0) * 5) + (COALESCE(stats.commentCount, 0) * 2) + (p.view_count * 0.1)) AS score

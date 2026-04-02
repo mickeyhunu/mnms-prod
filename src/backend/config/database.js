@@ -171,8 +171,8 @@ async function initDatabase() {
       email VARCHAR(255) NOT NULL UNIQUE,
       password VARCHAR(255) NOT NULL,
       nickname VARCHAR(255) NOT NULL UNIQUE,
-      role ENUM('USER','ADMIN') NOT NULL DEFAULT 'USER',
-      member_type ENUM('GENERAL','ADVERTISER') NOT NULL DEFAULT 'GENERAL',
+      role ENUM('MEMBER','BUSINESS','ADMIN') NOT NULL DEFAULT 'MEMBER',
+      member_type ENUM('MEMBER','BUSINESS') NOT NULL DEFAULT 'MEMBER',
       account_status ENUM('ACTIVE','SUSPENDED') NOT NULL DEFAULT 'ACTIVE',
       login_restricted_until DATETIME NULL,
       is_login_restriction_permanent TINYINT(1) NOT NULL DEFAULT 0,
@@ -207,8 +207,17 @@ async function initDatabase() {
   );
 
   if (!memberTypeColumn.length) {
-    await pool.query("ALTER TABLE users ADD COLUMN member_type ENUM('GENERAL','ADVERTISER') NOT NULL DEFAULT 'GENERAL' AFTER role");
+    await pool.query("ALTER TABLE users ADD COLUMN member_type ENUM('MEMBER','BUSINESS') NOT NULL DEFAULT 'MEMBER' AFTER role");
   }
+
+  await pool.query("ALTER TABLE users MODIFY COLUMN role ENUM('USER','MEMBER','BUSINESS','ADMIN') NOT NULL DEFAULT 'MEMBER'");
+  await pool.query("ALTER TABLE users MODIFY COLUMN member_type ENUM('GENERAL','ADVERTISER','MEMBER','BUSINESS') NOT NULL DEFAULT 'MEMBER'");
+  await pool.query("UPDATE users SET role = 'MEMBER' WHERE role = 'USER'");
+  await pool.query("UPDATE users SET member_type = 'MEMBER' WHERE member_type = 'GENERAL'");
+  await pool.query("UPDATE users SET member_type = 'BUSINESS' WHERE member_type = 'ADVERTISER'");
+  await pool.query("UPDATE users SET role = 'BUSINESS' WHERE role = 'MEMBER' AND member_type = 'BUSINESS'");
+  await pool.query("ALTER TABLE users MODIFY COLUMN role ENUM('MEMBER','BUSINESS','ADMIN') NOT NULL DEFAULT 'MEMBER'");
+  await pool.query("ALTER TABLE users MODIFY COLUMN member_type ENUM('MEMBER','BUSINESS') NOT NULL DEFAULT 'MEMBER'");
 
   const userColumnDefinitions = [
     { name: 'name', query: "ALTER TABLE users ADD COLUMN name VARCHAR(100) NULL AFTER nickname" },
@@ -244,6 +253,22 @@ async function initDatabase() {
       user_id BIGINT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS business_profiles (
+      user_id BIGINT PRIMARY KEY,
+      company_name VARCHAR(255) NULL,
+      business_registration_number VARCHAR(100) NULL,
+      manager_name VARCHAR(100) NULL,
+      contact_phone VARCHAR(30) NULL,
+      has_ad_permission TINYINT(1) NOT NULL DEFAULT 0,
+      approval_status ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
+      business_info JSON NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      CONSTRAINT fk_business_profiles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
@@ -796,7 +821,7 @@ async function initDatabase() {
   if (!adminRows.length) {
     await pool.query(
       'INSERT INTO users (email, password, nickname, role, member_type) VALUES (?, ?, ?, ?, ?)',
-      ['admin@company.com', 'admin1234', '관리자', 'ADMIN', 'GENERAL']
+      ['admin@company.com', 'admin1234', '관리자', 'ADMIN', 'MEMBER']
     );
   }
 }

@@ -203,6 +203,7 @@ async function handleRegister(e) {
         genderDigit: form.genderDigit.value.trim(),
         nickname: form.nickname.value.trim(),
         nicknameChecked: form.nicknameChecked.value,
+        accountType: form.accountType?.value || 'MEMBER',
         termsConsent: form.termsConsent.checked
     };
 
@@ -227,7 +228,8 @@ async function handleRegister(e) {
             password: formData.password,
             phone: formData.phone,
             genderDigit: formData.genderDigit,
-            nickname: formData.nickname
+            nickname: formData.nickname,
+            accountType: formData.accountType
         });
 
         showNotification('회원가입이 완료되었습니다!', 'success');
