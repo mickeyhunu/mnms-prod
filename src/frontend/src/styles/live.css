@@ -939,6 +939,7 @@ body[data-page="live"] .header {
     border: 1px solid rgba(148, 163, 184, 0.35);
     color: #e2e8f0;
     font-size: 12px;
+    white-space: nowrap;
     text-decoration: none;
 }
 
@@ -1128,6 +1129,13 @@ body[data-page="live"] .header {
 
     .entry-live-card__ranking-item {
         gap: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .live-access-condition-box__link {
+        font-size: 11px;
+        padding: 0 10px;
     }
 }
 
