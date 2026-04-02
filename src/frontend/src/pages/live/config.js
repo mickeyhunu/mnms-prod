@@ -3,6 +3,7 @@
  */
 import { createPageConfig } from '../shared/createPageConfig.js';
 import { liveStickyHeaderTemplate, liveScrollBottomButtonTemplate } from './templates/index.js';
+import { shareSheetTemplate } from '../post-detail/templates/shareSheet.js';
 
 const liveTemplate = `
 <main class="main-content live-main-content">
@@ -27,6 +28,7 @@ const liveTemplate = `
             </div>
 
             ${liveScrollBottomButtonTemplate}
+            ${shareSheetTemplate}
         </div>
     </main>
 `;

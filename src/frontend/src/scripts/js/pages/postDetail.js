@@ -605,8 +605,9 @@ async function handleKakaoShare() {
 
 function handleSmsShare() {
     const shareData = getShareData();
-    const message = `${shareData.title}
-${shareData.url}`;
+    const message = `미드나인 맨즈 커뮤니티
+제목 ${shareData.title}
+주소 ${shareData.url}`;
     const isAppleDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const separator = isAppleDevice ? '&' : '?';
     window.location.href = `sms:${separator}body=${encodeURIComponent(message)}`;
