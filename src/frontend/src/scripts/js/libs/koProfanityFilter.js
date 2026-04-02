@@ -47,19 +47,52 @@
             .trim();
     }
 
+    function getConfiguredCustomWords() {
+        const dynamicWords = Array.isArray(globalScope.MNMS_BLOCKED_KEYWORDS) ? globalScope.MNMS_BLOCKED_KEYWORDS : [];
+        const constantWords = Array.isArray(globalScope.CUSTOM_BLOCKED_KEYWORDS) ? globalScope.CUSTOM_BLOCKED_KEYWORDS : [];
+        return [...constantWords, ...dynamicWords];
+    }
+
+    function createObscenityMatcherIfAvailable() {
+        const obscenity = globalScope.obscenity || globalScope.Obscenity;
+        if (!obscenity) return null;
+
+        const { RegExpMatcher, englishDataset } = obscenity;
+        if (!RegExpMatcher || !englishDataset || typeof englishDataset.build !== 'function') return null;
+
+        try {
+            return new RegExpMatcher({ ...englishDataset.build() });
+        } catch (error) {
+            return null;
+        }
+    }
+
     function createFilter(initialWords = DEFAULT_PROFANITY_DICTIONARY) {
+        const obscenityMatcher = createObscenityMatcherIfAvailable();
         let dictionary = Array.from(new Set(initialWords.map((word) => normalizeForScan(word)).filter(Boolean)));
+        const bootstrappedCustomWords = getConfiguredCustomWords().map((word) => normalizeForScan(word)).filter(Boolean);
+        dictionary = Array.from(new Set([...dictionary, ...bootstrappedCustomWords]));
+
+        function findFromDictionary(normalizedText) {
+            return dictionary.find((word) => normalizedText.includes(word)) || null;
+        }
 
         const api = {
             hasProfanity(text) {
                 const normalizedText = normalizeForScan(text);
                 if (!normalizedText) return false;
+                if (obscenityMatcher && obscenityMatcher.hasMatch(text)) {
+                    return true;
+                }
                 return dictionary.some((word) => normalizedText.includes(word));
             },
             findProfanity(text) {
                 const normalizedText = normalizeForScan(text);
                 if (!normalizedText) return null;
-                return dictionary.find((word) => normalizedText.includes(word)) || null;
+                if (obscenityMatcher && obscenityMatcher.hasMatch(text)) {
+                    return '[obscenity-dataset-match]';
+                }
+                return findFromDictionary(normalizedText);
             },
             addWords(words) {
                 const incomingWords = Array.isArray(words) ? words : [words];
@@ -67,6 +100,13 @@
                     .map((word) => normalizeForScan(word))
                     .filter(Boolean);
                 dictionary = Array.from(new Set([...dictionary, ...normalizedWords]));
+            },
+            setWords(words) {
+                const incomingWords = Array.isArray(words) ? words : [words];
+                const normalizedWords = incomingWords
+                    .map((word) => normalizeForScan(word))
+                    .filter(Boolean);
+                dictionary = Array.from(new Set(normalizedWords));
             },
             getDictionarySize() {
                 return dictionary.length;

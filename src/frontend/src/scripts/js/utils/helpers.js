@@ -223,7 +223,8 @@ function findBlockedExpression(text) {
 
 function showBlockedExpressionModal(fieldLabel = '입력값', expression = '') {
    let modal = document.getElementById('blocked-expression-modal');
-   const safeExpression = sanitizeHTML(expression);
+   const displayExpression = expression === '[obscenity-dataset-match]' ? '금지어 패턴' : expression;
+   const safeExpression = sanitizeHTML(displayExpression);
    const modalMessage = `${fieldLabel}에 부적절한 표현${safeExpression ? `(${safeExpression})` : ''}이 포함되어 등록할 수 없습니다.`;
 
    if (!modal) {
