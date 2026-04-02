@@ -111,6 +111,80 @@ const pageRegistry = {
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js"]
   },
+  'ad-purchase': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <span class="community-board-name">광고 구매</span>
+                </div>
+            </header>
+
+            <section class="ad-purchase-layout" aria-label="광고 요금제 안내">
+                <article class="ad-package-card">
+                    <button type="button" class="ad-package-tab is-active">BASIC</button>
+                    <div class="ad-package-body">
+                        <ul class="ad-package-feature-list">
+                            <li>광고프로필 노출</li>
+                            <li>점프 6개</li>
+                            <li>자동점프 30일</li>
+                        </ul>
+                        <p class="ad-package-price">200,000원</p>
+                    </div>
+                </article>
+
+                <article class="ad-package-card">
+                    <button type="button" class="ad-package-tab is-active">PLUS</button>
+                    <div class="ad-package-body">
+                        <ul class="ad-package-feature-list">
+                            <li>광고프로필 노출</li>
+                            <li>점프 9개</li>
+                            <li>자동점프 30일</li>
+                            <li>커뮤니티 홍보글 1일 1회</li>
+                        </ul>
+                        <p class="ad-package-price">400,000원</p>
+                    </div>
+                </article>
+
+                <article class="ad-package-card">
+                    <button type="button" class="ad-package-tab is-active">PREMIUM</button>
+                    <div class="ad-package-body">
+                        <ul class="ad-package-feature-list">
+                            <li>지역 상단 광고프로필 노출</li>
+                            <li>점프 12개</li>
+                            <li>자동점프 30일</li>
+                            <li>커뮤니티 홍보글 1일 1회</li>
+                        </ul>
+                        <p class="ad-package-price">600,000원</p>
+                    </div>
+                </article>
+
+                <p class="ad-purchase-caption">배너광고는 최대 20개까지만 등록할 수 있습니다.</p>
+            </section>
+        </div>
+    </main>
+
+    <script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js"]
+  },
   'community': communityPageConfig,
   'create-post': {
     template: `<header class="header">
@@ -590,7 +664,7 @@ const pageRegistry = {
                 <section class="mypage-link-section hidden" id="ad-center-wrapper">
                     <p class="mypage-link-section-title">광고센터</p>
                     <div class="mypage-link-list" id="ad-center-section">
-                        <a class="mypage-link-item" href="/business-info"><span>광고 구매</span></a>
+                        <a class="mypage-link-item" href="/ad-purchase"><span>광고 구매</span></a>
                         <a class="mypage-link-item" href="/business-info"><span>점프 관리</span></a>
                         <a class="mypage-link-item" href="/business-info"><span>광고프로필 관리</span></a>
                         <a class="mypage-link-item" href="/business-info"><span>사업자정보 관리</span></a>

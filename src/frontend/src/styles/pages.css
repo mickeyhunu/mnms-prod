@@ -2200,3 +2200,74 @@
     color: var(--text-muted);
     font-size: 13px;
 }
+
+.ad-purchase-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.ad-package-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.ad-package-tab {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid #eceff3;
+    background: #f8fafc;
+    min-height: 44px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.ad-package-tab.is-active {
+    background: #fff;
+    color: #111827;
+}
+
+.ad-package-body {
+    padding: 16px;
+}
+
+.ad-package-feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ad-package-feature-list li {
+    position: relative;
+    padding-left: 22px;
+    font-size: 0.95rem;
+    color: #1f2937;
+}
+
+.ad-package-feature-list li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #10b981;
+    font-weight: 700;
+}
+
+.ad-package-price {
+    margin: 16px 0 0;
+    text-align: right;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.ad-purchase-caption {
+    margin: 4px 2px 0;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
