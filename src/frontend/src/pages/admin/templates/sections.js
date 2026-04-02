@@ -28,7 +28,7 @@ export const userEditPanelTemplate = `
                                 </label>
                                 <label>
                                     <span class="profile-field-title">닉네임</span>
-                                    <input type="text" id="admin-user-nickname" name="nickname" minlength="2" required>
+                                    <input type="text" id="admin-user-nickname" name="nickname" minlength="2" maxlength="8" required>
                                 </label>
                                 <label>생년월일
                                     <input type="text" id="admin-user-birth" name="birthDate" readonly>

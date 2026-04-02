@@ -177,10 +177,19 @@ function bindProfileForm() {
 
         nicknameCheckButton.addEventListener('click', async () => {
             const nickname = nicknameInput.value.trim();
-            if (!nickname || nickname.length < 2) {
+            const nicknameLength = Array.from(nickname).length;
+            if (nicknameLength < VALIDATION.NICKNAME_MIN_LENGTH || nicknameLength > VALIDATION.NICKNAME_MAX_LENGTH) {
                 nicknameCheckState = { checked: true, available: false, value: nickname };
                 if (nicknameCheckResult) {
-                    nicknameCheckResult.textContent = '닉네임은 2글자 이상이어야 합니다.';
+                    nicknameCheckResult.textContent = `닉네임은 ${VALIDATION.NICKNAME_MIN_LENGTH}자 이상 ${VALIDATION.NICKNAME_MAX_LENGTH}자 이하로 입력해주세요.`;
+                    nicknameCheckResult.style.color = '#dc3545';
+                }
+                return;
+            }
+            if (!validateNoBlockedExpression(nickname, '닉네임')) {
+                nicknameCheckState = { checked: true, available: false, value: nickname };
+                if (nicknameCheckResult) {
+                    nicknameCheckResult.textContent = '닉네임에 사용할 수 없는 표현이 포함되어 있습니다.';
                     nicknameCheckResult.style.color = '#dc3545';
                 }
                 return;
@@ -225,6 +234,15 @@ function bindProfileForm() {
 
         const isNicknameChanged = nickname !== (currentUser?.nickname || '');
         if (isNicknameChanged) {
+            const nicknameLength = Array.from(nickname).length;
+            if (nicknameLength < VALIDATION.NICKNAME_MIN_LENGTH || nicknameLength > VALIDATION.NICKNAME_MAX_LENGTH) {
+                setHelpMessage(result, `닉네임은 ${VALIDATION.NICKNAME_MIN_LENGTH}자 이상 ${VALIDATION.NICKNAME_MAX_LENGTH}자 이하로 입력해주세요.`, '#dc3545');
+                return;
+            }
+            if (!validateNoBlockedExpression(nickname, '닉네임')) {
+                setHelpMessage(result, '닉네임에 사용할 수 없는 표현이 포함되어 있습니다.', '#dc3545');
+                return;
+            }
             const checkedSameValue = nicknameCheckState.checked && nicknameCheckState.value === nickname;
             if (!checkedSameValue) {
                 if (result) {

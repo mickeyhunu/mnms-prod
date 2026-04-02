@@ -20,6 +20,7 @@ const { POINT_RULES } = require('../models/pointModel');
 const supportModel = require('../models/supportModel');
 const adminModel = require('../models/adminModel');
 const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
+const { validateNickname } = require('../utils/nicknamePolicy');
 
 
 function isNicknameChangeLocked(lastChangedAt) {
@@ -44,8 +45,9 @@ async function updateMyProfile(req, res, next) {
     const emailConsent = Boolean(req.body.emailConsent);
     const smsConsent = Boolean(req.body.smsConsent);
 
-    if (!nickname || nickname.length < 2) {
-      return res.status(400).json({ message: '닉네임은 2글자 이상이어야 합니다.' });
+    const nicknameValidation = validateNickname(nickname);
+    if (!nicknameValidation.valid) {
+      return res.status(400).json({ message: nicknameValidation.message });
     }
 
     const updates = {
