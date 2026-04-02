@@ -1312,8 +1312,14 @@ async function saveUserDetail() {
 
     document.getElementById('admin-user-phone').value = phone;
 
-    if (!nickname || nickname.length < 2) {
-        setAdminUserHelpMessage('닉네임은 2글자 이상이어야 합니다.', '#dc3545');
+    const nicknameLength = Array.from(nickname).length;
+    if (nicknameLength < VALIDATION.NICKNAME_MIN_LENGTH || nicknameLength > VALIDATION.NICKNAME_MAX_LENGTH) {
+        setAdminUserHelpMessage(`닉네임은 ${VALIDATION.NICKNAME_MIN_LENGTH}자 이상 ${VALIDATION.NICKNAME_MAX_LENGTH}자 이하로 입력해주세요.`, '#dc3545');
+        return;
+    }
+
+    if (!validateNoBlockedExpression(nickname, '닉네임')) {
+        setAdminUserHelpMessage('닉네임에 사용할 수 없는 표현이 포함되어 있습니다.', '#dc3545');
         return;
     }
 

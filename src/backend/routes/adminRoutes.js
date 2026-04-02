@@ -11,6 +11,7 @@ const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddlewa
 const { LOGIN_STATUS } = require('../utils/loginRestriction');
 const { deleteSessionsByUserId } = require('../models/sessionModel');
 const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
+const { validateNickname } = require('../utils/nicknamePolicy');
 
 const router = express.Router();
 
@@ -170,8 +171,9 @@ router.put('/users/:id', async (req, res, next) => {
     const hasLoginRestrictionDays = loginRestrictionDaysRaw !== undefined && loginRestrictionDaysRaw !== null && String(loginRestrictionDaysRaw).trim() !== '';
     const loginRestrictionDays = hasLoginRestrictionDays ? Number(loginRestrictionDaysRaw) : null;
 
-    if (!nickname || nickname.length < 2) {
-      return res.status(400).json({ message: '닉네임은 2글자 이상이어야 합니다.' });
+    const nicknameValidation = validateNickname(nickname);
+    if (!nicknameValidation.valid) {
+      return res.status(400).json({ message: nicknameValidation.message });
     }
 
     if (password && password.length < 4) {

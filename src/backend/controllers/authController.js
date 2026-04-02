@@ -6,6 +6,7 @@ const { formatRestrictionMessage, getLoginRestrictionState } = require('../utils
 const { recordAuthEvent } = require('../models/authEventModel');
 const { recordLoginAttemptResult } = require('../middlewares/loginRateLimitMiddleware');
 const { signAuthToken, DEFAULT_EXPIRES_IN } = require('../utils/jwt');
+const { validateNickname } = require('../utils/nicknamePolicy');
 
 function normalizeMemberType(value) {
   const normalized = String(value || '').trim().toUpperCase();
@@ -28,14 +29,20 @@ async function register(req, res, next) {
       return res.status(400).json({ message: '아이디, 비밀번호, 닉네임은 필수입니다.' });
     }
 
+    const normalizedNickname = String(nickname || '').trim();
+    const nicknameValidation = validateNickname(normalizedNickname);
+    if (!nicknameValidation.valid) {
+      return res.status(400).json({ message: nicknameValidation.message });
+    }
+
     if (await findByEmail(resolvedLoginId)) {
       return res.status(400).json({ message: '이미 사용 중인 아이디입니다.' });
     }
-    if (await findByNickname(nickname.trim())) {
+    if (await findByNickname(normalizedNickname)) {
       return res.status(400).json({ message: '이미 사용 중인 닉네임입니다.' });
     }
 
-    const userId = await createUser({ email: resolvedLoginId, password, nickname: nickname.trim(), memberType });
+    const userId = await createUser({ email: resolvedLoginId, password, nickname: normalizedNickname, memberType });
     await awardPointByAction(userId, 'REGISTER');
 
     const user = await findByEmail(resolvedLoginId);
@@ -119,8 +126,9 @@ async function logout(req, res, next) {
 async function checkNickname(req, res, next) {
   try {
     const nickname = (req.query.nickname || '').trim();
-    if (nickname.length < 2) {
-      return res.status(400).json({ message: '닉네임은 2글자 이상이어야 합니다.' });
+    const nicknameValidation = validateNickname(nickname);
+    if (!nicknameValidation.valid) {
+      return res.status(400).json({ message: nicknameValidation.message });
     }
 
     const exists = await findByNickname(nickname);
