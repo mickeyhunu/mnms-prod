@@ -925,6 +925,10 @@ async function handleCommentEditSubmit(e, commentId) {
         return;
     }
 
+    if (!validateNoBlockedExpression(content, '댓글')) {
+        return;
+    }
+
     try {
         await CommentAPI.updateComment(commentId, { content });
         showNotification('댓글이 수정되었습니다.', 'success');
@@ -1029,6 +1033,10 @@ async function handleReplySubmit(e, parentId) {
         addInputError(textarea, '답글 내용을 입력해주세요');
         return;
     }
+
+    if (!validateNoBlockedExpression(content, '답글')) {
+        return;
+    }
     
     try {
         setLoading(submitBtn, true);
@@ -1106,6 +1114,10 @@ async function handleCreateComment(e) {
     
     if (!content) {
         addInputError(contentTextarea, '댓글 내용을 입력해주세요');
+        return;
+    }
+
+    if (!validateNoBlockedExpression(content, '댓글')) {
         return;
     }
 

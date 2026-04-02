@@ -164,6 +164,11 @@ async function checkNicknameAvailability() {
         return;
     }
 
+    if (!validateNoBlockedExpression(nickname, '닉네임')) {
+        setNicknameChecked(false);
+        return;
+    }
+
     try {
         const result = await AuthAPI.checkNickname(nickname);
         if (result.available) {
@@ -204,6 +209,11 @@ async function handleRegister(e) {
 
     if (hasValidationErrors(errors)) {
         showValidationErrors(errors, form);
+        return;
+    }
+
+    if (!validateNoBlockedExpression(formData.nickname, '닉네임')) {
+        setNicknameChecked(false);
         return;
     }
 
