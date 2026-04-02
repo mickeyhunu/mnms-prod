@@ -52,7 +52,7 @@ function signAuthToken(user) {
   };
   const payload = {
     sub: String(user.id),
-    role: user.role || 'USER',
+    role: user.role || 'MEMBER',
     iss: DEFAULT_ISSUER,
     iat: now,
     exp: now + parseExpiresInToSeconds(DEFAULT_EXPIRES_IN),

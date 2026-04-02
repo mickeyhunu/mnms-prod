@@ -79,7 +79,7 @@ function isAdAccount(user) {
     const role = String(user.role || '').toUpperCase();
     const accountType = String(user.accountType || user.userType || '').toUpperCase();
 
-    return role === 'AD' || role === 'ADVERTISER' || accountType === 'AD' || accountType === 'ADVERTISER';
+    return role === 'BUSINESS' || accountType === 'BUSINESS';
 }
 
 function renderAdCenterSection(user) {

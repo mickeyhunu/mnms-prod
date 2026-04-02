@@ -8,9 +8,13 @@ const { recordLoginAttemptResult } = require('../middlewares/loginRateLimitMiddl
 const { signAuthToken, DEFAULT_EXPIRES_IN } = require('../utils/jwt');
 const { validateNickname } = require('../utils/nicknamePolicy');
 
-function normalizeMemberType(value) {
+function normalizeAccountType(value) {
   const normalized = String(value || '').trim().toUpperCase();
-  return normalized === 'ADVERTISER' ? 'ADVERTISER' : 'GENERAL';
+  return normalized === 'BUSINESS' ? 'BUSINESS' : 'MEMBER';
+}
+
+function resolveRoleByAccountType(accountType) {
+  return accountType === 'BUSINESS' ? 'BUSINESS' : 'MEMBER';
 }
 
 function getClientIp(req) {
@@ -23,7 +27,7 @@ const { pickUserRow } = require('../utils/response');
 async function register(req, res, next) {
   try {
     const { loginId, email, password, nickname } = req.body;
-    const memberType = normalizeMemberType(req.body.memberType);
+    const accountType = normalizeAccountType(req.body.accountType || req.body.memberType);
     const resolvedLoginId = (loginId || email || '').trim();
     if (!resolvedLoginId || !password || !nickname) {
       return res.status(400).json({ message: '아이디, 비밀번호, 닉네임은 필수입니다.' });
@@ -42,7 +46,8 @@ async function register(req, res, next) {
       return res.status(400).json({ message: '이미 사용 중인 닉네임입니다.' });
     }
 
-    const userId = await createUser({ email: resolvedLoginId, password, nickname: normalizedNickname, memberType });
+    const role = resolveRoleByAccountType(accountType);
+    const userId = await createUser({ email: resolvedLoginId, password, nickname: normalizedNickname, role, memberType: accountType });
     await awardPointByAction(userId, 'REGISTER');
 
     const user = await findByEmail(resolvedLoginId);
