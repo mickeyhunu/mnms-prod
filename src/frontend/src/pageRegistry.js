@@ -590,7 +590,10 @@ const pageRegistry = {
                 <section class="mypage-link-section hidden" id="ad-center-wrapper">
                     <p class="mypage-link-section-title">광고센터</p>
                     <div class="mypage-link-list" id="ad-center-section">
-                        <a class="mypage-link-item" href="/business-info"><span>광고센터 바로가기</span></a>
+                        <a class="mypage-link-item" href="/business-info"><span>광고 구매</span></a>
+                        <a class="mypage-link-item" href="/business-info"><span>점프 관리</span></a>
+                        <a class="mypage-link-item" href="/business-info"><span>광고프로필 관리</span></a>
+                        <a class="mypage-link-item" href="/business-info"><span>사업자정보 관리</span></a>
                     </div>
                 </section>
 
