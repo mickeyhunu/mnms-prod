@@ -158,8 +158,9 @@ async function checkNicknameAvailability() {
     const nicknameInput = document.getElementById('nickname');
     const nickname = nicknameInput?.value.trim() || '';
 
-    if (nickname.length < 2) {
-        showNotification('닉네임은 2글자 이상 입력해주세요.', 'warning');
+    const nicknameLength = Array.from(nickname).length;
+    if (nicknameLength < VALIDATION.NICKNAME_MIN_LENGTH || nicknameLength > VALIDATION.NICKNAME_MAX_LENGTH) {
+        showNotification(`닉네임은 ${VALIDATION.NICKNAME_MIN_LENGTH}자 이상 ${VALIDATION.NICKNAME_MAX_LENGTH}자 이하로 입력해주세요.`, 'warning');
         setNicknameChecked(false);
         return;
     }
