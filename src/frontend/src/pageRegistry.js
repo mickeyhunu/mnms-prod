@@ -225,7 +225,7 @@ const pageRegistry = {
         const vatPrice = document.getElementById('ad-vat-price');
         const totalPrice = document.getElementById('ad-total-price');
 
-        const formatPrice = (value) => `${value.toLocaleString('ko-KR')}원`;
+        const formatPrice = (value) => value.toLocaleString('ko-KR') + '원';
 
         const render = () => {
           const currentPlan = plans[state.plan];
@@ -235,19 +235,20 @@ const pageRegistry = {
             tab.setAttribute('aria-selected', String(isActive));
           });
 
-          featureList.innerHTML = currentPlan.features.map((item) => `<li>${item}</li>`).join('');
+          featureList.innerHTML = currentPlan.features.map((item) => '<li>' + item + '</li>').join('');
 
           priceOptions.innerHTML = currentPlan.options.map((option) => {
             const checked = option.days === state.duration;
-            return `
-              <button type="button" class="ad-price-option ${checked ? 'is-selected' : ''}" data-days="${option.days}">
-                <div>
-                  ${option.originalPrice ? `<span class="ad-price-original">${formatPrice(option.originalPrice)}</span>` : ''}
-                  <strong>${option.days}일 / ${formatPrice(option.price)}</strong>
-                </div>
-                <span class="ad-price-check" aria-hidden="true">${checked ? '●' : '○'}</span>
-              </button>
-            `;
+            const originalPrice = option.originalPrice
+              ? '<span class="ad-price-original">' + formatPrice(option.originalPrice) + '</span>'
+              : '';
+            return '<button type="button" class="ad-price-option ' + (checked ? 'is-selected' : '') + '" data-days="' + option.days + '">'
+              + '<div>'
+              + originalPrice
+              + '<strong>' + option.days + '일 / ' + formatPrice(option.price) + '</strong>'
+              + '</div>'
+              + '<span class="ad-price-check" aria-hidden="true">' + (checked ? '●' : '○') + '</span>'
+              + '</button>';
           }).join('');
 
           const selectedOption = currentPlan.options.find((option) => option.days === state.duration) || currentPlan.options[0];
@@ -255,7 +256,7 @@ const pageRegistry = {
 
           const vat = Math.round(selectedOption.price * 0.1);
           const total = selectedOption.price + vat;
-          selectedProduct.textContent = `${currentPlan.name} ${selectedOption.days}일`;
+          selectedProduct.textContent = currentPlan.name + ' ' + selectedOption.days + '일';
           productPrice.textContent = formatPrice(selectedOption.price);
           vatPrice.textContent = formatPrice(vat);
           totalPrice.textContent = formatPrice(total);
