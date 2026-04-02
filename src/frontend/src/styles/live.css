@@ -926,6 +926,7 @@ body[data-page="live"] .header {
     display: flex;
     gap: 8px;
     margin-top: 14px;
+    justify-content: center;
 }
 
 .live-access-condition-box__link {

@@ -732,7 +732,7 @@ function normalizeExternalUrl(url) {
 const WAITING_STORE_DECORATIONS = {
     '달토': '🐰',
     '엘리트': '🎆',
-    '퍼펙트': '💫',
+    '디저트': '🍮',
     '유앤미': '💟',
     '도파민': '🌌',
     '제우스': '🔱'
