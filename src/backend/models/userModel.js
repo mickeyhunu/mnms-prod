@@ -4,11 +4,11 @@
 const { getPool } = require('../config/database');
 const { getLoginRestrictionState, LOGIN_STATUS } = require('../utils/loginRestriction');
 
-async function createUser({ email, password, nickname, memberType = 'GENERAL' }) {
+async function createUser({ email, password, nickname, role = 'MEMBER', memberType = 'MEMBER' }) {
   const pool = getPool();
   const [result] = await pool.query(
     'INSERT INTO users (email, password, nickname, role, member_type, total_points) VALUES (?, ?, ?, ?, ?, ?)',
-    [email, password, nickname, 'USER', memberType, 0]
+    [email, password, nickname, role, memberType, 0]
   );
   return result.insertId;
 }

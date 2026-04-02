@@ -840,8 +840,8 @@ function renderUsersTable() {
                 <td>${formatAdminRestrictionStatus(user)}</td>
                 <td>${Number(user.totalPoints || 0).toLocaleString()} P</td>
                 <td>${formatDate(user.createdAt || user.created_at)}</td>
-                <td>${sanitizeHTML(user.role || 'USER')}</td>
-                <td>${user.memberType === 'ADVERTISER' ? '광고 회원' : '일반 회원'}</td>
+                <td>${sanitizeHTML(user.role || 'MEMBER')}</td>
+                <td>${user.memberType === 'BUSINESS' ? '기업 회원' : '일반 회원'}</td>
                 <td>
                     <div class="admin-user-actions">
                         <a class="btn btn-sm btn-secondary" href="/admin?tab=users&editUserId=${user.id}" data-admin-action="edit-user" data-target-id="${user.id}">정보 수정</a>
@@ -1244,8 +1244,8 @@ function fillUserEditForm(user) {
     document.getElementById('admin-user-email-consent').checked = Boolean(user.emailConsent);
     document.getElementById('admin-user-sms-consent').checked = Boolean(user.smsConsent);
     document.getElementById('admin-user-total-points').value = Number(user.totalPoints || 0);
-    document.getElementById('admin-user-role').value = user.role || 'USER';
-    document.getElementById('admin-user-member-type').value = user.memberType || 'GENERAL';
+    document.getElementById('admin-user-role').value = user.role || 'MEMBER';
+    document.getElementById('admin-user-member-type').value = user.memberType || 'MEMBER';
     document.getElementById('admin-user-account-status').value = user.accountStatus || ACCOUNT_STATUS.ACTIVE;
     document.getElementById('admin-user-login-restriction-permanent').checked = Boolean(user.isLoginRestrictionPermanent);
     document.getElementById('admin-user-login-restriction-days').value = '';
@@ -1304,8 +1304,8 @@ async function saveUserDetail() {
     const passwordConfirm = document.getElementById('admin-user-password-confirm')?.value?.trim() || '';
     const phone = formatPhoneNumber(document.getElementById('admin-user-phone')?.value?.trim() || '');
     const totalPoints = Number.parseInt(document.getElementById('admin-user-total-points')?.value || '0', 10);
-    const role = document.getElementById('admin-user-role')?.value || 'USER';
-    const memberType = document.getElementById('admin-user-member-type')?.value || 'GENERAL';
+    const role = document.getElementById('admin-user-role')?.value || 'MEMBER';
+    const memberType = document.getElementById('admin-user-member-type')?.value || 'MEMBER';
     const emailConsent = document.getElementById('admin-user-email-consent')?.checked || false;
     const smsConsent = document.getElementById('admin-user-sms-consent')?.checked || false;
     const accountStatus = document.getElementById('admin-user-account-status')?.value || ACCOUNT_STATUS.ACTIVE;

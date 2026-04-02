@@ -102,7 +102,7 @@ const pageRegistry = {
                 <h3 style="margin-bottom:8px;">준비중입니다</h3>
                 <p class="text-muted" style="margin:0;">업체정보 메뉴는 현재 준비 중입니다.</p>
                 <p class="text-muted" style="margin-top:8px;">업체 광고 관리는 관리자 페이지의 업체광고관리 탭에서 이용해주세요.</p>
-                <a href="/admin?tab=business-ads" class="btn btn-primary" style="margin-top:16px;">관리자 업체광고관리로 이동</a>
+                <a href="/business-info" class="btn btn-primary" style="margin-top:16px;">관리자 업체광고관리로 이동</a>
             </section>
         </div>
     </main>
@@ -590,7 +590,7 @@ const pageRegistry = {
                 <section class="mypage-link-section hidden" id="ad-center-wrapper">
                     <p class="mypage-link-section-title">광고센터</p>
                     <div class="mypage-link-list" id="ad-center-section">
-                        <a class="mypage-link-item" href="/admin?tab=business-ads"><span>광고센터 바로가기</span></a>
+                        <a class="mypage-link-item" href="/business-info"><span>광고센터 바로가기</span></a>
                     </div>
                 </section>
 
@@ -849,6 +849,20 @@ const pageRegistry = {
                         <label for="loginId" class="form-label">아이디</label>
                         <input type="text" id="loginId" name="loginId" class="form-control" placeholder="아이디를 입력하세요" required>
                         <div class="error-message hidden" id="loginId-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">회원 구분</label>
+                        <div class="grid grid-2">
+                            <label class="register-consent-item" for="accountType-member">
+                                <input type="radio" id="accountType-member" name="accountType" value="MEMBER" checked>
+                                <span>일반회원</span>
+                            </label>
+                            <label class="register-consent-item" for="accountType-business">
+                                <input type="radio" id="accountType-business" name="accountType" value="BUSINESS">
+                                <span>기업회원</span>
+                            </label>
+                        </div>
                     </div>
 
                     <div class="form-group">

@@ -46,14 +46,14 @@ export const userEditPanelTemplate = `
                                 </label>
                                 <label>권한
                                     <select id="admin-user-role" name="role" class="form-control">
-                                        <option value="USER">USER</option>
+                                        <option value="MEMBER">MEMBER</option>
                                         <option value="ADMIN">ADMIN</option>
                                     </select>
                                 </label>
                                 <label>회원 구분
                                     <select id="admin-user-member-type" name="memberType" class="form-control">
-                                        <option value="GENERAL">일반 회원</option>
-                                        <option value="ADVERTISER">광고 회원</option>
+                                        <option value="MEMBER">일반 회원</option>
+                                        <option value="BUSINESS">기업 회원</option>
                                     </select>
                                 </label>
                                 <label>계정 상태

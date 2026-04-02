@@ -11,7 +11,7 @@ async function listUsers() {
   const [rows] = await pool.query(
     `SELECT *
      FROM users
-     WHERE role = 'USER'
+     WHERE role = 'MEMBER'
      ORDER BY created_at DESC, id DESC`
   );
   const resolvedRows = [];
@@ -639,8 +639,8 @@ async function getDashboardStats(rangeDays = 14, { period = 'daily' } = {}) {
         (SELECT COUNT(*) FROM posts WHERE is_deleted = 0 AND DATE(created_at) = CURRENT_DATE()) AS todayPosts,
         (SELECT COUNT(*) FROM comments WHERE is_deleted = 0) AS totalComments,
         (SELECT COUNT(*) FROM comments WHERE is_deleted = 0 AND DATE(created_at) = CURRENT_DATE()) AS todayComments,
-        (SELECT COUNT(*) FROM users WHERE role = 'USER') AS totalUsers,
-        (SELECT COUNT(*) FROM users WHERE role = 'USER' AND DATE(created_at) = CURRENT_DATE()) AS todaySignups`
+        (SELECT COUNT(*) FROM users WHERE role = 'MEMBER') AS totalUsers,
+        (SELECT COUNT(*) FROM users WHERE role = 'MEMBER' AND DATE(created_at) = CURRENT_DATE()) AS todaySignups`
   );
 
   const [visitRows, postRows, commentRows, signupRows, boardRows] = await Promise.all([
@@ -675,7 +675,7 @@ async function getDashboardStats(rangeDays = 14, { period = 'daily' } = {}) {
     pool.query(
       `SELECT DATE(created_at) AS statsDate, COUNT(*) AS signupCount
          FROM users
-        WHERE role = 'USER'
+        WHERE role = 'MEMBER'
           AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL ? DAY)
         GROUP BY DATE(created_at)
         ORDER BY DATE(created_at) ASC`,
