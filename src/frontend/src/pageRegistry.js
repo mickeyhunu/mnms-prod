@@ -78,7 +78,7 @@ const pageRegistry = {
             <nav class="nav" id="navigation">
                 <div class="nav-guest" id="nav-guest">
                     <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
-                    <a href="register.html" class="btn btn-primary btn-sm">회원가입</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
                 </div>
                 <div class="nav-user hidden" id="nav-user">
                     <span class="user-nickname" id="user-nickname"></span>
@@ -420,7 +420,7 @@ const pageRegistry = {
         <nav class="nav" id="navigation">
             <div class="nav-guest" id="nav-guest">
                 <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
-                <a href="register.html" class="btn btn-primary btn-sm">회원가입</a>
+                <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
             </div>
             <div class="nav-user hidden" id="nav-user">
                 <span class="user-nickname" id="user-nickname"></span>
@@ -463,7 +463,7 @@ const pageRegistry = {
             <nav class="nav" id="navigation">
                 <div class="nav-guest" id="nav-guest">
                     <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
-                    <a href="register.html" class="btn btn-primary btn-sm">회원가입</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
                 </div>
                 <div class="nav-user hidden" id="nav-user">
                     <span class="user-nickname" id="user-nickname"></span>
@@ -515,7 +515,7 @@ const pageRegistry = {
             </a>
             <nav class="nav" id="navigation">
                 <div class="nav-guest" id="nav-guest">
-                    <a href="register.html" class="btn btn-primary btn-sm">회원가입</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
                 </div>
                 <div class="nav-user hidden" id="nav-user">
                     <span class="user-nickname" id="user-nickname"></span>
@@ -957,7 +957,7 @@ const pageRegistry = {
                         <div class="error-message hidden" id="termsConsent-error"></div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-full" id="submit-btn">회원가입</button>
+                    <button type="submit" class="btn btn-outline w-full" id="submit-btn">회원가입</button>
                 </form>
 
                 <div class="text-center mt-3">

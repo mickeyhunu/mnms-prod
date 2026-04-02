@@ -10,7 +10,7 @@ const communityTemplate = `
             <nav class="nav" id="navigation">
                 <div class="nav-guest" id="nav-guest">
                     <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
-                    <a href="register.html" class="btn btn-primary btn-sm">회원가입</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
                 </div>
                 <div class="nav-user hidden" id="nav-user">
                     <span class="user-nickname" id="user-nickname"></span>

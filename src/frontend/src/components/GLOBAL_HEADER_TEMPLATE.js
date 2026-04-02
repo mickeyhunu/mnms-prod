@@ -6,7 +6,7 @@ export const GLOBAL_HEADER_TEMPLATE = `<header class="header">
     <nav class="nav" id="navigation">
       <div class="nav-guest" id="nav-guest">
         <a href="/login" class="btn btn-outline btn-sm">로그인</a>
-        <a href="/register" class="btn btn-primary btn-sm">회원가입</a>
+        <a href="/register" class="btn btn-outline btn-sm">회원가입</a>
       </div>
       <div class="nav-user hidden" id="nav-user">
         <div class="header-user-menu" id="header-user-menu">
