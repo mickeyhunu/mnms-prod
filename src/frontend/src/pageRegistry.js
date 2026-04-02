@@ -583,8 +583,6 @@ const pageRegistry = {
                 <a href="/board/terms">이용약관</a>
                 <span class="footer-divider" aria-hidden="true"></span>
                 <a href="/board/terms">개인정보처리방침</a>
-                <span class="footer-divider" aria-hidden="true"></span>
-                <button type="button" class="mypage-footer-logout" data-bound-logout="true">로그아웃</button>
             </div>
             <p class="company-footer-notice">미드나잇 맨즈는 커뮤니티 서비스 제공 플랫폼입니다.</p>
             <p class="company-footer-notice">상호명 : MN컴퍼니 | 사업자번호 : 355-18-02505 | 대표자명 : 이상훈 | 대표번호 : 010-6567-4519</p>
@@ -669,8 +667,6 @@ const pageRegistry = {
             <a href="/board/terms">이용약관</a>
             <span class="footer-divider" aria-hidden="true"></span>
             <a href="/board/terms">개인정보처리방침</a>
-            <span class="footer-divider" aria-hidden="true"></span>
-            <button type="button" class="mypage-footer-logout">로그아웃</button>
         </div>
         <p class="company-footer-notice">미드나잇 맨즈는 커뮤니티 서비스 제공 플랫폼입니다.</p>
         <p class="company-footer-notice">상호명 : MN컴퍼니 | 사업자번호 : 355-18-02505 | 대표자명 : 이상훈 | 대표번호 : 010-6567-4519</p>
@@ -978,8 +974,6 @@ const pageRegistry = {
                 <a href="/board/terms">이용약관</a>
                 <span class="footer-divider" aria-hidden="true"></span>
                 <a href="/board/terms">개인정보처리방침</a>
-                <span class="footer-divider" aria-hidden="true"></span>
-                <button type="button" class="mypage-footer-logout" data-bound-logout="true">로그아웃</button>
             </div>
             <p class="company-footer-notice">미드나잇 맨즈는 커뮤니티 서비스 제공 플랫폼입니다.</p>
             <p class="company-footer-notice">상호명 : MN컴퍼니 | 사업자번호 : 355-18-02505 | 대표자명 : 이상훈 | 대표번호 : 010-6567-4519</p>

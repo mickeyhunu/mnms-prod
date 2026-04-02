@@ -57,23 +57,6 @@ async function initMyPage() {
 
 function bindLogoutActions() {
     Auth.bindLogoutButton();
-
-    const footerLogoutButton = document.querySelector('.mypage-footer-logout');
-    if (footerLogoutButton && footerLogoutButton.dataset.boundLogout !== 'true') {
-        footerLogoutButton.dataset.boundLogout = 'true';
-        footerLogoutButton.addEventListener('click', async (event) => {
-            event.preventDefault();
-
-            if (!confirm('로그아웃 하시겠습니까?')) return;
-
-            if (typeof AuthAPI !== 'undefined' && AuthAPI.logout) {
-                await AuthAPI.logout();
-                return;
-            }
-
-            Auth.logout();
-        });
-    }
 }
 
 function renderHeaderUser(user) {
