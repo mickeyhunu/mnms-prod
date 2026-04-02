@@ -326,6 +326,14 @@ async function handleSubmit(event) {
         return;
     }
 
+    if (!validateNoBlockedExpression(titleValue, '게시글 제목')) {
+        return;
+    }
+
+    if (!validateNoBlockedExpression(contentValue, '게시글 내용')) {
+        return;
+    }
+
     isSubmitting = true;
     if (submitBtn) {
         submitBtn.disabled = true;
