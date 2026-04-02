@@ -79,3 +79,14 @@ const PAGINATION = {
     DEFAULT_SIZE: 10,
     MAX_SIZE: 50
 };
+
+/**
+ * 운영자가 추가로 차단하고 싶은 키워드 목록.
+ * - 기본 사전형 필터와 함께 병합되어 적용됩니다.
+ * - 필요 시 배포 없이 동적 주입(window.MNMS_BLOCKED_KEYWORDS)도 가능합니다.
+ */
+const CUSTOM_BLOCKED_KEYWORDS = [
+    '도박사이트',
+    '불법토토',
+    '성매매'
+];
