@@ -133,53 +133,152 @@ const pageRegistry = {
         <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
+                    <a href="/mypage" class="community-back-link" aria-label="마이페이지로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
                     <span class="community-board-name">광고 구매</span>
                 </div>
             </header>
 
             <section class="ad-purchase-layout" aria-label="광고 요금제 안내">
-                <article class="ad-package-card">
-                    <button type="button" class="ad-package-tab is-active">BASIC</button>
-                    <div class="ad-package-body">
-                        <ul class="ad-package-feature-list">
-                            <li>광고프로필 노출</li>
-                            <li>점프 6개</li>
-                            <li>자동점프 30일</li>
-                        </ul>
-                        <p class="ad-package-price">200,000원</p>
-                    </div>
+                <div class="ad-plan-tabs" role="tablist" aria-label="요금제 선택">
+                    <button type="button" class="ad-plan-tab is-active" data-plan="basic" role="tab" aria-selected="true">BASIC</button>
+                    <button type="button" class="ad-plan-tab" data-plan="plus" role="tab" aria-selected="false">PLUS</button>
+                    <button type="button" class="ad-plan-tab" data-plan="premium" role="tab" aria-selected="false">PREMIUM</button>
+                    <button type="button" class="ad-plan-tab" data-plan="banner" role="tab" aria-selected="false">BANNER</button>
+                </div>
+
+                <article class="ad-plan-detail" id="ad-plan-detail">
+                    <ul class="ad-package-feature-list" id="ad-plan-features"></ul>
+                    <div class="ad-price-options" id="ad-price-options"></div>
                 </article>
 
-                <article class="ad-package-card">
-                    <button type="button" class="ad-package-tab is-active">PLUS</button>
-                    <div class="ad-package-body">
-                        <ul class="ad-package-feature-list">
-                            <li>광고프로필 노출</li>
-                            <li>점프 9개</li>
-                            <li>자동점프 30일</li>
-                            <li>커뮤니티 홍보글 1일 1회</li>
-                        </ul>
-                        <p class="ad-package-price">400,000원</p>
+                <article class="ad-payment-card" aria-label="결제 정보">
+                    <h3 class="ad-payment-title">결제정보</h3>
+                    <dl class="ad-payment-list">
+                        <div class="ad-payment-row">
+                            <dt>선택한 상품</dt>
+                            <dd id="ad-selected-product">BASIC 30일</dd>
+                        </div>
+                        <div class="ad-payment-row">
+                            <dt>상품 금액</dt>
+                            <dd id="ad-product-price">100,000원</dd>
+                        </div>
+                        <div class="ad-payment-row">
+                            <dt>부가세 (VAT)</dt>
+                            <dd id="ad-vat-price">10,000원</dd>
+                        </div>
+                    </dl>
+                    <div class="ad-payment-total">
+                        <strong>총 결제 금액</strong>
+                        <strong id="ad-total-price">110,000원</strong>
                     </div>
                 </article>
-
-                <article class="ad-package-card">
-                    <button type="button" class="ad-package-tab is-active">PREMIUM</button>
-                    <div class="ad-package-body">
-                        <ul class="ad-package-feature-list">
-                            <li>지역 상단 광고프로필 노출</li>
-                            <li>점프 12개</li>
-                            <li>자동점프 30일</li>
-                            <li>커뮤니티 홍보글 1일 1회</li>
-                        </ul>
-                        <p class="ad-package-price">600,000원</p>
-                    </div>
-                </article>
-
-                <p class="ad-purchase-caption">배너광고는 최대 20개까지만 등록할 수 있습니다.</p>
             </section>
         </div>
     </main>
+
+    <script>
+      (() => {
+        const plans = {
+          basic: {
+            name: 'BASIC',
+            features: ['채용정보 아래 노출', '광고 간 자동점프', '여성회원 1:1 채팅 지원'],
+            options: [
+              { days: 30, price: 100000, originalPrice: null },
+              { days: 90, price: 270000, originalPrice: 300000 }
+            ]
+          },
+          plus: {
+            name: 'PLUS',
+            features: ['채용정보 최상단 노출', '광고 간 자동점프', '여성회원 1:1 채팅 지원', '커뮤니티 참여 가능 · 홍보글 1일 1회'],
+            options: [
+              { days: 30, price: 200000, originalPrice: null },
+              { days: 90, price: 490000, originalPrice: 600000 }
+            ]
+          },
+          premium: {
+            name: 'PREMIUM',
+            features: ['채용정보 최상단 노출', '광고 간 자동점프', '여성회원 1:1 채팅 지원', '커뮤니티 참여 가능 · 홍보글 1일 2회', '커뮤니티 목록 사이 배너광고 노출'],
+            options: [
+              { days: 30, price: 400000, originalPrice: null },
+              { days: 90, price: 990000, originalPrice: 1200000 }
+            ]
+          },
+          banner: {
+            name: 'BANNER',
+            features: ['커뮤니티 상단 배너 노출', '메인 상단 순환형 배너 노출', '배너 클릭 통계 제공'],
+            options: [
+              { days: 30, price: 500000, originalPrice: null },
+              { days: 90, price: 1350000, originalPrice: 1500000 }
+            ]
+          }
+        };
+
+        const state = { plan: 'basic', duration: 30 };
+        const tabs = Array.from(document.querySelectorAll('.ad-plan-tab'));
+        const featureList = document.getElementById('ad-plan-features');
+        const priceOptions = document.getElementById('ad-price-options');
+
+        const selectedProduct = document.getElementById('ad-selected-product');
+        const productPrice = document.getElementById('ad-product-price');
+        const vatPrice = document.getElementById('ad-vat-price');
+        const totalPrice = document.getElementById('ad-total-price');
+
+        const formatPrice = (value) => `${value.toLocaleString('ko-KR')}원`;
+
+        const render = () => {
+          const currentPlan = plans[state.plan];
+          tabs.forEach((tab) => {
+            const isActive = tab.dataset.plan === state.plan;
+            tab.classList.toggle('is-active', isActive);
+            tab.setAttribute('aria-selected', String(isActive));
+          });
+
+          featureList.innerHTML = currentPlan.features.map((item) => `<li>${item}</li>`).join('');
+
+          priceOptions.innerHTML = currentPlan.options.map((option) => {
+            const checked = option.days === state.duration;
+            return `
+              <button type="button" class="ad-price-option ${checked ? 'is-selected' : ''}" data-days="${option.days}">
+                <div>
+                  ${option.originalPrice ? `<span class="ad-price-original">${formatPrice(option.originalPrice)}</span>` : ''}
+                  <strong>${option.days}일 / ${formatPrice(option.price)}</strong>
+                </div>
+                <span class="ad-price-check" aria-hidden="true">${checked ? '●' : '○'}</span>
+              </button>
+            `;
+          }).join('');
+
+          const selectedOption = currentPlan.options.find((option) => option.days === state.duration) || currentPlan.options[0];
+          state.duration = selectedOption.days;
+
+          const vat = Math.round(selectedOption.price * 0.1);
+          const total = selectedOption.price + vat;
+          selectedProduct.textContent = `${currentPlan.name} ${selectedOption.days}일`;
+          productPrice.textContent = formatPrice(selectedOption.price);
+          vatPrice.textContent = formatPrice(vat);
+          totalPrice.textContent = formatPrice(total);
+        };
+
+        tabs.forEach((tab) => {
+          tab.addEventListener('click', () => {
+            state.plan = tab.dataset.plan;
+            state.duration = 30;
+            render();
+          });
+        });
+
+        priceOptions.addEventListener('click', (event) => {
+          const optionButton = event.target.closest('.ad-price-option');
+          if (!optionButton) return;
+          state.duration = Number(optionButton.dataset.days);
+          render();
+        });
+
+        render();
+      })();
+    </script>
 
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],

@@ -2202,42 +2202,43 @@
 }
 
 .ad-purchase-layout {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.ad-package-card {
     border: 1px solid #e5e7eb;
-    border-radius: 14px;
+    border-radius: 12px;
     overflow: hidden;
     background: #fff;
 }
 
-.ad-package-tab {
-    width: 100%;
-    border: 0;
-    border-bottom: 1px solid #eceff3;
+.ad-plan-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-bottom: 1px solid #e5e7eb;
     background: #f8fafc;
-    min-height: 44px;
-    font-size: 0.95rem;
+}
+
+.ad-plan-tab {
+    border: 0;
+    min-height: 48px;
+    font-size: 16px;
     font-weight: 700;
-    letter-spacing: 0.01em;
+    color: #9ca3af;
+    background: transparent;
+    border-bottom: 2px solid transparent;
 }
 
-.ad-package-tab.is-active {
-    background: #fff;
+.ad-plan-tab.is-active {
     color: #111827;
+    border-bottom-color: #111827;
+    background: #fff;
 }
 
-.ad-package-body {
-    padding: 16px;
+.ad-plan-detail {
+    padding: 18px 14px 14px;
 }
 
 .ad-package-feature-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -2246,28 +2247,99 @@
 .ad-package-feature-list li {
     position: relative;
     padding-left: 22px;
-    font-size: 0.95rem;
-    color: #1f2937;
+    font-size: 30px;
+    font-size: clamp(15px, 3.8vw, 30px);
+    color: #111827;
 }
 
 .ad-package-feature-list li::before {
     content: "✓";
     position: absolute;
     left: 0;
-    color: #10b981;
+    color: #16a34a;
     font-weight: 700;
 }
 
-.ad-package-price {
-    margin: 16px 0 0;
-    text-align: right;
-    font-size: 1.1rem;
+.ad-price-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.ad-price-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 16px;
     font-weight: 700;
+    text-align: left;
+}
+
+.ad-price-option.is-selected {
+    border-color: #111827;
+}
+
+.ad-price-original {
+    display: block;
+    font-size: 14px;
+    color: #6b7280;
+    text-decoration: line-through;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.ad-price-check {
+    font-size: 18px;
     color: #111827;
 }
 
-.ad-purchase-caption {
-    margin: 4px 2px 0;
-    font-size: 0.9rem;
-    color: #6b7280;
+.ad-payment-card {
+    border-top: 1px solid #e5e7eb;
+    padding: 18px 14px;
+}
+
+.ad-payment-title {
+    margin: 0 0 14px;
+    font-size: 22px;
+    font-size: clamp(18px, 4vw, 22px);
+}
+
+.ad-payment-list {
+    margin: 0;
+}
+
+.ad-payment-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-size: 28px;
+    font-size: clamp(16px, 3.6vw, 28px);
+}
+
+.ad-payment-total {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 32px;
+    font-size: clamp(20px, 4.6vw, 32px);
+}
+
+@media (max-width: 520px) {
+    .ad-plan-tab {
+        font-size: 14px;
+    }
+
+    .ad-price-options {
+        grid-template-columns: 1fr;
+    }
 }
