@@ -111,6 +111,100 @@ const pageRegistry = {
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js"]
   },
+  'business-management': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <a href="/mypage" class="community-back-link" aria-label="마이페이지로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
+                    <span class="community-board-name">사업자정보 관리</span>
+                </div>
+            </header>
+
+            <section class="business-info-page" aria-label="사업자 정보 관리 폼">
+                <div class="business-info-notice">
+                    <p>버블알바에서 성매매와 관련된 광고를 할 경우,</p>
+                    <p>서비스 이용이 제한되며 법적 처벌을 받을 수 있어요.</p>
+                    <a href="/support/notice/provision">자세히 보기</a>
+                </div>
+
+                <div class="business-info-section">
+                    <h3>사업자등록증 이미지</h3>
+                    <input id="business-license-input" class="hidden" type="file" accept="image/*">
+                    <button id="business-license-upload-btn" class="business-license-upload-btn" type="button" aria-label="사업자등록증 업로드">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 20 20" width="18" height="18">
+                            <path stroke-linecap="round" stroke-width="1.5" d="M9.754.75v18M18.75 9.753h-18"></path>
+                        </svg>
+                    </button>
+                    <p id="business-license-file-name" class="business-license-file-name">등록할 이미지를 선택해주세요.</p>
+                    <div class="business-info-guide">
+                        <p>• 사업자등록증에 가려지는 부분이 없어야해요.</p>
+                        <p>• 이미지에 왜곡이나 흐린 부분이 있는지 확인해주세요.</p>
+                    </div>
+                </div>
+
+                <div class="business-info-section">
+                    <h3>사업자 상세정보</h3>
+                    <div class="business-verify-row">
+                        <input id="business-number" type="text" maxlength="12" placeholder="사업자 번호를 입력해주세요.">
+                        <button id="business-verify-btn" type="button" disabled>검증</button>
+                    </div>
+                    <input id="business-name" type="text" maxlength="100" placeholder="사업자 상호를 입력해주세요.">
+                    <input id="business-owner" type="text" maxlength="24" placeholder="사업자 대표를 입력해주세요.">
+                    <div class="business-address-wrap">
+                        <input id="business-address" type="text" maxlength="100" placeholder="사업자 주소를 입력해주세요." readonly>
+                        <button id="business-address-search-btn" type="button" aria-label="주소 검색">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" height="20" width="20">
+                                <path d="M19.975 8.187c-.97-4.61-4.697-6.687-7.97-6.687h-.01c-3.264 0-7 2.066-7.97 6.677-1.082 5.15 1.951 9.424 4.596 12.17C9.6 21.363 10.742 22.5 12 22.5s2.408-1.136 3.38-2.154c2.644-2.745 5.677-7.008 4.595-12.159m-7.97 5.001c-1.61 0-2.913-1.407-2.913-3.144S10.396 6.9 12.005 6.9s2.912 1.407 2.912 3.144-1.303 3.144-2.912 3.144"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <input id="business-address-detail" type="text" maxlength="100" placeholder="(선택) 상세 주소를 입력해주세요.">
+                </div>
+
+                <div class="business-info-section business-billing">
+                    <h3>계산서 발행</h3>
+                    <label class="business-billing-option">
+                        <input type="radio" name="billing-type" value="cash" checked>
+                        <span>현금영수증</span>
+                    </label>
+                    <p class="business-billing-help">광고프로필에 등록한 연락처로 발급해드려요.</p>
+                    <label class="business-billing-option">
+                        <input type="radio" name="billing-type" value="tax">
+                        <span>세금계산서</span>
+                    </label>
+                    <p class="business-billing-help">사업자정보에 등록한 사업자번호로 발급해드려요.</p>
+                </div>
+
+                <div class="business-info-notice business-info-notice--bottom">
+                    <p>광고프로필과 다른 사업자이거나 상세정보에 오탈자가 있을 경우,</p>
+                    <p>별도 안내 없이 수정되거나 반려될 수 있어요.</p>
+                </div>
+            </section>
+        </div>
+    </main>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/businessInfo.js", "scripts/js/components/footerNav.js"]
+  },
   'ad-purchase': {
     template: `<header class="header">
         <div class="header-container">
@@ -666,7 +760,7 @@ const pageRegistry = {
                         <a class="mypage-link-item" href="/ad-purchase"><span>광고 구매</span></a>
                         <a class="mypage-link-item" href="/business-info"><span>점프 관리</span></a>
                         <a class="mypage-link-item" href="/business-info"><span>광고프로필 관리</span></a>
-                        <a class="mypage-link-item" href="/business-info"><span>사업자정보 관리</span></a>
+                        <a class="mypage-link-item" href="/business-management"><span>사업자정보 관리</span></a>
                     </div>
                 </section>
 

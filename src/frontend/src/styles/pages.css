@@ -2406,3 +2406,132 @@
         font-size: 14px;
     }
 }
+
+.business-info-page {
+    border: 1px solid #e9ecef;
+    border-radius: 18px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.business-info-notice {
+    background: #f5f6f8;
+    text-align: center;
+    color: #6c757d;
+    font-size: 13px;
+    line-height: 1.55;
+    padding: 16px 14px;
+}
+
+.business-info-notice a {
+    display: inline-block;
+    margin-top: 6px;
+    color: #2b6fdb;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.business-info-section {
+    padding: 40px 16px 0;
+}
+
+.business-info-section h3 {
+    margin: 0;
+    font-size: 17px;
+    color: #212529;
+}
+
+.business-license-upload-btn {
+    width: 70px;
+    height: 70px;
+    margin-top: 16px;
+    border-radius: 14px;
+    border: 1px solid #dee2e6;
+    background: #fff;
+    color: #868e96;
+}
+
+.business-license-file-name {
+    margin: 10px 0 0;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.business-info-guide {
+    margin-top: 12px;
+    color: #6c757d;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.business-info-page input[type="text"] {
+    width: 100%;
+    margin-top: 12px;
+    min-height: 48px;
+    border: 1px solid #dee2e6;
+    border-radius: 14px;
+    padding: 0 12px;
+    font-size: 15px;
+    color: #212529;
+}
+
+.business-verify-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.business-verify-row input {
+    margin-top: 0 !important;
+}
+
+.business-verify-row button {
+    flex: 0 0 100px;
+    min-height: 48px;
+    border: 0;
+    border-radius: 14px;
+    background: #ced4da;
+    color: #fff;
+    font-weight: 700;
+}
+
+.business-verify-row button:not(:disabled) {
+    background: #212529;
+}
+
+.business-address-wrap {
+    position: relative;
+}
+
+.business-address-wrap button {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    color: #adb5bd;
+    cursor: pointer;
+}
+
+.business-billing {
+    padding-bottom: 0;
+}
+
+.business-billing-option {
+    margin-top: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.business-billing-help {
+    margin: 8px 0 0;
+    color: #6c757d;
+    font-size: 13px;
+}
+
+.business-info-notice--bottom {
+    margin-top: 60px;
+}
