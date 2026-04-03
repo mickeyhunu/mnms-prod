@@ -644,7 +644,3 @@ module.exports = {
   updateComment,
   deleteComment
 };
-    const targetBoardType = parseBoardType(post.board_type || post.boardType);
-    if (isBusinessUser(req.user) && targetBoardType !== BOARD_TYPES.PROMOTION) {
-      return res.status(403).json({ message: '광고자 계정은 홍보게시판 글만 수정할 수 있습니다.' });
-    }
