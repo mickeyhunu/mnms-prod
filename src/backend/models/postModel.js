@@ -8,7 +8,8 @@ const BOARD_TYPES = {
   ANON: 'ANON',
   REVIEW: 'REVIEW',
   STORY: 'STORY',
-  QUESTION: 'QUESTION'
+  QUESTION: 'QUESTION',
+  PROMOTION: 'PROMOTION'
 };
 
 const BOARD_TYPE_SET = new Set(Object.values(BOARD_TYPES));
