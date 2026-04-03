@@ -153,6 +153,8 @@ const pageRegistry = {
                     <div class="ad-price-options" id="ad-price-options"></div>
                 </article>
 
+                <hr class="ad-payment-divider">
+
                 <article class="ad-payment-card" aria-label="결제 정보">
                     <h3 class="ad-payment-title">결제정보</h3>
                     <dl class="ad-payment-list">
@@ -180,32 +182,48 @@ const pageRegistry = {
 
     <script>
       (() => {
-        const BANNER_AD_LIMIT = 20;
         const plans = {
           basic: {
             name: 'BASIC',
-            features: ['광고프로필 노출', '점프 6개', '자동점프 30일'],
+            features: [
+              { text: '광고프로필 노출', enabled: true },
+              { text: '점프 6개', enabled: true },
+              { text: '자동점프 30일', enabled: true }
+            ],
             options: [
               { days: 30, price: 190000, originalPrice: null }
             ]
           },
           plus: {
             name: 'PLUS',
-            features: ['광고프로필 노출', '점프 9개', '자동점프 30일', '커뮤니티 홍보글 1일 1회'],
+            features: [
+              { text: '광고프로필 노출', enabled: true },
+              { text: '점프 9개', enabled: true },
+              { text: '자동점프 30일', enabled: true },
+              { text: '커뮤니티 홍보글 1일 1회', enabled: true }
+            ],
             options: [
               { days: 30, price: 390000, originalPrice: null }
             ]
           },
           premium: {
             name: 'PREMIUM',
-            features: ['지역 상단 광고프로필 노출', '점프 12개', '자동점프 30일', '커뮤니티 홍보글 1일 1회'],
+            features: [
+              { text: '지역 상단 광고프로필 노출', enabled: true },
+              { text: '점프 12개', enabled: true },
+              { text: '자동점프 30일', enabled: true },
+              { text: '커뮤니티 홍보글 1일 1회', enabled: true }
+            ],
             options: [
               { days: 30, price: 590000, originalPrice: null }
             ]
           },
           banner: {
             name: 'BANNER',
-            features: ['배너광고 최대 20개 등록 가능', '잔여 배너광고 가능 수 계산 중...'],
+            features: [
+              { text: '배너광고 최대 20개 등록 가능', enabled: true },
+              { text: '배너 영역 랜덤 노출', enabled: true }
+            ],
             options: [
               { days: 30, price: 500000, originalPrice: null }
             ]
@@ -224,29 +242,6 @@ const pageRegistry = {
 
         const formatPrice = (value) => value.toLocaleString('ko-KR') + '원';
 
-        const updateBannerRemainingFeature = (currentBannerCount = 0) => {
-          const normalizedCount = Number.isFinite(currentBannerCount) ? Math.max(0, Number(currentBannerCount)) : 0;
-          const remainingCount = Math.max(0, BANNER_AD_LIMIT - normalizedCount);
-          plans.banner.features = [
-            '배너광고 최대 ' + BANNER_AD_LIMIT + '개 등록 가능',
-            BANNER_AD_LIMIT + ' - 현재 배너광고 갯수(' + normalizedCount + '개) = 잔여 배너광고 가능 갯수(' + remainingCount + '개)'
-          ];
-        };
-
-        const loadBannerAdRemaining = async () => {
-          try {
-            if (typeof APIClient === 'undefined') {
-              updateBannerRemainingFeature(0);
-              return;
-            }
-            const response = await APIClient.get('/users/me/business-ads');
-            const bannerItems = response && Array.isArray(response.content) ? response.content : [];
-            updateBannerRemainingFeature(bannerItems.length);
-          } catch (_error) {
-            updateBannerRemainingFeature(0);
-          }
-        };
-
         const render = () => {
           const currentPlan = plans[state.plan];
           tabs.forEach((tab) => {
@@ -255,7 +250,7 @@ const pageRegistry = {
             tab.setAttribute('aria-selected', String(isActive));
           });
 
-          featureList.innerHTML = currentPlan.features.map((item) => '<li>' + item + '</li>').join('');
+          featureList.innerHTML = currentPlan.features.map((item) => '<li class="' + (item.enabled ? 'is-enabled' : 'is-disabled') + '">' + item.text + '</li>').join('');
 
           priceOptions.innerHTML = currentPlan.options.map((option) => {
             const checked = option.days === state.duration;
@@ -267,7 +262,7 @@ const pageRegistry = {
               + originalPrice
               + '<strong>' + option.days + '일 / ' + formatPrice(option.price) + '</strong>'
               + '</div>'
-              + '<span class="ad-price-check" aria-hidden="true">' + (checked ? '●' : '○') + '</span>'
+              + '<span class="ad-price-check ' + (checked ? 'is-selected' : '') + '" aria-hidden="true">' + (checked ? '●' : '○') + '</span>'
               + '</button>';
           }).join('');
 
@@ -297,7 +292,7 @@ const pageRegistry = {
           render();
         });
 
-        loadBannerAdRemaining().then(render, render);
+        render();
       })();
     </script>
 

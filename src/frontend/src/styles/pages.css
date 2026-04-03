@@ -2203,7 +2203,7 @@
 
 .ad-purchase-layout {
     border: 1px solid #e5e7eb;
-    border-radius: 12px;
+    border-radius: 14px;
     overflow: hidden;
     background: #fff;
 }
@@ -2211,28 +2211,76 @@
 .ad-plan-tabs {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    border-bottom: 1px solid #e5e7eb;
-    background: #f8fafc;
-}
-
-.ad-plan-tab {
-    border: 0;
-    min-height: 48px;
-    font-size: 16px;
-    font-weight: 700;
-    color: #9ca3af;
-    background: transparent;
-    border-bottom: 2px solid transparent;
-}
-
-.ad-plan-tab.is-active {
-    color: #111827;
-    border-bottom-color: #111827;
     background: #fff;
 }
 
+.ad-plan-tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border: 0;
+    min-height: 54px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #9ca3af;
+    background: transparent;
+}
+
+.ad-plan-tab::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: #e5e7eb;
+}
+
+.ad-plan-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.ad-plan-badge--gold {
+    color: #7a5b00;
+    background: #f8e6a0;
+}
+
+.ad-plan-badge--silver {
+    color: #475569;
+    background: #dbe4f0;
+}
+
+.ad-plan-badge--bronze {
+    color: #7c4a03;
+    background: #f2d2b6;
+}
+
+.ad-plan-tab.is-active {
+    color: #111;
+    font-weight: 800;
+}
+
+.ad-plan-tab.is-active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    width: 80%;
+    height: 2px;
+    background: #111;
+}
+
 .ad-plan-detail {
-    padding: 18px 14px 14px;
+    padding: 20px 15px 16px;
 }
 
 .ad-package-feature-list {
@@ -2246,67 +2294,88 @@
 
 .ad-package-feature-list li {
     position: relative;
-    padding-left: 22px;
-    font-size: 30px;
-    font-size: clamp(15px, 3.8vw, 30px);
+    padding-left: 24px;
+    font-size: 16px;
     color: #111827;
 }
 
-.ad-package-feature-list li::before {
+.ad-package-feature-list li.is-enabled::before,
+.ad-package-feature-list li.is-disabled::before {
     content: "✓";
     position: absolute;
     left: 0;
-    color: #16a34a;
+    top: 50%;
+    transform: translateY(-50%);
     font-weight: 700;
+}
+
+.ad-package-feature-list li.is-enabled::before {
+    color: #16a34a;
+}
+
+.ad-package-feature-list li.is-disabled::before {
+    content: "✕";
+    color: #dc2626;
 }
 
 .ad-price-options {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 20px;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 22px;
 }
 
 .ad-price-option {
     display: flex;
-    justify-content: space-between;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
     align-items: center;
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    border-radius: 10px;
-    padding: 10px 12px;
+    gap: 8px;
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 0;
     font-size: 16px;
-    font-weight: 700;
+    font-weight: 500;
     text-align: left;
 }
 
-.ad-price-option.is-selected {
-    border-color: #111827;
+.ad-price-option strong {
+    font-size: 17px;
 }
 
 .ad-price-original {
     display: block;
-    font-size: 14px;
+    font-size: 13px;
     color: #6b7280;
     text-decoration: line-through;
     font-weight: 500;
-    margin-bottom: 2px;
+    margin: 0 18px 4px auto;
+    width: fit-content;
 }
 
 .ad-price-check {
-    font-size: 18px;
+    font-size: 20px;
+    color: #9ca3af;
+}
+
+.ad-price-check.is-selected {
     color: #111827;
 }
 
+.ad-payment-divider {
+    margin: 20px 0 0;
+    border: 0;
+    height: 6px;
+    background: #f3f4f6;
+}
+
 .ad-payment-card {
-    border-top: 1px solid #e5e7eb;
-    padding: 18px 14px;
+    padding: 24px 15px 18px;
 }
 
 .ad-payment-title {
     margin: 0 0 14px;
     font-size: 22px;
-    font-size: clamp(18px, 4vw, 22px);
 }
 
 .ad-payment-list {
@@ -2318,9 +2387,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 8px;
-    font-size: 28px;
-    font-size: clamp(16px, 3.6vw, 28px);
+    margin-bottom: 10px;
+    font-size: 16px;
 }
 
 .ad-payment-total {
@@ -2330,16 +2398,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 32px;
-    font-size: clamp(20px, 4.6vw, 32px);
+    font-size: 20px;
 }
 
 @media (max-width: 520px) {
     .ad-plan-tab {
         font-size: 14px;
-    }
-
-    .ad-price-options {
-        grid-template-columns: 1fr;
     }
 }
