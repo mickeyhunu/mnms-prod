@@ -162,16 +162,16 @@ const pageRegistry = {
                         </div>
                         <div class="ad-payment-row">
                             <dt>상품 금액</dt>
-                            <dd id="ad-product-price">100,000원</dd>
+                            <dd id="ad-product-price">200,000원</dd>
                         </div>
                         <div class="ad-payment-row">
                             <dt>부가세 (VAT)</dt>
-                            <dd id="ad-vat-price">10,000원</dd>
+                            <dd id="ad-vat-price">20,000원</dd>
                         </div>
                     </dl>
                     <div class="ad-payment-total">
                         <strong>총 결제 금액</strong>
-                        <strong id="ad-total-price">110,000원</strong>
+                        <strong id="ad-total-price">220,000원</strong>
                     </div>
                 </article>
             </section>
@@ -180,37 +180,34 @@ const pageRegistry = {
 
     <script>
       (() => {
+        const BANNER_AD_LIMIT = 20;
         const plans = {
           basic: {
             name: 'BASIC',
-            features: ['채용정보 아래 노출', '광고 간 자동점프', '여성회원 1:1 채팅 지원'],
+            features: ['광고프로필 노출', '점프 6개', '자동점프 30일'],
             options: [
-              { days: 30, price: 100000, originalPrice: null },
-              { days: 90, price: 270000, originalPrice: 300000 }
+              { days: 30, price: 200000, originalPrice: null }
             ]
           },
           plus: {
             name: 'PLUS',
-            features: ['채용정보 최상단 노출', '광고 간 자동점프', '여성회원 1:1 채팅 지원', '커뮤니티 참여 가능 · 홍보글 1일 1회'],
+            features: ['광고프로필 노출', '점프 9개', '자동점프 30일', '커뮤니티 홍보글 1일 1회'],
             options: [
-              { days: 30, price: 200000, originalPrice: null },
-              { days: 90, price: 490000, originalPrice: 600000 }
+              { days: 30, price: 400000, originalPrice: null }
             ]
           },
           premium: {
             name: 'PREMIUM',
-            features: ['채용정보 최상단 노출', '광고 간 자동점프', '여성회원 1:1 채팅 지원', '커뮤니티 참여 가능 · 홍보글 1일 2회', '커뮤니티 목록 사이 배너광고 노출'],
+            features: ['지역 상단 광고프로필 노출', '점프 12개', '자동점프 30일', '커뮤니티 홍보글 1일 1회'],
             options: [
-              { days: 30, price: 400000, originalPrice: null },
-              { days: 90, price: 990000, originalPrice: 1200000 }
+              { days: 30, price: 600000, originalPrice: null }
             ]
           },
           banner: {
             name: 'BANNER',
-            features: ['커뮤니티 상단 배너 노출', '메인 상단 순환형 배너 노출', '배너 클릭 통계 제공'],
+            features: ['배너광고 최대 20개 등록 가능', '잔여 배너광고 가능 수 계산 중...'],
             options: [
-              { days: 30, price: 500000, originalPrice: null },
-              { days: 90, price: 1350000, originalPrice: 1500000 }
+              { days: 30, price: 500000, originalPrice: null }
             ]
           }
         };
@@ -226,6 +223,29 @@ const pageRegistry = {
         const totalPrice = document.getElementById('ad-total-price');
 
         const formatPrice = (value) => value.toLocaleString('ko-KR') + '원';
+
+        const updateBannerRemainingFeature = (currentBannerCount = 0) => {
+          const normalizedCount = Number.isFinite(currentBannerCount) ? Math.max(0, Number(currentBannerCount)) : 0;
+          const remainingCount = Math.max(0, BANNER_AD_LIMIT - normalizedCount);
+          plans.banner.features = [
+            '배너광고 최대 ' + BANNER_AD_LIMIT + '개 등록 가능',
+            BANNER_AD_LIMIT + ' - 현재 배너광고 갯수(' + normalizedCount + '개) = 잔여 배너광고 가능 갯수(' + remainingCount + '개)'
+          ];
+        };
+
+        const loadBannerAdRemaining = async () => {
+          try {
+            if (typeof APIClient === 'undefined') {
+              updateBannerRemainingFeature(0);
+              return;
+            }
+            const response = await APIClient.get('/users/me/business-ads');
+            const bannerItems = Array.isArray(response?.content) ? response.content : [];
+            updateBannerRemainingFeature(bannerItems.length);
+          } catch (_error) {
+            updateBannerRemainingFeature(0);
+          }
+        };
 
         const render = () => {
           const currentPlan = plans[state.plan];
@@ -277,7 +297,7 @@ const pageRegistry = {
           render();
         });
 
-        render();
+        loadBannerAdRemaining().finally(render);
       })();
     </script>
 
