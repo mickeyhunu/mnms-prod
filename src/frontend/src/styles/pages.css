@@ -633,6 +633,12 @@
     margin-top: 0;
 }
 
+.mypage-rank-badge {
+    height: 18px;
+    width: auto;
+    vertical-align: middle;
+}
+
 .profile-form-actions {
     display: flex;
     justify-content: flex-end;
