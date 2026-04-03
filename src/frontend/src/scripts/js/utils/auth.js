@@ -21,8 +21,26 @@ const Auth = {
 
         return '';
     },
-    resolveBusinessBadgeImage(user) {
-        if (!this.isBusinessAccount(user)) return '';
+    isBusinessAdActive(user) {
+        if (!user) return false;
+
+        const activeFlagCandidates = [
+            user?.hasActiveBusinessAd,
+            user?.businessAdActive,
+            user?.isBusinessAdActive,
+            user?.isAdvertising,
+            user?.adActive
+        ];
+
+        const explicitFlag = activeFlagCandidates.find((value) => typeof value === 'boolean');
+        if (typeof explicitFlag === 'boolean') return explicitFlag;
+
+        return false;
+    },
+    resolveBusinessBadge(user) {
+        if (!this.isBusinessAccount(user)) {
+            return { image: '', label: '' };
+        }
 
         const rawPlan = user?.adPlan
             || user?.plan
@@ -33,10 +51,35 @@ const Auth = {
         const adPlan = this.normalizeBusinessAdPlan(rawPlan);
 
         if (adPlan) {
-            return `/src/assets/ad-plan-badges/${adPlan}-badge.png`;
+            const labelMap = {
+                basic: '베이직',
+                plus: '플러스',
+                premium: '프리미엄',
+                banner: '배너'
+            };
+            return {
+                image: `/src/assets/ad-plan-badges/${adPlan}-badge.png`,
+                label: labelMap[adPlan] || adPlan
+            };
         }
 
-        return '/src/assets/ad-plan-badges/premium-badge.png';
+        if (this.isBusinessAdActive(user)) {
+            return {
+                image: '/src/assets/ad-plan-badges/premium-badge.png',
+                label: '프리미엄'
+            };
+        }
+
+        return {
+            image: '/src/assets/ad-plan-badges/none-badge.png',
+            label: '미광고'
+        };
+    },
+    resolveBusinessBadgeImage(user) {
+        return this.resolveBusinessBadge(user).image;
+    },
+    resolveBusinessBadgeLabel(user) {
+        return this.resolveBusinessBadge(user).label;
     },
     formatNicknameWithLevel(user) {
         if (!user) return '';
