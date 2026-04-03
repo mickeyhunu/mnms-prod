@@ -173,7 +173,7 @@ a:hover {
 }
 
 .text-center { text-align: center; }
-.text-muted { color: var(--text-subtle); }
+.text-muted { color: var(--text-subtle); text-align: center; }
 .text-sm { font-size: 12px; }
 .hidden { display: none !important; }
 
