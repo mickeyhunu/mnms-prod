@@ -18,7 +18,6 @@ const BOARD_TYPES = postModel.BOARD_TYPES || {
   QUESTION: 'QUESTION',
   PROMOTION: 'PROMOTION'
 };
-const PROMOTION_TITLE_PREFIX = '광고 ';
 
 const DEFAULT_PAGE = 0;
 const DEFAULT_SIZE = 10;
@@ -50,13 +49,6 @@ function isBusinessUser(user) {
   const role = String(user?.role || '').toUpperCase();
   const memberType = String(user?.member_type || user?.memberType || '').toUpperCase();
   return role === 'BUSINESS' || memberType === 'BUSINESS';
-}
-
-function ensurePromotionTitlePrefix(title = '') {
-  const trimmed = String(title || '').trim();
-  if (!trimmed) return '';
-  if (trimmed.startsWith(PROMOTION_TITLE_PREFIX)) return trimmed;
-  return `${PROMOTION_TITLE_PREFIX}${trimmed}`;
 }
 
 
@@ -366,7 +358,7 @@ async function createPost(req, res, next) {
       : [];
     const postId = await postModel.createPost({
       userId: req.user.id,
-      title: boardType === BOARD_TYPES.PROMOTION ? ensurePromotionTitlePrefix(title) : title,
+      title,
       content,
       boardType,
       imageUrls: await resolveImageUrls(req.body),
@@ -415,9 +407,7 @@ async function updatePost(req, res, next) {
     const nextImageUrls = await resolveImageUrls(req.body);
 
     await postModel.updatePost(postId, {
-      title: targetBoardType === BOARD_TYPES.PROMOTION
-        ? ensurePromotionTitlePrefix(req.body.title ?? post.title)
-        : (req.body.title ?? post.title),
+      title: req.body.title ?? post.title,
       content: req.body.content ?? post.content,
       imageUrls: nextImageUrls,
       isNotice: req.user.role === 'ADMIN' ? Boolean(req.body.isNotice) : Boolean(post.is_notice),
