@@ -111,6 +111,100 @@ const pageRegistry = {
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js"]
   },
+  'business-management': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <a href="/mypage" class="community-back-link" aria-label="마이페이지로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
+                    <span class="community-board-name">사업자정보 관리</span>
+                </div>
+            </header>
+
+            <section class="business-info-page" aria-label="사업자 정보 관리 폼">
+                <div class="business-info-notice">
+                    <p>버블알바에서 성매매와 관련된 광고를 할 경우,</p>
+                    <p>서비스 이용이 제한되며 법적 처벌을 받을 수 있어요.</p>
+                    <a href="/support/notice/provision">자세히 보기</a>
+                </div>
+
+                <div class="business-info-section">
+                    <h3>사업자등록증 이미지</h3>
+                    <input id="business-license-input" class="hidden" type="file" accept="image/*">
+                    <button id="business-license-upload-btn" class="business-license-upload-btn" type="button" aria-label="사업자등록증 업로드">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 20 20" width="18" height="18">
+                            <path stroke-linecap="round" stroke-width="1.5" d="M9.754.75v18M18.75 9.753h-18"></path>
+                        </svg>
+                    </button>
+                    <p id="business-license-file-name" class="business-license-file-name">등록할 이미지를 선택해주세요.</p>
+                    <div class="business-info-guide">
+                        <p>• 사업자등록증에 가려지는 부분이 없어야해요.</p>
+                        <p>• 이미지에 왜곡이나 흐린 부분이 있는지 확인해주세요.</p>
+                    </div>
+                </div>
+
+                <div class="business-info-section">
+                    <h3>사업자 상세정보</h3>
+                    <div class="business-verify-row">
+                        <input id="business-number" type="text" maxlength="12" placeholder="사업자 번호를 입력해주세요.">
+                        <button id="business-verify-btn" type="button" disabled>검증</button>
+                    </div>
+                    <input id="business-name" type="text" maxlength="100" placeholder="사업자 상호를 입력해주세요.">
+                    <input id="business-owner" type="text" maxlength="24" placeholder="사업자 대표를 입력해주세요.">
+                    <div class="business-address-wrap">
+                        <input id="business-address" type="text" maxlength="100" placeholder="사업자 주소를 입력해주세요." readonly>
+                        <button id="business-address-search-btn" type="button" aria-label="주소 검색">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" height="20" width="20">
+                                <path d="M19.975 8.187c-.97-4.61-4.697-6.687-7.97-6.687h-.01c-3.264 0-7 2.066-7.97 6.677-1.082 5.15 1.951 9.424 4.596 12.17C9.6 21.363 10.742 22.5 12 22.5s2.408-1.136 3.38-2.154c2.644-2.745 5.677-7.008 4.595-12.159m-7.97 5.001c-1.61 0-2.913-1.407-2.913-3.144S10.396 6.9 12.005 6.9s2.912 1.407 2.912 3.144-1.303 3.144-2.912 3.144"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <input id="business-address-detail" type="text" maxlength="100" placeholder="(선택) 상세 주소를 입력해주세요.">
+                </div>
+
+                <div class="business-info-section business-billing">
+                    <h3>계산서 발행</h3>
+                    <label class="business-billing-option">
+                        <input type="radio" name="billing-type" value="cash" checked>
+                        <span>현금영수증</span>
+                    </label>
+                    <p class="business-billing-help">광고프로필에 등록한 연락처로 발급해드려요.</p>
+                    <label class="business-billing-option">
+                        <input type="radio" name="billing-type" value="tax">
+                        <span>세금계산서</span>
+                    </label>
+                    <p class="business-billing-help">사업자정보에 등록한 사업자번호로 발급해드려요.</p>
+                </div>
+
+                <div class="business-info-notice business-info-notice--bottom">
+                    <p>광고프로필과 다른 사업자이거나 상세정보에 오탈자가 있을 경우,</p>
+                    <p>별도 안내 없이 수정되거나 반려될 수 있어요.</p>
+                </div>
+            </section>
+        </div>
+    </main>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/businessInfo.js", "scripts/js/components/footerNav.js"]
+  },
   'ad-purchase': {
     template: `<header class="header">
         <div class="header-container">
@@ -666,7 +760,7 @@ const pageRegistry = {
                         <a class="mypage-link-item" href="/ad-purchase"><span>광고 구매</span></a>
                         <a class="mypage-link-item" href="/business-info"><span>점프 관리</span></a>
                         <a class="mypage-link-item" href="/business-info"><span>광고프로필 관리</span></a>
-                        <a class="mypage-link-item" href="/business-info"><span>사업자정보 관리</span></a>
+                        <a class="mypage-link-item" href="/business-management"><span>사업자정보 관리</span></a>
                     </div>
                 </section>
 
@@ -1040,7 +1134,7 @@ const pageRegistry = {
   'terms-policy': {
     template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
     <main class="main-content"><div class="container customer-service-page mypage-linked-container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">약관 및 정책</span></div></header>
-    <div class="mypage-linked-content"><section class="customer-service-card terms-policy-card"><h2>서비스 이용약관</h2><p>본 서비스는 커뮤니티 플랫폼 제공을 목적으로 하며, 회원은 관련 법령 및 본 약관을 준수해야 합니다. 회사는 서비스 운영, 점검, 기능 변경이 필요한 경우 사전 공지 후 서비스를 변경할 수 있습니다.</p><ul><li>회원 계정 정보는 정확하게 입력해야 하며 타인 계정 도용은 금지됩니다.</li><li>불법 게시물, 타인 권리 침해, 서비스 운영 방해 행위는 제재 대상입니다.</li><li>서비스 장애, 외부 링크, 제3자 제공 정보에 대한 책임 범위는 약관에 따릅니다.</li></ul><h2>개인정보처리방침</h2><p>회사는 회원가입, 본인확인, 서비스 제공 및 고객응대를 위해 필요한 최소한의 개인정보를 수집·이용합니다.</p><ul><li>수집 항목: 아이디, 비밀번호, 휴대폰 번호, 닉네임 등</li><li>이용 목적: 회원 식별, 부정 이용 방지, 문의 대응, 서비스 개선</li><li>보유 기간: 관련 법령 또는 이용 목적 달성 시까지</li></ul><p>개인정보 열람·정정·삭제 요청은 고객센터를 통해 접수할 수 있습니다.</p><h2>커뮤니티 운영정책</h2><p>건전한 커뮤니티 운영을 위해 아래 정책을 적용합니다.</p><ul><li>금지 콘텐츠: 불법 정보, 혐오·비방, 음란물, 저작권 침해 게시물</li><li>제재 절차: 경고 → 일시 이용제한 → 영구 이용제한</li><li>신고 처리: 접수 후 내부 기준에 따라 검토 및 조치</li></ul><p class="terms-policy-updated">시행일: 2026-03-17</p></section></div></div></main>
+    <div class="mypage-linked-content"><section class="customer-service-card terms-policy-card"><h2>서비스 이용약관</h2><p>본 약관은 MN컴퍼니(이하 “회사”)가 운영하는 미드나잇 맨즈 커뮤니티 서비스(이하 “서비스”)의 이용과 관련하여 회사와 회원의 권리·의무 및 책임사항을 규정합니다.</p><ul><li>회원은 정확한 정보로 가입해야 하며, 계정 공유·도용·명의 도용은 금지됩니다.</li><li>회원은 관련 법령, 본 약관, 커뮤니티 운영정책을 준수해야 합니다.</li><li>회사는 서비스 운영상 필요한 경우 기능 추가·변경·중단을 사전 공지 후 진행할 수 있습니다. 단, 긴급 장애 대응 등 불가피한 경우 사후 공지할 수 있습니다.</li></ul><p>회사는 회원이 등록한 게시물 중 관계 법령 위반, 권리 침해, 서비스 운영 방해, 스팸·광고·사기성 게시물 등에 해당하는 내용을 사전 통지 없이 제한·삭제할 수 있습니다.</p><h2>회원의 권리와 의무</h2><ul><li>회원은 언제든지 회원 탈퇴를 요청할 수 있으며, 회사는 관련 법령에 따라 처리합니다.</li><li>회원은 본인 계정 보안(아이디/비밀번호 관리)에 대한 책임이 있으며, 부정 사용 발견 시 즉시 회사에 알려야 합니다.</li><li>회원은 서비스를 통해 얻은 정보를 회사의 사전 승인 없이 상업적으로 이용하거나 제3자에게 제공할 수 없습니다.</li></ul><h2>개인정보처리방침</h2><p>MN컴퍼니(이하 “회사”)는 「개인정보 보호법」 제30조에 따라 정보주체의 개인정보를 보호하고 권익을 보장하기 위해 다음과 같이 개인정보처리방침을 수립·공개합니다.</p><p>회사는 서비스 제공에 필요한 범위에서만 개인정보를 수집·이용하며, 목적이 변경되는 경우 관련 법령에 따라 별도 동의를 받는 등 필요한 조치를 이행합니다.</p><ul><li>처리 목적: 회원 가입의사 확인, 본인 식별·인증, 계정 관리, 고객 문의 처리, 부정 이용 방지, 공지 전달</li><li>처리 항목: 아이디, 비밀번호, 휴대폰 번호, 닉네임(서비스 이용 과정에서 IP주소, 쿠키, 접속일시, 이용기록, 기기정보가 자동 수집될 수 있음)</li><li>보유 기간: 회원 탈퇴 시까지. 단, 관계 법령에 따라 보존이 필요한 경우 해당 기간 동안 별도 보관</li></ul><p>회사는 정보주체의 동의가 있거나 법령에 근거한 경우를 제외하고 개인정보를 제3자에게 제공하지 않으며, 위탁이 필요한 경우 수탁자·위탁업무를 사전에 고지하고 관리·감독합니다.</p><p>정보주체는 언제든지 개인정보 열람, 정정, 삭제, 처리정지 요구를 할 수 있으며 회사는 관련 법령에 따라 지체 없이 조치합니다. 다만, 법령상 보관의무가 있는 정보는 삭제가 제한될 수 있습니다.</p><ul><li>안전성 확보조치: 접근권한 관리, 비밀번호 등 주요 정보 암호화, 접속기록 보관 및 위변조 방지, 보안 프로그램 운영, 내부관리계획 수립·시행</li><li>쿠키 운영: 맞춤형 서비스 제공을 위해 쿠키를 사용할 수 있으며, 이용자는 브라우저 설정을 통해 쿠키 저장을 거부할 수 있습니다.</li><li>권익침해 구제: 개인정보침해신고센터(국번없이 118), 개인정보분쟁조정위원회(1833-6972) 등을 통해 상담 및 구제를 받을 수 있습니다.</li></ul><p>개인정보 보호책임자 및 문의 창구는 고객센터를 통해 안내하며, 관련 문의에 대해 지체 없이 답변·처리합니다.</p><h2>커뮤니티 운영정책</h2><p>회사는 안전하고 건전한 커뮤니티 환경을 위해 아래 정책을 적용합니다.</p><ul><li>금지 콘텐츠: 불법 정보, 혐오·차별·비방, 음란물, 사칭, 사기·유도, 저작권·초상권 침해 게시물</li><li>제재 절차: 안내/경고 → 게시물 제한 또는 임시 이용제한 → 영구 이용제한</li><li>신고 처리: 접수된 신고는 내부 기준에 따라 검토 후 조치하며, 필요 시 추가 소명 자료를 요청할 수 있습니다.</li></ul><h2>면책 및 분쟁해결</h2><p>회사는 천재지변, 시스템 장애, 외부 서비스 연동 문제 등 불가항력으로 인한 서비스 중단에 대해 책임이 제한될 수 있습니다. 다만, 회사의 고의 또는 중대한 과실이 있는 경우는 예외로 합니다.</p><p>회사와 회원 간 분쟁은 상호 협의를 우선하며, 협의가 어려운 경우 대한민국 법령을 따르고 관할 법원은 관련 법령에 따릅니다.</p><p class="terms-policy-updated">시행일: 2026-04-03</p></section></div></div></main>
     <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
