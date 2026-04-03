@@ -148,19 +148,24 @@ const pageRegistry = {
                 <div class="ad-profile-section">
                     <h3>광고프로필</h3>
                     <input id="ad-profile-name" type="text" maxlength="24" placeholder="업소명을 입력해주세요.">
-                    <input id="ad-profile-phone" type="text" maxlength="13" placeholder="연락처를 입력해주세요.">
+                    <input id="ad-profile-manager" type="text" maxlength="24" placeholder="담당자명을 입력해주세요.">
 
                     <div class="ad-profile-grid">
                         <label>
                             <span>지역</span>
                             <select id="ad-profile-region">
                                 <option value="" selected>선택</option>
-                                <option value="서울">서울</option>
-                                <option value="경기">경기</option>
-                                <option value="인천">인천</option>
-                                <option value="부산">부산</option>
                             </select>
                         </label>
+                        <label>
+                            <span>세부 지역</span>
+                            <select id="ad-profile-district">
+                                <option value="" selected>선택</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="ad-profile-grid">
                         <label>
                             <span>업종</span>
                             <select id="ad-profile-category">
