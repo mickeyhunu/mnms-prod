@@ -639,6 +639,17 @@
     vertical-align: middle;
 }
 
+.mypage-rank-with-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mypage-rank-label {
+    font-weight: 700;
+    color: #111827;
+}
+
 .profile-form-actions {
     display: flex;
     justify-content: flex-end;

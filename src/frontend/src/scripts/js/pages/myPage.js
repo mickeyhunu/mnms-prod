@@ -90,9 +90,15 @@ function resolveRankMarkup(user, fallbackLabel = '') {
     if (!isAdAccount(user)) return sanitizeHTML(String(fallbackLabel || ''));
 
     const badgeImage = Auth.resolveBusinessBadgeImage(user);
-    if (!badgeImage) return '기업회원 등급';
+    const badgeLabel = Auth.resolveBusinessBadgeLabel(user) || '기업회원 등급';
+    if (!badgeImage) return sanitizeHTML(badgeLabel);
 
-    return `<img class="mypage-rank-badge" src="${badgeImage}" alt="기업회원 광고 등급 배지">`;
+    return `
+        <span class="mypage-rank-with-label">
+            <img class="mypage-rank-badge" src="${badgeImage}" alt="기업회원 광고 등급 배지">
+            <span class="mypage-rank-label">${sanitizeHTML(badgeLabel)}</span>
+        </span>
+    `;
 }
 
 function renderAdCenterSection(user) {
