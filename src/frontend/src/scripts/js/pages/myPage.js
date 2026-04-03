@@ -318,7 +318,8 @@ function getBoardLabel(boardType) {
         ANON: '익명',
         REVIEW: '후기',
         STORY: '썰',
-        QUESTION: '질문'
+        QUESTION: '질문',
+        PROMOTION: '홍보'
     };
 
     return boardMap[String(boardType || '').toUpperCase()] || '자유';
