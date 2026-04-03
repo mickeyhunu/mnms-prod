@@ -29,6 +29,7 @@ const routes = [
   { path: '/find-account', component: PageView, meta: { pageKey: 'find-account', title: '아이디/비밀번호 찾기', description: '아이디 또는 비밀번호를 안전하게 찾을 수 있습니다.', noindex: true } },
   { path: '/ad-purchase', component: PageView, meta: { pageKey: 'ad-purchase', title: '광고 구매', description: '광고 요금제와 상품 구성을 확인하고 구매를 진행하세요.', noindex: true } },
   { path: '/business-info', component: PageView, meta: { pageKey: 'business-info', title: '업체정보', description: '업체정보 메뉴 준비중 안내 페이지입니다.', noindex: true } },
+  { path: '/business-management', component: PageView, meta: { pageKey: 'business-management', title: '사업자정보 관리', description: '사업자등록증, 사업자 상세정보, 계산서 발행 정보를 관리하세요.', noindex: true } },
   { path: '/live', component: PageView, meta: { pageKey: 'live', title: '라이브', description: '실시간 라이브 소식과 엔트리 정보를 확인하세요.' } },
   { path: '/support', component: PageView, meta: { pageKey: 'support-board', title: '고객지원', description: '공지사항, 고객센터 안내, 자주 묻는 질문을 확인하세요.' } },
   { path: '/support/faq', component: PageView, meta: { pageKey: 'support-board', title: 'FAQ', description: '자주 묻는 질문과 답변을 모아볼 수 있습니다.' } },
