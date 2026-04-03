@@ -214,12 +214,13 @@ function createArticleItem(post) {
     const photoBadge = hasPhotoAttachment
         ? '<span class="article-photo-badge" role="img" aria-label="사진 첨부">📷</span>'
         : '';
+    const inlineIcon = getArticleInlineIcon(post, isNoticePost);
 
     return `
         <li class="article-item ${isViewedPost ? 'article-item-viewed' : 'article-item-unviewed'} ${isNoticePost ? 'article-item-notice' : ''} ${isNoticePost && noticeType === 'IMPORTANT' ? 'article-item-important' : ''}">
             <a class="article-main" href="/post-detail?id=${post.id}" data-post-id="${post.id}">
                 <div class="article-title-row">
-                    <span class="article-inline-icon" aria-hidden="true">💬</span>
+                    <span class="article-inline-icon" aria-hidden="true">${inlineIcon}</span>
                     <h3 class="article-title"><span class="${boardLabelClass}">[${boardLabel}]</span> ${sanitizeHTML(post.title || '제목 없음')} ${photoBadge}</h3>
                     <span class="article-comment-inline">[${commentCount}]</span>
                     ${shouldShowNewBadge ? '<span class="article-new-badge">NEW</span>' : ''}
@@ -237,6 +238,22 @@ function createArticleItem(post) {
             </div>
         </li>
     `;
+}
+
+
+function getArticleInlineIcon(post, isNoticePost) {
+    if (isNoticePost) {
+        return '📢';
+    }
+
+    const authorRole = String(post?.authorRole || post?.author_role || post?.role || '').toUpperCase();
+    const authorMemberType = String(post?.authorMemberType || post?.memberType || post?.member_type || '').toUpperCase();
+
+    if (authorRole === 'BUSINESS' || authorMemberType === 'BUSINESS') {
+        return '🎯';
+    }
+
+    return '💬';
 }
 
 function hasPostImageAttachment(post) {
