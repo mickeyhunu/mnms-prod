@@ -133,7 +133,7 @@ const pageRegistry = {
         <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
-                    <a href="/mypage" class="community-back-link" aria-label="마이페이지로 이동">
+                    <a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
                     </a>
                     <span class="community-board-name">광고 구매</span>
