@@ -28,6 +28,7 @@ const routes = [
   { path: '/admin/inquiries/:id/answer', component: PageView, meta: { pageKey: 'admin-inquiry-answer', title: '문의 답변', description: '관리자 전용 문의 답변 페이지입니다.', noindex: true } },
   { path: '/find-account', component: PageView, meta: { pageKey: 'find-account', title: '아이디/비밀번호 찾기', description: '아이디 또는 비밀번호를 안전하게 찾을 수 있습니다.', noindex: true } },
   { path: '/ad-purchase', component: PageView, meta: { pageKey: 'ad-purchase', title: '광고 구매', description: '광고 요금제와 상품 구성을 확인하고 구매를 진행하세요.', noindex: true } },
+  { path: '/ad-order-history', component: PageView, meta: { pageKey: 'ad-order-history', title: '광고 구매 내역', description: '내가 주문한 광고 상품 내역을 확인하세요.', noindex: true } },
   { path: '/business-info', component: PageView, meta: { pageKey: 'business-info', title: '업체정보', description: '업체정보 메뉴 준비중 안내 페이지입니다.', noindex: true } },
   { path: '/business-management', component: PageView, meta: { pageKey: 'business-management', title: '사업자정보 관리', description: '사업자등록증, 사업자 상세정보, 계산서 발행 정보를 관리하세요.', noindex: true } },
   { path: '/live', component: PageView, meta: { pageKey: 'live', title: '라이브', description: '실시간 라이브 소식과 엔트리 정보를 확인하세요.' } },

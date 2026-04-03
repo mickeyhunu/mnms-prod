@@ -275,6 +275,8 @@ const pageRegistry = {
                         <strong>총 결제 금액</strong>
                         <strong id="ad-total-price">209,000원</strong>
                     </div>
+                    <button type="button" class="btn btn-primary ad-purchase-submit" id="ad-purchase-submit">광고 주문하기</button>
+                    <a href="/ad-order-history" class="ad-order-history-link">광고 구매 내역 보기</a>
                 </article>
             </section>
         </div>
@@ -283,6 +285,47 @@ const pageRegistry = {
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js", "scripts/js/pages/adPurchase.js"]
+  },
+  'ad-order-history': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
+                    <span class="community-board-name">광고 구매 내역</span>
+                </div>
+            </header>
+
+            <section class="ad-order-history-card" aria-label="광고 구매 주문 내역">
+                <p class="ad-order-history-caption">주문한 광고 상품의 결제 내역을 최신순으로 확인할 수 있어요.</p>
+                <div class="ad-order-history-empty hidden" id="ad-order-history-empty">아직 주문한 광고가 없습니다.</div>
+                <div class="ad-order-history-list" id="ad-order-history-list"></div>
+            </section>
+        </div>
+    </main>
+
+    <script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/adOrderHistory.js", "scripts/js/components/footerNav.js"]
   },
   'community': communityPageConfig,
   'create-post': {
@@ -770,7 +813,7 @@ const pageRegistry = {
                         <a class="mypage-link-item" href="/business-info"><span>점프 관리</span></a>
                         <a class="mypage-link-item" href="/business-info"><span>광고프로필 관리</span></a>
                         <a class="mypage-link-item" href="/business-management"><span>사업자정보 관리</span></a>
-                        <a class="mypage-link-item" href="/business-management"><span>광고 구매 내역</span></a>
+                        <a class="mypage-link-item" href="/ad-order-history"><span>광고 구매 내역</span></a>
                     </div>
                 </section>
 

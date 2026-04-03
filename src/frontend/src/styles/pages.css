@@ -2559,3 +2559,95 @@
 .business-info-notice--bottom {
     margin-top: 60px;
 }
+
+.ad-purchase-submit {
+    width: 100%;
+    margin-top: 18px;
+}
+
+.ad-order-history-link {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 14px;
+    color: #475569;
+    text-decoration: underline;
+}
+
+.ad-order-history-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: #fff;
+    padding: 18px 16px;
+}
+
+.ad-order-history-caption {
+    margin: 0 0 12px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.ad-order-history-empty {
+    border: 1px dashed #d1d5db;
+    border-radius: 10px;
+    padding: 18px 12px;
+    color: #6b7280;
+    text-align: center;
+}
+
+.ad-order-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ad-order-history-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px 12px;
+    background: #fff;
+}
+
+.ad-order-history-item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.ad-order-history-status {
+    font-size: 12px;
+    font-weight: 700;
+    color: #166534;
+    background: #dcfce7;
+    border-radius: 999px;
+    padding: 4px 9px;
+}
+
+.ad-order-history-meta {
+    margin: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.ad-order-history-meta div {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.ad-order-history-meta dt {
+    color: #6b7280;
+}
+
+.ad-order-history-meta dd {
+    margin: 0;
+    font-weight: 600;
+    color: #111827;
+}
+
+.ad-order-history-meta-total {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 8px;
+}

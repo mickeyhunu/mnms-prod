@@ -2,6 +2,7 @@
  * 파일 역할: ad-purchase 페이지 탭/요금제 상세/결제정보 UI를 담당하는 스크립트 파일.
  */
 (() => {
+    const ORDER_STORAGE_KEY = 'mnmsAdOrderHistory';
     const tabs = Array.from(document.querySelectorAll('.ad-plan-tab'));
     const featureList = document.getElementById('ad-plan-features');
     const priceOptions = document.getElementById('ad-price-options');
@@ -9,6 +10,7 @@
     const productPrice = document.getElementById('ad-product-price');
     const vatPrice = document.getElementById('ad-vat-price');
     const totalPrice = document.getElementById('ad-total-price');
+    const purchaseButton = document.getElementById('ad-purchase-submit');
 
     if (!tabs.length || !featureList || !priceOptions || !selectedProduct || !productPrice || !vatPrice || !totalPrice) {
         return;
@@ -56,6 +58,38 @@
 
     const state = { plan: 'basic', duration: 30 };
     const formatPrice = (value) => `${value.toLocaleString('ko-KR')}원`;
+
+    const readOrderHistory = () => {
+        try {
+            const raw = window.localStorage.getItem(ORDER_STORAGE_KEY);
+            const parsed = JSON.parse(raw || '[]');
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+            return [];
+        }
+    };
+
+    const saveOrderHistory = (orders) => {
+        window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(orders.slice(0, 100)));
+    };
+
+    const createOrder = () => {
+        const currentPlan = plans[state.plan];
+        const selectedOption = currentPlan.options.find((option) => option.days === state.duration) || currentPlan.options[0];
+        const vat = Math.round(selectedOption.price * 0.1);
+
+        return {
+            id: `AD-${Date.now()}`,
+            orderedAt: new Date().toISOString(),
+            planCode: state.plan,
+            planName: currentPlan.name,
+            durationDays: selectedOption.days,
+            supplyPrice: selectedOption.price,
+            vat,
+            totalPrice: selectedOption.price + vat,
+            status: '결제완료'
+        };
+    };
 
     const render = () => {
         const currentPlan = plans[state.plan];
@@ -110,6 +144,16 @@
         state.duration = Number(optionButton.dataset.days);
         render();
     });
+
+    if (purchaseButton) {
+        purchaseButton.addEventListener('click', () => {
+            const order = createOrder();
+            const existingOrders = readOrderHistory();
+            saveOrderHistory([order, ...existingOrders]);
+            alert('광고 주문이 완료되었습니다. 구매 내역에서 확인하실 수 있어요.');
+            window.location.href = '/ad-order-history';
+        });
+    }
 
     render();
 })();
