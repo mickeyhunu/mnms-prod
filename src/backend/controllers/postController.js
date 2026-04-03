@@ -351,10 +351,13 @@ async function createPost(req, res, next) {
     if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
 
     const boardType = parseBoardType(req.body.boardType);
+    const isAdmin = req.user.role === 'ADMIN';
+    if (!isAdmin && !isBusinessUser(req.user) && boardType === BOARD_TYPES.PROMOTION) {
+      return res.status(403).json({ message: '홍보게시판은 광고자 또는 관리자만 글을 작성할 수 있습니다.' });
+    }
     if (isBusinessUser(req.user) && boardType !== BOARD_TYPES.PROMOTION) {
       return res.status(403).json({ message: '광고자 계정은 홍보게시판에만 글을 작성할 수 있습니다.' });
     }
-    const isAdmin = req.user.role === 'ADMIN';
     const isNotice = isAdmin ? Boolean(req.body.isNotice) : false;
     const noticeType = isNotice ? parseNoticeType(req.body.noticeType) || 'NOTICE' : null;
     const isPinned = isNotice && isAdmin ? Boolean(req.body.isPinned) : false;
