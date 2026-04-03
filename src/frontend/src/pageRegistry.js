@@ -101,8 +101,6 @@ const pageRegistry = {
             <section class="card" style="text-align:center; padding:40px 20px;">
                 <h3 style="margin-bottom:8px;">준비중입니다</h3>
                 <p class="text-muted" style="margin:0;">업체정보 메뉴는 현재 준비 중입니다.</p>
-                <p class="text-muted" style="margin-top:8px;">업체 광고 관리는 관리자 페이지의 업체광고관리 탭에서 이용해주세요.</p>
-                <a href="/business-info" class="btn btn-primary" style="margin-top:16px;">관리자 업체광고관리로 이동</a>
             </section>
         </div>
     </main>
@@ -133,7 +131,7 @@ const pageRegistry = {
         <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
-                    <a href="/mypage" class="community-back-link" aria-label="마이페이지로 이동">
+                    <a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
                     </a>
                     <span class="community-board-name">사업자정보 관리</span>
@@ -761,6 +759,7 @@ const pageRegistry = {
                         <a class="mypage-link-item" href="/business-info"><span>점프 관리</span></a>
                         <a class="mypage-link-item" href="/business-info"><span>광고프로필 관리</span></a>
                         <a class="mypage-link-item" href="/business-management"><span>사업자정보 관리</span></a>
+                        <a class="mypage-link-item" href="/business-management"><span>광고 구매 내역</span></a>
                     </div>
                 </section>
 
