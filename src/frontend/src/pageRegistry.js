@@ -109,6 +109,130 @@ const pageRegistry = {
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js"]
   },
+  'ad-profile-management': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <a href="/my-page" class="community-back-link" aria-label="마이페이지로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
+                    <span class="community-board-name">광고프로필 관리</span>
+                </div>
+            </header>
+
+            <section class="ad-profile-page" aria-label="광고프로필 관리 폼">
+                <div class="ad-profile-notice">
+                    <p>미드나잇맨즈에서 성매매와 관련된 광고를 할 경우,</p>
+                    <p>서비스 이용이 제한되며 법적 처벌을 받을 수 있어요.</p>
+                    <a href="/support/notice/provision">자세히 보기</a>
+                </div>
+
+                <div class="ad-profile-section">
+                    <h3>광고프로필</h3>
+                    <input id="ad-profile-name" type="text" maxlength="24" placeholder="업소명을 입력해주세요.">
+                    <input id="ad-profile-phone" type="text" maxlength="13" placeholder="연락처를 입력해주세요.">
+
+                    <div class="ad-profile-grid">
+                        <label>
+                            <span>지역</span>
+                            <select id="ad-profile-region">
+                                <option value="" selected>선택</option>
+                                <option value="서울">서울</option>
+                                <option value="경기">경기</option>
+                                <option value="인천">인천</option>
+                                <option value="부산">부산</option>
+                            </select>
+                        </label>
+                        <label>
+                            <span>업종</span>
+                            <select id="ad-profile-category">
+                                <option value="" selected>선택</option>
+                                <option value="룸">룸</option>
+                                <option value="바">바</option>
+                                <option value="클럽">클럽</option>
+                                <option value="기타">기타</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="ad-profile-grid">
+                        <label>
+                            <span>영업시간</span>
+                            <div class="ad-profile-time-row">
+                                <select id="ad-profile-meridiem">
+                                    <option value="오전" selected>오전</option>
+                                    <option value="오후">오후</option>
+                                </select>
+                                <select id="ad-profile-hour"></select>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="ad-profile-section">
+                    <h3>상세정보</h3>
+                    <input id="ad-profile-title" type="text" maxlength="50" placeholder="제목을 입력해주세요.">
+                    <textarea id="ad-profile-description" maxlength="1000" placeholder="내용을 입력해주세요."></textarea>
+                </div>
+
+                <div class="ad-profile-section">
+                    <h3>대표이미지</h3>
+                    <div class="ad-profile-image-row">
+                        <input id="ad-profile-image-input" class="hidden" accept="image/*" type="file">
+                        <button id="ad-profile-image-upload-btn" class="ad-profile-image-upload-btn" type="button" aria-label="대표이미지 업로드">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 20 20" width="18" height="18">
+                                <path stroke-linecap="round" stroke-width="1.5" d="M9.754.75v18M18.75 9.753h-18"></path>
+                            </svg>
+                        </button>
+                        <img id="ad-profile-image-preview" class="ad-profile-image-preview hidden" alt="대표이미지 미리보기">
+                    </div>
+                    <div class="ad-profile-guide">
+                        <p>• 이미지 권장 사이즈: 가로 600px, 세로 600px (1:1 비율)</p>
+                        <p>• 대표 이미지가 없다면, 광고 결제 후 버블알바에서 제작해드려요.</p>
+                        <p>• 움직이는 이미지는 등록할 수 없어요.</p>
+                    </div>
+                </div>
+
+                <div class="ad-profile-preview">
+                    <h3>미리보기</h3>
+                    <article class="ad-profile-preview-card">
+                        <img id="ad-profile-preview-thumb" src="https://image.bubblealba.com/assets/advertiser/pending.webp" alt="광고 썸네일">
+                        <div class="ad-profile-preview-content">
+                            <strong id="ad-profile-preview-title">제목을 입력해주세요.</strong>
+                            <p id="ad-profile-preview-sub">협의 · 선택 · 선택</p>
+                            <p id="ad-profile-preview-desc">내용을 입력해주세요.</p>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="ad-profile-notice ad-profile-notice--bottom">
+                    <p>버블알바 광고관리 규정에 위배되는 내용을 입력할 경우,</p>
+                    <p>별도 안내 없이 수정되거나 반려될 수 있어요.</p>
+                </div>
+            </section>
+        </div>
+    </main>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/adProfileManagement.js", "scripts/js/components/footerNav.js"]
+  },
   'business-management': {
     template: `<header class="header">
         <div class="header-container">
@@ -811,7 +935,7 @@ const pageRegistry = {
                     <div class="mypage-link-list" id="ad-center-section">
                         <a class="mypage-link-item" href="/ad-purchase"><span>광고 구매</span></a>
                         <a class="mypage-link-item" href="/business-info"><span>점프 관리</span></a>
-                        <a class="mypage-link-item" href="/business-info"><span>광고프로필 관리</span></a>
+                        <a class="mypage-link-item" href="/ad-profile-management"><span>광고프로필 관리</span></a>
                         <a class="mypage-link-item" href="/business-management"><span>사업자정보 관리</span></a>
                         <a class="mypage-link-item" href="/ad-order-history"><span>광고 구매 내역</span></a>
                     </div>
