@@ -447,6 +447,14 @@
     font-weight: 700;
 }
 
+.author-plan-badge {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    object-fit: cover;
+    vertical-align: middle;
+}
+
 
 .own-content-badge {
     display: inline-flex;

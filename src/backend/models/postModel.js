@@ -225,6 +225,14 @@ async function findPostDetailById(id) {
             p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'MEMBER') AS authorRole,
+            COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
+            EXISTS (
+              SELECT 1
+                FROM business_ads ba
+               WHERE ba.owner_user_id = u.id
+                 AND ba.is_active = 1
+               LIMIT 1
+            ) AS authorHasActiveBusinessAd,
             CASE
               WHEN u.id IS NULL THEN NULL
               WHEN COALESCE(u.total_points, 0) >= 15000 THEN 7
@@ -334,6 +342,13 @@ async function listComments(postId) {
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'MEMBER') AS authorRole,
             COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
+            EXISTS (
+              SELECT 1
+                FROM business_ads ba
+               WHERE ba.owner_user_id = u.id
+                 AND ba.is_active = 1
+               LIMIT 1
+            ) AS authorHasActiveBusinessAd,
             CASE
               WHEN u.id IS NULL THEN NULL
               WHEN COALESCE(u.total_points, 0) >= 15000 THEN 7

@@ -406,6 +406,50 @@ function resolveLevelEmoji(level) {
     return '🐣';
 }
 
+function isBusinessAuthor(author = {}) {
+    const role = String(author?.authorRole || author?.role || '').toUpperCase();
+    const memberType = String(author?.authorMemberType || author?.memberType || author?.member_type || '').toUpperCase();
+    return role === 'BUSINESS' || memberType === 'BUSINESS' || Boolean(author?.authorIsBusiness);
+}
+
+function normalizeBusinessAdPlan(plan) {
+    const normalized = String(plan || '').trim().toLowerCase();
+    if (!normalized) return '';
+    if (['basic', 'plus', 'premium'].includes(normalized)) return normalized;
+    if (normalized === 'banner') return 'premium';
+    return '';
+}
+
+function resolveBusinessBadgeImage(author = {}) {
+    if (!isBusinessAuthor(author)) {
+        return '';
+    }
+
+    const rawPlan = author?.authorAdPlan
+        || author?.adPlan
+        || author?.plan
+        || author?.businessAdPlan
+        || author?.businessPlan;
+    const adPlan = normalizeBusinessAdPlan(rawPlan);
+    if (adPlan) {
+        return `/src/assets/ad-plan-badges/${adPlan}-badge.png`;
+    }
+
+    return Boolean(author?.authorHasActiveBusinessAd || author?.hasActiveBusinessAd)
+        ? '/src/assets/ad-plan-badges/premium-badge.png'
+        : '/src/assets/ad-plan-badges/none-badge.png';
+}
+
+function resolveAuthorBadgeMarkup(author = {}) {
+    const businessBadgeImage = resolveBusinessBadgeImage(author);
+    if (businessBadgeImage) {
+        return `<img class="author-plan-badge" src="${businessBadgeImage}" alt="기업회원 광고 등급 배지">`;
+    }
+
+    const emoji = resolveLevelEmoji(author?.authorLevel ?? author?.level);
+    return emoji ? `<span class="comment-level-badge" aria-hidden="true">${emoji}</span>` : '';
+}
+
 function isCurrentUserPostAuthor(post) {
     const currentUser = Auth.getUser();
     if (!currentUser) {
@@ -433,10 +477,10 @@ function renderPostDetail(post) {
     currentPostBoardType = boardType;
     const isCurrentAuthor = post.isAuthor || isCurrentUserPostAuthor(post);
     const isHiddenPost = Boolean(post.isHidden);
-    const authorEmoji = resolveLevelEmoji(post.authorLevel);
+    const authorBadgeMarkup = resolveAuthorBadgeMarkup(post);
     const postAuthorLabel = boardType === 'ANON' && !post.authorIsBusiness
-        ? `익명${isCurrentAuthor ? ' (본인)' : ''}${authorEmoji ? ` ${authorEmoji}` : ''}`
-        : `${post.authorNickname || ''}${authorEmoji ? ` ${authorEmoji}` : ''}`;
+        ? `익명${isCurrentAuthor ? ' (본인)' : ''}`
+        : `${post.authorNickname || ''}`;
 
     if (titleElement) titleElement.textContent = `[${boardTagMap[boardType] || '자유'}] ${post.title || ''}`;
     if (contentElement) {
@@ -447,7 +491,9 @@ function renderPostDetail(post) {
     if (boardNameEl) boardNameEl.textContent = boardNameMap[boardType] || '게시판';
     updatePostSeo(post, boardNameMap[boardType]);
 
-    if (authorElement) authorElement.textContent = postAuthorLabel;
+    if (authorElement) {
+        authorElement.innerHTML = `${sanitizeHTML(postAuthorLabel)}${authorBadgeMarkup ? ` ${authorBadgeMarkup}` : ''}`;
+    }
     if (dateElement) dateElement.textContent = formatDateTime(post.createdAt) || '';
 
     const levelElement = document.getElementById('post-author-level');
@@ -838,8 +884,10 @@ function createCommentItem(comment, depth = 0) {
     const showOwnBadge = isAuthor && (isAnonymousComment || isSecretComment);
     const authorName = sanitizeHTML(comment.authorNickname || '익명');
     const commentAuthorLevel = Number(comment.authorLevel ?? comment.level ?? comment.authorRank ?? comment.rank ?? comment.authorGrade ?? comment.grade);
-    const commentAuthorEmoji = resolveLevelEmoji(commentAuthorLevel);
-    const authorDisplayName = `${authorName}${commentAuthorEmoji ? ` ${commentAuthorEmoji}` : ''}`;
+    const commentBadgeMarkup = resolveAuthorBadgeMarkup({
+        ...comment,
+        authorLevel: commentAuthorLevel
+    });
     const canReplyByServer = comment.canReply !== false;
     const canReply = Auth.isAuthenticated() && depth < 3 && !isDeletedComment && !isHiddenComment && canReplyByServer;
     const canGuestEdit = !Auth.isAuthenticated() && !comment.userId;
@@ -855,7 +903,7 @@ function createCommentItem(comment, depth = 0) {
             <div class="comment-body">
                 <div class="comment-meta">
                     <div class="comment-meta-main">
-                        <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${authorDisplayName}</span>
+                        <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${authorName}${commentBadgeMarkup ? ` ${commentBadgeMarkup}` : ''}</span>
                         ${showOwnBadge ? '<span class="own-content-badge">본인</span>' : ''}
                         ${isSecretComment ? '<span style="margin-left:6px;font-size:12px;color:#7a5;">🔒 비밀댓글</span>' : ''}
                         ${isHiddenComment ? '<span style="margin-left:6px;font-size:12px;color:#9a6700;">관리자 제한</span>' : ''}
