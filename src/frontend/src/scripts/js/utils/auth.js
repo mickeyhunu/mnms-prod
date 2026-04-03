@@ -2,13 +2,64 @@
  * 파일 역할: auth에서 사용하는 공통 보조 함수/상수를 제공하는 유틸리티 파일.
  */
 const Auth = {
+    isBusinessAccount(user) {
+        if (!user) return false;
+
+        if (typeof user.isBusiness === 'boolean') return user.isBusiness;
+        if (typeof user.isAdvertiser === 'boolean') return user.isAdvertiser;
+
+        const role = String(user.role || '').toUpperCase();
+        const memberType = String(user.memberType || user.member_type || user.accountType || '').toUpperCase();
+
+        return role === 'BUSINESS' || memberType === 'BUSINESS';
+    },
+    normalizeBusinessAdPlan(plan) {
+        const normalized = String(plan || '').trim().toLowerCase();
+        if (['basic', 'plus', 'premium', 'banner'].includes(normalized)) {
+            return normalized;
+        }
+
+        return '';
+    },
+    resolveBusinessBadgeImage(user) {
+        if (!this.isBusinessAccount(user)) return '';
+
+        const rawPlan = user?.adPlan
+            || user?.plan
+            || user?.businessAdPlan
+            || user?.businessPlan
+            || user?.ad_plan
+            || user?.business_ad_plan;
+        const adPlan = this.normalizeBusinessAdPlan(rawPlan);
+
+        if (adPlan) {
+            return `/src/assets/ad-plan-badges/${adPlan}-badge.png`;
+        }
+
+        return '/src/assets/ad-plan-badges/premium-badge.png';
+    },
     formatNicknameWithLevel(user) {
         if (!user) return '';
 
         const nickname = user.nickname || user.email || '';
-        const levelEmoji = user.levelEmoji || '';
+        const levelEmoji = this.isBusinessAccount(user) ? '' : (user.levelEmoji || '');
 
         return levelEmoji ? `${nickname} ${levelEmoji}` : nickname;
+    },
+    applyNicknameDisplay(element, user) {
+        if (!element) return;
+
+        element.textContent = this.formatNicknameWithLevel(user);
+        const badgeImage = this.resolveBusinessBadgeImage(user);
+        if (!badgeImage) return;
+
+        const badge = document.createElement('img');
+        badge.className = 'user-business-badge';
+        badge.src = badgeImage;
+        badge.alt = '기업회원 광고 등급 배지';
+        badge.loading = 'lazy';
+        element.appendChild(document.createTextNode(' '));
+        element.appendChild(badge);
     },
     getToken() {
         return localStorage.getItem(STORAGE_KEYS.TOKEN);
@@ -79,9 +130,7 @@ const Auth = {
         if (user && this.isAuthenticated()) {
             if (navGuest) navGuest.classList.add('hidden');
             if (navUser) navUser.classList.remove('hidden');
-            if (userNickname) {
-                userNickname.textContent = this.formatNicknameWithLevel(user);
-            }
+            if (userNickname) this.applyNicknameDisplay(userNickname, user);
             if (adminLink && user.isAdmin) {
                 adminLink.classList.remove('hidden');
             } else if (adminLink) {
@@ -120,4 +169,3 @@ const Auth = {
         });
     }
 };
-
