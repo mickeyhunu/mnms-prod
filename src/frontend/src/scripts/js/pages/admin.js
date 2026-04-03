@@ -397,7 +397,8 @@ function getBoardTypeLabel(boardType) {
         ANON: '익명',
         REVIEW: '후기',
         STORY: '썰',
-        QUESTION: '질문'
+        QUESTION: '질문',
+        PROMOTION: '홍보'
     };
     return labels[String(boardType || '').toUpperCase()] || (boardType || '기타');
 }
@@ -1084,6 +1085,7 @@ function formatAdminActivityBoardLabel(boardType) {
     if (normalized === 'REVIEW') return '후기';
     if (normalized === 'STORY') return '썰';
     if (normalized === 'QUESTION') return '질문';
+    if (normalized === 'PROMOTION') return '홍보';
     return normalized || '-';
 }
 
