@@ -234,10 +234,22 @@ const pageRegistry = {
 
             <section class="ad-purchase-layout" aria-label="광고 요금제 안내">
                 <div class="ad-plan-tabs" role="tablist" aria-label="요금제 선택">
-                    <button type="button" class="ad-plan-tab is-active" data-plan="basic" role="tab" aria-selected="true">BASIC</button>
-                    <button type="button" class="ad-plan-tab" data-plan="plus" role="tab" aria-selected="false">PLUS</button>
-                    <button type="button" class="ad-plan-tab" data-plan="premium" role="tab" aria-selected="false">PREMIUM</button>
-                    <button type="button" class="ad-plan-tab" data-plan="banner" role="tab" aria-selected="false">BANNER</button>
+                    <button type="button" class="ad-plan-tab is-active" data-plan="basic" role="tab" aria-selected="true">
+                        <img class="ad-plan-tab-icon" src="/src/assets/ad-plan-badges/basic-badge.png" alt="" aria-hidden="true">
+                        BASIC
+                    </button>
+                    <button type="button" class="ad-plan-tab" data-plan="plus" role="tab" aria-selected="false">
+                        <img class="ad-plan-tab-icon" src="/src/assets/ad-plan-badges/plus-badge.png" alt="" aria-hidden="true">
+                        PLUS
+                    </button>
+                    <button type="button" class="ad-plan-tab" data-plan="premium" role="tab" aria-selected="false">
+                        <img class="ad-plan-tab-icon" src="/src/assets/ad-plan-badges/premium-badge.png" alt="" aria-hidden="true">
+                        PREMIUM
+                    </button>
+                    <button type="button" class="ad-plan-tab" data-plan="banner" role="tab" aria-selected="false">
+                        <img class="ad-plan-tab-icon" src="/src/assets/ad-plan-badges/banner-badge.png" alt="" aria-hidden="true">
+                        BANNER
+                    </button>
                 </div>
 
                 <article class="ad-plan-detail" id="ad-plan-detail">
