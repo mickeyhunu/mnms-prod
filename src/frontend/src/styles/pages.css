@@ -2228,6 +2228,13 @@
     background: transparent;
 }
 
+.ad-plan-tab-icon {
+    width: 60%;
+    height: 70%;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
 .ad-plan-tab::before {
     content: "";
     position: absolute;
