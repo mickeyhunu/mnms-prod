@@ -2220,12 +2220,20 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
+    padding: 8px 6px;
     border: 0;
     min-height: 54px;
     font-size: 17px;
     font-weight: 700;
     color: #9ca3af;
     background: transparent;
+}
+
+.ad-plan-tab-icon {
+    width: min(100%, 72px);
+    max-height: 32px;
+    object-fit: contain;
+    flex-shrink: 1;
 }
 
 .ad-plan-tab::before {
