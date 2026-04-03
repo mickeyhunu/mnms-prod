@@ -330,8 +330,10 @@ async function updatePostPointAwards(id, { createPointAwarded, reviewBonusPointA
 async function listComments(postId) {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.parent_id AS parentId, c.is_secret AS isSecret, c.is_hidden AS isHidden, c.is_deleted AS isDeleted, c.content, c.created_at AS createdAt,
+      `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.parent_id AS parentId, c.is_secret AS isSecret, c.is_hidden AS isHidden, c.is_deleted AS isDeleted, c.content, c.created_at AS createdAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
+            COALESCE(u.role, 'MEMBER') AS authorRole,
+            COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
             CASE
               WHEN u.id IS NULL THEN NULL
               WHEN COALESCE(u.total_points, 0) >= 15000 THEN 7

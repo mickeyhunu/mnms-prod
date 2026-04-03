@@ -11,6 +11,29 @@ let activeCommentActionId = null;
 let shareSheetOpen = false;
 const POST_DETAIL_DEFAULT_DESCRIPTION = '미드나잇 맨즈 커뮤니티 게시글 상세 페이지입니다.';
 
+function isBusinessUser(user) {
+    const role = String(user?.role || '').toUpperCase();
+    const memberType = String(user?.memberType || user?.member_type || '').toUpperCase();
+    return Boolean(user?.isBusiness || user?.isAdvertiser || role === 'BUSINESS' || memberType === 'BUSINESS');
+}
+
+function syncSecretCommentOptionByUser() {
+    const secretCheckbox = document.getElementById('comment-secret');
+    if (!secretCheckbox) return;
+
+    const secretLabel = secretCheckbox.closest('label');
+    const hideSecretOption = isBusinessUser(Auth.getUser());
+    if (hideSecretOption) {
+        secretCheckbox.checked = false;
+    }
+
+    if (secretLabel) {
+        secretLabel.style.display = hideSecretOption ? 'none' : 'inline-flex';
+    } else {
+        secretCheckbox.style.display = hideSecretOption ? 'none' : '';
+    }
+}
+
 function upsertHeadMeta(selector, attributes) {
     let element = document.head.querySelector(selector);
     if (!element) {
@@ -74,6 +97,7 @@ function initPostDetailPage() {
         return;
     }
 
+    syncSecretCommentOptionByUser();
     loadPost();
     setupEventListeners();
 }
@@ -410,7 +434,7 @@ function renderPostDetail(post) {
     const isCurrentAuthor = post.isAuthor || isCurrentUserPostAuthor(post);
     const isHiddenPost = Boolean(post.isHidden);
     const authorEmoji = resolveLevelEmoji(post.authorLevel);
-    const postAuthorLabel = boardType === 'ANON'
+    const postAuthorLabel = boardType === 'ANON' && !post.authorIsBusiness
         ? `익명${isCurrentAuthor ? ' (본인)' : ''}${authorEmoji ? ` ${authorEmoji}` : ''}`
         : `${post.authorNickname || ''}${authorEmoji ? ` ${authorEmoji}` : ''}`;
 
@@ -809,7 +833,8 @@ function createCommentItem(comment, depth = 0) {
     const isSecretComment = Boolean(comment.isSecret);
     const isDeletedComment = Boolean(comment.isDeleted);
     const isHiddenComment = Boolean(comment.isHidden);
-    const isAnonymousComment = currentPostBoardType === 'ANON' || String(comment.authorNickname || '').trim() === '익명';
+    const isAnonymousComment = (!comment.authorIsBusiness && currentPostBoardType === 'ANON')
+        || String(comment.authorNickname || '').trim() === '익명';
     const showOwnBadge = isAuthor && (isAnonymousComment || isSecretComment);
     const authorName = sanitizeHTML(comment.authorNickname || '익명');
     const commentAuthorLevel = Number(comment.authorLevel ?? comment.level ?? comment.authorRank ?? comment.rank ?? comment.authorGrade ?? comment.grade);
@@ -1112,6 +1137,7 @@ async function handleCreateComment(e) {
     
     const content = contentTextarea.value.trim();
     const secretCheckbox = document.getElementById('comment-secret');
+    const blockSecretForBusiness = isBusinessUser(Auth.getUser());
     
     if (!content) {
         addInputError(contentTextarea, '댓글 내용을 입력해주세요');
@@ -1128,7 +1154,7 @@ async function handleCreateComment(e) {
         
         await CommentAPI.createComment(postId, {
             content,
-            isSecret: Boolean(secretCheckbox && secretCheckbox.checked)
+            isSecret: Boolean(!blockSecretForBusiness && secretCheckbox && secretCheckbox.checked)
         });
         
         if (typeof NotificationSettings !== 'undefined' && NotificationSettings.isCommentNotificationEnabled()) {

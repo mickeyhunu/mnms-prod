@@ -51,6 +51,12 @@ function isBusinessUser(user) {
   return role === 'BUSINESS' || memberType === 'BUSINESS';
 }
 
+function isAdvertiserAuthor(author) {
+  const role = String(author?.authorRole || author?.role || '').toUpperCase();
+  const memberType = String(author?.authorMemberType || author?.memberType || author?.member_type || '').toUpperCase();
+  return role === 'BUSINESS' || memberType === 'BUSINESS';
+}
+
 
 function parseNoticeType(value) {
   const normalized = String(value || '').toUpperCase();
@@ -172,7 +178,12 @@ function sanitizePostForViewer(post) {
   }
 
   if (normalized.boardType === BOARD_TYPES.ANON) {
-    normalized.authorNickname = '익명';
+    normalized.authorIsBusiness = isAdvertiserAuthor(normalized);
+    if (!normalized.authorIsBusiness) {
+      normalized.authorNickname = '익명';
+    }
+  } else {
+    normalized.authorIsBusiness = isAdvertiserAuthor(normalized);
   }
 
   return normalized;
@@ -203,7 +214,9 @@ function sanitizeCommentForViewer(comment, post, currentUser) {
 
   const isAdminViewer = currentUser?.role === 'ADMIN';
 
-  if (post.board_type === BOARD_TYPES.ANON || post.boardType === BOARD_TYPES.ANON) {
+  normalized.authorIsBusiness = isAdvertiserAuthor(normalized);
+
+  if ((post.board_type === BOARD_TYPES.ANON || post.boardType === BOARD_TYPES.ANON) && !normalized.authorIsBusiness) {
     normalized.authorNickname = '익명';
   }
 
@@ -537,12 +550,17 @@ async function createComment(req, res, next) {
       }
     }
 
+    const secretCommentRequested = Boolean(isSecret);
+    if (isBusinessUser(req.user) && secretCommentRequested) {
+      return res.status(400).json({ message: '광고자 계정은 비밀댓글을 사용할 수 없습니다.' });
+    }
+
     const commentId = await postModel.createComment({
       postId,
       userId: req.user.id,
       content,
       parentId,
-      isSecret: Boolean(isSecret)
+      isSecret: secretCommentRequested
     });
     const pointResult = await awardPointByAction(req.user.id, 'CREATE_COMMENT');
     await postModel.updateCommentPointAwarded(commentId, pointResult.awarded);
