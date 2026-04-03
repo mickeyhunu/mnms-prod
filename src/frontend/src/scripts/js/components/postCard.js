@@ -86,7 +86,8 @@ function createPostCard(post) {
     const noticeLabel = String(post.noticeType || 'NOTICE').toUpperCase() === 'IMPORTANT' ? '필독' : '공지';
     const pinPrefix = post.isPinned ? '📌 ' : '';
     const titlePrefix = isAdminNotice ? `${pinPrefix}[${noticeLabel}] ` : '';
-    
+    const commentIcon = getCommentIcon(post, isAdminNotice);
+
     const isLikedByMe = Boolean(post.isLiked || post.liked || post.likedByMe);
 
     const authorName = getDisplayAuthorName(post);
@@ -103,7 +104,7 @@ function createPostCard(post) {
                         <span class="post-date">${formatDate(post.createdAt)}</span>
                         <span class="post-stats">
                             <span class="like-count">👍 ${post.likeCount || 0}</span>
-                            <span class="comment-count">💬 ${post.commentCount || 0}</span>
+                            <span class="comment-count">${commentIcon} ${post.commentCount || 0}</span>
                         </span>
                     </div>
                 </div>
@@ -122,6 +123,22 @@ function createPostCard(post) {
             </div>
         </div>
     `;
+}
+
+
+function getCommentIcon(post, isAdminNotice) {
+    if (isAdminNotice) {
+        return '📢';
+    }
+
+    const authorRole = String(post?.authorRole || post?.author_role || post?.role || '').toUpperCase();
+    const authorMemberType = String(post?.authorMemberType || post?.memberType || post?.member_type || '').toUpperCase();
+
+    if (authorRole === 'BUSINESS' || authorMemberType === 'BUSINESS') {
+        return '🎯';
+    }
+
+    return '💬';
 }
 
 function getDisplayAuthorName(post) {
