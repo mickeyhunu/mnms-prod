@@ -61,7 +61,7 @@ function bindLogoutActions() {
 
 function renderHeaderUser(user) {
     const nickname = document.getElementById('user-nickname');
-    if (nickname) nickname.textContent = Auth.formatNicknameWithLevel(user);
+    if (nickname) Auth.applyNicknameDisplay(nickname, user);
 
     const adminLink = document.getElementById('admin-link');
     if (adminLink) {
@@ -80,6 +80,19 @@ function isAdAccount(user) {
     const accountType = String(user.accountType || user.userType || '').toUpperCase();
 
     return role === 'BUSINESS' || accountType === 'BUSINESS';
+}
+
+function resolveRankLabel(user, fallbackLabel = '') {
+    return isAdAccount(user) ? '기업회원 등급' : String(fallbackLabel || '');
+}
+
+function resolveRankMarkup(user, fallbackLabel = '') {
+    if (!isAdAccount(user)) return sanitizeHTML(String(fallbackLabel || ''));
+
+    const badgeImage = Auth.resolveBusinessBadgeImage(user);
+    if (!badgeImage) return '기업회원 등급';
+
+    return `<img class="mypage-rank-badge" src="${badgeImage}" alt="기업회원 광고 등급 배지">`;
 }
 
 function renderAdCenterSection(user) {
@@ -608,21 +621,9 @@ async function loadStats() {
     try {
         const response = await APIClient.get('/users/me/stats');
         const joinedAt = response.joinedAt ? formatDate(response.joinedAt).replace(/-/g, '.') : '-';
-
-        container.innerHTML = `
-            <section class="mypage-summary-section">
-                <div class="mypage-summary-head">
-                    <h3 class="mypage-summary-title">기본 정보</h3>
-                    <a class="mypage-summary-action" href="/my-page/profile">정보 수정</a>
-                </div>
-                <div class="mypage-summary-list">
-                    <div class="mypage-summary-row"><span>아이디</span><strong>${sanitizeHTML(response.loginId || '')}</strong></div>
-                    <div class="mypage-summary-row"><span>닉네임</span><strong>${sanitizeHTML(response.nickname || '')}</strong></div>
-                    <div class="mypage-summary-row"><span>랭크</span><strong>${sanitizeHTML(response.levelLabel || '')}</strong></div>
-                    <div class="mypage-summary-row"><span>가입일</span><strong>${sanitizeHTML(joinedAt)}</strong></div>
-                </div>
-            </section>
-
+        const rankLabel = resolveRankLabel(currentUser, response.levelLabel || '');
+        const rankMarkup = resolveRankMarkup(currentUser, rankLabel);
+        const pointsSection = isAdAccount(currentUser) ? '' : `
             <section class="mypage-summary-section">
                 <div class="mypage-summary-head">
                     <h3 class="mypage-summary-title">포인트</h3>
@@ -638,6 +639,23 @@ async function loadStats() {
                     <div class="mypage-level-progress-meta"><span>${Number(response.totalPoints || 0).toLocaleString()}P</span><span>${Number(response.nextLevelMinPoints || response.totalPoints || 0).toLocaleString()}P</span></div>
                 </div>
             </section>
+        `;
+
+        container.innerHTML = `
+            <section class="mypage-summary-section">
+                <div class="mypage-summary-head">
+                    <h3 class="mypage-summary-title">기본 정보</h3>
+                    <a class="mypage-summary-action" href="/my-page/profile">정보 수정</a>
+                </div>
+                <div class="mypage-summary-list">
+                    <div class="mypage-summary-row"><span>아이디</span><strong>${sanitizeHTML(response.loginId || '')}</strong></div>
+                    <div class="mypage-summary-row"><span>닉네임</span><strong>${sanitizeHTML(response.nickname || '')}</strong></div>
+                    <div class="mypage-summary-row"><span>랭크</span><strong>${rankMarkup}</strong></div>
+                    <div class="mypage-summary-row"><span>가입일</span><strong>${sanitizeHTML(joinedAt)}</strong></div>
+                </div>
+            </section>
+
+            ${pointsSection}
 
             <section class="mypage-summary-section">
                 <div class="mypage-summary-head">

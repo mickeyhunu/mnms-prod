@@ -313,7 +313,7 @@ function updateHeaderForUser(user) {
         showElement(navUser);
 
         if (userNickname) {
-            userNickname.textContent = Auth.formatNicknameWithLevel(user);
+            Auth.applyNicknameDisplay(userNickname, user);
         }
 
         HeaderUserMenu.setOpenState(false);
