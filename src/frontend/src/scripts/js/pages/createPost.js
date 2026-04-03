@@ -7,6 +7,7 @@ let editingPostId = null;
 let existingImageUrls = [];
 let isAdminUser = false;
 let isBusinessUser = false;
+let businessPromotionFixedTitle = '';
 
 function getModeFromQuery() {
     const params = new URLSearchParams(window.location.search);
@@ -22,6 +23,7 @@ async function initCreatePost() {
     setupEventListeners();
     setupImageUpload();
     await setupBoardOptions();
+    await setupBusinessPromotionTitle();
     setupModeUI();
     await setupAdminNoticeOptions();
     validateForm();
@@ -81,9 +83,68 @@ async function setupBoardOptions() {
     if (!isBusinessUser) return;
 
     boardTypeSelect.value = 'PROMOTION';
-    Array.from(boardTypeSelect.options).forEach((option) => {
-        option.disabled = option.value !== 'PROMOTION';
-    });
+    Array.from(boardTypeSelect.options)
+        .filter((option) => option.value !== 'PROMOTION')
+        .forEach((option) => option.remove());
+}
+
+function applyBusinessTitleLock(title) {
+    const titleInput = document.getElementById('title');
+    if (!titleInput) return;
+
+    businessPromotionFixedTitle = String(title || '').trim();
+    if (!businessPromotionFixedTitle) return;
+
+    titleInput.value = businessPromotionFixedTitle;
+    titleInput.readOnly = true;
+    titleInput.dataset.fixedTitle = '1';
+    titleInput.title = '기업회원 홍보글 제목은 광고정보 기준으로 자동 고정됩니다.';
+    titleInput.classList.add('is-readonly');
+    updateCharCount('title', 255);
+}
+
+function resolveBusinessPromotionTitleFromAds(ads, me) {
+    const normalizedAds = Array.isArray(ads) ? ads : [];
+    const activeAd = normalizedAds.find((ad) => Boolean(ad?.isActive)) || normalizedAds[0] || null;
+    const adTitle = String(activeAd?.title || '').trim();
+    const managerName = String(me?.name || me?.nickname || '').trim();
+
+    if (!adTitle) return '';
+
+    const parts = adTitle.split('/').map((item) => item.trim()).filter(Boolean);
+    if (parts.length >= 3) return parts.slice(0, 3).join('/');
+    if (parts.length === 2 && managerName) return `${parts[0]}/${parts[1]}/${managerName}`;
+    if (parts.length === 1 && managerName) return `${parts[0]}/${managerName}`;
+    return adTitle;
+}
+
+async function setupBusinessPromotionTitle() {
+    if (!isBusinessUser || isEditMode) return;
+
+    let me = Auth.getUser();
+    if (!me) {
+        try {
+            me = await APIClient.get('/auth/me');
+        } catch (_error) {
+            me = null;
+        }
+    }
+
+    try {
+        const response = await APIClient.get('/users/me/business-ads');
+        const fixedTitle = resolveBusinessPromotionTitleFromAds(response?.content, me);
+        if (fixedTitle) {
+            applyBusinessTitleLock(fixedTitle);
+            return;
+        }
+    } catch (_error) {
+        // 광고 정보가 없는 경우 기본 사용자 정보로 폴백
+    }
+
+    const fallbackManagerName = String(me?.name || me?.nickname || '').trim();
+    if (fallbackManagerName) {
+        applyBusinessTitleLock(fallbackManagerName);
+    }
 }
 
 
@@ -341,7 +402,10 @@ async function handleSubmit(event) {
 
     if (isSubmitting) return;
 
-    const titleValue = document.getElementById('title')?.value.trim() || '';
+    const enteredTitle = document.getElementById('title')?.value.trim() || '';
+    const titleValue = (isBusinessUser && !isEditMode && businessPromotionFixedTitle)
+        ? businessPromotionFixedTitle
+        : enteredTitle;
     const contentValue = document.getElementById('content')?.value.trim() || '';
     const submitBtn = document.getElementById('submit-btn');
     const boardType = isBusinessUser
