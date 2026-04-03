@@ -94,10 +94,10 @@ function resolveRankMarkup(user, fallbackLabel = '') {
     if (!badgeImage) return sanitizeHTML(badgeLabel);
 
     return `
-        <span class="mypage-rank-with-label">
+        <div style="gap:10px">
             <img class="mypage-rank-badge" src="${badgeImage}" alt="기업회원 광고 등급 배지">
-            <span class="mypage-rank-label">${sanitizeHTML(badgeLabel)}</span>
-        </span>
+            <strong> ${sanitizeHTML(badgeLabel)}</strong>
+        </div>
     `;
 }
 

@@ -42,7 +42,8 @@
                 { text: '지역 상단 광고프로필 노출', enabled: true },
                 { text: '점프 12개', enabled: true },
                 { text: '자동점프 30일', enabled: true },
-                { text: '커뮤니티 홍보글 1일 1회', enabled: true }
+                { text: '커뮤니티 홍보글 1일 1회', enabled: true },
+                { text: '기업회원 익명 커뮤니티 이용가능', enabled: true }
             ],
             options: [{ days: 30, price: 590000, originalPrice: null }]
         },
