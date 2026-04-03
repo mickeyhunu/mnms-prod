@@ -4,6 +4,20 @@
 const liveModel = require('../models/liveModel');
 const adminModel = require('../models/adminModel');
 
+const LIVE_DB_CONNECTION_ERROR_CODES = new Set([
+  'ECONNREFUSED',
+  'ENOTFOUND',
+  'ETIMEDOUT',
+  'EHOSTUNREACH',
+  'ENETUNREACH'
+]);
+const TOP_AD_PLACEMENTS = new Set(['HOME', 'COMMUNITY']);
+
+function parsePositiveInt(value) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 function handleLiveError(error, next, res) {
   if (error.code === 'ER_NO_SUCH_TABLE') {
     return res.status(404).json({ message: 'LIVE 페이지 조회 대상 테이블을 찾을 수 없습니다.' });
@@ -13,7 +27,7 @@ function handleLiveError(error, next, res) {
     return res.status(503).json({ message: 'LIVE 전용 데이터베이스를 찾을 수 없습니다.', detail: error.message });
   }
 
-  if (['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', 'EHOSTUNREACH', 'ENETUNREACH'].includes(error.code)) {
+  if (LIVE_DB_CONNECTION_ERROR_CODES.has(error.code)) {
     return res.status(503).json({ message: 'LIVE 전용 데이터베이스에 연결할 수 없습니다.', detail: error.message });
   }
 
@@ -32,9 +46,8 @@ async function getLiveFilters(req, res, next) {
 async function getLiveEntries(req, res, next) {
   try {
     const categoryKey = req.query.category;
-    const storeNo = Number.parseInt(req.query.storeNo, 10);
-    const limit = req.query.limit;
-    const offset = req.query.offset;
+    const storeNo = parsePositiveInt(req.query.storeNo);
+    const { limit, offset } = req.query;
     const data = await liveModel.listLiveEntries(categoryKey, { storeNo, limit, offset });
     const totalCount = await liveModel.countRows(data.category.tableName, {
       storeNo,
@@ -62,8 +75,8 @@ async function getLiveEntries(req, res, next) {
 
 async function getLiveAds(req, res, next) {
   try {
-    const storeNo = Number.parseInt(req.query.storeNo, 10);
-    if (!Number.isInteger(storeNo) || storeNo <= 0) {
+    const storeNo = parsePositiveInt(req.query.storeNo);
+    if (!storeNo) {
       return res.status(400).json({ message: '유효한 매장 번호가 필요합니다.' });
     }
 
@@ -81,7 +94,7 @@ async function getLiveAds(req, res, next) {
 async function getTopAds(req, res, next) {
   try {
     const placement = String(req.query.placement || 'HOME').trim().toUpperCase();
-    if (!['HOME', 'COMMUNITY'].includes(placement)) {
+    if (!TOP_AD_PLACEMENTS.has(placement)) {
       return res.status(400).json({ message: '유효한 상단 광고 위치값이 필요합니다.' });
     }
 

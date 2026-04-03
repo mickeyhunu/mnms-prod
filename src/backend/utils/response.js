@@ -4,25 +4,43 @@
 const { resolveMemberLevel } = require('./memberLevel');
 const { getLoginRestrictionState, LOGIN_STATUS } = require('./loginRestriction');
 
+const DEFAULT_MEMBER_TYPE = 'MEMBER';
+const NICKNAME_CHANGE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+function toISOStringOrNull(value) {
+  return value ? value.toISOString() : null;
+}
+
+function resolveMemberType(user) {
+  return user.member_type || user.memberType || DEFAULT_MEMBER_TYPE;
+}
+
+function resolveNicknameChangeAvailableAt(lastChangedAt) {
+  if (!lastChangedAt) return null;
+
+  return new Date(new Date(lastChangedAt).getTime() + NICKNAME_CHANGE_COOLDOWN_MS).toISOString();
+}
+
 function pickUserRow(user) {
   const totalPoints = Number(user.total_points ?? user.totalPoints ?? 0);
   const memberLevel = resolveMemberLevel(totalPoints);
   const restrictionState = getLoginRestrictionState(user);
+  const memberType = resolveMemberType(user);
 
   return {
     id: user.id,
     email: user.email,
     nickname: user.nickname,
     role: user.role,
-    memberType: user.member_type || user.memberType || 'MEMBER',
-    accountType: user.member_type || user.memberType || 'MEMBER',
+    memberType,
+    accountType: memberType,
     accountStatus: restrictionState.accountStatus || LOGIN_STATUS.ACTIVE,
     isLoginRestricted: restrictionState.isRestricted,
-    loginRestrictedUntil: restrictionState.restrictedUntil ? restrictionState.restrictedUntil.toISOString() : null,
+    loginRestrictedUntil: toISOStringOrNull(restrictionState.restrictedUntil),
     isLoginRestrictionPermanent: restrictionState.isPermanent,
     isAdmin: user.role === 'ADMIN',
-    isAdvertiser: (user.member_type || user.memberType) === 'BUSINESS',
-    isBusiness: user.role === 'BUSINESS' || (user.member_type || user.memberType) === 'BUSINESS',
+    isAdvertiser: memberType === 'BUSINESS',
+    isBusiness: user.role === 'BUSINESS' || memberType === 'BUSINESS',
     totalPoints,
     level: memberLevel.level,
     levelEmoji: memberLevel.emoji,
@@ -34,9 +52,7 @@ function pickUserRow(user) {
     emailConsent: Boolean(user.email_consent),
     smsConsent: Boolean(user.sms_consent),
     createdAt: user.created_at || user.createdAt || null,
-    nicknameChangeAvailableAt: user.last_nickname_changed_at
-      ? new Date(new Date(user.last_nickname_changed_at).getTime() + 24 * 60 * 60 * 1000).toISOString()
-      : null
+    nicknameChangeAvailableAt: resolveNicknameChangeAvailableAt(user.last_nickname_changed_at)
   };
 }
 
