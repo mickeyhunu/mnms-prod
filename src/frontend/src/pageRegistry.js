@@ -162,16 +162,16 @@ const pageRegistry = {
                         </div>
                         <div class="ad-payment-row">
                             <dt>상품 금액</dt>
-                            <dd id="ad-product-price">200,000원</dd>
+                            <dd id="ad-product-price">190,000원</dd>
                         </div>
                         <div class="ad-payment-row">
                             <dt>부가세 (VAT)</dt>
-                            <dd id="ad-vat-price">20,000원</dd>
+                            <dd id="ad-vat-price">19,000원</dd>
                         </div>
                     </dl>
                     <div class="ad-payment-total">
                         <strong>총 결제 금액</strong>
-                        <strong id="ad-total-price">220,000원</strong>
+                        <strong id="ad-total-price">209,000원</strong>
                     </div>
                 </article>
             </section>
@@ -186,21 +186,21 @@ const pageRegistry = {
             name: 'BASIC',
             features: ['광고프로필 노출', '점프 6개', '자동점프 30일'],
             options: [
-              { days: 30, price: 200000, originalPrice: null }
+              { days: 30, price: 190000, originalPrice: null }
             ]
           },
           plus: {
             name: 'PLUS',
             features: ['광고프로필 노출', '점프 9개', '자동점프 30일', '커뮤니티 홍보글 1일 1회'],
             options: [
-              { days: 30, price: 400000, originalPrice: null }
+              { days: 30, price: 390000, originalPrice: null }
             ]
           },
           premium: {
             name: 'PREMIUM',
             features: ['지역 상단 광고프로필 노출', '점프 12개', '자동점프 30일', '커뮤니티 홍보글 1일 1회'],
             options: [
-              { days: 30, price: 600000, originalPrice: null }
+              { days: 30, price: 590000, originalPrice: null }
             ]
           },
           banner: {
@@ -240,7 +240,7 @@ const pageRegistry = {
               return;
             }
             const response = await APIClient.get('/users/me/business-ads');
-            const bannerItems = Array.isArray(response?.content) ? response.content : [];
+            const bannerItems = response && Array.isArray(response.content) ? response.content : [];
             updateBannerRemainingFeature(bannerItems.length);
           } catch (_error) {
             updateBannerRemainingFeature(0);
@@ -297,7 +297,7 @@ const pageRegistry = {
           render();
         });
 
-        loadBannerAdRemaining().finally(render);
+        loadBannerAdRemaining().then(render, render);
       })();
     </script>
 
