@@ -321,6 +321,7 @@ const pageRegistry = {
                     <option value="REVIEW">후기게시판</option>
                     <option value="STORY">썰게시판</option>
                     <option value="QUESTION">질문게시판</option>
+                    <option value="PROMOTION">홍보게시판</option>
                     </select>
                     </div>
 
@@ -336,6 +337,7 @@ const pageRegistry = {
                                     <label><input type="checkbox" name="notice-target-board" value="REVIEW"> 후기</label>
                                     <label><input type="checkbox" name="notice-target-board" value="STORY"> 썰</label>
                                     <label><input type="checkbox" name="notice-target-board" value="QUESTION"> 질문</label>
+                                    <label><input type="checkbox" name="notice-target-board" value="PROMOTION"> 홍보</label>
                                 </div>
                             </div>
                         </div>
@@ -430,6 +432,7 @@ const pageRegistry = {
                                 <option value="REVIEW">후기게시판</option>
                                 <option value="STORY">썰게시판</option>
                                 <option value="QUESTION">질문게시판</option>
+                                <option value="PROMOTION">홍보게시판</option>
                             </select>
                         </div>
                         <label><input type="checkbox" id="support-form-is-pinned"> 커뮤니티 필독 상단 고정으로 표시</label>
