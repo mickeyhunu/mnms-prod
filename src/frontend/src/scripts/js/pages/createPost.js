@@ -6,6 +6,7 @@ let isEditMode = false;
 let editingPostId = null;
 let existingImageUrls = [];
 let isAdminUser = false;
+let isBusinessUser = false;
 
 function getModeFromQuery() {
     const params = new URLSearchParams(window.location.search);
@@ -20,7 +21,7 @@ async function initCreatePost() {
     getModeFromQuery();
     setupEventListeners();
     setupImageUpload();
-    setupBoardOptions();
+    await setupBoardOptions();
     setupModeUI();
     await setupAdminNoticeOptions();
     validateForm();
@@ -50,8 +51,26 @@ function setupModeUI() {
     }
 }
 
-function setupBoardOptions() {
-    // 카테고리 선택은 모든 로그인 사용자에게 동일하게 제공됩니다.
+async function setupBoardOptions() {
+    const boardTypeSelect = document.getElementById('board-type');
+    if (!boardTypeSelect) return;
+
+    let me = Auth.getUser();
+    if (!me) {
+        try {
+            me = await APIClient.get('/auth/me');
+        } catch (_error) {
+            me = null;
+        }
+    }
+
+    isBusinessUser = Boolean(me?.isBusiness || me?.isAdvertiser || String(me?.role || '').toUpperCase() === 'BUSINESS');
+    if (!isBusinessUser) return;
+
+    boardTypeSelect.value = 'PROMOTION';
+    Array.from(boardTypeSelect.options).forEach((option) => {
+        option.disabled = option.value !== 'PROMOTION';
+    });
 }
 
 
@@ -312,7 +331,9 @@ async function handleSubmit(event) {
     const titleValue = document.getElementById('title')?.value.trim() || '';
     const contentValue = document.getElementById('content')?.value.trim() || '';
     const submitBtn = document.getElementById('submit-btn');
-    const boardType = document.getElementById('board-type')?.value || 'FREE';
+    const boardType = isBusinessUser
+        ? 'PROMOTION'
+        : (document.getElementById('board-type')?.value || 'FREE');
     const isNotice = Boolean(document.getElementById('is-notice')?.checked) && isAdminUser;
     const noticeTargetBoards = isNotice ? getSelectedNoticeTargetBoards() : [];
 

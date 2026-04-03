@@ -10,7 +10,15 @@ const {
   uploadDataUrlToS3
 } = require('../utils/fileUpload');
 
-const BOARD_TYPES = postModel.BOARD_TYPES || { FREE: 'FREE', ANON: 'ANON', REVIEW: 'REVIEW', STORY: 'STORY', QUESTION: 'QUESTION' };
+const BOARD_TYPES = postModel.BOARD_TYPES || {
+  FREE: 'FREE',
+  ANON: 'ANON',
+  REVIEW: 'REVIEW',
+  STORY: 'STORY',
+  QUESTION: 'QUESTION',
+  PROMOTION: 'PROMOTION'
+};
+const PROMOTION_TITLE_PREFIX = '광고 ';
 
 const DEFAULT_PAGE = 0;
 const DEFAULT_SIZE = 10;
@@ -36,6 +44,19 @@ function parseBoardType(value) {
   if (normalized === 'ALL') return 'ALL';
   if (Object.values(BOARD_TYPES).includes(normalized)) return normalized;
   return BOARD_TYPES.FREE;
+}
+
+function isBusinessUser(user) {
+  const role = String(user?.role || '').toUpperCase();
+  const memberType = String(user?.member_type || user?.memberType || '').toUpperCase();
+  return role === 'BUSINESS' || memberType === 'BUSINESS';
+}
+
+function ensurePromotionTitlePrefix(title = '') {
+  const trimmed = String(title || '').trim();
+  if (!trimmed) return '';
+  if (trimmed.startsWith(PROMOTION_TITLE_PREFIX)) return trimmed;
+  return `${PROMOTION_TITLE_PREFIX}${trimmed}`;
 }
 
 
@@ -330,6 +351,9 @@ async function createPost(req, res, next) {
     if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
 
     const boardType = parseBoardType(req.body.boardType);
+    if (isBusinessUser(req.user) && boardType !== BOARD_TYPES.PROMOTION) {
+      return res.status(403).json({ message: '광고자 계정은 홍보게시판에만 글을 작성할 수 있습니다.' });
+    }
     const isAdmin = req.user.role === 'ADMIN';
     const isNotice = isAdmin ? Boolean(req.body.isNotice) : false;
     const noticeType = isNotice ? parseNoticeType(req.body.noticeType) || 'NOTICE' : null;
@@ -339,7 +363,7 @@ async function createPost(req, res, next) {
       : [];
     const postId = await postModel.createPost({
       userId: req.user.id,
-      title,
+      title: boardType === BOARD_TYPES.PROMOTION ? ensurePromotionTitlePrefix(title) : title,
       content,
       boardType,
       imageUrls: await resolveImageUrls(req.body),
@@ -378,13 +402,19 @@ async function updatePost(req, res, next) {
     if (!req.user || (post.user_id !== req.user.id && req.user.role !== 'ADMIN')) {
       return res.status(403).json({ message: '수정 권한이 없습니다.' });
     }
+    const targetBoardType = parseBoardType(post.board_type || post.boardType);
+    if (isBusinessUser(req.user) && targetBoardType !== BOARD_TYPES.PROMOTION) {
+      return res.status(403).json({ message: '광고자 계정은 홍보게시판 글만 수정할 수 있습니다.' });
+    }
 
     const previousImageUrls = extractImageUrlsFromPost(post);
 
     const nextImageUrls = await resolveImageUrls(req.body);
 
     await postModel.updatePost(postId, {
-      title: req.body.title ?? post.title,
+      title: targetBoardType === BOARD_TYPES.PROMOTION
+        ? ensurePromotionTitlePrefix(req.body.title ?? post.title)
+        : (req.body.title ?? post.title),
       content: req.body.content ?? post.content,
       imageUrls: nextImageUrls,
       isNotice: req.user.role === 'ADMIN' ? Boolean(req.body.isNotice) : Boolean(post.is_notice),
@@ -614,3 +644,7 @@ module.exports = {
   updateComment,
   deleteComment
 };
+    const targetBoardType = parseBoardType(post.board_type || post.boardType);
+    if (isBusinessUser(req.user) && targetBoardType !== BOARD_TYPES.PROMOTION) {
+      return res.status(403).json({ message: '광고자 계정은 홍보게시판 글만 수정할 수 있습니다.' });
+    }

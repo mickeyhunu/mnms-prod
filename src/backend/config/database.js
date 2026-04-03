@@ -319,7 +319,7 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS posts (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       user_id BIGINT NULL,
-      board_type ENUM('FREE','ANON','REVIEW','STORY','QUESTION') NOT NULL DEFAULT 'FREE',
+      board_type ENUM('FREE','ANON','REVIEW','STORY','QUESTION','PROMOTION') NOT NULL DEFAULT 'FREE',
       is_notice TINYINT(1) NOT NULL DEFAULT 0,
       notice_type ENUM('NOTICE','IMPORTANT') NULL,
       is_pinned TINYINT(1) NOT NULL DEFAULT 0,
@@ -504,11 +504,11 @@ async function initDatabase() {
   );
 
   if (!boardTypeColumn.length) {
-    await pool.query("ALTER TABLE posts ADD COLUMN board_type ENUM('FREE','ANON','REVIEW','STORY','QUESTION') NOT NULL DEFAULT 'FREE' AFTER user_id");
+    await pool.query("ALTER TABLE posts ADD COLUMN board_type ENUM('FREE','ANON','REVIEW','STORY','QUESTION','PROMOTION') NOT NULL DEFAULT 'FREE' AFTER user_id");
   }
 
 
-  await pool.query("ALTER TABLE posts MODIFY COLUMN board_type ENUM('FREE','ANON','REVIEW','STORY','QUESTION') NOT NULL DEFAULT 'FREE'");
+  await pool.query("ALTER TABLE posts MODIFY COLUMN board_type ENUM('FREE','ANON','REVIEW','STORY','QUESTION','PROMOTION') NOT NULL DEFAULT 'FREE'");
 
   const [isNoticeColumn] = await pool.query(
     `SELECT 1
