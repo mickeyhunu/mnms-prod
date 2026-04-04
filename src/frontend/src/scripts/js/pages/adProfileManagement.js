@@ -65,20 +65,6 @@ function bindAdProfileInteractions() {
     createHourOptions(closeHourSelect);
     updateSelectOptions(regionSelect, Object.keys(REGION_DISTRICT_MAP));
 
-    const expandRegionSelect = () => {
-        if (!regionSelect) return;
-        regionSelect.size = 6;
-        regionSelect.classList.add('ad-profile-region-expanded');
-    };
-
-    const collapseRegionSelect = () => {
-        if (!regionSelect) return;
-        regionSelect.size = 1;
-        regionSelect.classList.remove('ad-profile-region-expanded');
-    };
-
-    collapseRegionSelect();
-
     const syncPreview = () => {
         const title = titleInput?.value?.trim() || '제목을 입력해주세요.';
         const description = descriptionInput?.value?.trim() || '내용을 입력해주세요.';
@@ -101,12 +87,8 @@ function bindAdProfileInteractions() {
     regionSelect?.addEventListener('change', () => {
         const selectedRegion = regionSelect.value;
         updateSelectOptions(districtSelect, REGION_DISTRICT_MAP[selectedRegion] || []);
-        collapseRegionSelect();
         syncPreview();
     });
-
-    regionSelect?.addEventListener('focus', expandRegionSelect);
-    regionSelect?.addEventListener('blur', collapseRegionSelect);
 
     [nameInput, managerInput, districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput, descriptionInput]
         .forEach((element) => {
