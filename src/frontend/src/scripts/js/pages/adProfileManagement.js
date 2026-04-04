@@ -42,7 +42,7 @@ function updateSelectOptions(selectElement, values) {
     selectElement.innerHTML = options.join('');
 }
 
-function bindScrollableSelect(selectElement, maxVisibleOptions = 8) {
+function bindScrollableSelect(selectElement, maxVisibleOptions = 5) {
     if (!selectElement) return;
 
     const collapse = () => {
