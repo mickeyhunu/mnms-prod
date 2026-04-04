@@ -42,40 +42,6 @@ function updateSelectOptions(selectElement, values) {
     selectElement.innerHTML = options.join('');
 }
 
-function bindScrollableSelect(selectElement, maxVisibleOptions = 8) {
-    if (!selectElement) return;
-
-    const collapse = () => {
-        selectElement.size = 1;
-        selectElement.classList.remove('is-expanded');
-    };
-
-    const expandIfNeeded = () => {
-        const optionCount = selectElement.options?.length || 0;
-        if (optionCount <= maxVisibleOptions) return;
-
-        selectElement.size = maxVisibleOptions;
-        selectElement.classList.add('is-expanded');
-        selectElement.focus();
-    };
-
-    selectElement.addEventListener('mousedown', (event) => {
-        if (selectElement.classList.contains('is-expanded')) return;
-        event.preventDefault();
-        expandIfNeeded();
-    });
-
-    selectElement.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            expandIfNeeded();
-        }
-    });
-
-    selectElement.addEventListener('blur', collapse);
-    selectElement.addEventListener('change', collapse);
-}
-
 function bindAdProfileInteractions() {
     const nameInput = document.getElementById('ad-profile-name');
     const managerInput = document.getElementById('ad-profile-manager');
@@ -98,8 +64,6 @@ function bindAdProfileInteractions() {
     createHourOptions(openHourSelect);
     createHourOptions(closeHourSelect);
     updateSelectOptions(regionSelect, Object.keys(REGION_DISTRICT_MAP));
-    [regionSelect, districtSelect, categorySelect, openHourSelect, closeHourSelect]
-        .forEach((select) => bindScrollableSelect(select));
 
     const syncPreview = () => {
         const title = titleInput?.value?.trim() || '제목을 입력해주세요.';

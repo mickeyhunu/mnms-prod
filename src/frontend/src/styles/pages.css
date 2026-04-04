@@ -2695,13 +2695,6 @@
     background: #fff;
 }
 
-.ad-profile-section select.is-expanded {
-    height: auto;
-    max-height: 320px;
-    overflow-y: auto;
-    padding: 8px 12px;
-}
-
 .ad-profile-section textarea {
     resize: vertical;
     padding: 12px;
