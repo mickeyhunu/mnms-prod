@@ -193,7 +193,19 @@ const pageRegistry = {
                 <div class="ad-profile-section">
                     <h3>상세정보</h3>
                     <input id="ad-profile-title" type="text" maxlength="50" placeholder="제목을 입력해주세요.">
-                    <textarea id="ad-profile-description" maxlength="1000" placeholder="내용을 입력해주세요."></textarea>
+                    <div class="ad-profile-editor" aria-label="광고 상세정보 에디터">
+                        <div class="ad-profile-editor-toolbar" role="toolbar" aria-label="텍스트 편집 도구">
+                            <button type="button" class="ad-profile-editor-btn" data-editor-command="bold" title="굵게"><strong>B</strong></button>
+                            <button type="button" class="ad-profile-editor-btn" data-editor-command="italic" title="기울임"><em>I</em></button>
+                            <button type="button" class="ad-profile-editor-btn" data-editor-command="underline" title="밑줄"><span style="text-decoration: underline;">U</span></button>
+                            <button type="button" class="ad-profile-editor-btn" data-editor-command="insertUnorderedList" title="목록">• 목록</button>
+                            <button type="button" class="ad-profile-editor-btn" data-editor-command="justifyLeft" title="왼쪽 정렬">좌</button>
+                            <button type="button" class="ad-profile-editor-btn" data-editor-command="justifyCenter" title="가운데 정렬">중</button>
+                            <button type="button" class="ad-profile-editor-btn" data-editor-command="justifyRight" title="오른쪽 정렬">우</button>
+                        </div>
+                        <div id="ad-profile-description-editor" class="ad-profile-editor-content" contenteditable="true" data-placeholder="내용을 입력해주세요."></div>
+                    </div>
+                    <textarea id="ad-profile-description" class="hidden" maxlength="1000" placeholder="내용을 입력해주세요."></textarea>
                 </div>
 
                 <div class="ad-profile-section">

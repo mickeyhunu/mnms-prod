@@ -86,6 +86,8 @@ function bindAdProfileInteractions() {
     const closeHourSelect = document.getElementById('ad-profile-close-hour');
     const titleInput = document.getElementById('ad-profile-title');
     const descriptionInput = document.getElementById('ad-profile-description');
+    const descriptionEditor = document.getElementById('ad-profile-description-editor');
+    const editorToolbar = document.querySelector('.ad-profile-editor-toolbar');
     const imageInput = document.getElementById('ad-profile-image-input');
     const imageUploadButton = document.getElementById('ad-profile-image-upload-btn');
     const imagePreview = document.getElementById('ad-profile-image-preview');
@@ -95,6 +97,14 @@ function bindAdProfileInteractions() {
     const previewSub = document.getElementById('ad-profile-preview-sub');
     const previewDesc = document.getElementById('ad-profile-preview-desc');
 
+    const syncDescriptionValue = () => {
+        if (!descriptionInput || !descriptionEditor) return '';
+
+        const html = descriptionEditor.innerHTML.trim();
+        descriptionInput.value = html;
+        return descriptionEditor.textContent?.trim() || '';
+    };
+
     createHourOptions(openHourSelect);
     createHourOptions(closeHourSelect);
     updateSelectOptions(regionSelect, Object.keys(REGION_DISTRICT_MAP));
@@ -103,7 +113,7 @@ function bindAdProfileInteractions() {
 
     const syncPreview = () => {
         const title = titleInput?.value?.trim() || '제목을 입력해주세요.';
-        const description = descriptionInput?.value?.trim() || '내용을 입력해주세요.';
+        const description = syncDescriptionValue() || '내용을 입력해주세요.';
         const region = regionSelect?.value?.trim() || '선택';
         const district = districtSelect?.value?.trim() || '선택';
         const category = categorySelect?.value?.trim() || '선택';
@@ -120,13 +130,29 @@ function bindAdProfileInteractions() {
         if (previewSub) previewSub.textContent = `협의 · ${region} ${district} · ${category} · ${formattedTime}`;
     };
 
+    if (descriptionEditor && descriptionInput) {
+        descriptionEditor.innerHTML = descriptionInput.value || '';
+        descriptionEditor.addEventListener('input', syncPreview);
+        descriptionEditor.addEventListener('blur', syncPreview);
+    }
+
+    editorToolbar?.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-editor-command]');
+        if (!button || !descriptionEditor) return;
+
+        event.preventDefault();
+        descriptionEditor.focus();
+        document.execCommand(button.dataset.editorCommand, false, null);
+        syncPreview();
+    });
+
     regionSelect?.addEventListener('change', () => {
         const selectedRegion = regionSelect.value;
         updateSelectOptions(districtSelect, REGION_DISTRICT_MAP[selectedRegion] || []);
         syncPreview();
     });
 
-    [nameInput, managerInput, districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput, descriptionInput]
+    [nameInput, managerInput, districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput]
         .forEach((element) => {
             element?.addEventListener('input', syncPreview);
             element?.addEventListener('change', syncPreview);
