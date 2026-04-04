@@ -2701,6 +2701,49 @@
     min-height: 220px;
 }
 
+.ad-profile-editor {
+    margin-top: 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.ad-profile-editor-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    border-bottom: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.ad-profile-editor-btn {
+    border: 1px solid #ced4da;
+    background: #fff;
+    color: #343a40;
+    border-radius: 8px;
+    min-width: 34px;
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.ad-profile-editor-content {
+    min-height: 220px;
+    padding: 12px;
+    line-height: 1.6;
+    font-size: 15px;
+    color: #212529;
+    outline: none;
+}
+
+.ad-profile-editor-content:empty::before {
+    content: attr(data-placeholder);
+    color: #9ca3af;
+}
+
 .ad-profile-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
