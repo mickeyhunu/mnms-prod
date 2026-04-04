@@ -221,7 +221,6 @@ const pageRegistry = {
                     </div>
                     <div class="ad-profile-guide">
                         <p>• 이미지 권장 사이즈: 가로 600px, 세로 600px (1:1 비율)</p>
-                        <p>• 대표 이미지가 없다면, 광고 결제 후 버블알바에서 제작해드려요.</p>
                         <p>• 움직이는 이미지는 등록할 수 없어요.</p>
                     </div>
                 </div>
