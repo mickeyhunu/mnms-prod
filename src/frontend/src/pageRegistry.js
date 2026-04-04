@@ -150,7 +150,7 @@ const pageRegistry = {
                     <input id="ad-profile-name" type="text" maxlength="24" placeholder="업소명을 입력해주세요.">
                     <input id="ad-profile-manager" type="text" maxlength="24" placeholder="담당자명을 입력해주세요.">
 
-                    <div class="ad-profile-grid">
+                    <div class="ad-profile-grid ad-profile-grid--region">
                         <label>
                             <span>지역</span>
                             <select id="ad-profile-region">
@@ -182,11 +182,9 @@ const pageRegistry = {
                         <label>
                             <span>영업시간</span>
                             <div class="ad-profile-time-row">
-                                <select id="ad-profile-meridiem">
-                                    <option value="오전" selected>오전</option>
-                                    <option value="오후">오후</option>
-                                </select>
-                                <select id="ad-profile-hour"></select>
+                                <select id="ad-profile-open-hour"></select>
+                                <span class="ad-profile-time-separator">~</span>
+                                <select id="ad-profile-close-hour"></select>
                             </div>
                         </label>
                     </div>
