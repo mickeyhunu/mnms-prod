@@ -2717,8 +2717,14 @@
 
 .ad-profile-time-row {
     display: grid;
-    grid-template-columns: 92px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     gap: 8px;
+    align-items: center;
+}
+
+.ad-profile-time-separator {
+    color: #6c757d;
+    font-size: 14px;
 }
 
 .ad-profile-image-row {
@@ -2793,5 +2799,9 @@
 @media (max-width: 640px) {
     .ad-profile-grid {
         grid-template-columns: 1fr;
+    }
+
+    .ad-profile-grid--region {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }

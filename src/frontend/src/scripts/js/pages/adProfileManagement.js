@@ -23,7 +23,7 @@ const REGION_DISTRICT_MAP = {
 
 function createHourOptions(hourSelect) {
     if (!hourSelect) return;
-    const options = ['선택'];
+    const options = ['시간선택'];
     for (let hour = 0; hour <= 24; hour += 1) {
         options.push(`${String(hour).padStart(2, '0')}시`);
     }
@@ -48,8 +48,8 @@ function bindAdProfileInteractions() {
     const regionSelect = document.getElementById('ad-profile-region');
     const districtSelect = document.getElementById('ad-profile-district');
     const categorySelect = document.getElementById('ad-profile-category');
-    const meridiemSelect = document.getElementById('ad-profile-meridiem');
-    const hourSelect = document.getElementById('ad-profile-hour');
+    const openHourSelect = document.getElementById('ad-profile-open-hour');
+    const closeHourSelect = document.getElementById('ad-profile-close-hour');
     const titleInput = document.getElementById('ad-profile-title');
     const descriptionInput = document.getElementById('ad-profile-description');
     const imageInput = document.getElementById('ad-profile-image-input');
@@ -61,7 +61,8 @@ function bindAdProfileInteractions() {
     const previewSub = document.getElementById('ad-profile-preview-sub');
     const previewDesc = document.getElementById('ad-profile-preview-desc');
 
-    createHourOptions(hourSelect);
+    createHourOptions(openHourSelect);
+    createHourOptions(closeHourSelect);
     updateSelectOptions(regionSelect, Object.keys(REGION_DISTRICT_MAP));
 
     const syncPreview = () => {
@@ -70,9 +71,13 @@ function bindAdProfileInteractions() {
         const region = regionSelect?.value?.trim() || '선택';
         const district = districtSelect?.value?.trim() || '선택';
         const category = categorySelect?.value?.trim() || '선택';
-        const meridiem = meridiemSelect?.value?.trim() || '오전';
-        const hour = hourSelect?.value?.trim() || '선택';
-        const formattedTime = hour === '선택' ? '선택' : `${meridiem} ${hour}`;
+        const openHour = openHourSelect?.value?.trim() || '시간선택';
+        const closeHour = closeHourSelect?.value?.trim() || '시간선택';
+        const isOpenHourSelected = openHour && openHour !== '시간선택';
+        const isCloseHourSelected = closeHour && closeHour !== '시간선택';
+        const formattedTime = (isOpenHourSelected && isCloseHourSelected)
+            ? `${openHour} ~ ${closeHour}`
+            : '시간선택 ~ 시간선택';
 
         if (previewTitle) previewTitle.textContent = title;
         if (previewDesc) previewDesc.textContent = description;
@@ -85,8 +90,11 @@ function bindAdProfileInteractions() {
         syncPreview();
     });
 
-    [nameInput, managerInput, districtSelect, categorySelect, meridiemSelect, hourSelect, titleInput, descriptionInput]
-        .forEach((element) => element?.addEventListener('input', syncPreview));
+    [nameInput, managerInput, districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput, descriptionInput]
+        .forEach((element) => {
+            element?.addEventListener('input', syncPreview);
+            element?.addEventListener('change', syncPreview);
+        });
 
     imageUploadButton?.addEventListener('click', () => imageInput?.click());
     imageInput?.addEventListener('change', () => {
