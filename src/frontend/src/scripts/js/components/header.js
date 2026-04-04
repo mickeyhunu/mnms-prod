@@ -305,7 +305,9 @@ function autoInitHeader() {
 function updateHeaderForUser(user) {
     const navGuest = document.getElementById('nav-guest');
     const navUser = document.getElementById('nav-user');
-    const userNickname = document.getElementById('user-nickname-label');
+    const userNickname = (typeof Auth !== 'undefined' && typeof Auth.resolveNicknameDisplayElement === 'function')
+        ? Auth.resolveNicknameDisplayElement()
+        : document.getElementById('user-nickname-label');
     const adminLink = document.getElementById('admin-link');
 
     if (user) {

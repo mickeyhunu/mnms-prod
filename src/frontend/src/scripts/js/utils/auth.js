@@ -2,6 +2,19 @@
  * 파일 역할: auth에서 사용하는 공통 보조 함수/상수를 제공하는 유틸리티 파일.
  */
 const Auth = {
+    resolveNicknameDisplayElement() {
+        const label = document.getElementById('user-nickname-label');
+        if (label) return label;
+
+        const legacy = document.getElementById('user-nickname');
+        if (!legacy) return null;
+
+        if (legacy.querySelector && legacy.querySelector('#user-nickname-label')) {
+            return legacy.querySelector('#user-nickname-label');
+        }
+
+        return legacy;
+    },
     isBusinessAccount(user) {
         if (!user) return false;
 
@@ -163,7 +176,7 @@ const Auth = {
         const user = this.getUser();
         const navGuest = document.getElementById('nav-guest');
         const navUser = document.getElementById('nav-user');
-        const userNickname = document.getElementById('user-nickname-label');
+        const userNickname = this.resolveNicknameDisplayElement();
         const adminLink = document.getElementById('admin-link');
 
         if (typeof HeaderUserMenu !== 'undefined') {
