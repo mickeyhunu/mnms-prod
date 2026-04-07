@@ -804,6 +804,21 @@ const pageRegistry = {
                 </a>
             </section>
         </div>
+        <div class="container">
+            <footer class="company-footer-slot" aria-label="홈 하단 정보">
+                <div class="company-footer-top">
+                    <strong class="company-footer-logo">MIDNIGHT MENS</strong>
+                </div>
+                <div class="company-footer-links-row">
+                    <a href="business-info.html">사업자 정보</a>
+                    <span class="footer-divider" aria-hidden="true"></span>
+                    <button type="button" id="report-center-btn">신고센터</button>
+                </div>
+                <p class="company-footer-notice">미드나잇 맨즈는 커뮤니티 서비스 제공 플랫폼입니다.</p>
+                <p class="company-footer-notice">상호명 : MN컴퍼니 | 사업자번호 : 355-18-02505 | 대표자명 : 이상훈 | 대표번호 : 010-6567-4519</p>
+                <p class="company-footer-copyright">© MIDNIGHT MENS. ALL RIGHTS RESERVED.</p>
+            </footer>
+        </div>
     </main>
 
     <script src="scripts/js/utils/constants.js"></script>
