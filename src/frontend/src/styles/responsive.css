@@ -307,10 +307,6 @@
         max-width: 1400px;
     }
 
-    .admin-page-header-container {
-        max-width: 1400px;
-    }
-
     .grid-4 {
         grid-template-columns: repeat(4, 1fr);
     }

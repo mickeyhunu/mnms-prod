@@ -6,7 +6,7 @@ import { adminModalTemplates } from './modals.js';
 
 export const adminTemplate = `
 <header class="header">
-        <div class="header-container admin-page-header-container">
+        <div class="header-container">
             <a href="index.html" class="logo">
                 <h1>미드나잇 맨즈</h1>
             </a>
