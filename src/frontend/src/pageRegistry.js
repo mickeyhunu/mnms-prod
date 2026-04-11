@@ -1266,6 +1266,7 @@ const pageRegistry = {
                     </div>
 
                     <input type="hidden" id="phoneVerified" name="phoneVerified" value="false">
+                    <input type="hidden" id="identityVerificationId" name="identityVerificationId" value="">
 
                     <div class="form-group">
                         <label for="nickname" class="form-label">닉네임</label>

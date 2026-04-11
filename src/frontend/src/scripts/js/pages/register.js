@@ -222,6 +222,7 @@ async function handleRegister(e) {
     try {
         setLoading(submitBtn, true);
         hideElement(errorBanner);
+        await sendPortOneIdentityVerificationRequest();
 
         const response = await AuthAPI.register({
             loginId: formData.loginId,
@@ -248,6 +249,41 @@ async function handleRegister(e) {
 
     } finally {
         setLoading(submitBtn, false);
+    }
+}
+
+function getIdentityVerificationId() {
+    const hiddenInputValue = document.getElementById('identityVerificationId')?.value?.trim();
+    if (hiddenInputValue) {
+        return hiddenInputValue;
+    }
+
+    const searchParams = new URLSearchParams(window.location.search);
+    return searchParams.get('identityVerificationId')?.trim() || '';
+}
+
+async function sendPortOneIdentityVerificationRequest() {
+    const identityVerificationId = getIdentityVerificationId();
+    if (!identityVerificationId) {
+        throw new Error('본인인증 정보가 없습니다. identityVerificationId를 확인해주세요.');
+    }
+
+    const response = await fetch(`https://api.portone.io/identity-verifications/${encodeURIComponent(identityVerificationId)}/send`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            bypass: {
+                kcpV2: {
+                    media_type: 'MC01'
+                }
+            }
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error('본인인증 요청에 실패했습니다. 잠시 후 다시 시도해주세요.');
     }
 }
 
