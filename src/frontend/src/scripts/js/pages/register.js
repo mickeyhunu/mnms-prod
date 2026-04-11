@@ -96,6 +96,26 @@ function setupIdentityVerification() {
     }
 }
 
+function setupNicknameCheck() {
+    const checkNicknameBtn = document.getElementById('check-nickname-btn');
+    const nicknameInput = document.getElementById('nickname');
+
+    if (checkNicknameBtn) {
+        checkNicknameBtn.addEventListener('click', checkNicknameAvailability);
+    }
+
+    if (nicknameInput) {
+        nicknameInput.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter') {
+                return;
+            }
+
+            event.preventDefault();
+            checkNicknameAvailability();
+        });
+    }
+}
+
 function handleIdentityVerification() {
     const popupName = 'kcpIdentityPopup';
     const popup = window.open('', popupName, 'width=460,height=640,scrollbars=yes,resizable=yes');
