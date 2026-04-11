@@ -281,11 +281,60 @@ const HeaderUserMenu = {
     }
 };
 
+const HeaderRegisterVerification = {
+    async requestKcpIdentityVerification() {
+        if (!window.PortOne || typeof window.PortOne.requestIdentityVerification !== 'function') {
+            return true;
+        }
+
+        const result = await window.PortOne.requestIdentityVerification({
+            storeId: 'store-4ff4af41-85e3-4559-8eb8-0d08a2c6ceec',
+            identityVerificationId: `identity-verification-${window.crypto.randomUUID()}`,
+            channelKey: 'channel-key-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+        });
+
+        if (result?.code) {
+            throw new Error(result.message || '본인인증이 취소되었거나 실패했습니다.');
+        }
+
+        return true;
+    },
+
+    bindRegisterLinks() {
+        const registerLinks = Array.from(document.querySelectorAll('a[href="/register"], a[href="register.html"]'));
+
+        registerLinks.forEach((link) => {
+            if (link.dataset.boundRegisterVerification === 'true') {
+                return;
+            }
+
+            link.dataset.boundRegisterVerification = 'true';
+            link.addEventListener('click', async (event) => {
+                event.preventDefault();
+
+                try {
+                    await this.requestKcpIdentityVerification();
+                    sessionStorage.setItem('identityVerificationPrechecked', 'true');
+                    window.location.href = link.getAttribute('href') || '/register';
+                } catch (error) {
+                    const message = error?.message || '본인인증 중 오류가 발생했습니다.';
+                    if (typeof showNotification === 'function') {
+                        showNotification(message, 'error');
+                    } else {
+                        alert(message);
+                    }
+                }
+            });
+        });
+    }
+};
+
 function initHeader() {
     Auth.updateHeaderUI();
     Auth.bindLogoutButton();
     HeaderUserMenu.init();
     HeaderNotificationCenter.init();
+    HeaderRegisterVerification.bindRegisterLinks();
 }
 
 function autoInitHeader() {
