@@ -4,32 +4,6 @@
 let generatedVerificationCode = null;
 let verifiedPhoneNumber = null;
 
-async function runPortOneIdentityVerification() {
-    if (!window.PortOne || typeof window.PortOne.requestIdentityVerification !== 'function') {
-        return true;
-    }
-
-    try {
-        const result = await window.PortOne.requestIdentityVerification({
-            // 고객사 storeId
-            storeId: 'store-4ff4af41-85e3-4559-8eb8-0d08a2c6ceec',
-            identityVerificationId: `identity-verification-${window.crypto.randomUUID()}`,
-            // 연동 정보 메뉴의 채널 관리 탭에서 확인 가능한 channelKey
-            channelKey: 'channel-key-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-        });
-
-        if (result?.code) {
-            throw new Error(result.message || '본인인증이 취소되었거나 실패했습니다.');
-        }
-
-        return true;
-    } catch (error) {
-        const message = error?.message || '본인인증 중 오류가 발생했습니다.';
-        showNotification(message, 'error');
-        return false;
-    }
-}
-
 function initRegisterPage() {
 
     if (Auth.redirectIfAuthenticated()) {
@@ -242,11 +216,6 @@ async function handleRegister(e) {
 
     if (!validateNoBlockedExpression(formData.nickname, '닉네임')) {
         setNicknameChecked(false);
-        return;
-    }
-
-    const identityVerified = await runPortOneIdentityVerification();
-    if (!identityVerified) {
         return;
     }
 

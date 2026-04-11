@@ -1317,7 +1317,6 @@ const pageRegistry = {
     <script src="scripts/js/utils/auth.js"></script>
     <script src="scripts/js/api/apiClient.js"></script>
     <script src="scripts/js/api/authAPI.js"></script>
-    <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
     <script src="scripts/js/pages/register.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/pages.css"],
