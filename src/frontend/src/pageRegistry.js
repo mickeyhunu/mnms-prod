@@ -1247,6 +1247,9 @@ const pageRegistry = {
                             <label class="form-label">KCP 본인인증</label>
                             <p class="text-muted">본인인증 버튼을 누르면 KCP 인증 팝업이 열립니다.</p>
                             <button type="button" class="btn btn-outline w-full" id="start-kcp-btn">본인인증</button>
+                            <form id="kcp-auth-form" method="post" action="about:blank" class="hidden" aria-hidden="true">
+                                <input type="hidden" name="requestType" value="REGISTER_IDENTITY">
+                            </form>
                             <small class="text-muted" id="identity-status">본인인증이 필요합니다.</small>
                             <div class="error-message hidden" id="identityVerified-error"></div>
                         </div>
