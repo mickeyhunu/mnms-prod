@@ -1200,30 +1200,14 @@ const pageRegistry = {
                 <p>미드나잇 맨즈에 가입하여 다양한 사람들과 소통하세요</p>
             </div>
 
-            <div class="modal hidden" id="identity-verification-modal">
-                <div class="modal-overlay"></div>
-                <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="identity-verification-title">
-                    <div class="modal-header">
-                        <h3 id="identity-verification-title">본인인증 확인</h3>
-                    </div>
-                    <div class="modal-body">
-                        <p class="text-muted">회원가입 전에 본인인증을 먼저 완료해주세요.</p>
-                        <div class="form-group">
-                            <label for="identity-phone" class="form-label">휴대폰 번호</label>
-                            <div class="grid grid-2">
-                                <input type="tel" id="identity-phone" class="form-control" placeholder="숫자만 입력 (예: 01012345678)">
-                                <button type="button" class="btn btn-outline" id="identity-send-code-btn">인증번호 발송</button>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="identity-verification-code" class="form-label">인증번호</label>
-                            <div class="grid grid-2">
-                                <input type="text" id="identity-verification-code" class="form-control" placeholder="6자리 인증번호" maxlength="6">
-                                <button type="button" class="btn btn-primary" id="identity-verify-btn">인증 완료</button>
-                            </div>
-                            <small class="text-muted" id="identity-verification-status">휴대폰 인증이 필요합니다.</small>
-                        </div>
-                    </div>
+            <div class="card" id="identity-verification-gate">
+                <div class="community-section-header">
+                    <h2>본인인증</h2>
+                    <p>회원가입 전에 본인인증 팝업(SDK)을 먼저 진행해주세요.</p>
+                </div>
+                <div class="text-center mt-3">
+                    <button type="button" class="btn btn-primary" id="open-identity-popup-btn">본인인증 팝업 열기</button>
+                    <p class="text-muted mt-3" id="identity-gate-status">본인인증 팝업을 준비 중입니다.</p>
                 </div>
             </div>
 

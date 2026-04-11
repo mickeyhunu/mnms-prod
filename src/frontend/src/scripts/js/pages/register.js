@@ -4,6 +4,7 @@
 let generatedVerificationCode = null;
 let verifiedPhoneNumber = null;
 let identityVerified = false;
+let identityPopup = null;
 
 function initRegisterPage() {
 
@@ -19,78 +20,30 @@ function initRegisterPage() {
 
 function setupIdentityVerificationGate() {
     const registerFormContainer = document.getElementById('register-form-container');
-    const identityModal = document.getElementById('identity-verification-modal');
-    const identitySendCodeBtn = document.getElementById('identity-send-code-btn');
-    const identityVerifyBtn = document.getElementById('identity-verify-btn');
+    const identityGate = document.getElementById('identity-verification-gate');
+    const openIdentityPopupBtn = document.getElementById('open-identity-popup-btn');
+    const identityGateStatus = document.getElementById('identity-gate-status');
 
-    if (!registerFormContainer || !identityModal) {
+    if (!registerFormContainer || !identityGate) {
         return;
     }
 
     registerFormContainer.classList.add('hidden');
-    identityModal.classList.remove('hidden');
-    identityModal.style.display = 'flex';
+    identityGate.classList.remove('hidden');
 
-    identitySendCodeBtn?.addEventListener('click', sendIdentityVerificationCode);
-    identityVerifyBtn?.addEventListener('click', verifyIdentityCode);
-}
+    window.addEventListener('message', handleIdentityVerificationMessage);
+    openIdentityPopupBtn?.addEventListener('click', () => openIdentityVerificationPopup(false));
+    openIdentityVerificationPopup(true);
 
-function sendIdentityVerificationCode() {
-    const phoneInput = document.getElementById('identity-phone');
-    const statusElement = document.getElementById('identity-verification-status');
-    const phone = phoneInput?.value.trim() || '';
-
-    if (!/^01[016789]\d{7,8}$/.test(phone)) {
-        showNotification('유효한 휴대폰 번호를 입력해주세요.', 'error');
-        return;
+    if (identityGateStatus) {
+        identityGateStatus.textContent = '본인인증 팝업을 진행해주세요.';
     }
-
-    generatedVerificationCode = String(Math.floor(100000 + Math.random() * 900000));
-    verifiedPhoneNumber = null;
-    identityVerified = false;
-    setPhoneVerified(false);
-
-    if (statusElement) {
-        statusElement.textContent = `인증번호가 발송되었습니다. (데모 코드: ${generatedVerificationCode})`;
-    }
-
-    showNotification('본인인증용 인증번호를 발송했습니다.', 'success');
-}
-
-function verifyIdentityCode() {
-    const phoneInput = document.getElementById('identity-phone');
-    const codeInput = document.getElementById('identity-verification-code');
-    const statusElement = document.getElementById('identity-verification-status');
-    const phone = phoneInput?.value.trim() || '';
-    const code = codeInput?.value.trim() || '';
-
-    if (!generatedVerificationCode) {
-        showNotification('먼저 인증번호를 발송해주세요.', 'warning');
-        return;
-    }
-
-    if (code !== generatedVerificationCode) {
-        setPhoneVerified(false);
-        identityVerified = false;
-        showNotification('인증번호가 일치하지 않습니다.', 'error');
-        return;
-    }
-
-    verifiedPhoneNumber = phone;
-    identityVerified = true;
-    setPhoneVerified(true);
-
-    if (statusElement) {
-        statusElement.textContent = '본인인증이 완료되었습니다.';
-    }
-
-    completeIdentityVerification(phone, code);
-    showNotification('본인인증이 완료되었습니다. 회원가입을 진행해주세요.', 'success');
 }
 
 function completeIdentityVerification(phone, code) {
     const registerFormContainer = document.getElementById('register-form-container');
-    const identityModal = document.getElementById('identity-verification-modal');
+    const identityGate = document.getElementById('identity-verification-gate');
+    const identityGateStatus = document.getElementById('identity-gate-status');
     const registerPhoneInput = document.getElementById('phone');
     const registerCodeInput = document.getElementById('verificationCode');
     const registerStatusElement = document.getElementById('verification-status');
@@ -119,11 +72,134 @@ function completeIdentityVerification(phone, code) {
         verifyCodeBtn.disabled = true;
     }
 
-    registerFormContainer?.classList.remove('hidden');
-    identityModal?.classList.add('hidden');
-    if (identityModal) {
-        identityModal.style.display = 'none';
+    if (identityGateStatus) {
+        identityGateStatus.textContent = '본인인증이 완료되었습니다.';
     }
+
+    registerFormContainer?.classList.remove('hidden');
+    identityGate?.classList.add('hidden');
+
+    if (identityPopup && !identityPopup.closed) {
+        identityPopup.close();
+    }
+}
+
+function openIdentityVerificationPopup(isAutoOpen = false) {
+    if (identityPopup && !identityPopup.closed) {
+        identityPopup.focus();
+        return;
+    }
+
+    const popupWidth = 460;
+    const popupHeight = 680;
+    const left = Math.max((window.screen.width - popupWidth) / 2, 0);
+    const top = Math.max((window.screen.height - popupHeight) / 2, 0);
+    const features = `width=${popupWidth},height=${popupHeight},left=${left},top=${top},resizable=no,scrollbars=yes`;
+
+    identityPopup = window.open('', 'identityVerificationPopup', features);
+    const gateStatus = document.getElementById('identity-gate-status');
+
+    if (!identityPopup) {
+        if (!isAutoOpen) {
+            showNotification('팝업이 차단되었습니다. 브라우저 팝업 허용 후 다시 시도해주세요.', 'warning');
+        }
+        if (gateStatus) {
+            gateStatus.textContent = '팝업이 차단되었습니다. "본인인증 팝업 열기" 버튼을 다시 눌러주세요.';
+        }
+        return;
+    }
+
+    identityPopup.document.write(getIdentityPopupTemplate());
+    identityPopup.document.close();
+
+    if (gateStatus) {
+        gateStatus.textContent = '본인인증 팝업이 열렸습니다. 인증 완료 후 자동으로 회원가입 화면이 열립니다.';
+    }
+}
+
+function handleIdentityVerificationMessage(event) {
+    if (event.origin !== window.location.origin) {
+        return;
+    }
+
+    const { type, phone, verificationCode } = event.data || {};
+    if (type !== 'IDENTITY_VERIFIED') {
+        return;
+    }
+
+    verifiedPhoneNumber = phone;
+    generatedVerificationCode = verificationCode;
+    identityVerified = true;
+    setPhoneVerified(true);
+    completeIdentityVerification(phone, verificationCode);
+    showNotification('본인인증이 완료되었습니다. 회원가입을 진행해주세요.', 'success');
+}
+
+function getIdentityPopupTemplate() {
+    return `<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>본인인증</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background:#f8fafc; color:#1f2937; }
+    .wrap { max-width: 400px; margin: 0 auto; background:#fff; border-radius:12px; padding:20px; box-shadow:0 8px 20px rgba(15,23,42,.08);}
+    h1 { font-size: 20px; margin:0 0 8px; }
+    p { margin:0 0 16px; color:#475569; font-size:14px; }
+    label { display:block; font-size:14px; margin-bottom:6px; font-weight:600; }
+    input { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:10px; }
+    button { width:100%; padding:11px 12px; border-radius:8px; border:0; cursor:pointer; font-weight:700; margin-bottom:8px; }
+    .btn-outline { background:#fff; border:1px solid #0f172a; color:#0f172a; }
+    .btn-primary { background:#0f172a; color:#fff; }
+    .status { font-size:13px; color:#334155; margin-top:6px; min-height:20px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>본인인증 확인</h1>
+    <p>휴대폰 인증을 완료하면 회원가입 페이지가 열립니다.</p>
+    <label for="popup-phone">휴대폰 번호</label>
+    <input id="popup-phone" type="tel" placeholder="숫자만 입력 (예: 01012345678)" />
+    <button id="popup-send-code-btn" type="button" class="btn-outline">인증번호 발송</button>
+    <label for="popup-code">인증번호</label>
+    <input id="popup-code" type="text" maxlength="6" placeholder="6자리 인증번호" />
+    <button id="popup-verify-btn" type="button" class="btn-primary">인증 완료</button>
+    <div class="status" id="popup-status">휴대폰 인증이 필요합니다.</div>
+  </div>
+  <script>
+    let generatedCode = null;
+    const phoneInput = document.getElementById('popup-phone');
+    const codeInput = document.getElementById('popup-code');
+    const status = document.getElementById('popup-status');
+    document.getElementById('popup-send-code-btn').addEventListener('click', function () {
+      const phone = (phoneInput.value || '').trim();
+      if (!/^01[016789]\\d{7,8}$/.test(phone)) {
+        status.textContent = '유효한 휴대폰 번호를 입력해주세요.';
+        return;
+      }
+      generatedCode = String(Math.floor(100000 + Math.random() * 900000));
+      status.textContent = '인증번호가 발송되었습니다. (데모 코드: ' + generatedCode + ')';
+    });
+    document.getElementById('popup-verify-btn').addEventListener('click', function () {
+      const phone = (phoneInput.value || '').trim();
+      const code = (codeInput.value || '').trim();
+      if (!generatedCode) {
+        status.textContent = '먼저 인증번호를 발송해주세요.';
+        return;
+      }
+      if (code !== generatedCode) {
+        status.textContent = '인증번호가 일치하지 않습니다.';
+        return;
+      }
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ type: 'IDENTITY_VERIFIED', phone: phone, verificationCode: code }, window.location.origin);
+      }
+      window.close();
+    });
+  <\/script>
+</body>
+</html>`;
 }
 
 function setupRegisterForm() {
