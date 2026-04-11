@@ -39,13 +39,11 @@ function setupRegisterForm() {
 
 function setupStepFlow() {
     const agreeTermsBtn = document.getElementById('agree-terms-btn');
-    const termsConsent = document.getElementById('termsConsent');
-    const privacyConsent = document.getElementById('privacyConsent');
 
     if (agreeTermsBtn) {
         agreeTermsBtn.addEventListener('click', () => {
-            if (!termsConsent?.checked || !privacyConsent?.checked) {
-                showNotification('이용약관 및 개인정보 보호정책에 모두 동의해주세요.', 'warning');
+            if (!hasRequiredConsents()) {
+                showNotification('이용약관 및 개인정보 수집에 동의해야 회원가입 하실 수 있습니다.', 'warning');
                 return;
             }
 
@@ -54,6 +52,13 @@ function setupStepFlow() {
             handleIdentityVerification();
         });
     }
+}
+
+function hasRequiredConsents() {
+    const termsConsent = document.getElementById('termsConsent');
+    const privacyConsent = document.getElementById('privacyConsent');
+
+    return Boolean(termsConsent?.checked && privacyConsent?.checked);
 }
 
 function showStep(stepName) {
@@ -117,6 +122,11 @@ function setupNicknameCheck() {
 }
 
 function handleIdentityVerification() {
+    if (!hasRequiredConsents()) {
+        showNotification('이용약관 및 개인정보 수집에 동의해야 회원가입 하실 수 있습니다.', 'warning');
+        return;
+    }
+
     const popupName = 'kcpIdentityPopup';
     const popup = window.open('', popupName, 'width=460,height=640,scrollbars=yes,resizable=yes');
     if (!popup) {
@@ -255,7 +265,8 @@ async function handleRegister(e) {
         nickname: form.nickname.value.trim(),
         nicknameChecked: form.nicknameChecked.value,
         accountType: form.accountType?.value || 'MEMBER',
-        termsConsent: form.termsConsent.checked
+        termsConsent: form.termsConsent.checked,
+        privacyConsent: form.privacyConsent.checked
     };
 
     const errors = validateRegisterForm(formData);
