@@ -5,12 +5,6 @@ let generatedVerificationCode = null;
 let verifiedPhoneNumber = null;
 
 async function runPortOneIdentityVerification() {
-    const precheckedIdentity = sessionStorage.getItem('identityVerificationPrechecked') === 'true';
-    if (precheckedIdentity) {
-        sessionStorage.removeItem('identityVerificationPrechecked');
-        return true;
-    }
-
     if (!window.PortOne || typeof window.PortOne.requestIdentityVerification !== 'function') {
         return true;
     }
