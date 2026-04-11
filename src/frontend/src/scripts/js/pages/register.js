@@ -48,8 +48,10 @@ function setupStepFlow() {
                 showNotification('이용약관 및 개인정보 보호정책에 모두 동의해주세요.', 'warning');
                 return;
             }
+
             showStep('identity');
-            showNotification('약관 동의가 완료되었습니다. 본인인증을 진행해주세요.', 'success');
+            showNotification('약관 동의가 완료되었습니다. 본인인증을 시작합니다.', 'success');
+            handleIdentityVerification();
         });
     }
 }
