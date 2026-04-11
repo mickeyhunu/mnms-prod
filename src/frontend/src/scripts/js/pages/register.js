@@ -42,8 +42,9 @@ function setupStepFlow() {
 
     if (agreeTermsBtn) {
         agreeTermsBtn.addEventListener('click', () => {
-            if (!hasRequiredConsents()) {
-                showNotification('이용약관 및 개인정보 수집에 동의해야 회원가입 하실 수 있습니다.', 'warning');
+            const consentErrorMessage = getConsentErrorMessage();
+            if (consentErrorMessage) {
+                showNotification(consentErrorMessage, 'warning');
                 return;
             }
 
@@ -54,11 +55,25 @@ function setupStepFlow() {
     }
 }
 
-function hasRequiredConsents() {
+function getConsentErrorMessage() {
     const termsConsent = document.getElementById('termsConsent');
     const privacyConsent = document.getElementById('privacyConsent');
+    const hasTermsConsent = Boolean(termsConsent?.checked);
+    const hasPrivacyConsent = Boolean(privacyConsent?.checked);
 
-    return Boolean(termsConsent?.checked && privacyConsent?.checked);
+    if (!hasTermsConsent && !hasPrivacyConsent) {
+        return '이용약관 및 개인정보 보호정책에 모두 동의해주세요';
+    }
+
+    if (!hasTermsConsent) {
+        return '이용약관 동의가 필요합니다.';
+    }
+
+    if (!hasPrivacyConsent) {
+        return '개인정보 보호정책 동의가 필요합니다.';
+    }
+
+    return '';
 }
 
 function showStep(stepName) {
@@ -122,8 +137,9 @@ function setupNicknameCheck() {
 }
 
 function handleIdentityVerification() {
-    if (!hasRequiredConsents()) {
-        showNotification('이용약관 및 개인정보 수집에 동의해야 회원가입 하실 수 있습니다.', 'warning');
+    const consentErrorMessage = getConsentErrorMessage();
+    if (consentErrorMessage) {
+        showNotification(consentErrorMessage, 'warning');
         return;
     }
 
