@@ -1808,6 +1808,56 @@
     margin-top: 6px;
 }
 
+.legacy-terms-panel {
+    border: 1px solid #e6e6e6;
+    border-top: none;
+    border-bottom: 1px solid #cccccc;
+    margin-bottom: 10px;
+    padding: 30px;
+}
+
+.legacy-terms-section + .legacy-terms-section {
+    margin-top: 36px;
+}
+
+.legacy-terms-title {
+    margin: 0 0 8px;
+    color: #000;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.legacy-terms-scroll {
+    overflow-y: auto;
+    height: 120px;
+    padding: 10px;
+    border: 1px solid #d7d7d7;
+    background-color: #fdfdfd;
+    color: #7e7e7e;
+    line-height: 1.45;
+    font-size: 13px;
+}
+
+.legacy-terms-scroll h3 {
+    margin: 0 0 8px;
+    color: #333;
+    font-size: 14px;
+}
+
+.legacy-consent-item {
+    margin-top: 6px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #666;
+}
+
+.legacy-consent-item input {
+    margin: 0;
+}
+
 .register-consent-item {
     display: flex;
     align-items: flex-start;
