@@ -20,8 +20,8 @@ function validateRegisterForm(data) {
         errors.phone = '유효한 휴대폰 번호를 입력해주세요.';
     }
 
-    if (data.phoneVerified !== 'true') {
-        errors.verificationCode = '휴대폰 인증을 완료해주세요.';
+    if (data.identityVerified !== 'true') {
+        errors.identityVerified = '본인인증을 완료해주세요.';
     }
 
     if (!data.genderDigit || !/^\d$/.test(data.genderDigit)) {

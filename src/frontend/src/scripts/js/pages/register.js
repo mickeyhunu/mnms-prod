@@ -1,9 +1,6 @@
 /**
  * 파일 역할: register 페이지의 이벤트/데이터 흐름을 초기화하는 페이지 스크립트 파일.
  */
-let generatedVerificationCode = null;
-let verifiedPhoneNumber = null;
-
 function initRegisterPage() {
 
     if (Auth.redirectIfAuthenticated()) {
@@ -11,8 +8,9 @@ function initRegisterPage() {
     }
 
     setupRegisterForm();
-    setupPhoneVerification();
+    setupIdentityVerification();
     setupNicknameCheck();
+    setupStepFlow();
 }
 
 function setupRegisterForm() {
@@ -28,10 +26,6 @@ function setupRegisterForm() {
     inputs.forEach(input => {
         input.addEventListener('blur', () => validateFormField(input));
         input.addEventListener('input', () => {
-            if (input.name === 'phone') {
-                markPhoneAsUnverified();
-            }
-
             if (input.name === 'nickname') {
                 markNicknameAsUnchecked();
             }
@@ -43,73 +37,37 @@ function setupRegisterForm() {
     });
 }
 
-function setupPhoneVerification() {
-    const sendCodeBtn = document.getElementById('send-code-btn');
-    const verifyCodeBtn = document.getElementById('verify-code-btn');
+function setupStepFlow() {
+    const agreeTermsBtn = document.getElementById('agree-terms-btn');
+    const termsConsent = document.getElementById('termsConsent');
 
-    if (sendCodeBtn) {
-        sendCodeBtn.addEventListener('click', sendVerificationCode);
-    }
-
-    if (verifyCodeBtn) {
-        verifyCodeBtn.addEventListener('click', verifyPhoneCode);
-    }
-}
-
-function setupNicknameCheck() {
-    const checkNicknameBtn = document.getElementById('check-nickname-btn');
-
-    if (checkNicknameBtn) {
-        checkNicknameBtn.addEventListener('click', checkNicknameAvailability);
+    if (agreeTermsBtn) {
+        agreeTermsBtn.addEventListener('click', () => {
+            if (termsConsent) {
+                termsConsent.checked = true;
+            }
+            showStep('identity');
+            showNotification('약관 동의가 완료되었습니다. 본인인증을 진행해주세요.', 'success');
+        });
     }
 }
 
-function sendVerificationCode() {
-    const phoneInput = document.getElementById('phone');
-    const statusElement = document.getElementById('verification-status');
+function showStep(stepName) {
+    const steps = {
+        terms: document.getElementById('register-step-terms'),
+        identity: document.getElementById('register-step-identity'),
+        detail: document.getElementById('register-step-detail')
+    };
 
-    const phone = phoneInput.value.trim();
-    if (!/^01[016789]\d{7,8}$/.test(phone)) {
-        showNotification('유효한 휴대폰 번호를 입력해주세요.', 'error');
-        return;
+    Object.values(steps).forEach(step => {
+        if (step) {
+            step.classList.add('hidden');
+        }
+    });
+
+    if (steps[stepName]) {
+        steps[stepName].classList.remove('hidden');
     }
-
-    generatedVerificationCode = String(Math.floor(100000 + Math.random() * 900000));
-    verifiedPhoneNumber = null;
-    setPhoneVerified(false);
-
-    if (statusElement) {
-        statusElement.textContent = `인증번호가 발송되었습니다. (데모 코드: ${generatedVerificationCode})`;
-    }
-
-    showNotification('인증번호를 발송했습니다.', 'success');
-}
-
-function verifyPhoneCode() {
-    const codeInput = document.getElementById('verificationCode');
-    const phoneInput = document.getElementById('phone');
-    const statusElement = document.getElementById('verification-status');
-
-    if (!generatedVerificationCode) {
-        showNotification('먼저 인증번호를 발송해주세요.', 'warning');
-        return;
-    }
-
-    const code = codeInput.value.trim();
-    if (code !== generatedVerificationCode) {
-        setPhoneVerified(false);
-        showNotification('인증번호가 일치하지 않습니다.', 'error');
-        return;
-    }
-
-    verifiedPhoneNumber = phoneInput.value.trim();
-    setPhoneVerified(true);
-
-    if (statusElement) {
-        statusElement.textContent = '휴대폰 인증이 완료되었습니다.';
-    }
-
-    showNotification('휴대폰 인증이 완료되었습니다.', 'success');
 }
 
 function setPhoneVerified(isVerified) {
@@ -119,15 +77,77 @@ function setPhoneVerified(isVerified) {
     }
 }
 
-function markPhoneAsUnverified() {
-    const currentPhone = document.getElementById('phone')?.value.trim();
+function setIdentityVerified(isVerified) {
+    const identityVerifiedInput = document.getElementById('identityVerified');
+    if (identityVerifiedInput) {
+        identityVerifiedInput.value = isVerified ? 'true' : 'false';
+    }
+}
 
-    if (verifiedPhoneNumber && verifiedPhoneNumber !== currentPhone) {
-        setPhoneVerified(false);
-        const statusElement = document.getElementById('verification-status');
-        if (statusElement) {
-            statusElement.textContent = '휴대폰 번호가 변경되어 재인증이 필요합니다.';
+function setupIdentityVerification() {
+    const startIdentityBtn = document.getElementById('start-kcp-btn');
+
+    if (startIdentityBtn) {
+        startIdentityBtn.addEventListener('click', handleIdentityVerification);
+    }
+}
+
+function handleIdentityVerification() {
+    const popup = window.open('', 'kcpIdentityPopup', 'width=460,height=640');
+    if (!popup) {
+        showNotification('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.', 'error');
+        return;
+    }
+
+    popup.document.write(`
+        <html lang="ko">
+        <head><title>KCP 본인인증</title></head>
+        <body style="font-family:sans-serif;padding:24px;">
+            <h2>KCP 본인인증</h2>
+            <p>본인인증을 진행 중입니다...</p>
+        </body>
+        </html>
+    `);
+    popup.document.close();
+
+    setTimeout(() => {
+        const mockKcpResponse = {
+            success: true,
+            phone: '01012345678',
+            genderDigit: '1',
+            ci: `CI_${Date.now()}`
+        };
+
+        if (mockKcpResponse.success) {
+            applyIdentityResponse(mockKcpResponse);
+            popup.close();
+            showNotification('본인인증이 완료되었습니다.', 'success');
+            showStep('detail');
         }
+    }, 1200);
+}
+
+function applyIdentityResponse(response) {
+    const phoneInput = document.getElementById('phone');
+    const genderDigitInput = document.getElementById('genderDigit');
+    const identityCiInput = document.getElementById('identityCi');
+    const statusElement = document.getElementById('identity-status');
+
+    if (phoneInput) {
+        phoneInput.value = response.phone;
+    }
+    if (genderDigitInput) {
+        genderDigitInput.value = response.genderDigit;
+    }
+    if (identityCiInput) {
+        identityCiInput.value = response.ci;
+    }
+
+    setPhoneVerified(true);
+    setIdentityVerified(true);
+
+    if (statusElement) {
+        statusElement.textContent = `KCP 본인인증 완료 (${response.phone})`;
     }
 }
 
@@ -198,8 +218,8 @@ async function handleRegister(e) {
         password: form.password.value,
         confirmPassword: form.confirmPassword.value,
         phone: form.phone.value.trim(),
-        verificationCode: form.verificationCode.value.trim(),
         phoneVerified: form.phoneVerified.value,
+        identityVerified: form.identityVerified.value,
         genderDigit: form.genderDigit.value.trim(),
         nickname: form.nickname.value.trim(),
         nicknameChecked: form.nicknameChecked.value,
@@ -223,7 +243,7 @@ async function handleRegister(e) {
         setLoading(submitBtn, true);
         hideElement(errorBanner);
 
-        const response = await AuthAPI.register({
+        await AuthAPI.register({
             loginId: formData.loginId,
             password: formData.password,
             phone: formData.phone,

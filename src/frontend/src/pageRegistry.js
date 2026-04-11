@@ -1206,88 +1206,80 @@ const pageRegistry = {
                         <p id="error-message"></p>
                     </div>
 
-                    <div class="form-group">
-                        <label for="loginId" class="form-label">아이디</label>
-                        <input type="text" id="loginId" name="loginId" class="form-control" placeholder="아이디를 입력하세요" required>
-                        <div class="error-message hidden" id="loginId-error"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">회원 구분</label>
-                        <div class="grid grid-2">
-                            <label class="register-consent-item" for="accountType-member">
-                                <input type="radio" id="accountType-member" name="accountType" value="MEMBER" checked>
-                                <span>일반회원</span>
+                    <div id="register-step-terms">
+                        <div class="form-group register-consent-group">
+                            <label class="register-consent-item" for="termsConsent">
+                                <input type="checkbox" id="termsConsent" name="termsConsent" required>
+                                <span>[필수] <a href="/board/terms" target="_blank" rel="noopener noreferrer">약관 및 정책</a>에 동의합니다.</span>
                             </label>
-                            <label class="register-consent-item" for="accountType-business">
-                                <input type="radio" id="accountType-business" name="accountType" value="BUSINESS">
-                                <span>기업회원</span>
-                            </label>
+                            <div class="error-message hidden" id="termsConsent-error"></div>
+                        </div>
+                        <button type="button" class="btn btn-outline w-full" id="agree-terms-btn">동의하고 본인인증 진행</button>
+                    </div>
+
+                    <div id="register-step-identity" class="hidden">
+                        <div class="form-group">
+                            <label class="form-label">KCP 본인인증</label>
+                            <p class="text-muted">본인인증 버튼을 누르면 KCP 인증 팝업이 열립니다.</p>
+                            <button type="button" class="btn btn-outline w-full" id="start-kcp-btn">본인인증</button>
+                            <small class="text-muted" id="identity-status">본인인증이 필요합니다.</small>
+                            <div class="error-message hidden" id="identityVerified-error"></div>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="password" class="form-label">비밀번호</label>
-                        <input type="password" id="password" name="password" class="form-control" placeholder="비밀번호를 입력하세요" required>
-                        <div class="error-message hidden" id="password-error"></div>
-                        <small class="text-muted">8자 이상 입력해주세요</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="confirmPassword" class="form-label">비밀번호 확인</label>
-                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="비밀번호를 다시 입력하세요" required>
-                        <div class="error-message hidden" id="confirmPassword-error"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="phone" class="form-label">휴대폰 번호</label>
-                        <div class="grid grid-2">
-                            <input type="tel" id="phone" name="phone" class="form-control" placeholder="숫자만 입력 (예: 01012345678)" required>
-                            <button type="button" class="btn btn-outline" id="send-code-btn">인증번호 발송</button>
+                    <div id="register-step-detail" class="hidden">
+                        <div class="form-group">
+                            <label for="loginId" class="form-label">아이디</label>
+                            <input type="text" id="loginId" name="loginId" class="form-control" placeholder="아이디를 입력하세요" required>
+                            <div class="error-message hidden" id="loginId-error"></div>
                         </div>
-                        <div class="error-message hidden" id="phone-error"></div>
-                    </div>
 
-                    <div class="form-group">
-                        <label for="verificationCode" class="form-label">인증번호</label>
-                        <div class="grid grid-2">
-                            <input type="text" id="verificationCode" name="verificationCode" class="form-control" placeholder="6자리 인증번호" maxlength="6" required>
-                            <button type="button" class="btn btn-outline" id="verify-code-btn">인증 확인</button>
+                        <div class="form-group">
+                            <label class="form-label">회원 구분</label>
+                            <div class="grid grid-2">
+                                <label class="register-consent-item" for="accountType-member">
+                                    <input type="radio" id="accountType-member" name="accountType" value="MEMBER" checked>
+                                    <span>일반회원</span>
+                                </label>
+                                <label class="register-consent-item" for="accountType-business">
+                                    <input type="radio" id="accountType-business" name="accountType" value="BUSINESS">
+                                    <span>기업회원</span>
+                                </label>
+                            </div>
                         </div>
-                        <small class="text-muted" id="verification-status">휴대폰 인증이 필요합니다.</small>
-                        <div class="error-message hidden" id="verificationCode-error"></div>
-                    </div>
 
-                    <div class="form-group">
-                        <label for="genderDigit" class="form-label">성별 식별 번호</label>
-                        <input type="number" id="genderDigit" name="genderDigit" class="form-control" placeholder="주민번호 뒷자리 첫 숫자" min="0" max="9" required>
-                        <small class="text-muted">남성만 가입 가능 (홀수 번호만 통과)</small>
-                        <div class="error-message hidden" id="genderDigit-error"></div>
-                    </div>
-
-                    <input type="hidden" id="phoneVerified" name="phoneVerified" value="false">
-
-                    <div class="form-group">
-                        <label for="nickname" class="form-label">닉네임</label>
-                        <div class="grid grid-2">
-                            <input type="text" id="nickname" name="nickname" class="form-control" placeholder="사용할 닉네임을 입력하세요" minlength="2" maxlength="8" required>
-                            <button type="button" class="btn btn-outline" id="check-nickname-btn">중복 확인</button>
+                        <div class="form-group">
+                            <label for="password" class="form-label">비밀번호</label>
+                            <input type="password" id="password" name="password" class="form-control" placeholder="비밀번호를 입력하세요" required>
+                            <div class="error-message hidden" id="password-error"></div>
+                            <small class="text-muted">8자 이상 입력해주세요</small>
                         </div>
-                        <small class="text-muted" id="nickname-status">닉네임 중복 확인이 필요합니다.</small>
-                        <div class="error-message hidden" id="nickname-error"></div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword" class="form-label">비밀번호 확인</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="비밀번호를 다시 입력하세요" required>
+                            <div class="error-message hidden" id="confirmPassword-error"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nickname" class="form-label">닉네임</label>
+                            <div class="grid grid-2">
+                                <input type="text" id="nickname" name="nickname" class="form-control" placeholder="사용할 닉네임을 입력하세요" minlength="2" maxlength="8" required>
+                                <button type="button" class="btn btn-outline" id="check-nickname-btn">중복 확인</button>
+                            </div>
+                            <small class="text-muted" id="nickname-status">닉네임 중복 확인이 필요합니다.</small>
+                            <div class="error-message hidden" id="nickname-error"></div>
+                        </div>
+
+                        <input type="hidden" id="phone" name="phone" value="">
+                        <input type="hidden" id="genderDigit" name="genderDigit" value="">
+                        <input type="hidden" id="identityCi" name="identityCi" value="">
+                        <input type="hidden" id="phoneVerified" name="phoneVerified" value="false">
+                        <input type="hidden" id="identityVerified" name="identityVerified" value="false">
+                        <input type="hidden" id="nicknameChecked" name="nicknameChecked" value="false">
+
+                        <button type="submit" class="btn btn-outline w-full" id="submit-btn">회원가입 완료</button>
                     </div>
-
-                    <input type="hidden" id="nicknameChecked" name="nicknameChecked" value="false">
-
-                    <div class="form-group register-consent-group">
-                        <label class="register-consent-item" for="termsConsent">
-                            <input type="checkbox" id="termsConsent" name="termsConsent" required>
-                            <span>[필수] <a href="/board/terms" target="_blank" rel="noopener noreferrer">약관 및 정책</a>에 동의합니다.</span>
-                        </label>
-                        <div class="error-message hidden" id="termsConsent-error"></div>
-                    </div>
-
-                    <button type="submit" class="btn btn-outline w-full" id="submit-btn">회원가입</button>
                 </form>
 
                 <div class="text-center mt-3">
