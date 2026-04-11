@@ -1200,7 +1200,18 @@ const pageRegistry = {
                 <p>미드나잇 맨즈에 가입하여 다양한 사람들과 소통하세요</p>
             </div>
 
-            <div class="card">
+            <div class="card" id="identity-verification-gate">
+                <div class="community-section-header">
+                    <h2>본인인증</h2>
+                    <p>회원가입 전에 본인인증 팝업(SDK)을 먼저 진행해주세요.</p>
+                </div>
+                <div class="text-center mt-3">
+                    <button type="button" class="btn btn-primary" id="open-identity-popup-btn">본인인증 팝업 열기</button>
+                    <p class="text-muted mt-3" id="identity-gate-status">본인인증 팝업을 준비 중입니다.</p>
+                </div>
+            </div>
+
+            <div class="card hidden" id="register-form-container">
                 <form id="register-form">
                     <div class="error-banner hidden" id="error-banner">
                         <p id="error-message"></p>
