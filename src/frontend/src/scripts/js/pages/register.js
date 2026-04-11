@@ -3,6 +3,7 @@
  */
 let generatedVerificationCode = null;
 let verifiedPhoneNumber = null;
+let identityVerified = false;
 
 function initRegisterPage() {
 
@@ -10,9 +11,119 @@ function initRegisterPage() {
         return;
     }
 
+    setupIdentityVerificationGate();
     setupRegisterForm();
     setupPhoneVerification();
     setupNicknameCheck();
+}
+
+function setupIdentityVerificationGate() {
+    const registerFormContainer = document.getElementById('register-form-container');
+    const identityModal = document.getElementById('identity-verification-modal');
+    const identitySendCodeBtn = document.getElementById('identity-send-code-btn');
+    const identityVerifyBtn = document.getElementById('identity-verify-btn');
+
+    if (!registerFormContainer || !identityModal) {
+        return;
+    }
+
+    registerFormContainer.classList.add('hidden');
+    identityModal.classList.remove('hidden');
+    identityModal.style.display = 'flex';
+
+    identitySendCodeBtn?.addEventListener('click', sendIdentityVerificationCode);
+    identityVerifyBtn?.addEventListener('click', verifyIdentityCode);
+}
+
+function sendIdentityVerificationCode() {
+    const phoneInput = document.getElementById('identity-phone');
+    const statusElement = document.getElementById('identity-verification-status');
+    const phone = phoneInput?.value.trim() || '';
+
+    if (!/^01[016789]\d{7,8}$/.test(phone)) {
+        showNotification('유효한 휴대폰 번호를 입력해주세요.', 'error');
+        return;
+    }
+
+    generatedVerificationCode = String(Math.floor(100000 + Math.random() * 900000));
+    verifiedPhoneNumber = null;
+    identityVerified = false;
+    setPhoneVerified(false);
+
+    if (statusElement) {
+        statusElement.textContent = `인증번호가 발송되었습니다. (데모 코드: ${generatedVerificationCode})`;
+    }
+
+    showNotification('본인인증용 인증번호를 발송했습니다.', 'success');
+}
+
+function verifyIdentityCode() {
+    const phoneInput = document.getElementById('identity-phone');
+    const codeInput = document.getElementById('identity-verification-code');
+    const statusElement = document.getElementById('identity-verification-status');
+    const phone = phoneInput?.value.trim() || '';
+    const code = codeInput?.value.trim() || '';
+
+    if (!generatedVerificationCode) {
+        showNotification('먼저 인증번호를 발송해주세요.', 'warning');
+        return;
+    }
+
+    if (code !== generatedVerificationCode) {
+        setPhoneVerified(false);
+        identityVerified = false;
+        showNotification('인증번호가 일치하지 않습니다.', 'error');
+        return;
+    }
+
+    verifiedPhoneNumber = phone;
+    identityVerified = true;
+    setPhoneVerified(true);
+
+    if (statusElement) {
+        statusElement.textContent = '본인인증이 완료되었습니다.';
+    }
+
+    completeIdentityVerification(phone, code);
+    showNotification('본인인증이 완료되었습니다. 회원가입을 진행해주세요.', 'success');
+}
+
+function completeIdentityVerification(phone, code) {
+    const registerFormContainer = document.getElementById('register-form-container');
+    const identityModal = document.getElementById('identity-verification-modal');
+    const registerPhoneInput = document.getElementById('phone');
+    const registerCodeInput = document.getElementById('verificationCode');
+    const registerStatusElement = document.getElementById('verification-status');
+    const sendCodeBtn = document.getElementById('send-code-btn');
+    const verifyCodeBtn = document.getElementById('verify-code-btn');
+
+    if (registerPhoneInput) {
+        registerPhoneInput.value = phone;
+        registerPhoneInput.readOnly = true;
+    }
+
+    if (registerCodeInput) {
+        registerCodeInput.value = code;
+        registerCodeInput.readOnly = true;
+    }
+
+    if (registerStatusElement) {
+        registerStatusElement.textContent = '본인인증이 완료되었습니다.';
+    }
+
+    if (sendCodeBtn) {
+        sendCodeBtn.disabled = true;
+    }
+
+    if (verifyCodeBtn) {
+        verifyCodeBtn.disabled = true;
+    }
+
+    registerFormContainer?.classList.remove('hidden');
+    identityModal?.classList.add('hidden');
+    if (identityModal) {
+        identityModal.style.display = 'none';
+    }
 }
 
 function setupRegisterForm() {
@@ -120,6 +231,10 @@ function setPhoneVerified(isVerified) {
 }
 
 function markPhoneAsUnverified() {
+    if (identityVerified) {
+        return;
+    }
+
     const currentPhone = document.getElementById('phone')?.value.trim();
 
     if (verifiedPhoneNumber && verifiedPhoneNumber !== currentPhone) {
@@ -206,6 +321,11 @@ async function handleRegister(e) {
         accountType: form.accountType?.value || 'MEMBER',
         termsConsent: form.termsConsent.checked
     };
+
+    if (!identityVerified) {
+        showNotification('먼저 본인인증을 완료해주세요.', 'warning');
+        return;
+    }
 
     const errors = validateRegisterForm(formData);
 
