@@ -1206,14 +1206,39 @@ const pageRegistry = {
                         <p id="error-message"></p>
                     </div>
 
-                    <div id="register-step-terms">
-                        <div class="form-group register-consent-group">
-                            <label class="register-consent-item" for="termsConsent">
-                                <input type="checkbox" id="termsConsent" name="termsConsent" required>
-                                <span>[필수] <a href="/board/terms" target="_blank" rel="noopener noreferrer">약관 및 정책</a>에 동의합니다.</span>
+                    <div id="register-step-terms" class="legacy-terms-panel">
+                        <div class="legacy-terms-section">
+                            <p class="legacy-terms-title">이용약관</p>
+                            <div class="legacy-terms-scroll">
+                                <h3>제1장 총칙</h3>
+                                <p>본 약관은 미드나잇 맨즈가 제공하는 서비스 이용과 관련한 회사와 회원의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.</p>
+                                <p>회원가입 시 본 약관에 동의한 것으로 간주되며, 관련 법령 및 서비스 운영 정책에 따라 약관이 변경될 수 있습니다.</p>
+                                <p>회사는 서비스 운영상 필요한 경우 공지사항을 통해 변경 내용을 안내하며, 회원은 변경된 약관에 동의하지 않을 경우 이용을 중단할 수 있습니다.</p>
+                                <p>회원은 정확한 정보를 입력해야 하며, 타인의 정보를 도용하거나 허위 정보를 입력한 경우 서비스 이용이 제한될 수 있습니다.</p>
+                                <p>회사는 안정적인 서비스 제공을 위해 최선을 다하며, 시스템 점검이나 불가항력적 사유에 따라 일시적으로 서비스가 중단될 수 있습니다.</p>
+                            </div>
+                            <label class="legacy-consent-item" for="termsConsent">
+                                <input type="checkbox" id="termsConsent" name="termsConsent" required checked>
+                                <span>회원이용약관 내용에 동의합니다.</span>
                             </label>
                             <div class="error-message hidden" id="termsConsent-error"></div>
                         </div>
+
+                        <div class="legacy-terms-section">
+                            <p class="legacy-terms-title">개인정보 보호정책</p>
+                            <div class="legacy-terms-scroll">
+                                <p>회사는 회원의 개인정보를 중요하게 생각하며 관련 법령을 준수합니다.</p>
+                                <p>수집된 개인정보는 회원관리, 서비스 제공, 본인확인, 고객 문의 대응 등의 목적에 한해 이용됩니다.</p>
+                                <p>회원의 개인정보는 목적 달성 후 지체 없이 파기하며, 법령에 따라 보관이 필요한 경우 해당 기간 동안 안전하게 보관합니다.</p>
+                                <p>개인정보 처리 방침이 변경되는 경우 서비스 내 공지사항을 통해 사전 안내합니다.</p>
+                                <p>자세한 내용은 <a href="/board/terms" target="_blank" rel="noopener noreferrer">이용약관/정책 페이지</a>에서 확인할 수 있습니다.</p>
+                            </div>
+                            <label class="legacy-consent-item" for="privacyConsent">
+                                <input type="checkbox" id="privacyConsent" name="privacyConsent" checked>
+                                <span>개인정보 보호정책에 동의합니다.</span>
+                            </label>
+                        </div>
+
                         <button type="button" class="btn btn-outline w-full" id="agree-terms-btn">동의하고 본인인증 진행</button>
                     </div>
 

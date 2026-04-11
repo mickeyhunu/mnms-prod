@@ -40,11 +40,13 @@ function setupRegisterForm() {
 function setupStepFlow() {
     const agreeTermsBtn = document.getElementById('agree-terms-btn');
     const termsConsent = document.getElementById('termsConsent');
+    const privacyConsent = document.getElementById('privacyConsent');
 
     if (agreeTermsBtn) {
         agreeTermsBtn.addEventListener('click', () => {
-            if (termsConsent) {
-                termsConsent.checked = true;
+            if (!termsConsent?.checked || !privacyConsent?.checked) {
+                showNotification('이용약관 및 개인정보 보호정책에 모두 동의해주세요.', 'warning');
+                return;
             }
             showStep('identity');
             showNotification('약관 동의가 완료되었습니다. 본인인증을 진행해주세요.', 'success');
