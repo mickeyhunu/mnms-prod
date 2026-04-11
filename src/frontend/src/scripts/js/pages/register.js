@@ -95,10 +95,17 @@ function setupIdentityVerification() {
 }
 
 function handleIdentityVerification() {
-    const popup = window.open('', 'kcpIdentityPopup', 'width=460,height=640');
+    const popupName = 'kcpIdentityPopup';
+    const popup = window.open('', popupName, 'width=460,height=640,scrollbars=yes,resizable=yes');
     if (!popup) {
         showNotification('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.', 'error');
         return;
+    }
+
+    const authForm = document.getElementById('kcp-auth-form');
+    if (authForm instanceof HTMLFormElement) {
+        authForm.target = popupName;
+        authForm.submit();
     }
 
     popup.document.write(`
