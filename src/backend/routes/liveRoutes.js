@@ -10,5 +10,6 @@ router.get('/filters', liveController.getLiveFilters);
 router.get('/entries', liveController.getLiveEntries);
 router.get('/ads', liveController.getLiveAds);
 router.get('/top-ads', liveController.getTopAds);
+router.get('/business-ads', liveController.getBusinessAds);
 
 module.exports = router;

@@ -456,6 +456,13 @@ async function initDatabase() {
       title VARCHAR(255) NOT NULL,
       image_url VARCHAR(1000) NOT NULL,
       link_url VARCHAR(1000) NOT NULL,
+      region VARCHAR(50) NOT NULL DEFAULT '',
+      district VARCHAR(50) NOT NULL DEFAULT '',
+      category VARCHAR(50) NOT NULL DEFAULT '',
+      open_hour VARCHAR(20) NOT NULL DEFAULT '',
+      close_hour VARCHAR(20) NOT NULL DEFAULT '',
+      description TEXT NULL,
+      plan_type VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
       display_order INT NOT NULL DEFAULT 0,
       is_active TINYINT(1) NOT NULL DEFAULT 1,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -464,6 +471,32 @@ async function initDatabase() {
       CONSTRAINT fk_business_ads_owner FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  const businessAdsColumnMigrations = [
+    { name: 'region', sql: "ALTER TABLE business_ads ADD COLUMN region VARCHAR(50) NOT NULL DEFAULT '' AFTER link_url" },
+    { name: 'district', sql: "ALTER TABLE business_ads ADD COLUMN district VARCHAR(50) NOT NULL DEFAULT '' AFTER region" },
+    { name: 'category', sql: "ALTER TABLE business_ads ADD COLUMN category VARCHAR(50) NOT NULL DEFAULT '' AFTER district" },
+    { name: 'open_hour', sql: "ALTER TABLE business_ads ADD COLUMN open_hour VARCHAR(20) NOT NULL DEFAULT '' AFTER category" },
+    { name: 'close_hour', sql: "ALTER TABLE business_ads ADD COLUMN close_hour VARCHAR(20) NOT NULL DEFAULT '' AFTER open_hour" },
+    { name: 'description', sql: 'ALTER TABLE business_ads ADD COLUMN description TEXT NULL AFTER close_hour' },
+    { name: 'plan_type', sql: "ALTER TABLE business_ads ADD COLUMN plan_type VARCHAR(20) NOT NULL DEFAULT 'NORMAL' AFTER description" }
+  ];
+
+  for (const migration of businessAdsColumnMigrations) {
+    const [columnRows] = await pool.query(
+      `SELECT 1
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = ?
+         AND TABLE_NAME = 'business_ads'
+         AND COLUMN_NAME = ?
+       LIMIT 1`,
+      [dbConfig.database, migration.name]
+    );
+
+    if (!columnRows.length) {
+      await pool.query(migration.sql);
+    }
+  }
 
   const [adsAdTypeColumn] = await pool.query(
     `SELECT 1
