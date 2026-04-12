@@ -1,5 +1,5 @@
 /**
- * 파일 역할: business-info(광고프로필 관리) 페이지의 입력/미리보기 상호작용을 담당하는 스크립트 파일.
+ * 파일 역할: business-info(광고프로필 관리) 페이지의 입력/미리보기/저장 상호작용을 담당하는 스크립트 파일.
  */
 const REGION_DISTRICT_MAP = {
     서울: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
@@ -21,6 +21,13 @@ const REGION_DISTRICT_MAP = {
     제주: ['서귀포시', '제주시']
 };
 
+const adProfileState = {
+    currentAdId: null,
+    uploadedImageUrl: '',
+    me: null,
+    isSaving: false
+};
+
 function createHourOptions(hourSelect) {
     if (!hourSelect) return;
     const options = ['시간선택'];
@@ -33,18 +40,42 @@ function createHourOptions(hourSelect) {
         .join('');
 }
 
-function updateSelectOptions(selectElement, values) {
+function updateSelectOptions(selectElement, values, placeholder = '선택') {
     if (!selectElement) return;
 
-    const options = ['<option value="" selected>선택</option>']
+    const options = [`<option value="" selected>${placeholder}</option>`]
         .concat(values.map((value) => `<option value="${value}">${value}</option>`));
 
     selectElement.innerHTML = options.join('');
 }
 
+function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('이미지를 읽을 수 없습니다.'));
+        reader.readAsDataURL(file);
+    });
+}
+
+async function uploadAdImage(file) {
+    const dataUrl = await fileToDataUrl(file);
+    const response = await APIClient.post('/uploads/ads/images', {
+        files: [{
+            dataUrl,
+            fileName: file.name || 'ad-profile-image.png'
+        }]
+    });
+
+    const uploaded = Array.isArray(response?.files) ? response.files[0] : null;
+    if (!uploaded?.url) {
+        throw new Error('대표이미지 업로드에 실패했습니다.');
+    }
+
+    return uploaded.url;
+}
+
 function bindAdProfileInteractions() {
-    const nameInput = document.getElementById('ad-profile-name');
-    const managerInput = document.getElementById('ad-profile-manager');
     const regionSelect = document.getElementById('ad-profile-region');
     const districtSelect = document.getElementById('ad-profile-district');
     const categorySelect = document.getElementById('ad-profile-category');
@@ -65,7 +96,6 @@ function bindAdProfileInteractions() {
 
     const syncDescriptionValue = () => {
         if (!descriptionInput || !descriptionEditor) return '';
-
         const html = descriptionEditor.innerHTML.trim();
         descriptionInput.value = html;
         return descriptionEditor.textContent?.trim() || '';
@@ -91,7 +121,7 @@ function bindAdProfileInteractions() {
 
         if (previewTitle) previewTitle.textContent = title;
         if (previewDesc) previewDesc.textContent = description;
-        if (previewSub) previewSub.textContent = `협의 · ${region} ${district} · ${category} · ${formattedTime}`;
+        if (previewSub) previewSub.textContent = `${region} ${district} · ${category} · ${formattedTime}`;
     };
 
     if (descriptionEditor && descriptionInput) {
@@ -116,7 +146,7 @@ function bindAdProfileInteractions() {
         syncPreview();
     });
 
-    [nameInput, managerInput, districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput]
+    [districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput]
         .forEach((element) => {
             element?.addEventListener('input', syncPreview);
             element?.addEventListener('change', syncPreview);
@@ -135,9 +165,123 @@ function bindAdProfileInteractions() {
         if (previewThumb) {
             previewThumb.src = objectUrl;
         }
+        adProfileState.uploadedImageUrl = '';
     });
 
     syncPreview();
+}
+
+function showSaveMessage(message, isError = false) {
+    const messageElement = document.getElementById('ad-profile-save-message');
+    if (!messageElement) return;
+    messageElement.textContent = message;
+    messageElement.style.color = isError ? '#dc2626' : '#15803d';
+}
+
+async function saveAdProfile() {
+    if (adProfileState.isSaving) return;
+
+    const region = String(document.getElementById('ad-profile-region')?.value || '').trim();
+    const district = String(document.getElementById('ad-profile-district')?.value || '').trim();
+    const category = String(document.getElementById('ad-profile-category')?.value || '').trim();
+    const openHour = String(document.getElementById('ad-profile-open-hour')?.value || '').trim();
+    const closeHour = String(document.getElementById('ad-profile-close-hour')?.value || '').trim();
+    const title = String(document.getElementById('ad-profile-title')?.value || '').trim();
+    const description = String(document.getElementById('ad-profile-description')?.value || '').trim();
+    const imageInput = document.getElementById('ad-profile-image-input');
+    const saveButton = document.getElementById('ad-profile-save-btn');
+
+    if (!region || !district || !title) {
+        showSaveMessage('지역/세부 지역/제목은 필수입니다.', true);
+        return;
+    }
+
+    try {
+        adProfileState.isSaving = true;
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.textContent = '저장 중...';
+        }
+
+        let imageUrl = adProfileState.uploadedImageUrl;
+        const selectedFile = imageInput?.files?.[0];
+        if (selectedFile) {
+            imageUrl = await uploadAdImage(selectedFile);
+            adProfileState.uploadedImageUrl = imageUrl;
+        }
+
+        if (!imageUrl) {
+            showSaveMessage('대표이미지를 업로드해주세요.', true);
+            return;
+        }
+
+        const payload = {
+            title,
+            imageUrl,
+            linkUrl: '#',
+            region,
+            district,
+            category,
+            openHour,
+            closeHour,
+            description,
+            planType: adProfileState.me?.isBusiness ? 'PREMIUM' : 'NORMAL',
+            isActive: true,
+            displayOrder: 0
+        };
+
+        if (adProfileState.currentAdId) {
+            await APIClient.put(`/users/me/business-ads/${adProfileState.currentAdId}`, payload);
+        } else {
+            const created = await APIClient.post('/users/me/business-ads', payload);
+            adProfileState.currentAdId = Number(created?.id || 0) || adProfileState.currentAdId;
+        }
+
+        showSaveMessage('광고프로필이 저장되었습니다. 업체정보 메뉴에서 확인할 수 있습니다.');
+    } catch (error) {
+        showSaveMessage(error.message || '광고프로필 저장에 실패했습니다.', true);
+    } finally {
+        adProfileState.isSaving = false;
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.textContent = '광고프로필 저장';
+        }
+    }
+}
+
+function applyAdProfileToForm(ad) {
+    if (!ad) return;
+
+    const regionSelect = document.getElementById('ad-profile-region');
+    const districtSelect = document.getElementById('ad-profile-district');
+    const categorySelect = document.getElementById('ad-profile-category');
+    const openHourSelect = document.getElementById('ad-profile-open-hour');
+    const closeHourSelect = document.getElementById('ad-profile-close-hour');
+    const titleInput = document.getElementById('ad-profile-title');
+    const descriptionInput = document.getElementById('ad-profile-description');
+    const descriptionEditor = document.getElementById('ad-profile-description-editor');
+    const imagePreview = document.getElementById('ad-profile-image-preview');
+    const previewThumb = document.getElementById('ad-profile-preview-thumb');
+
+    if (regionSelect) {
+        regionSelect.value = ad.region || '';
+        updateSelectOptions(districtSelect, REGION_DISTRICT_MAP[ad.region] || []);
+    }
+    if (districtSelect) districtSelect.value = ad.district || '';
+    if (categorySelect) categorySelect.value = ad.category || '';
+    if (openHourSelect) openHourSelect.value = ad.openHour || '';
+    if (closeHourSelect) closeHourSelect.value = ad.closeHour || '';
+    if (titleInput) titleInput.value = ad.title || '';
+    if (descriptionInput) descriptionInput.value = ad.description || '';
+    if (descriptionEditor) descriptionEditor.innerHTML = ad.description || '';
+    if (imagePreview && ad.imageUrl) {
+        imagePreview.src = ad.imageUrl;
+        imagePreview.classList.remove('hidden');
+    }
+    if (previewThumb && ad.imageUrl) {
+        previewThumb.src = ad.imageUrl;
+    }
+    adProfileState.uploadedImageUrl = ad.imageUrl || '';
 }
 
 async function initAdProfileManagementPage() {
@@ -148,12 +292,24 @@ async function initAdProfileManagementPage() {
 
     try {
         const me = await APIClient.get('/auth/me');
+        adProfileState.me = me;
+
         const nickname = document.getElementById('user-nickname');
         if (nickname) nickname.textContent = Auth.formatNicknameWithLevel(me);
 
         if (typeof initHeader === 'function') initHeader();
         Auth.bindLogoutButton();
         bindAdProfileInteractions();
+
+        const saveButton = document.getElementById('ad-profile-save-btn');
+        saveButton?.addEventListener('click', saveAdProfile);
+
+        const response = await APIClient.get('/users/me/business-ads');
+        const existingAd = Array.isArray(response?.content) ? response.content[0] : null;
+        if (existingAd) {
+            adProfileState.currentAdId = Number(existingAd.id || 0) || null;
+            applyAdProfileToForm(existingAd);
+        }
     } catch (error) {
         alert(error.message || '광고프로필 페이지를 불러오지 못했습니다.');
     }

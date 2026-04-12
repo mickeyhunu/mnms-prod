@@ -425,12 +425,19 @@ async function createMyBusinessAd(req, res, next) {
   try {
     const title = String(req.body?.title || '').trim();
     const imageUrl = String(req.body?.imageUrl || '').trim();
-    const linkUrl = String(req.body?.linkUrl || '').trim();
+    const linkUrl = String(req.body?.linkUrl || '#').trim() || '#';
+    const region = String(req.body?.region || '').trim();
+    const district = String(req.body?.district || '').trim();
+    const category = String(req.body?.category || '').trim();
+    const openHour = String(req.body?.openHour || '').trim();
+    const closeHour = String(req.body?.closeHour || '').trim();
+    const description = String(req.body?.description || '').trim();
+    const planType = String(req.body?.planType || 'NORMAL').trim().toUpperCase() === 'PREMIUM' ? 'PREMIUM' : 'NORMAL';
     const displayOrder = Number(req.body?.displayOrder) || 0;
     const isActive = Boolean(req.body?.isActive);
 
-    if (!title || !imageUrl || !linkUrl) {
-      return res.status(400).json({ message: '제목, 이미지 URL, 링크 URL은 필수입니다.' });
+    if (!title || !imageUrl || !region || !district) {
+      return res.status(400).json({ message: '제목, 이미지 URL, 지역, 세부 지역은 필수입니다.' });
     }
 
     const insertId = await adminModel.createBusinessAd({
@@ -438,6 +445,13 @@ async function createMyBusinessAd(req, res, next) {
       title,
       imageUrl,
       linkUrl,
+      region,
+      district,
+      category,
+      openHour,
+      closeHour,
+      description,
+      planType,
       displayOrder,
       isActive
     });
@@ -459,15 +473,35 @@ async function updateMyBusinessAd(req, res, next) {
 
     const title = String(req.body?.title || '').trim();
     const imageUrl = String(req.body?.imageUrl || '').trim();
-    const linkUrl = String(req.body?.linkUrl || '').trim();
+    const linkUrl = String(req.body?.linkUrl || '#').trim() || '#';
+    const region = String(req.body?.region || '').trim();
+    const district = String(req.body?.district || '').trim();
+    const category = String(req.body?.category || '').trim();
+    const openHour = String(req.body?.openHour || '').trim();
+    const closeHour = String(req.body?.closeHour || '').trim();
+    const description = String(req.body?.description || '').trim();
+    const planType = String(req.body?.planType || 'NORMAL').trim().toUpperCase() === 'PREMIUM' ? 'PREMIUM' : 'NORMAL';
     const displayOrder = Number(req.body?.displayOrder) || 0;
     const isActive = Boolean(req.body?.isActive);
 
-    if (!title || !imageUrl || !linkUrl) {
-      return res.status(400).json({ message: '제목, 이미지 URL, 링크 URL은 필수입니다.' });
+    if (!title || !imageUrl || !region || !district) {
+      return res.status(400).json({ message: '제목, 이미지 URL, 지역, 세부 지역은 필수입니다.' });
     }
 
-    await adminModel.updateBusinessAd(id, { title, imageUrl, linkUrl, displayOrder, isActive });
+    await adminModel.updateBusinessAd(id, {
+      title,
+      imageUrl,
+      linkUrl,
+      region,
+      district,
+      category,
+      openHour,
+      closeHour,
+      description,
+      planType,
+      displayOrder,
+      isActive
+    });
     if (target.imageUrl && target.imageUrl !== imageUrl) {
       await deleteS3ObjectByUrl(target.imageUrl);
     }

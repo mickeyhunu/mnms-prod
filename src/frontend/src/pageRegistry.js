@@ -98,13 +98,35 @@ const pageRegistry = {
                 </div>
             </header>
 
-            <section class="card" style="text-align:center; padding:40px 20px;">
-                <h3 style="margin-bottom:8px;">준비중입니다</h3>
-                <p class="text-muted" style="margin:0;">업체정보 메뉴는 현재 준비 중입니다.</p>
+            <section class="card business-directory-card">
+                <div class="business-directory-filter">
+                    <label>
+                        <span>지역</span>
+                        <select id="business-region-filter">
+                            <option value="">전체</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>세부 지역</span>
+                        <select id="business-district-filter">
+                            <option value="">전체</option>
+                        </select>
+                    </label>
+                    <button type="button" class="btn btn-primary btn-sm" id="business-filter-apply-btn">조회</button>
+                </div>
+                <ul class="business-directory-list" id="business-directory-list"></ul>
+                <p class="text-muted hidden" id="business-directory-empty">선택한 지역에 등록된 광고가 없습니다.</p>
             </section>
         </div>
     </main>
 
+    <script src="scripts/js/utils/constants.js"></script>
+    <script src="scripts/js/utils/helpers.js"></script>
+    <script src="scripts/js/utils/auth.js"></script>
+    <script src="scripts/js/api/apiClient.js"></script>
+    <script src="scripts/js/api/authAPI.js"></script>
+    <script src="scripts/js/components/header.js"></script>
+    <script src="scripts/js/pages/businessInfo.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js"]
@@ -240,6 +262,10 @@ const pageRegistry = {
                 <div class="ad-profile-notice ad-profile-notice--bottom">
                     <p>버블알바 광고관리 규정에 위배되는 내용을 입력할 경우,</p>
                     <p>별도 안내 없이 수정되거나 반려될 수 있어요.</p>
+                </div>
+                <div class="ad-profile-submit-wrap">
+                    <button id="ad-profile-save-btn" class="btn btn-primary" type="button">광고프로필 저장</button>
+                    <p id="ad-profile-save-message" class="text-muted"></p>
                 </div>
             </section>
         </div>

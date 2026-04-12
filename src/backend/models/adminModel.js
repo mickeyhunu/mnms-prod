@@ -261,6 +261,8 @@ async function listBusinessAdsByOwner(ownerUserId) {
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT id, owner_user_id AS ownerUserId, title, image_url AS imageUrl, link_url AS linkUrl,
+            region, district, category, open_hour AS openHour, close_hour AS closeHour,
+            description, plan_type AS planType,
             display_order AS displayOrder, is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
       WHERE owner_user_id = ?
@@ -270,12 +272,58 @@ async function listBusinessAdsByOwner(ownerUserId) {
   return rows;
 }
 
-async function createBusinessAd({ ownerUserId, title, imageUrl, linkUrl, displayOrder = 0, isActive = true }) {
+async function listPublicBusinessAds({ region = '', district = '' } = {}) {
+  const pool = getPool();
+  const whereConditions = ['ba.is_active = 1'];
+  const whereParams = [];
+
+  if (region) {
+    whereConditions.push('ba.region = ?');
+    whereParams.push(region);
+  }
+
+  if (district) {
+    whereConditions.push('ba.district = ?');
+    whereParams.push(district);
+  }
+
+  const [rows] = await pool.query(
+    `SELECT ba.id, ba.owner_user_id AS ownerUserId, ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl,
+            ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
+            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.created_at AS createdAt,
+            COALESCE(u.nickname, '업체') AS ownerNickname
+       FROM business_ads ba
+       LEFT JOIN users u ON u.id = ba.owner_user_id
+      WHERE ${whereConditions.join(' AND ')}
+      ORDER BY CASE WHEN ba.plan_type = 'PREMIUM' THEN 0 ELSE 1 END, ba.display_order ASC, ba.id DESC`,
+    whereParams
+  );
+
+  return rows;
+}
+
+async function createBusinessAd({
+  ownerUserId,
+  title,
+  imageUrl,
+  linkUrl,
+  region = '',
+  district = '',
+  category = '',
+  openHour = '',
+  closeHour = '',
+  description = '',
+  planType = 'NORMAL',
+  displayOrder = 0,
+  isActive = true
+}) {
   const pool = getPool();
   const [result] = await pool.query(
-    `INSERT INTO business_ads (owner_user_id, title, image_url, link_url, display_order, is_active)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [ownerUserId, title, imageUrl, linkUrl, displayOrder, isActive ? 1 : 0]
+    `INSERT INTO business_ads (
+      owner_user_id, title, image_url, link_url, region, district, category, open_hour, close_hour,
+      description, plan_type, display_order, is_active
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [ownerUserId, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, description, planType, displayOrder, isActive ? 1 : 0]
   );
   return result.insertId;
 }
@@ -284,6 +332,8 @@ async function findBusinessAdById(adId) {
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT id, owner_user_id AS ownerUserId, title, image_url AS imageUrl, link_url AS linkUrl,
+            region, district, category, open_hour AS openHour, close_hour AS closeHour,
+            description, plan_type AS planType,
             display_order AS displayOrder, is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
       WHERE id = ?`,
@@ -292,13 +342,27 @@ async function findBusinessAdById(adId) {
   return rows[0] || null;
 }
 
-async function updateBusinessAd(adId, { title, imageUrl, linkUrl, displayOrder = 0, isActive = true }) {
+async function updateBusinessAd(adId, {
+  title,
+  imageUrl,
+  linkUrl,
+  region = '',
+  district = '',
+  category = '',
+  openHour = '',
+  closeHour = '',
+  description = '',
+  planType = 'NORMAL',
+  displayOrder = 0,
+  isActive = true
+}) {
   const pool = getPool();
   await pool.query(
     `UPDATE business_ads
-     SET title = ?, image_url = ?, link_url = ?, display_order = ?, is_active = ?
+     SET title = ?, image_url = ?, link_url = ?, region = ?, district = ?, category = ?, open_hour = ?, close_hour = ?,
+         description = ?, plan_type = ?, display_order = ?, is_active = ?
      WHERE id = ?`,
-    [title, imageUrl, linkUrl, displayOrder, isActive ? 1 : 0, adId]
+    [title, imageUrl, linkUrl, region, district, category, openHour, closeHour, description, planType, displayOrder, isActive ? 1 : 0, adId]
   );
 }
 
@@ -770,6 +834,7 @@ module.exports = {
   updateAd,
   deleteAd,
   listBusinessAdsByOwner,
+  listPublicBusinessAds,
   createBusinessAd,
   findBusinessAdById,
   updateBusinessAd,

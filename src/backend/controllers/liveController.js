@@ -109,9 +109,26 @@ async function getTopAds(req, res, next) {
   }
 }
 
+async function getBusinessAds(req, res, next) {
+  try {
+    const region = String(req.query.region || '').trim();
+    const district = String(req.query.district || '').trim();
+    const ads = await adminModel.listPublicBusinessAds({ region, district });
+    return res.json({
+      region: region || null,
+      district: district || null,
+      content: ads,
+      totalElements: ads.length
+    });
+  } catch (error) {
+    return handleLiveError(error, next, res);
+  }
+}
+
 module.exports = {
   getLiveFilters,
   getLiveEntries,
   getLiveAds,
-  getTopAds
+  getTopAds,
+  getBusinessAds
 };

@@ -2888,6 +2888,92 @@
     margin-top: 60px;
 }
 
+.ad-profile-submit-wrap {
+    padding: 20px 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.business-directory-card {
+    padding: 14px;
+}
+
+.business-directory-filter {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+    gap: 8px;
+    align-items: end;
+    margin-bottom: 12px;
+}
+
+.business-directory-filter label span {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.business-directory-filter select {
+    width: 100%;
+    min-height: 38px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0 8px;
+}
+
+.business-directory-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid #e5e7eb;
+}
+
+.business-directory-item {
+    display: grid;
+    grid-template-columns: 70px 1fr auto;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.business-directory-item img {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.business-directory-item h4 {
+    margin: 0;
+    font-size: 14px;
+}
+
+.business-directory-item p {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #4b5563;
+}
+
+.business-directory-tier {
+    align-self: start;
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.business-directory-tier-premium {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.business-directory-tier-normal {
+    background: #e5e7eb;
+    color: #374151;
+}
+
 @media (max-width: 640px) {
     .ad-profile-grid {
         grid-template-columns: 1fr;
@@ -2895,5 +2981,13 @@
 
     .ad-profile-grid--region {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .business-directory-filter {
+        grid-template-columns: 1fr;
+    }
+
+    .business-directory-item {
+        grid-template-columns: 64px 1fr;
     }
 }
