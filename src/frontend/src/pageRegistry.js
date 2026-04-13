@@ -112,6 +112,10 @@ const pageRegistry = {
                             <option value="">전체</option>
                         </select>
                     </label>
+                    <label>
+                        <span>검색</span>
+                        <input type="search" id="business-keyword-filter" placeholder="업소명/업종 검색">
+                    </label>
                     <button type="button" class="btn btn-primary btn-sm" id="business-filter-apply-btn">조회</button>
                 </div>
                 <ul class="business-directory-list" id="business-directory-list"></ul>

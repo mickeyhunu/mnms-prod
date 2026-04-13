@@ -42,17 +42,15 @@ function renderBusinessAds(ads) {
     empty.classList.add('hidden');
     list.innerHTML = ads.map((ad) => {
         const planType = String(ad.planType || 'NORMAL').toUpperCase() === 'PREMIUM' ? 'premium' : 'normal';
-        const openHour = ad.openHour || '시간미정';
-        const closeHour = ad.closeHour || '시간미정';
-        const description = String(ad.description || '').replace(/<[^>]*>/g, '').trim();
+        const title = sanitizeHTML(ad.title || '업체정보');
+        const regionDistrict = [ad.region, ad.district].filter(Boolean).map((value) => sanitizeHTML(value)).join(' ');
+        const category = sanitizeHTML(ad.category || '업종 미지정');
+        const summary = [regionDistrict, category].filter(Boolean).join(' · ');
         return `
             <li class="business-directory-item">
-                <img src="${sanitizeHTML(ad.imageUrl || '')}" alt="${sanitizeHTML(ad.title || '광고 썸네일')}">
-                <div>
-                    <h4>${sanitizeHTML(ad.title || '업체정보')}</h4>
-                    <p>${sanitizeHTML(ad.region || '')} ${sanitizeHTML(ad.district || '')} · ${sanitizeHTML(ad.category || '업종 미지정')}</p>
-                    <p>${sanitizeHTML(openHour)} ~ ${sanitizeHTML(closeHour)}</p>
-                    <p>${sanitizeHTML(description || '등록된 소개글이 없습니다.')}</p>
+                <div class="business-directory-main">
+                    <h4>${title}</h4>
+                    <p>${summary}</p>
                 </div>
                 <span class="business-directory-tier business-directory-tier-${planType}">${planType === 'premium' ? '프리미엄' : '일반'}</span>
             </li>
@@ -63,9 +61,10 @@ function renderBusinessAds(ads) {
 async function loadBusinessAds() {
     const region = String(document.getElementById('business-region-filter')?.value || '').trim();
     const district = String(document.getElementById('business-district-filter')?.value || '').trim();
+    const keyword = String(document.getElementById('business-keyword-filter')?.value || '').trim();
 
     try {
-        const response = await APIClient.get('/live/business-ads', { region, district });
+        const response = await APIClient.get('/live/business-ads', { region, district, keyword });
         renderBusinessAds(Array.isArray(response?.content) ? response.content : []);
     } catch (error) {
         renderBusinessAds([]);
@@ -75,6 +74,7 @@ async function loadBusinessAds() {
 function bindBusinessFilterEvents() {
     const regionSelect = document.getElementById('business-region-filter');
     const districtSelect = document.getElementById('business-district-filter');
+    const keywordInput = document.getElementById('business-keyword-filter');
     const applyButton = document.getElementById('business-filter-apply-btn');
 
     updateSelectOptions(regionSelect, Object.keys(REGION_DISTRICT_MAP));
@@ -85,6 +85,12 @@ function bindBusinessFilterEvents() {
     });
 
     applyButton?.addEventListener('click', loadBusinessAds);
+    keywordInput?.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            loadBusinessAds();
+        }
+    });
 }
 
 async function initBusinessInfoPage() {
