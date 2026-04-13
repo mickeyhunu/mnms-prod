@@ -61,10 +61,11 @@ function renderBusinessAds(ads) {
 async function loadBusinessAds() {
     const region = String(document.getElementById('business-region-filter')?.value || '').trim();
     const district = String(document.getElementById('business-district-filter')?.value || '').trim();
+    const category = String(document.getElementById('business-category-filter')?.value || '').trim();
     const keyword = String(document.getElementById('business-keyword-filter')?.value || '').trim();
 
     try {
-        const response = await APIClient.get('/live/business-ads', { region, district, keyword });
+        const response = await APIClient.get('/live/business-ads', { region, district, category, keyword });
         renderBusinessAds(Array.isArray(response?.content) ? response.content : []);
     } catch (error) {
         renderBusinessAds([]);
@@ -74,10 +75,12 @@ async function loadBusinessAds() {
 function bindBusinessFilterEvents() {
     const regionSelect = document.getElementById('business-region-filter');
     const districtSelect = document.getElementById('business-district-filter');
+    const categorySelect = document.getElementById('business-category-filter');
     const keywordInput = document.getElementById('business-keyword-filter');
     const applyButton = document.getElementById('business-filter-apply-btn');
 
     updateSelectOptions(regionSelect, Object.keys(REGION_DISTRICT_MAP));
+    updateSelectOptions(categorySelect, ['룸', '바', '클럽', '기타']);
 
     regionSelect?.addEventListener('change', () => {
         const region = regionSelect.value;

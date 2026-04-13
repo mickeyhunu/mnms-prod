@@ -113,8 +113,18 @@ const pageRegistry = {
                         </select>
                     </label>
                     <label>
+                        <span>업종</span>
+                        <select id="business-category-filter">
+                            <option value="">전체</option>
+                            <option value="룸">룸</option>
+                            <option value="바">바</option>
+                            <option value="클럽">클럽</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </label>
+                    <label>
                         <span>검색</span>
-                        <input type="search" id="business-keyword-filter" placeholder="업소명/업종 검색">
+                        <input type="search" id="business-keyword-filter" placeholder="제목/작성자 검색">
                     </label>
                     <button type="button" class="btn btn-primary btn-sm" id="business-filter-apply-btn">조회</button>
                 </div>
