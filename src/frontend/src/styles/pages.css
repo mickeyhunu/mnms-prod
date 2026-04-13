@@ -2901,7 +2901,7 @@
 
 .business-directory-filter {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
     gap: 8px;
     align-items: end;
     margin-bottom: 12px;
@@ -2922,6 +2922,14 @@
     padding: 0 8px;
 }
 
+.business-directory-filter input[type="search"] {
+    width: 100%;
+    min-height: 38px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0 10px;
+}
+
 .business-directory-list {
     list-style: none;
     margin: 0;
@@ -2930,30 +2938,36 @@
 }
 
 .business-directory-item {
-    display: grid;
-    grid-template-columns: 70px 1fr auto;
+    display: flex;
+    align-items: center;
     gap: 10px;
     padding: 10px 0;
     border-bottom: 1px solid #e5e7eb;
 }
 
-.business-directory-item img {
-    width: 70px;
-    height: 70px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
+.business-directory-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
 }
 
 .business-directory-item h4 {
     margin: 0;
     font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .business-directory-item p {
-    margin: 4px 0 0;
+    margin: 0;
     font-size: 12px;
     color: #4b5563;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .business-directory-tier {
@@ -2985,9 +2999,5 @@
 
     .business-directory-filter {
         grid-template-columns: 1fr;
-    }
-
-    .business-directory-item {
-        grid-template-columns: 64px 1fr;
     }
 }
