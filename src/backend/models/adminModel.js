@@ -272,7 +272,7 @@ async function listBusinessAdsByOwner(ownerUserId) {
   return rows;
 }
 
-async function listPublicBusinessAds({ region = '', district = '', keyword = '' } = {}) {
+async function listPublicBusinessAds({ region = '', district = '', category = '', keyword = '' } = {}) {
   const pool = getPool();
   const whereConditions = ['ba.is_active = 1'];
   const whereParams = [];
@@ -287,8 +287,13 @@ async function listPublicBusinessAds({ region = '', district = '', keyword = '' 
     whereParams.push(district);
   }
 
+  if (category) {
+    whereConditions.push('ba.category = ?');
+    whereParams.push(category);
+  }
+
   if (keyword) {
-    whereConditions.push('(ba.title LIKE ? OR ba.category LIKE ?)');
+    whereConditions.push('(ba.title LIKE ? OR COALESCE(u.nickname, \'\') LIKE ?)');
     whereParams.push(`%${keyword}%`, `%${keyword}%`);
   }
 

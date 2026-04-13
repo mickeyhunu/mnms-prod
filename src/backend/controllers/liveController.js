@@ -113,11 +113,13 @@ async function getBusinessAds(req, res, next) {
   try {
     const region = String(req.query.region || '').trim();
     const district = String(req.query.district || '').trim();
+    const category = String(req.query.category || '').trim();
     const keyword = String(req.query.keyword || '').trim();
-    const ads = await adminModel.listPublicBusinessAds({ region, district, keyword });
+    const ads = await adminModel.listPublicBusinessAds({ region, district, category, keyword });
     return res.json({
       region: region || null,
       district: district || null,
+      category: category || null,
       keyword: keyword || null,
       content: ads,
       totalElements: ads.length
