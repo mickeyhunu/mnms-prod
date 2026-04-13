@@ -78,6 +78,15 @@ function bindBusinessFilterEvents() {
     const categorySelect = document.getElementById('business-category-filter');
     const keywordInput = document.getElementById('business-keyword-filter');
     const applyButton = document.getElementById('business-filter-apply-btn');
+    let keywordDebounceTimer = null;
+
+    const requestBusinessAds = () => {
+        if (keywordDebounceTimer) {
+            window.clearTimeout(keywordDebounceTimer);
+            keywordDebounceTimer = null;
+        }
+        loadBusinessAds();
+    };
 
     updateSelectOptions(regionSelect, Object.keys(REGION_DISTRICT_MAP));
     updateSelectOptions(categorySelect, ['룸', '바', '클럽', '기타']);
@@ -85,13 +94,25 @@ function bindBusinessFilterEvents() {
     regionSelect?.addEventListener('change', () => {
         const region = regionSelect.value;
         updateSelectOptions(districtSelect, REGION_DISTRICT_MAP[region] || []);
+        requestBusinessAds();
     });
+    districtSelect?.addEventListener('change', requestBusinessAds);
+    categorySelect?.addEventListener('change', requestBusinessAds);
 
     applyButton?.addEventListener('click', loadBusinessAds);
+    keywordInput?.addEventListener('input', () => {
+        if (keywordDebounceTimer) {
+            window.clearTimeout(keywordDebounceTimer);
+        }
+        keywordDebounceTimer = window.setTimeout(() => {
+            loadBusinessAds();
+            keywordDebounceTimer = null;
+        }, 300);
+    });
     keywordInput?.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
             event.preventDefault();
-            loadBusinessAds();
+            requestBusinessAds();
         }
     });
 }
