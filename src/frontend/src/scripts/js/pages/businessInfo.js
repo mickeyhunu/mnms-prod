@@ -77,8 +77,10 @@ function bindBusinessFilterEvents() {
     const districtSelect = document.getElementById('business-district-filter');
     const categorySelect = document.getElementById('business-category-filter');
     const keywordInput = document.getElementById('business-keyword-filter');
-    const applyButton = document.getElementById('business-filter-apply-btn');
+    const filterToggleButton = document.getElementById('business-filter-toggle-btn');
+    const filterFields = document.getElementById('business-directory-filter-fields');
     let keywordDebounceTimer = null;
+    const mobileMediaQuery = window.matchMedia('(max-width: 640px)');
 
     const requestBusinessAds = () => {
         if (keywordDebounceTimer) {
@@ -87,9 +89,26 @@ function bindBusinessFilterEvents() {
         }
         loadBusinessAds();
     };
+    const syncFilterFieldsVisibility = () => {
+        if (!filterFields || !filterToggleButton) return;
+        const shouldCollapse = mobileMediaQuery.matches;
+        const isExpanded = !shouldCollapse;
+        filterFields.classList.toggle('hidden', shouldCollapse);
+        filterToggleButton.setAttribute('aria-expanded', String(isExpanded));
+        filterToggleButton.textContent = isExpanded ? '검색 필터 접기' : '검색 필터 펼치기';
+    };
+    const toggleFilterFields = () => {
+        if (!filterFields || !filterToggleButton) return;
+        const isHidden = filterFields.classList.contains('hidden');
+        const willExpand = isHidden;
+        filterFields.classList.toggle('hidden', !willExpand);
+        filterToggleButton.setAttribute('aria-expanded', String(willExpand));
+        filterToggleButton.textContent = willExpand ? '검색 필터 접기' : '검색 필터 펼치기';
+    };
 
     updateSelectOptions(regionSelect, Object.keys(REGION_DISTRICT_MAP));
     updateSelectOptions(categorySelect, ['룸', '바', '클럽', '기타']);
+    syncFilterFieldsVisibility();
 
     regionSelect?.addEventListener('change', () => {
         const region = regionSelect.value;
@@ -98,8 +117,8 @@ function bindBusinessFilterEvents() {
     });
     districtSelect?.addEventListener('change', requestBusinessAds);
     categorySelect?.addEventListener('change', requestBusinessAds);
-
-    applyButton?.addEventListener('click', loadBusinessAds);
+    filterToggleButton?.addEventListener('click', toggleFilterFields);
+    mobileMediaQuery.addEventListener('change', syncFilterFieldsVisibility);
     keywordInput?.addEventListener('input', () => {
         if (keywordDebounceTimer) {
             window.clearTimeout(keywordDebounceTimer);
