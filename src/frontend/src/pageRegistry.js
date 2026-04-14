@@ -100,37 +100,33 @@ const pageRegistry = {
 
             <section class="card business-directory-card">
                 <div class="business-directory-filter">
-                    <button type="button" class="btn btn-outline btn-sm business-filter-toggle" id="business-filter-toggle-btn" aria-expanded="true" aria-controls="business-directory-filter-fields">
-                        검색 필터
-                    </button>
-                    <div class="business-directory-filter-fields" id="business-directory-filter-fields">
-                        <label>
-                            <span>지역</span>
-                            <select id="business-region-filter">
-                                <option value="">전체</option>
-                            </select>
-                        </label>
-                        <label>
-                            <span>세부 지역</span>
-                            <select id="business-district-filter">
-                                <option value="">전체</option>
-                            </select>
-                        </label>
-                        <label>
-                            <span>업종</span>
-                            <select id="business-category-filter">
-                                <option value="">전체</option>
-                                <option value="룸">룸</option>
-                                <option value="바">바</option>
-                                <option value="클럽">클럽</option>
-                                <option value="기타">기타</option>
-                            </select>
-                        </label>
-                        <label>
-                            <span>검색</span>
-                            <input type="search" id="business-keyword-filter" placeholder="제목/작성자 검색">
-                        </label>
-                    </div>
+                    <label>
+                        <span>지역</span>
+                        <select id="business-region-filter">
+                            <option value="">전체</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>세부 지역</span>
+                        <select id="business-district-filter">
+                            <option value="">전체</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>업종</span>
+                        <select id="business-category-filter">
+                            <option value="">전체</option>
+                            <option value="룸">룸</option>
+                            <option value="바">바</option>
+                            <option value="클럽">클럽</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>검색</span>
+                        <input type="search" id="business-keyword-filter" placeholder="제목/작성자 검색">
+                    </label>
+                    <button type="button" class="btn btn-primary btn-sm" id="business-filter-apply-btn">조회</button>
                 </div>
                 <ul class="business-directory-list" id="business-directory-list"></ul>
                 <p class="text-muted hidden" id="business-directory-empty">선택한 지역에 등록된 광고가 없습니다.</p>
