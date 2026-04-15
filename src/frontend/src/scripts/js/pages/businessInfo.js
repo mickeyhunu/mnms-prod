@@ -77,7 +77,6 @@ function bindBusinessFilterEvents() {
     const districtSelect = document.getElementById('business-district-filter');
     const categorySelect = document.getElementById('business-category-filter');
     const keywordInput = document.getElementById('business-keyword-filter');
-    const applyButton = document.getElementById('business-filter-apply-btn');
     let keywordDebounceTimer = null;
 
     const requestBusinessAds = () => {
@@ -99,7 +98,6 @@ function bindBusinessFilterEvents() {
     districtSelect?.addEventListener('change', requestBusinessAds);
     categorySelect?.addEventListener('change', requestBusinessAds);
 
-    applyButton?.addEventListener('click', loadBusinessAds);
     keywordInput?.addEventListener('input', () => {
         if (keywordDebounceTimer) {
             window.clearTimeout(keywordDebounceTimer);
