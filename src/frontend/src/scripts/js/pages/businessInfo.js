@@ -24,7 +24,12 @@ const REGION_DISTRICT_MAP = {
 const BUSINESS_CATEGORIES = ['룸', '바', '클럽', '기타'];
 
 function normalizeAreaLabel(value) {
-    return String(value || '').replace(/(특별시|광역시|자치시|자치도|도|시|군|구)$/u, '').trim() || String(value || '').trim();
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+
+    if ([...raw].length <= 2) return raw;
+
+    return raw.replace(/(특별시|광역시|자치시|자치도|도|시|군|구)$/u, '').trim() || raw;
 }
 
 function renderBusinessAds(ads) {
