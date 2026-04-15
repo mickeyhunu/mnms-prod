@@ -102,23 +102,23 @@ const pageRegistry = {
                 <div class="business-directory-filter-v2" aria-label="업체 필터">
                     <div class="business-filter-row business-filter-row--top">
                         <div class="business-filter-left">
-                            <a href="#" class="business-geo" title="GPS" aria-label="위치">
+                            <div href="#" class="business-geo" title="GPS" aria-label="위치">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.686 2 6 4.686 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.314-2.686-6-6-6Zm0 8.5A2.5 2.5 0 1 1 12 5.5a2.5 2.5 0 0 1 0 5Z"></path></svg>
-                            </a>
+                            </div>
                             <a href="#" class="business-badge" data-filter-toggle="region"><span id="business-region-badge-label">지역 전체</span><i class="business-chevron" aria-hidden="true"></i></a>
                             <a href="#" class="business-badge hidden" id="business-district-trigger" data-filter-toggle="district"><span id="business-district-badge-label">세부 지역</span><i class="business-chevron" aria-hidden="true"></i></a>
                             <a href="#" class="business-badge" data-filter-toggle="category"><span id="business-category-badge-label">업종 전체</span><i class="business-chevron" aria-hidden="true"></i></a>
                         </div>
                         <div class="business-filter-right">
-                            <div class="business-filter-search">
-                                <input type="search" id="business-keyword-filter" placeholder="제목/작성자 검색">
-                            </div>
-                            <button type="button" class="business-search-btn" id="business-search-btn" aria-label="업소검색">
+                            <div type="button" class="business-search-btn" id="business-search-btn" aria-label="업소검색">
                                 <svg viewBox="0 0 512 512" aria-hidden="true">
                                     <path d="m495,466.1l-119.2-119.2c29.1-35.5 46.5-80.8 46.5-130.3 0-113.5-92.1-205.6-205.6-205.6-113.6,0-205.7,92.1-205.7,205.7s92.1,205.7 205.7,205.7c49.4,0 94.8-17.4 130.3-46.5l119.1,119.1c8,8 20.9,8 28.9,0 8-8 8-20.9 0-28.9zm-443.2-249.4c-1.42109e-14-91 73.8-164.8 164.8-164.8 91,0 164.8,73.8 164.8,164.8s-73.8,164.8-164.8,164.8c-91,0-164.8-73.8-164.8-164.8z"></path>
                                 </svg>
-                                <span>업소검색</span>
-                            </button>
+                            </div>
+                            <div class="business-filter-search">
+                                <input type="search" id="business-keyword-filter" placeholder="제목/작성자 검색">
+                            </div>
+                        
                         </div>
                     </div>
 
