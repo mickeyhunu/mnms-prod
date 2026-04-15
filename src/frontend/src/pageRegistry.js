@@ -126,7 +126,6 @@ const pageRegistry = {
                         <span>검색</span>
                         <input type="search" id="business-keyword-filter" placeholder="제목/작성자 검색">
                     </label>
-                    <button type="button" class="btn btn-primary btn-sm" id="business-filter-apply-btn">조회</button>
                 </div>
                 <ul class="business-directory-list" id="business-directory-list"></ul>
                 <p class="text-muted hidden" id="business-directory-empty">선택한 지역에 등록된 광고가 없습니다.</p>
