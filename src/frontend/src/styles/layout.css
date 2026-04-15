@@ -86,7 +86,8 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    max-width: min(20vw, 210px);
+    max-width: none;
+    min-width: max-content;
     min-height: 36px;
     padding: 0;
     border: none;
@@ -95,12 +96,17 @@
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
 .user-nickname-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
+    text-overflow: clip;
+    flex-shrink: 0;
 }
 
 .user-business-badge {
