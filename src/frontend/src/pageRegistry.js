@@ -99,33 +99,43 @@ const pageRegistry = {
             </header>
 
             <section class="card business-directory-card">
-                <div class="business-directory-filter">
-                    <label>
-                        <span>지역</span>
-                        <select id="business-region-filter">
-                            <option value="">전체</option>
-                        </select>
-                    </label>
-                    <label>
-                        <span>세부 지역</span>
-                        <select id="business-district-filter">
-                            <option value="">전체</option>
-                        </select>
-                    </label>
-                    <label>
-                        <span>업종</span>
-                        <select id="business-category-filter">
-                            <option value="">전체</option>
-                            <option value="룸">룸</option>
-                            <option value="바">바</option>
-                            <option value="클럽">클럽</option>
-                            <option value="기타">기타</option>
-                        </select>
-                    </label>
-                    <label>
-                        <span>검색</span>
+                <div class="business-directory-filter-v2" aria-label="업체 필터">
+                    <div class="business-filter-row business-filter-row--top">
+                        <div class="business-filter-left">
+                            <a href="#" class="business-geo" title="GPS" aria-label="위치">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.686 2 6 4.686 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.314-2.686-6-6-6Zm0 8.5A2.5 2.5 0 1 1 12 5.5a2.5 2.5 0 0 1 0 5Z"></path></svg>
+                            </a>
+                            <a href="#" class="business-badge" data-filter-toggle="region"><span id="business-region-badge-label">지역 전체</span><i class="business-chevron" aria-hidden="true"></i></a>
+                            <a href="#" class="business-badge" data-filter-toggle="district"><span id="business-district-badge-label">세부 지역</span><i class="business-chevron" aria-hidden="true"></i></a>
+                            <a href="#" class="business-badge" data-filter-toggle="category"><span id="business-category-badge-label">업종 전체</span><i class="business-chevron" aria-hidden="true"></i></a>
+                        </div>
+                        <div class="business-filter-right">
+                            <a href="#" class="business-badge business-badge--sort" data-filter-toggle="sort"><span id="business-sort-badge-label">인기순</span><i class="business-chevron" aria-hidden="true"></i></a>
+                        </div>
+                    </div>
+                    <div class="business-filter-search">
                         <input type="search" id="business-keyword-filter" placeholder="제목/작성자 검색">
-                    </label>
+                    </div>
+
+                    <input type="hidden" id="business-region-filter" value="">
+                    <input type="hidden" id="business-district-filter" value="">
+                    <input type="hidden" id="business-category-filter" value="">
+                    <input type="hidden" id="business-sort-filter" value="popular">
+
+                    <div class="business-filter-menu" id="business-menu-region">
+                        <div class="business-filter-menu__content" id="business-menu-region-items"></div>
+                    </div>
+                    <div class="business-filter-menu" id="business-menu-district">
+                        <div class="business-filter-menu__content" id="business-menu-district-items"></div>
+                    </div>
+                    <div class="business-filter-menu" id="business-menu-category">
+                        <div class="business-filter-menu__content" id="business-menu-category-items"></div>
+                    </div>
+                    <div class="business-filter-menu" id="business-menu-sort">
+                        <div class="business-filter-menu__content">
+                            <button type="button" class="business-filter-option is-active" data-sort="popular">인기순</button>
+                        </div>
+                    </div>
                 </div>
                 <ul class="business-directory-list" id="business-directory-list"></ul>
                 <p class="text-muted hidden" id="business-directory-empty">선택한 지역에 등록된 광고가 없습니다.</p>
