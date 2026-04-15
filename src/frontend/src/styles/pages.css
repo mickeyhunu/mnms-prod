@@ -2915,14 +2915,12 @@
 .business-filter-right {
     display: flex;
     align-items: center;
-    gap: 8px;
     min-width: 0;
 }
 
 .business-filter-left {
     flex: 1 1 auto;
     overflow-x: auto;
-    padding-bottom: 2px;
     gap: 5px;
 }
 
@@ -2936,16 +2934,15 @@
     align-items: center;
     gap: 4px;
     height: 30px;
-    padding: 0 10px;
+    padding: 0 2px;
     background: #fff;
     color: #111827;
     text-decoration: none;
-    font-size: 13px;
+    font-size: 12px;
     white-space: nowrap;
 }
 
-.business-badge:hover,
-.business-geo:hover {
+.business-badge:hover {
     background: #f3f4f6;
 }
 
@@ -2961,8 +2958,8 @@
 }
 
 .business-chevron {
-    width: 7px;
-    height: 7px;
+    width: 5px;
+    height: 5px;
     border-right: 1.5px solid currentColor;
     border-bottom: 1.5px solid currentColor;
     transform: rotate(45deg) translateY(-1px);
@@ -2970,13 +2967,13 @@
 }
 
 .business-filter-search {
-    width: 220px;
+    width: 125px;
 }
 
 .business-filter-search input[type="search"] {
     width: 100%;
     min-height: 36px;
-    padding: 0 12px;
+    padding: 0 8px;
 }
 
 .business-search-btn {
@@ -2984,7 +2981,7 @@
     align-items: center;
     gap: 6px;
     height: 36px;
-    padding: 0 12px;
+    padding: 0 8px 0 0;
     font-size: 13px;
 }
 
