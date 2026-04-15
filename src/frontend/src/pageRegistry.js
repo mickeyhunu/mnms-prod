@@ -106,11 +106,8 @@ const pageRegistry = {
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.686 2 6 4.686 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.314-2.686-6-6-6Zm0 8.5A2.5 2.5 0 1 1 12 5.5a2.5 2.5 0 0 1 0 5Z"></path></svg>
                             </a>
                             <a href="#" class="business-badge" data-filter-toggle="region"><span id="business-region-badge-label">지역 전체</span><i class="business-chevron" aria-hidden="true"></i></a>
-                            <a href="#" class="business-badge" data-filter-toggle="district"><span id="business-district-badge-label">세부 지역</span><i class="business-chevron" aria-hidden="true"></i></a>
+                            <a href="#" class="business-badge hidden" id="business-district-trigger" data-filter-toggle="district"><span id="business-district-badge-label">세부 지역</span><i class="business-chevron" aria-hidden="true"></i></a>
                             <a href="#" class="business-badge" data-filter-toggle="category"><span id="business-category-badge-label">업종 전체</span><i class="business-chevron" aria-hidden="true"></i></a>
-                        </div>
-                        <div class="business-filter-right">
-                            <a href="#" class="business-badge business-badge--sort" data-filter-toggle="sort"><span id="business-sort-badge-label">인기순</span><i class="business-chevron" aria-hidden="true"></i></a>
                         </div>
                     </div>
                     <div class="business-filter-search">
@@ -130,11 +127,6 @@ const pageRegistry = {
                     </div>
                     <div class="business-filter-menu" id="business-menu-category">
                         <div class="business-filter-menu__content" id="business-menu-category-items"></div>
-                    </div>
-                    <div class="business-filter-menu" id="business-menu-sort">
-                        <div class="business-filter-menu__content">
-                            <button type="button" class="business-filter-option is-active" data-sort="popular">인기순</button>
-                        </div>
                     </div>
                 </div>
                 <ul class="business-directory-list" id="business-directory-list"></ul>

@@ -2934,8 +2934,6 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    border: 1px solid #d1d5db;
-    border-radius: 999px;
     height: 30px;
     padding: 0 10px;
     background: #fff;
@@ -2978,8 +2976,6 @@
 .business-filter-search input[type="search"] {
     width: 100%;
     min-height: 38px;
-    border: 1px solid #d1d5db;
-    border-radius: 10px;
     padding: 0 12px;
 }
 
@@ -3006,8 +3002,6 @@
 }
 
 .business-filter-option {
-    border: 1px solid #d1d5db;
-    border-radius: 999px;
     padding: 8px 12px;
     min-height: 34px;
     background: #fff;

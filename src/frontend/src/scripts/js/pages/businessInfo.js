@@ -22,7 +22,6 @@ const REGION_DISTRICT_MAP = {
 };
 
 const BUSINESS_CATEGORIES = ['룸', '바', '클럽', '기타'];
-const SORT_OPTIONS = [{ value: 'popular', label: '인기순' }];
 
 function normalizeAreaLabel(value) {
     return String(value || '').replace(/(특별시|광역시|자치시|자치도|도|시|군|구)$/u, '').trim() || String(value || '').trim();
@@ -71,16 +70,13 @@ function syncBadgeLabels() {
     const { region, district, category } = readBusinessFilters();
     const regionBadge = document.getElementById('business-region-badge-label');
     const districtBadge = document.getElementById('business-district-badge-label');
+    const districtTrigger = document.getElementById('business-district-trigger');
     const categoryBadge = document.getElementById('business-category-badge-label');
-    const sortBadge = document.getElementById('business-sort-badge-label');
-    const sortSelect = document.getElementById('business-sort-filter');
 
     if (regionBadge) regionBadge.textContent = region ? normalizeAreaLabel(region) : '지역 전체';
     if (districtBadge) districtBadge.textContent = district ? normalizeAreaLabel(district) : '세부 지역';
+    if (districtTrigger) districtTrigger.classList.toggle('hidden', !region);
     if (categoryBadge) categoryBadge.textContent = category || '업종 전체';
-
-    const selectedSort = SORT_OPTIONS.find((option) => option.value === sortSelect?.value) || SORT_OPTIONS[0];
-    if (sortBadge) sortBadge.textContent = selectedSort?.label || '인기순';
 }
 
 async function loadBusinessAds() {
@@ -191,6 +187,7 @@ function bindBusinessFilterEvents() {
         button.addEventListener('click', (event) => {
             event.preventDefault();
             const target = button.getAttribute('data-filter-toggle');
+            if (target === 'district' && !String(regionSelect?.value || '').trim()) return;
             const menu = document.getElementById(`business-menu-${target}`);
             if (!menu) return;
             const willOpen = !menu.classList.contains('is-open');
@@ -203,17 +200,6 @@ function bindBusinessFilterEvents() {
         if (!event.target.closest('.business-directory-filter-v2')) {
             closeFilterPanels();
         }
-    });
-
-    document.querySelectorAll('[data-sort]').forEach((button) => {
-        button.addEventListener('click', () => {
-            const sortValue = button.getAttribute('data-sort') || 'popular';
-            if (sortSelect) {
-                sortSelect.value = sortValue;
-            }
-            closeFilterPanels();
-            requestBusinessAds();
-        });
     });
 
     sortSelect?.addEventListener('change', requestBusinessAds);
