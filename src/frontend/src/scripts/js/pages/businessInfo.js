@@ -121,6 +121,7 @@ function bindBusinessFilterEvents() {
     const categorySelect = document.getElementById('business-category-filter');
     const sortSelect = document.getElementById('business-sort-filter');
     const keywordInput = document.getElementById('business-keyword-filter');
+    const searchButton = document.getElementById('business-search-btn');
 
     const regionMenu = document.getElementById('business-menu-region-items');
     const districtMenu = document.getElementById('business-menu-district-items');
@@ -221,6 +222,8 @@ function bindBusinessFilterEvents() {
             requestBusinessAds();
         }
     });
+
+    searchButton?.addEventListener('click', requestBusinessAds);
 
     rerenderRegionMenu();
     rerenderDistrictMenu();
