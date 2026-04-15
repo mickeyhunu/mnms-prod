@@ -2899,41 +2899,127 @@
     padding: 14px;
 }
 
-.business-directory-filter {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 8px;
-    align-items: end;
+.business-directory-filter-v2 {
     margin-bottom: 12px;
-    overflow-x: auto;
+    position: relative;
 }
 
-.business-directory-filter label {
-    flex: 1 1 0;
+.business-filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.business-filter-left,
+.business-filter-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     min-width: 0;
 }
 
-.business-directory-filter label span {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 12px;
-    color: #6b7280;
+.business-filter-left {
+    flex: 1 1 auto;
+    overflow-x: auto;
+    padding-bottom: 2px;
 }
 
-.business-directory-filter select {
-    width: 100%;
-    min-height: 38px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    padding: 0 8px;
+.business-filter-left::-webkit-scrollbar {
+    display: none;
 }
 
-.business-directory-filter input[type="search"] {
-    width: 100%;
-    min-height: 38px;
+.business-geo,
+.business-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     border: 1px solid #d1d5db;
-    border-radius: 8px;
+    border-radius: 999px;
+    height: 30px;
     padding: 0 10px;
+    background: #fff;
+    color: #111827;
+    text-decoration: none;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.business-badge:hover,
+.business-geo:hover {
+    background: #f3f4f6;
+}
+
+.business-geo {
+    width: 30px;
+    justify-content: center;
+    padding: 0;
+}
+
+.business-geo svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+.business-chevron {
+    width: 7px;
+    height: 7px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg) translateY(-1px);
+    display: inline-block;
+}
+
+.business-filter-search {
+    margin-top: 8px;
+}
+
+.business-filter-search input[type="search"] {
+    width: 100%;
+    min-height: 38px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 0 12px;
+}
+
+.business-filter-menu {
+    display: none;
+    margin-top: 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.business-filter-menu.is-open {
+    display: block;
+}
+
+.business-filter-menu__content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+.business-filter-option {
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    padding: 8px 12px;
+    min-height: 34px;
+    background: #fff;
+    color: #1f2937;
+    font-size: 13px;
+    line-height: 1;
+}
+
+.business-filter-option.is-active {
+    background: #111827;
+    border-color: #111827;
+    color: #fff;
 }
 
 .business-directory-list {
