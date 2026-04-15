@@ -21,11 +21,11 @@ const REGION_DISTRICT_MAP = {
     제주: ['서귀포시', '제주시']
 };
 
-function updateSelectOptions(selectElement, values, placeholder = '전체') {
-    if (!selectElement) return;
-    const options = [`<option value="">${placeholder}</option>`]
-        .concat(values.map((value) => `<option value="${value}">${value}</option>`));
-    selectElement.innerHTML = options.join('');
+const BUSINESS_CATEGORIES = ['룸', '바', '클럽', '기타'];
+const SORT_OPTIONS = [{ value: 'popular', label: '인기순' }];
+
+function normalizeAreaLabel(value) {
+    return String(value || '').replace(/(특별시|광역시|자치시|자치도|도|시|군|구)$/u, '').trim() || String(value || '').trim();
 }
 
 function renderBusinessAds(ads) {
@@ -58,11 +58,33 @@ function renderBusinessAds(ads) {
     }).join('');
 }
 
+function readBusinessFilters() {
+    return {
+        region: String(document.getElementById('business-region-filter')?.value || '').trim(),
+        district: String(document.getElementById('business-district-filter')?.value || '').trim(),
+        category: String(document.getElementById('business-category-filter')?.value || '').trim(),
+        keyword: String(document.getElementById('business-keyword-filter')?.value || '').trim()
+    };
+}
+
+function syncBadgeLabels() {
+    const { region, district, category } = readBusinessFilters();
+    const regionBadge = document.getElementById('business-region-badge-label');
+    const districtBadge = document.getElementById('business-district-badge-label');
+    const categoryBadge = document.getElementById('business-category-badge-label');
+    const sortBadge = document.getElementById('business-sort-badge-label');
+    const sortSelect = document.getElementById('business-sort-filter');
+
+    if (regionBadge) regionBadge.textContent = region ? normalizeAreaLabel(region) : '지역 전체';
+    if (districtBadge) districtBadge.textContent = district ? normalizeAreaLabel(district) : '세부 지역';
+    if (categoryBadge) categoryBadge.textContent = category || '업종 전체';
+
+    const selectedSort = SORT_OPTIONS.find((option) => option.value === sortSelect?.value) || SORT_OPTIONS[0];
+    if (sortBadge) sortBadge.textContent = selectedSort?.label || '인기순';
+}
+
 async function loadBusinessAds() {
-    const region = String(document.getElementById('business-region-filter')?.value || '').trim();
-    const district = String(document.getElementById('business-district-filter')?.value || '').trim();
-    const category = String(document.getElementById('business-category-filter')?.value || '').trim();
-    const keyword = String(document.getElementById('business-keyword-filter')?.value || '').trim();
+    const { region, district, category, keyword } = readBusinessFilters();
 
     try {
         const response = await APIClient.get('/live/business-ads', { region, district, category, keyword });
@@ -72,11 +94,42 @@ async function loadBusinessAds() {
     }
 }
 
+function openFilterPanel(target) {
+    document.querySelectorAll('.business-filter-menu').forEach((menu) => {
+        menu.classList.toggle('is-open', menu.id === `business-menu-${target}`);
+    });
+}
+
+function closeFilterPanels() {
+    document.querySelectorAll('.business-filter-menu').forEach((menu) => menu.classList.remove('is-open'));
+}
+
+function renderFilterButtonList(container, options, selectedValue, onSelect, allLabel = '전체') {
+    if (!container) return;
+    container.innerHTML = [
+        `<button type="button" class="business-filter-option ${selectedValue ? '' : 'is-active'}" data-value="">${allLabel}</button>`,
+        ...options.map((option) => {
+            const isActive = String(selectedValue) === String(option.value);
+            return `<button type="button" class="business-filter-option ${isActive ? 'is-active' : ''}" data-value="${sanitizeHTML(option.value)}">${sanitizeHTML(option.label)}</button>`;
+        })
+    ].join('');
+
+    container.querySelectorAll('.business-filter-option').forEach((button) => {
+        button.addEventListener('click', () => onSelect(button.dataset.value || ''));
+    });
+}
+
 function bindBusinessFilterEvents() {
     const regionSelect = document.getElementById('business-region-filter');
     const districtSelect = document.getElementById('business-district-filter');
     const categorySelect = document.getElementById('business-category-filter');
+    const sortSelect = document.getElementById('business-sort-filter');
     const keywordInput = document.getElementById('business-keyword-filter');
+
+    const regionMenu = document.getElementById('business-menu-region-items');
+    const districtMenu = document.getElementById('business-menu-district-items');
+    const categoryMenu = document.getElementById('business-menu-category-items');
+
     let keywordDebounceTimer = null;
 
     const requestBusinessAds = () => {
@@ -84,35 +137,109 @@ function bindBusinessFilterEvents() {
             window.clearTimeout(keywordDebounceTimer);
             keywordDebounceTimer = null;
         }
+        syncBadgeLabels();
         loadBusinessAds();
     };
 
-    updateSelectOptions(regionSelect, Object.keys(REGION_DISTRICT_MAP));
-    updateSelectOptions(categorySelect, ['룸', '바', '클럽', '기타']);
+    const rerenderRegionMenu = () => {
+        renderFilterButtonList(
+            regionMenu,
+            Object.keys(REGION_DISTRICT_MAP).map((region) => ({ value: region, label: normalizeAreaLabel(region) })),
+            regionSelect?.value || '',
+            (selected) => {
+                if (!regionSelect) return;
+                regionSelect.value = selected;
+                districtSelect.value = '';
+                rerenderDistrictMenu();
+                closeFilterPanels();
+                requestBusinessAds();
+            }
+        );
+    };
 
-    regionSelect?.addEventListener('change', () => {
-        const region = regionSelect.value;
-        updateSelectOptions(districtSelect, REGION_DISTRICT_MAP[region] || []);
-        requestBusinessAds();
+    const rerenderDistrictMenu = () => {
+        const districts = REGION_DISTRICT_MAP[regionSelect?.value || ''] || [];
+        renderFilterButtonList(
+            districtMenu,
+            districts.map((district) => ({ value: district, label: normalizeAreaLabel(district) })),
+            districtSelect?.value || '',
+            (selected) => {
+                if (!districtSelect) return;
+                districtSelect.value = selected;
+                closeFilterPanels();
+                requestBusinessAds();
+            }
+        );
+    };
+
+    const rerenderCategoryMenu = () => {
+        renderFilterButtonList(
+            categoryMenu,
+            BUSINESS_CATEGORIES.map((category) => ({ value: category, label: category })),
+            categorySelect?.value || '',
+            (selected) => {
+                if (!categorySelect) return;
+                categorySelect.value = selected;
+                closeFilterPanels();
+                requestBusinessAds();
+            },
+            '업종 전체'
+        );
+    };
+
+    document.querySelectorAll('[data-filter-toggle]').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            const target = button.getAttribute('data-filter-toggle');
+            const menu = document.getElementById(`business-menu-${target}`);
+            if (!menu) return;
+            const willOpen = !menu.classList.contains('is-open');
+            closeFilterPanels();
+            if (willOpen) openFilterPanel(target);
+        });
     });
-    districtSelect?.addEventListener('change', requestBusinessAds);
-    categorySelect?.addEventListener('change', requestBusinessAds);
+
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.business-directory-filter-v2')) {
+            closeFilterPanels();
+        }
+    });
+
+    document.querySelectorAll('[data-sort]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const sortValue = button.getAttribute('data-sort') || 'popular';
+            if (sortSelect) {
+                sortSelect.value = sortValue;
+            }
+            closeFilterPanels();
+            requestBusinessAds();
+        });
+    });
+
+    sortSelect?.addEventListener('change', requestBusinessAds);
 
     keywordInput?.addEventListener('input', () => {
         if (keywordDebounceTimer) {
             window.clearTimeout(keywordDebounceTimer);
         }
         keywordDebounceTimer = window.setTimeout(() => {
+            syncBadgeLabels();
             loadBusinessAds();
             keywordDebounceTimer = null;
         }, 300);
     });
+
     keywordInput?.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
             event.preventDefault();
             requestBusinessAds();
         }
     });
+
+    rerenderRegionMenu();
+    rerenderDistrictMenu();
+    rerenderCategoryMenu();
+    syncBadgeLabels();
 }
 
 async function initBusinessInfoPage() {
