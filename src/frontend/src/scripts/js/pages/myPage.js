@@ -4,6 +4,9 @@
 let currentUser = null;
 let nicknameCheckState = { checked: false, available: false, value: '' };
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
+const AD_PROFILE_DRAFT_KEY = 'mnm.adProfileDraft';
+const BUSINESS_INFO_DRAFT_KEY = 'mnm.businessInfoDraft';
+const BUSINESS_INFO_REGISTERED_KEY = 'mnm.businessInfoRegistered';
 
 function formatPhoneNumber(value) {
     const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
@@ -38,6 +41,7 @@ async function initMyPage() {
         renderHeaderUser(currentUser);
         renderAdCenterSection(currentUser);
         renderProfileForm(currentUser);
+        await renderBusinessProfileStatuses();
 
         if (window.location.pathname === '/my-page/profile') {
             bindProfileForm();
@@ -109,6 +113,95 @@ function renderAdCenterSection(user) {
     const shouldShow = isAdAccount(user);
     adCenterWrapper.classList.toggle('hidden', !shouldShow);
     adCenterSection.classList.toggle('hidden', !shouldShow);
+}
+
+function readStoredData(key) {
+    try {
+        const raw = window.localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+function hasAnyValue(values) {
+    return Object.values(values).some((value) => String(value || '').trim());
+}
+
+function isAdProfileComplete(profile) {
+    if (!profile || typeof profile !== 'object') return false;
+
+    const requiredValues = {
+        businessName: profile.businessName || profile.storeName,
+        managerName: profile.managerName,
+        managerContact: profile.managerContact,
+        title: profile.title,
+        region: profile.region,
+        district: profile.district,
+        category: profile.category,
+        openHour: profile.openHour,
+        closeHour: profile.closeHour,
+        description: profile.description
+    };
+
+    return Object.values(requiredValues).every((value) => String(value || '').trim());
+}
+
+function isBusinessInfoComplete(info) {
+    if (!info || typeof info !== 'object') return false;
+    const requiredValues = {
+        licenseImageName: info.licenseImageName || info.licenseImageUrl,
+        businessNumber: info.businessNumber,
+        businessName: info.businessName,
+        businessOwner: info.businessOwner,
+        businessAddress: info.businessAddress,
+        billingType: info.billingType
+    };
+    return Object.values(requiredValues).every((value) => String(value || '').trim());
+}
+
+function applyStatusBadge(elementId, status) {
+    const badge = document.getElementById(elementId);
+    if (!badge) return;
+
+    badge.classList.remove('mypage-status-badge--registered', 'mypage-status-badge--draft', 'mypage-status-badge--unregistered');
+
+    const statusMap = {
+        registered: { label: '등록', className: 'mypage-status-badge--registered' },
+        draft: { label: '임시저장', className: 'mypage-status-badge--draft' },
+        unregistered: { label: '미등록', className: 'mypage-status-badge--unregistered' }
+    };
+
+    const target = statusMap[status] || statusMap.unregistered;
+    badge.textContent = target.label;
+    badge.classList.add(target.className);
+}
+
+async function renderBusinessProfileStatuses() {
+    const adDraft = readStoredData(AD_PROFILE_DRAFT_KEY);
+    const businessDraft = readStoredData(BUSINESS_INFO_DRAFT_KEY);
+    const businessRegistered = readStoredData(BUSINESS_INFO_REGISTERED_KEY);
+
+    let adStatus = 'unregistered';
+    let businessStatus = 'unregistered';
+
+    try {
+        const response = await APIClient.get('/users/me/business-ads');
+        const existingAd = Array.isArray(response?.content) ? response.content[0] : null;
+        if (isAdProfileComplete(existingAd)) adStatus = 'registered';
+        else if (hasAnyValue(adDraft || {})) adStatus = 'draft';
+    } catch (error) {
+        if (hasAnyValue(adDraft || {})) adStatus = 'draft';
+    }
+
+    if (isBusinessInfoComplete(businessRegistered)) {
+        businessStatus = 'registered';
+    } else if (hasAnyValue(businessDraft || {})) {
+        businessStatus = 'draft';
+    }
+
+    applyStatusBadge('mypage-ad-profile-status', adStatus);
+    applyStatusBadge('mypage-business-info-status', businessStatus);
 }
 
 function renderProfileForm(user) {
