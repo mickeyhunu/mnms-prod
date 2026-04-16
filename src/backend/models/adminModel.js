@@ -275,7 +275,11 @@ async function listBusinessAdsByOwner(ownerUserId) {
 
 async function listPublicBusinessAds({ region = '', district = '', category = '', keyword = '' } = {}) {
   const pool = getPool();
-  const whereConditions = ['ba.is_active = 1', "ba.registration_status = 'REGISTERED'"];
+  const whereConditions = [
+    'ba.is_active = 1',
+    "ba.registration_status = 'REGISTERED'",
+    "bp.registration_status = 'REGISTERED'"
+  ];
   const whereParams = [];
 
   if (region) {
