@@ -13,7 +13,9 @@ const {
   markPostsAsRead,
   findByNicknameExceptUser,
   updateUserProfile,
-  findById
+  findById,
+  getBusinessProfileByUserId,
+  upsertBusinessProfileByUserId
 } = require('../models/userModel');
 const { resolveMemberLevel, MEMBER_LEVELS } = require('../utils/memberLevel');
 const { POINT_RULES } = require('../models/pointModel');
@@ -21,6 +23,34 @@ const supportModel = require('../models/supportModel');
 const adminModel = require('../models/adminModel');
 const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
 const { validateNickname } = require('../utils/nicknamePolicy');
+
+const REGISTRATION_STATUSES = new Set(['UNREGISTERED', 'DRAFT', 'REGISTERED']);
+
+function normalizeRegistrationStatus(value, fallback = 'UNREGISTERED') {
+  const status = String(value || '').trim().toUpperCase();
+  return REGISTRATION_STATUSES.has(status) ? status : fallback;
+}
+
+function isCompleteBusinessAdPayload(payload = {}) {
+  const requiredValues = [
+    payload.businessName,
+    payload.managerName,
+    payload.managerContact,
+    payload.title,
+    payload.region,
+    payload.district,
+    payload.category,
+    payload.openHour,
+    payload.closeHour,
+    payload.description
+  ];
+  return requiredValues.every((value) => String(value || '').trim());
+}
+
+function pickTrimmedText(body, key, fallback = '') {
+  if (!body || !Object.prototype.hasOwnProperty.call(body, key)) return fallback;
+  return String(body[key] || '').trim();
+}
 
 
 function isNicknameChangeLocked(lastChangedAt) {
@@ -437,10 +467,14 @@ async function createMyBusinessAd(req, res, next) {
     const description = String(req.body?.description || '').trim();
     const planType = String(req.body?.planType || 'NORMAL').trim().toUpperCase() === 'PREMIUM' ? 'PREMIUM' : 'NORMAL';
     const displayOrder = Number(req.body?.displayOrder) || 0;
-    const isActive = Boolean(req.body?.isActive);
+    const requestedStatus = normalizeRegistrationStatus(req.body?.registrationStatus, 'UNREGISTERED');
+    const isRegisteredStatus = requestedStatus === 'REGISTERED';
+    const isActive = isRegisteredStatus;
 
-    if (!title || !region || !district) {
-      return res.status(400).json({ message: '제목, 지역, 세부 지역은 필수입니다.' });
+    if (isRegisteredStatus && !isCompleteBusinessAdPayload({
+      businessName, managerName, managerContact, title, region, district, category, openHour, closeHour, description
+    })) {
+      return res.status(400).json({ message: '광고프로필 필수 항목을 모두 입력해주세요.' });
     }
 
     const insertId = await adminModel.createBusinessAd({
@@ -459,7 +493,8 @@ async function createMyBusinessAd(req, res, next) {
       description,
       planType,
       displayOrder,
-      isActive
+      isActive,
+      registrationStatus: requestedStatus
     });
     res.status(201).json({ id: insertId });
   } catch (error) {
@@ -477,24 +512,29 @@ async function updateMyBusinessAd(req, res, next) {
       return res.status(404).json({ message: '광고를 찾을 수 없습니다.' });
     }
 
-    const businessName = String(req.body?.businessName || '').trim();
-    const managerName = String(req.body?.managerName || '').trim();
-    const managerContact = String(req.body?.managerContact || '').trim();
-    const title = String(req.body?.title || '').trim();
-    const imageUrl = String(req.body?.imageUrl || '').trim();
-    const linkUrl = String(req.body?.linkUrl || '#').trim() || '#';
-    const region = String(req.body?.region || '').trim();
-    const district = String(req.body?.district || '').trim();
-    const category = String(req.body?.category || '').trim();
-    const openHour = String(req.body?.openHour || '').trim();
-    const closeHour = String(req.body?.closeHour || '').trim();
-    const description = String(req.body?.description || '').trim();
-    const planType = String(req.body?.planType || 'NORMAL').trim().toUpperCase() === 'PREMIUM' ? 'PREMIUM' : 'NORMAL';
-    const displayOrder = Number(req.body?.displayOrder) || 0;
-    const isActive = Boolean(req.body?.isActive);
+    const businessName = pickTrimmedText(req.body, 'businessName', target.businessName || '');
+    const managerName = pickTrimmedText(req.body, 'managerName', target.managerName || '');
+    const managerContact = pickTrimmedText(req.body, 'managerContact', target.managerContact || '');
+    const title = pickTrimmedText(req.body, 'title', target.title || '');
+    const imageUrl = pickTrimmedText(req.body, 'imageUrl', target.imageUrl || '');
+    const linkUrl = pickTrimmedText(req.body, 'linkUrl', target.linkUrl || '#') || '#';
+    const region = pickTrimmedText(req.body, 'region', target.region || '');
+    const district = pickTrimmedText(req.body, 'district', target.district || '');
+    const category = pickTrimmedText(req.body, 'category', target.category || '');
+    const openHour = pickTrimmedText(req.body, 'openHour', target.openHour || '');
+    const closeHour = pickTrimmedText(req.body, 'closeHour', target.closeHour || '');
+    const description = pickTrimmedText(req.body, 'description', target.description || '');
+    const planTypeRaw = pickTrimmedText(req.body, 'planType', target.planType || 'NORMAL').toUpperCase();
+    const planType = planTypeRaw === 'PREMIUM' ? 'PREMIUM' : 'NORMAL';
+    const displayOrder = Object.prototype.hasOwnProperty.call(req.body || {}, 'displayOrder') ? (Number(req.body?.displayOrder) || 0) : (Number(target.displayOrder) || 0);
+    const requestedStatus = normalizeRegistrationStatus(req.body?.registrationStatus, target.registrationStatus || 'UNREGISTERED');
+    const isRegisteredStatus = requestedStatus === 'REGISTERED';
+    const isActive = isRegisteredStatus;
 
-    if (!title || !region || !district) {
-      return res.status(400).json({ message: '제목, 지역, 세부 지역은 필수입니다.' });
+    if (isRegisteredStatus && !isCompleteBusinessAdPayload({
+      businessName, managerName, managerContact, title, region, district, category, openHour, closeHour, description
+    })) {
+      return res.status(400).json({ message: '광고프로필 필수 항목을 모두 입력해주세요.' });
     }
 
     await adminModel.updateBusinessAd(id, {
@@ -512,7 +552,8 @@ async function updateMyBusinessAd(req, res, next) {
       description,
       planType,
       displayOrder,
-      isActive
+      isActive,
+      registrationStatus: requestedStatus
     });
     if (target.imageUrl && target.imageUrl !== imageUrl) {
       await deleteS3ObjectByUrl(target.imageUrl);
@@ -543,6 +584,72 @@ async function deleteMyBusinessAd(req, res, next) {
   }
 }
 
+async function getMyBusinessProfile(req, res, next) {
+  try {
+    const profile = await getBusinessProfileByUserId(req.user.id);
+    if (!profile) {
+      return res.json({
+        registrationStatus: 'UNREGISTERED',
+        businessInfo: {}
+      });
+    }
+
+    const rawBusinessInfo = profile.businessInfo;
+    let businessInfo = {};
+    if (rawBusinessInfo && typeof rawBusinessInfo === 'object') {
+      businessInfo = rawBusinessInfo;
+    } else if (typeof rawBusinessInfo === 'string') {
+      try {
+        businessInfo = JSON.parse(rawBusinessInfo);
+      } catch (error) {
+        businessInfo = {};
+      }
+    }
+
+    res.json({
+      registrationStatus: normalizeRegistrationStatus(profile.registrationStatus, 'UNREGISTERED'),
+      businessInfo
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function saveMyBusinessProfile(req, res, next) {
+  try {
+    const businessInfo = (req.body?.businessInfo && typeof req.body.businessInfo === 'object') ? req.body.businessInfo : {};
+    const registrationStatus = normalizeRegistrationStatus(req.body?.registrationStatus, 'UNREGISTERED');
+
+    if (registrationStatus === 'REGISTERED') {
+      const requiredValues = {
+        licenseImageName: String(businessInfo.licenseImageName || '').trim(),
+        businessNumber: String(businessInfo.businessNumber || '').trim(),
+        businessName: String(businessInfo.businessName || '').trim(),
+        businessOwner: String(businessInfo.businessOwner || '').trim(),
+        businessAddress: String(businessInfo.businessAddress || '').trim(),
+        billingType: String(businessInfo.billingType || '').trim()
+      };
+
+      if (Object.values(requiredValues).some((value) => !value)) {
+        return res.status(400).json({ message: '사업자정보 필수 항목을 모두 입력해주세요.' });
+      }
+    }
+
+    await upsertBusinessProfileByUserId(req.user.id, {
+      companyName: String(businessInfo.businessName || '').trim() || null,
+      businessRegistrationNumber: String(businessInfo.businessNumber || '').trim() || null,
+      managerName: String(businessInfo.businessOwner || '').trim() || null,
+      contactPhone: String(req.user.phone || '').trim() || null,
+      registrationStatus,
+      businessInfo
+    });
+
+    res.json({ success: true, registrationStatus });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   myStats,
   myPointHistories,
@@ -557,5 +664,7 @@ module.exports = {
   listMyBusinessAds,
   createMyBusinessAd,
   updateMyBusinessAd,
-  deleteMyBusinessAd
+  deleteMyBusinessAd,
+  getMyBusinessProfile,
+  saveMyBusinessProfile
 };

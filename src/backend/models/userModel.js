@@ -394,6 +394,53 @@ async function updateUserProfile(userId, payload) {
   await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
 }
 
+async function getBusinessProfileByUserId(userId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT user_id AS userId,
+            company_name AS companyName,
+            business_registration_number AS businessRegistrationNumber,
+            manager_name AS managerName,
+            contact_phone AS contactPhone,
+            has_ad_permission AS hasAdPermission,
+            approval_status AS approvalStatus,
+            registration_status AS registrationStatus,
+            business_info AS businessInfo,
+            created_at AS createdAt,
+            updated_at AS updatedAt
+       FROM business_profiles
+      WHERE user_id = ?`,
+    [userId]
+  );
+  return rows[0] || null;
+}
+
+async function upsertBusinessProfileByUserId(userId, payload = {}) {
+  const pool = getPool();
+  const {
+    companyName = null,
+    businessRegistrationNumber = null,
+    managerName = null,
+    contactPhone = null,
+    registrationStatus = 'UNREGISTERED',
+    businessInfo = null
+  } = payload;
+
+  await pool.query(
+    `INSERT INTO business_profiles (
+      user_id, company_name, business_registration_number, manager_name, contact_phone, registration_status, business_info
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+      company_name = VALUES(company_name),
+      business_registration_number = VALUES(business_registration_number),
+      manager_name = VALUES(manager_name),
+      contact_phone = VALUES(contact_phone),
+      registration_status = VALUES(registration_status),
+      business_info = VALUES(business_info)`,
+    [userId, companyName, businessRegistrationNumber, managerName, contactPhone, registrationStatus, businessInfo ? JSON.stringify(businessInfo) : null]
+  );
+}
+
 module.exports = {
   clearExpiredLoginRestriction,
   ensureResolvedLoginRestriction,
@@ -403,6 +450,8 @@ module.exports = {
   findByNickname,
   findByNicknameExceptUser,
   updateUserProfile,
+  getBusinessProfileByUserId,
+  upsertBusinessProfileByUserId,
   recordUserLoginHistory,
   getUserLoginHistories,
   getUserActivityStats,

@@ -265,6 +265,7 @@ async function initDatabase() {
       contact_phone VARCHAR(30) NULL,
       has_ad_permission TINYINT(1) NOT NULL DEFAULT 0,
       approval_status ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
+      registration_status ENUM('UNREGISTERED','DRAFT','REGISTERED') NOT NULL DEFAULT 'UNREGISTERED',
       business_info JSON NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -467,6 +468,7 @@ async function initDatabase() {
       description TEXT NULL,
       plan_type VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
       view_count BIGINT NOT NULL DEFAULT 0,
+      registration_status ENUM('UNREGISTERED','DRAFT','REGISTERED') NOT NULL DEFAULT 'UNREGISTERED',
       display_order INT NOT NULL DEFAULT 0,
       is_active TINYINT(1) NOT NULL DEFAULT 1,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -487,7 +489,8 @@ async function initDatabase() {
     { name: 'close_hour', sql: "ALTER TABLE business_ads ADD COLUMN close_hour VARCHAR(20) NOT NULL DEFAULT '' AFTER open_hour" },
     { name: 'description', sql: 'ALTER TABLE business_ads ADD COLUMN description TEXT NULL AFTER close_hour' },
     { name: 'plan_type', sql: "ALTER TABLE business_ads ADD COLUMN plan_type VARCHAR(20) NOT NULL DEFAULT 'NORMAL' AFTER description" },
-    { name: 'view_count', sql: "ALTER TABLE business_ads ADD COLUMN view_count BIGINT NOT NULL DEFAULT 0 AFTER plan_type" }
+    { name: 'view_count', sql: "ALTER TABLE business_ads ADD COLUMN view_count BIGINT NOT NULL DEFAULT 0 AFTER plan_type" },
+    { name: 'registration_status', sql: "ALTER TABLE business_ads ADD COLUMN registration_status ENUM('UNREGISTERED','DRAFT','REGISTERED') NOT NULL DEFAULT 'UNREGISTERED' AFTER view_count" }
   ];
 
   for (const migration of businessAdsColumnMigrations) {
@@ -504,6 +507,20 @@ async function initDatabase() {
     if (!columnRows.length) {
       await pool.query(migration.sql);
     }
+  }
+
+  const [businessProfileRegistrationStatusColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'business_profiles'
+       AND COLUMN_NAME = 'registration_status'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!businessProfileRegistrationStatusColumn.length) {
+    await pool.query("ALTER TABLE business_profiles ADD COLUMN registration_status ENUM('UNREGISTERED','DRAFT','REGISTERED') NOT NULL DEFAULT 'UNREGISTERED' AFTER approval_status");
   }
 
   const [adsAdTypeColumn] = await pool.query(

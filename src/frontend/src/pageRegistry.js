@@ -277,6 +277,7 @@ const pageRegistry = {
                     <p>별도 안내 없이 수정되거나 반려될 수 있어요.</p>
                 </div>
                 <div class="ad-profile-submit-wrap">
+                    <button id="ad-profile-draft-btn" class="btn btn-secondary hidden" type="button">임시저장</button>
                     <button id="ad-profile-save-btn" class="btn btn-primary" type="button">광고프로필 저장</button>
                 </div>
             </section>
@@ -375,6 +376,7 @@ const pageRegistry = {
                 </div>
 
                 <div class="ad-profile-actions">
+                    <button id="business-info-draft-btn" class="btn btn-secondary hidden" type="button">임시저장</button>
                     <button id="business-info-save-btn" class="btn btn-primary" type="button">사업자정보 저장</button>
                 </div>
             </section>
