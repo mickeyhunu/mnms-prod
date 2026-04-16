@@ -178,6 +178,13 @@ function showSaveMessage(message, isError = false) {
     messageElement.style.color = isError ? '#dc2626' : '#15803d';
 }
 
+async function loadMyAdProfile() {
+    const response = await APIClient.get('/users/me/business-ads');
+    const existingAd = Array.isArray(response?.content) ? response.content[0] : null;
+    adProfileState.currentAdId = Number(existingAd?.id || 0) || null;
+    if (existingAd) applyAdProfileToForm(existingAd);
+}
+
 async function saveAdProfile() {
     if (adProfileState.isSaving) return;
 
@@ -238,6 +245,7 @@ async function saveAdProfile() {
         }
 
         showSaveMessage('광고프로필이 저장되었습니다. 업체정보 메뉴에서 확인할 수 있습니다.');
+        await loadMyAdProfile();
     } catch (error) {
         showSaveMessage(error.message || '광고프로필 저장에 실패했습니다.', true);
     } finally {
@@ -304,12 +312,7 @@ async function initAdProfileManagementPage() {
         const saveButton = document.getElementById('ad-profile-save-btn');
         saveButton?.addEventListener('click', saveAdProfile);
 
-        const response = await APIClient.get('/users/me/business-ads');
-        const existingAd = Array.isArray(response?.content) ? response.content[0] : null;
-        if (existingAd) {
-            adProfileState.currentAdId = Number(existingAd.id || 0) || null;
-            applyAdProfileToForm(existingAd);
-        }
+        await loadMyAdProfile();
     } catch (error) {
         alert(error.message || '광고프로필 페이지를 불러오지 못했습니다.');
     }
