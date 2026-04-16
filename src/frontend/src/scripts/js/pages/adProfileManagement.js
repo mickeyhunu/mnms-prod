@@ -25,7 +25,8 @@ const adProfileState = {
     currentAdId: null,
     uploadedImageUrl: '',
     me: null,
-    isSaving: false
+    isSaving: false,
+    syncPreview: null
 };
 const DEFAULT_AD_IMAGE_URL = 'https://image.bubblealba.com/assets/advertiser/pending.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
@@ -181,6 +182,7 @@ function bindAdProfileInteractions() {
             element?.addEventListener('change', syncPreview);
         });
 
+    adProfileState.syncPreview = syncPreview;
     syncPreview();
 }
 
@@ -311,6 +313,7 @@ function applyAdProfileToForm(ad) {
     if (descriptionInput) descriptionInput.value = ad.description || '';
     if (descriptionEditor) descriptionEditor.innerHTML = ad.description || '';
     adProfileState.uploadedImageUrl = ad.imageUrl || DEFAULT_AD_IMAGE_URL;
+    adProfileState.syncPreview?.();
 }
 
 async function initAdProfileManagementPage() {
