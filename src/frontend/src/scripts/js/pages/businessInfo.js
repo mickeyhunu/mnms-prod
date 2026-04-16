@@ -48,17 +48,27 @@ function renderBusinessAds(ads) {
         const regionLabel = sanitizeHTML(ad.region || '지역미지정');
         const businessName = sanitizeHTML(ad.businessName || ad.companyName || ad.ownerNickname || '업소');
         const managerName = sanitizeHTML(ad.managerName || ad.profileManagerName || ad.ownerNickname || '담당자');
+        const managerContact = sanitizeHTML(ad.managerContact || '연락처');
+        const district = sanitizeHTML(ad.district || '선택');
+        const category = sanitizeHTML(ad.category || '선택');
+        const openHour = sanitizeHTML(ad.openHour || '시간선택');
+        const closeHour = sanitizeHTML(ad.closeHour || '시간선택');
         const baseTitle = sanitizeHTML(ad.title || '업체정보');
         const title = `[${regionLabel}-${businessName}] ${baseTitle}`;
         const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
+        const formattedTime = (openHour !== '시간선택' && closeHour !== '시간선택')
+            ? `${openHour} ~ ${closeHour}`
+            : '시간선택 ~ 시간선택';
+        const detail = `${regionLabel} ${district} · ${category} · ${formattedTime}`;
         return `
             <li class="business-directory-item">
                 <div class="business-directory-main">
                     <h4>${title}</h4>
                     <div class="business-directory-meta">
-                        <span class="business-directory-manager">담당자 | ${managerName}</span>
-                        <span class="business-directory-views">조회수 | ${viewCount}</span>
+                        <span class="business-directory-manager">${managerName} · ${managerContact}</span>
+                        <span class="business-directory-views">조회수 ${viewCount}</span>
                     </div>
+                    <p class="business-directory-region-detail">${detail}</p>
                 </div>
             </li>
         `;

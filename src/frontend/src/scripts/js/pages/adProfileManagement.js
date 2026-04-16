@@ -96,7 +96,6 @@ function bindAdProfileInteractions() {
     const previewTitle = document.getElementById('ad-profile-preview-title');
     const previewSub = document.getElementById('ad-profile-preview-sub');
     const previewRegion = document.getElementById('ad-profile-preview-region');
-    const previewDesc = document.getElementById('ad-profile-preview-desc');
 
     const syncDescriptionValue = () => {
         if (!descriptionInput || !descriptionEditor) return '';
@@ -112,7 +111,7 @@ function bindAdProfileInteractions() {
     const syncPreview = () => {
         const storeName = businessNameInput?.value?.trim() || '업소명';
         const title = titleInput?.value?.trim() || '제목을 입력해주세요.';
-        const description = syncDescriptionValue() || '내용을 입력해주세요.';
+        syncDescriptionValue();
         const region = regionSelect?.value?.trim() || '선택';
         const district = districtSelect?.value?.trim() || '선택';
         const category = categorySelect?.value?.trim() || '선택';
@@ -127,7 +126,6 @@ function bindAdProfileInteractions() {
             : '시간선택 ~ 시간선택';
 
         if (previewTitle) previewTitle.textContent = `[${region}-${storeName}] ${title}`;
-        if (previewDesc) previewDesc.textContent = description;
         if (previewSub) previewSub.textContent = `${managerName} · ${managerContact}`;
         if (previewRegion) previewRegion.textContent = `${region} ${district} · ${category} · ${formattedTime}`;
     };
