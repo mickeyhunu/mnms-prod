@@ -244,13 +244,38 @@ function stripEmptyValues(payload) {
     }, {});
 }
 
+function hasAnyAdProfileValue(data) {
+    if (!data || typeof data !== 'object') return false;
+
+    const plainTextDescription = String(data.description || '')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .trim();
+
+    const valuesToCheck = [
+        data.businessName,
+        data.managerContact,
+        data.title,
+        data.region,
+        data.district,
+        data.category,
+        data.openHour,
+        data.closeHour,
+        plainTextDescription
+    ];
+
+    return valuesToCheck.some((value) => String(value || '').trim());
+}
+
 function updateAdProfileActionButtons() {
     const saveButton = document.getElementById('ad-profile-save-btn');
     const draftButton = document.getElementById('ad-profile-draft-btn');
+    const hasAnyValue = hasAnyAdProfileValue(collectDraftData());
     const isComplete = isAdProfileFormComplete();
 
     saveButton?.classList.toggle('hidden', !isComplete);
     draftButton?.classList.toggle('hidden', isComplete);
+    if (draftButton) draftButton.disabled = !hasAnyValue;
 }
 
 function saveDraftData() {
@@ -295,6 +320,23 @@ async function saveAdProfile({ forceDraft = false } = {}) {
     const saveButton = document.getElementById('ad-profile-save-btn');
     const draftButton = document.getElementById('ad-profile-draft-btn');
     const registrationStatus = forceDraft ? 'DRAFT' : 'REGISTERED';
+    const hasAnyValue = hasAnyAdProfileValue({
+        businessName,
+        managerContact,
+        title,
+        region,
+        district,
+        category,
+        openHour,
+        closeHour,
+        description
+    });
+
+    if (forceDraft && !hasAnyValue) {
+        showSaveMessage('입력한 항목이 없습니다.');
+        updateAdProfileActionButtons();
+        return;
+    }
 
     if (!forceDraft) {
         const requiredFieldError = getRequiredFieldError({

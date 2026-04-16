@@ -265,6 +265,7 @@ function collectBusinessManagementFormData() {
 function hasAnyBusinessValue(data) {
     const candidate = { ...data };
     delete candidate.licenseImageName;
+    delete candidate.billingType;
     const hasText = Object.values(candidate).some((value) => String(value || '').trim());
     const hasImage = data?.licenseImageName && data.licenseImageName !== '등록할 이미지를 선택해주세요.';
     return Boolean(hasText || hasImage);
@@ -297,10 +298,13 @@ function isBusinessInfoComplete(data) {
 function updateBusinessActionButtons() {
     const saveButton = document.getElementById('business-info-save-btn');
     const draftButton = document.getElementById('business-info-draft-btn');
-    const isComplete = isBusinessInfoComplete(collectBusinessManagementFormData());
+    const formData = collectBusinessManagementFormData();
+    const isComplete = isBusinessInfoComplete(formData);
+    const hasAnyValue = hasAnyBusinessValue(formData);
 
     saveButton?.classList.toggle('hidden', !isComplete);
     draftButton?.classList.toggle('hidden', isComplete);
+    if (draftButton) draftButton.disabled = !hasAnyValue;
 }
 
 function applyBusinessFormData(savedData) {
@@ -358,11 +362,13 @@ function bindBusinessManagementEvents() {
 
     draftButton?.addEventListener('click', async () => {
         try {
-            const formData = stripEmptyBusinessValues(collectBusinessManagementFormData());
-            if (!hasAnyBusinessValue(formData)) {
+            const collectedFormData = collectBusinessManagementFormData();
+            if (!hasAnyBusinessValue(collectedFormData)) {
                 alert('입력한 항목이 없습니다.');
+                updateBusinessActionButtons();
                 return;
             }
+            const formData = stripEmptyBusinessValues(collectedFormData);
 
             await APIClient.put('/users/me/business-profile', {
                 registrationStatus: 'DRAFT',
