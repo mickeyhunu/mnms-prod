@@ -178,9 +178,18 @@ function showSaveMessage(message, isError = false) {
     messageElement.style.color = isError ? '#dc2626' : '#15803d';
 }
 
+async function loadMyAdProfile() {
+    const response = await APIClient.get('/users/me/business-ads');
+    const existingAd = Array.isArray(response?.content) ? response.content[0] : null;
+    adProfileState.currentAdId = Number(existingAd?.id || 0) || null;
+    if (existingAd) applyAdProfileToForm(existingAd);
+}
+
 async function saveAdProfile() {
     if (adProfileState.isSaving) return;
 
+    const storeName = String(document.getElementById('ad-profile-name')?.value || '').trim();
+    const managerName = String(document.getElementById('ad-profile-manager')?.value || '').trim();
     const region = String(document.getElementById('ad-profile-region')?.value || '').trim();
     const district = String(document.getElementById('ad-profile-district')?.value || '').trim();
     const category = String(document.getElementById('ad-profile-category')?.value || '').trim();
@@ -216,6 +225,8 @@ async function saveAdProfile() {
         }
 
         const payload = {
+            storeName,
+            managerName,
             title,
             imageUrl,
             linkUrl: '#',
@@ -238,6 +249,7 @@ async function saveAdProfile() {
         }
 
         showSaveMessage('광고프로필이 저장되었습니다. 업체정보 메뉴에서 확인할 수 있습니다.');
+        await loadMyAdProfile();
     } catch (error) {
         showSaveMessage(error.message || '광고프로필 저장에 실패했습니다.', true);
     } finally {
@@ -252,6 +264,8 @@ async function saveAdProfile() {
 function applyAdProfileToForm(ad) {
     if (!ad) return;
 
+    const storeNameInput = document.getElementById('ad-profile-name');
+    const managerNameInput = document.getElementById('ad-profile-manager');
     const regionSelect = document.getElementById('ad-profile-region');
     const districtSelect = document.getElementById('ad-profile-district');
     const categorySelect = document.getElementById('ad-profile-category');
@@ -263,6 +277,8 @@ function applyAdProfileToForm(ad) {
     const imagePreview = document.getElementById('ad-profile-image-preview');
     const previewThumb = document.getElementById('ad-profile-preview-thumb');
 
+    if (storeNameInput) storeNameInput.value = ad.storeName || '';
+    if (managerNameInput) managerNameInput.value = ad.managerName || '';
     if (regionSelect) {
         regionSelect.value = ad.region || '';
         updateSelectOptions(districtSelect, REGION_DISTRICT_MAP[ad.region] || []);
@@ -296,6 +312,10 @@ async function initAdProfileManagementPage() {
 
         const nickname = document.getElementById('user-nickname');
         if (nickname) nickname.textContent = Auth.formatNicknameWithLevel(me);
+        const managerNameInput = document.getElementById('ad-profile-manager');
+        if (managerNameInput) {
+            managerNameInput.value = String(me?.name || me?.nickname || '').trim();
+        }
 
         if (typeof initHeader === 'function') initHeader();
         Auth.bindLogoutButton();
@@ -304,12 +324,7 @@ async function initAdProfileManagementPage() {
         const saveButton = document.getElementById('ad-profile-save-btn');
         saveButton?.addEventListener('click', saveAdProfile);
 
-        const response = await APIClient.get('/users/me/business-ads');
-        const existingAd = Array.isArray(response?.content) ? response.content[0] : null;
-        if (existingAd) {
-            adProfileState.currentAdId = Number(existingAd.id || 0) || null;
-            applyAdProfileToForm(existingAd);
-        }
+        await loadMyAdProfile();
     } catch (error) {
         alert(error.message || '광고프로필 페이지를 불러오지 못했습니다.');
     }

@@ -260,7 +260,8 @@ async function deleteAd(adId) {
 async function listBusinessAdsByOwner(ownerUserId) {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT id, owner_user_id AS ownerUserId, title, image_url AS imageUrl, link_url AS linkUrl,
+    `SELECT id, owner_user_id AS ownerUserId, store_name AS storeName, manager_name AS managerName,
+            title, image_url AS imageUrl, link_url AS linkUrl,
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
             description, plan_type AS planType,
             display_order AS displayOrder, is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
@@ -314,6 +315,8 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
 
 async function createBusinessAd({
   ownerUserId,
+  storeName = '',
+  managerName = '',
   title,
   imageUrl,
   linkUrl,
@@ -330,10 +333,10 @@ async function createBusinessAd({
   const pool = getPool();
   const [result] = await pool.query(
     `INSERT INTO business_ads (
-      owner_user_id, title, image_url, link_url, region, district, category, open_hour, close_hour,
+      owner_user_id, store_name, manager_name, title, image_url, link_url, region, district, category, open_hour, close_hour,
       description, plan_type, display_order, is_active
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [ownerUserId, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, description, planType, displayOrder, isActive ? 1 : 0]
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [ownerUserId, storeName, managerName, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, description, planType, displayOrder, isActive ? 1 : 0]
   );
   return result.insertId;
 }
@@ -341,7 +344,8 @@ async function createBusinessAd({
 async function findBusinessAdById(adId) {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT id, owner_user_id AS ownerUserId, title, image_url AS imageUrl, link_url AS linkUrl,
+    `SELECT id, owner_user_id AS ownerUserId, store_name AS storeName, manager_name AS managerName,
+            title, image_url AS imageUrl, link_url AS linkUrl,
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
             description, plan_type AS planType,
             display_order AS displayOrder, is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
@@ -353,6 +357,8 @@ async function findBusinessAdById(adId) {
 }
 
 async function updateBusinessAd(adId, {
+  storeName = '',
+  managerName = '',
   title,
   imageUrl,
   linkUrl,
@@ -369,10 +375,10 @@ async function updateBusinessAd(adId, {
   const pool = getPool();
   await pool.query(
     `UPDATE business_ads
-     SET title = ?, image_url = ?, link_url = ?, region = ?, district = ?, category = ?, open_hour = ?, close_hour = ?,
+     SET store_name = ?, manager_name = ?, title = ?, image_url = ?, link_url = ?, region = ?, district = ?, category = ?, open_hour = ?, close_hour = ?,
          description = ?, plan_type = ?, display_order = ?, is_active = ?
      WHERE id = ?`,
-    [title, imageUrl, linkUrl, region, district, category, openHour, closeHour, description, planType, displayOrder, isActive ? 1 : 0, adId]
+    [storeName, managerName, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, description, planType, displayOrder, isActive ? 1 : 0, adId]
   );
 }
 
