@@ -183,11 +183,8 @@ function getBoardLabel(boardType) {
 }
 
 function createArticleItem(post) {
-    const createdAt = formatDate(post.createdAt);
     const commentCount = Number(post.commentCount || 0);
     const viewCount = Number(post.viewCount || 0);
-    const recommendCount = Number(post.likeCount || post.recommendCount || 0);
-    const previewText = sanitizeHTML(getPreviewText(post));
     const authorName = sanitizeHTML(post.boardType === 'ANON' ? '익명' : (post.authorNickname || '익명'));
     const isNoticePost = Boolean(post.isNotice);
     const noticeType = String(post.noticeType || 'NOTICE').toUpperCase();
@@ -225,12 +222,9 @@ function createArticleItem(post) {
                     <span class="article-comment-inline">[${commentCount}]</span>
                     ${shouldShowNewBadge ? '<span class="article-new-badge">NEW</span>' : ''}
                 </div>
-                <p class="article-preview">${previewText}</p>
                 <div class="article-meta">
                     <span>${authorBadge}</span>
-                    <span>${createdAt}</span>
                     <span>조회수 : ${viewCount}</span>
-                    <span class="article-recommend">추천수 : ${recommendCount}</span>
                 </div>
             </a>
             <div class="article-side">
