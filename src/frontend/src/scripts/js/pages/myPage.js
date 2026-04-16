@@ -4,9 +4,6 @@
 let currentUser = null;
 let nicknameCheckState = { checked: false, available: false, value: '' };
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
-const AD_PROFILE_DRAFT_KEY = 'mnm.adProfileDraft';
-const BUSINESS_INFO_DRAFT_KEY = 'mnm.businessInfoDraft';
-const BUSINESS_INFO_REGISTERED_KEY = 'mnm.businessInfoRegistered';
 
 function formatPhoneNumber(value) {
     const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
@@ -115,49 +112,28 @@ function renderAdCenterSection(user) {
     adCenterSection.classList.toggle('hidden', !shouldShow);
 }
 
-function readStoredData(key) {
-    try {
-        const raw = window.localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : null;
-    } catch (error) {
-        return null;
-    }
+function normalizeRegistrationStatus(status) {
+    const value = String(status || '').trim().toLowerCase();
+    if (value === 'registered') return 'registered';
+    if (value === 'draft') return 'draft';
+    return 'unregistered';
 }
 
-function hasAnyValue(values) {
-    return Object.values(values).some((value) => String(value || '').trim());
-}
-
-function isAdProfileComplete(profile) {
+function hasCompleteAdProfile(profile) {
     if (!profile || typeof profile !== 'object') return false;
-
-    const requiredValues = {
-        businessName: profile.businessName || profile.storeName,
-        managerName: profile.managerName,
-        managerContact: profile.managerContact,
-        title: profile.title,
-        region: profile.region,
-        district: profile.district,
-        category: profile.category,
-        openHour: profile.openHour,
-        closeHour: profile.closeHour,
-        description: profile.description
-    };
-
-    return Object.values(requiredValues).every((value) => String(value || '').trim());
-}
-
-function isBusinessInfoComplete(info) {
-    if (!info || typeof info !== 'object') return false;
-    const requiredValues = {
-        licenseImageName: info.licenseImageName || info.licenseImageUrl,
-        businessNumber: info.businessNumber,
-        businessName: info.businessName,
-        businessOwner: info.businessOwner,
-        businessAddress: info.businessAddress,
-        billingType: info.billingType
-    };
-    return Object.values(requiredValues).every((value) => String(value || '').trim());
+    const requiredValues = [
+        profile.businessName || profile.storeName,
+        profile.managerName,
+        profile.managerContact,
+        profile.title,
+        profile.region,
+        profile.district,
+        profile.category,
+        profile.openHour,
+        profile.closeHour,
+        profile.description
+    ];
+    return requiredValues.every((value) => String(value || '').trim());
 }
 
 function applyStatusBadge(elementId, status) {
@@ -178,26 +154,23 @@ function applyStatusBadge(elementId, status) {
 }
 
 async function renderBusinessProfileStatuses() {
-    const adDraft = readStoredData(AD_PROFILE_DRAFT_KEY);
-    const businessDraft = readStoredData(BUSINESS_INFO_DRAFT_KEY);
-    const businessRegistered = readStoredData(BUSINESS_INFO_REGISTERED_KEY);
-
     let adStatus = 'unregistered';
     let businessStatus = 'unregistered';
 
     try {
         const response = await APIClient.get('/users/me/business-ads');
         const existingAd = Array.isArray(response?.content) ? response.content[0] : null;
-        if (isAdProfileComplete(existingAd)) adStatus = 'registered';
-        else if (hasAnyValue(adDraft || {})) adStatus = 'draft';
+        adStatus = normalizeRegistrationStatus(existingAd?.registrationStatus);
+        if (adStatus === 'unregistered' && hasCompleteAdProfile(existingAd)) adStatus = 'registered';
     } catch (error) {
-        if (hasAnyValue(adDraft || {})) adStatus = 'draft';
+        adStatus = 'unregistered';
     }
 
-    if (isBusinessInfoComplete(businessRegistered)) {
-        businessStatus = 'registered';
-    } else if (hasAnyValue(businessDraft || {})) {
-        businessStatus = 'draft';
+    try {
+        const profile = await APIClient.get('/users/me/business-profile');
+        businessStatus = normalizeRegistrationStatus(profile?.registrationStatus);
+    } catch (error) {
+        businessStatus = 'unregistered';
     }
 
     applyStatusBadge('mypage-ad-profile-status', adStatus);

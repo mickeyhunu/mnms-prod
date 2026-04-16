@@ -17,7 +17,9 @@ const {
   listMyBusinessAds,
   createMyBusinessAd,
   updateMyBusinessAd,
-  deleteMyBusinessAd
+  deleteMyBusinessAd,
+  getMyBusinessProfile,
+  saveMyBusinessProfile
 } = require('../controllers/userController');
 
 const router = express.Router();
@@ -36,5 +38,7 @@ router.get('/me/business-ads', authMiddleware, listMyBusinessAds);
 router.post('/me/business-ads', authMiddleware, createMyBusinessAd);
 router.put('/me/business-ads/:id', authMiddleware, updateMyBusinessAd);
 router.delete('/me/business-ads/:id', authMiddleware, deleteMyBusinessAd);
+router.get('/me/business-profile', authMiddleware, getMyBusinessProfile);
+router.put('/me/business-profile', authMiddleware, saveMyBusinessProfile);
 
 module.exports = router;

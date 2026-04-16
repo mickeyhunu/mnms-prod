@@ -30,7 +30,6 @@ const adProfileState = {
 };
 const DEFAULT_AD_IMAGE_URL = 'https://image.bubblealba.com/assets/advertiser/pending.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
-const AD_PROFILE_DRAFT_KEY = 'mnm.adProfileDraft';
 
 function createHourOptions(hourSelect) {
     if (!hourSelect) return;
@@ -204,15 +203,6 @@ function showSaveMessage(message) {
     alert(message);
 }
 
-function readDraftData() {
-    try {
-        const raw = window.localStorage.getItem(AD_PROFILE_DRAFT_KEY);
-        return raw ? JSON.parse(raw) : null;
-    } catch (error) {
-        return null;
-    }
-}
-
 function collectDraftData() {
     return {
         businessName: String(document.getElementById('ad-profile-name')?.value || '').trim(),
@@ -226,18 +216,6 @@ function collectDraftData() {
         closeHour: String(document.getElementById('ad-profile-close-hour')?.value || '').trim(),
         description: String(document.getElementById('ad-profile-description')?.value || '').trim()
     };
-}
-
-function hasAnyDraftValue(draft) {
-    return Object.values(draft || {}).some((value) => String(value || '').trim());
-}
-
-function stripEmptyDraftValues(draft) {
-    return Object.entries(draft || {}).reduce((acc, [key, value]) => {
-        const normalized = String(value || '').trim();
-        if (normalized) acc[key] = normalized;
-        return acc;
-    }, {});
 }
 
 function isAdProfileFormComplete() {
@@ -256,6 +234,16 @@ function isAdProfileFormComplete() {
     });
 }
 
+function stripEmptyValues(payload) {
+    return Object.entries(payload || {}).reduce((acc, [key, value]) => {
+        if (value === null || value === undefined) return acc;
+        const normalized = typeof value === 'string' ? value.trim() : value;
+        if (normalized === '') return acc;
+        acc[key] = normalized;
+        return acc;
+    }, {});
+}
+
 function updateAdProfileActionButtons() {
     const saveButton = document.getElementById('ad-profile-save-btn');
     const draftButton = document.getElementById('ad-profile-draft-btn');
@@ -266,45 +254,6 @@ function updateAdProfileActionButtons() {
 }
 
 function saveDraftData() {
-    const draft = stripEmptyDraftValues(collectDraftData());
-    if (!hasAnyDraftValue(draft)) {
-        window.localStorage.removeItem(AD_PROFILE_DRAFT_KEY);
-        updateAdProfileActionButtons();
-        return;
-    }
-    window.localStorage.setItem(AD_PROFILE_DRAFT_KEY, JSON.stringify(draft));
-    updateAdProfileActionButtons();
-}
-
-function applyDraftToForm(draft) {
-    if (!draft || typeof draft !== 'object') return;
-
-    const storeNameInput = document.getElementById('ad-profile-name');
-    const regionSelect = document.getElementById('ad-profile-region');
-    const districtSelect = document.getElementById('ad-profile-district');
-    const categorySelect = document.getElementById('ad-profile-category');
-    const openHourSelect = document.getElementById('ad-profile-open-hour');
-    const closeHourSelect = document.getElementById('ad-profile-close-hour');
-    const titleInput = document.getElementById('ad-profile-title');
-    const managerNameInput = document.getElementById('ad-profile-manager');
-    const managerContactInput = document.getElementById('ad-profile-manager-contact');
-    const descriptionInput = document.getElementById('ad-profile-description');
-    const descriptionEditor = document.getElementById('ad-profile-description-editor');
-
-    if (storeNameInput && draft.businessName) storeNameInput.value = draft.businessName;
-    if (regionSelect && draft.region) {
-        regionSelect.value = draft.region;
-        updateSelectOptions(districtSelect, REGION_DISTRICT_MAP[draft.region] || []);
-    }
-    if (districtSelect && draft.district) districtSelect.value = draft.district;
-    if (categorySelect && draft.category) categorySelect.value = draft.category;
-    if (openHourSelect && draft.openHour) openHourSelect.value = draft.openHour;
-    if (closeHourSelect && draft.closeHour) closeHourSelect.value = draft.closeHour;
-    if (titleInput && draft.title) titleInput.value = draft.title;
-    if (managerNameInput && draft.managerName) managerNameInput.value = draft.managerName;
-    if (managerContactInput && draft.managerContact) managerContactInput.value = formatPhoneNumber(draft.managerContact);
-    if (descriptionInput && draft.description) descriptionInput.value = draft.description;
-    if (descriptionEditor && draft.description) descriptionEditor.innerHTML = draft.description;
     updateAdProfileActionButtons();
 }
 
@@ -329,7 +278,7 @@ async function loadMyAdProfile() {
     if (existingAd) applyAdProfileToForm(existingAd);
 }
 
-async function saveAdProfile() {
+async function saveAdProfile({ forceDraft = false } = {}) {
     if (adProfileState.isSaving) return;
 
     const storeName = String(document.getElementById('ad-profile-name')?.value || '').trim();
@@ -344,22 +293,26 @@ async function saveAdProfile() {
     const managerContact = String(document.getElementById('ad-profile-manager-contact')?.value || '').trim();
     const description = String(document.getElementById('ad-profile-description')?.value || '').trim();
     const saveButton = document.getElementById('ad-profile-save-btn');
+    const draftButton = document.getElementById('ad-profile-draft-btn');
+    const registrationStatus = forceDraft ? 'DRAFT' : 'REGISTERED';
 
-    const requiredFieldError = getRequiredFieldError({
-        storeName,
-        managerName,
-        managerContact,
-        region,
-        district,
-        category,
-        openHour,
-        closeHour,
-        title,
-        description
-    });
-    if (requiredFieldError) {
-        showSaveMessage(requiredFieldError);
-        return;
+    if (!forceDraft) {
+        const requiredFieldError = getRequiredFieldError({
+            storeName,
+            managerName,
+            managerContact,
+            region,
+            district,
+            category,
+            openHour,
+            closeHour,
+            title,
+            description
+        });
+        if (requiredFieldError) {
+            showSaveMessage(requiredFieldError);
+            return;
+        }
     }
 
     try {
@@ -368,15 +321,19 @@ async function saveAdProfile() {
             saveButton.disabled = true;
             saveButton.textContent = '저장 중...';
         }
+        if (draftButton) {
+            draftButton.disabled = true;
+            draftButton.textContent = '저장 중...';
+        }
 
         if (managerContact && !PHONE_PATTERN.test(managerContact)) {
             showSaveMessage('담당자 연락처는 010-0000-0000 형식으로 입력해주세요.');
             return;
         }
 
-        const imageUrl = adProfileState.uploadedImageUrl || DEFAULT_AD_IMAGE_URL;
+        const imageUrl = adProfileState.uploadedImageUrl || (forceDraft ? '' : DEFAULT_AD_IMAGE_URL);
 
-        const payload = {
+        let payload = {
             businessName,
             managerName,
             managerContact,
@@ -390,9 +347,17 @@ async function saveAdProfile() {
             closeHour,
             description,
             planType: adProfileState.me?.isBusiness ? 'PREMIUM' : 'NORMAL',
-            isActive: true,
+            registrationStatus,
+            isActive: !forceDraft,
             displayOrder: 0
         };
+        if (forceDraft) {
+            payload = {
+                ...stripEmptyValues(payload),
+                registrationStatus: 'DRAFT',
+                isActive: false
+            };
+        }
 
         if (adProfileState.currentAdId) {
             await APIClient.put(`/users/me/business-ads/${adProfileState.currentAdId}`, payload);
@@ -401,8 +366,14 @@ async function saveAdProfile() {
             adProfileState.currentAdId = Number(created?.id || 0) || adProfileState.currentAdId;
         }
 
+        if (forceDraft) {
+            showSaveMessage('입력한 항목만 임시저장되었습니다.');
+            await loadMyAdProfile();
+            updateAdProfileActionButtons();
+            return;
+        }
+
         showSaveMessage('광고프로필이 저장되었습니다. 업체정보 메뉴에서 확인할 수 있습니다.');
-        window.localStorage.removeItem(AD_PROFILE_DRAFT_KEY);
         await loadMyAdProfile();
         window.location.href = '/my-page';
     } catch (error) {
@@ -412,6 +383,10 @@ async function saveAdProfile() {
         if (saveButton) {
             saveButton.disabled = false;
             saveButton.textContent = '광고프로필 저장';
+        }
+        if (draftButton) {
+            draftButton.disabled = false;
+            draftButton.textContent = '임시저장';
         }
     }
 }
@@ -473,16 +448,12 @@ async function initAdProfileManagementPage() {
         if (typeof initHeader === 'function') initHeader();
         Auth.bindLogoutButton();
         bindAdProfileInteractions();
-        applyDraftToForm(readDraftData());
         adProfileState.syncPreview?.();
 
         const saveButton = document.getElementById('ad-profile-save-btn');
         const draftButton = document.getElementById('ad-profile-draft-btn');
-        saveButton?.addEventListener('click', saveAdProfile);
-        draftButton?.addEventListener('click', () => {
-            saveDraftData();
-            showSaveMessage('입력한 항목만 임시저장되었습니다.');
-        });
+        saveButton?.addEventListener('click', () => saveAdProfile({ forceDraft: false }));
+        draftButton?.addEventListener('click', () => saveAdProfile({ forceDraft: true }));
 
         updateAdProfileActionButtons();
         await loadMyAdProfile();
