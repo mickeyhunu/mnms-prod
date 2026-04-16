@@ -1,6 +1,11 @@
 /**
  * 파일 역할: register 페이지의 이벤트/데이터 흐름을 초기화하는 페이지 스크립트 파일.
  */
+
+const PORTONE_BROWSER_SDK_URL = 'https://cdn.portone.io/v2/browser-sdk.js';
+const PORTONE_STORE_ID = 'store-ef30fda0-ff53-48f6-aab5-9b82f4a70672';
+const PORTONE_CHANNEL_KEY = 'channel-key-73e3732b-f4ef-4bac-ad22-9ca474348c76';
+
 function initRegisterPage() {
 
     if (Auth.redirectIfAuthenticated()) {
@@ -175,33 +180,58 @@ function setupNicknameCheck() {
     }
 }
 
-async function handleIdentityVerification() {
-    const popupName = 'kcpIdentityPopup';
-    const popup = window.open('', popupName, 'width=460,height=640,scrollbars=yes,resizable=yes');
-    if (!popup) {
-        showNotification('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.', 'error');
-        return;
+async function loadPortOneSdk() {
+    if (window.PortOne && typeof window.PortOne.requestIdentityVerification === 'function') {
+        return window.PortOne;
     }
 
-    const authForm = document.getElementById('kcp-auth-form');
-
-    try {
-        const response = await requestIdentityVerification({
-            popupName,
-            popup,
-            authForm
+    const existingScript = document.querySelector(`script[src="${PORTONE_BROWSER_SDK_URL}"]`);
+    if (existingScript) {
+        await new Promise((resolve, reject) => {
+            existingScript.addEventListener('load', resolve, { once: true });
+            existingScript.addEventListener('error', () => reject(new Error('PortOne SDK 로드에 실패했습니다.')), { once: true });
         });
+        return window.PortOne;
+    }
 
-        if (!response?.success) {
-            throw new Error(response?.message || '본인인증에 실패했습니다.');
+    await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = PORTONE_BROWSER_SDK_URL;
+        script.async = true;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error('PortOne SDK 로드에 실패했습니다.'));
+        document.head.appendChild(script);
+    });
+
+    return window.PortOne;
+}
+
+async function handleIdentityVerification() {
+    try {
+        const PortOne = await loadPortOneSdk();
+        if (!PortOne || typeof PortOne.requestIdentityVerification !== 'function') {
+            throw new Error('PortOne 본인인증 모듈을 찾을 수 없습니다.');
         }
 
-        applyIdentityResponse(response);
-        popup.close();
+        const response = await PortOne.requestIdentityVerification({
+            storeId: PORTONE_STORE_ID,
+            identityVerificationId: `test-${Date.now()}`,
+            channelKey: PORTONE_CHANNEL_KEY
+        });
+
+        if (response?.code) {
+            throw new Error(response.message || '본인인증에 실패했습니다.');
+        }
+
+        setIdentityVerified(true);
+        const statusElement = document.getElementById('identity-status');
+        if (statusElement) {
+            statusElement.textContent = 'PortOne 본인인증 요청이 완료되었습니다.';
+        }
+
         showNotification('본인인증이 완료되었습니다.', 'success');
         showStep('detail');
     } catch (error) {
-        popup.close();
         showNotification(error.message || '본인인증 중 오류가 발생했습니다.', 'error');
     }
 }
