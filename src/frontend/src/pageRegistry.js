@@ -194,6 +194,7 @@ const pageRegistry = {
                     <h3>광고프로필</h3>
                     <input id="ad-profile-name" type="text" maxlength="24" placeholder="업소명을 입력해주세요.">
                     <input id="ad-profile-manager" type="text" maxlength="24" placeholder="담당자명을 입력해주세요.">
+                    <input id="ad-profile-manager-contact" type="text" maxlength="13" placeholder="담당자 연락처를 입력해주세요.">
 
                     <div class="ad-profile-grid ad-profile-grid--region">
                         <label>
@@ -247,39 +248,28 @@ const pageRegistry = {
                             <button type="button" class="ad-profile-editor-btn" data-editor-command="justifyLeft" title="왼쪽 정렬">좌</button>
                             <button type="button" class="ad-profile-editor-btn" data-editor-command="justifyCenter" title="가운데 정렬">중</button>
                             <button type="button" class="ad-profile-editor-btn" data-editor-command="justifyRight" title="오른쪽 정렬">우</button>
+                            <button type="button" class="ad-profile-editor-btn" id="ad-profile-editor-image-btn" title="이미지 첨부">이미지</button>
                         </div>
+                        <input id="ad-profile-editor-image-input" class="hidden" accept="image/*" type="file">
                         <div id="ad-profile-description-editor" class="ad-profile-editor-content" contenteditable="true" data-placeholder="내용을 입력해주세요."></div>
                     </div>
                     <textarea id="ad-profile-description" class="hidden" maxlength="1000" placeholder="내용을 입력해주세요."></textarea>
                 </div>
 
-                <div class="ad-profile-section">
-                    <h3>대표이미지</h3>
-                    <div class="ad-profile-image-row">
-                        <input id="ad-profile-image-input" class="hidden" accept="image/*" type="file">
-                        <button id="ad-profile-image-upload-btn" class="ad-profile-image-upload-btn" type="button" aria-label="대표이미지 업로드">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 20 20" width="18" height="18">
-                                <path stroke-linecap="round" stroke-width="1.5" d="M9.754.75v18M18.75 9.753h-18"></path>
-                            </svg>
-                        </button>
-                        <img id="ad-profile-image-preview" class="ad-profile-image-preview hidden" alt="대표이미지 미리보기">
-                    </div>
-                    <div class="ad-profile-guide">
-                        <p>• 이미지 권장 사이즈: 가로 600px, 세로 600px (1:1 비율)</p>
-                        <p>• 움직이는 이미지는 등록할 수 없어요.</p>
-                    </div>
-                </div>
-
                 <div class="ad-profile-preview">
                     <h3>미리보기</h3>
-                    <article class="ad-profile-preview-card">
-                        <img id="ad-profile-preview-thumb" src="https://image.bubblealba.com/assets/advertiser/pending.webp" alt="광고 썸네일">
-                        <div class="ad-profile-preview-content">
-                            <strong id="ad-profile-preview-title">제목을 입력해주세요.</strong>
-                            <p id="ad-profile-preview-sub">협의 · 선택 · 선택</p>
-                            <p id="ad-profile-preview-desc">내용을 입력해주세요.</p>
-                        </div>
-                    </article>
+                    <ul class="business-directory-list ad-profile-preview-list">
+                        <li class="business-directory-item">
+                            <div class="business-directory-main">
+                                <h4 id="ad-profile-preview-title">[선택-업소명] 제목을 입력해주세요.</h4>
+                                <div class="business-directory-meta">
+                                    <span class="business-directory-manager" id="ad-profile-preview-sub">담당자 · 연락처</span>
+                                    <span class="business-directory-views" id="ad-profile-preview-region">선택 선택 · 선택 · 시간선택 ~ 시간선택</span>
+                                </div>
+                                <p id="ad-profile-preview-desc" class="ad-profile-preview-desc">내용을 입력해주세요.</p>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
 
                 <div class="ad-profile-notice ad-profile-notice--bottom">

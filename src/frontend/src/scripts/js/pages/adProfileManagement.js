@@ -27,6 +27,8 @@ const adProfileState = {
     me: null,
     isSaving: false
 };
+const DEFAULT_AD_IMAGE_URL = 'https://image.bubblealba.com/assets/advertiser/pending.webp';
+const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 
 function createHourOptions(hourSelect) {
     if (!hourSelect) return;
@@ -84,16 +86,16 @@ function bindAdProfileInteractions() {
     const titleInput = document.getElementById('ad-profile-title');
     const businessNameInput = document.getElementById('ad-profile-name');
     const managerNameInput = document.getElementById('ad-profile-manager');
+    const managerContactInput = document.getElementById('ad-profile-manager-contact');
     const descriptionInput = document.getElementById('ad-profile-description');
     const descriptionEditor = document.getElementById('ad-profile-description-editor');
     const editorToolbar = document.querySelector('.ad-profile-editor-toolbar');
-    const imageInput = document.getElementById('ad-profile-image-input');
-    const imageUploadButton = document.getElementById('ad-profile-image-upload-btn');
-    const imagePreview = document.getElementById('ad-profile-image-preview');
-    const previewThumb = document.getElementById('ad-profile-preview-thumb');
+    const editorImageButton = document.getElementById('ad-profile-editor-image-btn');
+    const editorImageInput = document.getElementById('ad-profile-editor-image-input');
 
     const previewTitle = document.getElementById('ad-profile-preview-title');
     const previewSub = document.getElementById('ad-profile-preview-sub');
+    const previewRegion = document.getElementById('ad-profile-preview-region');
     const previewDesc = document.getElementById('ad-profile-preview-desc');
 
     const syncDescriptionValue = () => {
@@ -108,11 +110,14 @@ function bindAdProfileInteractions() {
     updateSelectOptions(regionSelect, Object.keys(REGION_DISTRICT_MAP));
 
     const syncPreview = () => {
+        const storeName = businessNameInput?.value?.trim() || '업소명';
         const title = titleInput?.value?.trim() || '제목을 입력해주세요.';
         const description = syncDescriptionValue() || '내용을 입력해주세요.';
         const region = regionSelect?.value?.trim() || '선택';
         const district = districtSelect?.value?.trim() || '선택';
         const category = categorySelect?.value?.trim() || '선택';
+        const managerName = managerNameInput?.value?.trim() || '담당자';
+        const managerContact = managerContactInput?.value?.trim() || '연락처';
         const openHour = openHourSelect?.value?.trim() || '시간선택';
         const closeHour = closeHourSelect?.value?.trim() || '시간선택';
         const isOpenHourSelected = openHour && openHour !== '시간선택';
@@ -121,9 +126,10 @@ function bindAdProfileInteractions() {
             ? `${openHour} ~ ${closeHour}`
             : '시간선택 ~ 시간선택';
 
-        if (previewTitle) previewTitle.textContent = title;
+        if (previewTitle) previewTitle.textContent = `[${region}-${storeName}] ${title}`;
         if (previewDesc) previewDesc.textContent = description;
-        if (previewSub) previewSub.textContent = `${region} ${district} · ${category} · ${formattedTime}`;
+        if (previewSub) previewSub.textContent = `${managerName} · ${managerContact}`;
+        if (previewRegion) previewRegion.textContent = `${region} ${district} · ${category} · ${formattedTime}`;
     };
 
     if (descriptionEditor && descriptionInput) {
@@ -142,35 +148,49 @@ function bindAdProfileInteractions() {
         syncPreview();
     });
 
+    managerContactInput?.addEventListener('input', () => {
+        managerContactInput.value = formatPhoneNumber(managerContactInput.value);
+        syncPreview();
+    });
+
+    editorImageButton?.addEventListener('click', () => editorImageInput?.click());
+    editorImageInput?.addEventListener('change', async () => {
+        const file = editorImageInput.files?.[0];
+        if (!file || !file.type.startsWith('image/')) return;
+
+        try {
+            const imageUrl = await uploadAdImage(file);
+            if (!descriptionEditor) return;
+            descriptionEditor.focus();
+            document.execCommand('insertImage', false, imageUrl);
+            syncPreview();
+        } catch (error) {
+            showSaveMessage(error.message || '에디터 이미지 첨부에 실패했습니다.', true);
+        } finally {
+            editorImageInput.value = '';
+        }
+    });
+
     regionSelect?.addEventListener('change', () => {
         const selectedRegion = regionSelect.value;
         updateSelectOptions(districtSelect, REGION_DISTRICT_MAP[selectedRegion] || []);
         syncPreview();
     });
 
-    [districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput, businessNameInput, managerNameInput]
+    [districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput, businessNameInput, managerNameInput, managerContactInput]
         .forEach((element) => {
             element?.addEventListener('input', syncPreview);
             element?.addEventListener('change', syncPreview);
         });
 
-    imageUploadButton?.addEventListener('click', () => imageInput?.click());
-    imageInput?.addEventListener('change', () => {
-        const file = imageInput.files?.[0];
-        if (!file || !file.type.startsWith('image/')) return;
-
-        const objectUrl = URL.createObjectURL(file);
-        if (imagePreview) {
-            imagePreview.src = objectUrl;
-            imagePreview.classList.remove('hidden');
-        }
-        if (previewThumb) {
-            previewThumb.src = objectUrl;
-        }
-        adProfileState.uploadedImageUrl = '';
-    });
-
     syncPreview();
+}
+
+function formatPhoneNumber(value) {
+    const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+    return `${digits.slice(0, 3)}-${digits.slice(3, digits.length === 10 ? 6 : 7)}-${digits.slice(digits.length === 10 ? 6 : 7)}`;
 }
 
 function showSaveMessage(message, isError = false) {
@@ -199,8 +219,8 @@ async function saveAdProfile() {
     const title = String(document.getElementById('ad-profile-title')?.value || '').trim();
     const businessName = String(document.getElementById('ad-profile-name')?.value || '').trim();
     const managerName = String(document.getElementById('ad-profile-manager')?.value || '').trim();
+    const managerContact = String(document.getElementById('ad-profile-manager-contact')?.value || '').trim();
     const description = String(document.getElementById('ad-profile-description')?.value || '').trim();
-    const imageInput = document.getElementById('ad-profile-image-input');
     const saveButton = document.getElementById('ad-profile-save-btn');
 
     if (!region || !district || !title) {
@@ -215,21 +235,17 @@ async function saveAdProfile() {
             saveButton.textContent = '저장 중...';
         }
 
-        let imageUrl = adProfileState.uploadedImageUrl;
-        const selectedFile = imageInput?.files?.[0];
-        if (selectedFile) {
-            imageUrl = await uploadAdImage(selectedFile);
-            adProfileState.uploadedImageUrl = imageUrl;
-        }
-
-        if (!imageUrl) {
-            showSaveMessage('대표이미지를 업로드해주세요.', true);
+        if (managerContact && !PHONE_PATTERN.test(managerContact)) {
+            showSaveMessage('담당자 연락처는 010-0000-0000 형식으로 입력해주세요.', true);
             return;
         }
+
+        const imageUrl = adProfileState.uploadedImageUrl || DEFAULT_AD_IMAGE_URL;
 
         const payload = {
             businessName,
             managerName,
+            managerContact,
             title,
             imageUrl,
             linkUrl: '#',
@@ -276,10 +292,9 @@ function applyAdProfileToForm(ad) {
     const titleInput = document.getElementById('ad-profile-title');
     const businessNameInput = document.getElementById('ad-profile-name');
     const managerNameInput = document.getElementById('ad-profile-manager');
+    const managerContactInput = document.getElementById('ad-profile-manager-contact');
     const descriptionInput = document.getElementById('ad-profile-description');
     const descriptionEditor = document.getElementById('ad-profile-description-editor');
-    const imagePreview = document.getElementById('ad-profile-image-preview');
-    const previewThumb = document.getElementById('ad-profile-preview-thumb');
 
     if (storeNameInput) storeNameInput.value = ad.businessName || ad.storeName || '';
     if (managerNameInput) managerNameInput.value = ad.managerName || '';
@@ -294,16 +309,10 @@ function applyAdProfileToForm(ad) {
     if (titleInput) titleInput.value = ad.title || '';
     if (businessNameInput) businessNameInput.value = ad.businessName || '';
     if (managerNameInput) managerNameInput.value = ad.managerName || '';
+    if (managerContactInput) managerContactInput.value = formatPhoneNumber(ad.managerContact || '');
     if (descriptionInput) descriptionInput.value = ad.description || '';
     if (descriptionEditor) descriptionEditor.innerHTML = ad.description || '';
-    if (imagePreview && ad.imageUrl) {
-        imagePreview.src = ad.imageUrl;
-        imagePreview.classList.remove('hidden');
-    }
-    if (previewThumb && ad.imageUrl) {
-        previewThumb.src = ad.imageUrl;
-    }
-    adProfileState.uploadedImageUrl = ad.imageUrl || '';
+    adProfileState.uploadedImageUrl = ad.imageUrl || DEFAULT_AD_IMAGE_URL;
 }
 
 async function initAdProfileManagementPage() {
