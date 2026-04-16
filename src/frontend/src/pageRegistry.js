@@ -192,20 +192,20 @@ const pageRegistry = {
 
                 <div class="ad-profile-section">
                     <h3>광고프로필</h3>
-                    <input id="ad-profile-name" type="text" maxlength="24" placeholder="업소명을 입력해주세요.">
-                    <input id="ad-profile-manager" type="text" maxlength="24" placeholder="담당자명을 입력해주세요.">
-                    <input id="ad-profile-manager-contact" type="text" maxlength="13" placeholder="담당자 연락처를 입력해주세요.">
+                    <input id="ad-profile-name" type="text" maxlength="24" placeholder="업소명을 입력해주세요." required>
+                    <input id="ad-profile-manager" type="text" maxlength="24" placeholder="담당자명을 입력해주세요." required>
+                    <input id="ad-profile-manager-contact" type="text" maxlength="13" placeholder="담당자 연락처를 입력해주세요." required>
 
                     <div class="ad-profile-grid ad-profile-grid--region">
                         <label>
                             <span>지역</span>
-                            <select id="ad-profile-region">
+                            <select id="ad-profile-region" required>
                                 <option value="" selected>선택</option>
                             </select>
                         </label>
                         <label>
                             <span>세부 지역</span>
-                            <select id="ad-profile-district">
+                            <select id="ad-profile-district" required>
                                 <option value="" selected>선택</option>
                             </select>
                         </label>
@@ -214,7 +214,7 @@ const pageRegistry = {
                     <div class="ad-profile-grid">
                         <label>
                             <span>업종</span>
-                            <select id="ad-profile-category">
+                            <select id="ad-profile-category" required>
                                 <option value="" selected>선택</option>
                                 <option value="룸">룸</option>
                                 <option value="바">바</option>
@@ -228,9 +228,9 @@ const pageRegistry = {
                         <label>
                             <span>영업시간</span>
                             <div class="ad-profile-time-row">
-                                <select id="ad-profile-open-hour"></select>
+                                <select id="ad-profile-open-hour" required></select>
                                 <span class="ad-profile-time-separator">~</span>
-                                <select id="ad-profile-close-hour"></select>
+                                <select id="ad-profile-close-hour" required></select>
                             </div>
                         </label>
                     </div>
@@ -238,7 +238,7 @@ const pageRegistry = {
 
                 <div class="ad-profile-section">
                     <h3>상세정보</h3>
-                    <input id="ad-profile-title" type="text" maxlength="50" placeholder="제목을 입력해주세요.">
+                    <input id="ad-profile-title" type="text" maxlength="50" placeholder="제목을 입력해주세요." required>
                     <div class="ad-profile-editor" aria-label="광고 상세정보 에디터">
                         <div class="ad-profile-editor-toolbar" role="toolbar" aria-label="텍스트 편집 도구">
                             <button type="button" class="ad-profile-editor-btn" data-editor-command="bold" title="굵게"><strong>B</strong></button>
@@ -253,7 +253,7 @@ const pageRegistry = {
                         <input id="ad-profile-editor-image-input" class="hidden" accept="image/*" type="file">
                         <div id="ad-profile-description-editor" class="ad-profile-editor-content" contenteditable="true" data-placeholder="내용을 입력해주세요."></div>
                     </div>
-                    <textarea id="ad-profile-description" class="hidden" maxlength="1000" placeholder="내용을 입력해주세요."></textarea>
+                    <textarea id="ad-profile-description" class="hidden" maxlength="1000" placeholder="내용을 입력해주세요." required></textarea>
                 </div>
 
                 <div class="ad-profile-preview">
@@ -278,7 +278,6 @@ const pageRegistry = {
                 </div>
                 <div class="ad-profile-submit-wrap">
                     <button id="ad-profile-save-btn" class="btn btn-primary" type="button">광고프로필 저장</button>
-                    <p id="ad-profile-save-message" class="text-muted"></p>
                 </div>
             </section>
         </div>

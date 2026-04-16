@@ -164,7 +164,7 @@ function bindAdProfileInteractions() {
             document.execCommand('insertImage', false, imageUrl);
             syncPreview();
         } catch (error) {
-            showSaveMessage(error.message || '에디터 이미지 첨부에 실패했습니다.', true);
+            showSaveMessage(error.message || '에디터 이미지 첨부에 실패했습니다.');
         } finally {
             editorImageInput.value = '';
         }
@@ -193,11 +193,22 @@ function formatPhoneNumber(value) {
     return `${digits.slice(0, 3)}-${digits.slice(3, digits.length === 10 ? 6 : 7)}-${digits.slice(digits.length === 10 ? 6 : 7)}`;
 }
 
-function showSaveMessage(message, isError = false) {
-    const messageElement = document.getElementById('ad-profile-save-message');
-    if (!messageElement) return;
-    messageElement.textContent = message;
-    messageElement.style.color = isError ? '#dc2626' : '#15803d';
+function showSaveMessage(message) {
+    alert(message);
+}
+
+function getRequiredFieldError({ storeName, managerName, managerContact, region, district, category, openHour, closeHour, title, description }) {
+    if (!storeName) return '업소명을 입력해주세요.';
+    if (!managerName) return '담당자명을 입력해주세요.';
+    if (!managerContact) return '담당자 연락처를 입력해주세요.';
+    if (!region) return '지역을 선택해주세요.';
+    if (!district) return '세부 지역을 선택해주세요.';
+    if (!category) return '업종을 선택해주세요.';
+    if (!openHour) return '영업 시작 시간을 선택해주세요.';
+    if (!closeHour) return '영업 종료 시간을 선택해주세요.';
+    if (!title) return '제목을 입력해주세요.';
+    if (!description) return '상세정보 내용을 입력해주세요.';
+    return '';
 }
 
 async function loadMyAdProfile() {
@@ -217,14 +228,26 @@ async function saveAdProfile() {
     const openHour = String(document.getElementById('ad-profile-open-hour')?.value || '').trim();
     const closeHour = String(document.getElementById('ad-profile-close-hour')?.value || '').trim();
     const title = String(document.getElementById('ad-profile-title')?.value || '').trim();
-    const businessName = String(document.getElementById('ad-profile-name')?.value || '').trim();
+    const businessName = storeName;
     const managerName = String(document.getElementById('ad-profile-manager')?.value || '').trim();
     const managerContact = String(document.getElementById('ad-profile-manager-contact')?.value || '').trim();
     const description = String(document.getElementById('ad-profile-description')?.value || '').trim();
     const saveButton = document.getElementById('ad-profile-save-btn');
 
-    if (!region || !district || !title) {
-        showSaveMessage('지역/세부 지역/제목은 필수입니다.', true);
+    const requiredFieldError = getRequiredFieldError({
+        storeName,
+        managerName,
+        managerContact,
+        region,
+        district,
+        category,
+        openHour,
+        closeHour,
+        title,
+        description
+    });
+    if (requiredFieldError) {
+        showSaveMessage(requiredFieldError);
         return;
     }
 
@@ -236,7 +259,7 @@ async function saveAdProfile() {
         }
 
         if (managerContact && !PHONE_PATTERN.test(managerContact)) {
-            showSaveMessage('담당자 연락처는 010-0000-0000 형식으로 입력해주세요.', true);
+            showSaveMessage('담당자 연락처는 010-0000-0000 형식으로 입력해주세요.');
             return;
         }
 
@@ -269,8 +292,9 @@ async function saveAdProfile() {
 
         showSaveMessage('광고프로필이 저장되었습니다. 업체정보 메뉴에서 확인할 수 있습니다.');
         await loadMyAdProfile();
+        window.location.href = '/my-page';
     } catch (error) {
-        showSaveMessage(error.message || '광고프로필 저장에 실패했습니다.', true);
+        showSaveMessage(error.message || '광고프로필 저장에 실패했습니다.');
     } finally {
         adProfileState.isSaving = false;
         if (saveButton) {
