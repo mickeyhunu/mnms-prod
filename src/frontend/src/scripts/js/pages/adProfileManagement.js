@@ -232,13 +232,48 @@ function hasAnyDraftValue(draft) {
     return Object.values(draft || {}).some((value) => String(value || '').trim());
 }
 
-function saveDraftData() {
+function stripEmptyDraftValues(draft) {
+    return Object.entries(draft || {}).reduce((acc, [key, value]) => {
+        const normalized = String(value || '').trim();
+        if (normalized) acc[key] = normalized;
+        return acc;
+    }, {});
+}
+
+function isAdProfileFormComplete() {
     const draft = collectDraftData();
+    return !getRequiredFieldError({
+        storeName: draft.businessName,
+        managerName: draft.managerName,
+        managerContact: draft.managerContact,
+        region: draft.region,
+        district: draft.district,
+        category: draft.category,
+        openHour: draft.openHour,
+        closeHour: draft.closeHour,
+        title: draft.title,
+        description: draft.description
+    });
+}
+
+function updateAdProfileActionButtons() {
+    const saveButton = document.getElementById('ad-profile-save-btn');
+    const draftButton = document.getElementById('ad-profile-draft-btn');
+    const isComplete = isAdProfileFormComplete();
+
+    saveButton?.classList.toggle('hidden', !isComplete);
+    draftButton?.classList.toggle('hidden', isComplete);
+}
+
+function saveDraftData() {
+    const draft = stripEmptyDraftValues(collectDraftData());
     if (!hasAnyDraftValue(draft)) {
         window.localStorage.removeItem(AD_PROFILE_DRAFT_KEY);
+        updateAdProfileActionButtons();
         return;
     }
     window.localStorage.setItem(AD_PROFILE_DRAFT_KEY, JSON.stringify(draft));
+    updateAdProfileActionButtons();
 }
 
 function applyDraftToForm(draft) {
@@ -270,6 +305,7 @@ function applyDraftToForm(draft) {
     if (managerContactInput && draft.managerContact) managerContactInput.value = formatPhoneNumber(draft.managerContact);
     if (descriptionInput && draft.description) descriptionInput.value = draft.description;
     if (descriptionEditor && draft.description) descriptionEditor.innerHTML = draft.description;
+    updateAdProfileActionButtons();
 }
 
 function getRequiredFieldError({ storeName, managerName, managerContact, region, district, category, openHour, closeHour, title, description }) {
@@ -414,6 +450,7 @@ function applyAdProfileToForm(ad) {
     if (descriptionEditor) descriptionEditor.innerHTML = ad.description || '';
     adProfileState.uploadedImageUrl = ad.imageUrl || DEFAULT_AD_IMAGE_URL;
     adProfileState.syncPreview?.();
+    updateAdProfileActionButtons();
 }
 
 async function initAdProfileManagementPage() {
@@ -440,9 +477,16 @@ async function initAdProfileManagementPage() {
         adProfileState.syncPreview?.();
 
         const saveButton = document.getElementById('ad-profile-save-btn');
+        const draftButton = document.getElementById('ad-profile-draft-btn');
         saveButton?.addEventListener('click', saveAdProfile);
+        draftButton?.addEventListener('click', () => {
+            saveDraftData();
+            showSaveMessage('입력한 항목만 임시저장되었습니다.');
+        });
 
+        updateAdProfileActionButtons();
         await loadMyAdProfile();
+        updateAdProfileActionButtons();
     } catch (error) {
         alert(error.message || '광고프로필 페이지를 불러오지 못했습니다.');
     }
