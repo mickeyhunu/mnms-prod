@@ -49,15 +49,16 @@ function renderBusinessAds(ads) {
         const businessName = sanitizeHTML(ad.businessName || ad.companyName || ad.ownerNickname || '업소');
         const managerName = sanitizeHTML(ad.managerName || ad.profileManagerName || ad.ownerNickname || '담당자');
         const baseTitle = sanitizeHTML(ad.title || '업체정보');
-        const title = `[${regionLabel}-${businessName}-${managerName}] ${baseTitle}`;
+        const title = `[${regionLabel}-${businessName}] ${baseTitle}`;
         const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
         return `
             <li class="business-directory-item">
                 <div class="business-directory-main">
                     <h4>${title}</h4>
-                </div>
-                <div class="business-directory-meta">
-                    <span class="business-directory-views">조회 ${viewCount}</span>
+                    <div class="business-directory-meta">
+                        <span class="business-directory-manager">${managerName}</span>
+                        <span class="business-directory-views">조회수 ${viewCount}</span>
+                    </div>
                 </div>
             </li>
         `;
