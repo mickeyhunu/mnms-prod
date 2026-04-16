@@ -273,7 +273,7 @@ const pageRegistry = {
                 </div>
 
                 <div class="ad-profile-notice ad-profile-notice--bottom">
-                    <p>버블알바 광고관리 규정에 위배되는 내용을 입력할 경우,</p>
+                    <p>미드나잇맨즈 광고관리 규정에 위배되는 내용을 입력할 경우,</p>
                     <p>별도 안내 없이 수정되거나 반려될 수 있어요.</p>
                 </div>
                 <div class="ad-profile-submit-wrap">
