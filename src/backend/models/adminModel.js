@@ -260,10 +260,10 @@ async function deleteAd(adId) {
 async function listBusinessAdsByOwner(ownerUserId) {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT id, owner_user_id AS ownerUserId, store_name AS storeName, manager_name AS managerName,
+    `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, manager_name AS managerName,
             title, image_url AS imageUrl, link_url AS linkUrl,
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
-            description, plan_type AS planType,
+            description, plan_type AS planType, view_count AS viewCount,
             display_order AS displayOrder, is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
       WHERE owner_user_id = ?
@@ -299,12 +299,15 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
   }
 
   const [rows] = await pool.query(
-    `SELECT ba.id, ba.owner_user_id AS ownerUserId, ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl,
+    `SELECT ba.id, ba.owner_user_id AS ownerUserId, ba.business_name AS businessName, ba.manager_name AS managerName,
+            ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl,
             ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
             ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.created_at AS createdAt,
-            COALESCE(u.nickname, '업체') AS ownerNickname
+            ba.view_count AS viewCount, COALESCE(u.nickname, '업체') AS ownerNickname,
+            COALESCE(bp.company_name, '') AS companyName, COALESCE(bp.manager_name, '') AS profileManagerName
        FROM business_ads ba
        LEFT JOIN users u ON u.id = ba.owner_user_id
+       LEFT JOIN business_profiles bp ON bp.user_id = ba.owner_user_id
       WHERE ${whereConditions.join(' AND ')}
       ORDER BY CASE WHEN ba.plan_type = 'PREMIUM' THEN 0 ELSE 1 END, ba.display_order ASC, ba.id DESC`,
     whereParams
@@ -315,7 +318,7 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
 
 async function createBusinessAd({
   ownerUserId,
-  storeName = '',
+  businessName = '',
   managerName = '',
   title,
   imageUrl,
@@ -333,10 +336,10 @@ async function createBusinessAd({
   const pool = getPool();
   const [result] = await pool.query(
     `INSERT INTO business_ads (
-      owner_user_id, store_name, manager_name, title, image_url, link_url, region, district, category, open_hour, close_hour,
+      owner_user_id, business_name, manager_name, title, image_url, link_url, region, district, category, open_hour, close_hour,
       description, plan_type, display_order, is_active
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [ownerUserId, storeName, managerName, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, description, planType, displayOrder, isActive ? 1 : 0]
+    [ownerUserId, businessName, managerName, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, description, planType, displayOrder, isActive ? 1 : 0]
   );
   return result.insertId;
 }
@@ -344,10 +347,10 @@ async function createBusinessAd({
 async function findBusinessAdById(adId) {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT id, owner_user_id AS ownerUserId, store_name AS storeName, manager_name AS managerName,
+    `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, manager_name AS managerName,
             title, image_url AS imageUrl, link_url AS linkUrl,
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
-            description, plan_type AS planType,
+            description, plan_type AS planType, view_count AS viewCount,
             display_order AS displayOrder, is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
       WHERE id = ?`,
@@ -357,7 +360,7 @@ async function findBusinessAdById(adId) {
 }
 
 async function updateBusinessAd(adId, {
-  storeName = '',
+  businessName = '',
   managerName = '',
   title,
   imageUrl,
@@ -375,10 +378,25 @@ async function updateBusinessAd(adId, {
   const pool = getPool();
   await pool.query(
     `UPDATE business_ads
-     SET store_name = ?, manager_name = ?, title = ?, image_url = ?, link_url = ?, region = ?, district = ?, category = ?, open_hour = ?, close_hour = ?,
+     SET business_name = ?, manager_name = ?, title = ?, image_url = ?, link_url = ?, region = ?, district = ?, category = ?, open_hour = ?, close_hour = ?,
          description = ?, plan_type = ?, display_order = ?, is_active = ?
      WHERE id = ?`,
-    [storeName, managerName, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, description, planType, displayOrder, isActive ? 1 : 0, adId]
+    [businessName, managerName, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, description, planType, displayOrder, isActive ? 1 : 0, adId]
+  );
+}
+
+async function increaseBusinessAdViewCounts(adIds = []) {
+  if (!Array.isArray(adIds) || !adIds.length) return;
+  const normalizedIds = [...new Set(adIds.map((id) => Number.parseInt(id, 10)).filter((id) => Number.isInteger(id) && id > 0))];
+  if (!normalizedIds.length) return;
+
+  const pool = getPool();
+  const placeholders = normalizedIds.map(() => '?').join(', ');
+  await pool.query(
+    `UPDATE business_ads
+        SET view_count = view_count + 1
+      WHERE id IN (${placeholders})`,
+    normalizedIds
   );
 }
 
@@ -851,6 +869,7 @@ module.exports = {
   deleteAd,
   listBusinessAdsByOwner,
   listPublicBusinessAds,
+  increaseBusinessAdViewCounts,
   createBusinessAd,
   findBusinessAdById,
   updateBusinessAd,

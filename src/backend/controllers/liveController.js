@@ -116,13 +116,19 @@ async function getBusinessAds(req, res, next) {
     const category = String(req.query.category || '').trim();
     const keyword = String(req.query.keyword || '').trim();
     const ads = await adminModel.listPublicBusinessAds({ region, district, category, keyword });
+    const adIds = ads.map((ad) => Number.parseInt(ad.id, 10)).filter((id) => Number.isInteger(id) && id > 0);
+    await adminModel.increaseBusinessAdViewCounts(adIds);
+    const content = ads.map((ad) => ({
+      ...ad,
+      viewCount: Number(ad.viewCount || 0) + 1
+    }));
     return res.json({
       region: region || null,
       district: district || null,
       category: category || null,
       keyword: keyword || null,
-      content: ads,
-      totalElements: ads.length
+      content,
+      totalElements: content.length
     });
   } catch (error) {
     return handleLiveError(error, next, res);
