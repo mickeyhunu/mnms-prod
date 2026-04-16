@@ -266,7 +266,6 @@ const pageRegistry = {
                                     <span class="business-directory-manager" id="ad-profile-preview-sub">담당자 · 연락처</span>
                                     <span class="business-directory-views" id="ad-profile-preview-region">선택 선택 · 선택 · 시간선택 ~ 시간선택</span>
                                 </div>
-                                <p id="ad-profile-preview-desc" class="ad-profile-preview-desc">내용을 입력해주세요.</p>
                             </div>
                         </li>
                     </ul>
