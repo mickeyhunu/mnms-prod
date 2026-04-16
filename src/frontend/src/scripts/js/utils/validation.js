@@ -38,8 +38,12 @@ function validateRegisterForm(data) {
         errors.nickname = '닉네임 중복 확인을 완료해주세요.';
     }
 
-    if (!data.termsConsent) {
-        errors.termsConsent = '약관 및 정책 동의가 필요합니다.';
+    if (!data.termsConsent && !data.privacyConsent) {
+        errors.termsConsent = '이용약관 및 개인정보 보호정책에 모두 동의해주세요';
+    } else if (!data.termsConsent) {
+        errors.termsConsent = '이용약관 동의가 필요합니다.';
+    } else if (!data.privacyConsent) {
+        errors.termsConsent = '개인정보 보호정책 동의가 필요합니다.';
     }
 
     return errors;
