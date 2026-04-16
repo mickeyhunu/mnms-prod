@@ -2819,69 +2819,22 @@
     font-size: 14px;
 }
 
-.ad-profile-image-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 16px;
-}
-
-.ad-profile-image-upload-btn,
-.ad-profile-image-preview {
-    width: 70px;
-    height: 70px;
-    border-radius: 14px;
-    border: 1px solid #dee2e6;
-    background: #fff;
-    color: #868e96;
-    object-fit: cover;
-}
-
-.ad-profile-guide {
-    margin-top: 12px;
-    color: #6c757d;
-    font-size: 13px;
-    line-height: 1.6;
-}
-
 .ad-profile-preview {
     margin-top: 60px;
     border-top: 1px solid #e9ecef;
     padding: 16px;
 }
 
-.ad-profile-preview-card {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    border: 1px solid #e9ecef;
-    border-radius: 14px;
-    padding: 14px;
+.ad-profile-preview-list {
     margin-top: 12px;
 }
 
-.ad-profile-preview-card img {
-    width: 70px;
-    height: 70px;
-    border-radius: 14px;
-    object-fit: cover;
-    flex-shrink: 0;
-}
-
-.ad-profile-preview-content {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.ad-profile-preview-content strong {
-    font-size: 16px;
-}
-
-.ad-profile-preview-content p {
+.ad-profile-preview-desc {
     margin: 0;
-    font-size: 13px;
-    color: #495057;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #4b5563;
+    line-height: 1.5;
 }
 
 .ad-profile-notice--bottom {

@@ -260,7 +260,7 @@ async function deleteAd(adId) {
 async function listBusinessAdsByOwner(ownerUserId) {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, manager_name AS managerName,
+    `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, manager_name AS managerName, manager_contact AS managerContact,
             title, image_url AS imageUrl, link_url AS linkUrl,
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
             description, plan_type AS planType, view_count AS viewCount,
@@ -299,7 +299,7 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
   }
 
   const [rows] = await pool.query(
-    `SELECT ba.id, ba.owner_user_id AS ownerUserId, ba.business_name AS businessName, ba.manager_name AS managerName,
+    `SELECT ba.id, ba.owner_user_id AS ownerUserId, ba.business_name AS businessName, ba.manager_name AS managerName, ba.manager_contact AS managerContact,
             ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl,
             ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
             ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.created_at AS createdAt,
@@ -320,6 +320,7 @@ async function createBusinessAd({
   ownerUserId,
   businessName = '',
   managerName = '',
+  managerContact = '',
   title,
   imageUrl,
   linkUrl,
@@ -336,10 +337,10 @@ async function createBusinessAd({
   const pool = getPool();
   const [result] = await pool.query(
     `INSERT INTO business_ads (
-      owner_user_id, business_name, manager_name, title, image_url, link_url, region, district, category, open_hour, close_hour,
+      owner_user_id, business_name, manager_name, manager_contact, title, image_url, link_url, region, district, category, open_hour, close_hour,
       description, plan_type, display_order, is_active
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [ownerUserId, businessName, managerName, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, description, planType, displayOrder, isActive ? 1 : 0]
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [ownerUserId, businessName, managerName, managerContact, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, description, planType, displayOrder, isActive ? 1 : 0]
   );
   return result.insertId;
 }
@@ -347,7 +348,7 @@ async function createBusinessAd({
 async function findBusinessAdById(adId) {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, manager_name AS managerName,
+    `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, manager_name AS managerName, manager_contact AS managerContact,
             title, image_url AS imageUrl, link_url AS linkUrl,
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
             description, plan_type AS planType, view_count AS viewCount,
@@ -362,6 +363,7 @@ async function findBusinessAdById(adId) {
 async function updateBusinessAd(adId, {
   businessName = '',
   managerName = '',
+  managerContact = '',
   title,
   imageUrl,
   linkUrl,
@@ -378,10 +380,10 @@ async function updateBusinessAd(adId, {
   const pool = getPool();
   await pool.query(
     `UPDATE business_ads
-     SET business_name = ?, manager_name = ?, title = ?, image_url = ?, link_url = ?, region = ?, district = ?, category = ?, open_hour = ?, close_hour = ?,
+     SET business_name = ?, manager_name = ?, manager_contact = ?, title = ?, image_url = ?, link_url = ?, region = ?, district = ?, category = ?, open_hour = ?, close_hour = ?,
          description = ?, plan_type = ?, display_order = ?, is_active = ?
      WHERE id = ?`,
-    [businessName, managerName, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, description, planType, displayOrder, isActive ? 1 : 0, adId]
+    [businessName, managerName, managerContact, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, description, planType, displayOrder, isActive ? 1 : 0, adId]
   );
 }
 

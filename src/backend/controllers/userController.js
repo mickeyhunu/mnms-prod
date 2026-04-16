@@ -425,6 +425,7 @@ async function createMyBusinessAd(req, res, next) {
   try {
     const businessName = String(req.body?.businessName || '').trim();
     const managerName = String(req.body?.managerName || '').trim();
+    const managerContact = String(req.body?.managerContact || '').trim();
     const title = String(req.body?.title || '').trim();
     const imageUrl = String(req.body?.imageUrl || '').trim();
     const linkUrl = String(req.body?.linkUrl || '#').trim() || '#';
@@ -438,16 +439,17 @@ async function createMyBusinessAd(req, res, next) {
     const displayOrder = Number(req.body?.displayOrder) || 0;
     const isActive = Boolean(req.body?.isActive);
 
-    if (!title || !imageUrl || !region || !district) {
-      return res.status(400).json({ message: '제목, 이미지 URL, 지역, 세부 지역은 필수입니다.' });
+    if (!title || !region || !district) {
+      return res.status(400).json({ message: '제목, 지역, 세부 지역은 필수입니다.' });
     }
 
     const insertId = await adminModel.createBusinessAd({
       ownerUserId: req.user.id,
       businessName,
       managerName,
+      managerContact,
       title,
-      imageUrl,
+      imageUrl: imageUrl || 'https://image.bubblealba.com/assets/advertiser/pending.webp',
       linkUrl,
       region,
       district,
@@ -477,6 +479,7 @@ async function updateMyBusinessAd(req, res, next) {
 
     const businessName = String(req.body?.businessName || '').trim();
     const managerName = String(req.body?.managerName || '').trim();
+    const managerContact = String(req.body?.managerContact || '').trim();
     const title = String(req.body?.title || '').trim();
     const imageUrl = String(req.body?.imageUrl || '').trim();
     const linkUrl = String(req.body?.linkUrl || '#').trim() || '#';
@@ -490,15 +493,16 @@ async function updateMyBusinessAd(req, res, next) {
     const displayOrder = Number(req.body?.displayOrder) || 0;
     const isActive = Boolean(req.body?.isActive);
 
-    if (!title || !imageUrl || !region || !district) {
-      return res.status(400).json({ message: '제목, 이미지 URL, 지역, 세부 지역은 필수입니다.' });
+    if (!title || !region || !district) {
+      return res.status(400).json({ message: '제목, 지역, 세부 지역은 필수입니다.' });
     }
 
     await adminModel.updateBusinessAd(id, {
       businessName,
       managerName,
+      managerContact,
       title,
-      imageUrl,
+      imageUrl: imageUrl || target.imageUrl || 'https://image.bubblealba.com/assets/advertiser/pending.webp',
       linkUrl,
       region,
       district,
