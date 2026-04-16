@@ -423,6 +423,8 @@ async function listMyBusinessAds(req, res, next) {
 
 async function createMyBusinessAd(req, res, next) {
   try {
+    const storeName = String(req.body?.storeName || '').trim();
+    const managerName = String(req.body?.managerName || '').trim();
     const title = String(req.body?.title || '').trim();
     const imageUrl = String(req.body?.imageUrl || '').trim();
     const linkUrl = String(req.body?.linkUrl || '#').trim() || '#';
@@ -442,6 +444,8 @@ async function createMyBusinessAd(req, res, next) {
 
     const insertId = await adminModel.createBusinessAd({
       ownerUserId: req.user.id,
+      storeName,
+      managerName,
       title,
       imageUrl,
       linkUrl,
@@ -471,6 +475,8 @@ async function updateMyBusinessAd(req, res, next) {
       return res.status(404).json({ message: '광고를 찾을 수 없습니다.' });
     }
 
+    const storeName = String(req.body?.storeName || '').trim();
+    const managerName = String(req.body?.managerName || '').trim();
     const title = String(req.body?.title || '').trim();
     const imageUrl = String(req.body?.imageUrl || '').trim();
     const linkUrl = String(req.body?.linkUrl || '#').trim() || '#';
@@ -489,6 +495,8 @@ async function updateMyBusinessAd(req, res, next) {
     }
 
     await adminModel.updateBusinessAd(id, {
+      storeName,
+      managerName,
       title,
       imageUrl,
       linkUrl,

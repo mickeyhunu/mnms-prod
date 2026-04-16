@@ -453,6 +453,8 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS business_ads (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       owner_user_id BIGINT NOT NULL,
+      store_name VARCHAR(255) NULL,
+      manager_name VARCHAR(100) NULL,
       title VARCHAR(255) NOT NULL,
       image_url VARCHAR(1000) NOT NULL,
       link_url VARCHAR(1000) NOT NULL,
@@ -473,6 +475,8 @@ async function initDatabase() {
   `);
 
   const businessAdsColumnMigrations = [
+    { name: 'store_name', sql: "ALTER TABLE business_ads ADD COLUMN store_name VARCHAR(255) NULL AFTER owner_user_id" },
+    { name: 'manager_name', sql: "ALTER TABLE business_ads ADD COLUMN manager_name VARCHAR(100) NULL AFTER store_name" },
     { name: 'region', sql: "ALTER TABLE business_ads ADD COLUMN region VARCHAR(50) NOT NULL DEFAULT '' AFTER link_url" },
     { name: 'district', sql: "ALTER TABLE business_ads ADD COLUMN district VARCHAR(50) NOT NULL DEFAULT '' AFTER region" },
     { name: 'category', sql: "ALTER TABLE business_ads ADD COLUMN category VARCHAR(50) NOT NULL DEFAULT '' AFTER district" },
