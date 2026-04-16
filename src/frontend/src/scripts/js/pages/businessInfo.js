@@ -64,11 +64,11 @@ function renderBusinessAds(ads) {
             <li class="business-directory-item">
                 <div class="business-directory-main">
                     <h4>${title}</h4>
+                    <p class="business-directory-region-detail">${detail}</p>
                     <div class="business-directory-meta">
                         <span class="business-directory-manager">${managerName} · ${managerContact}</span>
                         <span class="business-directory-views">조회수 ${viewCount}</span>
                     </div>
-                    <p class="business-directory-region-detail">${detail}</p>
                 </div>
             </li>
         `;

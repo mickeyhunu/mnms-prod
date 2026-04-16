@@ -2996,7 +2996,7 @@
 
 .business-directory-item h4 {
     margin: 0;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.35;
     white-space: nowrap;
     overflow: hidden;
@@ -3022,9 +3022,7 @@
 }
 
 .business-directory-region-detail {
-    margin: 4px 0 0;
     font-size: 12px;
-    color: #6b7280;
     line-height: 1.4;
 }
 
