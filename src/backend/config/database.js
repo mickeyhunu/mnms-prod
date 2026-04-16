@@ -453,6 +453,8 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS business_ads (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       owner_user_id BIGINT NOT NULL,
+      business_name VARCHAR(255) NOT NULL DEFAULT '',
+      manager_name VARCHAR(100) NOT NULL DEFAULT '',
       title VARCHAR(255) NOT NULL,
       image_url VARCHAR(1000) NOT NULL,
       link_url VARCHAR(1000) NOT NULL,
@@ -463,6 +465,7 @@ async function initDatabase() {
       close_hour VARCHAR(20) NOT NULL DEFAULT '',
       description TEXT NULL,
       plan_type VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
+      view_count BIGINT NOT NULL DEFAULT 0,
       display_order INT NOT NULL DEFAULT 0,
       is_active TINYINT(1) NOT NULL DEFAULT 1,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -473,13 +476,16 @@ async function initDatabase() {
   `);
 
   const businessAdsColumnMigrations = [
+    { name: 'business_name', sql: "ALTER TABLE business_ads ADD COLUMN business_name VARCHAR(255) NOT NULL DEFAULT '' AFTER owner_user_id" },
+    { name: 'manager_name', sql: "ALTER TABLE business_ads ADD COLUMN manager_name VARCHAR(100) NOT NULL DEFAULT '' AFTER business_name" },
     { name: 'region', sql: "ALTER TABLE business_ads ADD COLUMN region VARCHAR(50) NOT NULL DEFAULT '' AFTER link_url" },
     { name: 'district', sql: "ALTER TABLE business_ads ADD COLUMN district VARCHAR(50) NOT NULL DEFAULT '' AFTER region" },
     { name: 'category', sql: "ALTER TABLE business_ads ADD COLUMN category VARCHAR(50) NOT NULL DEFAULT '' AFTER district" },
     { name: 'open_hour', sql: "ALTER TABLE business_ads ADD COLUMN open_hour VARCHAR(20) NOT NULL DEFAULT '' AFTER category" },
     { name: 'close_hour', sql: "ALTER TABLE business_ads ADD COLUMN close_hour VARCHAR(20) NOT NULL DEFAULT '' AFTER open_hour" },
     { name: 'description', sql: 'ALTER TABLE business_ads ADD COLUMN description TEXT NULL AFTER close_hour' },
-    { name: 'plan_type', sql: "ALTER TABLE business_ads ADD COLUMN plan_type VARCHAR(20) NOT NULL DEFAULT 'NORMAL' AFTER description" }
+    { name: 'plan_type', sql: "ALTER TABLE business_ads ADD COLUMN plan_type VARCHAR(20) NOT NULL DEFAULT 'NORMAL' AFTER description" },
+    { name: 'view_count', sql: "ALTER TABLE business_ads ADD COLUMN view_count BIGINT NOT NULL DEFAULT 0 AFTER plan_type" }
   ];
 
   for (const migration of businessAdsColumnMigrations) {

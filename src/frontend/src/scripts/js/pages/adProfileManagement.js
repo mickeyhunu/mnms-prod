@@ -82,6 +82,8 @@ function bindAdProfileInteractions() {
     const openHourSelect = document.getElementById('ad-profile-open-hour');
     const closeHourSelect = document.getElementById('ad-profile-close-hour');
     const titleInput = document.getElementById('ad-profile-title');
+    const businessNameInput = document.getElementById('ad-profile-name');
+    const managerNameInput = document.getElementById('ad-profile-manager');
     const descriptionInput = document.getElementById('ad-profile-description');
     const descriptionEditor = document.getElementById('ad-profile-description-editor');
     const editorToolbar = document.querySelector('.ad-profile-editor-toolbar');
@@ -146,7 +148,7 @@ function bindAdProfileInteractions() {
         syncPreview();
     });
 
-    [districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput]
+    [districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput, businessNameInput, managerNameInput]
         .forEach((element) => {
             element?.addEventListener('input', syncPreview);
             element?.addEventListener('change', syncPreview);
@@ -194,6 +196,8 @@ async function saveAdProfile() {
     const openHour = String(document.getElementById('ad-profile-open-hour')?.value || '').trim();
     const closeHour = String(document.getElementById('ad-profile-close-hour')?.value || '').trim();
     const title = String(document.getElementById('ad-profile-title')?.value || '').trim();
+    const businessName = String(document.getElementById('ad-profile-name')?.value || '').trim();
+    const managerName = String(document.getElementById('ad-profile-manager')?.value || '').trim();
     const description = String(document.getElementById('ad-profile-description')?.value || '').trim();
     const imageInput = document.getElementById('ad-profile-image-input');
     const saveButton = document.getElementById('ad-profile-save-btn');
@@ -223,6 +227,8 @@ async function saveAdProfile() {
         }
 
         const payload = {
+            businessName,
+            managerName,
             title,
             imageUrl,
             linkUrl: '#',
@@ -266,6 +272,8 @@ function applyAdProfileToForm(ad) {
     const openHourSelect = document.getElementById('ad-profile-open-hour');
     const closeHourSelect = document.getElementById('ad-profile-close-hour');
     const titleInput = document.getElementById('ad-profile-title');
+    const businessNameInput = document.getElementById('ad-profile-name');
+    const managerNameInput = document.getElementById('ad-profile-manager');
     const descriptionInput = document.getElementById('ad-profile-description');
     const descriptionEditor = document.getElementById('ad-profile-description-editor');
     const imagePreview = document.getElementById('ad-profile-image-preview');
@@ -280,6 +288,8 @@ function applyAdProfileToForm(ad) {
     if (openHourSelect) openHourSelect.value = ad.openHour || '';
     if (closeHourSelect) closeHourSelect.value = ad.closeHour || '';
     if (titleInput) titleInput.value = ad.title || '';
+    if (businessNameInput) businessNameInput.value = ad.businessName || '';
+    if (managerNameInput) managerNameInput.value = ad.managerName || '';
     if (descriptionInput) descriptionInput.value = ad.description || '';
     if (descriptionEditor) descriptionEditor.innerHTML = ad.description || '';
     if (imagePreview && ad.imageUrl) {
