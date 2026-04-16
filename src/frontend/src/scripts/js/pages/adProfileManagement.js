@@ -30,6 +30,7 @@ const adProfileState = {
 };
 const DEFAULT_AD_IMAGE_URL = 'https://image.bubblealba.com/assets/advertiser/pending.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
+const AD_PROFILE_DRAFT_KEY = 'mnm.adProfileDraft';
 
 function createHourOptions(hourSelect) {
     if (!hourSelect) return;
@@ -174,13 +175,19 @@ function bindAdProfileInteractions() {
         const selectedRegion = regionSelect.value;
         updateSelectOptions(districtSelect, REGION_DISTRICT_MAP[selectedRegion] || []);
         syncPreview();
+        saveDraftData();
     });
 
     [districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput, businessNameInput, managerNameInput, managerContactInput]
         .forEach((element) => {
             element?.addEventListener('input', syncPreview);
             element?.addEventListener('change', syncPreview);
+            element?.addEventListener('input', saveDraftData);
+            element?.addEventListener('change', saveDraftData);
         });
+
+    descriptionEditor?.addEventListener('input', saveDraftData);
+    descriptionEditor?.addEventListener('blur', saveDraftData);
 
     adProfileState.syncPreview = syncPreview;
     syncPreview();
@@ -195,6 +202,74 @@ function formatPhoneNumber(value) {
 
 function showSaveMessage(message) {
     alert(message);
+}
+
+function readDraftData() {
+    try {
+        const raw = window.localStorage.getItem(AD_PROFILE_DRAFT_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+function collectDraftData() {
+    return {
+        businessName: String(document.getElementById('ad-profile-name')?.value || '').trim(),
+        managerName: String(document.getElementById('ad-profile-manager')?.value || '').trim(),
+        managerContact: String(document.getElementById('ad-profile-manager-contact')?.value || '').trim(),
+        title: String(document.getElementById('ad-profile-title')?.value || '').trim(),
+        region: String(document.getElementById('ad-profile-region')?.value || '').trim(),
+        district: String(document.getElementById('ad-profile-district')?.value || '').trim(),
+        category: String(document.getElementById('ad-profile-category')?.value || '').trim(),
+        openHour: String(document.getElementById('ad-profile-open-hour')?.value || '').trim(),
+        closeHour: String(document.getElementById('ad-profile-close-hour')?.value || '').trim(),
+        description: String(document.getElementById('ad-profile-description')?.value || '').trim()
+    };
+}
+
+function hasAnyDraftValue(draft) {
+    return Object.values(draft || {}).some((value) => String(value || '').trim());
+}
+
+function saveDraftData() {
+    const draft = collectDraftData();
+    if (!hasAnyDraftValue(draft)) {
+        window.localStorage.removeItem(AD_PROFILE_DRAFT_KEY);
+        return;
+    }
+    window.localStorage.setItem(AD_PROFILE_DRAFT_KEY, JSON.stringify(draft));
+}
+
+function applyDraftToForm(draft) {
+    if (!draft || typeof draft !== 'object') return;
+
+    const storeNameInput = document.getElementById('ad-profile-name');
+    const regionSelect = document.getElementById('ad-profile-region');
+    const districtSelect = document.getElementById('ad-profile-district');
+    const categorySelect = document.getElementById('ad-profile-category');
+    const openHourSelect = document.getElementById('ad-profile-open-hour');
+    const closeHourSelect = document.getElementById('ad-profile-close-hour');
+    const titleInput = document.getElementById('ad-profile-title');
+    const managerNameInput = document.getElementById('ad-profile-manager');
+    const managerContactInput = document.getElementById('ad-profile-manager-contact');
+    const descriptionInput = document.getElementById('ad-profile-description');
+    const descriptionEditor = document.getElementById('ad-profile-description-editor');
+
+    if (storeNameInput && draft.businessName) storeNameInput.value = draft.businessName;
+    if (regionSelect && draft.region) {
+        regionSelect.value = draft.region;
+        updateSelectOptions(districtSelect, REGION_DISTRICT_MAP[draft.region] || []);
+    }
+    if (districtSelect && draft.district) districtSelect.value = draft.district;
+    if (categorySelect && draft.category) categorySelect.value = draft.category;
+    if (openHourSelect && draft.openHour) openHourSelect.value = draft.openHour;
+    if (closeHourSelect && draft.closeHour) closeHourSelect.value = draft.closeHour;
+    if (titleInput && draft.title) titleInput.value = draft.title;
+    if (managerNameInput && draft.managerName) managerNameInput.value = draft.managerName;
+    if (managerContactInput && draft.managerContact) managerContactInput.value = formatPhoneNumber(draft.managerContact);
+    if (descriptionInput && draft.description) descriptionInput.value = draft.description;
+    if (descriptionEditor && draft.description) descriptionEditor.innerHTML = draft.description;
 }
 
 function getRequiredFieldError({ storeName, managerName, managerContact, region, district, category, openHour, closeHour, title, description }) {
@@ -291,6 +366,7 @@ async function saveAdProfile() {
         }
 
         showSaveMessage('광고프로필이 저장되었습니다. 업체정보 메뉴에서 확인할 수 있습니다.');
+        window.localStorage.removeItem(AD_PROFILE_DRAFT_KEY);
         await loadMyAdProfile();
         window.location.href = '/my-page';
     } catch (error) {
@@ -360,6 +436,8 @@ async function initAdProfileManagementPage() {
         if (typeof initHeader === 'function') initHeader();
         Auth.bindLogoutButton();
         bindAdProfileInteractions();
+        applyDraftToForm(readDraftData());
+        adProfileState.syncPreview?.();
 
         const saveButton = document.getElementById('ad-profile-save-btn');
         saveButton?.addEventListener('click', saveAdProfile);

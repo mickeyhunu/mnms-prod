@@ -22,6 +22,8 @@ const REGION_DISTRICT_MAP = {
 };
 
 const BUSINESS_CATEGORIES = ['룸', '바', '클럽', '기타'];
+const BUSINESS_INFO_DRAFT_KEY = 'mnm.businessInfoDraft';
+const BUSINESS_INFO_REGISTERED_KEY = 'mnm.businessInfoRegistered';
 
 function normalizeAreaLabel(value) {
     const raw = String(value || '').trim();
@@ -249,6 +251,142 @@ function bindBusinessFilterEvents() {
     syncBadgeLabels();
 }
 
+function readStorageJson(key) {
+    try {
+        const raw = window.localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+function collectBusinessManagementFormData() {
+    const selectedBilling = document.querySelector('input[name="billing-type"]:checked');
+    return {
+        licenseImageName: String(document.getElementById('business-license-file-name')?.textContent || '').trim(),
+        businessNumber: String(document.getElementById('business-number')?.value || '').trim(),
+        businessName: String(document.getElementById('business-name')?.value || '').trim(),
+        businessOwner: String(document.getElementById('business-owner')?.value || '').trim(),
+        businessAddress: String(document.getElementById('business-address')?.value || '').trim(),
+        businessAddressDetail: String(document.getElementById('business-address-detail')?.value || '').trim(),
+        billingType: String(selectedBilling?.value || '').trim()
+    };
+}
+
+function hasAnyBusinessValue(data) {
+    const candidate = { ...data };
+    delete candidate.licenseImageName;
+    const hasText = Object.values(candidate).some((value) => String(value || '').trim());
+    const hasImage = data?.licenseImageName && data.licenseImageName !== '등록할 이미지를 선택해주세요.';
+    return Boolean(hasText || hasImage);
+}
+
+function isBusinessInfoComplete(data) {
+    if (!data) return false;
+    const hasLicenseImage = data.licenseImageName && data.licenseImageName !== '등록할 이미지를 선택해주세요.';
+    return Boolean(
+        hasLicenseImage
+        && data.businessNumber
+        && data.businessName
+        && data.businessOwner
+        && data.businessAddress
+        && data.billingType
+    );
+}
+
+function persistBusinessDraft() {
+    const formData = collectBusinessManagementFormData();
+    if (!hasAnyBusinessValue(formData)) {
+        window.localStorage.removeItem(BUSINESS_INFO_DRAFT_KEY);
+        return;
+    }
+    window.localStorage.setItem(BUSINESS_INFO_DRAFT_KEY, JSON.stringify(formData));
+}
+
+function applyBusinessFormData(savedData) {
+    if (!savedData || typeof savedData !== 'object') return;
+
+    const setValue = (id, value) => {
+        const element = document.getElementById(id);
+        if (element && value) element.value = value;
+    };
+
+    setValue('business-number', savedData.businessNumber);
+    setValue('business-name', savedData.businessName);
+    setValue('business-owner', savedData.businessOwner);
+    setValue('business-address', savedData.businessAddress);
+    setValue('business-address-detail', savedData.businessAddressDetail);
+
+    const fileName = document.getElementById('business-license-file-name');
+    if (fileName && savedData.licenseImageName) {
+        fileName.textContent = savedData.licenseImageName;
+    }
+
+    const billingType = String(savedData.billingType || '').trim();
+    if (billingType) {
+        const target = document.querySelector(`input[name="billing-type"][value="${billingType}"]`);
+        if (target) target.checked = true;
+    }
+}
+
+function bindBusinessManagementEvents() {
+    const licenseInput = document.getElementById('business-license-input');
+    const uploadButton = document.getElementById('business-license-upload-btn');
+    const fileName = document.getElementById('business-license-file-name');
+    const saveButton = document.getElementById('business-info-save-btn');
+    const fields = ['business-number', 'business-name', 'business-owner', 'business-address', 'business-address-detail'];
+
+    uploadButton?.addEventListener('click', () => licenseInput?.click());
+    licenseInput?.addEventListener('change', () => {
+        const file = licenseInput.files?.[0];
+        if (fileName && file) fileName.textContent = file.name;
+        persistBusinessDraft();
+    });
+
+    fields.forEach((id) => {
+        const input = document.getElementById(id);
+        input?.addEventListener('input', persistBusinessDraft);
+        input?.addEventListener('change', persistBusinessDraft);
+    });
+
+    document.querySelectorAll('input[name="billing-type"]').forEach((radio) => {
+        radio.addEventListener('change', persistBusinessDraft);
+    });
+
+    saveButton?.addEventListener('click', () => {
+        const formData = collectBusinessManagementFormData();
+        if (!isBusinessInfoComplete(formData)) {
+            alert('사업자정보 필수 항목을 모두 입력해주세요.');
+            persistBusinessDraft();
+            return;
+        }
+
+        window.localStorage.setItem(BUSINESS_INFO_REGISTERED_KEY, JSON.stringify(formData));
+        window.localStorage.removeItem(BUSINESS_INFO_DRAFT_KEY);
+        alert('사업자정보가 저장되었습니다.');
+        window.location.href = '/my-page';
+    });
+}
+
+async function initBusinessManagementPage() {
+    if (!Auth.isAuthenticated()) {
+        window.location.href = '/login';
+        return;
+    }
+
+    const me = await APIClient.get('/auth/me');
+    const nickname = document.getElementById('user-nickname');
+    if (nickname) nickname.textContent = Auth.formatNicknameWithLevel(me);
+
+    if (typeof initHeader === 'function') initHeader();
+    Auth.bindLogoutButton();
+
+    const savedRegistered = readStorageJson(BUSINESS_INFO_REGISTERED_KEY);
+    const savedDraft = readStorageJson(BUSINESS_INFO_DRAFT_KEY);
+    applyBusinessFormData(savedRegistered || savedDraft);
+    bindBusinessManagementEvents();
+}
+
 async function initBusinessInfoPage() {
     Auth.updateHeaderUI();
 
@@ -258,8 +396,16 @@ async function initBusinessInfoPage() {
     await loadBusinessAds();
 }
 
+async function initBusinessPage() {
+    if (window.location.pathname === '/business-management') {
+        await initBusinessManagementPage();
+        return;
+    }
+    await initBusinessInfoPage();
+}
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initBusinessInfoPage, { once: true });
+    document.addEventListener('DOMContentLoaded', initBusinessPage, { once: true });
 } else {
-    initBusinessInfoPage();
+    initBusinessPage();
 }
