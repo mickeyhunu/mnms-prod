@@ -145,3 +145,14 @@ aws s3api create-bucket \
 - 이미지 URL 접근 불가: 버킷/CloudFront 공개 정책 또는 서명 URL 전략 확인
 - 게시글 작성 디버그가 필요하면 `/create-post?debugUpload=1`로 접속하면 성공 후 자동 이동 대신 콘솔에 업로드 결과를 남깁니다.
 
+## KCP 본인인증 연동 설정
+- 회원가입의 본인인증 버튼은 `POST /api/auth/request-identity-verification`로 요청을 보내고, 서버가 KCP 인증 화면으로 자동 전송합니다.
+- 아래 환경변수 2개를 반드시 설정해야 실제 KCP 화면이 열립니다.
+  - `KCP_REQUEST_URL` (KCP 인증 요청 URL)
+  - `KCP_SITE_CODE` (KCP 사이트 코드)
+- 선택 환경변수:
+  - `KCP_RETURN_URL` (인증 완료 후 KCP가 리다이렉트할 URL. 미설정 시 `https?://<host>/kcp/callback` 자동 구성)
+
+### PEM 키 보관 위치
+- `.pem` 키는 프론트엔드/레포에 직접 넣지 말고, 서버의 외부 안전 경로(예: `/etc/mnms/kcp/`)에 저장하세요.
+- 경로가 필요하면 `.env.local` 같은 로컬 전용 환경 파일을 통해 주입하세요.
