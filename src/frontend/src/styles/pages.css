@@ -3049,33 +3049,15 @@
 .business-directory-main {
     flex: 1;
     min-width: 0;
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
 }
 
 .business-directory-item h4 {
     margin: 0;
     font-size: 14px;
     line-height: 1.35;
-    word-break: break-all;
-}
-
-.business-directory-item p {
-    margin: 0;
-    font-size: 12px;
-    color: #4b5563;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.business-directory-tier {
-    align-self: start;
-    border-radius: 999px;
-    padding: 3px 8px;
-    font-size: 11px;
-    font-weight: 700;
 }
 
 .business-directory-meta {
@@ -3089,16 +3071,6 @@
 .business-directory-views {
     font-size: 12px;
     color: #4b5563;
-}
-
-.business-directory-tier-premium {
-    background: #fee2e2;
-    color: #b91c1c;
-}
-
-.business-directory-tier-normal {
-    background: #e5e7eb;
-    color: #374151;
 }
 
 @media (max-width: 640px) {
