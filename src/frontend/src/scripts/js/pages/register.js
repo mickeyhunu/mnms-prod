@@ -3,8 +3,7 @@
  */
 
 const PORTONE_BROWSER_SDK_URL = 'https://cdn.portone.io/v2/browser-sdk.js';
-const PORTONE_STORE_ID = 'store-ef30fda0-ff53-48f6-aab5-9b82f4a70672';
-const PORTONE_CHANNEL_KEY = 'channel-key-73e3732b-f4ef-4bac-ad22-9ca474348c76';
+let portOneIdentityConfig = null;
 
 function initRegisterPage() {
 
@@ -206,17 +205,39 @@ async function loadPortOneSdk() {
     return window.PortOne;
 }
 
+async function getPortOneIdentityConfig() {
+    if (portOneIdentityConfig?.storeId && portOneIdentityConfig?.channelKey) {
+        return portOneIdentityConfig;
+    }
+
+    const config = await AuthAPI.getIdentityVerificationConfig();
+    const storeId = String(config?.storeId || '').trim();
+    const channelKey = String(config?.channelKey || '').trim();
+
+    if (!storeId || !channelKey) {
+        throw new Error('PortOne 본인인증 설정값을 불러오지 못했습니다.');
+    }
+
+    portOneIdentityConfig = {
+        storeId,
+        channelKey
+    };
+
+    return portOneIdentityConfig;
+}
+
 async function handleIdentityVerification() {
     try {
         const PortOne = await loadPortOneSdk();
+        const identityConfig = await getPortOneIdentityConfig();
         if (!PortOne || typeof PortOne.requestIdentityVerification !== 'function') {
             throw new Error('PortOne 본인인증 모듈을 찾을 수 없습니다.');
         }
 
         const response = await PortOne.requestIdentityVerification({
-            storeId: PORTONE_STORE_ID,
+            storeId: identityConfig.storeId,
             identityVerificationId: `test-${Date.now()}`,
-            channelKey: PORTONE_CHANNEL_KEY
+            channelKey: identityConfig.channelKey
         });
 
         if (response?.code) {

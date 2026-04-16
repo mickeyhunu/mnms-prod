@@ -219,4 +219,20 @@ async function requestIdentityVerification(req, res) {
 </html>`);
 }
 
-module.exports = { register, login, me, logout, checkNickname, requestIdentityVerification };
+async function getIdentityVerificationConfig(req, res) {
+  const storeId = String(process.env.PORTONE_STORE_ID || '').trim();
+  const channelKey = String(process.env.PORTONE_CHANNEL_KEY || '').trim();
+
+  if (!storeId || !channelKey) {
+    return res.status(500).json({
+      message: 'PortOne 연동 환경변수(PORTONE_STORE_ID, PORTONE_CHANNEL_KEY)가 설정되지 않았습니다.'
+    });
+  }
+
+  return res.json({
+    storeId,
+    channelKey
+  });
+}
+
+module.exports = { register, login, me, logout, checkNickname, requestIdentityVerification, getIdentityVerificationConfig };

@@ -63,6 +63,14 @@ const AuthAPI = {
         }
     },
 
+    async getIdentityVerificationConfig() {
+        try {
+            return await APIClient.get('/auth/identity-verification-config');
+        } catch (error) {
+            throw error;
+        }
+    },
+
     async logout() {
         try {
             await APIClient.post('/auth/logout');
