@@ -45,24 +45,18 @@ function renderBusinessAds(ads) {
 
     empty.classList.add('hidden');
     list.innerHTML = ads.map((ad) => {
-        const planType = String(ad.planType || 'NORMAL').toUpperCase() === 'PREMIUM' ? 'premium' : 'normal';
         const regionLabel = sanitizeHTML(ad.region || '지역미지정');
         const businessName = sanitizeHTML(ad.businessName || ad.companyName || ad.ownerNickname || '업소');
         const managerName = sanitizeHTML(ad.managerName || ad.profileManagerName || ad.ownerNickname || '담당자');
         const baseTitle = sanitizeHTML(ad.title || '업체정보');
         const title = `[${regionLabel}-${businessName}-${managerName}] ${baseTitle}`;
-        const regionDistrict = [ad.region, ad.district].filter(Boolean).map((value) => sanitizeHTML(value)).join(' ');
-        const category = sanitizeHTML(ad.category || '업종 미지정');
-        const summary = [regionDistrict, category].filter(Boolean).join(' · ');
         const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
         return `
             <li class="business-directory-item">
                 <div class="business-directory-main">
                     <h4>${title}</h4>
-                    <p>${summary}</p>
                 </div>
                 <div class="business-directory-meta">
-                    <span class="business-directory-tier business-directory-tier-${planType}">${planType === 'premium' ? '프리미엄' : '일반'}</span>
                     <span class="business-directory-views">조회 ${viewCount}</span>
                 </div>
             </li>
