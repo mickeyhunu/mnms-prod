@@ -262,9 +262,10 @@ const pageRegistry = {
                         <li class="business-directory-item">
                             <div class="business-directory-main">
                                 <h4 id="ad-profile-preview-title">[선택-업소명] 제목을 입력해주세요.</h4>
+                                <p class="business-directory-region-detail" id="ad-profile-preview-detail">선택 선택 · 선택 · 시간선택 ~ 시간선택</p>
                                 <div class="business-directory-meta">
-                                    <span class="business-directory-manager" id="ad-profile-preview-sub">담당자 · 연락처</span>
-                                    <span class="business-directory-views" id="ad-profile-preview-region">선택 선택 · 선택 · 시간선택 ~ 시간선택</span>
+                                    <span class="business-directory-manager" id="ad-profile-preview-manager">담당자 · 연락처</span>
+                                    <span class="business-directory-views">조회수 43</span>
                                 </div>
                             </div>
                         </li>

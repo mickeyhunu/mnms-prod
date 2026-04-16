@@ -94,8 +94,8 @@ function bindAdProfileInteractions() {
     const editorImageInput = document.getElementById('ad-profile-editor-image-input');
 
     const previewTitle = document.getElementById('ad-profile-preview-title');
-    const previewSub = document.getElementById('ad-profile-preview-sub');
-    const previewRegion = document.getElementById('ad-profile-preview-region');
+    const previewManager = document.getElementById('ad-profile-preview-manager');
+    const previewDetail = document.getElementById('ad-profile-preview-detail');
 
     const syncDescriptionValue = () => {
         if (!descriptionInput || !descriptionEditor) return '';
@@ -126,8 +126,8 @@ function bindAdProfileInteractions() {
             : '시간선택 ~ 시간선택';
 
         if (previewTitle) previewTitle.textContent = `[${region}-${storeName}] ${title}`;
-        if (previewSub) previewSub.textContent = `${managerName} · ${managerContact}`;
-        if (previewRegion) previewRegion.textContent = `${region} ${district} · ${category} · ${formattedTime}`;
+        if (previewManager) previewManager.textContent = `${managerName} · ${managerContact}`;
+        if (previewDetail) previewDetail.textContent = `${region} ${district} · ${category} · ${formattedTime}`;
     };
 
     if (descriptionEditor && descriptionInput) {
