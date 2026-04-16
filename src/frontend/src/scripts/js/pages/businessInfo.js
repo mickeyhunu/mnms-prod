@@ -56,8 +56,8 @@ function renderBusinessAds(ads) {
                 <div class="business-directory-main">
                     <h4>${title}</h4>
                     <div class="business-directory-meta">
-                        <span class="business-directory-manager">${managerName}</span>
-                        <span class="business-directory-views">조회수 ${viewCount}</span>
+                        <span class="business-directory-manager">담당자 | ${managerName}</span>
+                        <span class="business-directory-views">조회수 | ${viewCount}</span>
                     </div>
                 </div>
             </li>
