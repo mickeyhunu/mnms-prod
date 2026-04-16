@@ -281,6 +281,17 @@ function hasAnyBusinessValue(data) {
     return Boolean(hasText || hasImage);
 }
 
+function stripEmptyBusinessValues(data) {
+    const trimmed = Object.entries(data || {}).reduce((acc, [key, value]) => {
+        const normalized = String(value || '').trim();
+        if (!normalized) return acc;
+        if (key === 'licenseImageName' && normalized === '등록할 이미지를 선택해주세요.') return acc;
+        acc[key] = normalized;
+        return acc;
+    }, {});
+    return trimmed;
+}
+
 function isBusinessInfoComplete(data) {
     if (!data) return false;
     const hasLicenseImage = data.licenseImageName && data.licenseImageName !== '등록할 이미지를 선택해주세요.';
@@ -294,13 +305,24 @@ function isBusinessInfoComplete(data) {
     );
 }
 
+function updateBusinessActionButtons() {
+    const saveButton = document.getElementById('business-info-save-btn');
+    const draftButton = document.getElementById('business-info-draft-btn');
+    const isComplete = isBusinessInfoComplete(collectBusinessManagementFormData());
+
+    saveButton?.classList.toggle('hidden', !isComplete);
+    draftButton?.classList.toggle('hidden', isComplete);
+}
+
 function persistBusinessDraft() {
-    const formData = collectBusinessManagementFormData();
+    const formData = stripEmptyBusinessValues(collectBusinessManagementFormData());
     if (!hasAnyBusinessValue(formData)) {
         window.localStorage.removeItem(BUSINESS_INFO_DRAFT_KEY);
+        updateBusinessActionButtons();
         return;
     }
     window.localStorage.setItem(BUSINESS_INFO_DRAFT_KEY, JSON.stringify(formData));
+    updateBusinessActionButtons();
 }
 
 function applyBusinessFormData(savedData) {
@@ -327,6 +349,8 @@ function applyBusinessFormData(savedData) {
         const target = document.querySelector(`input[name="billing-type"][value="${billingType}"]`);
         if (target) target.checked = true;
     }
+
+    updateBusinessActionButtons();
 }
 
 function bindBusinessManagementEvents() {
@@ -334,6 +358,7 @@ function bindBusinessManagementEvents() {
     const uploadButton = document.getElementById('business-license-upload-btn');
     const fileName = document.getElementById('business-license-file-name');
     const saveButton = document.getElementById('business-info-save-btn');
+    const draftButton = document.getElementById('business-info-draft-btn');
     const fields = ['business-number', 'business-name', 'business-owner', 'business-address', 'business-address-detail'];
 
     uploadButton?.addEventListener('click', () => licenseInput?.click());
@@ -353,6 +378,11 @@ function bindBusinessManagementEvents() {
         radio.addEventListener('change', persistBusinessDraft);
     });
 
+    draftButton?.addEventListener('click', () => {
+        persistBusinessDraft();
+        alert('입력한 항목만 임시저장되었습니다.');
+    });
+
     saveButton?.addEventListener('click', () => {
         const formData = collectBusinessManagementFormData();
         if (!isBusinessInfoComplete(formData)) {
@@ -366,6 +396,8 @@ function bindBusinessManagementEvents() {
         alert('사업자정보가 저장되었습니다.');
         window.location.href = '/my-page';
     });
+
+    updateBusinessActionButtons();
 }
 
 async function initBusinessManagementPage() {
@@ -385,6 +417,7 @@ async function initBusinessManagementPage() {
     const savedDraft = readStorageJson(BUSINESS_INFO_DRAFT_KEY);
     applyBusinessFormData(savedRegistered || savedDraft);
     bindBusinessManagementEvents();
+    updateBusinessActionButtons();
 }
 
 async function initBusinessInfoPage() {
