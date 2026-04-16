@@ -22,8 +22,6 @@ const REGION_DISTRICT_MAP = {
 };
 
 const BUSINESS_CATEGORIES = ['룸', '바', '클럽', '기타'];
-const BUSINESS_INFO_DRAFT_KEY = 'mnm.businessInfoDraft';
-const BUSINESS_INFO_REGISTERED_KEY = 'mnm.businessInfoRegistered';
 
 function normalizeAreaLabel(value) {
     const raw = String(value || '').trim();
@@ -251,15 +249,6 @@ function bindBusinessFilterEvents() {
     syncBadgeLabels();
 }
 
-function readStorageJson(key) {
-    try {
-        const raw = window.localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : null;
-    } catch (error) {
-        return null;
-    }
-}
-
 function collectBusinessManagementFormData() {
     const selectedBilling = document.querySelector('input[name="billing-type"]:checked');
     return {
@@ -281,6 +270,17 @@ function hasAnyBusinessValue(data) {
     return Boolean(hasText || hasImage);
 }
 
+function stripEmptyBusinessValues(data) {
+    const trimmed = Object.entries(data || {}).reduce((acc, [key, value]) => {
+        const normalized = String(value || '').trim();
+        if (!normalized) return acc;
+        if (key === 'licenseImageName' && normalized === '등록할 이미지를 선택해주세요.') return acc;
+        acc[key] = normalized;
+        return acc;
+    }, {});
+    return trimmed;
+}
+
 function isBusinessInfoComplete(data) {
     if (!data) return false;
     const hasLicenseImage = data.licenseImageName && data.licenseImageName !== '등록할 이미지를 선택해주세요.';
@@ -294,13 +294,13 @@ function isBusinessInfoComplete(data) {
     );
 }
 
-function persistBusinessDraft() {
-    const formData = collectBusinessManagementFormData();
-    if (!hasAnyBusinessValue(formData)) {
-        window.localStorage.removeItem(BUSINESS_INFO_DRAFT_KEY);
-        return;
-    }
-    window.localStorage.setItem(BUSINESS_INFO_DRAFT_KEY, JSON.stringify(formData));
+function updateBusinessActionButtons() {
+    const saveButton = document.getElementById('business-info-save-btn');
+    const draftButton = document.getElementById('business-info-draft-btn');
+    const isComplete = isBusinessInfoComplete(collectBusinessManagementFormData());
+
+    saveButton?.classList.toggle('hidden', !isComplete);
+    draftButton?.classList.toggle('hidden', isComplete);
 }
 
 function applyBusinessFormData(savedData) {
@@ -327,6 +327,8 @@ function applyBusinessFormData(savedData) {
         const target = document.querySelector(`input[name="billing-type"][value="${billingType}"]`);
         if (target) target.checked = true;
     }
+
+    updateBusinessActionButtons();
 }
 
 function bindBusinessManagementEvents() {
@@ -334,38 +336,66 @@ function bindBusinessManagementEvents() {
     const uploadButton = document.getElementById('business-license-upload-btn');
     const fileName = document.getElementById('business-license-file-name');
     const saveButton = document.getElementById('business-info-save-btn');
+    const draftButton = document.getElementById('business-info-draft-btn');
     const fields = ['business-number', 'business-name', 'business-owner', 'business-address', 'business-address-detail'];
 
     uploadButton?.addEventListener('click', () => licenseInput?.click());
     licenseInput?.addEventListener('change', () => {
         const file = licenseInput.files?.[0];
         if (fileName && file) fileName.textContent = file.name;
-        persistBusinessDraft();
+        updateBusinessActionButtons();
     });
 
     fields.forEach((id) => {
         const input = document.getElementById(id);
-        input?.addEventListener('input', persistBusinessDraft);
-        input?.addEventListener('change', persistBusinessDraft);
+        input?.addEventListener('input', updateBusinessActionButtons);
+        input?.addEventListener('change', updateBusinessActionButtons);
     });
 
     document.querySelectorAll('input[name="billing-type"]').forEach((radio) => {
-        radio.addEventListener('change', persistBusinessDraft);
+        radio.addEventListener('change', updateBusinessActionButtons);
     });
 
-    saveButton?.addEventListener('click', () => {
-        const formData = collectBusinessManagementFormData();
-        if (!isBusinessInfoComplete(formData)) {
-            alert('사업자정보 필수 항목을 모두 입력해주세요.');
-            persistBusinessDraft();
-            return;
+    draftButton?.addEventListener('click', async () => {
+        try {
+            const formData = stripEmptyBusinessValues(collectBusinessManagementFormData());
+            if (!hasAnyBusinessValue(formData)) {
+                alert('입력한 항목이 없습니다.');
+                return;
+            }
+
+            await APIClient.put('/users/me/business-profile', {
+                registrationStatus: 'DRAFT',
+                businessInfo: formData
+            });
+            alert('입력한 항목만 임시저장되었습니다.');
+            updateBusinessActionButtons();
+        } catch (error) {
+            alert(error.message || '사업자정보 임시저장에 실패했습니다.');
         }
-
-        window.localStorage.setItem(BUSINESS_INFO_REGISTERED_KEY, JSON.stringify(formData));
-        window.localStorage.removeItem(BUSINESS_INFO_DRAFT_KEY);
-        alert('사업자정보가 저장되었습니다.');
-        window.location.href = '/my-page';
     });
+
+    saveButton?.addEventListener('click', async () => {
+        try {
+            const formData = collectBusinessManagementFormData();
+            if (!isBusinessInfoComplete(formData)) {
+                alert('사업자정보 필수 항목을 모두 입력해주세요.');
+                updateBusinessActionButtons();
+                return;
+            }
+
+            await APIClient.put('/users/me/business-profile', {
+                registrationStatus: 'REGISTERED',
+                businessInfo: formData
+            });
+            alert('사업자정보가 저장되었습니다.');
+            window.location.href = '/my-page';
+        } catch (error) {
+            alert(error.message || '사업자정보 저장에 실패했습니다.');
+        }
+    });
+
+    updateBusinessActionButtons();
 }
 
 async function initBusinessManagementPage() {
@@ -381,10 +411,10 @@ async function initBusinessManagementPage() {
     if (typeof initHeader === 'function') initHeader();
     Auth.bindLogoutButton();
 
-    const savedRegistered = readStorageJson(BUSINESS_INFO_REGISTERED_KEY);
-    const savedDraft = readStorageJson(BUSINESS_INFO_DRAFT_KEY);
-    applyBusinessFormData(savedRegistered || savedDraft);
+    const profile = await APIClient.get('/users/me/business-profile');
+    applyBusinessFormData(profile?.businessInfo || {});
     bindBusinessManagementEvents();
+    updateBusinessActionButtons();
 }
 
 async function initBusinessInfoPage() {
