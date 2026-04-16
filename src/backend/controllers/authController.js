@@ -143,4 +143,80 @@ async function checkNickname(req, res, next) {
   }
 }
 
-module.exports = { register, login, me, logout, checkNickname };
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildHiddenInput(name, value) {
+  return `<input type="hidden" name="${escapeHtml(name)}" value="${escapeHtml(value)}">`;
+}
+
+function generateOrderNumber() {
+  return `MNMS_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+}
+
+function resolveReturnUrl(req) {
+  const configuredReturnUrl = String(process.env.KCP_RETURN_URL || '').trim();
+  if (configuredReturnUrl) {
+    return configuredReturnUrl;
+  }
+
+  const forwardedProto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
+  const protocol = forwardedProto || req.protocol || 'http';
+  const host = req.get('host');
+  return `${protocol}://${host}/kcp/callback`;
+}
+
+async function requestIdentityVerification(req, res) {
+  const kcpRequestUrl = String(process.env.KCP_REQUEST_URL || '').trim();
+  const siteCode = String(process.env.KCP_SITE_CODE || '').trim();
+
+  if (!kcpRequestUrl || !siteCode) {
+    return res.status(500).json({
+      message: 'KCP 연동 환경변수(KCP_REQUEST_URL, KCP_SITE_CODE)가 설정되지 않았습니다.'
+    });
+  }
+
+  const requestPayload = {
+    req_tx: String(req.body.req_tx || 'cert').trim() || 'cert',
+    site_cd: siteCode,
+    ordr_idxx: String(req.body.ordr_idxx || generateOrderNumber()).trim(),
+    Ret_URL: String(req.body.Ret_URL || resolveReturnUrl(req)).trim(),
+    cert_method: String(req.body.cert_method || '01').trim(),
+    cert_otp_use: String(req.body.cert_otp_use || 'Y').trim(),
+    user_name: String(req.body.user_name || '').trim(),
+    phone_no: String(req.body.phone_no || '').trim(),
+    user_birth: String(req.body.user_birth || '').trim(),
+    user_sex: String(req.body.user_sex || '').trim(),
+    user_ci: String(req.body.user_ci || '').trim()
+  };
+
+  const hiddenInputs = Object.entries(requestPayload)
+    .map(([name, value]) => buildHiddenInput(name, value))
+    .join('\n');
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KCP 본인인증 요청</title>
+</head>
+<body>
+  <form id="kcp-request-form" method="post" action="${escapeHtml(kcpRequestUrl)}">
+    ${hiddenInputs}
+  </form>
+  <script>
+    document.getElementById('kcp-request-form').submit();
+  </script>
+</body>
+</html>`);
+}
+
+module.exports = { register, login, me, logout, checkNickname, requestIdentityVerification };

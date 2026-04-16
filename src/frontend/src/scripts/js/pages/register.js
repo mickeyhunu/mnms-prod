@@ -96,6 +96,65 @@ function setupIdentityVerification() {
     }
 }
 
+async function requestIdentityVerification({ popupName, popup, authForm }) {
+    if (!(authForm instanceof HTMLFormElement)) {
+        throw new Error('KCP 인증 폼을 찾을 수 없습니다.');
+    }
+
+    const submitUrl = String(authForm.action || '').trim();
+    if (!submitUrl || submitUrl === 'about:blank') {
+        throw new Error('KCP 인증 요청 URL이 설정되지 않았습니다.');
+    }
+
+    authForm.target = popupName;
+    authForm.submit();
+
+    popup.document.write(`
+        <html lang="ko">
+        <head><title>KCP 본인인증</title></head>
+        <body style="font-family:sans-serif;padding:24px;">
+            <h2>KCP 본인인증</h2>
+            <p>본인인증을 진행 중입니다...</p>
+        </body>
+        </html>
+    `);
+    popup.document.close();
+
+    if (typeof window.requestIdentityVerification !== 'function') {
+        return new Promise((resolve, reject) => {
+            const timeoutId = window.setTimeout(() => {
+                window.removeEventListener('message', handleMessage);
+                reject(new Error('본인인증 응답 대기 시간이 초과되었습니다.'));
+            }, 5 * 60 * 1000);
+
+            const handleMessage = (event) => {
+                const data = event?.data || {};
+                if (data.type !== 'KCP_IDENTITY_VERIFICATION_RESULT') {
+                    return;
+                }
+
+                window.clearTimeout(timeoutId);
+                window.removeEventListener('message', handleMessage);
+                resolve(data.payload || null);
+            };
+
+            window.addEventListener('message', handleMessage);
+        });
+    }
+
+    const response = window.requestIdentityVerification({
+        popupName,
+        popup,
+        form: authForm
+    });
+
+    if (response && typeof response.then === 'function') {
+        return response;
+    }
+
+    return response;
+}
+
 function setupNicknameCheck() {
     const checkNicknameBtn = document.getElementById('check-nickname-btn');
     const nicknameInput = document.getElementById('nickname');
@@ -116,7 +175,7 @@ function setupNicknameCheck() {
     }
 }
 
-function handleIdentityVerification() {
+async function handleIdentityVerification() {
     const popupName = 'kcpIdentityPopup';
     const popup = window.open('', popupName, 'width=460,height=640,scrollbars=yes,resizable=yes');
     if (!popup) {
@@ -125,37 +184,26 @@ function handleIdentityVerification() {
     }
 
     const authForm = document.getElementById('kcp-auth-form');
-    if (authForm instanceof HTMLFormElement) {
-        authForm.target = popupName;
-        authForm.submit();
-    }
 
-    popup.document.write(`
-        <html lang="ko">
-        <head><title>KCP 본인인증</title></head>
-        <body style="font-family:sans-serif;padding:24px;">
-            <h2>KCP 본인인증</h2>
-            <p>본인인증을 진행 중입니다...</p>
-        </body>
-        </html>
-    `);
-    popup.document.close();
+    try {
+        const response = await requestIdentityVerification({
+            popupName,
+            popup,
+            authForm
+        });
 
-    setTimeout(() => {
-        const mockKcpResponse = {
-            success: true,
-            phone: '01012345678',
-            genderDigit: '1',
-            ci: `CI_${Date.now()}`
-        };
-
-        if (mockKcpResponse.success) {
-            applyIdentityResponse(mockKcpResponse);
-            popup.close();
-            showNotification('본인인증이 완료되었습니다.', 'success');
-            showStep('detail');
+        if (!response?.success) {
+            throw new Error(response?.message || '본인인증에 실패했습니다.');
         }
-    }, 1200);
+
+        applyIdentityResponse(response);
+        popup.close();
+        showNotification('본인인증이 완료되었습니다.', 'success');
+        showStep('detail');
+    } catch (error) {
+        popup.close();
+        showNotification(error.message || '본인인증 중 오류가 발생했습니다.', 'error');
+    }
 }
 
 function applyIdentityResponse(response) {

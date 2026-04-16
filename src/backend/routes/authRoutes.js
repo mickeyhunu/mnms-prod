@@ -11,6 +11,7 @@ const router = express.Router();
 router.post('/register', controller.register);
 router.post('/login', loginRateLimitMiddleware, controller.login);
 router.get('/check-nickname', controller.checkNickname);
+router.post('/request-identity-verification', controller.requestIdentityVerification);
 router.post('/logout', authMiddleware, controller.logout);
 router.get('/me', authMiddleware, controller.me);
 
