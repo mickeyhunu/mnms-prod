@@ -35,7 +35,7 @@ function createHourOptions(hourSelect) {
     if (!hourSelect) return;
     const options = ['시간선택'];
     for (let hour = 0; hour <= 24; hour += 1) {
-        options.push(`${String(hour).padStart(2, '0')}시`);
+        options.push(`${String(hour).padStart(2, '0')}:00`);
     }
 
     hourSelect.innerHTML = options
