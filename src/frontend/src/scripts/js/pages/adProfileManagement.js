@@ -190,6 +190,8 @@ async function loadMyAdProfile() {
 async function saveAdProfile() {
     if (adProfileState.isSaving) return;
 
+    const storeName = String(document.getElementById('ad-profile-name')?.value || '').trim();
+    const managerName = String(document.getElementById('ad-profile-manager')?.value || '').trim();
     const region = String(document.getElementById('ad-profile-region')?.value || '').trim();
     const district = String(document.getElementById('ad-profile-district')?.value || '').trim();
     const category = String(document.getElementById('ad-profile-category')?.value || '').trim();
@@ -266,6 +268,8 @@ async function saveAdProfile() {
 function applyAdProfileToForm(ad) {
     if (!ad) return;
 
+    const storeNameInput = document.getElementById('ad-profile-name');
+    const managerNameInput = document.getElementById('ad-profile-manager');
     const regionSelect = document.getElementById('ad-profile-region');
     const districtSelect = document.getElementById('ad-profile-district');
     const categorySelect = document.getElementById('ad-profile-category');
@@ -279,6 +283,8 @@ function applyAdProfileToForm(ad) {
     const imagePreview = document.getElementById('ad-profile-image-preview');
     const previewThumb = document.getElementById('ad-profile-preview-thumb');
 
+    if (storeNameInput) storeNameInput.value = ad.storeName || '';
+    if (managerNameInput) managerNameInput.value = ad.managerName || '';
     if (regionSelect) {
         regionSelect.value = ad.region || '';
         updateSelectOptions(districtSelect, REGION_DISTRICT_MAP[ad.region] || []);
@@ -314,6 +320,10 @@ async function initAdProfileManagementPage() {
 
         const nickname = document.getElementById('user-nickname');
         if (nickname) nickname.textContent = Auth.formatNicknameWithLevel(me);
+        const managerNameInput = document.getElementById('ad-profile-manager');
+        if (managerNameInput) {
+            managerNameInput.value = String(me?.name || me?.nickname || '').trim();
+        }
 
         if (typeof initHeader === 'function') initHeader();
         Auth.bindLogoutButton();
