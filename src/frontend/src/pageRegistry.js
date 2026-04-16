@@ -373,6 +373,10 @@ const pageRegistry = {
                     <p>광고프로필과 다른 사업자이거나 상세정보에 오탈자가 있을 경우,</p>
                     <p>별도 안내 없이 수정되거나 반려될 수 있어요.</p>
                 </div>
+
+                <div class="ad-profile-actions">
+                    <button id="business-info-save-btn" class="btn btn-primary" type="button">사업자정보 저장</button>
+                </div>
             </section>
         </div>
     </main>`,
@@ -987,8 +991,14 @@ const pageRegistry = {
                     <div class="mypage-link-list" id="ad-center-section">
                         <a class="mypage-link-item" href="/ad-purchase"><span>광고 구매</span></a>
                         <a class="mypage-link-item" href="/business-info"><span>점프 관리</span></a>
-                        <a class="mypage-link-item" href="/ad-profile-management"><span>광고프로필 관리</span></a>
-                        <a class="mypage-link-item" href="/business-management"><span>사업자정보 관리</span></a>
+                        <a class="mypage-link-item" href="/ad-profile-management">
+                            <span>광고프로필 관리</span>
+                            <span id="mypage-ad-profile-status" class="mypage-status-badge mypage-status-badge--unregistered">미등록</span>
+                        </a>
+                        <a class="mypage-link-item" href="/business-management">
+                            <span>사업자정보 관리</span>
+                            <span id="mypage-business-info-status" class="mypage-status-badge mypage-status-badge--unregistered">미등록</span>
+                        </a>
                         <a class="mypage-link-item" href="/ad-order-history"><span>광고 구매 내역</span></a>
                     </div>
                 </section>
