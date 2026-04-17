@@ -144,6 +144,19 @@ a:hover {
     border-color: var(--danger-color);
 }
 
+.form-control-static {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: #f8fafc;
+    color: var(--text-color);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+}
+
 .form-group {
     margin-bottom: 20px;
 }
