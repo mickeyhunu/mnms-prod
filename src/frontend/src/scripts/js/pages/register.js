@@ -20,7 +20,6 @@ function initRegisterPage() {
 function setupRegisterForm() {
     const form = document.getElementById('register-form');
     if (!form) {
-        console.error('Register form not found');
         return;
     }
 
@@ -255,11 +254,10 @@ async function handleIdentityVerification() {
             verifiedCustomer: verificationResult?.verifiedCustomer || verificationResult?.customer || response?.verifiedCustomer
         };
 
-        logIdentityVerificationResult(mergedIdentityResult);
         const normalizedResponse = normalizeIdentityResponse(mergedIdentityResult);
 
         if (isFemaleIdentity(normalizedResponse.genderDigit)) {
-            throw new Error('남성회원만 가입가능합니다.');
+            throw new Error('남성 회원만 가입 가능합니다.');
         }
         if (!isIdentityDataComplete(normalizedResponse)) {
             throw new Error('본인인증 정보가 올바르게 전달되지 않았습니다. 다시 시도해주세요.');
@@ -346,13 +344,6 @@ function normalizeIdentityResponse(rawResponse = {}) {
     };
 }
 
-function logIdentityVerificationResult(response) {
-    console.group('[회원가입] 본인인증 완료 응답 데이터');
-    console.log('원본 응답:', response);
-    console.log('정규화 응답:', normalizeIdentityResponse(response));
-    console.groupEnd();
-}
-
 function formatBirthDate(value) {
     const digitsOnly = String(value || '').replace(/\D/g, '');
     if (digitsOnly.length !== 8) {
@@ -399,7 +390,7 @@ function applyIdentityResponse(response = {}) {
         phoneInput.value = response.phone || '';
     }
     if (phoneDisplay) {
-        phoneDisplay.textContent = response.phone || '정보 없음';
+        phoneDisplay.textContent = '본인인증 완료';
     }
     if (genderDigitInput) {
         genderDigitInput.value = response.genderDigit || '';
@@ -411,21 +402,20 @@ function applyIdentityResponse(response = {}) {
         nameInput.value = response.name || '';
     }
     if (nameDisplay) {
-        nameDisplay.textContent = response.name || '정보 없음';
+        nameDisplay.textContent = '본인인증 완료';
     }
     if (birthDateInput) {
         birthDateInput.value = formattedBirthDate || '';
     }
     if (birthDateDisplay) {
-        birthDateDisplay.textContent = formattedBirthDate || '정보 없음';
+        birthDateDisplay.textContent = '본인인증 완료';
     }
 
     setPhoneVerified(Boolean(response.phone));
     setIdentityVerified(true);
 
     if (statusElement) {
-        const phoneLabel = response.phone || '휴대폰 번호 확인';
-        statusElement.textContent = `본인인증 완료 (${phoneLabel})`;
+        statusElement.textContent = '본인인증 완료';
     }
 }
 
@@ -538,8 +528,6 @@ async function handleRegister(e) {
         }, 1500);
 
     } catch (error) {
-        console.error('회원가입 에러:', error);
-
         if (errorMessage) {
             errorMessage.textContent = error.message || '회원가입 중 오류가 발생했습니다.';
         }
