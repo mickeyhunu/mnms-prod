@@ -1296,28 +1296,15 @@ const pageRegistry = {
                                 <p>수신 동의 후에도 마이페이지 또는 수신 거부 안내를 통해 언제든지 변경할 수 있습니다.</p>
                             </div>
                             <label class="legacy-consent-item" for="marketingConsent">
-                                <input type="checkbox" id="marketingConsent" name="marketingConsent">
+                                <input type="checkbox" id="marketingConsent" name="marketingConsent" checked>
                                 <span>[선택] 마케팅 정보 수신에 동의합니다.</span>
                             </label>
                         </div>
-
-                        <div class="error-message hidden" id="termsConsent-error">약관 및 정책 동의가 필요합니다.</div>
-                        <button type="button" class="btn btn-outline w-full" id="agree-terms-btn">본인(성인)인증하고 회원가입</button>
-                    </div>
-
-                    <div id="register-step-identity" class="hidden">
-                        <div class="form-group">
-                            <label class="form-label">KCP 본인인증</label>
-                            <p class="text-muted">본인인증 버튼을 누르면 KCP 인증 팝업이 열립니다.</p>
-                            <button type="button" class="btn btn-outline w-full" id="start-kcp-btn">본인(성인)인증하고 회원가입</button>
-                            <form id="kcp-auth-form" method="post" action="/api/auth/request-identity-verification" class="hidden" aria-hidden="true">
-                                <input type="hidden" name="req_tx" value="cert">
-                                <input type="hidden" name="cert_method" value="01">
-                                <input type="hidden" name="cert_otp_use" value="Y">
-                            </form>
-                            <small class="text-muted" id="identity-status">본인인증이 필요합니다.</small>
-                            <div class="error-message hidden" id="identityVerified-error"></div>
-                        </div>
+                        
+                        <div class="legacy-terms-section">
+                            <div class="error-message hidden" id="termsConsent-error">약관 및 정책 동의가 필요합니다.</div>
+                            <button type="button" class="btn btn-outline w-full" id="agree-terms-btn">본인(성인)인증하고 회원가입</button>
+                        <div/>
                     </div>
 
                     <div id="register-step-detail" class="hidden">
