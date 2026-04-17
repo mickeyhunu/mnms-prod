@@ -1365,6 +1365,8 @@ const pageRegistry = {
 
                         <input type="hidden" id="genderDigit" name="genderDigit" value="">
                         <input type="hidden" id="identityCi" name="identityCi" value="">
+                        <input type="hidden" id="identityDi" name="identityDi" value="">
+                        <input type="hidden" id="identityVerificationId" name="identityVerificationId" value="">
                         <input type="hidden" id="phoneVerified" name="phoneVerified" value="false">
                         <input type="hidden" id="identityVerified" name="identityVerified" value="false">
                         <input type="hidden" id="nicknameChecked" name="nicknameChecked" value="false">

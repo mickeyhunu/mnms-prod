@@ -228,7 +228,13 @@ async function initDatabase() {
     { name: 'last_nickname_changed_at', query: "ALTER TABLE users ADD COLUMN last_nickname_changed_at DATETIME NULL AFTER sms_consent" },
     { name: 'account_status', query: "ALTER TABLE users ADD COLUMN account_status ENUM('ACTIVE','SUSPENDED') NOT NULL DEFAULT 'ACTIVE' AFTER member_type" },
     { name: 'login_restricted_until', query: "ALTER TABLE users ADD COLUMN login_restricted_until DATETIME NULL AFTER account_status" },
-    { name: 'is_login_restriction_permanent', query: "ALTER TABLE users ADD COLUMN is_login_restriction_permanent TINYINT(1) NOT NULL DEFAULT 0 AFTER login_restricted_until" }
+    { name: 'is_login_restriction_permanent', query: "ALTER TABLE users ADD COLUMN is_login_restriction_permanent TINYINT(1) NOT NULL DEFAULT 0 AFTER login_restricted_until" },
+    { name: 'identity_ci_hash', query: "ALTER TABLE users ADD COLUMN identity_ci_hash CHAR(64) NULL AFTER phone" },
+    { name: 'identity_di_hash', query: "ALTER TABLE users ADD COLUMN identity_di_hash CHAR(64) NULL AFTER identity_ci_hash" },
+    { name: 'phone_hash', query: "ALTER TABLE users ADD COLUMN phone_hash CHAR(64) NULL AFTER identity_di_hash" },
+    { name: 'is_adult_verified', query: "ALTER TABLE users ADD COLUMN is_adult_verified TINYINT(1) NOT NULL DEFAULT 0 AFTER phone_hash" },
+    { name: 'adult_verified_at', query: "ALTER TABLE users ADD COLUMN adult_verified_at DATETIME NULL AFTER is_adult_verified" },
+    { name: 'last_identity_verified_at', query: "ALTER TABLE users ADD COLUMN last_identity_verified_at DATETIME NULL AFTER adult_verified_at" }
   ];
 
   for (const column of userColumnDefinitions) {
@@ -246,6 +252,39 @@ async function initDatabase() {
       await pool.query(column.query);
     }
   }
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS identity_verification_usages (
+      identity_verification_id VARCHAR(120) PRIMARY KEY,
+      ci_hash CHAR(64) NULL,
+      di_hash CHAR(64) NULL,
+      phone_hash CHAR(64) NULL,
+      used_by_user_id BIGINT NULL,
+      used_ip_address VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_identity_verification_usages_ci (ci_hash),
+      INDEX idx_identity_verification_usages_di (di_hash),
+      INDEX idx_identity_verification_usages_phone (phone_hash),
+      FOREIGN KEY (used_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS signup_restrictions (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      ci_hash CHAR(64) NULL,
+      di_hash CHAR(64) NULL,
+      phone_hash CHAR(64) NULL,
+      restriction_type ENUM('REJOIN_WAIT','BLACKLIST','SUSPENDED_HISTORY') NOT NULL DEFAULT 'REJOIN_WAIT',
+      reason VARCHAR(255) NULL,
+      restricted_until DATETIME NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_signup_restrictions_ci (ci_hash),
+      INDEX idx_signup_restrictions_di (di_hash),
+      INDEX idx_signup_restrictions_phone (phone_hash),
+      INDEX idx_signup_restrictions_until (restricted_until)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS sessions (

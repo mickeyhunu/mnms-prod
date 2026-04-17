@@ -307,6 +307,10 @@ function pickFirstExistingValue(source, candidatePaths = []) {
 
 function normalizeIdentityResponse(rawResponse = {}) {
     return {
+        identityVerificationId: String(pickFirstExistingValue(rawResponse, [
+            'identityVerificationId',
+            'id'
+        ]) || ''),
         phone: String(pickFirstExistingValue(rawResponse, [
             'normalized.phone',
             'phone',
@@ -336,6 +340,13 @@ function normalizeIdentityResponse(rawResponse = {}) {
             'identityCi',
             'verifiedCustomer.ci',
             'customer.ci'
+        ]) || ''),
+        di: String(pickFirstExistingValue(rawResponse, [
+            'normalized.di',
+            'di',
+            'identityDi',
+            'verifiedCustomer.di',
+            'customer.di'
         ]) || ''),
         name: String(pickFirstExistingValue(rawResponse, [
             'normalized.name',
@@ -391,6 +402,8 @@ function applyIdentityResponse(response = {}) {
     const phoneDisplay = document.getElementById('phone-display');
     const genderDigitInput = document.getElementById('genderDigit');
     const identityCiInput = document.getElementById('identityCi');
+    const identityDiInput = document.getElementById('identityDi');
+    const identityVerificationIdInput = document.getElementById('identityVerificationId');
     const nameInput = document.getElementById('name') || document.getElementById('fullName');
     const nameDisplay = document.getElementById('name-display');
     const birthDateInput = document.getElementById('birthDate');
@@ -409,6 +422,12 @@ function applyIdentityResponse(response = {}) {
     }
     if (identityCiInput) {
         identityCiInput.value = response.ci || '';
+    }
+    if (identityDiInput) {
+        identityDiInput.value = response.di || '';
+    }
+    if (identityVerificationIdInput) {
+        identityVerificationIdInput.value = response.identityVerificationId || '';
     }
     if (nameInput) {
         nameInput.value = response.name || '';
@@ -498,6 +517,10 @@ async function handleRegister(e) {
         password: form.password.value,
         confirmPassword: form.confirmPassword.value,
         phone: form.phone.value.trim(),
+        birthDate: form.birthDate.value.trim(),
+        identityVerificationId: form.identityVerificationId.value.trim(),
+        identityCi: form.identityCi.value.trim(),
+        identityDi: form.identityDi.value.trim(),
         phoneVerified: form.phoneVerified.value,
         identityVerified: form.identityVerified.value,
         genderDigit: form.genderDigit.value.trim(),
@@ -527,6 +550,10 @@ async function handleRegister(e) {
             loginId: formData.loginId,
             password: formData.password,
             phone: formData.phone,
+            birthDate: formData.birthDate,
+            identityVerificationId: formData.identityVerificationId,
+            identityCi: formData.identityCi,
+            identityDi: formData.identityDi,
             genderDigit: formData.genderDigit,
             nickname: formData.nickname,
             accountType: 'MEMBER',
