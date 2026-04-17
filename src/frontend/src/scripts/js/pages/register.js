@@ -46,11 +46,11 @@ function setupStepFlow() {
     const privacyConsent = document.getElementById('privacyConsent');
     const marketingConsent = document.getElementById('marketingConsent');
     const termsConsentError = document.getElementById('termsConsent-error');
-    const consentCheckboxes = [termsConsent, privacyConsent, marketingConsent].filter(Boolean);
+    const requiredConsentCheckboxes = [termsConsent, privacyConsent].filter(Boolean);
 
-    consentCheckboxes.forEach((checkbox) => {
+    [termsConsent, privacyConsent, marketingConsent].filter(Boolean).forEach((checkbox) => {
         checkbox.addEventListener('change', () => {
-            if (consentCheckboxes.every(item => item.checked)) {
+            if (requiredConsentCheckboxes.every(item => item.checked)) {
                 termsConsentError?.classList.add('hidden');
             }
         });
@@ -58,7 +58,7 @@ function setupStepFlow() {
 
     if (agreeTermsBtn) {
         agreeTermsBtn.addEventListener('click', () => {
-            if (!consentCheckboxes.every(item => item.checked)) {
+            if (!requiredConsentCheckboxes.every(item => item.checked)) {
                 termsConsentError?.classList.remove('hidden');
                 return;
             }
