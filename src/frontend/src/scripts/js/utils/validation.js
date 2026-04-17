@@ -24,6 +24,14 @@ function validateRegisterForm(data) {
         errors.identityVerified = '본인인증을 완료해주세요.';
     }
 
+    if (!data.identityVerificationId) {
+        errors.identityVerified = '본인인증 식별 정보가 없습니다. 본인인증을 다시 진행해주세요.';
+    }
+
+    if (!data.identityCi && !data.identityDi) {
+        errors.identityVerified = '본인인증 고유값(CI/DI)이 없어 가입을 진행할 수 없습니다.';
+    }
+
     if (!data.genderDigit || !/^\d$/.test(data.genderDigit)) {
         errors.genderDigit = '성별 식별 번호를 입력해주세요.';
     } else if (Number(data.genderDigit) % 2 === 0) {

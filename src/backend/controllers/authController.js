@@ -2,6 +2,13 @@
  * 파일 역할: authController 관련 HTTP 요청을 처리하고 모델/응답 로직을 조합하는 컨트롤러 파일.
  */
 const { createUser, findByEmail, findByNickname, recordUserLoginHistory } = require('../models/userModel');
+const {
+  hashIdentityValue,
+  findUserByIdentityHashes,
+  isIdentityVerificationIdUsed,
+  markIdentityVerificationUsed,
+  findActiveSignupRestriction
+} = require('../models/identityPolicyModel');
 const { formatRestrictionMessage, getLoginRestrictionState } = require('../utils/loginRestriction');
 const { recordAuthEvent } = require('../models/authEventModel');
 const { recordLoginAttemptResult } = require('../middlewares/loginRateLimitMiddleware');
@@ -20,6 +27,77 @@ function resolveRoleByAccountType(accountType) {
 function getClientIp(req) {
   return req.ip || req.socket?.remoteAddress || 'unknown';
 }
+
+const IDENTITY_REUSE_WINDOW_MS = 3 * 60 * 1000;
+const REGISTER_IP_WINDOW_MS = 5 * 60 * 1000;
+const REGISTER_IP_MAX_ATTEMPTS = 5;
+const identityReuseStore = new Map();
+const registerIpStore = new Map();
+
+function cleanupMapByWindow(store, windowMs, now = Date.now()) {
+  for (const [key, value] of store.entries()) {
+    if (!value) {
+      store.delete(key);
+      continue;
+    }
+    const lastAt = Number(value.lastAt || value.firstAt || 0);
+    if (!lastAt || now - lastAt > windowMs) {
+      store.delete(key);
+    }
+  }
+}
+
+function normalizeBirthDateToIso(value) {
+  const digitsOnly = String(value || '').replace(/\D/g, '');
+  if (digitsOnly.length !== 8) return '';
+  return `${digitsOnly.slice(0, 4)}-${digitsOnly.slice(4, 6)}-${digitsOnly.slice(6, 8)}`;
+}
+
+function calculateInternationalAge(birthDateIso, referenceDate = new Date()) {
+  if (!birthDateIso) return -1;
+  const birthDate = new Date(`${birthDateIso}T00:00:00Z`);
+  if (Number.isNaN(birthDate.getTime())) return -1;
+
+  const current = new Date(referenceDate);
+  let age = current.getUTCFullYear() - birthDate.getUTCFullYear();
+  const hasBirthdayPassed = (
+    current.getUTCMonth() > birthDate.getUTCMonth()
+    || (current.getUTCMonth() === birthDate.getUTCMonth() && current.getUTCDate() >= birthDate.getUTCDate())
+  );
+  if (!hasBirthdayPassed) age -= 1;
+  return age;
+}
+
+function registerIdentityUsageAttempt({ identityVerificationId, ipAddress }) {
+  const now = Date.now();
+  cleanupMapByWindow(identityReuseStore, IDENTITY_REUSE_WINDOW_MS, now);
+  cleanupMapByWindow(registerIpStore, REGISTER_IP_WINDOW_MS, now);
+
+  const normalizedIdentityId = String(identityVerificationId || '').trim();
+  if (normalizedIdentityId) {
+    const prev = identityReuseStore.get(normalizedIdentityId);
+    if (prev && now - prev.lastAt < IDENTITY_REUSE_WINDOW_MS) {
+      return { blocked: true, message: '같은 인증 요청은 잠시 후 다시 시도해주세요. (3분 제한)' };
+    }
+    identityReuseStore.set(normalizedIdentityId, { lastAt: now });
+  }
+
+  const ipKey = String(ipAddress || 'unknown').trim() || 'unknown';
+  const ipEntry = registerIpStore.get(ipKey);
+  if (!ipEntry || now - ipEntry.firstAt > REGISTER_IP_WINDOW_MS) {
+    registerIpStore.set(ipKey, { count: 1, firstAt: now, lastAt: now });
+    return { blocked: false };
+  }
+
+  ipEntry.count += 1;
+  ipEntry.lastAt = now;
+  registerIpStore.set(ipKey, ipEntry);
+  if (ipEntry.count > REGISTER_IP_MAX_ATTEMPTS) {
+    return { blocked: true, message: '동일 IP에서 인증/가입 요청이 많아 5분 뒤 다시 시도해주세요.' };
+  }
+
+  return { blocked: false };
+}
 const { createSession, deleteSession } = require('../models/sessionModel');
 const { awardPointByAction } = require('../models/pointModel');
 const { pickUserRow } = require('../utils/response');
@@ -27,10 +105,33 @@ const { pickUserRow } = require('../utils/response');
 async function register(req, res, next) {
   try {
     const { loginId, email, password, nickname, genderDigit } = req.body;
+    const ipAddress = getClientIp(req);
     const accountType = normalizeAccountType(req.body.accountType || req.body.memberType);
     const resolvedLoginId = (loginId || email || '').trim();
+    const identityVerificationId = String(req.body.identityVerificationId || '').trim();
+    const identityCi = String(req.body.identityCi || req.body.ci || '').trim();
+    const identityDi = String(req.body.identityDi || req.body.di || '').trim();
+    const phone = String(req.body.phone || '').trim();
+    const birthDateIso = normalizeBirthDateToIso(req.body.birthDate || '');
+
+    const registerAttemptState = registerIdentityUsageAttempt({ identityVerificationId, ipAddress });
+    if (registerAttemptState.blocked) {
+      return res.status(429).json({ message: registerAttemptState.message });
+    }
+
     if (!resolvedLoginId || !password || !nickname) {
       return res.status(400).json({ message: '아이디, 비밀번호, 닉네임은 필수입니다.' });
+    }
+    if (!identityVerificationId) {
+      return res.status(400).json({ message: '본인인증 확인 정보가 누락되었습니다. 인증 후 다시 시도해주세요.' });
+    }
+    if (!identityDi && !identityCi) {
+      return res.status(400).json({ message: '본인인증 고유값(DI/CI)이 없어 가입을 진행할 수 없습니다.' });
+    }
+
+    const age = calculateInternationalAge(birthDateIso);
+    if (age < 19) {
+      return res.status(403).json({ message: '19세 이상만 가입 가능합니다.' });
     }
 
     const normalizedNickname = String(nickname || '').trim();
@@ -47,6 +148,27 @@ async function register(req, res, next) {
       return res.status(400).json({ message: '남성회원만 가입가능합니다.' });
     }
 
+    const ciHash = hashIdentityValue(identityCi);
+    const diHash = hashIdentityValue(identityDi);
+    const phoneHash = hashIdentityValue(phone);
+
+    if (await isIdentityVerificationIdUsed(identityVerificationId)) {
+      return res.status(409).json({ message: '이미 사용된 본인인증 건입니다. 다시 본인인증을 진행해주세요.' });
+    }
+
+    const activeRestriction = await findActiveSignupRestriction({ ciHash, diHash, phoneHash });
+    if (activeRestriction) {
+      if (activeRestriction.restrictionType === 'REJOIN_WAIT') {
+        return res.status(403).json({ message: '탈퇴 후 7일 이내에는 재가입할 수 없습니다.' });
+      }
+      return res.status(403).json({ message: '가입이 제한된 본인인증 정보입니다. 고객센터로 문의해주세요.' });
+    }
+
+    const existingIdentityUser = await findUserByIdentityHashes({ ciHash, diHash, phoneHash });
+    if (existingIdentityUser) {
+      return res.status(409).json({ message: '동일 명의(또는 휴대폰 번호)로 가입된 아이디가 이미 존재합니다.' });
+    }
+
     if (await findByEmail(resolvedLoginId)) {
       return res.status(400).json({ message: '이미 사용 중인 아이디입니다.' });
     }
@@ -55,7 +177,28 @@ async function register(req, res, next) {
     }
 
     const role = resolveRoleByAccountType(accountType);
-    const userId = await createUser({ email: resolvedLoginId, password, nickname: normalizedNickname, role, memberType: accountType });
+    const userId = await createUser({
+      email: resolvedLoginId,
+      password,
+      nickname: normalizedNickname,
+      role,
+      memberType: accountType,
+      phone,
+      identityCiHash: ciHash,
+      identityDiHash: diHash,
+      phoneHash,
+      isAdultVerified: true,
+      adultVerifiedAt: new Date(),
+      lastIdentityVerifiedAt: new Date()
+    });
+    await markIdentityVerificationUsed({
+      identityVerificationId,
+      ciHash,
+      diHash,
+      phoneHash,
+      usedByUserId: userId,
+      usedIpAddress: ipAddress
+    });
     await awardPointByAction(userId, 'REGISTER');
 
     const user = await findByEmail(resolvedLoginId);
@@ -272,7 +415,8 @@ function normalizeIdentityVerificationPayload(payload = {}) {
     birthDate: pickIdentityValue(verifiedCustomer, ['birthDate', 'birthday', 'birth']) || pickIdentityValue(payload, ['birthDate', 'birthday', 'birth']),
     phone: pickIdentityValue(verifiedCustomer, ['phoneNumber', 'phone', 'mobilePhone']) || pickIdentityValue(payload, ['phoneNumber', 'phone', 'mobilePhone']),
     genderDigit: pickIdentityValue(verifiedCustomer, ['genderDigit', 'genderCode', 'gender']) || pickIdentityValue(payload, ['genderDigit', 'genderCode', 'gender']),
-    ci: pickIdentityValue(verifiedCustomer, ['ci']) || pickIdentityValue(payload, ['ci'])
+    ci: pickIdentityValue(verifiedCustomer, ['ci']) || pickIdentityValue(payload, ['ci']),
+    di: pickIdentityValue(verifiedCustomer, ['di']) || pickIdentityValue(payload, ['di'])
   };
 }
 
