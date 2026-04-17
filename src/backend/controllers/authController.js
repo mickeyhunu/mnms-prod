@@ -14,6 +14,7 @@ const { recordAuthEvent } = require('../models/authEventModel');
 const { recordLoginAttemptResult } = require('../middlewares/loginRateLimitMiddleware');
 const { signAuthToken, DEFAULT_EXPIRES_IN } = require('../utils/jwt');
 const { validateNickname } = require('../utils/nicknamePolicy');
+const { validateLoginId, validatePassword } = require('../utils/authPolicy');
 
 function normalizeAccountType(value) {
   const normalized = String(value || '').trim().toUpperCase();
@@ -123,6 +124,16 @@ async function register(req, res, next) {
 
     if (!resolvedLoginId || !password || !nickname) {
       return res.status(400).json({ message: '아이디, 비밀번호, 닉네임은 필수입니다.' });
+    }
+
+    const loginIdValidation = validateLoginId(resolvedLoginId);
+    if (!loginIdValidation.valid) {
+      return res.status(400).json({ message: loginIdValidation.message });
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      return res.status(400).json({ message: passwordValidation.message });
     }
     if (!identityVerificationId) {
       return res.status(400).json({ message: '본인인증 확인 정보가 누락되었습니다. 인증 후 다시 시도해주세요.' });
