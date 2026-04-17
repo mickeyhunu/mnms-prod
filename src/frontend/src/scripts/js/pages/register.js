@@ -48,7 +48,7 @@ function setupStepFlow() {
     if (agreeTermsBtn) {
         agreeTermsBtn.addEventListener('click', () => {
             if (!termsConsent?.checked || !privacyConsent?.checked) {
-                showNotification('이용약관 및 개인정보 보호정책에 모두 동의해주세요.', 'warning');
+                showNotification('[필수] 이용약관 및 개인정보처리방침에 모두 동의해주세요.', 'warning');
                 return;
             }
 
