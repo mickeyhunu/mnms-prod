@@ -550,6 +550,11 @@ async function handleRegister(e) {
 
     if (hasValidationErrors(errors)) {
         showValidationErrors(errors, form);
+        const firstErrorMessage = Object.values(errors)[0];
+        if (errorMessage && firstErrorMessage) {
+            errorMessage.textContent = firstErrorMessage;
+            showElement(errorBanner);
+        }
         return;
     }
 
@@ -565,6 +570,7 @@ async function handleRegister(e) {
         await AuthAPI.register({
             loginId: formData.loginId,
             password: formData.password,
+            name: form.name?.value?.trim() || '',
             phone: formData.phone,
             birthDate: formData.birthDate,
             identityVerificationId: formData.identityVerificationId,
@@ -579,7 +585,7 @@ async function handleRegister(e) {
         showNotification('회원가입이 완료되었습니다!', 'success');
 
         setTimeout(() => {
-            window.location.href = '/login';
+            window.location.href = '/login?returnTo=%2F&registered=1';
         }, 1500);
 
     } catch (error) {

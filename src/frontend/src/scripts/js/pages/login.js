@@ -5,7 +5,15 @@ function initLoginPage() {
     if (Auth.redirectIfAuthenticated()) {
         return;
     }
+    showRegisteredMessageIfNeeded();
     setupLoginForm();
+}
+
+function showRegisteredMessageIfNeeded() {
+    const params = new URLSearchParams(window.location.search || '');
+    if (params.get('registered') === '1') {
+        showNotification('회원가입이 완료되었습니다. 로그인 후 홈으로 이동합니다.', 'success');
+    }
 }
 
 function setupLoginForm() {
@@ -51,10 +59,12 @@ async function handleLogin(e) {
         
         showNotification(MESSAGES.LOGIN_SUCCESS, 'success');
 
-        
+        const params = new URLSearchParams(window.location.search || '');
+        const returnTo = params.get('returnTo') || '/';
+        const isValidReturnPath = returnTo.startsWith('/') && !returnTo.startsWith('//');
         setTimeout(() => {
-            window.location.href = 'http://localhost:8080/';
-        }, 2000);
+            window.location.href = isValidReturnPath ? returnTo : '/';
+        }, 1000);
         
     } catch (error) {
         console.error('로그인 에러:', error);
