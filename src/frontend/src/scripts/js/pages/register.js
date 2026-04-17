@@ -243,8 +243,20 @@ async function handleIdentityVerification() {
             throw new Error(response.message || '본인인증에 실패했습니다.');
         }
 
-        logIdentityVerificationResult(response);
-        const normalizedResponse = normalizeIdentityResponse(response);
+        const identityVerificationTxId = String(response?.identityVerificationTxId || '').trim();
+        if (!identityVerificationTxId) {
+            throw new Error('본인인증 거래 정보를 찾지 못했습니다. 다시 시도해주세요.');
+        }
+
+        const verificationResult = await AuthAPI.getIdentityVerificationResult(identityVerificationTxId);
+        const mergedIdentityResult = {
+            ...response,
+            ...verificationResult,
+            verifiedCustomer: verificationResult?.verifiedCustomer || verificationResult?.customer || response?.verifiedCustomer
+        };
+
+        logIdentityVerificationResult(mergedIdentityResult);
+        const normalizedResponse = normalizeIdentityResponse(mergedIdentityResult);
 
         if (isFemaleIdentity(normalizedResponse.genderDigit)) {
             throw new Error('남성회원만 가입가능합니다.');
@@ -286,6 +298,7 @@ function pickFirstExistingValue(source, candidatePaths = []) {
 function normalizeIdentityResponse(rawResponse = {}) {
     return {
         phone: String(pickFirstExistingValue(rawResponse, [
+            'normalized.phone',
             'phone',
             'phoneNumber',
             'mobile',
@@ -296,29 +309,38 @@ function normalizeIdentityResponse(rawResponse = {}) {
             'customer.phoneNumber'
         ]) || ''),
         genderDigit: String(pickFirstExistingValue(rawResponse, [
+            'normalized.genderDigit',
             'genderDigit',
             'genderCode',
             'gender',
+            'verifiedCustomer.genderDigit',
+            'verifiedCustomer.genderCode',
             'verifiedCustomer.gender',
+            'customer.genderDigit',
+            'customer.genderCode',
             'customer.gender'
         ]) || ''),
         ci: String(pickFirstExistingValue(rawResponse, [
+            'normalized.ci',
             'ci',
             'identityCi',
             'verifiedCustomer.ci',
             'customer.ci'
         ]) || ''),
         name: String(pickFirstExistingValue(rawResponse, [
+            'normalized.name',
             'name',
             'fullName',
             'verifiedCustomer.name',
             'customer.name'
         ]) || ''),
         birthDate: String(pickFirstExistingValue(rawResponse, [
+            'normalized.birthDate',
             'birthDate',
             'birth',
             'birthday',
             'verifiedCustomer.birthDate',
+            'verifiedCustomer.birthday',
             'customer.birthDate'
         ]) || '')
     };

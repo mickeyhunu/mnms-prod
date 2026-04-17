@@ -243,4 +243,93 @@ async function getIdentityVerificationConfig(req, res) {
   });
 }
 
-module.exports = { register, login, me, logout, checkNickname, requestIdentityVerification, getIdentityVerificationConfig };
+function pickIdentityValue(source, candidateKeys = []) {
+  if (!source || typeof source !== 'object') {
+    return '';
+  }
+
+  for (const key of candidateKeys) {
+    const value = source[key];
+    if (value !== undefined && value !== null && String(value).trim() !== '') {
+      return String(value).trim();
+    }
+  }
+
+  return '';
+}
+
+function normalizeIdentityVerificationPayload(payload = {}) {
+  const verifiedCustomer = payload.verifiedCustomer || payload.customer || {};
+
+  return {
+    name: pickIdentityValue(verifiedCustomer, ['name', 'fullName']) || pickIdentityValue(payload, ['name', 'fullName']),
+    birthDate: pickIdentityValue(verifiedCustomer, ['birthDate', 'birthday', 'birth']) || pickIdentityValue(payload, ['birthDate', 'birthday', 'birth']),
+    phone: pickIdentityValue(verifiedCustomer, ['phoneNumber', 'phone', 'mobilePhone']) || pickIdentityValue(payload, ['phoneNumber', 'phone', 'mobilePhone']),
+    genderDigit: pickIdentityValue(verifiedCustomer, ['genderDigit', 'genderCode', 'gender']) || pickIdentityValue(payload, ['genderDigit', 'genderCode', 'gender']),
+    ci: pickIdentityValue(verifiedCustomer, ['ci']) || pickIdentityValue(payload, ['ci'])
+  };
+}
+
+async function getIdentityVerificationResult(req, res) {
+  const txId = String(req.params.identityVerificationTxId || '').trim();
+  const apiSecret = String(process.env.PORTONE_API_SECRET || '').trim();
+
+  if (!txId) {
+    return res.status(400).json({ message: '본인인증 거래 ID가 필요합니다.' });
+  }
+
+  if (!apiSecret) {
+    return res.status(500).json({
+      message: 'PortOne 연동 환경변수(PORTONE_API_SECRET)가 설정되지 않았습니다.'
+    });
+  }
+
+  const endpointUrl = `https://api.portone.io/identity-verifications/${encodeURIComponent(txId)}`;
+
+  let upstreamResponse;
+  try {
+    upstreamResponse = await fetch(endpointUrl, {
+      method: 'GET',
+      headers: {
+        Authorization: `PortOne ${apiSecret}`,
+        Accept: 'application/json'
+      }
+    });
+  } catch (error) {
+    return res.status(502).json({
+      message: 'PortOne 본인인증 결과 조회에 실패했습니다.',
+      detail: error.message
+    });
+  }
+
+  let payload = null;
+  try {
+    payload = await upstreamResponse.json();
+  } catch (error) {
+    return res.status(502).json({
+      message: 'PortOne 본인인증 결과 응답을 해석할 수 없습니다.'
+    });
+  }
+
+  if (!upstreamResponse.ok) {
+    return res.status(upstreamResponse.status).json({
+      message: payload?.message || 'PortOne 본인인증 결과 조회에 실패했습니다.'
+    });
+  }
+
+  return res.json({
+    ...payload,
+    normalized: normalizeIdentityVerificationPayload(payload)
+  });
+}
+
+module.exports = {
+  register,
+  login,
+  me,
+  logout,
+  checkNickname,
+  requestIdentityVerification,
+  getIdentityVerificationConfig,
+  getIdentityVerificationResult
+};

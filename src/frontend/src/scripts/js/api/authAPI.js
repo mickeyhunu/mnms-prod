@@ -71,6 +71,14 @@ const AuthAPI = {
         }
     },
 
+    async getIdentityVerificationResult(identityVerificationTxId) {
+        try {
+            return await APIClient.get(`/auth/identity-verification/${encodeURIComponent(identityVerificationTxId)}`);
+        } catch (error) {
+            throw error;
+        }
+    },
+
     async logout() {
         try {
             await APIClient.post('/auth/logout');
