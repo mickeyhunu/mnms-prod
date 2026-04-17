@@ -473,6 +473,33 @@ function markNicknameAsUnchecked() {
     setNicknameChecked(false);
 }
 
+const REGISTER_POLICY_ALERT_MESSAGES = [
+    '이미 사용된 본인인증 건입니다. 다시 본인인증을 진행해주세요.',
+    '19세 이상만 가입 가능합니다.',
+    '본인인증 확인 정보가 누락되었습니다. 인증 후 다시 시도해주세요.',
+    '본인인증 고유값(DI/CI)이 없어 가입을 진행할 수 없습니다.',
+    '남성회원만 가입가능합니다.',
+    '같은 인증 요청은 잠시 후 다시 시도해주세요. (3분 제한)',
+    '동일 IP에서 인증/가입 요청이 많아 5분 뒤 다시 시도해주세요.',
+    '동일 명의(또는 휴대폰 번호)로 가입된 아이디가 이미 존재합니다.',
+    '탈퇴 후 7일 이내에는 재가입할 수 없습니다.',
+    '가입이 제한된 본인인증 정보입니다. 고객센터로 문의해주세요.'
+];
+
+function showRegisterPolicyAlert(error) {
+    const message = String(error?.message || '').trim();
+    if (!message) {
+        return;
+    }
+
+    const shouldAlert = REGISTER_POLICY_ALERT_MESSAGES.includes(message)
+        || [400, 403, 409, 429].includes(Number(error?.status || 0));
+
+    if (shouldAlert) {
+        alert(message);
+    }
+}
+
 async function checkNicknameAvailability() {
     const nicknameInput = document.getElementById('nickname');
     const nickname = nicknameInput?.value.trim() || '';
@@ -567,6 +594,7 @@ async function handleRegister(e) {
         }, 1500);
 
     } catch (error) {
+        showRegisterPolicyAlert(error);
         if (errorMessage) {
             errorMessage.textContent = error.message || '회원가입 중 오류가 발생했습니다.';
         }
