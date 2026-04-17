@@ -245,6 +245,11 @@ async function handleIdentityVerification() {
 
         logIdentityVerificationResult(response);
         const normalizedResponse = normalizeIdentityResponse(response);
+
+        if (normalizedResponse.genderDigit && Number(normalizedResponse.genderDigit) % 2 === 0) {
+            throw new Error('남성회원만 가입가능합니다.');
+        }
+
         applyIdentityResponse(normalizedResponse);
 
         showNotification('본인인증이 완료되었습니다.', 'success');
