@@ -230,10 +230,16 @@ async function requestIdentityVerification(req, res) {
 async function getIdentityVerificationConfig(req, res) {
   const storeId = String(process.env.PORTONE_STORE_ID || '').trim();
   const channelKey = String(process.env.PORTONE_CHANNEL_KEY || '').trim();
+  const apiSecret = String(process.env.PORTONE_API_SECRET || '').trim();
 
-  if (!storeId || !channelKey) {
+  if (!storeId || !channelKey || !apiSecret) {
+    const missingEnvs = [];
+    if (!storeId) missingEnvs.push('PORTONE_STORE_ID');
+    if (!channelKey) missingEnvs.push('PORTONE_CHANNEL_KEY');
+    if (!apiSecret) missingEnvs.push('PORTONE_API_SECRET');
+
     return res.status(500).json({
-      message: 'PortOne 연동 환경변수(PORTONE_STORE_ID, PORTONE_CHANNEL_KEY)가 설정되지 않았습니다.'
+      message: `PortOne 연동 환경변수(${missingEnvs.join(', ')})가 설정되지 않았습니다.`
     });
   }
 
