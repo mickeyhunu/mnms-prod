@@ -277,11 +277,11 @@ function normalizeIdentityVerificationPayload(payload = {}) {
 }
 
 async function getIdentityVerificationResult(req, res) {
-  const txId = String(req.params.identityVerificationTxId || '').trim();
+  const identityVerificationId = String(req.params.identityVerificationId || '').trim();
   const apiSecret = String(process.env.PORTONE_API_SECRET || '').trim();
 
-  if (!txId) {
-    return res.status(400).json({ message: '본인인증 거래 ID가 필요합니다.' });
+  if (!identityVerificationId) {
+    return res.status(400).json({ message: '본인인증 ID가 필요합니다.' });
   }
 
   if (!apiSecret) {
@@ -290,7 +290,7 @@ async function getIdentityVerificationResult(req, res) {
     });
   }
 
-  const endpointUrl = `https://api.portone.io/identity-verifications/${encodeURIComponent(txId)}`;
+  const endpointUrl = `https://api.portone.io/identity-verifications/${encodeURIComponent(identityVerificationId)}`;
 
   let upstreamResponse;
   try {
