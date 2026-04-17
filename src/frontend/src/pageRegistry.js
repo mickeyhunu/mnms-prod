@@ -1328,8 +1328,9 @@ const pageRegistry = {
                         </div>
 
                         <div class="form-group">
-                            <label for="name" class="form-label">이름</label>
-                            <input type="text" id="name" name="name" class="form-control" placeholder="본인인증 후 자동 입력됩니다." readonly>
+                            <label class="form-label">이름</label>
+                            <p class="form-control-static" id="name-display">본인인증 후 자동 입력됩니다.</p>
+                            <input type="hidden" id="name" name="name" value="">
                         </div>
 
                         <div class="form-group">
@@ -1343,13 +1344,15 @@ const pageRegistry = {
                         </div>
 
                         <div class="form-group">
-                            <label for="birthDate" class="form-label">생년월일</label>
-                            <input type="text" id="birthDate" name="birthDate" class="form-control" placeholder="본인인증 후 자동 입력됩니다." readonly>
+                            <label class="form-label">생년월일</label>
+                            <p class="form-control-static" id="birthDate-display">본인인증 후 자동 입력됩니다.</p>
+                            <input type="hidden" id="birthDate" name="birthDate" value="">
                         </div>
 
                         <div class="form-group">
-                            <label for="phone" class="form-label">연락처</label>
-                            <input type="text" id="phone" name="phone" class="form-control" placeholder="본인인증 후 자동 입력됩니다." readonly>
+                            <label class="form-label">연락처</label>
+                            <p class="form-control-static" id="phone-display">본인인증 후 자동 입력됩니다.</p>
+                            <input type="hidden" id="phone" name="phone" value="">
                             <div class="error-message hidden" id="phone-error"></div>
                         </div>
 

@@ -246,8 +246,11 @@ async function handleIdentityVerification() {
         logIdentityVerificationResult(response);
         const normalizedResponse = normalizeIdentityResponse(response);
 
-        if (normalizedResponse.genderDigit && Number(normalizedResponse.genderDigit) % 2 === 0) {
+        if (isFemaleIdentity(normalizedResponse.genderDigit)) {
             throw new Error('남성회원만 가입가능합니다.');
+        }
+        if (!isIdentityDataComplete(normalizedResponse)) {
+            throw new Error('본인인증 정보가 올바르게 전달되지 않았습니다. 다시 시도해주세요.');
         }
 
         applyIdentityResponse(normalizedResponse);
@@ -340,16 +343,41 @@ function formatBirthDate(value) {
     return `${year}년 ${month}월 ${day}일`;
 }
 
+function isFemaleIdentity(genderDigitRaw) {
+    const genderDigit = String(genderDigitRaw || '').trim().toLowerCase();
+    if (!genderDigit) {
+        return false;
+    }
+
+    if (/^\d$/.test(genderDigit)) {
+        return Number(genderDigit) % 2 === 0;
+    }
+
+    return ['f', 'female', 'woman', '여', '여성'].includes(genderDigit);
+}
+
+function isIdentityDataComplete(response = {}) {
+    const requiredFields = [response.name, response.birthDate, response.phone, response.genderDigit];
+    return requiredFields.every(field => String(field || '').trim().length > 0);
+}
+
 function applyIdentityResponse(response = {}) {
     const phoneInput = document.getElementById('phone');
+    const phoneDisplay = document.getElementById('phone-display');
     const genderDigitInput = document.getElementById('genderDigit');
     const identityCiInput = document.getElementById('identityCi');
     const nameInput = document.getElementById('name') || document.getElementById('fullName');
+    const nameDisplay = document.getElementById('name-display');
     const birthDateInput = document.getElementById('birthDate');
+    const birthDateDisplay = document.getElementById('birthDate-display');
     const statusElement = document.getElementById('identity-status');
+    const formattedBirthDate = formatBirthDate(response.birthDate);
 
     if (phoneInput) {
         phoneInput.value = response.phone || '';
+    }
+    if (phoneDisplay) {
+        phoneDisplay.textContent = response.phone || '정보 없음';
     }
     if (genderDigitInput) {
         genderDigitInput.value = response.genderDigit || '';
@@ -357,11 +385,17 @@ function applyIdentityResponse(response = {}) {
     if (identityCiInput) {
         identityCiInput.value = response.ci || '';
     }
-    if (nameInput && !nameInput.value) {
+    if (nameInput) {
         nameInput.value = response.name || '';
     }
-    if (birthDateInput && !birthDateInput.value) {
-        birthDateInput.value = formatBirthDate(response.birthDate);
+    if (nameDisplay) {
+        nameDisplay.textContent = response.name || '정보 없음';
+    }
+    if (birthDateInput) {
+        birthDateInput.value = formattedBirthDate || '';
+    }
+    if (birthDateDisplay) {
+        birthDateDisplay.textContent = formattedBirthDate || '정보 없음';
     }
 
     setPhoneVerified(Boolean(response.phone));
