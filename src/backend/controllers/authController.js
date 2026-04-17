@@ -148,26 +148,24 @@ async function register(req, res, next) {
       return res.status(400).json({ message: '남성회원만 가입가능합니다.' });
     }
 
-    const ciHash = hashIdentityValue(identityCi);
-    const diHash = hashIdentityValue(identityDi);
-    const phoneHash = hashIdentityValue(phone);
-
-    if (await isIdentityVerificationIdUsed(identityVerificationId)) {
-      return res.status(409).json({ message: '이미 사용된 본인인증 건입니다. 다시 본인인증을 진행해주세요.' });
+    const signupEligibility = await evaluateIdentitySignupEligibility({
+      identityVerificationId,
+      ci: identityCi,
+      di: identityDi,
+      phone
+    });
+    if (!signupEligibility.allowed) {
+      const blockedStatusByReason = {
+        MISSING_IDENTITY_VERIFICATION_ID: 400,
+        MISSING_IDENTITY_HASH: 400,
+        IDENTITY_VERIFICATION_ALREADY_USED: 409,
+        REJOIN_WAIT: 403,
+        RESTRICTED_IDENTITY: 403,
+        DUPLICATE_IDENTITY: 409
+      };
+      return res.status(blockedStatusByReason[signupEligibility.reasonCode] || 400).json({ message: signupEligibility.message });
     }
-
-    const activeRestriction = await findActiveSignupRestriction({ ciHash, diHash, phoneHash });
-    if (activeRestriction) {
-      if (activeRestriction.restrictionType === 'REJOIN_WAIT') {
-        return res.status(403).json({ message: '탈퇴 후 7일 이내에는 재가입할 수 없습니다.' });
-      }
-      return res.status(403).json({ message: '가입이 제한된 본인인증 정보입니다. 고객센터로 문의해주세요.' });
-    }
-
-    const existingIdentityUser = await findUserByIdentityHashes({ ciHash, diHash, phoneHash });
-    if (existingIdentityUser) {
-      return res.status(409).json({ message: '동일 명의(또는 휴대폰 번호)로 가입된 아이디가 이미 존재합니다.' });
-    }
+    const { ciHash, diHash, phoneHash } = signupEligibility.identityHashes;
 
     if (await findByEmail(resolvedLoginId)) {
       return res.status(400).json({ message: '이미 사용 중인 아이디입니다.' });
@@ -420,6 +418,73 @@ function normalizeIdentityVerificationPayload(payload = {}) {
   };
 }
 
+async function evaluateIdentitySignupEligibility({ identityVerificationId, ci = '', di = '', phone = '' }) {
+  const ciHash = hashIdentityValue(ci);
+  const diHash = hashIdentityValue(di);
+  const phoneHash = hashIdentityValue(phone);
+
+  if (!identityVerificationId) {
+    return {
+      allowed: false,
+      reasonCode: 'MISSING_IDENTITY_VERIFICATION_ID',
+      message: '본인인증 확인 정보가 누락되었습니다. 인증 후 다시 시도해주세요.'
+    };
+  }
+
+  if (!diHash && !ciHash) {
+    return {
+      allowed: false,
+      reasonCode: 'MISSING_IDENTITY_HASH',
+      message: '본인인증 고유값(DI/CI)이 없어 가입을 진행할 수 없습니다.'
+    };
+  }
+
+  if (await isIdentityVerificationIdUsed(identityVerificationId)) {
+    return {
+      allowed: false,
+      reasonCode: 'IDENTITY_VERIFICATION_ALREADY_USED',
+      message: '이미 사용된 본인인증 건입니다. 다시 본인인증을 진행해주세요.'
+    };
+  }
+
+  const activeRestriction = await findActiveSignupRestriction({ ciHash, diHash, phoneHash });
+  if (activeRestriction) {
+    if (activeRestriction.restrictionType === 'REJOIN_WAIT') {
+      return {
+        allowed: false,
+        reasonCode: 'REJOIN_WAIT',
+        message: '탈퇴 후 7일 이내에는 재가입할 수 없습니다.'
+      };
+    }
+
+    return {
+      allowed: false,
+      reasonCode: 'RESTRICTED_IDENTITY',
+      message: '가입이 제한된 본인인증 정보입니다. 고객센터로 문의해주세요.'
+    };
+  }
+
+  const existingIdentityUser = await findUserByIdentityHashes({ ciHash, diHash, phoneHash });
+  if (existingIdentityUser) {
+    return {
+      allowed: false,
+      reasonCode: 'DUPLICATE_IDENTITY',
+      message: '동일 명의(또는 휴대폰 번호)로 가입된 아이디가 이미 존재합니다.'
+    };
+  }
+
+  return {
+    allowed: true,
+    reasonCode: 'OK',
+    message: '가입 가능한 본인인증 정보입니다.',
+    identityHashes: {
+      ciHash,
+      diHash,
+      phoneHash
+    }
+  };
+}
+
 async function getIdentityVerificationResult(req, res) {
   const identityVerificationId = String(req.params.identityVerificationId || '').trim();
   const apiSecret = String(process.env.PORTONE_API_SECRET || '').trim();
@@ -467,9 +532,18 @@ async function getIdentityVerificationResult(req, res) {
     });
   }
 
+  const normalizedPayload = normalizeIdentityVerificationPayload(payload);
+  const signupEligibility = await evaluateIdentitySignupEligibility({
+    identityVerificationId,
+    ci: normalizedPayload.ci,
+    di: normalizedPayload.di,
+    phone: normalizedPayload.phone
+  });
+
   return res.json({
     ...payload,
-    normalized: normalizeIdentityVerificationPayload(payload)
+    normalized: normalizedPayload,
+    signupEligibility
   });
 }
 
