@@ -115,6 +115,9 @@ async function register(req, res, next) {
     const identityDi = String(req.body.identityDi || req.body.di || '').trim();
     const phone = String(req.body.phone || '').trim();
     const birthDateIso = normalizeBirthDateToIso(req.body.birthDate || '');
+    const termsConsent = Boolean(req.body.termsConsent);
+    const privacyConsent = Boolean(req.body.privacyConsent);
+    const marketingConsent = Boolean(req.body.marketingConsent);
     const smsConsent = Boolean(req.body.smsConsent);
 
     const registerAttemptState = registerIdentityUsageAttempt({ identityVerificationId, ipAddress });
@@ -140,6 +143,9 @@ async function register(req, res, next) {
     }
     if (!identityDi && !identityCi) {
       return res.status(400).json({ message: '본인인증 고유값(DI/CI)이 없어 가입을 진행할 수 없습니다.' });
+    }
+    if (!termsConsent || !privacyConsent) {
+      return res.status(400).json({ message: '약관 및 개인정보처리방침 동의가 필요합니다.' });
     }
 
     const age = calculateInternationalAge(birthDateIso);
@@ -197,6 +203,9 @@ async function register(req, res, next) {
       role,
       memberType: accountType,
       phone,
+      termsConsent,
+      privacyConsent,
+      marketingConsent,
       smsConsent,
       identityCiHash: ciHash,
       identityDiHash: diHash,

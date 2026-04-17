@@ -542,6 +542,8 @@ async function handleRegister(e) {
         genderDigit: form.genderDigit.value.trim(),
         nickname: form.nickname.value.trim(),
         nicknameChecked: form.nicknameChecked.value,
+        privacyConsent: form.privacyConsent?.checked || false,
+        marketingConsent: form.marketingConsent?.checked || false,
         smsConsent: form.smsConsent?.checked || false,
         termsConsent: form.termsConsent.checked
     };
@@ -579,6 +581,9 @@ async function handleRegister(e) {
             genderDigit: formData.genderDigit,
             nickname: formData.nickname,
             accountType: 'MEMBER',
+            termsConsent: formData.termsConsent,
+            privacyConsent: formData.privacyConsent,
+            marketingConsent: formData.marketingConsent,
             smsConsent: formData.smsConsent
         });
 
