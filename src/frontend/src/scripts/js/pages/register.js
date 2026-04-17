@@ -53,7 +53,6 @@ function setupStepFlow() {
                 return;
             }
 
-            showStep('identity');
             showNotification('약관 동의가 완료되었습니다. 본인인증을 시작합니다.', 'success');
             handleIdentityVerification();
         });
