@@ -102,6 +102,14 @@ function setIdentityVerified(isVerified) {
     }
 }
 
+function showIdentityStatus(message = '') {
+    const statusElement = document.getElementById('identity-status');
+    if (!statusElement) {
+        return;
+    }
+    statusElement.textContent = String(message || '').trim();
+}
+
 function setupIdentityVerification() {
     const startIdentityBtn = document.getElementById('start-kcp-btn');
 
@@ -265,6 +273,10 @@ async function handleIdentityVerification() {
             ...verificationResult,
             verifiedCustomer: verificationResult?.verifiedCustomer || verificationResult?.customer || response?.verifiedCustomer
         };
+        const signupEligibility = verificationResult?.signupEligibility;
+        if (signupEligibility && signupEligibility.allowed === false) {
+            throw new Error(signupEligibility.message || '해당 본인인증 정보로는 회원가입이 불가합니다.');
+        }
 
         const normalizedResponse = normalizeIdentityResponse(mergedIdentityResult);
 
@@ -278,8 +290,10 @@ async function handleIdentityVerification() {
         applyIdentityResponse(normalizedResponse);
 
         showNotification('본인인증이 완료되었습니다.', 'success');
+        showIdentityStatus('본인인증 완료');
         showStep('detail');
     } catch (error) {
+        showIdentityStatus(error.message || '본인인증 중 오류가 발생했습니다.');
         showNotification(error.message || '본인인증 중 오류가 발생했습니다.', 'error');
     }
 }
