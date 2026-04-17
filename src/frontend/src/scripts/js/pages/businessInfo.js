@@ -22,6 +22,8 @@ const REGION_DISTRICT_MAP = {
 };
 
 const BUSINESS_CATEGORIES = ['룸', '바', '클럽', '기타'];
+const KAKAO_POSTCODE_SCRIPT_URL = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+let kakaoPostcodeLoader = null;
 
 function normalizeAreaLabel(value) {
     const raw = String(value || '').trim();
@@ -30,6 +32,60 @@ function normalizeAreaLabel(value) {
     if ([...raw].length <= 2) return raw;
 
     return raw.replace(/(특별시|광역시|자치시|자치도|도|시|군|구)$/u, '').trim() || raw;
+}
+
+function loadKakaoPostcodeScript() {
+    if (window.daum?.Postcode) {
+        return Promise.resolve();
+    }
+
+    if (kakaoPostcodeLoader) {
+        return kakaoPostcodeLoader;
+    }
+
+    kakaoPostcodeLoader = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = KAKAO_POSTCODE_SCRIPT_URL;
+        script.async = true;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('주소 검색 서비스를 불러오지 못했습니다.'));
+        document.head.appendChild(script);
+    });
+
+    return kakaoPostcodeLoader;
+}
+
+function buildBusinessAddress(postcodeResult) {
+    const roadAddress = String(postcodeResult?.roadAddress || '').trim();
+    const jibunAddress = String(postcodeResult?.jibunAddress || '').trim();
+    const extraAddress = [
+        String(postcodeResult?.bname || '').trim(),
+        String(postcodeResult?.buildingName || '').trim()
+    ].filter(Boolean).join(', ');
+
+    if (roadAddress) {
+        return extraAddress ? `${roadAddress} (${extraAddress})` : roadAddress;
+    }
+
+    return jibunAddress;
+}
+
+async function openBusinessAddressSearch() {
+    await loadKakaoPostcodeScript();
+
+    const addressInput = document.getElementById('business-address');
+    const addressDetailInput = document.getElementById('business-address-detail');
+    if (!addressInput) return;
+
+    new window.daum.Postcode({
+        oncomplete(data) {
+            const selectedAddress = buildBusinessAddress(data);
+            if (!selectedAddress) return;
+            addressInput.value = selectedAddress;
+            addressDetailInput?.focus();
+            updateBusinessActionButtons();
+        }
+    }).open();
 }
 
 function renderBusinessAds(ads) {
@@ -341,6 +397,8 @@ function bindBusinessManagementEvents() {
     const fileName = document.getElementById('business-license-file-name');
     const saveButton = document.getElementById('business-info-save-btn');
     const draftButton = document.getElementById('business-info-draft-btn');
+    const addressSearchButton = document.getElementById('business-address-search-btn');
+    const addressInput = document.getElementById('business-address');
     const fields = ['business-number', 'business-name', 'business-owner', 'business-address', 'business-address-detail'];
 
     uploadButton?.addEventListener('click', () => licenseInput?.click());
@@ -359,6 +417,16 @@ function bindBusinessManagementEvents() {
     document.querySelectorAll('input[name="billing-type"]').forEach((radio) => {
         radio.addEventListener('change', updateBusinessActionButtons);
     });
+
+    const handleAddressSearch = async () => {
+        try {
+            await openBusinessAddressSearch();
+        } catch (error) {
+            alert(error.message || '주소 검색을 실행할 수 없습니다. 잠시 후 다시 시도해주세요.');
+        }
+    };
+    addressSearchButton?.addEventListener('click', handleAddressSearch);
+    addressInput?.addEventListener('click', handleAddressSearch);
 
     draftButton?.addEventListener('click', async () => {
         try {
