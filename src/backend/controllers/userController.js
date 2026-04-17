@@ -23,6 +23,7 @@ const supportModel = require('../models/supportModel');
 const adminModel = require('../models/adminModel');
 const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
 const { validateNickname } = require('../utils/nicknamePolicy');
+const { validatePassword } = require('../utils/authPolicy');
 
 const REGISTRATION_STATUSES = new Set(['UNREGISTERED', 'DRAFT', 'REGISTERED']);
 
@@ -87,8 +88,9 @@ async function updateMyProfile(req, res, next) {
     };
 
     if (password) {
-      if (password.length < 4) {
-        return res.status(400).json({ message: '비밀번호는 4글자 이상이어야 합니다.' });
+      const passwordValidation = validatePassword(password);
+      if (!passwordValidation.valid) {
+        return res.status(400).json({ message: passwordValidation.message });
       }
       updates.password = password;
     }

@@ -1082,10 +1082,10 @@ const pageRegistry = {
                 <input type="text" id="profile-login-id" name="loginId" readonly>
               </label>
               <label>비밀번호
-                <input type="password" id="profile-password" name="password" minlength="4" placeholder="변경 시 입력">
+                <input type="password" id="profile-password" name="password" minlength="8" placeholder="변경 시 입력">
               </label>
               <label>비밀번호 확인
-                <input type="password" id="profile-password-confirm" name="passwordConfirm" minlength="4" placeholder="비밀번호 재입력">
+                <input type="password" id="profile-password-confirm" name="passwordConfirm" minlength="8" placeholder="비밀번호 재입력">
                 <small id="profile-password-match-result" class="help-text" role="status"></small>
               </label>
               <label>이름
@@ -1312,13 +1312,14 @@ const pageRegistry = {
                             <label for="loginId" class="form-label">아이디</label>
                             <input type="text" id="loginId" name="loginId" class="form-control" placeholder="아이디를 입력하세요" required>
                             <div class="error-message hidden" id="loginId-error"></div>
+                            <small class="text-muted">4자 이상 영문/숫자 조합으로 입력해주세요</small>
                         </div>
 
                         <div class="form-group">
                             <label for="password" class="form-label">비밀번호</label>
                             <input type="password" id="password" name="password" class="form-control" placeholder="비밀번호를 입력하세요" required>
                             <div class="error-message hidden" id="password-error"></div>
-                            <small class="text-muted">8자 이상 입력해주세요</small>
+                            <small class="text-muted">8자 이상, 영문/숫자를 포함하고 특수문자를 사용할 수 있습니다</small>
                         </div>
 
                         <div class="form-group">

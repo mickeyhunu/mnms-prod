@@ -312,6 +312,11 @@ function bindProfileForm() {
 
         if (form.phone) form.phone.value = phone;
 
+        if (password && !VALIDATION.PASSWORD_REGEX.test(password)) {
+            setHelpMessage(result, `비밀번호는 ${VALIDATION.MIN_PASSWORD_LENGTH}자 이상 영문/숫자를 포함해야 하며 특수문자를 사용할 수 있습니다.`, '#dc3545');
+            return;
+        }
+
         if (password && password !== passwordConfirm) {
             setHelpMessage(passwordMatchResult, '비밀번호와 비밀번호 확인이 일치하지 않습니다.', '#dc3545');
             return;

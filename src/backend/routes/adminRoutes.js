@@ -12,6 +12,7 @@ const { LOGIN_STATUS } = require('../utils/loginRestriction');
 const { deleteSessionsByUserId } = require('../models/sessionModel');
 const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
 const { validateNickname } = require('../utils/nicknamePolicy');
+const { validatePassword } = require('../utils/authPolicy');
 
 const router = express.Router();
 
@@ -176,8 +177,11 @@ router.put('/users/:id', async (req, res, next) => {
       return res.status(400).json({ message: nicknameValidation.message });
     }
 
-    if (password && password.length < 4) {
-      return res.status(400).json({ message: '비밀번호는 4글자 이상이어야 합니다.' });
+    if (password) {
+      const passwordValidation = validatePassword(password);
+      if (!passwordValidation.valid) {
+        return res.status(400).json({ message: passwordValidation.message });
+      }
     }
 
     if (phone && !/^01\d-\d{3,4}-\d{4}$/.test(phone)) {

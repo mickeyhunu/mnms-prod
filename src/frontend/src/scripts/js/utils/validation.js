@@ -4,12 +4,12 @@
 function validateRegisterForm(data) {
     const errors = {};
 
-    if (!data.loginId || data.loginId.trim().length < 3) {
-        errors.loginId = '아이디는 3글자 이상 입력해주세요.';
+    if (!data.loginId || !VALIDATION.LOGIN_ID_REGEX.test(data.loginId.trim())) {
+        errors.loginId = '아이디는 4자 이상 영문/숫자 조합으로 입력해주세요.';
     }
 
-    if (!data.password || data.password.length < VALIDATION.MIN_PASSWORD_LENGTH) {
-        errors.password = `비밀번호는 ${VALIDATION.MIN_PASSWORD_LENGTH}글자 이상이어야 합니다.`;
+    if (!data.password || !VALIDATION.PASSWORD_REGEX.test(data.password)) {
+        errors.password = `비밀번호는 ${VALIDATION.MIN_PASSWORD_LENGTH}자 이상 영문/숫자를 포함해야 하며 특수문자를 사용할 수 있습니다.`;
     }
 
     if (data.password !== data.confirmPassword) {
