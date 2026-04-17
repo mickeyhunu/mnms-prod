@@ -26,7 +26,7 @@ const { pickUserRow } = require('../utils/response');
 
 async function register(req, res, next) {
   try {
-    const { loginId, email, password, nickname } = req.body;
+    const { loginId, email, password, nickname, genderDigit } = req.body;
     const accountType = normalizeAccountType(req.body.accountType || req.body.memberType);
     const resolvedLoginId = (loginId || email || '').trim();
     if (!resolvedLoginId || !password || !nickname) {
@@ -37,6 +37,14 @@ async function register(req, res, next) {
     const nicknameValidation = validateNickname(normalizedNickname);
     if (!nicknameValidation.valid) {
       return res.status(400).json({ message: nicknameValidation.message });
+    }
+
+    const normalizedGenderDigit = String(genderDigit || '').trim();
+    if (!/^\d$/.test(normalizedGenderDigit)) {
+      return res.status(400).json({ message: '성별 식별 번호를 확인할 수 없습니다. 본인인증을 다시 진행해주세요.' });
+    }
+    if (Number(normalizedGenderDigit) % 2 === 0) {
+      return res.status(400).json({ message: '남성회원만 가입가능합니다.' });
     }
 
     if (await findByEmail(resolvedLoginId)) {

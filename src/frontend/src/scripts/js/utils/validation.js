@@ -27,7 +27,7 @@ function validateRegisterForm(data) {
     if (!data.genderDigit || !/^\d$/.test(data.genderDigit)) {
         errors.genderDigit = '성별 식별 번호를 입력해주세요.';
     } else if (Number(data.genderDigit) % 2 === 0) {
-        errors.genderDigit = '남성만 가입 가능합니다. 홀수 번호를 입력해주세요.';
+        errors.genderDigit = '남성회원만 가입가능합니다.';
     }
     const nicknameLength = Array.from(String(data.nickname || '').trim()).length;
     if (nicknameLength < VALIDATION.NICKNAME_MIN_LENGTH || nicknameLength > VALIDATION.NICKNAME_MAX_LENGTH) {
