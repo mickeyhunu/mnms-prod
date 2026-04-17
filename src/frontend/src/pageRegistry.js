@@ -1359,7 +1359,7 @@ const pageRegistry = {
 
                         <div class="form-group">
                             <label class="register-consent-item" for="smsConsent">
-                                <input type="checkbox" id="smsConsent" name="smsConsent">
+                                <input type="checkbox" id="smsConsent" name="smsConsent" checked>
                                 <span>SMS 수신 동의</span>
                             </label>
                         </div>
