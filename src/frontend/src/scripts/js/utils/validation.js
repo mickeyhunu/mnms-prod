@@ -3,16 +3,22 @@
  */
 function validateRegisterForm(data) {
     const errors = {};
+    const loginId = String(data.loginId || '').trim();
+    const password = String(data.password || '');
 
-    if (!data.loginId || data.loginId.trim().length < 3) {
-        errors.loginId = '아이디는 3글자 이상 입력해주세요.';
+    if (!loginId || loginId.length < VALIDATION.LOGIN_ID_MIN_LENGTH) {
+        errors.loginId = `아이디는 ${VALIDATION.LOGIN_ID_MIN_LENGTH}자 이상 입력해주세요.`;
+    } else if (!VALIDATION.LOGIN_ID_REGEX.test(loginId)) {
+        errors.loginId = '아이디는 영문 소문자와 숫자만 사용할 수 있습니다.';
     }
 
-    if (!data.password || data.password.length < VALIDATION.MIN_PASSWORD_LENGTH) {
+    if (!password || password.length < VALIDATION.MIN_PASSWORD_LENGTH) {
         errors.password = `비밀번호는 ${VALIDATION.MIN_PASSWORD_LENGTH}글자 이상이어야 합니다.`;
+    } else if (!VALIDATION.PASSWORD_COMPLEXITY_REGEX.test(password)) {
+        errors.password = '비밀번호는 영문/숫자/특수문자를 모두 포함해야 합니다.';
     }
 
-    if (data.password !== data.confirmPassword) {
+    if (password !== data.confirmPassword) {
         errors.confirmPassword = '비밀번호가 일치하지 않습니다.';
     }
 

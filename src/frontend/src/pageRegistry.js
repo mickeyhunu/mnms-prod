@@ -1312,13 +1312,14 @@ const pageRegistry = {
                             <label for="loginId" class="form-label">아이디</label>
                             <input type="text" id="loginId" name="loginId" class="form-control" placeholder="아이디를 입력하세요" required>
                             <div class="error-message hidden" id="loginId-error"></div>
+                            <small class="text-muted">4자 이상, 영문 소문자/숫자만 입력해주세요</small>
                         </div>
 
                         <div class="form-group">
                             <label for="password" class="form-label">비밀번호</label>
                             <input type="password" id="password" name="password" class="form-control" placeholder="비밀번호를 입력하세요" required>
                             <div class="error-message hidden" id="password-error"></div>
-                            <small class="text-muted">8자 이상 입력해주세요</small>
+                            <small class="text-muted">8자 이상, 영문/숫자/특수문자를 모두 포함해주세요</small>
                         </div>
 
                         <div class="form-group">
@@ -1358,7 +1359,7 @@ const pageRegistry = {
 
                         <div class="form-group">
                             <label class="register-consent-item" for="smsConsent">
-                                <input type="checkbox" id="smsConsent" name="smsConsent">
+                                <input type="checkbox" id="smsConsent" name="smsConsent" checked>
                                 <span>SMS 수신 동의</span>
                             </label>
                         </div>
