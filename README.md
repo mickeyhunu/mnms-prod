@@ -151,20 +151,8 @@ aws s3api create-bucket \
   - `KCP_REQUEST_URL` (KCP 인증 요청 URL)
   - `KCP_SITE_CODE` (KCP 사이트 코드)
 - 선택 환경변수:
-  - `KCP_RETURN_URL` (인증 완료 후 KCP가 리다이렉트할 URL. 최우선 사용)
-  - `KCP_BASE_URL` (예: `https://www.example.com`. `KCP_RETURN_URL`이 없을 때 `${KCP_BASE_URL}/kcp/callback`으로 자동 구성)
-  - `FRONTEND_ORIGIN` (`KCP_BASE_URL` 미설정 시 폴백으로 사용)
+  - `KCP_RETURN_URL` (인증 완료 후 KCP가 리다이렉트할 URL. 미설정 시 `https?://<host>/kcp/callback` 자동 구성)
 
 ### PEM 키 보관 위치
 - `.pem` 키는 프론트엔드/레포에 직접 넣지 말고, 서버의 외부 안전 경로(예: `/etc/mnms/kcp/`)에 저장하세요.
 - 경로가 필요하면 `.env.local` 같은 로컬 전용 환경 파일을 통해 주입하세요.
-
-
-### `[CS13] 인증되지 않은 도메인` 오류 점검
-KCP의 CS13 오류는 대부분 `Ret_URL` 도메인이 KCP에 등록된 도메인과 다를 때 발생합니다.
-
-1. 서버 환경변수에 아래 둘 중 하나를 명시하세요.
-   - `KCP_RETURN_URL=https://<등록된도메인>/kcp/callback`
-   - `KCP_BASE_URL=https://<등록된도메인>`
-2. 운영 프록시/Nginx를 사용하는 경우 `x-forwarded-host`, `x-forwarded-proto` 헤더가 원본 도메인을 전달하는지 확인하세요.
-3. `localhost`, `127.0.0.1` URL로 KCP 실거래 인증을 호출하면 CS13이 발생합니다.

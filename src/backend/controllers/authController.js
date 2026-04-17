@@ -160,40 +160,15 @@ function generateOrderNumber() {
   return `MNMS_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
 }
 
-function firstHeaderValue(value) {
-  return String(value || '').split(',')[0].trim();
-}
-
-function isLocalhostHost(hostname) {
-  return ['localhost', '127.0.0.1', '::1'].includes(String(hostname || '').toLowerCase());
-}
-
 function resolveReturnUrl(req) {
   const configuredReturnUrl = String(process.env.KCP_RETURN_URL || '').trim();
   if (configuredReturnUrl) {
     return configuredReturnUrl;
   }
 
-  const configuredBaseUrl = String(process.env.KCP_BASE_URL || process.env.FRONTEND_ORIGIN || '').trim();
-  if (configuredBaseUrl) {
-    return `${configuredBaseUrl.replace(/\/$/, '')}/kcp/callback`;
-  }
-
-  const forwardedProto = firstHeaderValue(req.headers['x-forwarded-proto']);
-  const forwardedHost = firstHeaderValue(req.headers['x-forwarded-host']);
-  const origin = String(req.headers.origin || '').trim();
-
-  if (origin) {
-    try {
-      const originUrl = new URL(origin);
-      return `${originUrl.protocol}//${originUrl.host}/kcp/callback`;
-    } catch (error) {
-      // ignore malformed origin
-    }
-  }
-
+  const forwardedProto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
   const protocol = forwardedProto || req.protocol || 'http';
-  const host = forwardedHost || req.get('host');
+  const host = req.get('host');
   return `${protocol}://${host}/kcp/callback`;
 }
 
@@ -220,19 +195,6 @@ async function requestIdentityVerification(req, res) {
     user_sex: String(req.body.user_sex || '').trim(),
     user_ci: String(req.body.user_ci || '').trim()
   };
-
-  try {
-    const retUrl = new URL(requestPayload.Ret_URL);
-    if (isLocalhostHost(retUrl.hostname)) {
-      return res.status(400).json({
-        message: 'KCP 본인인증 Ret_URL 도메인이 localhost로 설정되어 CS13 오류가 발생할 수 있습니다. KCP_RETURN_URL 또는 KCP_BASE_URL을 실서비스 도메인으로 설정하세요.'
-      });
-    }
-  } catch (error) {
-    return res.status(400).json({
-      message: 'KCP 본인인증 Ret_URL이 유효한 URL이 아닙니다. KCP_RETURN_URL 또는 KCP_BASE_URL 값을 확인하세요.'
-    });
-  }
 
   const hiddenInputs = Object.entries(requestPayload)
     .map(([name, value]) => buildHiddenInput(name, value))
