@@ -423,13 +423,15 @@ function applyIdentityResponse(response = {}) {
     const birthDateInput = document.getElementById('birthDate');
     const birthDateDisplay = document.getElementById('birthDate-display');
     const statusElement = document.getElementById('identity-status');
+    const resolvedName = String(response.name || '').trim();
+    const resolvedPhone = String(response.phone || '').trim();
     const formattedBirthDate = formatBirthDate(response.birthDate);
 
     if (phoneInput) {
         phoneInput.value = response.phone || '';
     }
     if (phoneDisplay) {
-        phoneDisplay.textContent = '본인인증 완료';
+        phoneDisplay.textContent = resolvedPhone || '본인인증 후 자동 입력됩니다.';
     }
     if (genderDigitInput) {
         genderDigitInput.value = response.genderDigit || '';
@@ -447,13 +449,13 @@ function applyIdentityResponse(response = {}) {
         nameInput.value = response.name || '';
     }
     if (nameDisplay) {
-        nameDisplay.textContent = '본인인증 완료';
+        nameDisplay.textContent = resolvedName || '본인인증 후 자동 입력됩니다.';
     }
     if (birthDateInput) {
         birthDateInput.value = formattedBirthDate || '';
     }
     if (birthDateDisplay) {
-        birthDateDisplay.textContent = '본인인증 완료';
+        birthDateDisplay.textContent = formattedBirthDate || '본인인증 후 자동 입력됩니다.';
     }
 
     setPhoneVerified(Boolean(response.phone));
