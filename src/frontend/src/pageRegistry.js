@@ -1300,11 +1300,11 @@ const pageRegistry = {
                                 <span>[선택] 마케팅 정보 수신에 동의합니다.</span>
                             </label>
                         </div>
-                        
+
                         <div class="legacy-terms-section">
                             <div class="error-message hidden" id="termsConsent-error">약관 및 정책 동의가 필요합니다.</div>
                             <button type="button" class="btn btn-outline w-full" id="agree-terms-btn">본인(성인)인증하고 회원가입</button>
-                        <div/>
+                        </div>
                     </div>
 
                     <div id="register-step-detail" class="hidden">
