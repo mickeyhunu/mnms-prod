@@ -108,11 +108,13 @@ async function register(req, res, next) {
     const ipAddress = getClientIp(req);
     const accountType = normalizeAccountType(req.body.accountType || req.body.memberType);
     const resolvedLoginId = (loginId || email || '').trim();
+    const name = String(req.body.name || '').trim() || null;
     const identityVerificationId = String(req.body.identityVerificationId || '').trim();
     const identityCi = String(req.body.identityCi || req.body.ci || '').trim();
     const identityDi = String(req.body.identityDi || req.body.di || '').trim();
     const phone = String(req.body.phone || '').trim();
     const birthDateIso = normalizeBirthDateToIso(req.body.birthDate || '');
+    const smsConsent = Boolean(req.body.smsConsent);
 
     const registerAttemptState = registerIdentityUsageAttempt({ identityVerificationId, ipAddress });
     if (registerAttemptState.blocked) {
@@ -179,9 +181,12 @@ async function register(req, res, next) {
       email: resolvedLoginId,
       password,
       nickname: normalizedNickname,
+      name,
+      birthDate: birthDateIso || null,
       role,
       memberType: accountType,
       phone,
+      smsConsent,
       identityCiHash: ciHash,
       identityDiHash: diHash,
       phoneHash,

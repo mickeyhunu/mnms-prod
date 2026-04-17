@@ -8,9 +8,12 @@ async function createUser({
   email,
   password,
   nickname,
+  name = null,
+  birthDate = null,
   role = 'MEMBER',
   memberType = 'MEMBER',
   phone = null,
+  smsConsent = false,
   identityCiHash = null,
   identityDiHash = null,
   phoneHash = null,
@@ -21,9 +24,9 @@ async function createUser({
   const pool = getPool();
   const [result] = await pool.query(
     `INSERT INTO users
-      (email, password, nickname, role, member_type, phone, identity_ci_hash, identity_di_hash, phone_hash, is_adult_verified, adult_verified_at, last_identity_verified_at, total_points)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [email, password, nickname, role, memberType, phone, identityCiHash, identityDiHash, phoneHash, isAdultVerified ? 1 : 0, adultVerifiedAt, lastIdentityVerifiedAt, 0]
+      (email, password, nickname, name, birth_date, role, member_type, phone, sms_consent, identity_ci_hash, identity_di_hash, phone_hash, is_adult_verified, adult_verified_at, last_identity_verified_at, total_points)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [email, password, nickname, name, birthDate, role, memberType, phone, smsConsent ? 1 : 0, identityCiHash, identityDiHash, phoneHash, isAdultVerified ? 1 : 0, adultVerifiedAt, lastIdentityVerifiedAt, 0]
   );
   return result.insertId;
 }
