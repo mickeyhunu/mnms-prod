@@ -225,27 +225,6 @@ async function getPortOneIdentityConfig() {
     return portOneIdentityConfig;
 }
 
-async function fetchIdentityVerificationResultWithRetry(identityVerificationTxId, options = {}) {
-    const maxAttempts = Number(options.maxAttempts || 4);
-    const retryDelayMs = Number(options.retryDelayMs || 1200);
-
-    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-        try {
-            return await AuthAPI.getIdentityVerificationResult(identityVerificationTxId);
-        } catch (error) {
-            const isNotFound = Number(error?.status) === 404;
-            const isLastAttempt = attempt === maxAttempts;
-            if (!isNotFound || isLastAttempt) {
-                throw error;
-            }
-
-            await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
-        }
-    }
-
-    throw new Error('본인인증 결과를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.');
-}
-
 async function handleIdentityVerification() {
     try {
         const PortOne = await loadPortOneSdk();
@@ -269,7 +248,7 @@ async function handleIdentityVerification() {
             throw new Error('본인인증 거래 정보를 찾지 못했습니다. 다시 시도해주세요.');
         }
 
-        const verificationResult = await fetchIdentityVerificationResultWithRetry(identityVerificationTxId);
+        const verificationResult = await AuthAPI.getIdentityVerificationResult(identityVerificationTxId);
         const mergedIdentityResult = {
             ...response,
             ...verificationResult,
