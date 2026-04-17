@@ -1315,20 +1315,6 @@ const pageRegistry = {
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">회원 구분</label>
-                            <div class="grid grid-2">
-                                <label class="register-consent-item" for="accountType-member">
-                                    <input type="radio" id="accountType-member" name="accountType" value="MEMBER" checked>
-                                    <span>일반회원</span>
-                                </label>
-                                <label class="register-consent-item" for="accountType-business">
-                                    <input type="radio" id="accountType-business" name="accountType" value="BUSINESS">
-                                    <span>기업회원</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
                             <label for="password" class="form-label">비밀번호</label>
                             <input type="password" id="password" name="password" class="form-control" placeholder="비밀번호를 입력하세요" required>
                             <div class="error-message hidden" id="password-error"></div>
@@ -1342,6 +1328,11 @@ const pageRegistry = {
                         </div>
 
                         <div class="form-group">
+                            <label for="name" class="form-label">이름</label>
+                            <input type="text" id="name" name="name" class="form-control" placeholder="본인인증 후 자동 입력됩니다." readonly>
+                        </div>
+
+                        <div class="form-group">
                             <label for="nickname" class="form-label">닉네임</label>
                             <div class="grid grid-2">
                                 <input type="text" id="nickname" name="nickname" class="form-control" placeholder="사용할 닉네임을 입력하세요" minlength="2" maxlength="8" required>
@@ -1351,7 +1342,24 @@ const pageRegistry = {
                             <div class="error-message hidden" id="nickname-error"></div>
                         </div>
 
-                        <input type="hidden" id="phone" name="phone" value="">
+                        <div class="form-group">
+                            <label for="birthDate" class="form-label">생년월일</label>
+                            <input type="text" id="birthDate" name="birthDate" class="form-control" placeholder="본인인증 후 자동 입력됩니다." readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone" class="form-label">연락처</label>
+                            <input type="text" id="phone" name="phone" class="form-control" placeholder="본인인증 후 자동 입력됩니다." readonly>
+                            <div class="error-message hidden" id="phone-error"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="register-consent-item" for="smsConsent">
+                                <input type="checkbox" id="smsConsent" name="smsConsent">
+                                <span>SMS 수신 동의</span>
+                            </label>
+                        </div>
+
                         <input type="hidden" id="genderDigit" name="genderDigit" value="">
                         <input type="hidden" id="identityCi" name="identityCi" value="">
                         <input type="hidden" id="phoneVerified" name="phoneVerified" value="false">

@@ -323,6 +323,18 @@ function logIdentityVerificationResult(response) {
     console.groupEnd();
 }
 
+function formatBirthDate(value) {
+    const digitsOnly = String(value || '').replace(/\D/g, '');
+    if (digitsOnly.length !== 8) {
+        return String(value || '').trim();
+    }
+
+    const year = digitsOnly.slice(0, 4);
+    const month = digitsOnly.slice(4, 6);
+    const day = digitsOnly.slice(6, 8);
+    return `${year}년 ${month}월 ${day}일`;
+}
+
 function applyIdentityResponse(response = {}) {
     const phoneInput = document.getElementById('phone');
     const genderDigitInput = document.getElementById('genderDigit');
@@ -344,7 +356,7 @@ function applyIdentityResponse(response = {}) {
         nameInput.value = response.name || '';
     }
     if (birthDateInput && !birthDateInput.value) {
-        birthDateInput.value = response.birthDate || '';
+        birthDateInput.value = formatBirthDate(response.birthDate);
     }
 
     setPhoneVerified(Boolean(response.phone));
@@ -428,7 +440,7 @@ async function handleRegister(e) {
         genderDigit: form.genderDigit.value.trim(),
         nickname: form.nickname.value.trim(),
         nicknameChecked: form.nicknameChecked.value,
-        accountType: form.accountType?.value || 'MEMBER',
+        smsConsent: form.smsConsent?.checked || false,
         termsConsent: form.termsConsent.checked
     };
 
@@ -454,7 +466,8 @@ async function handleRegister(e) {
             phone: formData.phone,
             genderDigit: formData.genderDigit,
             nickname: formData.nickname,
-            accountType: formData.accountType
+            accountType: 'MEMBER',
+            smsConsent: formData.smsConsent
         });
 
         showNotification('회원가입이 완료되었습니다!', 'success');
