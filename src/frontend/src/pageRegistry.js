@@ -1258,7 +1258,7 @@ const pageRegistry = {
 
                     <div id="register-step-terms" class="legacy-terms-panel">
                         <div class="legacy-terms-section">
-                            <p class="legacy-terms-title">이용약관</p>
+                            <p class="legacy-terms-title">[필수] 이용약관</p>
                             <div class="legacy-terms-scroll">
                                 <h3>제1장 총칙</h3>
                                 <p>본 약관은 미드나잇 맨즈가 제공하는 서비스 이용과 관련한 회사와 회원의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.</p>
@@ -1269,13 +1269,13 @@ const pageRegistry = {
                             </div>
                             <label class="legacy-consent-item" for="termsConsent">
                                 <input type="checkbox" id="termsConsent" name="termsConsent" required checked>
-                                <span>회원이용약관 내용에 동의합니다.</span>
+                                <span>[필수] 이용약관에 동의합니다.</span>
                             </label>
                             <div class="error-message hidden" id="termsConsent-error"></div>
                         </div>
 
                         <div class="legacy-terms-section">
-                            <p class="legacy-terms-title">개인정보 보호정책</p>
+                            <p class="legacy-terms-title">[필수] 개인정보처리방침</p>
                             <div class="legacy-terms-scroll">
                                 <p>회사는 회원의 개인정보를 중요하게 생각하며 관련 법령을 준수합니다.</p>
                                 <p>수집된 개인정보는 회원관리, 서비스 제공, 본인확인, 고객 문의 대응 등의 목적에 한해 이용됩니다.</p>
@@ -1285,7 +1285,20 @@ const pageRegistry = {
                             </div>
                             <label class="legacy-consent-item" for="privacyConsent">
                                 <input type="checkbox" id="privacyConsent" name="privacyConsent" checked>
-                                <span>개인정보 보호정책에 동의합니다.</span>
+                                <span>[필수] 개인정보처리방침에 동의합니다.</span>
+                            </label>
+                        </div>
+
+                        <div class="legacy-terms-section">
+                            <p class="legacy-terms-title">[선택] 마케팅 정보 수신 동의</p>
+                            <div class="legacy-terms-scroll">
+                                <p>이벤트, 혜택, 신규 서비스 안내 등 마케팅 정보를 문자(SMS)로 받아보실 수 있습니다.</p>
+                                <p>본 동의는 선택사항이며, 동의하지 않아도 회원가입 및 서비스 이용이 가능합니다.</p>
+                                <p>수신 동의 후에도 마이페이지 또는 수신 거부 안내를 통해 언제든지 변경할 수 있습니다.</p>
+                            </div>
+                            <label class="legacy-consent-item" for="marketingConsent">
+                                <input type="checkbox" id="marketingConsent" name="marketingConsent">
+                                <span>[선택] 마케팅 정보 수신에 동의합니다.</span>
                             </label>
                         </div>
 
@@ -1296,7 +1309,7 @@ const pageRegistry = {
                         <div class="form-group">
                             <label class="form-label">KCP 본인인증</label>
                             <p class="text-muted">본인인증 버튼을 누르면 KCP 인증 팝업이 열립니다.</p>
-                            <button type="button" class="btn btn-outline w-full" id="start-kcp-btn">본인인증</button>
+                            <button type="button" class="btn btn-outline w-full" id="start-kcp-btn">성인인증 후 가입하기</button>
                             <form id="kcp-auth-form" method="post" action="/api/auth/request-identity-verification" class="hidden" aria-hidden="true">
                                 <input type="hidden" name="req_tx" value="cert">
                                 <input type="hidden" name="cert_method" value="01">
