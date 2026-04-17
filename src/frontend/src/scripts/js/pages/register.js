@@ -243,11 +243,9 @@ async function handleIdentityVerification() {
             throw new Error(response.message || '본인인증에 실패했습니다.');
         }
 
-        setIdentityVerified(true);
-        const statusElement = document.getElementById('identity-status');
-        if (statusElement) {
-            statusElement.textContent = 'PortOne 본인인증 요청이 완료되었습니다.';
-        }
+        logIdentityVerificationResult(response);
+        const normalizedResponse = normalizeIdentityResponse(response);
+        applyIdentityResponse(normalizedResponse);
 
         showNotification('본인인증이 완료되었습니다.', 'success');
         showStep('detail');
@@ -256,27 +254,105 @@ async function handleIdentityVerification() {
     }
 }
 
-function applyIdentityResponse(response) {
+function getNestedValue(source, path) {
+    return path.split('.').reduce((acc, key) => {
+        if (acc && typeof acc === 'object') {
+            return acc[key];
+        }
+
+        return undefined;
+    }, source);
+}
+
+function pickFirstExistingValue(source, candidatePaths = []) {
+    for (const path of candidatePaths) {
+        const value = getNestedValue(source, path);
+        if (value !== undefined && value !== null && value !== '') {
+            return value;
+        }
+    }
+
+    return '';
+}
+
+function normalizeIdentityResponse(rawResponse = {}) {
+    return {
+        phone: String(pickFirstExistingValue(rawResponse, [
+            'phone',
+            'phoneNumber',
+            'mobile',
+            'mobilePhone',
+            'verifiedCustomer.phone',
+            'verifiedCustomer.phoneNumber',
+            'customer.phone',
+            'customer.phoneNumber'
+        ]) || ''),
+        genderDigit: String(pickFirstExistingValue(rawResponse, [
+            'genderDigit',
+            'genderCode',
+            'gender',
+            'verifiedCustomer.gender',
+            'customer.gender'
+        ]) || ''),
+        ci: String(pickFirstExistingValue(rawResponse, [
+            'ci',
+            'identityCi',
+            'verifiedCustomer.ci',
+            'customer.ci'
+        ]) || ''),
+        name: String(pickFirstExistingValue(rawResponse, [
+            'name',
+            'fullName',
+            'verifiedCustomer.name',
+            'customer.name'
+        ]) || ''),
+        birthDate: String(pickFirstExistingValue(rawResponse, [
+            'birthDate',
+            'birth',
+            'birthday',
+            'verifiedCustomer.birthDate',
+            'customer.birthDate'
+        ]) || '')
+    };
+}
+
+function logIdentityVerificationResult(response) {
+    console.group('[회원가입] 본인인증 완료 응답 데이터');
+    console.log('원본 응답:', response);
+    console.log('정규화 응답:', normalizeIdentityResponse(response));
+    console.groupEnd();
+}
+
+function applyIdentityResponse(response = {}) {
     const phoneInput = document.getElementById('phone');
     const genderDigitInput = document.getElementById('genderDigit');
     const identityCiInput = document.getElementById('identityCi');
+    const nameInput = document.getElementById('name') || document.getElementById('fullName');
+    const birthDateInput = document.getElementById('birthDate');
     const statusElement = document.getElementById('identity-status');
 
     if (phoneInput) {
-        phoneInput.value = response.phone;
+        phoneInput.value = response.phone || '';
     }
     if (genderDigitInput) {
-        genderDigitInput.value = response.genderDigit;
+        genderDigitInput.value = response.genderDigit || '';
     }
     if (identityCiInput) {
-        identityCiInput.value = response.ci;
+        identityCiInput.value = response.ci || '';
+    }
+    if (nameInput && !nameInput.value) {
+        nameInput.value = response.name || '';
+    }
+    if (birthDateInput && !birthDateInput.value) {
+        birthDateInput.value = response.birthDate || '';
     }
 
-    setPhoneVerified(true);
+    setPhoneVerified(Boolean(response.phone));
     setIdentityVerified(true);
 
     if (statusElement) {
-        statusElement.textContent = `KCP 본인인증 완료 (${response.phone})`;
+        const phoneLabel = response.phone || '휴대폰 번호 확인';
+        statusElement.textContent = `본인인증 완료 (${phoneLabel})`;
     }
 }
 
