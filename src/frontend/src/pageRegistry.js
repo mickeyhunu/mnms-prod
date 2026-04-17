@@ -1271,7 +1271,6 @@ const pageRegistry = {
                                 <input type="checkbox" id="termsConsent" name="termsConsent" required checked>
                                 <span>[필수] 이용약관에 동의합니다.</span>
                             </label>
-                            <div class="error-message hidden" id="termsConsent-error"></div>
                         </div>
 
                         <div class="legacy-terms-section">
@@ -1297,11 +1296,12 @@ const pageRegistry = {
                                 <p>수신 동의 후에도 마이페이지 또는 수신 거부 안내를 통해 언제든지 변경할 수 있습니다.</p>
                             </div>
                             <label class="legacy-consent-item" for="marketingConsent">
-                                <input type="checkbox" id="marketingConsent" name="marketingConsent">
+                                <input type="checkbox" id="marketingConsent" name="marketingConsent" checked>
                                 <span>[선택] 마케팅 정보 수신에 동의합니다.</span>
                             </label>
                         </div>
 
+                        <div class="error-message hidden" id="termsConsent-error">약관 및 정책 동의가 필요합니다.</div>
                         <button type="button" class="btn btn-outline w-full" id="agree-terms-btn">동의하고 본인인증 진행</button>
                     </div>
 

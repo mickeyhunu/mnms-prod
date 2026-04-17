@@ -44,14 +44,26 @@ function setupStepFlow() {
     const agreeTermsBtn = document.getElementById('agree-terms-btn');
     const termsConsent = document.getElementById('termsConsent');
     const privacyConsent = document.getElementById('privacyConsent');
+    const marketingConsent = document.getElementById('marketingConsent');
+    const termsConsentError = document.getElementById('termsConsent-error');
+    const consentCheckboxes = [termsConsent, privacyConsent, marketingConsent].filter(Boolean);
+
+    consentCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener('change', () => {
+            if (consentCheckboxes.every(item => item.checked)) {
+                termsConsentError?.classList.add('hidden');
+            }
+        });
+    });
 
     if (agreeTermsBtn) {
         agreeTermsBtn.addEventListener('click', () => {
-            if (!termsConsent?.checked || !privacyConsent?.checked) {
-                showNotification('[필수] 이용약관 및 개인정보처리방침에 모두 동의해주세요.', 'warning');
+            if (!consentCheckboxes.every(item => item.checked)) {
+                termsConsentError?.classList.remove('hidden');
                 return;
             }
 
+            termsConsentError?.classList.add('hidden');
             showNotification('약관 동의가 완료되었습니다. 본인인증을 시작합니다.', 'success');
             handleIdentityVerification();
         });
