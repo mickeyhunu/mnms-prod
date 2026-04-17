@@ -12,7 +12,7 @@ router.post('/register', controller.register);
 router.post('/login', loginRateLimitMiddleware, controller.login);
 router.get('/check-nickname', controller.checkNickname);
 router.get('/identity-verification-config', controller.getIdentityVerificationConfig);
-router.get('/identity-verification/:identityVerificationTxId', controller.getIdentityVerificationResult);
+router.get('/identity-verification/:identityVerificationId', controller.getIdentityVerificationResult);
 router.post('/request-identity-verification', controller.requestIdentityVerification);
 router.post('/logout', authMiddleware, controller.logout);
 router.get('/me', authMiddleware, controller.me);

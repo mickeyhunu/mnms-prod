@@ -235,7 +235,7 @@ async function handleIdentityVerification() {
 
         const response = await PortOne.requestIdentityVerification({
             storeId: identityConfig.storeId,
-            identityVerificationId: `test-${Date.now()}`,
+            identityVerificationId: `test${Date.now()}`,
             channelKey: identityConfig.channelKey
         });
 
@@ -243,12 +243,12 @@ async function handleIdentityVerification() {
             throw new Error(response.message || '본인인증에 실패했습니다.');
         }
 
-        const identityVerificationTxId = String(response?.identityVerificationTxId || '').trim();
-        if (!identityVerificationTxId) {
+        const identityVerificationId = String(response?.identityVerificationId || '').trim();
+        if (!identityVerificationId) {
             throw new Error('본인인증 거래 정보를 찾지 못했습니다. 다시 시도해주세요.');
         }
 
-        const verificationResult = await AuthAPI.getIdentityVerificationResult(identityVerificationTxId);
+        const verificationResult = await AuthAPI.getIdentityVerificationResult(identityVerificationId);
         const mergedIdentityResult = {
             ...response,
             ...verificationResult,
