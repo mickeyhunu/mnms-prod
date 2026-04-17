@@ -71,9 +71,9 @@ const AuthAPI = {
         }
     },
 
-    async getIdentityVerificationResult(identityVerificationTxId) {
+    async getIdentityVerificationResult(identityVerificationId) {
         try {
-            return await APIClient.get(`/auth/identity-verification/${encodeURIComponent(identityVerificationTxId)}`);
+            return await APIClient.get(`/auth/identity-verification/${encodeURIComponent(identityVerificationId)}`);
         } catch (error) {
             throw error;
         }
