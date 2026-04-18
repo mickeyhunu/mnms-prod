@@ -525,8 +525,6 @@ async function handleRegister(e) {
 
     const form = e.target;
     const submitBtn = document.getElementById('submit-btn');
-    const errorBanner = document.getElementById('error-banner');
-    const errorMessage = document.getElementById('error-message');
 
     const formData = {
         loginId: form.loginId.value.trim(),
@@ -553,9 +551,8 @@ async function handleRegister(e) {
     if (hasValidationErrors(errors)) {
         showValidationErrors(errors, form);
         const firstErrorMessage = Object.values(errors)[0];
-        if (errorMessage && firstErrorMessage) {
-            errorMessage.textContent = firstErrorMessage;
-            showElement(errorBanner);
+        if (firstErrorMessage) {
+            showNotification(firstErrorMessage, 'error');
         }
         return;
     }
@@ -567,7 +564,6 @@ async function handleRegister(e) {
 
     try {
         setLoading(submitBtn, true);
-        hideElement(errorBanner);
 
         await AuthAPI.register({
             loginId: formData.loginId,
@@ -594,10 +590,7 @@ async function handleRegister(e) {
         }, 1500);
 
     } catch (error) {
-        if (errorMessage) {
-            errorMessage.textContent = error.message || '회원가입 중 오류가 발생했습니다.';
-        }
-        showElement(errorBanner);
+        showNotification(error.message || '회원가입 중 오류가 발생했습니다.', 'error');
 
     } finally {
         setLoading(submitBtn, false);
