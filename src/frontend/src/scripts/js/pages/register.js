@@ -25,6 +25,17 @@ function setupRegisterForm() {
 
     form.addEventListener('submit', handleRegister);
 
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            handleRegister({
+                preventDefault: () => { },
+                target: form
+            });
+        });
+    }
+
     const inputs = form.querySelectorAll('input, select');
     inputs.forEach(input => {
         input.addEventListener('blur', () => validateFormField(input));
