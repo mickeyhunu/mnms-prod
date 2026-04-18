@@ -6,8 +6,10 @@ const PORTONE_BROWSER_SDK_URL = 'https://cdn.portone.io/v2/browser-sdk.js';
 let portOneIdentityConfig = null;
 
 function initRegisterPage() {
+    console.info('[Register] initRegisterPage 시작');
 
     if (Auth.redirectIfAuthenticated()) {
+        console.info('[Register] 이미 로그인 상태라 회원가입 페이지 초기화 중단');
         return;
     }
 
@@ -20,15 +22,18 @@ function initRegisterPage() {
 function setupRegisterForm() {
     const form = document.getElementById('register-form');
     if (!form) {
+        console.warn('[Register] register-form 엘리먼트를 찾지 못했습니다.');
         return;
     }
 
+    console.info('[Register] 회원가입 폼 이벤트 바인딩');
     form.addEventListener('submit', handleRegister);
 
     const submitBtn = document.getElementById('submit-btn');
     if (submitBtn) {
         submitBtn.addEventListener('click', (event) => {
             event.preventDefault();
+            console.info('[Register] 회원가입 버튼 클릭 이벤트 감지');
             handleRegister({
                 preventDefault: () => { },
                 target: form
@@ -569,6 +574,8 @@ async function handleRegister(e) {
     const form = e.target;
     const submitBtn = document.getElementById('submit-btn');
 
+    console.info('[Register] handleRegister 시작');
+
     const formData = {
         loginId: form.loginId.value.trim(),
         password: form.password.value,
@@ -591,8 +598,13 @@ async function handleRegister(e) {
     };
 
     const errors = validateRegisterForm(formData);
+    console.debug('[Register] 유효성 검사 결과', {
+        hasErrors: hasValidationErrors(errors),
+        errorKeys: Object.keys(errors || {})
+    });
 
     if (hasValidationErrors(errors)) {
+        console.warn('[Register] 유효성 검사 실패', errors);
         showValidationErrors(errors, form);
         const firstErrorMessage = Object.values(errors)[0];
         if (firstErrorMessage) {
@@ -608,6 +620,20 @@ async function handleRegister(e) {
 
     try {
         setLoading(submitBtn, true);
+        console.info('[Register] 회원가입 API 요청 시작', {
+            loginId: formData.loginId,
+            nickname: formData.nickname,
+            phone: formData.phone,
+            birthDate: formData.birthDate,
+            identityVerificationId: formData.identityVerificationId,
+            hasIdentityCi: Boolean(formData.identityCi),
+            hasIdentityDi: Boolean(formData.identityDi),
+            genderDigit: formData.genderDigit,
+            termsConsent: formData.termsConsent,
+            privacyConsent: formData.privacyConsent,
+            marketingConsent: formData.marketingConsent,
+            smsConsent: formData.smsConsent
+        });
 
         await AuthAPI.register({
             loginId: formData.loginId,
@@ -626,17 +652,25 @@ async function handleRegister(e) {
             marketingConsent: formData.marketingConsent,
             smsConsent: formData.smsConsent
         });
+        console.info('[Register] 회원가입 API 요청 성공');
 
         showNotification('회원가입이 완료되었습니다!', 'success');
 
         setTimeout(() => {
+            console.info('[Register] 로그인 페이지로 이동');
             window.location.href = '/login?returnTo=%2F&registered=1';
         }, 1500);
 
     } catch (error) {
+        console.error('[Register] 회원가입 API 요청 실패', {
+            message: error?.message,
+            status: error?.status,
+            data: error?.data
+        });
         showNotification(error.message || '회원가입 중 오류가 발생했습니다.', 'error');
 
     } finally {
+        console.info('[Register] handleRegister 종료');
         setLoading(submitBtn, false);
     }
 }

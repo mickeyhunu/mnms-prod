@@ -58,6 +58,7 @@ const APIClient = {
         const url = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
         
         try {
+            console.info('[APIClient.post] 요청 시작', { endpoint, url });
             const headers = {
                 'Content-Type': 'application/json'
             };
@@ -73,6 +74,11 @@ const APIClient = {
                 credentials: 'include',
                 body: JSON.stringify(data)
             });
+            console.info('[APIClient.post] 응답 수신', {
+                endpoint,
+                status: response.status,
+                ok: response.ok
+            });
             
             
             if (!response.ok) {
@@ -86,10 +92,16 @@ const APIClient = {
                 const error = new Error(errorData.message || '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
                 error.status = response.status;
                 error.data = errorData;
+                console.error('[APIClient.post] 요청 실패', {
+                    endpoint,
+                    status: response.status,
+                    errorData
+                });
                 throw error;
             }
 
             const responseData = await response.json();
+            console.info('[APIClient.post] 요청 성공', { endpoint });
             return responseData;
             
         } catch (error) {
