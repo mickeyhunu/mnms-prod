@@ -164,7 +164,7 @@ function showValidationErrors(errors, form) {
         const field = form.querySelector(`[name="${fieldName}"]`);
         const errorElement = form.querySelector(`#${fieldName}-error`);
 
-        if (field) {
+        if (field && fieldName !== 'nickname') {
             field.classList.add('error');
         }
 
@@ -221,6 +221,20 @@ function validateFormField(field) {
     } else if (form.id === 'comment-form') {
         const formData = getFormData(form);
         errors = validateCommentForm(formData);
+    }
+
+    if (fieldName === 'nickname') {
+        const nicknameStatus = form.querySelector('#nickname-status');
+        if (nicknameStatus) {
+            nicknameStatus.textContent = errors[fieldName] || '닉네임 중복 확인이 필요합니다.';
+        }
+
+        if (errorElement) {
+            errorElement.textContent = '';
+            errorElement.classList.add('hidden');
+        }
+        field.classList.remove('error');
+        return !errors[fieldName];
     }
 
     if (errors[fieldName]) {
