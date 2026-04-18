@@ -46,6 +46,23 @@ const router = createRouter({
   routes
 });
 
+
+router.beforeEach((to) => {
+  if (!/\.html$/i.test(to.path)) {
+    return true;
+  }
+
+  const normalizedPath = to.path.replace(/\.html$/i, '');
+  const redirectPath = normalizedPath === '/index' ? '/' : normalizedPath;
+
+  return {
+    path: redirectPath,
+    query: to.query,
+    hash: to.hash,
+    replace: true
+  };
+});
+
 function upsertMetaTag(selector, attributes) {
   let element = document.head.querySelector(selector);
   if (!element) {
