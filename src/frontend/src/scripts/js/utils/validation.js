@@ -146,6 +146,19 @@ function showValidationErrors(errors, form) {
             field.classList.add('error');
         }
 
+        if (fieldName === 'nickname') {
+            const nicknameStatus = form.querySelector('#nickname-status');
+            if (nicknameStatus) {
+                nicknameStatus.textContent = errors[fieldName];
+            }
+
+            if (errorElement) {
+                errorElement.textContent = '';
+                errorElement.classList.add('hidden');
+            }
+            return;
+        }
+
         if (errorElement) {
             errorElement.textContent = errors[fieldName];
             errorElement.classList.remove('hidden');

@@ -490,15 +490,11 @@ function setNicknameChecked(isChecked, isAvailable = false) {
     }
 
     if (nicknameError) {
-        if (isChecked && isAvailable) {
-            nicknameError.textContent = '';
-            nicknameError.classList.add('hidden');
-        } else if (isChecked && !isAvailable) {
-            nicknameError.textContent = '이미 사용 중인 닉네임입니다.';
-            nicknameError.classList.remove('hidden');
-        }
+        nicknameError.textContent = '';
+        nicknameError.classList.add('hidden');
     }
 }
+
 
 function markNicknameAsUnchecked() {
     setNicknameChecked(false);
