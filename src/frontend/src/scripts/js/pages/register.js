@@ -468,10 +468,15 @@ function applyIdentityResponse(response = {}) {
 
 function setNicknameChecked(isChecked, isAvailable = false) {
     const nicknameCheckedInput = document.getElementById('nicknameChecked');
+    const nicknameAvailableInput = document.getElementById('nicknameAvailable');
     const statusElement = document.getElementById('nickname-status');
+    const nicknameError = document.getElementById('nickname-error');
 
     if (nicknameCheckedInput) {
         nicknameCheckedInput.value = isChecked ? 'true' : 'false';
+    }
+    if (nicknameAvailableInput) {
+        nicknameAvailableInput.value = isAvailable ? 'true' : 'false';
     }
 
     if (statusElement) {
@@ -481,6 +486,16 @@ function setNicknameChecked(isChecked, isAvailable = false) {
             statusElement.textContent = '사용 가능한 닉네임입니다.';
         } else {
             statusElement.textContent = '이미 사용 중인 닉네임입니다.';
+        }
+    }
+
+    if (nicknameError) {
+        if (isChecked && isAvailable) {
+            nicknameError.textContent = '';
+            nicknameError.classList.add('hidden');
+        } else if (isChecked && !isAvailable) {
+            nicknameError.textContent = '이미 사용 중인 닉네임입니다.';
+            nicknameError.classList.remove('hidden');
         }
     }
 }
@@ -511,7 +526,7 @@ async function checkNicknameAvailability() {
             setNicknameChecked(true, true);
             showNotification('사용 가능한 닉네임입니다.', 'success');
         } else {
-            setNicknameChecked(false, false);
+            setNicknameChecked(true, false);
             showNotification('이미 사용 중인 닉네임입니다.', 'error');
         }
     } catch (error) {
@@ -540,6 +555,7 @@ async function handleRegister(e) {
         genderDigit: form.genderDigit.value.trim(),
         nickname: form.nickname.value.trim(),
         nicknameChecked: form.nicknameChecked.value,
+        nicknameAvailable: form.nicknameAvailable.value,
         privacyConsent: form.privacyConsent?.checked || false,
         marketingConsent: form.marketingConsent?.checked || false,
         smsConsent: form.smsConsent?.checked || false,

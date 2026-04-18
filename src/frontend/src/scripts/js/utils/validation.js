@@ -44,6 +44,8 @@ function validateRegisterForm(data) {
 
     if (data.nicknameChecked !== 'true') {
         errors.nickname = '닉네임 중복 확인을 완료해주세요.';
+    } else if (data.nicknameAvailable !== 'true') {
+        errors.nickname = '이미 사용 중인 닉네임입니다.';
     }
 
     if (!data.termsConsent) {
