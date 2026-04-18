@@ -1367,6 +1367,7 @@ const pageRegistry = {
                         <input type="hidden" id="phoneVerified" name="phoneVerified" value="false">
                         <input type="hidden" id="identityVerified" name="identityVerified" value="false">
                         <input type="hidden" id="nicknameChecked" name="nicknameChecked" value="false">
+                        <input type="hidden" id="nicknameAvailable" name="nicknameAvailable" value="false">
 
                         <button type="submit" class="btn btn-outline w-full" id="submit-btn">회원가입 완료</button>
                     </div>
