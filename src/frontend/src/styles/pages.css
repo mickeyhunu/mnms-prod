@@ -1886,7 +1886,7 @@
 
 .register-consent-item {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
     font-size: 14px;
     color: #343a40;
