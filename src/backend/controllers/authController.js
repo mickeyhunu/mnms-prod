@@ -105,6 +105,14 @@ const { pickUserRow } = require('../utils/response');
 
 async function register(req, res, next) {
   try {
+    console.info('[AuthController.register] 요청 시작', {
+      ipAddress: getClientIp(req),
+      loginId: req.body?.loginId || req.body?.email || '',
+      nickname: req.body?.nickname || '',
+      identityVerificationId: req.body?.identityVerificationId || '',
+      hasIdentityCi: Boolean(req.body?.identityCi || req.body?.ci),
+      hasIdentityDi: Boolean(req.body?.identityDi || req.body?.di)
+    });
     const { loginId, email, password, nickname, genderDigit } = req.body;
     const ipAddress = getClientIp(req);
     const accountType = normalizeAccountType(req.body.accountType || req.body.memberType);
@@ -122,48 +130,67 @@ async function register(req, res, next) {
 
     const registerAttemptState = registerIdentityUsageAttempt({ identityVerificationId, ipAddress });
     if (registerAttemptState.blocked) {
+      console.warn('[AuthController.register] 요청 제한 차단', {
+        ipAddress,
+        identityVerificationId,
+        message: registerAttemptState.message
+      });
       return res.status(429).json({ message: registerAttemptState.message });
     }
 
     if (!resolvedLoginId || !password || !nickname) {
+      console.warn('[AuthController.register] 필수값 누락', {
+        hasLoginId: Boolean(resolvedLoginId),
+        hasPassword: Boolean(password),
+        hasNickname: Boolean(nickname)
+      });
       return res.status(400).json({ message: '아이디, 비밀번호, 닉네임은 필수입니다.' });
     }
 
     const loginIdValidation = validateLoginId(resolvedLoginId);
     if (!loginIdValidation.valid) {
+      console.warn('[AuthController.register] 아이디 정책 검증 실패', loginIdValidation);
       return res.status(400).json({ message: loginIdValidation.message });
     }
 
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.valid) {
+      console.warn('[AuthController.register] 비밀번호 정책 검증 실패', passwordValidation);
       return res.status(400).json({ message: passwordValidation.message });
     }
     if (!identityVerificationId) {
+      console.warn('[AuthController.register] 본인인증 ID 누락');
       return res.status(400).json({ message: '본인인증 확인 정보가 누락되었습니다. 인증 후 다시 시도해주세요.' });
     }
     if (!identityDi && !identityCi) {
+      console.warn('[AuthController.register] 본인인증 고유값(DI/CI) 누락');
       return res.status(400).json({ message: '본인인증 고유값(DI/CI)이 없어 가입을 진행할 수 없습니다.' });
     }
     if (!termsConsent || !privacyConsent) {
+      console.warn('[AuthController.register] 필수 약관 동의 누락', { termsConsent, privacyConsent });
       return res.status(400).json({ message: '약관 및 개인정보처리방침 동의가 필요합니다.' });
     }
 
     const age = calculateInternationalAge(birthDateIso);
     if (age < 19) {
+      console.warn('[AuthController.register] 나이 제한으로 가입 거절', { birthDateIso, age });
       return res.status(403).json({ message: '19세 이상만 가입 가능합니다.' });
     }
 
     const normalizedNickname = String(nickname || '').trim();
     const nicknameValidation = validateNickname(normalizedNickname);
     if (!nicknameValidation.valid) {
+      console.warn('[AuthController.register] 닉네임 정책 검증 실패', nicknameValidation);
       return res.status(400).json({ message: nicknameValidation.message });
     }
 
     const normalizedGenderDigit = String(genderDigit || '').trim();
     if (!/^\d$/.test(normalizedGenderDigit)) {
+      console.warn('[AuthController.register] 성별 식별 번호 형식 오류', { genderDigit: normalizedGenderDigit });
       return res.status(400).json({ message: '성별 식별 번호를 확인할 수 없습니다. 본인인증을 다시 진행해주세요.' });
     }
     if (Number(normalizedGenderDigit) % 2 === 0) {
+      console.warn('[AuthController.register] 남성 회원 제한으로 가입 거절', { genderDigit: normalizedGenderDigit });
       return res.status(400).json({ message: '남성회원만 가입가능합니다.' });
     }
 
@@ -174,6 +201,10 @@ async function register(req, res, next) {
       phone
     });
     if (!signupEligibility.allowed) {
+      console.warn('[AuthController.register] 본인인증 기반 가입 불가', {
+        reasonCode: signupEligibility.reasonCode,
+        message: signupEligibility.message
+      });
       const blockedStatusByReason = {
         MISSING_IDENTITY_VERIFICATION_ID: 400,
         MISSING_IDENTITY_HASH: 400,
@@ -187,9 +218,11 @@ async function register(req, res, next) {
     const { ciHash, diHash, phoneHash } = signupEligibility.identityHashes;
 
     if (await findByEmail(resolvedLoginId)) {
+      console.warn('[AuthController.register] 중복 아이디', { loginId: resolvedLoginId });
       return res.status(400).json({ message: '이미 사용 중인 아이디입니다.' });
     }
     if (await findByNickname(normalizedNickname)) {
+      console.warn('[AuthController.register] 중복 닉네임', { nickname: normalizedNickname });
       return res.status(400).json({ message: '이미 사용 중인 닉네임입니다.' });
     }
 
@@ -225,8 +258,17 @@ async function register(req, res, next) {
     await awardPointByAction(userId, 'REGISTER');
 
     const user = await findByEmail(resolvedLoginId);
+    console.info('[AuthController.register] 가입 완료', {
+      userId,
+      loginId: resolvedLoginId,
+      nickname: normalizedNickname
+    });
     res.json({ success: true, message: '회원가입이 완료되었습니다.', user: pickUserRow({ ...user, id: userId }) });
   } catch (error) {
+    console.error('[AuthController.register] 예외 발생', {
+      message: error?.message,
+      stack: error?.stack
+    });
     next(error);
   }
 }
