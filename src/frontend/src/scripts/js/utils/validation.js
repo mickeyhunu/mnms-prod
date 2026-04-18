@@ -32,9 +32,10 @@ function validateRegisterForm(data) {
         errors.identityVerified = '본인인증 고유값(CI/DI)이 없어 가입을 진행할 수 없습니다.';
     }
 
-    if (!data.genderDigit || !/^\d$/.test(data.genderDigit)) {
-        errors.genderDigit = '성별 식별 번호를 입력해주세요.';
-    } else if (Number(data.genderDigit) % 2 === 0) {
+    const maleOnlyEligibility = resolveMaleOnlyEligibility(data.genderDigit);
+    if (maleOnlyEligibility === null) {
+        errors.genderDigit = '성별 식별 정보를 확인할 수 없습니다.';
+    } else if (!maleOnlyEligibility) {
         errors.genderDigit = '남성회원만 가입가능합니다.';
     }
     const nicknameLength = Array.from(String(data.nickname || '').trim()).length;
@@ -53,6 +54,27 @@ function validateRegisterForm(data) {
     }
 
     return errors;
+}
+
+function resolveMaleOnlyEligibility(genderDigitRaw) {
+    const genderDigit = String(genderDigitRaw || '').trim().toLowerCase();
+    if (!genderDigit) {
+        return null;
+    }
+
+    if (/^\d$/.test(genderDigit)) {
+        return Number(genderDigit) % 2 === 1;
+    }
+
+    if (['m', 'male', 'man', '남', '남성'].includes(genderDigit)) {
+        return true;
+    }
+
+    if (['f', 'female', 'woman', '여', '여성'].includes(genderDigit)) {
+        return false;
+    }
+
+    return null;
 }
 
 function validateLoginForm(data) {
