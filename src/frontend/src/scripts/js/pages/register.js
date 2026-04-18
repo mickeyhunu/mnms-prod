@@ -330,6 +330,27 @@ function pickFirstExistingValue(source, candidatePaths = []) {
     return '';
 }
 
+function normalizeGenderDigitValue(rawValue) {
+    const normalizedValue = String(rawValue || '').trim();
+    if (!normalizedValue) {
+        return '';
+    }
+
+    if (/^\d$/.test(normalizedValue)) {
+        return normalizedValue;
+    }
+
+    const lowerValue = normalizedValue.toLowerCase();
+    if (['m', 'male', 'man', '남', '남성'].includes(lowerValue)) {
+        return '1';
+    }
+    if (['f', 'female', 'woman', '여', '여성'].includes(lowerValue)) {
+        return '2';
+    }
+
+    return normalizedValue;
+}
+
 function normalizeIdentityResponse(rawResponse = {}) {
     return {
         identityVerificationId: String(pickFirstExistingValue(rawResponse, [
@@ -347,7 +368,7 @@ function normalizeIdentityResponse(rawResponse = {}) {
             'customer.phone',
             'customer.phoneNumber'
         ]) || ''),
-        genderDigit: String(pickFirstExistingValue(rawResponse, [
+        genderDigit: normalizeGenderDigitValue(pickFirstExistingValue(rawResponse, [
             'normalized.genderDigit',
             'genderDigit',
             'genderCode',
@@ -358,7 +379,7 @@ function normalizeIdentityResponse(rawResponse = {}) {
             'customer.genderDigit',
             'customer.genderCode',
             'customer.gender'
-        ]) || ''),
+        ])),
         ci: String(pickFirstExistingValue(rawResponse, [
             'normalized.ci',
             'ci',
@@ -559,7 +580,7 @@ async function handleRegister(e) {
         identityDi: form.identityDi.value.trim(),
         phoneVerified: form.phoneVerified.value,
         identityVerified: form.identityVerified.value,
-        genderDigit: form.genderDigit.value.trim(),
+        genderDigit: normalizeGenderDigitValue(form.genderDigit.value),
         nickname: form.nickname.value.trim(),
         nicknameChecked: form.nicknameChecked.value,
         nicknameAvailable: form.nicknameAvailable.value,
