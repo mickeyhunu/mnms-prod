@@ -1252,10 +1252,6 @@ const pageRegistry = {
 
             <div class="card">
                 <form id="register-form">
-                    <div class="error-banner hidden" id="error-banner">
-                        <p id="error-message"></p>
-                    </div>
-
                     <div id="register-step-terms" class="legacy-terms-panel">
                         <div class="legacy-terms-section">
                             <p class="legacy-terms-title">[필수] 이용약관</p>
