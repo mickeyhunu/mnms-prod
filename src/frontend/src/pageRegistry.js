@@ -790,15 +790,29 @@ const pageRegistry = {
     <div class="container auth-container auth-login">
         <div class="community-section-header">
             <h1>계정 찾기</h1>
-            <p>가입하신 이메일 또는 전화번호로 계정을 찾을 수 있습니다.</p>
+            <p>본인인증 후 가입된 아이디를 확인하고 비밀번호를 재설정할 수 있습니다.</p>
         </div>
 
         <div class="card">
-            <div class="form-group">
-                <label class="form-label" for="find-keyword">이메일 또는 전화번호</label>
-                <input class="form-control" id="find-keyword" type="text" placeholder="example@company.com 또는 01012345678">
+            <div class="form-actions">
+                <button class="btn btn-primary w-full" id="find-account-btn" type="button">계정찾기 (본인인증)</button>
             </div>
-            <button class="btn btn-primary w-full" type="button" onclick="alert('계정 찾기 기능은 준비 중입니다.')">계정 찾기</button>
+            <p class="text-center mt-3" id="find-account-status" aria-live="polite"></p>
+            <div class="form-group mt-3 hidden" id="found-account-section">
+                <label class="form-label" for="found-login-id">가입된 아이디</label>
+                <input class="form-control" id="found-login-id" type="text" readonly>
+            </div>
+            <form id="reset-password-form" class="hidden mt-3">
+                <div class="form-group">
+                    <label class="form-label" for="new-password">새 비밀번호</label>
+                    <input class="form-control" id="new-password" type="password" minlength="8" required placeholder="새 비밀번호를 입력하세요">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="confirm-new-password">새 비밀번호 확인</label>
+                    <input class="form-control" id="confirm-new-password" type="password" minlength="8" required placeholder="새 비밀번호를 다시 입력하세요">
+                </div>
+                <button class="btn btn-secondary w-full" type="submit">비밀번호 재설정</button>
+            </form>
             <div class="text-center mt-3">
                 <a href="login.html">로그인 화면으로 돌아가기</a>
             </div>
@@ -807,7 +821,7 @@ const pageRegistry = {
 </main>
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/pages/findAccount.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js"]
   },
   'index': {
     template: `<header class="header">

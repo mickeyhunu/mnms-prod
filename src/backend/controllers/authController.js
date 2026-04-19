@@ -1,7 +1,13 @@
 /**
  * 파일 역할: authController 관련 HTTP 요청을 처리하고 모델/응답 로직을 조합하는 컨트롤러 파일.
  */
-const { createUser, findByEmail, findByNickname, recordUserLoginHistory } = require('../models/userModel');
+const {
+  createUser,
+  findByEmail,
+  findByNickname,
+  recordUserLoginHistory,
+  updateUserProfile
+} = require('../models/userModel');
 const {
   hashIdentityValue,
   findUserByIdentityHashes,
@@ -590,50 +596,11 @@ async function evaluateIdentitySignupEligibility({ identityVerificationId, ci = 
 
 async function getIdentityVerificationResult(req, res) {
   const identityVerificationId = String(req.params.identityVerificationId || '').trim();
-  const apiSecret = String(process.env.PORTONE_API_SECRET || '').trim();
-
-  if (!identityVerificationId) {
-    return res.status(400).json({ message: '본인인증 ID가 필요합니다.' });
+  const fetchedResult = await fetchIdentityVerificationPayload(identityVerificationId);
+  if (fetchedResult.error) {
+    return res.status(fetchedResult.error.status).json(fetchedResult.error.body);
   }
-
-  if (!apiSecret) {
-    return res.status(500).json({
-      message: 'PortOne 연동 환경변수(PORTONE_API_SECRET)가 설정되지 않았습니다.'
-    });
-  }
-
-  const endpointUrl = `https://api.portone.io/identity-verifications/${encodeURIComponent(identityVerificationId)}`;
-
-  let upstreamResponse;
-  try {
-    upstreamResponse = await fetch(endpointUrl, {
-      method: 'GET',
-      headers: {
-        Authorization: `PortOne ${apiSecret}`,
-        Accept: 'application/json'
-      }
-    });
-  } catch (error) {
-    return res.status(502).json({
-      message: 'PortOne 본인인증 결과 조회에 실패했습니다.',
-      detail: error.message
-    });
-  }
-
-  let payload = null;
-  try {
-    payload = await upstreamResponse.json();
-  } catch (error) {
-    return res.status(502).json({
-      message: 'PortOne 본인인증 결과 응답을 해석할 수 없습니다.'
-    });
-  }
-
-  if (!upstreamResponse.ok) {
-    return res.status(upstreamResponse.status).json({
-      message: payload?.message || 'PortOne 본인인증 결과 조회에 실패했습니다.'
-    });
-  }
+  const payload = fetchedResult.payload;
 
   const normalizedPayload = normalizeIdentityVerificationPayload(payload);
   const signupEligibility = await evaluateIdentitySignupEligibility({
@@ -650,6 +617,132 @@ async function getIdentityVerificationResult(req, res) {
   });
 }
 
+async function fetchIdentityVerificationPayload(identityVerificationId) {
+  const normalizedIdentityVerificationId = String(identityVerificationId || '').trim();
+  const apiSecret = String(process.env.PORTONE_API_SECRET || '').trim();
+
+  if (!normalizedIdentityVerificationId) {
+    return {
+      error: {
+        status: 400,
+        body: { message: '본인인증 ID가 필요합니다.' }
+      }
+    };
+  }
+
+  if (!apiSecret) {
+    return {
+      error: {
+        status: 500,
+        body: { message: 'PortOne 연동 환경변수(PORTONE_API_SECRET)가 설정되지 않았습니다.' }
+      }
+    };
+  }
+
+  const endpointUrl = `https://api.portone.io/identity-verifications/${encodeURIComponent(normalizedIdentityVerificationId)}`;
+
+  let upstreamResponse;
+  try {
+    upstreamResponse = await fetch(endpointUrl, {
+      method: 'GET',
+      headers: {
+        Authorization: `PortOne ${apiSecret}`,
+        Accept: 'application/json'
+      }
+    });
+  } catch (error) {
+    return {
+      error: {
+        status: 502,
+        body: {
+          message: 'PortOne 본인인증 결과 조회에 실패했습니다.',
+          detail: error.message
+        }
+      }
+    };
+  }
+
+  let payload = null;
+  try {
+    payload = await upstreamResponse.json();
+  } catch (error) {
+    return {
+      error: {
+        status: 502,
+        body: { message: 'PortOne 본인인증 결과 응답을 해석할 수 없습니다.' }
+      }
+    };
+  }
+
+  if (!upstreamResponse.ok) {
+    return {
+      error: {
+        status: upstreamResponse.status,
+        body: { message: payload?.message || 'PortOne 본인인증 결과 조회에 실패했습니다.' }
+      }
+    };
+  }
+
+  return { payload };
+}
+
+async function findAccountByIdentity(req, res) {
+  const identityVerificationId = String(req.body?.identityVerificationId || '').trim();
+  const fetchedResult = await fetchIdentityVerificationPayload(identityVerificationId);
+  if (fetchedResult.error) {
+    return res.status(fetchedResult.error.status).json(fetchedResult.error.body);
+  }
+
+  const normalizedPayload = normalizeIdentityVerificationPayload(fetchedResult.payload);
+  const ciHash = hashIdentityValue(normalizedPayload.ci);
+  const diHash = hashIdentityValue(normalizedPayload.di);
+  const phoneHash = hashIdentityValue(normalizedPayload.phone);
+
+  if (!ciHash && !diHash && !phoneHash) {
+    return res.status(400).json({ message: '본인인증 정보가 올바르지 않습니다. 다시 시도해주세요.' });
+  }
+
+  const user = await findUserByIdentityHashes({ ciHash, diHash, phoneHash });
+  if (!user) {
+    return res.json({
+      found: false,
+      message: '본인인증 정보로 가입된 아이디가 없습니다.'
+    });
+  }
+
+  return res.json({
+    found: true,
+    loginId: user.email,
+    message: '가입된 아이디를 확인했습니다.'
+  });
+}
+
+async function resetPasswordByIdentity(req, res) {
+  const identityVerificationId = String(req.body?.identityVerificationId || '').trim();
+  const nextPassword = String(req.body?.newPassword || '').trim();
+  const passwordValidation = validatePassword(nextPassword);
+  if (!passwordValidation.valid) {
+    return res.status(400).json({ message: passwordValidation.message });
+  }
+
+  const fetchedResult = await fetchIdentityVerificationPayload(identityVerificationId);
+  if (fetchedResult.error) {
+    return res.status(fetchedResult.error.status).json(fetchedResult.error.body);
+  }
+
+  const normalizedPayload = normalizeIdentityVerificationPayload(fetchedResult.payload);
+  const ciHash = hashIdentityValue(normalizedPayload.ci);
+  const diHash = hashIdentityValue(normalizedPayload.di);
+  const phoneHash = hashIdentityValue(normalizedPayload.phone);
+  const user = await findUserByIdentityHashes({ ciHash, diHash, phoneHash });
+  if (!user) {
+    return res.status(404).json({ message: '본인인증 정보로 가입된 아이디가 없습니다.' });
+  }
+
+  await updateUserProfile(user.id, { password: nextPassword });
+  return res.json({ success: true, message: '비밀번호가 변경되었습니다.' });
+}
+
 module.exports = {
   register,
   login,
@@ -658,5 +751,7 @@ module.exports = {
   checkNickname,
   requestIdentityVerification,
   getIdentityVerificationConfig,
-  getIdentityVerificationResult
+  getIdentityVerificationResult,
+  findAccountByIdentity,
+  resetPasswordByIdentity
 };
