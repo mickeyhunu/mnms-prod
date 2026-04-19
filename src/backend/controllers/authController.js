@@ -103,6 +103,37 @@ const { createSession, deleteSession } = require('../models/sessionModel');
 const { awardPointByAction } = require('../models/pointModel');
 const { pickUserRow } = require('../utils/response');
 
+function resolveRegisterConflictError(error) {
+  if (!error || error.code !== 'ER_DUP_ENTRY') return null;
+
+  const messageSource = `${error?.sqlMessage || ''} ${error?.message || ''}`.toLowerCase();
+  if (messageSource.includes('identity_verification_usages')) {
+    return {
+      status: 409,
+      message: '이미 사용된 본인인증 건입니다. 다시 본인인증을 진행해주세요.'
+    };
+  }
+
+  if (messageSource.includes('users.email')) {
+    return {
+      status: 409,
+      message: '이미 사용 중인 아이디입니다.'
+    };
+  }
+
+  if (messageSource.includes('users.nickname')) {
+    return {
+      status: 409,
+      message: '이미 사용 중인 닉네임입니다.'
+    };
+  }
+
+  return {
+    status: 409,
+    message: '이미 사용 중인 정보가 있어 회원가입을 완료할 수 없습니다.'
+  };
+}
+
 async function register(req, res, next) {
   try {
     console.info('[AuthController.register] 요청 시작', {
@@ -265,6 +296,16 @@ async function register(req, res, next) {
     });
     res.json({ success: true, message: '회원가입이 완료되었습니다.', user: pickUserRow({ ...user, id: userId }) });
   } catch (error) {
+    const conflictError = resolveRegisterConflictError(error);
+    if (conflictError) {
+      console.warn('[AuthController.register] DB 중복 예외 처리', {
+        status: conflictError.status,
+        message: conflictError.message,
+        dbErrorCode: error?.code,
+        dbMessage: error?.sqlMessage || error?.message
+      });
+      return res.status(conflictError.status).json({ message: conflictError.message });
+    }
     console.error('[AuthController.register] 예외 발생', {
       message: error?.message,
       stack: error?.stack
