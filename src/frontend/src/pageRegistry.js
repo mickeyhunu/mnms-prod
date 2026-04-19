@@ -1264,7 +1264,7 @@ const pageRegistry = {
                                 <p>회사는 안정적인 서비스 제공을 위해 최선을 다하며, 시스템 점검이나 불가항력적 사유에 따라 일시적으로 서비스가 중단될 수 있습니다.</p>
                             </div>
                             <label class="legacy-consent-item" for="termsConsent">
-                                <input type="checkbox" id="termsConsent" name="termsConsent" required checked>
+                                <input type="checkbox" id="termsConsent" name="termsConsent" required>
                                 <span>[필수] 이용약관에 동의합니다.</span>
                             </label>
                         </div>
@@ -1279,7 +1279,7 @@ const pageRegistry = {
                                 <p>자세한 내용은 <a href="/board/terms" target="_blank" rel="noopener noreferrer">이용약관/정책 페이지</a>에서 확인할 수 있습니다.</p>
                             </div>
                             <label class="legacy-consent-item" for="privacyConsent">
-                                <input type="checkbox" id="privacyConsent" name="privacyConsent" checked>
+                                <input type="checkbox" id="privacyConsent" name="privacyConsent">
                                 <span>[필수] 개인정보처리방침에 동의합니다.</span>
                             </label>
                         </div>
@@ -1292,12 +1292,13 @@ const pageRegistry = {
                                 <p>수신 동의 후에도 마이페이지 또는 수신 거부 안내를 통해 언제든지 변경할 수 있습니다.</p>
                             </div>
                             <label class="legacy-consent-item" for="marketingConsent">
-                                <input type="checkbox" id="marketingConsent" name="marketingConsent" checked>
+                                <input type="checkbox" id="marketingConsent" name="marketingConsent">
                                 <span>[선택] 마케팅 정보 수신에 동의합니다.</span>
                             </label>
                         </div>
 
                         <div class="legacy-terms-section">
+                            <button type="button" class="btn btn-secondary w-full" id="select-all-consent-btn">모두 동의</button>
                             <div class="error-message hidden" id="termsConsent-error">약관 및 정책 동의가 필요합니다.</div>
                             <button type="button" class="btn btn-outline w-full" id="agree-terms-btn">본인(성인)인증하고 회원가입</button>
                         </div>
