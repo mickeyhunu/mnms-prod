@@ -96,6 +96,22 @@ const AuthAPI = {
         }
     },
 
+    async findAccountByIdentity(identityVerificationId) {
+        try {
+            return await APIClient.post('/auth/find-account-by-identity', { identityVerificationId });
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    async resetPasswordByIdentity(identityVerificationId, newPassword) {
+        try {
+            return await APIClient.post('/auth/reset-password-by-identity', { identityVerificationId, newPassword });
+        } catch (error) {
+            throw error;
+        }
+    },
+
     async logout() {
         try {
             await APIClient.post('/auth/logout');
