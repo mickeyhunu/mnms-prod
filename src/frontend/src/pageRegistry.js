@@ -923,8 +923,7 @@ const pageRegistry = {
                     <p>아직 계정이 없으신가요? <a href="register.html">회원가입</a></p>
                 </div>
 
-                <div class="grid grid-3 mt-3">
-                    <a href="index.html" class="btn btn-outline btn-sm">비회원 입장</a>
+                <div class="grid grid-2 mt-3">
                     <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
                     <a href="find-account.html" class="btn btn-outline btn-sm">계정 찾기</a>
                 </div>
