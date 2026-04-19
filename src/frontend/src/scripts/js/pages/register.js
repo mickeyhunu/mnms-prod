@@ -5,6 +5,17 @@
 const PORTONE_BROWSER_SDK_URL = 'https://cdn.portone.io/v2/browser-sdk.js';
 let portOneIdentityConfig = null;
 
+function showBlockingAlert(message) {
+    const resolvedMessage = String(message || '').trim();
+    if (!resolvedMessage) {
+        return;
+    }
+
+    if (typeof window !== 'undefined' && typeof window.alert === 'function') {
+        window.alert(resolvedMessage);
+    }
+}
+
 function initRegisterPage() {
     console.info('[Register] initRegisterPage 시작');
 
@@ -291,7 +302,8 @@ async function handleIdentityVerification() {
         };
         const signupEligibility = verificationResult?.signupEligibility;
         if (signupEligibility && signupEligibility.allowed === false) {
-            throw new Error(signupEligibility.message || '해당 본인인증 정보로는 회원가입이 불가합니다.');
+            const rejectionMessage = signupEligibility.message || '해당 본인인증 정보로는 회원가입이 불가합니다.';
+            throw new Error(rejectionMessage);
         }
 
         const normalizedResponse = normalizeIdentityResponse(mergedIdentityResult);
@@ -309,8 +321,10 @@ async function handleIdentityVerification() {
         showIdentityStatus('본인인증 완료');
         showStep('detail');
     } catch (error) {
-        showIdentityStatus(error.message || '본인인증 중 오류가 발생했습니다.');
-        showNotification(error.message || '본인인증 중 오류가 발생했습니다.', 'error');
+        const message = error.message || '본인인증 중 오류가 발생했습니다.';
+        showIdentityStatus(message);
+        showNotification(message, 'error');
+        showBlockingAlert(message);
     }
 }
 
@@ -667,7 +681,9 @@ async function handleRegister(e) {
             status: error?.status,
             data: error?.data
         });
-        showNotification(error.message || '회원가입 중 오류가 발생했습니다.', 'error');
+        const message = error.message || '회원가입 중 오류가 발생했습니다.';
+        showNotification(message, 'error');
+        showBlockingAlert(message);
 
     } finally {
         console.info('[Register] handleRegister 종료');
