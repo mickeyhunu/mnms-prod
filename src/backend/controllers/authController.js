@@ -220,11 +220,6 @@ async function register(req, res, next) {
       console.warn('[AuthController.register] 성별 식별 번호 형식 오류', { genderDigit: normalizedGenderDigit });
       return res.status(400).json({ message: '성별 식별 번호를 확인할 수 없습니다. 본인인증을 다시 진행해주세요.' });
     }
-    if (Number(normalizedGenderDigit) % 2 === 0) {
-      console.warn('[AuthController.register] 남성 회원 제한으로 가입 거절', { genderDigit: normalizedGenderDigit });
-      return res.status(400).json({ message: '남성회원만 가입가능합니다.' });
-    }
-
     const signupEligibility = await evaluateIdentitySignupEligibility({
       identityVerificationId,
       ci: identityCi,
