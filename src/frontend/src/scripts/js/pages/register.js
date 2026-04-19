@@ -69,6 +69,7 @@ function setupRegisterForm() {
 
 function setupStepFlow() {
     const agreeTermsBtn = document.getElementById('agree-terms-btn');
+    const selectAllConsentBtn = document.getElementById('select-all-consent-btn');
     const termsConsent = document.getElementById('termsConsent');
     const privacyConsent = document.getElementById('privacyConsent');
     const marketingConsent = document.getElementById('marketingConsent');
@@ -82,6 +83,16 @@ function setupStepFlow() {
             }
         });
     });
+
+    if (selectAllConsentBtn) {
+        selectAllConsentBtn.addEventListener('click', () => {
+            [termsConsent, privacyConsent, marketingConsent].filter(Boolean).forEach((checkbox) => {
+                checkbox.checked = true;
+                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+            termsConsentError?.classList.add('hidden');
+        });
+    }
 
     if (agreeTermsBtn) {
         agreeTermsBtn.addEventListener('click', () => {
