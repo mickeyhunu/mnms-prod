@@ -154,9 +154,13 @@ async function handleResetPassword(event) {
     try {
         if (submitButton) submitButton.disabled = true;
         const response = await AuthAPI.resetPasswordByIdentity(verifiedIdentityVerificationId, newPassword);
-        showFindAccountMessage(response?.message || '비밀번호가 변경되었습니다.', 'success');
+        showFindAccountMessage(response?.message || '비밀번호가 변경되었습니다. 로그인 화면으로 이동합니다.', 'success');
         if (newPasswordInput) newPasswordInput.value = '';
         if (confirmPasswordInput) confirmPasswordInput.value = '';
+        verifiedIdentityVerificationId = '';
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 800);
     } catch (error) {
         showFindAccountMessage(error.message || '비밀번호 변경에 실패했습니다.', 'error');
     } finally {
