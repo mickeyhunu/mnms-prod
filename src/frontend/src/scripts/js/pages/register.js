@@ -308,9 +308,6 @@ async function handleIdentityVerification() {
 
         const normalizedResponse = normalizeIdentityResponse(mergedIdentityResult);
 
-        if (isFemaleIdentity(normalizedResponse.genderDigit)) {
-            throw new Error('남성 회원만 가입 가능합니다.');
-        }
         if (!isIdentityDataComplete(normalizedResponse)) {
             throw new Error('본인인증 정보가 올바르게 전달되지 않았습니다. 다시 시도해주세요.');
         }
@@ -442,19 +439,6 @@ function formatBirthDate(value) {
     const month = digitsOnly.slice(4, 6);
     const day = digitsOnly.slice(6, 8);
     return `${year}년 ${month}월 ${day}일`;
-}
-
-function isFemaleIdentity(genderDigitRaw) {
-    const genderDigit = String(genderDigitRaw || '').trim().toLowerCase();
-    if (!genderDigit) {
-        return false;
-    }
-
-    if (/^\d$/.test(genderDigit)) {
-        return Number(genderDigit) % 2 === 0;
-    }
-
-    return ['f', 'female', 'woman', '여', '여성'].includes(genderDigit);
 }
 
 function isIdentityDataComplete(response = {}) {
@@ -623,6 +607,7 @@ async function handleRegister(e) {
         const firstErrorMessage = Object.values(errors)[0];
         if (firstErrorMessage) {
             showNotification(firstErrorMessage, 'error');
+            showBlockingAlert(firstErrorMessage);
         }
         return;
     }
