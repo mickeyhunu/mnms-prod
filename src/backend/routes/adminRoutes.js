@@ -13,6 +13,7 @@ const { deleteSessionsByUserId } = require('../models/sessionModel');
 const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validatePassword } = require('../utils/authPolicy');
+const { hashPassword } = require('../utils/passwordHasher');
 
 const router = express.Router();
 
@@ -231,7 +232,7 @@ router.put('/users/:id', async (req, res, next) => {
     };
 
     if (password) {
-      updates.password = password;
+      updates.password = await hashPassword(password);
     }
 
     await adminModel.updateUserByAdmin(id, updates);

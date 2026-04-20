@@ -21,6 +21,7 @@ const { recordLoginAttemptResult } = require('../middlewares/loginRateLimitMiddl
 const { signAuthToken, DEFAULT_EXPIRES_IN } = require('../utils/jwt');
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validateLoginId, validatePassword } = require('../utils/authPolicy');
+const { hashPassword, verifyPassword, isHashedPassword } = require('../utils/passwordHasher');
 
 function normalizeAccountType(value) {
   const normalized = String(value || '').trim().toUpperCase();
@@ -258,10 +259,11 @@ async function register(req, res, next) {
       return res.status(400).json({ message: '이미 사용 중인 닉네임입니다.' });
     }
 
+    const hashedPassword = await hashPassword(password);
     const role = resolveRoleByAccountType(accountType);
     const userId = await createUser({
       email: resolvedLoginId,
-      password,
+      password: hashedPassword,
       nickname: normalizedNickname,
       name,
       birthDate: birthDateIso || null,
@@ -322,7 +324,8 @@ async function login(req, res, next) {
     const ipAddress = getClientIp(req);
     const userAgent = req.headers['user-agent'] || null;
     const user = await findByEmail(resolvedLoginId);
-    if (!user || user.password !== password) {
+    const isPasswordValid = user ? await verifyPassword(password, user.password) : false;
+    if (!user || !isPasswordValid) {
       recordLoginAttemptResult(req, { success: false });
       await recordAuthEvent({
         eventType: 'LOGIN_FAIL',
@@ -365,6 +368,10 @@ async function login(req, res, next) {
       userAgent
     });
     await awardPointByAction(user.id, 'LOGIN_DAILY');
+    if (!isHashedPassword(user.password)) {
+      const rehashedPassword = await hashPassword(password);
+      await updateUserProfile(user.id, { password: rehashedPassword });
+    }
 
     const refreshedUser = await findByEmail(resolvedLoginId);
     res.json({ success: true, token, tokenExpiresIn: DEFAULT_EXPIRES_IN, ...pickUserRow(refreshedUser || user) });
@@ -739,7 +746,8 @@ async function resetPasswordByIdentity(req, res) {
     return res.status(404).json({ message: '본인인증 정보로 가입된 아이디가 없습니다.' });
   }
 
-  await updateUserProfile(user.id, { password: nextPassword });
+  const hashedPassword = await hashPassword(nextPassword);
+  await updateUserProfile(user.id, { password: hashedPassword });
   return res.json({ success: true, message: '비밀번호가 변경되었습니다.' });
 }
 

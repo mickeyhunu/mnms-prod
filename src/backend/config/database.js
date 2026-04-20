@@ -2,6 +2,7 @@
  * 파일 역할: 애플리케이션의 데이터베이스 연결 설정을 담당하는 구성 파일.
  */
 const mysql = require('mysql2/promise');
+const { hashPassword, isHashedPassword } = require('../utils/passwordHasher');
 
 function isEnabled(value) {
   return ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
@@ -931,12 +932,16 @@ async function initDatabase() {
     await pool.query('ALTER TABLE support_inquiries ADD COLUMN attachment_urls LONGTEXT NULL AFTER content');
   }
 
-  const [adminRows] = await pool.query('SELECT id FROM users WHERE email = ?', ['admin@company.com']);
+  const [adminRows] = await pool.query('SELECT id, password FROM users WHERE email = ?', ['admin@company.com']);
   if (!adminRows.length) {
+    const adminPasswordHash = await hashPassword('admin1234');
     await pool.query(
       'INSERT INTO users (email, password, nickname, role, member_type) VALUES (?, ?, ?, ?, ?)',
-      ['admin@company.com', 'admin1234', '관리자', 'ADMIN', 'MEMBER']
+      ['admin@company.com', adminPasswordHash, '관리자', 'ADMIN', 'MEMBER']
     );
+  } else if (!isHashedPassword(adminRows[0].password)) {
+    const adminPasswordHash = await hashPassword(adminRows[0].password);
+    await pool.query('UPDATE users SET password = ? WHERE id = ?', [adminPasswordHash, adminRows[0].id]);
   }
 }
 
