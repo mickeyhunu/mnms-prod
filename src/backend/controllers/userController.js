@@ -74,7 +74,6 @@ async function updateMyProfile(req, res, next) {
     const nickname = String(req.body.nickname || '').trim();
     const phone = String(req.body.phone || '').trim();
     const password = String(req.body.password || '').trim();
-    const emailConsent = Boolean(req.body.emailConsent);
     const smsConsent = Boolean(req.body.smsConsent);
 
     const nicknameValidation = validateNickname(nickname);
@@ -84,7 +83,6 @@ async function updateMyProfile(req, res, next) {
 
     const updates = {
       phone,
-      email_consent: emailConsent,
       sms_consent: smsConsent
     };
 
@@ -125,7 +123,6 @@ async function updateMyProfile(req, res, next) {
         phone: updatedUser.phone || '',
         name: updatedUser.name || '',
         birthDate: updatedUser.birth_date || null,
-        emailConsent: Boolean(updatedUser.email_consent),
         smsConsent: Boolean(updatedUser.sms_consent),
         nicknameChangeAvailableAt: getNicknameChangeAvailableAt(updatedUser.last_nickname_changed_at)
       }

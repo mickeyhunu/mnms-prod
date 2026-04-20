@@ -241,7 +241,6 @@ async function initDatabase() {
     { name: 'terms_consent', query: "ALTER TABLE users ADD COLUMN terms_consent TINYINT(1) NOT NULL DEFAULT 0 AFTER phone" },
     { name: 'privacy_consent', query: "ALTER TABLE users ADD COLUMN privacy_consent TINYINT(1) NOT NULL DEFAULT 0 AFTER terms_consent" },
     { name: 'marketing_consent', query: "ALTER TABLE users ADD COLUMN marketing_consent TINYINT(1) NOT NULL DEFAULT 0 AFTER privacy_consent" },
-    { name: 'email_consent', query: "ALTER TABLE users ADD COLUMN email_consent TINYINT(1) NOT NULL DEFAULT 0 AFTER phone" },
     { name: 'sms_consent', query: "ALTER TABLE users ADD COLUMN sms_consent TINYINT(1) NOT NULL DEFAULT 0 AFTER marketing_consent" },
     { name: 'last_nickname_changed_at', query: "ALTER TABLE users ADD COLUMN last_nickname_changed_at DATETIME NULL AFTER sms_consent" },
     { name: 'account_status', query: "ALTER TABLE users ADD COLUMN account_status ENUM('ACTIVE','SUSPENDED') NOT NULL DEFAULT 'ACTIVE' AFTER member_type" },
@@ -269,6 +268,20 @@ async function initDatabase() {
     if (!rows.length) {
       await pool.query(column.query);
     }
+  }
+
+  const [emailConsentColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'users'
+       AND COLUMN_NAME = 'email_consent'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (emailConsentColumn.length) {
+    await pool.query('ALTER TABLE users DROP COLUMN email_consent');
   }
 
   await pool.query(`

@@ -165,7 +165,6 @@ router.put('/users/:id', async (req, res, next) => {
     const role = String(req.body?.role || '').toUpperCase();
     const memberType = String(req.body?.memberType || '').toUpperCase();
     const totalPoints = Number(req.body?.totalPoints);
-    const emailConsent = Boolean(req.body?.emailConsent);
     const smsConsent = Boolean(req.body?.smsConsent);
     const accountStatus = String(req.body?.accountStatus || LOGIN_STATUS.ACTIVE).toUpperCase();
     const isLoginRestrictionPermanent = Boolean(req.body?.isLoginRestrictionPermanent);
@@ -219,7 +218,6 @@ router.put('/users/:id', async (req, res, next) => {
     const updates = {
       nickname,
       phone,
-      email_consent: emailConsent,
       sms_consent: smsConsent,
       role,
       member_type: memberType,
