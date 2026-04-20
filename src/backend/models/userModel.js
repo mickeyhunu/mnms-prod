@@ -399,11 +399,6 @@ async function updateUserProfile(userId, payload) {
     values.push(payload.phone || null);
   }
 
-  if (Object.prototype.hasOwnProperty.call(payload, 'email_consent')) {
-    fields.push('email_consent = ?');
-    values.push(payload.email_consent ? 1 : 0);
-  }
-
   if (Object.prototype.hasOwnProperty.call(payload, 'sms_consent')) {
     fields.push('sms_consent = ?');
     values.push(payload.sms_consent ? 1 : 0);
