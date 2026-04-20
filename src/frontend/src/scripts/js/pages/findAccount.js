@@ -63,22 +63,22 @@ async function getFindAccountIdentityConfig() {
 
 function showFoundAccountSection(loginId) {
     const foundSection = document.getElementById('found-account-section');
-    const foundLoginIdInput = document.getElementById('found-login-id');
+    const foundLoginIdDisplay = document.getElementById('found-login-id');
     const resetForm = document.getElementById('reset-password-form');
 
     if (foundSection) foundSection.classList.remove('hidden');
     if (resetForm) resetForm.classList.remove('hidden');
-    if (foundLoginIdInput) foundLoginIdInput.value = String(loginId || '').trim();
+    if (foundLoginIdDisplay) foundLoginIdDisplay.textContent = String(loginId || '').trim();
 }
 
 function hideFoundAccountSection() {
     const foundSection = document.getElementById('found-account-section');
     const resetForm = document.getElementById('reset-password-form');
-    const foundLoginIdInput = document.getElementById('found-login-id');
+    const foundLoginIdDisplay = document.getElementById('found-login-id');
 
     if (foundSection) foundSection.classList.add('hidden');
     if (resetForm) resetForm.classList.add('hidden');
-    if (foundLoginIdInput) foundLoginIdInput.value = '';
+    if (foundLoginIdDisplay) foundLoginIdDisplay.textContent = '본인인증 후 자동 입력됩니다.';
 }
 
 async function handleFindAccount() {

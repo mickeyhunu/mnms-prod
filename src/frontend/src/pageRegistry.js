@@ -799,8 +799,8 @@ const pageRegistry = {
             </div>
             <p class="text-center mt-3" id="find-account-status" aria-live="polite"></p>
             <div class="form-group mt-3 hidden" id="found-account-section">
-                <label class="form-label" for="found-login-id">가입된 아이디</label>
-                <input class="form-control" id="found-login-id" type="text" readonly>
+                <label class="form-label">가입된 아이디</label>
+                <p class="form-control-static" id="found-login-id">본인인증 후 자동 입력됩니다.</p>
             </div>
             <form id="reset-password-form" class="hidden mt-3">
                 <div class="form-group">
