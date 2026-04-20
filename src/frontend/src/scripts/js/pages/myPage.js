@@ -110,7 +110,9 @@ function bindLogoutActions() {
 }
 
 function renderHeaderUser(user) {
-    const nickname = document.getElementById('user-nickname');
+    const nickname = (typeof Auth.resolveNicknameDisplayElement === 'function')
+        ? Auth.resolveNicknameDisplayElement()
+        : document.getElementById('user-nickname');
     if (nickname) Auth.applyNicknameDisplay(nickname, user);
 
     const adminLink = document.getElementById('admin-link');
