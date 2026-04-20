@@ -24,6 +24,7 @@ const adminModel = require('../models/adminModel');
 const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validatePassword } = require('../utils/authPolicy');
+const { hashPassword } = require('../utils/passwordHasher');
 
 const REGISTRATION_STATUSES = new Set(['UNREGISTERED', 'DRAFT', 'REGISTERED']);
 
@@ -92,7 +93,7 @@ async function updateMyProfile(req, res, next) {
       if (!passwordValidation.valid) {
         return res.status(400).json({ message: passwordValidation.message });
       }
-      updates.password = password;
+      updates.password = await hashPassword(password);
     }
 
     if (nickname !== req.user.nickname) {
