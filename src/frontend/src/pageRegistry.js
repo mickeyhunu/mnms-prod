@@ -1118,7 +1118,6 @@ const pageRegistry = {
               </label>
               <label>이메일
                 <input type="email" id="profile-email" name="email">
-                <span class="profile-consent-inline"><input type="checkbox" id="email-consent" name="emailConsent"><span class="profile-consent-text">이메일 수신 동의</span></span>
               </label>
               <label>연락처
                 <input type="text" id="profile-phone" name="phone" placeholder="010-0000-0000">

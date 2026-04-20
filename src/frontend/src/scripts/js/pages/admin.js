@@ -1243,7 +1243,6 @@ function fillUserEditForm(user) {
     document.getElementById('admin-user-birth').value = user.birthDate || '';
     document.getElementById('admin-user-nickname').value = user.nickname || '';
     document.getElementById('admin-user-phone').value = formatPhoneNumber(user.phone || '');
-    document.getElementById('admin-user-email-consent').checked = Boolean(user.emailConsent);
     document.getElementById('admin-user-sms-consent').checked = Boolean(user.smsConsent);
     document.getElementById('admin-user-total-points').value = Number(user.totalPoints || 0);
     document.getElementById('admin-user-role').value = user.role || 'MEMBER';
@@ -1308,7 +1307,6 @@ async function saveUserDetail() {
     const totalPoints = Number.parseInt(document.getElementById('admin-user-total-points')?.value || '0', 10);
     const role = document.getElementById('admin-user-role')?.value || 'MEMBER';
     const memberType = document.getElementById('admin-user-member-type')?.value || 'MEMBER';
-    const emailConsent = document.getElementById('admin-user-email-consent')?.checked || false;
     const smsConsent = document.getElementById('admin-user-sms-consent')?.checked || false;
     const accountStatus = document.getElementById('admin-user-account-status')?.value || ACCOUNT_STATUS.ACTIVE;
     const loginRestrictionDaysValue = document.getElementById('admin-user-login-restriction-days')?.value || '';
@@ -1362,7 +1360,6 @@ async function saveUserDetail() {
             ? Number.parseInt(loginRestrictionDaysValue, 10)
             : null,
         isLoginRestrictionPermanent,
-        emailConsent,
         smsConsent
     };
 

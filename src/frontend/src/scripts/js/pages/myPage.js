@@ -184,7 +184,6 @@ function renderProfileForm(user) {
     const emailField = document.getElementById('profile-email');
     const nameField = document.getElementById('profile-name');
     const birthField = document.getElementById('profile-birth');
-    const emailConsent = document.getElementById('email-consent');
     const smsConsent = document.getElementById('sms-consent');
 
     if (loginIdField) loginIdField.value = user.email || '';
@@ -202,7 +201,6 @@ function renderProfileForm(user) {
 
     if (nameField) nameField.value = user.name || user.nickname || '';
     if (birthField) birthField.value = user.birthDate || user.birth || '';
-    if (emailConsent) emailConsent.checked = Boolean(user.emailConsent);
     if (smsConsent) smsConsent.checked = Boolean(user.smsConsent);
 
     nicknameCheckState = { checked: true, available: true, value: user.nickname || '' };
@@ -359,7 +357,6 @@ function bindProfileForm() {
             nickname,
             phone,
             email: form.email.value.trim(),
-            emailConsent: form.emailConsent.checked,
             smsConsent: form.smsConsent.checked
         };
 
