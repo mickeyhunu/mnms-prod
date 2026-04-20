@@ -1116,9 +1116,6 @@ const pageRegistry = {
               <label>생년월일
                 <input type="text" id="profile-birth" name="birthDate" readonly>
               </label>
-              <label>이메일
-                <input type="email" id="profile-email" name="email">
-              </label>
               <label>연락처
                 <input type="text" id="profile-phone" name="phone" placeholder="010-0000-0000">
                 <span class="profile-consent-inline"><input type="checkbox" id="sms-consent" name="smsConsent"><span class="profile-consent-text">SMS 수신 동의</span></span>
