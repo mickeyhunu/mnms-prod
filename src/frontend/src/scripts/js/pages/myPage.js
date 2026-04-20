@@ -12,6 +12,12 @@ function formatPhoneNumber(value) {
     return `${digits.slice(0, 3)}-${digits.slice(3, digits.length - 4)}-${digits.slice(-4)}`;
 }
 
+function formatBirthDate(value) {
+    const text = String(value || '').trim();
+    if (!text) return '';
+    return text.slice(0, 10);
+}
+
 function setHelpMessage(element, message, color) {
     if (!element) return;
     element.textContent = message;
@@ -181,7 +187,6 @@ function renderProfileForm(user) {
     const loginIdField = document.getElementById('profile-login-id');
     const nicknameInput = document.getElementById('profile-nickname');
     const phoneField = document.getElementById('profile-phone');
-    const emailField = document.getElementById('profile-email');
     const nameField = document.getElementById('profile-name');
     const birthField = document.getElementById('profile-birth');
     const smsConsent = document.getElementById('sms-consent');
@@ -194,13 +199,8 @@ function renderProfileForm(user) {
         else phoneField.textContent = user.phone || '없음';
     }
 
-    if (emailField) {
-        if (emailField.tagName === 'INPUT') emailField.value = user.email || '';
-        else emailField.textContent = user.email || '없음';
-    }
-
     if (nameField) nameField.value = user.name || user.nickname || '';
-    if (birthField) birthField.value = user.birthDate || user.birth || '';
+    if (birthField) birthField.value = formatBirthDate(user.birthDate || user.birth || '');
     if (smsConsent) smsConsent.checked = Boolean(user.smsConsent);
 
     nicknameCheckState = { checked: true, available: true, value: user.nickname || '' };
@@ -356,7 +356,6 @@ function bindProfileForm() {
         const payload = {
             nickname,
             phone,
-            email: form.email.value.trim(),
             smsConsent: form.smsConsent.checked
         };
 
