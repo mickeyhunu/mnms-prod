@@ -1117,7 +1117,11 @@ const pageRegistry = {
                 <input type="text" id="profile-birth" name="birthDate" readonly>
               </label>
               <label>연락처
-                <input type="text" id="profile-phone" name="phone" placeholder="010-0000-0000">
+                <span class="profile-nickname-inline">
+                  <input type="text" id="profile-phone" name="phone" placeholder="본인인증 후 자동 입력" readonly>
+                  <button type="button" class="btn btn-outline btn-sm" id="phone-verify-btn">연락처 변경</button>
+                </span>
+                <small id="phone-verify-result" class="help-text"></small>
                 <span class="profile-consent-inline"><input type="checkbox" id="sms-consent" name="smsConsent"><span class="profile-consent-text">SMS 수신 동의</span></span>
               </label>
             </div>

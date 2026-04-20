@@ -4,6 +4,8 @@
 let currentUser = null;
 let nicknameCheckState = { checked: false, available: false, value: '' };
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
+const MYPAGE_PORTONE_SDK_URL = 'https://cdn.portone.io/v2/browser-sdk.js';
+let myPageIdentityConfig = null;
 
 function formatPhoneNumber(value) {
     const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
@@ -22,6 +24,47 @@ function setHelpMessage(element, message, color) {
     if (!element) return;
     element.textContent = message;
     if (color) element.style.color = color;
+}
+
+async function loadMyPagePortOneSdk() {
+    if (window.PortOne && typeof window.PortOne.requestIdentityVerification === 'function') {
+        return window.PortOne;
+    }
+
+    await new Promise((resolve, reject) => {
+        const existingScript = document.querySelector(`script[src="${MYPAGE_PORTONE_SDK_URL}"]`);
+        if (existingScript) {
+            existingScript.addEventListener('load', () => resolve(), { once: true });
+            existingScript.addEventListener('error', () => reject(new Error('PortOne SDK 로드에 실패했습니다.')), { once: true });
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = MYPAGE_PORTONE_SDK_URL;
+        script.async = true;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('PortOne SDK 로드에 실패했습니다.'));
+        document.head.appendChild(script);
+    });
+
+    return window.PortOne;
+}
+
+async function getMyPageIdentityConfig() {
+    if (myPageIdentityConfig?.storeId && myPageIdentityConfig?.channelKey) {
+        return myPageIdentityConfig;
+    }
+
+    const config = await APIClient.get('/auth/identity-verification-config');
+    const storeId = String(config?.storeId || '').trim();
+    const channelKey = String(config?.channelKey || '').trim();
+
+    if (!storeId || !channelKey) {
+        throw new Error('본인인증 설정 정보를 불러오지 못했습니다.');
+    }
+
+    myPageIdentityConfig = { storeId, channelKey };
+    return myPageIdentityConfig;
 }
 
 if (document.readyState === 'loading') {
@@ -217,12 +260,10 @@ function bindProfileForm() {
     const passwordConfirmInput = form.querySelector('#profile-password-confirm');
     const passwordMatchResult = form.querySelector('#profile-password-match-result');
     const phoneInput = form.querySelector('#profile-phone');
+    const phoneVerifyButton = form.querySelector('#phone-verify-btn');
+    const phoneVerifyResult = form.querySelector('#phone-verify-result');
 
-    if (phoneInput) {
-        phoneInput.addEventListener('input', () => {
-            phoneInput.value = formatPhoneNumber(phoneInput.value);
-        });
-    }
+    if (phoneInput) phoneInput.readOnly = true;
 
     const updatePasswordMatchMessage = () => {
         if (!passwordMatchResult || !passwordConfirmInput) return;
@@ -294,6 +335,61 @@ function bindProfileForm() {
                     nicknameCheckResult.textContent = error?.message || '중복 확인에 실패했습니다.';
                     nicknameCheckResult.style.color = '#dc3545';
                 }
+            }
+        });
+    }
+
+    if (phoneVerifyButton && phoneInput) {
+        phoneVerifyButton.addEventListener('click', async () => {
+            const currentName = String(currentUser?.name || '').trim();
+            try {
+                phoneVerifyButton.disabled = true;
+                setHelpMessage(phoneVerifyResult, '본인인증을 진행합니다...', '#6c757d');
+
+                const PortOne = await loadMyPagePortOneSdk();
+                const identityConfig = await getMyPageIdentityConfig();
+                if (!PortOne || typeof PortOne.requestIdentityVerification !== 'function') {
+                    throw new Error('본인인증 모듈을 찾을 수 없습니다.');
+                }
+
+                const response = await PortOne.requestIdentityVerification({
+                    storeId: identityConfig.storeId,
+                    identityVerificationId: `my-page-phone-${Date.now()}`,
+                    channelKey: identityConfig.channelKey
+                });
+
+                if (response?.code) {
+                    throw new Error(response.message || '본인인증에 실패했습니다.');
+                }
+
+                const identityVerificationId = String(response?.identityVerificationId || '').trim();
+                if (!identityVerificationId) {
+                    throw new Error('본인인증 거래 정보를 확인하지 못했습니다. 다시 시도해주세요.');
+                }
+
+                const verificationResult = await APIClient.get(`/auth/identity-verification/${encodeURIComponent(identityVerificationId)}`);
+                const verifiedName = String(verificationResult?.normalized?.name || verificationResult?.verifiedCustomer?.name || '').trim();
+                const verifiedPhone = formatPhoneNumber(
+                    verificationResult?.normalized?.phone
+                        || verificationResult?.verifiedCustomer?.phoneNumber
+                        || verificationResult?.verifiedCustomer?.phone
+                        || ''
+                );
+
+                if (!verifiedName || !verifiedPhone) {
+                    throw new Error('본인인증 정보에서 이름 또는 연락처를 확인하지 못했습니다.');
+                }
+
+                if (!currentName || verifiedName !== currentName) {
+                    throw new Error('동일 명의 본인인증만 연락처 변경이 가능합니다.');
+                }
+
+                phoneInput.value = verifiedPhone;
+                setHelpMessage(phoneVerifyResult, '본인인증 완료: 인증된 연락처가 자동 입력되었습니다.', '#198754');
+            } catch (error) {
+                setHelpMessage(phoneVerifyResult, error?.message || '연락처 본인인증 중 오류가 발생했습니다.', '#dc3545');
+            } finally {
+                phoneVerifyButton.disabled = false;
             }
         });
     }
