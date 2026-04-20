@@ -244,12 +244,13 @@ a:hover {
     flex-shrink: 0;
     font-size: 54px;
     line-height: 1;
-    font-family: Georgia, "Times New Roman", serif;
 }
 
 .age-notice-number {
-    display: block;
-    transform: translateY(-3px);
+  display: flex;
+  align-items: center;   /* 세로 중앙 */
+  justify-content: center; /* 가로 중앙 */
+  height: 100px;
 }
 
 .age-notice-text p {
