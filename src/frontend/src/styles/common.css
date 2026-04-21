@@ -292,7 +292,6 @@ a:hover {
 
 .admin-comment-author,
 .admin-comment-content {
-    color: var(--danger-color) !important;
     font-weight: bold !important;
 }
 
