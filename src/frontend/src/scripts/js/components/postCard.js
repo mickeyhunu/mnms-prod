@@ -49,6 +49,7 @@ function createBoardRow(post, isNotice = false, index = 0) {
     const numberLabel = isNotice ? (post.isPinned ? '📌' : noticeText) : post.id || index + 1;
 
     const authorName = getDisplayAuthorName(post);
+    const ownBadgeMarkup = getOwnContentBadgeMarkup(post);
 
     return `
         <tr class="${isNotice ? 'notice-row' : 'post-row'}" data-post-id="${post.id}">
@@ -59,7 +60,7 @@ function createBoardRow(post, isNotice = false, index = 0) {
                 ${newBadge}
                 ${post.commentCount > 0 ? `<small>[${post.commentCount}]</small>` : ''}
             </td>
-            <td class="col-author">${sanitizeHTML(authorName || `작성자 #${post.authorId || ''}`)}</td>
+            <td class="col-author">${sanitizeHTML(authorName || `작성자 #${post.authorId || ''}`)}${ownBadgeMarkup}</td>
             <td class="col-date">${formatDate(post.createdAt)}</td>
             <td class="col-like">${post.likeCount || 0}</td>
             <td class="col-view">${post.viewCount || 0}</td>
@@ -91,6 +92,7 @@ function createPostCard(post) {
     const isLikedByMe = Boolean(post.isLiked || post.liked || post.likedByMe);
 
     const authorName = getDisplayAuthorName(post);
+    const ownBadgeMarkup = getOwnContentBadgeMarkup(post);
 
     return `
         <div class="${cardClass}" data-post-id="${post.id}">
@@ -100,7 +102,7 @@ function createPostCard(post) {
                         <a href="/post-detail?id=${post.id}" onclick="handlePostClick(${post.id}); return false;">${titlePrefix}${sanitizeHTML(post.title)}</a>
                     </h3>
                     <div class="post-meta">
-                        <span class="post-author">${sanitizeHTML(authorName || '작성자 #' + post.authorId)}</span>
+                        <span class="post-author">${sanitizeHTML(authorName || '작성자 #' + post.authorId)}${ownBadgeMarkup}</span>
                         <span class="post-date">${formatDate(post.createdAt)}</span>
                         <span class="post-stats">
                             <span class="like-count">👍 ${post.likeCount || 0}</span>
@@ -123,6 +125,18 @@ function createPostCard(post) {
             </div>
         </div>
     `;
+}
+
+function getOwnContentBadgeMarkup(post) {
+    const user = Auth.getUser();
+    if (!user) return '';
+
+    const postAuthorId = post?.authorId ?? post?.userId;
+    if (!postAuthorId) return '';
+
+    return String(user.id) === String(postAuthorId)
+        ? ' <span class="own-content-badge">본인</span>'
+        : '';
 }
 
 
@@ -287,4 +301,3 @@ function truncateText(text, maxLength) {
     if (text.length <= maxLength) return text;
     return text.substr(0, maxLength) + '...';
 }
-
