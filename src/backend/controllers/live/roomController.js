@@ -517,10 +517,6 @@ async function renderRoomImage(req, res, next) {
       res.type('image/svg+xml').send(svg);
     }
 
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const referer = req.get('referer') || '직접 요청';
-    const userAgent = req.get('user-agent') || '알 수 없음';
-    console.log(`[ROOMIMAGE ACCESS] IP:${ip} REF:${referer} UA:${userAgent}`);
   } catch (error) {
     next(error);
   }

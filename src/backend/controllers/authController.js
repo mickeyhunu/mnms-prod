@@ -143,14 +143,6 @@ function resolveRegisterConflictError(error) {
 
 async function register(req, res, next) {
   try {
-    console.info('[AuthController.register] 요청 시작', {
-      ipAddress: getClientIp(req),
-      loginId: req.body?.loginId || req.body?.email || '',
-      nickname: req.body?.nickname || '',
-      identityVerificationId: req.body?.identityVerificationId || '',
-      hasIdentityCi: Boolean(req.body?.identityCi || req.body?.ci),
-      hasIdentityDi: Boolean(req.body?.identityDi || req.body?.di)
-    });
     const { loginId, email, password, nickname, genderDigit } = req.body;
     const ipAddress = getClientIp(req);
     const accountType = normalizeAccountType(req.body.accountType || req.body.memberType);
@@ -292,11 +284,6 @@ async function register(req, res, next) {
     await awardPointByAction(userId, 'REGISTER');
 
     const user = await findByEmail(resolvedLoginId);
-    console.info('[AuthController.register] 가입 완료', {
-      userId,
-      loginId: resolvedLoginId,
-      nickname: normalizedNickname
-    });
     res.json({ success: true, message: '회원가입이 완료되었습니다.', user: pickUserRow({ ...user, id: userId }) });
   } catch (error) {
     const conflictError = resolveRegisterConflictError(error);
