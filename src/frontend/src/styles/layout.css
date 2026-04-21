@@ -115,6 +115,12 @@
     vertical-align: text-bottom;
 }
 
+.user-level-badge {
+    height: 16px;
+    width: auto;
+    vertical-align: text-bottom;
+}
+
 .user-nickname-caret {
     flex-shrink: 0;
     font-size: 12px;
