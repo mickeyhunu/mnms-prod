@@ -1321,7 +1321,7 @@ const pageRegistry = {
                             <label for="loginId" class="form-label">아이디</label>
                             <input type="text" id="loginId" name="loginId" class="form-control" placeholder="아이디를 입력하세요" required>
                             <div class="error-message hidden" id="loginId-error"></div>
-                            <small class="text-muted">4자 이상 영문/숫자 조합으로 입력해주세요</small>
+                            <small class="text-muted">4자 이상으로 입력해주세요</small>
                         </div>
 
                         <div class="form-group">

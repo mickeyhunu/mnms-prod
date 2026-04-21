@@ -1,7 +1,7 @@
 /**
  * 파일 역할: 인증 관련 아이디/비밀번호 정책 검증 유틸리티 파일.
  */
-const LOGIN_ID_REGEX = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,}$/;
+const LOGIN_ID_REGEX = /^.{4,}$/;
 const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)[^\s]{8,}$/;
 
 function validateLoginId(value) {
@@ -9,7 +9,7 @@ function validateLoginId(value) {
   const valid = LOGIN_ID_REGEX.test(normalized);
   return {
     valid,
-    message: valid ? null : '아이디는 4자 이상 영문/숫자 조합으로 입력해주세요.'
+    message: valid ? null : '아이디는 4자 이상으로 입력해주세요.'
   };
 }
 
