@@ -497,7 +497,7 @@ function renderPostDetail(post) {
     updatePostSeo(post, boardNameMap[boardType]);
 
     if (authorElement) {
-        authorElement.innerHTML = `${sanitizeHTML(postAuthorLabel)}${isCurrentAuthor ? ' <span class="own-content-badge">본인</span>' : ''}${authorBadgeMarkup ? ` ${authorBadgeMarkup}` : ''}`;
+        authorElement.innerHTML = `${sanitizeHTML(postAuthorLabel)}${authorBadgeMarkup ? ` ${authorBadgeMarkup}` : ''}${isCurrentAuthor ? ' <span class="own-content-badge">본인</span>' : ''}`;
     }
     if (dateElement) dateElement.textContent = formatDateTime(post.createdAt) || '';
 
