@@ -405,7 +405,7 @@ function resolveLevelBadgeImage(level) {
         4: 'lv4.png',
         5: 'lv5.png',
         6: 'lv6.png',
-        7: 'lv8.png'
+        7: 'lv7.png'
     };
     const assetFile = levelToAssetMap[normalizedLevel] || levelToAssetMap[7];
     return `/src/assets/lv-badges/${assetFile}`;

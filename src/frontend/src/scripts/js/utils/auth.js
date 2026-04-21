@@ -113,8 +113,7 @@ const Auth = {
         const levelNumber = Number(match[1]);
         if (!Number.isFinite(levelNumber) || levelNumber <= 0) return '';
 
-        const normalizedLevel = levelNumber === 7 ? 8 : levelNumber;
-        return `/src/assets/lv-badges/lv${normalizedLevel}.png`;
+        return `/src/assets/lv-badges/lv${levelNumber}.png`;
     },
     applyNicknameDisplay(element, user) {
         if (!element) return;
