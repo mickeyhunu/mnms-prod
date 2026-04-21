@@ -1345,9 +1345,9 @@ const pageRegistry = {
 
                         <div class="form-group">
                             <label for="nickname" class="form-label">닉네임</label>
-                            <div class="grid grid-2">
+                            <div class="grid grid-2 register-nickname-inline">
                                 <input type="text" id="nickname" name="nickname" class="form-control" placeholder="사용할 닉네임을 입력하세요" minlength="2" maxlength="8" required>
-                                <button type="button" class="btn btn-outline" id="check-nickname-btn">중복 확인</button>
+                                <button type="button" class="btn btn-outline btn-sm" id="check-nickname-btn">중복 확인</button>
                             </div>
                             <small class="text-muted" id="nickname-status">닉네임 중복 확인이 필요합니다.</small>
                             <div class="error-message hidden" id="nickname-error"></div>
