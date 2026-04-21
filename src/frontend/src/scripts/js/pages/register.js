@@ -533,6 +533,10 @@ function setNicknameChecked(isChecked, isAvailable = false, options = {}) {
         } else {
             statusElement.textContent = '이미 사용 중인 닉네임입니다.';
         }
+        
+        statusElement.style.color = isChecked
+            ? (isAvailable ? '#198754' : '#dc3545')
+            : '';
     }
 }
 
