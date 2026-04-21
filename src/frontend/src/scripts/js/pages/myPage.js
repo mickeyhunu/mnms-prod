@@ -704,11 +704,17 @@ function parseLevelBadgeLabel(rawLabel = '') {
     const label = String(rawLabel || '').trim();
     if (!label) return { image: '', title: '' };
 
-    const match = label.match(/^(\/assets\/lv-badges\/lv\d+\.png)\s*(.*)$/i);
+    const match = label.match(/^((?:[a-z]:\\workspace\\mnms-prod\\)?(?:\/?src)?\/?assets\/lv-badges\/lv\d+\.png)\s*(.*)$/i);
     if (!match) return { image: '', title: label };
 
+    const filenameMatch = String(match[1]).replace(/\\/g, '/').match(/(lv\d+\.png)$/i);
+    const filename = (filenameMatch?.[1] || '').toLowerCase();
+    if (!filename) return { image: '', title: label };
+
+    const normalizedFilename = filename === 'lv7.png' ? 'lv8.png' : filename;
+
     return {
-        image: match[1],
+        image: `/src/assets/lv-badges/${normalizedFilename}`,
         title: String(match[2] || '').trim()
     };
 }

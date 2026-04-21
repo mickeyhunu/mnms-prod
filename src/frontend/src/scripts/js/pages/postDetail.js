@@ -396,8 +396,19 @@ function resolveLevelBadgeImage(level) {
     if (!Number.isFinite(numericLevel) || numericLevel <= 0) {
         return '';
     }
-    const normalizedLevel = Math.min(7, Math.max(1, Math.floor(numericLevel)));
-    return `/assets/lv-badges/lv${normalizedLevel}.png`;
+
+    const normalizedLevel = Math.max(1, Math.floor(numericLevel));
+    const levelToAssetMap = {
+        1: 'lv1.png',
+        2: 'lv2.png',
+        3: 'lv3.png',
+        4: 'lv4.png',
+        5: 'lv5.png',
+        6: 'lv6.png',
+        7: 'lv8.png'
+    };
+    const assetFile = levelToAssetMap[normalizedLevel] || levelToAssetMap[7];
+    return `/src/assets/lv-badges/${assetFile}`;
 }
 
 function isBusinessAuthor(author = {}) {
