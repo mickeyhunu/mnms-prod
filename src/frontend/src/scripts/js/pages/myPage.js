@@ -701,7 +701,10 @@ function renderLevelGuide(levelGuide = []) {
 }
 
 function parseLevelBadgeLabel(rawLabel = '') {
-    const label = String(rawLabel || '').trim();
+    const label = String(rawLabel || '')
+        .replace(/<\/?strong>/gi, '')
+        .replace(/\*\*/g, '')
+        .trim();
     if (!label) return { image: '', title: '' };
 
     const match = label.match(/^((?:[a-z]:\\workspace\\mnms-prod\\)?(?:\/?src)?\/?assets\/lv-badges\/lv\d+\.png)\s*(.*)$/i);
