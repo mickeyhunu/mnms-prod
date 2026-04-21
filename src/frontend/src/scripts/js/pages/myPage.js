@@ -791,7 +791,9 @@ async function loadStats() {
 
     try {
         const response = await APIClient.get('/users/me/stats');
-        const joinedAt = response.joinedAt ? formatDate(response.joinedAt).replace(/-/g, '.') : '-';
+        const joinedAt = response.joinedAt
+            ? formatDate(response.joinedAt).split(' ')[0].replace(/\.$/, '')
+            : '-';
         const rankLabel = resolveRankLabel(currentUser, response.levelLabel || '');
         const rankMarkup = resolveRankMarkup(currentUser, rankLabel);
         const pointsSection = isAdAccount(currentUser) ? '' : `
