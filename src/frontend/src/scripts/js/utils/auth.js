@@ -102,10 +102,39 @@ const Auth = {
 
         return levelEmoji ? `${nickname} ${levelEmoji}` : nickname;
     },
+    parseLevelBadgeImage(levelEmoji) {
+        const rawLevelEmoji = String(levelEmoji || '').trim();
+        if (!rawLevelEmoji) return '';
+
+        const normalized = rawLevelEmoji.replace(/\\/g, '/');
+        const match = normalized.match(/(?:^|\/)lv(\d+)\.png(?:$|\s)/i);
+        if (!match) return '';
+
+        const levelNumber = Number(match[1]);
+        if (!Number.isFinite(levelNumber) || levelNumber <= 0) return '';
+
+        const normalizedLevel = levelNumber === 7 ? 8 : levelNumber;
+        return `/src/assets/lv-badges/lv${normalizedLevel}.png`;
+    },
     applyNicknameDisplay(element, user) {
         if (!element) return;
 
-        element.textContent = this.formatNicknameWithLevel(user);
+        const nickname = user?.nickname || user?.email || '';
+        element.textContent = nickname;
+
+        const levelBadgeImage = this.isBusinessAccount(user)
+            ? ''
+            : this.parseLevelBadgeImage(user?.levelEmoji);
+        if (levelBadgeImage) {
+            const levelBadge = document.createElement('img');
+            levelBadge.className = 'user-level-badge';
+            levelBadge.src = levelBadgeImage;
+            levelBadge.alt = '회원 등급 배지';
+            levelBadge.loading = 'lazy';
+            element.appendChild(document.createTextNode(' '));
+            element.appendChild(levelBadge);
+        }
+
         const badgeImage = this.resolveBusinessBadgeImage(user);
         if (!badgeImage) return;
 
