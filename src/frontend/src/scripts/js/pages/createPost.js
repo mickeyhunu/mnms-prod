@@ -267,29 +267,7 @@ function renderImagePreview() {
     });
 }
 
-function isUploadDebugMode() {
-    const params = new URLSearchParams(window.location.search || '');
-    if (params.get('debugUpload') === '1') return true;
-
-    try {
-        return window.localStorage.getItem('mnms_debug_upload') === '1';
-    } catch (error) {
-        return false;
-    }
-}
-
-function handlePostSubmitSuccess(result, { isEdit = false } = {}) {
-    if (isUploadDebugMode()) {
-        console.group('[S3 Upload Debug] 게시글 저장 결과');
-        console.log('mode:', isEdit ? 'edit' : 'create');
-        console.log('result:', result);
-        console.log('post image urls:', result?.post?.image_urls || result?.post?.imageUrls || []);
-        console.groupEnd();
-
-        alert('디버그 모드: 업로드 결과를 콘솔에 출력했습니다. 확인 후 직접 이동해주세요.');
-        return;
-    }
-
+function handlePostSubmitSuccess() {
     window.location.href = '/community';
 }
 
@@ -455,15 +433,14 @@ async function handleSubmit(event) {
             imageUrls: [...existingImageUrls, ...imageUrls].slice(0, 5)
         };
 
-        let submitResult;
         if (isEditMode) {
-            submitResult = await APIClient.put(`/posts/${editingPostId}`, payload);
+            await APIClient.put(`/posts/${editingPostId}`, payload);
         } else {
-            submitResult = await APIClient.post('/posts', payload);
+            await APIClient.post('/posts', payload);
         }
 
         alert(isEditMode ? '글이 수정되었습니다!' : '글이 작성되었습니다!');
-        handlePostSubmitSuccess(submitResult, { isEdit: isEditMode });
+        handlePostSubmitSuccess();
     } catch (error) {
         console.error('글 작성 에러:', error);
         if (error.status === 401) {

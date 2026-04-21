@@ -47,19 +47,7 @@ const AuthAPI = {
 
     async register(userData) {
         try {
-            console.info('[AuthAPI.register] 요청 시작', {
-                loginId: userData?.loginId,
-                nickname: userData?.nickname,
-                accountType: userData?.accountType,
-                identityVerificationId: userData?.identityVerificationId,
-                hasIdentityCi: Boolean(userData?.identityCi),
-                hasIdentityDi: Boolean(userData?.identityDi)
-            });
             const response = await APIClient.post('/auth/register', userData);
-            console.info('[AuthAPI.register] 요청 성공', {
-                success: response?.success,
-                message: response?.message
-            });
             return response;
         } catch (error) {
             console.error('[AuthAPI.register] 요청 실패', {
