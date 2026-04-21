@@ -711,10 +711,8 @@ function parseLevelBadgeLabel(rawLabel = '') {
     const filename = (filenameMatch?.[1] || '').toLowerCase();
     if (!filename) return { image: '', title: label };
 
-    const normalizedFilename = filename === 'lv7.png' ? 'lv8.png' : filename;
-
     return {
-        image: `/src/assets/lv-badges/${normalizedFilename}`,
+        image: `/src/assets/lv-badges/${filename}`,
         title: String(match[2] || '').trim()
     };
 }
