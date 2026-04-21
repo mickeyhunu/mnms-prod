@@ -265,6 +265,14 @@ function validateNoBlockedExpression(value, fieldLabel = '입력값') {
    return false;
 }
 
+function hasStandaloneJamo(value) {
+   return /[ㄱ-ㅎㅏ-ㅣ]/.test(String(value || ''));
+}
+
+function validateNicknameComposition(value) {
+   return !hasStandaloneJamo(value);
+}
+
 function formatDate(dateString) {
    if (!dateString) return '';
 
