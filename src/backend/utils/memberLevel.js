@@ -2,13 +2,13 @@
  * 파일 역할: 회원 포인트 기반 레벨/등급 계산 규칙을 제공하는 유틸리티 파일.
  */
 const MEMBER_LEVELS = [
-  { level: 1, emoji: '🐣', title: '룸린이', minPoints: 0 },
-  { level: 2, emoji: '🍻', title: '단골', minPoints: 100 },
-  { level: 3, emoji: '🧠', title: '빠꼼이', minPoints: 300 },
-  { level: 4, emoji: '🎓', title: '룸박사', minPoints: 800 },
-  { level: 5, emoji: '💎', title: 'VIP', minPoints: 2000 },
-  { level: 6, emoji: '👑', title: '사장', minPoints: 5000 },
-  { level: 7, emoji: '🔱', title: '전설', minPoints: 15000 }
+  { level: 1, emoji: '/assets/lv-badges/lv1.png', title: '룸린이', minPoints: 0 },
+  { level: 2, emoji: '/assets/lv-badges/lv2.png', title: '단골', minPoints: 100 },
+  { level: 3, emoji: '/assets/lv-badges/lv3.png', title: '빠꼼이', minPoints: 300 },
+  { level: 4, emoji: '/assets/lv-badges/lv4.png', title: '룸박사', minPoints: 800 },
+  { level: 5, emoji: '/assets/lv-badges/lv5.png', title: 'VIP', minPoints: 2000 },
+  { level: 6, emoji: '/assets/lv-badges/lv6.png', title: '사장', minPoints: 5000 },
+  { level: 7, emoji: '/assets/lv-badges/lv7.png', title: '전설', minPoints: 15000 }
 ];
 
 function normalizePoints(points) {
