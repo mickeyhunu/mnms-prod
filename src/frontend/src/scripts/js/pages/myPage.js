@@ -140,7 +140,7 @@ function resolveRankLabel(user, fallbackLabel = '') {
 
 function resolveRankMarkup(user, fallbackLabel = '') {
     if (!isAdAccount(user)) {
-        return `<strong>${sanitizeHTML(String(fallbackLabel || ''))}</strong>`;
+        return renderLevelBadgeLabel(fallbackLabel || '');
     }
 
     const badgeImage = Auth.resolveBusinessBadgeImage(user);
