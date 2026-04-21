@@ -322,6 +322,14 @@ function bindProfileForm() {
                 }
                 return;
             }
+            if (!validateNicknameComposition(nickname)) {
+                nicknameCheckState = { checked: true, available: false, value: nickname };
+                if (nicknameCheckResult) {
+                    nicknameCheckResult.textContent = '닉네임에는 단독 자음/모음을 사용할 수 없습니다.';
+                    nicknameCheckResult.style.color = '#dc3545';
+                }
+                return;
+            }
 
             try {
                 const duplicateCheck = await APIClient.get('/auth/check-nickname', { nickname });
@@ -429,6 +437,10 @@ function bindProfileForm() {
             }
             if (!validateNoBlockedExpression(nickname, '닉네임')) {
                 setHelpMessage(result, '닉네임에 사용할 수 없는 표현이 포함되어 있습니다.', '#dc3545');
+                return;
+            }
+            if (!validateNicknameComposition(nickname)) {
+                setHelpMessage(result, '닉네임에는 단독 자음/모음을 사용할 수 없습니다.', '#dc3545');
                 return;
             }
             const checkedSameValue = nicknameCheckState.checked && nicknameCheckState.value === nickname;

@@ -555,6 +555,11 @@ async function checkNicknameAvailability() {
         setNicknameChecked(false);
         return;
     }
+    if (!validateNicknameComposition(nickname)) {
+        showNotification('닉네임에는 단독 자음/모음을 사용할 수 없습니다.', 'warning');
+        setNicknameChecked(false);
+        return;
+    }
 
     try {
         const result = await AuthAPI.checkNickname(nickname);
@@ -618,6 +623,11 @@ async function handleRegister(e) {
     }
 
     if (!validateNoBlockedExpression(formData.nickname, '닉네임')) {
+        setNicknameChecked(false);
+        return;
+    }
+    if (!validateNicknameComposition(formData.nickname)) {
+        showNotification('닉네임에는 단독 자음/모음을 사용할 수 없습니다.', 'warning');
         setNicknameChecked(false);
         return;
     }
