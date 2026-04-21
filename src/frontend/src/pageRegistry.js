@@ -1350,7 +1350,6 @@ const pageRegistry = {
                                 <button type="button" class="btn btn-outline btn-sm" id="check-nickname-btn">중복 확인</button>
                             </div>
                             <small class="text-muted" id="nickname-status">닉네임 중복 확인이 필요합니다.</small>
-                            <div class="error-message hidden" id="nickname-error"></div>
                         </div>
 
                         <div class="form-group">

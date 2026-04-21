@@ -516,7 +516,6 @@ function setNicknameChecked(isChecked, isAvailable = false) {
     const nicknameCheckedInput = document.getElementById('nicknameChecked');
     const nicknameAvailableInput = document.getElementById('nicknameAvailable');
     const statusElement = document.getElementById('nickname-status');
-    const nicknameError = document.getElementById('nickname-error');
 
     if (nicknameCheckedInput) {
         nicknameCheckedInput.value = isChecked ? 'true' : 'false';
@@ -533,11 +532,6 @@ function setNicknameChecked(isChecked, isAvailable = false) {
         } else {
             statusElement.textContent = '이미 사용 중인 닉네임입니다.';
         }
-    }
-
-    if (nicknameError) {
-        nicknameError.textContent = '';
-        nicknameError.classList.add('hidden');
     }
 }
 
