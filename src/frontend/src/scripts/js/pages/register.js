@@ -512,7 +512,8 @@ function applyIdentityResponse(response = {}) {
     }
 }
 
-function setNicknameChecked(isChecked, isAvailable = false) {
+function setNicknameChecked(isChecked, isAvailable = false, options = {}) {
+    const { skipStatusUpdate = false } = options;
     const nicknameCheckedInput = document.getElementById('nicknameChecked');
     const nicknameAvailableInput = document.getElementById('nicknameAvailable');
     const statusElement = document.getElementById('nickname-status');
@@ -524,7 +525,7 @@ function setNicknameChecked(isChecked, isAvailable = false) {
         nicknameAvailableInput.value = isAvailable ? 'true' : 'false';
     }
 
-    if (statusElement) {
+    if (statusElement && !skipStatusUpdate) {
         if (!isChecked) {
             statusElement.textContent = '닉네임 중복 확인이 필요합니다.';
         } else if (isAvailable) {
@@ -556,20 +557,20 @@ async function checkNicknameAvailability() {
         const message = `닉네임은 ${VALIDATION.NICKNAME_MIN_LENGTH}자 이상 ${VALIDATION.NICKNAME_MAX_LENGTH}자 이하로 입력해주세요.`;
         showNotification(message, 'warning');
         setNicknameStatusMessage(message);
-        setNicknameChecked(false);
+        setNicknameChecked(false, false, { skipStatusUpdate: true });
         return;
     }
 
     if (!validateNoBlockedExpression(nickname, '닉네임')) {
         setNicknameStatusMessage('닉네임에 사용할 수 없는 표현이 포함되어 있습니다.');
-        setNicknameChecked(false);
+        setNicknameChecked(false, false, { skipStatusUpdate: true });
         return;
     }
     if (!validateNicknameComposition(nickname)) {
         const message = '닉네임에는 단독 자음/모음을 사용할 수 없습니다.';
         showNotification(message, 'warning');
         setNicknameStatusMessage(message);
-        setNicknameChecked(false);
+        setNicknameChecked(false, false, { skipStatusUpdate: true });
         return;
     }
 
@@ -583,8 +584,10 @@ async function checkNicknameAvailability() {
             showNotification('이미 사용 중인 닉네임입니다.', 'error');
         }
     } catch (error) {
-        setNicknameChecked(false);
-        showNotification(error.message || '닉네임 확인 중 오류가 발생했습니다.', 'error');
+        const message = error.message || '닉네임 확인 중 오류가 발생했습니다.';
+        setNicknameStatusMessage(message);
+        setNicknameChecked(false, false, { skipStatusUpdate: true });
+        showNotification(message, 'error');
     }
 }
 
