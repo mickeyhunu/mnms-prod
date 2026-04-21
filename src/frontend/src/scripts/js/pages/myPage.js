@@ -691,13 +691,40 @@ function renderLevelGuide(levelGuide = []) {
                 const maxLabel = level.maxPoints == null ? '이상' : `${Number(level.maxPoints).toLocaleString()}P`;
                 return `
                     <div class="mypage-guide-row">
-                        <span>${sanitizeHTML(level.label || '')}</span>
+                        <span>${renderLevelBadgeLabel(level.label || '')}</span>
                         <strong>${Number(level.minPoints || 0).toLocaleString()}P ~ ${maxLabel}</strong>
                     </div>
                 `;
             }).join('')}
         </div>
     `;
+}
+
+function parseLevelBadgeLabel(rawLabel = '') {
+    const label = String(rawLabel || '').trim();
+    if (!label) return { image: '', title: '' };
+
+    const match = label.match(/^((?:[a-z]:\\workspace\\mnms-prod\\)?(?:\/?src)?\/?assets\/lv-badges\/lv\d+\.png)\s*(.*)$/i);
+    if (!match) return { image: '', title: label };
+
+    const filenameMatch = String(match[1]).replace(/\\/g, '/').match(/(lv\d+\.png)$/i);
+    const filename = (filenameMatch?.[1] || '').toLowerCase();
+    if (!filename) return { image: '', title: label };
+
+    const normalizedFilename = filename === 'lv7.png' ? 'lv8.png' : filename;
+
+    return {
+        image: `/src/assets/lv-badges/${normalizedFilename}`,
+        title: String(match[2] || '').trim()
+    };
+}
+
+function renderLevelBadgeLabel(rawLabel = '') {
+    const parsed = parseLevelBadgeLabel(rawLabel);
+    if (!parsed.image) return sanitizeHTML(parsed.title);
+
+    const titleMarkup = parsed.title ? ` <span>${sanitizeHTML(parsed.title)}</span>` : '';
+    return `<img class="mypage-level-badge" src="${parsed.image}" alt="회원 등급 배지" loading="lazy">${titleMarkup}`;
 }
 
 async function loadPointHistories(page = 1) {
@@ -720,7 +747,7 @@ async function loadPointHistories(page = 1) {
                         <div class="mypage-summary-head">
                             <h3 class="mypage-summary-title">보유 포인트</h3>
                         </div>
-                        <div class="mypage-summary-row"><span>현재 등급</span><strong>${sanitizeHTML(response.levelLabel || '-')}</strong></div>
+                        <div class="mypage-summary-row"><span>현재 등급</span><strong>${renderLevelBadgeLabel(response.levelLabel || '-')}</strong></div>
                         <div class="mypage-summary-row"><span>누적 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
                     </section>
 
@@ -805,7 +832,7 @@ async function loadStats() {
                 <div class="mypage-summary-row"><span>보유 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
                 <div class="mypage-level-progress">
                     <div class="mypage-level-progress-meta">
-                        <span>${sanitizeHTML(response.levelLabel || '')} → ${sanitizeHTML(response.nextLevelLabel || 'MAX')}</span>
+                        <span>${sanitizeHTML(parseLevelBadgeLabel(response.levelLabel || '').title || '')} → ${sanitizeHTML(parseLevelBadgeLabel(response.nextLevelLabel || '').title || 'MAX')}</span>
                         <span>${Number(response.neededPointsToNextLevel || 0).toLocaleString()}P 필요</span>
                     </div>
                     <progress class="mypage-progress-bar" max="100" value="${Number(response.progressRate || 0)}"></progress>

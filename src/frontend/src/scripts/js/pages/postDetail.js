@@ -391,19 +391,24 @@ function normalizePostDetailResponse(post) {
 }
 
 
-function resolveLevelEmoji(level) {
+function resolveLevelBadgeImage(level) {
     const numericLevel = Number(level);
     if (!Number.isFinite(numericLevel) || numericLevel <= 0) {
         return '';
     }
 
-    if (numericLevel >= 7) return '🔱';
-    if (numericLevel >= 6) return '👑';
-    if (numericLevel >= 5) return '💎';
-    if (numericLevel >= 4) return '🎓';
-    if (numericLevel >= 3) return '🧠';
-    if (numericLevel >= 2) return '🍻';
-    return '🐣';
+    const normalizedLevel = Math.max(1, Math.floor(numericLevel));
+    const levelToAssetMap = {
+        1: 'lv1.png',
+        2: 'lv2.png',
+        3: 'lv3.png',
+        4: 'lv4.png',
+        5: 'lv5.png',
+        6: 'lv6.png',
+        7: 'lv8.png'
+    };
+    const assetFile = levelToAssetMap[normalizedLevel] || levelToAssetMap[7];
+    return `/src/assets/lv-badges/${assetFile}`;
 }
 
 function isBusinessAuthor(author = {}) {
@@ -446,8 +451,8 @@ function resolveAuthorBadgeMarkup(author = {}) {
         return `<img class="author-plan-badge" src="${businessBadgeImage}" alt="기업회원 광고 등급 배지">`;
     }
 
-    const emoji = resolveLevelEmoji(author?.authorLevel ?? author?.level);
-    return emoji ? `<span class="comment-level-badge" aria-hidden="true">${emoji}</span>` : '';
+    const badgeImage = resolveLevelBadgeImage(author?.authorLevel ?? author?.level);
+    return badgeImage ? `<img class="comment-level-badge" src="${badgeImage}" alt="회원 등급 배지" loading="lazy">` : '';
 }
 
 function isCurrentUserPostAuthor(post) {
