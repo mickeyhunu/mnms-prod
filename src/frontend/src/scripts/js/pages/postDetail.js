@@ -497,7 +497,7 @@ function renderPostDetail(post) {
     updatePostSeo(post, boardNameMap[boardType]);
 
     if (authorElement) {
-        authorElement.innerHTML = `${sanitizeHTML(postAuthorLabel)}${authorBadgeMarkup ? ` ${authorBadgeMarkup}` : ''}`;
+        authorElement.innerHTML = `${sanitizeHTML(postAuthorLabel)}${isCurrentAuthor ? ' <span class="own-content-badge">본인</span>' : ''}${authorBadgeMarkup ? ` ${authorBadgeMarkup}` : ''}`;
     }
     if (dateElement) dateElement.textContent = formatDateTime(post.createdAt) || '';
 
@@ -886,7 +886,7 @@ function createCommentItem(comment, depth = 0) {
     const isHiddenComment = Boolean(comment.isHidden);
     const isAnonymousComment = (!comment.authorIsBusiness && currentPostBoardType === 'ANON')
         || String(comment.authorNickname || '').trim() === '익명';
-    const showOwnBadge = isAuthor && (isAnonymousComment || isSecretComment);
+    const showOwnBadge = Boolean(isAuthor);
     const authorName = sanitizeHTML(comment.authorNickname || '익명');
     const commentAuthorLevel = Number(comment.authorLevel ?? comment.level ?? comment.authorRank ?? comment.rank ?? comment.authorGrade ?? comment.grade);
     const commentBadgeMarkup = resolveAuthorBadgeMarkup({
