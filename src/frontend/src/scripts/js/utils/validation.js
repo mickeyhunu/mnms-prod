@@ -39,6 +39,8 @@ function validateRegisterForm(data) {
     const nicknameLength = Array.from(String(data.nickname || '').trim()).length;
     if (nicknameLength < VALIDATION.NICKNAME_MIN_LENGTH || nicknameLength > VALIDATION.NICKNAME_MAX_LENGTH) {
         errors.nickname = `닉네임은 ${VALIDATION.NICKNAME_MIN_LENGTH}자 이상 ${VALIDATION.NICKNAME_MAX_LENGTH}자 이하로 입력해주세요.`;
+    } else if (!validateNicknameComposition(data.nickname || '')) {
+        errors.nickname = '닉네임에는 단독 자음/모음을 사용할 수 없습니다.';
     }
 
     if (data.nicknameChecked !== 'true') {

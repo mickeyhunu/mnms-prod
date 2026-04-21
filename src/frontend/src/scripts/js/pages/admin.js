@@ -1325,6 +1325,10 @@ async function saveUserDetail() {
         setAdminUserHelpMessage('닉네임에 사용할 수 없는 표현이 포함되어 있습니다.', '#dc3545');
         return;
     }
+    if (!validateNicknameComposition(nickname)) {
+        setAdminUserHelpMessage('닉네임에는 단독 자음/모음을 사용할 수 없습니다.', '#dc3545');
+        return;
+    }
 
     if (password && password !== passwordConfirm) {
         setAdminUserHelpMessage('비밀번호와 비밀번호 확인이 일치하지 않습니다.', '#dc3545');
