@@ -170,7 +170,7 @@ function validateSupportForm() {
     const submitBtn = document.getElementById('submit-btn');
     if (!submitBtn) return;
 
-    submitBtn.disabled = isSubmitting || !title || content.length < 10;
+    submitBtn.disabled = isSubmitting || !title || content.length < 6;
 }
 
 async function submitSupportPost(event) {
@@ -190,8 +190,8 @@ async function submitSupportPost(event) {
         return;
     }
 
-    if (content.length < 10) {
-        alert('내용은 최소 10자 이상 입력해주세요.');
+    if (content.length < 6) {
+        alert('내용은 최소 6자 이상 입력해주세요.');
         return;
     }
 
