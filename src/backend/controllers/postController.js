@@ -533,8 +533,9 @@ async function createComment(req, res, next) {
       return res.status(400).json({ message: '유효하지 않은 부모 댓글 ID입니다.' });
     }
 
+    let parentComment = null;
     if (parentId) {
-      const parentComment = await postModel.findCommentById(parentId);
+      parentComment = await postModel.findCommentById(parentId);
       if (!parentComment || Number(parentComment.post_id) !== Number(postId)) {
         return res.status(400).json({ message: '같은 게시글의 댓글에만 답글을 작성할 수 있습니다.' });
       }
@@ -551,7 +552,10 @@ async function createComment(req, res, next) {
     }
 
     const secretCommentRequested = Boolean(isSecret);
-    if (isBusinessUser(req.user) && secretCommentRequested) {
+    const inheritedSecretFromParent = Boolean(parentComment && parentComment.is_secret);
+    const shouldCreateSecretComment = secretCommentRequested || inheritedSecretFromParent;
+
+    if (isBusinessUser(req.user) && secretCommentRequested && !inheritedSecretFromParent) {
       return res.status(400).json({ message: '광고자 계정은 비밀댓글을 사용할 수 없습니다.' });
     }
 
@@ -560,7 +564,7 @@ async function createComment(req, res, next) {
       userId: req.user.id,
       content,
       parentId,
-      isSecret: secretCommentRequested
+      isSecret: shouldCreateSecretComment
     });
     const pointResult = await awardPointByAction(req.user.id, 'CREATE_COMMENT');
     await postModel.updateCommentPointAwarded(commentId, pointResult.awarded);
