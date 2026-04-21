@@ -903,6 +903,12 @@ body[data-page="live"] .header {
     transform: translate(-50%, -50%) scale(1);
 }
 
+.live-access-condition-box.is-closing {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+    pointer-events: none;
+}
+
 .live-access-condition-box__close {
     position: absolute;
     top: 8px;
