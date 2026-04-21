@@ -26,6 +26,10 @@ function findBlockedNicknameTerm(value) {
   return BLOCKED_NICKNAME_TERMS.find((term) => normalized.includes(term)) || null;
 }
 
+function hasStandaloneJamo(value) {
+  return /[ㄱ-ㅎㅏ-ㅣ]/.test(String(value || ''));
+}
+
 function validateNickname(value) {
   const nickname = String(value || '').trim();
   const length = getNicknameLength(nickname);
@@ -42,6 +46,13 @@ function validateNickname(value) {
     return {
       valid: false,
       message: '닉네임에 사용할 수 없는 표현이 포함되어 있습니다.'
+    };
+  }
+
+  if (hasStandaloneJamo(nickname)) {
+    return {
+      valid: false,
+      message: '닉네임에는 단독 자음/모음을 사용할 수 없습니다.'
     };
   }
 
