@@ -329,7 +329,7 @@ function validateForm() {
     if (!title || !content || !submitBtn) return;
 
     const isValid = title.value.trim().length > 0 &&
-        content.value.trim().length >= 10 &&
+        content.value.trim().length >= 6 &&
         title.value.length <= 255 &&
         content.value.length <= 1000;
 
@@ -419,8 +419,8 @@ async function handleSubmit(event) {
         return;
     }
 
-    if (contentValue.length < 10) {
-        alert('내용은 최소 10자 이상 입력해주세요.');
+    if (contentValue.length < 6) {
+        alert('내용은 최소 6자 이상 입력해주세요.');
         return;
     }
 
