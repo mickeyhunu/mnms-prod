@@ -858,6 +858,9 @@ function showLiveAccessConditionMessage(message) {
     if (!normalizedMessage) return;
 
     const existing = document.querySelector('.live-access-condition-box');
+    if (typeof existing?.__cleanupLiveAccessConditionBox === 'function') {
+        existing.__cleanupLiveAccessConditionBox();
+    }
     existing?.remove();
 
     const box = document.createElement('div');
@@ -872,11 +875,60 @@ function showLiveAccessConditionMessage(message) {
     `;
     document.body.appendChild(box);
 
+    let isClosing = false;
+    let closeTimerId = null;
+    let outsideClickTimerId = null;
+    let removeAfterAnimationTimerId = null;
+
+    const handleDocumentClick = (event) => {
+        if (!box.contains(event.target)) {
+            closeBox();
+        }
+    };
+
+    const cleanup = () => {
+        if (closeTimerId) {
+            window.clearTimeout(closeTimerId);
+            closeTimerId = null;
+        }
+        if (outsideClickTimerId) {
+            window.clearTimeout(outsideClickTimerId);
+            outsideClickTimerId = null;
+        }
+        if (removeAfterAnimationTimerId) {
+            window.clearTimeout(removeAfterAnimationTimerId);
+            removeAfterAnimationTimerId = null;
+        }
+        document.removeEventListener('click', handleDocumentClick);
+    };
+
+    box.__cleanupLiveAccessConditionBox = cleanup;
+
+    const closeBox = () => {
+        if (isClosing) return;
+        isClosing = true;
+        cleanup();
+        box.classList.remove('is-visible');
+        box.classList.add('is-closing');
+        removeAfterAnimationTimerId = window.setTimeout(() => {
+            box.remove();
+        }, 240);
+    };
+
     window.setTimeout(() => {
         box.classList.add('is-visible');
     }, 10);
+
+    outsideClickTimerId = window.setTimeout(() => {
+        document.addEventListener('click', handleDocumentClick);
+    }, 0);
+
+    closeTimerId = window.setTimeout(() => {
+        closeBox();
+    }, 10000);
+
     box.querySelector('.live-access-condition-box__close')?.addEventListener('click', () => {
-        box.remove();
+        closeBox();
     });
 }
 
