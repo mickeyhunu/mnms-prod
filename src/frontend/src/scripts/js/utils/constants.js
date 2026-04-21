@@ -62,7 +62,7 @@ const MESSAGES = {
 
 const VALIDATION = {
     EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-    LOGIN_ID_REGEX: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,}$/,
+    LOGIN_ID_REGEX: /^.{4,}$/,
     PASSWORD_REGEX: /^(?=.*[A-Za-z])(?=.*\d)[^\s]{8,}$/,
     MIN_PASSWORD_LENGTH: 8,
     NICKNAME_MIN_LENGTH: 2,
