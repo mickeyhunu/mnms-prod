@@ -139,16 +139,18 @@ function resolveRankLabel(user, fallbackLabel = '') {
 }
 
 function resolveRankMarkup(user, fallbackLabel = '') {
-    if (!isAdAccount(user)) return sanitizeHTML(String(fallbackLabel || ''));
+    if (!isAdAccount(user)) {
+        return `<strong>${sanitizeHTML(String(fallbackLabel || ''))}</strong>`;
+    }
 
     const badgeImage = Auth.resolveBusinessBadgeImage(user);
     const badgeLabel = Auth.resolveBusinessBadgeLabel(user) || '기업회원 등급';
-    if (!badgeImage) return sanitizeHTML(badgeLabel);
+    if (!badgeImage) return `<strong>${sanitizeHTML(badgeLabel)}</strong>`;
 
     return `
-        <div style="gap:10px">
+        <div class="mypage-rank-with-label">
             <img class="mypage-rank-badge" src="${badgeImage}" alt="기업회원 광고 등급 배지">
-            <strong> ${sanitizeHTML(badgeLabel)}</strong>
+            <strong class="mypage-rank-label">${sanitizeHTML(badgeLabel)}</strong>
         </div>
     `;
 }
@@ -851,7 +853,7 @@ async function loadStats() {
                 <div class="mypage-summary-list">
                     <div class="mypage-summary-row"><span>아이디</span><strong>${sanitizeHTML(response.loginId || '')}</strong></div>
                     <div class="mypage-summary-row"><span>닉네임</span><strong>${sanitizeHTML(response.nickname || '')}</strong></div>
-                    <div class="mypage-summary-row"><span>랭크</span><strong>${rankMarkup}</strong></div>
+                    <div class="mypage-summary-row"><span>랭크</span>${rankMarkup}</div>
                     <div class="mypage-summary-row"><span>가입일</span><strong>${sanitizeHTML(joinedAt)}</strong></div>
                 </div>
             </section>
