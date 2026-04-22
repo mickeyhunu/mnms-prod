@@ -308,6 +308,10 @@ async function handleIdentityVerification() {
         };
         const signupEligibility = verificationResult?.signupEligibility;
         if (signupEligibility && signupEligibility.allowed === false) {
+            if (signupEligibility.reasonCode === 'FEMALE_NOT_ALLOWED') {
+                showIdentityStatus('');
+                return;
+            }
             const rejectionMessage = signupEligibility.message || '해당 본인인증 정보로는 회원가입이 불가합니다.';
             throw new Error(rejectionMessage);
         }
@@ -670,6 +674,9 @@ async function handleRegister(e) {
             status: error?.status,
             data: error?.data
         });
+        if (error?.data?.reasonCode === 'FEMALE_NOT_ALLOWED') {
+            return;
+        }
         const message = error.message || '회원가입 중 오류가 발생했습니다.';
         showNotification(message, 'error');
         showBlockingAlert(message);
