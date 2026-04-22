@@ -30,13 +30,14 @@ const AuthAPI = {
             const response = await APIClient.post('/auth/login', credentials);
 
 
-            if (response.token) {
-                Auth.setToken(response.token);
+            const accessToken = response.accessToken || response.token;
+            if (accessToken) {
+                Auth.setToken(accessToken);
 
                 const userData = this.mapAuthUserPayload(response);
                 Auth.setUser(userData);
             } else {
-                console.error('응답에 토큰이 없습니다!');
+                console.error('응답에 access token이 없습니다!');
             }
 
             return response;
@@ -97,6 +98,21 @@ const AuthAPI = {
         try {
             return await APIClient.post('/auth/reset-password-by-identity', { identityVerificationId, newPassword });
         } catch (error) {
+            throw error;
+        }
+    },
+
+
+    async refresh() {
+        try {
+            const response = await APIClient.post('/auth/refresh');
+            const accessToken = response.accessToken || response.token;
+            if (accessToken) {
+                Auth.setToken(accessToken);
+            }
+            return response;
+        } catch (error) {
+            Auth.logout();
             throw error;
         }
     },

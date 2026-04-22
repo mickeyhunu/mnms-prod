@@ -16,7 +16,8 @@ router.get('/identity-verification/:identityVerificationId', controller.getIdent
 router.post('/find-account-by-identity', controller.findAccountByIdentity);
 router.post('/reset-password-by-identity', controller.resetPasswordByIdentity);
 router.post('/request-identity-verification', controller.requestIdentityVerification);
-router.post('/logout', authMiddleware, controller.logout);
+router.post('/refresh', controller.refresh);
+router.post('/logout', controller.logout);
 router.get('/me', authMiddleware, controller.me);
 
 module.exports = router;

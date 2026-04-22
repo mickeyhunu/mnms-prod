@@ -3,9 +3,10 @@
  */
 const crypto = require('crypto');
 
-const DEFAULT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 const DEFAULT_ISSUER = process.env.JWT_ISSUER || 'midnightmens';
 const DEFAULT_ALGORITHM = 'HS256';
+const ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || process.env.JWT_EXPIRES_IN || '1h';
+const REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '14d';
 
 function toBase64Url(value) {
   return Buffer.from(value)
@@ -37,14 +38,20 @@ function parseExpiresInToSeconds(expiresIn) {
   return value * multiplier;
 }
 
-function getJwtSecret() {
-  const secret = String(process.env.JWT_SECRET || '').trim();
-  if (secret) return secret;
+function resolveSecret(explicitSecret, fallbackName) {
+  const explicit = String(explicitSecret || '').trim();
+  if (explicit) return explicit;
+
+  const commonSecret = String(process.env.JWT_SECRET || '').trim();
+  if (commonSecret) return commonSecret;
+
+  const namedFallback = String(process.env[fallbackName] || '').trim();
+  if (namedFallback) return namedFallback;
 
   return 'midnightmens-dev-secret-change-me';
 }
 
-function signAuthToken(user) {
+function signToken({ user, expiresIn, secret, tokenType }) {
   const now = Math.floor(Date.now() / 1000);
   const header = {
     alg: DEFAULT_ALGORITHM,
@@ -55,14 +62,15 @@ function signAuthToken(user) {
     role: user.role || 'MEMBER',
     iss: DEFAULT_ISSUER,
     iat: now,
-    exp: now + parseExpiresInToSeconds(DEFAULT_EXPIRES_IN),
-    jti: crypto.randomBytes(16).toString('hex')
+    exp: now + parseExpiresInToSeconds(expiresIn),
+    jti: crypto.randomBytes(16).toString('hex'),
+    tokenType
   };
 
   const encodedHeader = toBase64Url(JSON.stringify(header));
   const encodedPayload = toBase64Url(JSON.stringify(payload));
   const signature = crypto
-    .createHmac('sha256', getJwtSecret())
+    .createHmac('sha256', secret)
     .update(`${encodedHeader}.${encodedPayload}`)
     .digest('base64')
     .replace(/=/g, '')
@@ -72,7 +80,7 @@ function signAuthToken(user) {
   return `${encodedHeader}.${encodedPayload}.${signature}`;
 }
 
-function verifyAuthToken(token) {
+function verifyToken(token, { secret, tokenType }) {
   const parts = String(token || '').split('.');
   if (parts.length !== 3) {
     throw new Error('INVALID_TOKEN_FORMAT');
@@ -80,7 +88,7 @@ function verifyAuthToken(token) {
 
   const [encodedHeader, encodedPayload, signature] = parts;
   const expectedSignature = crypto
-    .createHmac('sha256', getJwtSecret())
+    .createHmac('sha256', secret)
     .update(`${encodedHeader}.${encodedPayload}`)
     .digest('base64')
     .replace(/=/g, '')
@@ -99,6 +107,10 @@ function verifyAuthToken(token) {
     throw new Error('INVALID_TOKEN_CLAIMS');
   }
 
+  if (payload.tokenType !== tokenType) {
+    throw new Error('INVALID_TOKEN_TYPE');
+  }
+
   const now = Math.floor(Date.now() / 1000);
   if (Number(payload.exp || 0) <= now) {
     throw new Error('TOKEN_EXPIRED');
@@ -107,4 +119,44 @@ function verifyAuthToken(token) {
   return payload;
 }
 
-module.exports = { signAuthToken, verifyAuthToken, DEFAULT_EXPIRES_IN };
+function signAccessToken(user) {
+  return signToken({
+    user,
+    expiresIn: ACCESS_EXPIRES_IN,
+    secret: resolveSecret(process.env.JWT_ACCESS_SECRET, 'JWT_ACCESS_SECRET'),
+    tokenType: 'ACCESS'
+  });
+}
+
+function signRefreshToken(user) {
+  return signToken({
+    user,
+    expiresIn: REFRESH_EXPIRES_IN,
+    secret: resolveSecret(process.env.JWT_REFRESH_SECRET, 'JWT_REFRESH_SECRET'),
+    tokenType: 'REFRESH'
+  });
+}
+
+function verifyAccessToken(token) {
+  return verifyToken(token, {
+    secret: resolveSecret(process.env.JWT_ACCESS_SECRET, 'JWT_ACCESS_SECRET'),
+    tokenType: 'ACCESS'
+  });
+}
+
+function verifyRefreshToken(token) {
+  return verifyToken(token, {
+    secret: resolveSecret(process.env.JWT_REFRESH_SECRET, 'JWT_REFRESH_SECRET'),
+    tokenType: 'REFRESH'
+  });
+}
+
+module.exports = {
+  signAccessToken,
+  signRefreshToken,
+  verifyAccessToken,
+  verifyRefreshToken,
+  ACCESS_EXPIRES_IN,
+  REFRESH_EXPIRES_IN,
+  parseExpiresInToSeconds
+};
