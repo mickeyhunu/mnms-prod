@@ -1,9 +1,9 @@
 /**
  * 파일 역할: authMiddleware 요청 전처리/인증 검증을 수행하는 미들웨어 파일.
  */
-const { findUserByToken, deleteSessionsByUserId } = require('../models/sessionModel');
+const { findById } = require('../models/userModel');
 const { formatRestrictionMessage, getLoginRestrictionState } = require('../utils/loginRestriction');
-const { verifyAuthToken } = require('../utils/jwt');
+const { verifyAccessToken } = require('../utils/jwt');
 
 async function authMiddleware(req, res, next) {
   try {
@@ -13,20 +13,17 @@ async function authMiddleware(req, res, next) {
 
     let payload;
     try {
-      payload = verifyAuthToken(token);
+      payload = verifyAccessToken(token);
     } catch (_error) {
       return res.status(401).json({ message: '토큰이 유효하지 않거나 만료되었습니다.' });
     }
 
-    const user = await findUserByToken(token);
+    const userId = Number(payload.sub || 0);
+    const user = Number.isFinite(userId) && userId > 0 ? await findById(userId) : null;
     if (!user) return res.status(401).json({ message: '세션이 유효하지 않습니다.' });
-    if (String(user.id) !== String(payload.sub || '')) {
-      return res.status(401).json({ message: '세션이 유효하지 않습니다.' });
-    }
 
     const restrictionState = getLoginRestrictionState(user);
     if (restrictionState.isRestricted) {
-      await deleteSessionsByUserId(user.id);
       return res.status(403).json({ message: formatRestrictionMessage(user) });
     }
 
@@ -48,15 +45,21 @@ function optionalAuthMiddleware(req, _res, next) {
 
   let payload;
   try {
-    payload = verifyAuthToken(token);
+    payload = verifyAccessToken(token);
   } catch (_error) {
     req.user = null;
     return next();
   }
 
-  findUserByToken(token)
+  const userId = Number(payload.sub || 0);
+  if (!Number.isFinite(userId) || userId <= 0) {
+    req.user = null;
+    return next();
+  }
+
+  findById(userId)
     .then((user) => {
-      req.user = user && String(user.id) === String(payload.sub || '') ? user : null;
+      req.user = user || null;
       next();
     })
     .catch(next);
