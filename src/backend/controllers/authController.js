@@ -214,7 +214,7 @@ async function register(req, res, next) {
       return res.status(400).json({ message: nicknameValidation.message });
     }
 
-    const normalizedGenderDigit = String(genderDigit || '').trim();
+    const normalizedGenderDigit = normalizeGenderDigitValue(genderDigit);
     if (!/^\d$/.test(normalizedGenderDigit)) {
       console.warn('[AuthController.register] 성별 식별 번호 형식 오류', { genderDigit: normalizedGenderDigit });
       return res.status(400).json({ message: '성별 식별 번호를 확인할 수 없습니다. 본인인증을 다시 진행해주세요.' });
@@ -223,7 +223,8 @@ async function register(req, res, next) {
       identityVerificationId,
       ci: identityCi,
       di: identityDi,
-      phone
+      phone,
+      genderDigit: normalizedGenderDigit
     });
     if (!signupEligibility.allowed) {
       console.warn('[AuthController.register] 본인인증 기반 가입 불가', {
@@ -234,6 +235,7 @@ async function register(req, res, next) {
         MISSING_IDENTITY_VERIFICATION_ID: 400,
         MISSING_IDENTITY_HASH: 400,
         IDENTITY_VERIFICATION_ALREADY_USED: 409,
+        FEMALE_NOT_ALLOWED: 403,
         REJOIN_WAIT: 403,
         RESTRICTED_IDENTITY: 403,
         DUPLICATE_IDENTITY: 409
@@ -516,13 +518,41 @@ function normalizeIdentityVerificationPayload(payload = {}) {
     name: pickIdentityValue(verifiedCustomer, ['name', 'fullName']) || pickIdentityValue(payload, ['name', 'fullName']),
     birthDate: pickIdentityValue(verifiedCustomer, ['birthDate', 'birthday', 'birth']) || pickIdentityValue(payload, ['birthDate', 'birthday', 'birth']),
     phone: pickIdentityValue(verifiedCustomer, ['phoneNumber', 'phone', 'mobilePhone']) || pickIdentityValue(payload, ['phoneNumber', 'phone', 'mobilePhone']),
-    genderDigit: pickIdentityValue(verifiedCustomer, ['genderDigit', 'genderCode', 'gender']) || pickIdentityValue(payload, ['genderDigit', 'genderCode', 'gender']),
+    genderDigit: normalizeGenderDigitValue(
+      pickIdentityValue(verifiedCustomer, ['genderDigit', 'genderCode', 'gender']) || pickIdentityValue(payload, ['genderDigit', 'genderCode', 'gender'])
+    ),
     ci: pickIdentityValue(verifiedCustomer, ['ci']) || pickIdentityValue(payload, ['ci']),
     di: pickIdentityValue(verifiedCustomer, ['di']) || pickIdentityValue(payload, ['di'])
   };
 }
 
-async function evaluateIdentitySignupEligibility({ identityVerificationId, ci = '', di = '', phone = '' }) {
+function normalizeGenderDigitValue(genderDigit = '') {
+  const normalizedValue = String(genderDigit || '').trim();
+  if (!normalizedValue) {
+    return '';
+  }
+
+  if (/^\d$/.test(normalizedValue)) {
+    return normalizedValue;
+  }
+
+  const lowerValue = normalizedValue.toLowerCase();
+  if (['m', 'male', 'man', '남', '남성'].includes(lowerValue)) {
+    return '1';
+  }
+  if (['f', 'female', 'woman', '여', '여성'].includes(lowerValue)) {
+    return '2';
+  }
+
+  return normalizedValue;
+}
+
+function isFemaleGenderDigit(genderDigit = '') {
+  const normalizedGenderDigit = normalizeGenderDigitValue(genderDigit);
+  return ['2', '4', '6', '8'].includes(normalizedGenderDigit);
+}
+
+async function evaluateIdentitySignupEligibility({ identityVerificationId, ci = '', di = '', phone = '', genderDigit = '' }) {
   const ciHash = hashIdentityValue(ci);
   const diHash = hashIdentityValue(di);
   const phoneHash = hashIdentityValue(phone);
@@ -548,6 +578,14 @@ async function evaluateIdentitySignupEligibility({ identityVerificationId, ci = 
       allowed: false,
       reasonCode: 'IDENTITY_VERIFICATION_ALREADY_USED',
       message: '이미 사용된 본인인증 건입니다. 다시 본인인증을 진행해주세요.'
+    };
+  }
+
+  if (isFemaleGenderDigit(genderDigit)) {
+    return {
+      allowed: false,
+      reasonCode: 'FEMALE_NOT_ALLOWED',
+      message: '본인인증 결과에 따라 현재 회원가입이 제한됩니다.'
     };
   }
 
@@ -602,7 +640,8 @@ async function getIdentityVerificationResult(req, res) {
     identityVerificationId,
     ci: normalizedPayload.ci,
     di: normalizedPayload.di,
-    phone: normalizedPayload.phone
+    phone: normalizedPayload.phone,
+    genderDigit: normalizedPayload.genderDigit
   });
 
   return res.json({
