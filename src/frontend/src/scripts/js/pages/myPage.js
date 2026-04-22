@@ -139,6 +139,15 @@ function resolveRankLabel(user, fallbackLabel = '') {
 }
 
 function resolveRankMarkup(user, fallbackLabel = '') {
+    if (Auth.isAdminAccount(user)) {
+        return `
+            <span class="mypage-rank-with-label">
+                <img class="mypage-level-badge" src="/src/assets/lv-badges/admin.png" alt="관리자 배지" loading="lazy">
+                <span class="mypage-rank-label">관리자</span>
+            </span>
+        `;
+    }
+
     if (!isAdAccount(user)) {
         return renderLevelBadgeLabel(fallbackLabel || '');
     }

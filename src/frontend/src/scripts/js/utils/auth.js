@@ -130,7 +130,8 @@ const Auth = {
         const nickname = user?.nickname || user?.email || '';
         element.textContent = nickname;
 
-        const levelBadgeImage = this.isBusinessAccount(user)
+        const adminBadgeImage = this.resolveAdminBadgeImage(user);
+        const levelBadgeImage = this.isBusinessAccount(user) || adminBadgeImage
             ? ''
             : this.parseLevelBadgeImage(user?.levelEmoji);
         if (levelBadgeImage) {
@@ -143,7 +144,6 @@ const Auth = {
             element.appendChild(levelBadge);
         }
 
-        const adminBadgeImage = this.resolveAdminBadgeImage(user);
         if (adminBadgeImage) {
             const adminBadge = document.createElement('img');
             adminBadge.className = 'user-level-badge';
