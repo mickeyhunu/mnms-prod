@@ -5,7 +5,21 @@ import { createApp } from 'vue';
 import router from './router/index.js';
 import App from './App.js';
 
+const isEditableTarget = (target) => {
+  if (!(target instanceof Element)) {
+    return false;
+  }
+
+  return Boolean(
+    target.closest('input, textarea, select, [contenteditable], [role="textbox"]'),
+  );
+};
+
 const preventDefault = (event) => {
+  if (isEditableTarget(event.target)) {
+    return;
+  }
+
   event.preventDefault();
 };
 
@@ -14,11 +28,19 @@ document.addEventListener('dragstart', preventDefault, true);
 document.addEventListener('drop', preventDefault, true);
 document.addEventListener('selectstart', preventDefault, true);
 document.addEventListener('mousedown', (event) => {
+  if (isEditableTarget(event.target)) {
+    return;
+  }
+
   if (event.detail > 1) {
     event.preventDefault();
   }
 }, true);
-document.addEventListener('selectionchange', () => {
+document.addEventListener('selectionchange', (event) => {
+  if (isEditableTarget(document.activeElement)) {
+    return;
+  }
+
   if (window.getSelection) {
     const selection = window.getSelection();
     if (selection && selection.type === 'Range') {
@@ -26,20 +48,6 @@ document.addEventListener('selectionchange', () => {
     }
   }
 }, true);
-
-const dragBlockStyle = document.createElement('style');
-dragBlockStyle.textContent = `
-  html,
-  body,
-  body * {
-    -webkit-user-drag: none !important;
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-    user-select: none !important;
-  }
-`;
-document.head.appendChild(dragBlockStyle);
 
 const isLocalEnv = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
