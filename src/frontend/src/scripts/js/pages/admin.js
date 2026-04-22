@@ -67,6 +67,10 @@ const ADMIN_SEARCH_TYPE_OPTIONS = {
     }
 };
 
+function revealAdminPageShell() {
+    document.getElementById('admin-page-shell')?.classList.remove('hidden');
+}
+
 function getAdminPageState() {
     const params = new URLSearchParams(window.location.search);
     const requestedTab = params.get('tab');
@@ -141,14 +145,15 @@ async function initAdminPage() {
         return;
     }
 
-    bindCommonEvents();
-
     try {
         const me = await APIClient.get('/auth/me');
         if (!me.isAdmin) {
             window.location.replace(NOT_FOUND_PATH);
             return;
         }
+
+        revealAdminPageShell();
+        bindCommonEvents();
 
         const nickname = Auth.resolveNicknameDisplayElement();
         if (nickname) Auth.applyNicknameDisplay(nickname, me);
