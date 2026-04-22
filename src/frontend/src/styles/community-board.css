@@ -291,7 +291,7 @@
 }
 
 .community-container {
-    max-width: 640px;
+    max-width: var(--main-content-unified-max-width, 920px);
     background: #ffffff;
     padding: 0 0 24px;
 }
