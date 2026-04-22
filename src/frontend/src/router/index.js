@@ -38,7 +38,9 @@ const routes = [
   { path: '/customer-service', component: PageView, meta: { pageKey: 'customer-service', title: '1:1 문의', description: '서비스 이용 중 문제를 1:1 문의로 접수하세요.', noindex: true } },
   { path: '/board/terms', component: PageView, meta: { pageKey: 'terms-policy', title: '약관 및 정책', description: '이용약관과 운영정책, 개인정보 정책을 확인하세요.' } },
   { path: '/my-inquiries', component: PageView, meta: { pageKey: 'my-inquiries', title: '내 문의 내역', description: '내가 접수한 1:1 문의 내역을 확인하세요.', noindex: true } },
-  { path: '/my-inquiries/:id', component: PageView, meta: { pageKey: 'my-inquiry-detail', title: '문의 상세', description: '내 문의 내용과 답변 상세를 확인하세요.', noindex: true } }
+  { path: '/my-inquiries/:id', component: PageView, meta: { pageKey: 'my-inquiry-detail', title: '문의 상세', description: '내 문의 내용과 답변 상세를 확인하세요.', noindex: true } },
+  { path: '/404', component: PageView, meta: { pageKey: 'not-found', title: '404 Not Found', description: '요청하신 페이지를 찾을 수 없습니다.', noindex: true } },
+  { path: '/:pathMatch(.*)*', redirect: '/404' }
 ];
 
 const router = createRouter({
