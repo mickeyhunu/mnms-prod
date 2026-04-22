@@ -174,6 +174,7 @@ async function initDatabase() {
       nickname VARCHAR(255) NOT NULL UNIQUE,
       name VARCHAR(100) NULL,
       birth_date DATE NULL,
+      gender_digit CHAR(1) NULL,
       phone VARCHAR(30) NULL,
       terms_consent TINYINT(1) NOT NULL DEFAULT 0,
       privacy_consent TINYINT(1) NOT NULL DEFAULT 0,
@@ -237,7 +238,8 @@ async function initDatabase() {
   const userColumnDefinitions = [
     { name: 'name', query: "ALTER TABLE users ADD COLUMN name VARCHAR(100) NULL AFTER nickname" },
     { name: 'birth_date', query: "ALTER TABLE users ADD COLUMN birth_date DATE NULL AFTER name" },
-    { name: 'phone', query: "ALTER TABLE users ADD COLUMN phone VARCHAR(30) NULL AFTER birth_date" },
+    { name: 'gender_digit', query: "ALTER TABLE users ADD COLUMN gender_digit CHAR(1) NULL AFTER birth_date" },
+    { name: 'phone', query: "ALTER TABLE users ADD COLUMN phone VARCHAR(30) NULL AFTER gender_digit" },
     { name: 'terms_consent', query: "ALTER TABLE users ADD COLUMN terms_consent TINYINT(1) NOT NULL DEFAULT 0 AFTER phone" },
     { name: 'privacy_consent', query: "ALTER TABLE users ADD COLUMN privacy_consent TINYINT(1) NOT NULL DEFAULT 0 AFTER terms_consent" },
     { name: 'marketing_consent', query: "ALTER TABLE users ADD COLUMN marketing_consent TINYINT(1) NOT NULL DEFAULT 0 AFTER privacy_consent" },

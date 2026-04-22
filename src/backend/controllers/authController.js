@@ -259,6 +259,7 @@ async function register(req, res, next) {
       nickname: normalizedNickname,
       name,
       birthDate: birthDateIso || null,
+      genderDigit: normalizedGenderDigit,
       role,
       memberType: accountType,
       phone,

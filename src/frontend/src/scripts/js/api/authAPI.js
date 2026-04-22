@@ -21,7 +21,8 @@ const AuthAPI = {
             accountStatus: payload.accountStatus,
             isLoginRestricted: payload.isLoginRestricted,
             loginRestrictedUntil: payload.loginRestrictedUntil,
-            isLoginRestrictionPermanent: payload.isLoginRestrictionPermanent
+            isLoginRestrictionPermanent: payload.isLoginRestrictionPermanent,
+            genderDigit: payload.genderDigit
         };
     },
     async login(credentials) {

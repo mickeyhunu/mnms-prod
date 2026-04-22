@@ -49,6 +49,7 @@ function pickUserRow(user) {
     phone: user.phone || '',
     name: user.name || '',
     birthDate: user.birth_date || null,
+    genderDigit: user.gender_digit || null,
     smsConsent: Boolean(user.sms_consent),
     createdAt: user.created_at || user.createdAt || null,
     nicknameChangeAvailableAt: resolveNicknameChangeAvailableAt(user.last_nickname_changed_at)
