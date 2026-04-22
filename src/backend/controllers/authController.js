@@ -240,7 +240,12 @@ async function register(req, res, next) {
         RESTRICTED_IDENTITY: 403,
         DUPLICATE_IDENTITY: 409
       };
-      return res.status(blockedStatusByReason[signupEligibility.reasonCode] || 400).json({ message: signupEligibility.message });
+      return res
+        .status(blockedStatusByReason[signupEligibility.reasonCode] || 400)
+        .json({
+          reasonCode: signupEligibility.reasonCode,
+          message: signupEligibility.message
+        });
     }
     const { ciHash, diHash, phoneHash } = signupEligibility.identityHashes;
 
