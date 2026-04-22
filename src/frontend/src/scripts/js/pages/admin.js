@@ -150,8 +150,8 @@ async function initAdminPage() {
             return;
         }
 
-        const nickname = document.getElementById('user-nickname');
-        if (nickname) nickname.textContent = Auth.formatNicknameWithLevel(me);
+        const nickname = Auth.resolveNicknameDisplayElement();
+        if (nickname) Auth.applyNicknameDisplay(nickname, me);
 
         const pageState = getAdminPageState();
         await activateAdminTab(pageState.activeTab, { updateHistory: true, replaceHistory: true });
