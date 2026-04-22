@@ -308,6 +308,10 @@ async function handleIdentityVerification() {
         };
         const signupEligibility = verificationResult?.signupEligibility;
         if (signupEligibility && signupEligibility.allowed === false) {
+            if (signupEligibility.reasonCode === 'FEMALE_NOT_ALLOWED') {
+                showIdentityStatus('');
+                return;
+            }
             const rejectionMessage = signupEligibility.message || '해당 본인인증 정보로는 회원가입이 불가합니다.';
             throw new Error(rejectionMessage);
         }
