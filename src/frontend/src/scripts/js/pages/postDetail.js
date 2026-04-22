@@ -446,6 +446,11 @@ function resolveBusinessBadgeImage(author = {}) {
 }
 
 function resolveAuthorBadgeMarkup(author = {}) {
+    const normalizedRole = String(author?.authorRole || author?.role || '').toUpperCase();
+    if (normalizedRole === 'ADMIN') {
+        return '<img class="comment-level-badge" src="/src/assets/lv-badges/admin.png" alt="관리자 배지" loading="lazy">';
+    }
+
     const businessBadgeImage = resolveBusinessBadgeImage(author);
     if (businessBadgeImage) {
         return `<img class="author-plan-badge" src="${businessBadgeImage}" alt="기업회원 광고 등급 배지">`;

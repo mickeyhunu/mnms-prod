@@ -26,6 +26,12 @@ const Auth = {
 
         return role === 'BUSINESS' || memberType === 'BUSINESS';
     },
+    isAdminAccount(user) {
+        if (!user) return false;
+        if (typeof user.isAdmin === 'boolean') return user.isAdmin;
+        const role = String(user.role || '').toUpperCase();
+        return role === 'ADMIN';
+    },
     normalizeBusinessAdPlan(plan) {
         const normalized = String(plan || '').trim().toLowerCase();
         if (['basic', 'plus', 'premium', 'banner'].includes(normalized)) {
@@ -94,6 +100,9 @@ const Auth = {
     resolveBusinessBadgeLabel(user) {
         return this.resolveBusinessBadge(user).label;
     },
+    resolveAdminBadgeImage(user) {
+        return this.isAdminAccount(user) ? '/src/assets/lv-badges/admin.png' : '';
+    },
     formatNicknameWithLevel(user) {
         if (!user) return '';
 
@@ -132,6 +141,17 @@ const Auth = {
             levelBadge.loading = 'lazy';
             element.appendChild(document.createTextNode(' '));
             element.appendChild(levelBadge);
+        }
+
+        const adminBadgeImage = this.resolveAdminBadgeImage(user);
+        if (adminBadgeImage) {
+            const adminBadge = document.createElement('img');
+            adminBadge.className = 'user-level-badge';
+            adminBadge.src = adminBadgeImage;
+            adminBadge.alt = '관리자 배지';
+            adminBadge.loading = 'lazy';
+            element.appendChild(document.createTextNode(' '));
+            element.appendChild(adminBadge);
         }
 
         const badgeImage = this.resolveBusinessBadgeImage(user);

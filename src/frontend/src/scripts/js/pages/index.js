@@ -199,7 +199,11 @@ function createArticleItem(post) {
     const boardLabelClass = isNoticePost
         ? (noticeType === 'IMPORTANT' ? 'article-board-label article-board-label-important' : 'article-board-label article-board-label-notice')
         : 'article-board-label';
-    const authorBadge = sanitizeHTML(post.authorRole === 'ADMIN' ? '관리자' : authorName);
+    const normalizedRole = String(post.authorRole || post.author_role || post.role || '').toUpperCase();
+    const adminBadgeMarkup = normalizedRole === 'ADMIN'
+        ? ' <img class="user-level-badge" src="/src/assets/lv-badges/admin.png" alt="관리자 배지" loading="lazy">'
+        : '';
+    const authorBadge = `${authorName}${adminBadgeMarkup}`;
     const categoryTag = '';
     const isNewPost = isWithin12Hours(post.createdAt);
     const isNewComment = isWithin12Hours(
