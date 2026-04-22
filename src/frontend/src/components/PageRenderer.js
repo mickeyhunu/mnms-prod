@@ -3,7 +3,7 @@
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, watch } from 'vue';
 import { pageRegistry } from '../pageRegistry.js';
-import { GLOBAL_HEADER_TEMPLATE } from './GLOBAL_HEADER_TEMPLATE.js';
+import { GLOBAL_HEADER_TEMPLATE, stripLegacyHeaderTemplate } from './GLOBAL_HEADER_TEMPLATE.js';
 import { BRAND_ASSETS, createBrandLogoMarkup } from '../brandAssets.js';
 
 const LINK_MAP = {
@@ -54,10 +54,6 @@ function normalizeTemplateLinks(template) {
   return template.replace(/href=(['"])([^'"]+\.html(?:[?#][^'"]*)?)\1/gi, (_, quote, fileWithSuffix) => {
     return `href=${quote}${mapHtmlPath(fileWithSuffix)}${quote}`;
   });
-}
-
-function stripLegacyHeader(template) {
-  return template.replace(/^\s*<header class="header">[\s\S]*?<\/header>\s*/i, '');
 }
 
 function stripTemplateScripts(template) {
@@ -173,7 +169,7 @@ export default {
     const injectedNodes = [];
 
     const pageConfig = computed(() => pageRegistry[props.page] || { template: '<div>페이지를 찾을 수 없습니다.</div>', styles: [], scripts: [] });
-    const pageBodyContent = computed(() => normalizeTemplateLinks(stripTemplateScripts(stripLegacyHeader(pageConfig.value.template || ''))));
+    const pageBodyContent = computed(() => normalizeTemplateLinks(stripTemplateScripts(stripLegacyHeaderTemplate(pageConfig.value.template || ''))));
     const pageShellClass = computed(() => `page-shell page-shell--${props.page || 'unknown'}`);
     const shouldRenderGlobalHeader = computed(() => !PAGES_WITHOUT_GLOBAL_HEADER.has(props.page));
 

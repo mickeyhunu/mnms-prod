@@ -38,3 +38,28 @@ export const GLOBAL_HEADER_TEMPLATE = `<header class="header">
     </nav>
   </div>
 </header>`;
+
+const LEGACY_HEADER_REGEX = /^\s*<header\b[^>]*class=["'][^"']*\bheader\b[^"']*["'][^>]*>[\s\S]*?<\/header>\s*/i;
+
+export function stripLegacyHeaderTemplate(template = '') {
+  if (typeof template !== 'string' || template.length === 0) {
+    return '';
+  }
+
+  if (typeof document === 'undefined') {
+    return template.replace(LEGACY_HEADER_REGEX, '');
+  }
+
+  const container = document.createElement('template');
+  container.innerHTML = template;
+
+  const legacyHeaderContainer = container.content.querySelector('.header-container');
+  const legacyHeader = legacyHeaderContainer?.closest('header');
+
+  if (!legacyHeader) {
+    return template.replace(LEGACY_HEADER_REGEX, '');
+  }
+
+  legacyHeader.remove();
+  return container.innerHTML.trimStart();
+}
