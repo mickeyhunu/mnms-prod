@@ -13,12 +13,30 @@ document.addEventListener('contextmenu', preventDefault, true);
 document.addEventListener('dragstart', preventDefault, true);
 document.addEventListener('drop', preventDefault, true);
 document.addEventListener('selectstart', preventDefault, true);
+document.addEventListener('mousedown', (event) => {
+  if (event.detail > 1) {
+    event.preventDefault();
+  }
+}, true);
+document.addEventListener('selectionchange', () => {
+  if (window.getSelection) {
+    const selection = window.getSelection();
+    if (selection && selection.type === 'Range') {
+      selection.removeAllRanges();
+    }
+  }
+}, true);
 
 const dragBlockStyle = document.createElement('style');
 dragBlockStyle.textContent = `
-  * {
-    -webkit-user-drag: none;
-    user-select: none;
+  html,
+  body,
+  body * {
+    -webkit-user-drag: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
   }
 `;
 document.head.appendChild(dragBlockStyle);
