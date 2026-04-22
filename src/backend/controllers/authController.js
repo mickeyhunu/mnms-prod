@@ -18,7 +18,14 @@ const {
 const { formatRestrictionMessage, getLoginRestrictionState } = require('../utils/loginRestriction');
 const { recordAuthEvent } = require('../models/authEventModel');
 const { recordLoginAttemptResult } = require('../middlewares/loginRateLimitMiddleware');
-const { signAuthToken, DEFAULT_EXPIRES_IN } = require('../utils/jwt');
+const {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+  ACCESS_EXPIRES_IN,
+  REFRESH_EXPIRES_IN,
+  parseExpiresInToSeconds
+} = require('../utils/jwt');
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validateLoginId, validatePassword } = require('../utils/authPolicy');
 const { hashPassword, verifyPassword, isHashedPassword } = require('../utils/passwordHasher');
@@ -106,9 +113,49 @@ function registerIdentityUsageAttempt({ identityVerificationId, ipAddress }) {
 
   return { blocked: false };
 }
-const { createSession, deleteSession } = require('../models/sessionModel');
+const { createSession, findUserByToken, deleteSession } = require('../models/sessionModel');
 const { awardPointByAction } = require('../models/pointModel');
 const { pickUserRow } = require('../utils/response');
+
+
+function parseCookies(cookieHeader = '') {
+  return String(cookieHeader || '')
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .reduce((acc, entry) => {
+      const separatorIndex = entry.indexOf('=');
+      if (separatorIndex <= 0) return acc;
+      const key = entry.slice(0, separatorIndex).trim();
+      const value = entry.slice(separatorIndex + 1).trim();
+      acc[key] = decodeURIComponent(value);
+      return acc;
+    }, {});
+}
+
+function buildRefreshCookie(req, token, maxAgeSeconds) {
+  const attrs = [
+    `refreshToken=${encodeURIComponent(token)}`,
+    'Path=/',
+    `Max-Age=${maxAgeSeconds}`,
+    'HttpOnly',
+    'SameSite=Lax'
+  ];
+  if (req.secure) attrs.push('Secure');
+  return attrs.join('; ');
+}
+
+function buildRefreshCookieClear(req) {
+  const attrs = [
+    'refreshToken=',
+    'Path=/',
+    'Max-Age=0',
+    'HttpOnly',
+    'SameSite=Lax'
+  ];
+  if (req.secure) attrs.push('Secure');
+  return attrs.join('; ');
+}
 
 function resolveRegisterConflictError(error) {
   if (!error || error.code !== 'ER_DUP_ENTRY') return null;
@@ -347,8 +394,10 @@ async function login(req, res, next) {
       return res.status(403).json({ message: formatRestrictionMessage(user) });
     }
 
-    const token = signAuthToken(user);
-    await createSession(token, user.id);
+    const accessToken = signAccessToken(user);
+    const refreshToken = signRefreshToken(user);
+    await createSession(refreshToken, user.id);
+    res.append('Set-Cookie', buildRefreshCookie(req, refreshToken, parseExpiresInToSeconds(REFRESH_EXPIRES_IN)));
     await recordUserLoginHistory(user.id, {
       ipAddress,
       userAgent
@@ -369,7 +418,15 @@ async function login(req, res, next) {
     }
 
     const refreshedUser = await findByEmail(resolvedLoginId);
-    res.json({ success: true, token, tokenExpiresIn: DEFAULT_EXPIRES_IN, ...pickUserRow(refreshedUser || user) });
+    res.json({
+      success: true,
+      token: accessToken,
+      accessToken,
+      refreshTokenExpiresIn: REFRESH_EXPIRES_IN,
+      tokenExpiresIn: ACCESS_EXPIRES_IN,
+      accessTokenExpiresIn: ACCESS_EXPIRES_IN,
+      ...pickUserRow(refreshedUser || user)
+    });
   } catch (error) {
     next(error);
   }
@@ -379,9 +436,56 @@ async function me(req, res) {
   res.json(pickUserRow(req.user));
 }
 
+async function refresh(req, res, next) {
+  try {
+    const cookies = parseCookies(req.headers.cookie);
+    const refreshToken = String(cookies.refreshToken || '').trim();
+    if (!refreshToken) {
+      return res.status(401).json({ message: '리프레시 토큰이 없습니다.' });
+    }
+
+    let payload;
+    try {
+      payload = verifyRefreshToken(refreshToken);
+    } catch (_error) {
+      await deleteSession(refreshToken);
+      res.append('Set-Cookie', buildRefreshCookieClear(req));
+      return res.status(401).json({ message: '리프레시 토큰이 유효하지 않거나 만료되었습니다.' });
+    }
+
+    const user = await findUserByToken(refreshToken);
+    if (!user || String(user.id) !== String(payload.sub || '')) {
+      res.append('Set-Cookie', buildRefreshCookieClear(req));
+      return res.status(401).json({ message: '세션이 유효하지 않습니다.' });
+    }
+
+    await deleteSession(refreshToken);
+    const newRefreshToken = signRefreshToken(user);
+    const newAccessToken = signAccessToken(user);
+    await createSession(newRefreshToken, user.id);
+    res.append('Set-Cookie', buildRefreshCookie(req, newRefreshToken, parseExpiresInToSeconds(REFRESH_EXPIRES_IN)));
+
+    return res.json({
+      success: true,
+      token: newAccessToken,
+      accessToken: newAccessToken,
+      tokenExpiresIn: ACCESS_EXPIRES_IN,
+      accessTokenExpiresIn: ACCESS_EXPIRES_IN,
+      refreshTokenExpiresIn: REFRESH_EXPIRES_IN
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function logout(req, res, next) {
   try {
-    await deleteSession(req.token);
+    const cookies = parseCookies(req.headers.cookie);
+    const refreshToken = String(cookies.refreshToken || '').trim();
+    if (refreshToken) {
+      await deleteSession(refreshToken);
+    }
+    res.append('Set-Cookie', buildRefreshCookieClear(req));
     res.json({ success: true, message: '로그아웃되었습니다.' });
   } catch (error) {
     next(error);
@@ -787,6 +891,7 @@ module.exports = {
   register,
   login,
   me,
+  refresh,
   logout,
   checkNickname,
   requestIdentityVerification,
