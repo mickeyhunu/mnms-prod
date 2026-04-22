@@ -16,6 +16,7 @@ export const GLOBAL_HEADER_TEMPLATE = `<header class="header">
           </button>
           <div class="header-user-dropdown hidden" id="header-user-dropdown" role="menu" aria-label="사용자 메뉴">
             <a href="/my-page" class="header-user-dropdown-link" role="menuitem">내 정보</a>
+            <a href="/admin" class="header-user-dropdown-link hidden" id="admin-link" role="menuitem">관리자</a>
             <button class="header-user-dropdown-link header-user-dropdown-action" id="logout-btn" type="button" role="menuitem">로그아웃</button>
           </div>
         </div>
@@ -33,7 +34,6 @@ export const GLOBAL_HEADER_TEMPLATE = `<header class="header">
             <div class="header-notification-list" id="header-notification-list"></div>
           </section>
         </div>
-        <a href="/admin" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
       </div>
     </nav>
   </div>
