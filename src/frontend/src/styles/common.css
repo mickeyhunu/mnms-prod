@@ -2,6 +2,7 @@
 :root {
     --app-header-offset: 79px;
     --main-content-unified-max-width: 920px;
+    --main-content-horizontal-padding: 20px;
     --community-section-header-height: 56px;
     --bg-color: #ffffff;
     --surface-color: #ffffff;
