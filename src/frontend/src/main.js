@@ -5,23 +5,33 @@ import { createApp } from 'vue';
 import router from './router/index.js';
 import App from './App.js';
 
-document.addEventListener('contextmenu', (event) => {
+const preventDefault = (event) => {
   event.preventDefault();
-});
+};
 
-document.addEventListener('dragstart', (event) => {
-  event.preventDefault();
-});
+document.addEventListener('contextmenu', preventDefault, true);
+document.addEventListener('dragstart', preventDefault, true);
+document.addEventListener('drop', preventDefault, true);
+document.addEventListener('selectstart', preventDefault, true);
 
-document.addEventListener('drop', (event) => {
-  event.preventDefault();
-});
-
-setInterval(() => {
-  const devtoolsOpen = window.outerWidth - window.innerWidth > 100;
-  if (devtoolsOpen) {
-    document.body.innerHTML = '접근이 제한되었습니다';
+const dragBlockStyle = document.createElement('style');
+dragBlockStyle.textContent = `
+  * {
+    -webkit-user-drag: none;
+    user-select: none;
   }
-}, 1000);
+`;
+document.head.appendChild(dragBlockStyle);
+
+const isLocalEnv = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+if (!isLocalEnv) {
+  setInterval(() => {
+    const devtoolsOpen = window.outerWidth - window.innerWidth > 100;
+    if (devtoolsOpen) {
+      document.body.innerHTML = '접근이 제한되었습니다';
+    }
+  }, 1000);
+}
 
 createApp(App).use(router).mount('#app');
