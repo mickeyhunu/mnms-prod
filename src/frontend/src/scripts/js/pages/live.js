@@ -854,7 +854,10 @@ function getLiveCategoryDeniedReason(categoryKey) {
 }
 
 function showLiveAccessConditionMessage(message) {
-    const normalizedMessage = String(message || '').trim();
+    const isAuthenticated = Auth.isAuthenticated();
+    const normalizedMessage = isAuthenticated
+        ? String(message || '').trim()
+        : '로그인 후 이용 가능합니다.';
     if (!normalizedMessage) return;
 
     const existing = document.querySelector('.live-access-condition-box');
@@ -863,15 +866,21 @@ function showLiveAccessConditionMessage(message) {
     }
     existing?.remove();
 
+    const actionsHtml = isAuthenticated
+        ? `
+            <a class="live-access-condition-box__link" href="/community">커뮤니티 바로가기</a>
+            <a class="live-access-condition-box__link" href="/my-page/points">회원등급 바로가기</a>
+        `
+        : `
+            <a class="live-access-condition-box__link" href="/login">로그인 바로가기</a>
+        `;
+
     const box = document.createElement('div');
     box.className = 'live-access-condition-box';
     box.innerHTML = `
         <button type="button" class="live-access-condition-box__close" aria-label="안내창 닫기">×</button>
         <p class="live-access-condition-box__message">${sanitizeHTML(normalizedMessage).replace(/\n/g, '<br>')}</p>
-        <div class="live-access-condition-box__actions">
-            <a class="live-access-condition-box__link" href="/community">커뮤니티 바로가기</a>
-            <a class="live-access-condition-box__link" href="/my-page/points">회원등급 바로가기</a>
-        </div>
+        <div class="live-access-condition-box__actions">${actionsHtml}</div>
     `;
     document.body.appendChild(box);
 
