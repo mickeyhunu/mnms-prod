@@ -5,6 +5,7 @@ import { userEditPanelTemplate } from './sections.js';
 import { adminModalTemplates } from './modals.js';
 
 export const adminTemplate = `
+<div id="admin-page-shell" class="hidden">
 <header class="header">
         <div class="header-container">
             <a href="index.html" class="logo">
@@ -335,5 +336,5 @@ export const adminTemplate = `
     </main>
 
     ${adminModalTemplates}
-
+</div>
 `;
