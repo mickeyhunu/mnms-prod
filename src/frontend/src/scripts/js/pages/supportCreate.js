@@ -3,6 +3,7 @@
  */
 let isSubmitting = false;
 let editingTarget = null;
+const NOT_FOUND_PATH = '/404';
 
 function initSupportCreatePage() {
     if (!Auth.isAuthenticated()) {
@@ -128,16 +129,14 @@ async function fillUserInfo() {
     try {
         const me = await APIClient.get('/auth/me');
         if (!me.isAdmin) {
-            alert('관리자만 접근할 수 있습니다.');
-            window.location.href = '/';
+            window.location.replace(NOT_FOUND_PATH);
             return;
         }
 
         const nickname = document.getElementById('user-nickname');
         if (nickname) nickname.textContent = Auth.formatNicknameWithLevel(me);
     } catch (error) {
-        alert('관리자 권한 확인에 실패했습니다.');
-        window.location.href = '/admin';
+        window.location.replace(NOT_FOUND_PATH);
     }
 }
 

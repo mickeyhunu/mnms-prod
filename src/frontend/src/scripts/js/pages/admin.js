@@ -2,6 +2,7 @@
  * 파일 역할: admin 페이지의 이벤트/데이터 흐름을 초기화하는 페이지 스크립트 파일.
  */
 let adminActionTarget = null;
+const NOT_FOUND_PATH = '/404';
 let supportEditTarget = null;
 let currentSupportCategory = 'NOTICE';
 let currentInquiryStatus = '';
@@ -145,8 +146,7 @@ async function initAdminPage() {
     try {
         const me = await APIClient.get('/auth/me');
         if (!me.isAdmin) {
-            alert('관리자만 접근할 수 있습니다.');
-            window.location.href = '/';
+            window.location.replace(NOT_FOUND_PATH);
             return;
         }
 
@@ -160,8 +160,7 @@ async function initAdminPage() {
             await openUserEditModal(pageState.editUserId, { syncHistory: false });
         }
     } catch (error) {
-        alert('관리자 권한 확인에 실패했습니다.');
-        window.location.href = '/';
+        window.location.replace(NOT_FOUND_PATH);
     }
 }
 

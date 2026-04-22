@@ -3,6 +3,7 @@
  */
 let inquiryTarget = null;
 let isSaving = false;
+const NOT_FOUND_PATH = '/404';
 
 function getInquiryIdFromPath() {
     const matched = window.location.pathname.match(/\/admin\/inquiries\/(\d+)\/answer/i);
@@ -226,8 +227,7 @@ async function initAdminInquiryAnswerPage() {
     try {
         const me = await APIClient.get('/auth/me');
         if (!me.isAdmin) {
-            alert('관리자만 접근할 수 있습니다.');
-            window.location.href = '/';
+            window.location.replace(NOT_FOUND_PATH);
             return;
         }
 
@@ -236,8 +236,7 @@ async function initAdminInquiryAnswerPage() {
 
         await loadInquiryDetail();
     } catch (error) {
-        alert('관리자 권한 확인에 실패했습니다.');
-        window.location.href = '/';
+        window.location.replace(NOT_FOUND_PATH);
     }
 }
 
