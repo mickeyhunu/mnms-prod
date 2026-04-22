@@ -670,6 +670,9 @@ async function handleRegister(e) {
             status: error?.status,
             data: error?.data
         });
+        if (error?.data?.reasonCode === 'FEMALE_NOT_ALLOWED') {
+            return;
+        }
         const message = error.message || '회원가입 중 오류가 발생했습니다.';
         showNotification(message, 'error');
         showBlockingAlert(message);
