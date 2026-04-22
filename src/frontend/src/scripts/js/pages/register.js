@@ -6,8 +6,14 @@ const PORTONE_BROWSER_SDK_URL = 'https://cdn.portone.io/v2/browser-sdk.js';
 let portOneIdentityConfig = null;
 
 function showBlockingAlert(message) {
-    void message;
-    return;
+    const resolvedMessage = String(message || '').trim();
+    if (!resolvedMessage) {
+        return;
+    }
+
+    if (typeof window !== 'undefined' && typeof window.alert === 'function') {
+        window.alert(resolvedMessage);
+    }
 }
 
 function initRegisterPage() {
