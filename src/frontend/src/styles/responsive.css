@@ -2,10 +2,11 @@
 @media (max-width: 768px) {
     :root {
         --app-header-offset: 57px;
+        --main-content-horizontal-padding: 12px;
     }
 
     .header-container {
-        padding: 8px 12px;
+        padding: 8px var(--main-content-horizontal-padding);
         flex-direction: row;
         gap: 8px;
         flex-wrap: nowrap;
