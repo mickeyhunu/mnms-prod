@@ -305,9 +305,14 @@ a:hover {
     border: 1px solid var(--border-color);
 }
 
-.admin-comment-author,
-.admin-comment-content {
+.admin-comment-author {
+    color: gold !important;
     font-weight: bold !important;
+    text-shadow:
+    -0.5px -0.5px 0 black,
+     0.5px -0.5px 0 black,
+    -0.5px  0.5px 0 black,
+     0.5px  0.5px 0 black;
 }
 
 .bookmarks-page div.community-section-header {

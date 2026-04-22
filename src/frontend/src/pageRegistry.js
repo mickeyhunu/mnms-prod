@@ -138,7 +138,7 @@ const pageRegistry = {
                     </div>
                 </div>
                 <ul class="business-directory-list" id="business-directory-list"></ul>
-                <p class="text-muted hidden" id="business-directory-empty">선택한 지역에 등록된 광고가 없습니다.</p>
+                <p class="text-muted hidden" id="business-directory-empty" style="padding: 15px">업체정보 기능은 준비중 입니다.</p>
             </section>
         </div>
     </main>

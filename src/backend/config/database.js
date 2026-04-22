@@ -945,12 +945,12 @@ async function initDatabase() {
     await pool.query('ALTER TABLE support_inquiries ADD COLUMN attachment_urls LONGTEXT NULL AFTER content');
   }
 
-  const [adminRows] = await pool.query('SELECT id, password FROM users WHERE email = ?', ['admin@company.com']);
+  const [adminRows] = await pool.query('SELECT id, password FROM users WHERE email = ?', ['master']);
   if (!adminRows.length) {
     const adminPasswordHash = await hashPassword('admin1234');
     await pool.query(
       'INSERT INTO users (email, password, nickname, role, member_type) VALUES (?, ?, ?, ?, ?)',
-      ['admin@company.com', adminPasswordHash, '관리자', 'ADMIN', 'MEMBER']
+      ['master', adminPasswordHash, '관리자', 'ADMIN', 'MEMBER']
     );
   } else if (!isHashedPassword(adminRows[0].password)) {
     const adminPasswordHash = await hashPassword(adminRows[0].password);
