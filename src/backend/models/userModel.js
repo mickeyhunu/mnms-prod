@@ -248,7 +248,7 @@ async function getUserNotifications(userId, { limit = 50 } = {}) {
          c.content AS content,
          c.created_at AS createdAt,
          COALESCE(u.nickname, '익명') AS actorNickname,
-         CONCAT('내 댓글에 새로운 대댓글이 달렸습니다. (', p.title, ')') AS message
+         CONCAT('내 댓글에 새로운 대댓글이 달렸습니다.') AS message
        FROM comments c
        INNER JOIN comments parent ON parent.id = c.parent_id
        INNER JOIN posts p ON p.id = c.post_id

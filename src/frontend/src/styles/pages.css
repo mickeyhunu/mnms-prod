@@ -2150,6 +2150,7 @@
 .admin-stats-content {
     display: grid;
     gap: 20px;
+    padding: 14px 12px 22px;
 }
 
 .admin-stats-summary {
@@ -2206,7 +2207,7 @@
 .admin-stats-grid {
     display: grid;
     gap: 20px;
-    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+    grid-template-columns: 1fr;
 }
 
 .admin-stats-panel {

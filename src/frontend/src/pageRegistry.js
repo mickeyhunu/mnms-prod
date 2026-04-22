@@ -1428,7 +1428,7 @@ const pageRegistry = {
   'not-found': {
     template: `<main class="main-content not-found-page">
         <div class="container">
-            <section class="card not-found-card">
+            <section class="not-found-card">
                 <img src="/src/assets/image/404.png" alt="404 페이지" class="not-found-image">
                 <h1>페이지를 찾을 수 없어요</h1>
                 <p>요청하신 페이지가 삭제되었거나 주소가 변경되었을 수 있습니다.</p>
