@@ -30,7 +30,7 @@ const AuthAPI = {
             const response = await APIClient.post('/auth/login', credentials);
 
 
-            const accessToken = response.accessToken || response.token;
+            const accessToken = response.accessToken;
             if (accessToken) {
                 Auth.setToken(accessToken);
 
@@ -102,11 +102,10 @@ const AuthAPI = {
         }
     },
 
-
     async refresh() {
         try {
             const response = await APIClient.post('/auth/refresh');
-            const accessToken = response.accessToken || response.token;
+            const accessToken = response.accessToken;
             if (accessToken) {
                 Auth.setToken(accessToken);
             }

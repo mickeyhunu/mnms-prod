@@ -320,15 +320,6 @@ async function initDatabase() {
   `);
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS sessions (
-      token VARCHAR(512) PRIMARY KEY,
-      user_id BIGINT NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-  `);
-
-  await pool.query(`
     CREATE TABLE IF NOT EXISTS business_profiles (
       user_id BIGINT PRIMARY KEY,
       company_name VARCHAR(255) NULL,
@@ -344,20 +335,6 @@ async function initDatabase() {
       CONSTRAINT fk_business_profiles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
-
-  const [sessionTokenColumn] = await pool.query(
-    `SELECT CHARACTER_MAXIMUM_LENGTH AS maxLength
-     FROM INFORMATION_SCHEMA.COLUMNS
-     WHERE TABLE_SCHEMA = ?
-       AND TABLE_NAME = 'sessions'
-       AND COLUMN_NAME = 'token'
-     LIMIT 1`,
-    [dbConfig.database]
-  );
-
-  if (sessionTokenColumn.length && Number(sessionTokenColumn[0].maxLength || 0) < 512) {
-    await pool.query('ALTER TABLE sessions MODIFY COLUMN token VARCHAR(512) PRIMARY KEY');
-  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS user_login_histories (
