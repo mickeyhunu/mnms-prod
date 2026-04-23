@@ -846,9 +846,6 @@ const pageRegistry = {
     
     <main class="main-content">
         <div class="container"><section class="top-ads hidden" id="top-ads-container" data-top-ad-placement="HOME" aria-label="홈 상단 광고"></section></div>
-        <div class="container home-theme-toggle-wrap">
-            <button class="btn btn-sm home-theme-toggle" id="home-theme-toggle" type="button" aria-pressed="false">다크모드 ON</button>
-        </div>
         <div class="container home-service-wrap">
             <section class="service-category-grid" aria-label="홈 카테고리">
                 <a class="service-item" href="live.html">
@@ -876,7 +873,7 @@ const pageRegistry = {
     <script src="scripts/js/components/topAds.js"></script>
     <script src="scripts/js/pages/home.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css", "styles/home-dark.css"],
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/topAds.js", "scripts/js/pages/home.js", "scripts/js/components/footerNav.js"]
   },
   'live': livePageConfig,

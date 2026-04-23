@@ -1,90 +1,54 @@
 /* 파일 역할: home-dark 화면 스타일(레이아웃/컴포넌트/반응형 등)을 정의하는 스타일시트 파일. */
-body[data-page="index"] .home-theme-toggle-wrap {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 12px;
-}
-
-body[data-page="index"] .home-theme-toggle {
-    min-width: 120px;
-    border-color: #d7d9ff;
-}
-
 body.home-dark {
-    background: #0f172a;
-    color: #e2e8f0;
+    background: #ffffff;
+    color: var(--text-color);
 }
 
 .home-dark .header {
-    background: #111827;
-    border-bottom: 1px solid #334155;
+    background: #ffffff;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .home-dark .logo h1 {
-    color: #a5b4fc;
+    color: var(--primary-color);
     letter-spacing: -0.2px;
 }
 
 .home-dark .main-content {
-    background: #0f172a;
+    background: #ffffff;
 }
 
 .home-dark div.community-section-header h1 {
-    color: #f8fafc;
+    color: var(--text-color);
 }
 
 .home-dark div.community-section-header p,
 .home-dark .user-nickname-button {
-    color: #94a3b8;
+    color: var(--text-subtle);
 }
 
 .home-dark .post-card {
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: #ffffff;
+    border: 1px solid var(--border-color);
     box-shadow: none;
 }
 
 .home-dark .post-card:hover {
-    border-color: #818cf8;
+    border-color: var(--primary-color);
     box-shadow: none;
 }
 
 .home-dark .post-title,
 .home-dark .post-title a {
-    color: #e2e8f0;
+    color: var(--text-color);
 }
 
 .home-dark .post-title a:hover {
-    color: #a5b4fc;
+    color: var(--primary-color);
 }
 
 .home-dark .post-meta,
 .home-dark .post-stats,
 .home-dark .post-content {
-    color: #94a3b8;
-}
-
-.home-dark .home-theme-toggle {
-    border-color: #475569;
-    color: #e2e8f0;
-    background: #1e293b;
-}
-
-.home-dark .home-theme-toggle:hover {
-    border-color: #818cf8;
-    color: #c7d2fe;
-    background: #273449;
-}
-
-.home-dark .service-item {
-    background: #1e293b;
-    border-color: #475569;
-}
-
-.home-dark .service-label {
-    color: #f1f5f9;
-}
-
-.home-dark .top-ads {
-    background: #020617;
+    color: var(--text-subtle);
 }
