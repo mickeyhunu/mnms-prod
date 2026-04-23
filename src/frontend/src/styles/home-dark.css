@@ -1,54 +1,90 @@
 /* 파일 역할: home-dark 화면 스타일(레이아웃/컴포넌트/반응형 등)을 정의하는 스타일시트 파일. */
+body[data-page="index"] .home-theme-toggle-wrap {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+
+body[data-page="index"] .home-theme-toggle {
+    min-width: 120px;
+    border-color: #d7d9ff;
+}
+
 body.home-dark {
-    background: #ffffff;
-    color: var(--text-color);
+    background: #0f172a;
+    color: #e2e8f0;
 }
 
 .home-dark .header {
-    background: #ffffff;
-    border-bottom: 1px solid var(--border-color);
+    background: #111827;
+    border-bottom: 1px solid #334155;
 }
 
 .home-dark .logo h1 {
-    color: var(--primary-color);
+    color: #a5b4fc;
     letter-spacing: -0.2px;
 }
 
 .home-dark .main-content {
-    background: #ffffff;
+    background: #0f172a;
 }
 
 .home-dark div.community-section-header h1 {
-    color: var(--text-color);
+    color: #f8fafc;
 }
 
 .home-dark div.community-section-header p,
 .home-dark .user-nickname-button {
-    color: var(--text-subtle);
+    color: #94a3b8;
 }
 
 .home-dark .post-card {
-    background: #ffffff;
-    border: 1px solid var(--border-color);
+    background: #1e293b;
+    border: 1px solid #334155;
     box-shadow: none;
 }
 
 .home-dark .post-card:hover {
-    border-color: var(--primary-color);
+    border-color: #818cf8;
     box-shadow: none;
 }
 
 .home-dark .post-title,
 .home-dark .post-title a {
-    color: var(--text-color);
+    color: #e2e8f0;
 }
 
 .home-dark .post-title a:hover {
-    color: var(--primary-color);
+    color: #a5b4fc;
 }
 
 .home-dark .post-meta,
 .home-dark .post-stats,
 .home-dark .post-content {
-    color: var(--text-subtle);
+    color: #94a3b8;
+}
+
+.home-dark .home-theme-toggle {
+    border-color: #475569;
+    color: #e2e8f0;
+    background: #1e293b;
+}
+
+.home-dark .home-theme-toggle:hover {
+    border-color: #818cf8;
+    color: #c7d2fe;
+    background: #273449;
+}
+
+.home-dark .service-item {
+    background: #1e293b;
+    border-color: #475569;
+}
+
+.home-dark .service-label {
+    color: #f1f5f9;
+}
+
+.home-dark .top-ads {
+    background: #020617;
 }
