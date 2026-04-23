@@ -9,7 +9,6 @@ const supportController = require('../controllers/supportController');
 const { findByNicknameExceptUser } = require('../models/userModel');
 const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddleware');
 const { LOGIN_STATUS } = require('../utils/loginRestriction');
-const { deleteSessionsByUserId } = require('../models/sessionModel');
 const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validatePassword } = require('../utils/authPolicy');
@@ -234,9 +233,6 @@ router.put('/users/:id', async (req, res, next) => {
     }
 
     await adminModel.updateUserByAdmin(id, updates);
-    if (accountStatus === LOGIN_STATUS.SUSPENDED) {
-      await deleteSessionsByUserId(id);
-    }
     const updatedUser = await adminModel.getUserDetail(id);
 
     res.json({

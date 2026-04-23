@@ -3,6 +3,7 @@
  */
 const {
   createUser,
+  findById,
   findByEmail,
   findByNickname,
   recordUserLoginHistory,
@@ -113,10 +114,8 @@ function registerIdentityUsageAttempt({ identityVerificationId, ipAddress }) {
 
   return { blocked: false };
 }
-const { createSession, findUserByToken, deleteSession } = require('../models/sessionModel');
 const { awardPointByAction } = require('../models/pointModel');
 const { pickUserRow } = require('../utils/response');
-
 
 function parseCookies(cookieHeader = '') {
   return String(cookieHeader || '')
@@ -395,9 +394,6 @@ async function login(req, res, next) {
     }
 
     const accessToken = signAccessToken(user);
-    const refreshToken = signRefreshToken(user);
-    await createSession(refreshToken, user.id);
-    res.append('Set-Cookie', buildRefreshCookie(req, refreshToken, parseExpiresInToSeconds(REFRESH_EXPIRES_IN)));
     await recordUserLoginHistory(user.id, {
       ipAddress,
       userAgent
@@ -418,13 +414,13 @@ async function login(req, res, next) {
     }
 
     const refreshedUser = await findByEmail(resolvedLoginId);
+    const refreshToken = signRefreshToken(user);
+    res.append('Set-Cookie', buildRefreshCookie(req, refreshToken, parseExpiresInToSeconds(REFRESH_EXPIRES_IN)));
     res.json({
       success: true,
-      token: accessToken,
       accessToken,
-      refreshTokenExpiresIn: REFRESH_EXPIRES_IN,
-      tokenExpiresIn: ACCESS_EXPIRES_IN,
       accessTokenExpiresIn: ACCESS_EXPIRES_IN,
+      refreshTokenExpiresIn: REFRESH_EXPIRES_IN,
       ...pickUserRow(refreshedUser || user)
     });
   } catch (error) {
@@ -448,28 +444,29 @@ async function refresh(req, res, next) {
     try {
       payload = verifyRefreshToken(refreshToken);
     } catch (_error) {
-      await deleteSession(refreshToken);
       res.append('Set-Cookie', buildRefreshCookieClear(req));
       return res.status(401).json({ message: '리프레시 토큰이 유효하지 않거나 만료되었습니다.' });
     }
 
-    const user = await findUserByToken(refreshToken);
-    if (!user || String(user.id) !== String(payload.sub || '')) {
+    const userId = Number(payload.sub || 0);
+    if (!Number.isFinite(userId) || userId <= 0) {
       res.append('Set-Cookie', buildRefreshCookieClear(req));
       return res.status(401).json({ message: '세션이 유효하지 않습니다.' });
     }
 
-    await deleteSession(refreshToken);
+    const user = await findById(userId);
+    if (!user) {
+      res.append('Set-Cookie', buildRefreshCookieClear(req));
+      return res.status(401).json({ message: '세션이 유효하지 않습니다.' });
+    }
+
     const newRefreshToken = signRefreshToken(user);
     const newAccessToken = signAccessToken(user);
-    await createSession(newRefreshToken, user.id);
     res.append('Set-Cookie', buildRefreshCookie(req, newRefreshToken, parseExpiresInToSeconds(REFRESH_EXPIRES_IN)));
 
     return res.json({
       success: true,
-      token: newAccessToken,
       accessToken: newAccessToken,
-      tokenExpiresIn: ACCESS_EXPIRES_IN,
       accessTokenExpiresIn: ACCESS_EXPIRES_IN,
       refreshTokenExpiresIn: REFRESH_EXPIRES_IN
     });
@@ -478,18 +475,9 @@ async function refresh(req, res, next) {
   }
 }
 
-async function logout(req, res, next) {
-  try {
-    const cookies = parseCookies(req.headers.cookie);
-    const refreshToken = String(cookies.refreshToken || '').trim();
-    if (refreshToken) {
-      await deleteSession(refreshToken);
-    }
-    res.append('Set-Cookie', buildRefreshCookieClear(req));
-    res.json({ success: true, message: '로그아웃되었습니다.' });
-  } catch (error) {
-    next(error);
-  }
+async function logout(req, res) {
+  res.append('Set-Cookie', buildRefreshCookieClear(req));
+  res.json({ success: true, message: '로그아웃되었습니다.' });
 }
 
 async function checkNickname(req, res, next) {
