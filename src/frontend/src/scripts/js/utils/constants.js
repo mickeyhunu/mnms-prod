@@ -25,11 +25,6 @@ const ENDPOINTS = {
         UPDATE: '/comments',
         DELETE: '/comments'
     },
-    BOOKMARKS: {
-        LIST: '/bookmarks',
-        TOGGLE: '/bookmarks/toggle',
-        CHECK: '/bookmarks/check'
-    },
     MESSAGES: {
         RECEIVED: '/messages/received',
         SENT: '/messages/sent',
@@ -54,8 +49,6 @@ const MESSAGES = {
     POST_UPDATE_SUCCESS: '게시글이 수정되었습니다.',
     POST_DELETE_SUCCESS: '게시글이 삭제되었습니다.',
     COMMENT_CREATE_SUCCESS: '댓글이 작성되었습니다.',
-    BOOKMARK_ADDED: '북마크에 추가되었습니다.',
-    BOOKMARK_REMOVED: '북마크가 해제되었습니다.',
     MESSAGE_SENT: '쪽지가 전송되었습니다.',
     MESSAGE_DELETED: '쪽지가 삭제되었습니다.'
 };
