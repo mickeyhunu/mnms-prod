@@ -244,6 +244,7 @@ async function myActivity(req, res, next) {
 
 async function myLiveAccessStatus(req, res, next) {
   try {
+    const isAdmin = req.user?.role === 'ADMIN';
     const dailyStats = await getUserDailyActivityStats(req.user.id);
     const todayPostCount = Number(dailyStats.todayPostCount || 0);
     const todayCommentCount = Number(dailyStats.todayCommentCount || 0);
@@ -260,8 +261,8 @@ async function myLiveAccessStatus(req, res, next) {
       hasDailyActivity,
       access: {
         choice: true,
-        chojoong: isPpakkomLevel || hasDailyActivity,
-        waiting: isPpakkomLevel || hasDailyActivity,
+        chojoong: isAdmin || isPpakkomLevel || hasDailyActivity,
+        waiting: isAdmin || isPpakkomLevel || hasDailyActivity,
         entry: isRoomDoctorLevel || (isPpakkomLevel && hasDailyActivity)
       }
     });
