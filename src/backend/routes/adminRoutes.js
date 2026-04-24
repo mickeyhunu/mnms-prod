@@ -128,6 +128,19 @@ router.get('/users', async (req, res, next) => {
   }
 });
 
+router.get('/admins', async (req, res, next) => {
+  try {
+    const rows = await adminModel.listAdmins();
+    const content = rows.map((user) => ({
+      ...user,
+      isCurrentUser: Number(user.id) === Number(req.user.id)
+    }));
+    res.json({ content, totalElements: content.length });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/users/:id', async (req, res, next) => {
   try {
     const id = Number.parseInt(req.params.id, 10);
@@ -191,6 +204,11 @@ router.put('/users/:id', async (req, res, next) => {
       return res.status(400).json({ message: '유효하지 않은 권한입니다.' });
     }
 
+    const isMasterAdmin = String(req.user?.email || '').trim().toLowerCase() === 'master';
+    if (role === 'ADMIN' && !isMasterAdmin) {
+      return res.status(403).json({ message: '마스터 관리자만 관리자 권한을 부여할 수 있습니다.' });
+    }
+
     if (!['MEMBER', 'BUSINESS'].includes(memberType)) {
       return res.status(400).json({ message: '유효하지 않은 회원 구분입니다.' });
     }
@@ -251,6 +269,9 @@ router.patch('/users/:id/role', async (req, res, next) => {
     const role = String(req.body?.role || '').toUpperCase();
     if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 회원 ID입니다.' });
     if (!['MEMBER', 'ADMIN'].includes(role)) return res.status(400).json({ message: '유효하지 않은 권한입니다.' });
+    if (role === 'ADMIN' && String(req.user?.email || '').trim().toLowerCase() !== 'master') {
+      return res.status(403).json({ message: '마스터 관리자만 관리자 권한을 부여할 수 있습니다.' });
+    }
 
     const target = await adminModel.findUserById(id);
     if (!target) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });

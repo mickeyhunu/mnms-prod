@@ -35,7 +35,7 @@ export const adminTemplate = `
             <div class="admin-tabs">
                 <button class="admin-tab active" data-tab="stats">통계 대시보드</button>
                 <button class="admin-tab" data-tab="users">회원 관리</button>
-                <button class="admin-tab" data-tab="users">관리자 관리</button>
+                <button class="admin-tab" data-tab="admins">관리자 관리</button>
                 <button class="admin-tab" data-tab="posts">게시글 관리</button>
                 <button class="admin-tab" data-tab="comments">댓글 관리</button>
                 <button class="admin-tab" data-tab="banner-ads">배너광고관리</button>
@@ -144,6 +144,19 @@ export const adminTemplate = `
                         <table class="admin-table"><thead><tr><th>ID</th><th>이메일</th><th>닉네임</th><th>계정상태</th><th>포인트</th><th>가입일</th><th>권한</th><th>회원구분</th><th>관리</th></tr></thead><tbody id="users-tbody"></tbody></table>
                     </div>
                     <div class="admin-pagination hidden" id="users-pagination"></div>
+                </div>
+
+                <div id="admins-section" class="tab-pane hidden">
+                    <div class="loading" id="admins-loading"><div class="spinner"></div><p>관리자 목록을 불러오는 중...</p></div>
+                    <div class="error-banner hidden" id="admins-error"><p id="admins-error-message"></p><button class="btn btn-sm btn-primary" id="admins-retry-btn">다시 시도</button></div>
+                    <div class="admin-list-toolbar">
+                        <p class="admin-list-toolbar__meta">총 <strong id="admins-total">0</strong>명</p>
+                        <input type="search" id="admins-search-input" class="form-control admin-list-toolbar__search" placeholder="관리자 검색" aria-label="관리자 검색">
+                    </div>
+                    <div class="admin-table-container hidden" id="admins-content">
+                        <table class="admin-table"><thead><tr><th>ID</th><th>로그인 아이디</th><th>닉네임</th><th>권한</th><th>가입일</th></tr></thead><tbody id="admins-tbody"></tbody></table>
+                    </div>
+                    <div class="admin-pagination hidden" id="admins-pagination"></div>
                 </div>
 
                 <div id="entries-section" class="tab-pane hidden">

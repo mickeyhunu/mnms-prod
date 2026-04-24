@@ -13,6 +13,7 @@ let editingAdId = null;
 let currentEntryStoreNo = null;
 let entryStores = [];
 let adStores = [];
+let isMasterAdmin = false;
 const TOP_AD_PLACEMENT_OPTIONS = [
     { value: '1', label: '홈 상단' },
     { value: '2', label: '커뮤니티 상단' }
@@ -21,7 +22,7 @@ let isGlobalAdminClickBound = false;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
-const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'entries', 'banner-ads', 'business-ads', 'support', 'inquiries'];
+const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'admins', 'entries', 'banner-ads', 'business-ads', 'support', 'inquiries'];
 const ADMIN_PAGE_SIZE = 20;
 const ADMIN_STATS_RANGE_DAYS = 14;
 const ADMIN_DASHBOARD_STATE = { summary: null, daily: [], series: [], period: 'daily', boardStats: [], selectedMetric: 'visitors' };
@@ -42,6 +43,7 @@ const ADMIN_LIST_STATE = {
     posts: { items: [], query: '', searchType: 'post', page: 1 },
     comments: { items: [], query: '', searchType: 'post', page: 1 },
     users: { items: [], query: '', page: 1 },
+    admins: { items: [], query: '', page: 1 },
     entries: { items: [], query: '', page: 1 },
     ads: { items: [], query: '', page: 1 },
     support: { items: [], query: '', page: 1 },
@@ -51,6 +53,7 @@ const ADMIN_SEARCH_PLACEHOLDERS = {
     posts: '게시글 검색',
     comments: '댓글 검색',
     users: '회원 검색',
+    admins: '관리자 검색',
     entries: '엔트리 검색',
     ads: '광고 검색',
     support: '공지/FAQ 검색',
@@ -124,6 +127,7 @@ async function activateAdminTab(tabKey, options = {}) {
     else if (resolvedTabKey === 'posts') await loadPosts();
     else if (resolvedTabKey === 'comments') await loadComments();
     else if (resolvedTabKey === 'users') await loadUsers();
+    else if (resolvedTabKey === 'admins') await loadAdmins();
     else if (resolvedTabKey === 'entries') await loadEntries();
     else if (resolvedTabKey === 'banner-ads') await loadAds();
     else if (resolvedTabKey === 'business-ads') {
@@ -154,6 +158,7 @@ async function initAdminPage() {
 
         revealAdminPageShell();
         bindCommonEvents();
+        isMasterAdmin = String(me.email || '').trim().toLowerCase() === 'master';
 
         const nickname = Auth.resolveNicknameDisplayElement();
         if (nickname) Auth.applyNicknameDisplay(nickname, me);
@@ -189,6 +194,7 @@ function bindCommonEvents() {
     document.getElementById('posts-retry-btn')?.addEventListener('click', loadPosts);
     document.getElementById('comments-retry-btn')?.addEventListener('click', loadComments);
     document.getElementById('users-retry-btn')?.addEventListener('click', loadUsers);
+    document.getElementById('admins-retry-btn')?.addEventListener('click', loadAdmins);
     document.getElementById('entries-retry-btn')?.addEventListener('click', loadEntries);
     document.getElementById('entries-retry-btn-secondary')?.addEventListener('click', loadEntries);
     document.getElementById('ads-retry-btn')?.addEventListener('click', loadAds);
@@ -316,6 +322,7 @@ function getAdminFilteredItems(prefix) {
         posts: ['id', 'title', 'authorNickname', 'user_id', 'userId'],
         comments: ['id', 'content', 'authorNickname', 'user_id', 'userId', 'postId', 'post_id'],
         users: ['id', 'email', 'nickname', 'role', 'memberType', 'member_type', 'phone'],
+        admins: ['id', 'email', 'nickname', 'role'],
         entries: ['workerName', 'entryId'],
         ads: ['id', 'title', 'adType', 'storeNo', 'linkUrl', 'imageUrl', 'displayOrder'],
         support: ['id', 'title', 'category', 'sourceType'],
@@ -613,6 +620,18 @@ async function loadUsers() {
     }
 }
 
+async function loadAdmins() {
+    toggleLoading('admins', true);
+    try {
+        const response = await APIClient.get('/admin/admins');
+        ADMIN_LIST_STATE.admins.items = response.content || [];
+        renderAdminsTable();
+        showContent('admins');
+    } catch (error) {
+        showError('admins', error.message || '관리자 목록을 불러오지 못했습니다.');
+    }
+}
+
 async function loadStatsDashboard() {
     toggleLoading('stats', true);
     try {
@@ -858,6 +877,30 @@ function renderUsersTable() {
     }
 
     renderAdminPagination('users', totalPages, page);
+}
+
+function renderAdminsTable() {
+    const tbody = document.getElementById('admins-tbody');
+    if (!tbody) return;
+
+    const { filteredItems, pageItems, page, totalPages } = getAdminPagination('admins');
+    updateAdminTotal('admins', filteredItems.length);
+
+    if (!pageItems.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">관리자 계정이 없습니다.</td></tr>';
+    } else {
+        tbody.innerHTML = pageItems.map((admin) => `
+            <tr>
+                <td>${admin.id}</td>
+                <td>${sanitizeHTML(admin.email || '-')}</td>
+                <td>${sanitizeHTML(admin.nickname || '-')}</td>
+                <td>${admin.isMasterAdmin ? 'MASTER' : 'ADMIN'}</td>
+                <td>${formatDate(admin.createdAt || admin.created_at)}</td>
+            </tr>
+        `).join('');
+    }
+
+    renderAdminPagination('admins', totalPages, page);
 }
 
 function renderEntriesTable() {
@@ -1249,7 +1292,13 @@ function fillUserEditForm(user) {
     document.getElementById('admin-user-phone').value = formatPhoneNumber(user.phone || '');
     document.getElementById('admin-user-sms-consent').checked = Boolean(user.smsConsent);
     document.getElementById('admin-user-total-points').value = Number(user.totalPoints || 0);
-    document.getElementById('admin-user-role').value = user.role || 'MEMBER';
+    const roleSelect = document.getElementById('admin-user-role');
+    if (roleSelect) {
+        roleSelect.value = user.role || 'MEMBER';
+        const adminOption = roleSelect.querySelector('option[value="ADMIN"]');
+        if (adminOption) adminOption.disabled = !isMasterAdmin;
+        roleSelect.disabled = !isMasterAdmin;
+    }
     document.getElementById('admin-user-member-type').value = user.memberType || 'MEMBER';
     document.getElementById('admin-user-account-status').value = user.accountStatus || ACCOUNT_STATUS.ACTIVE;
     document.getElementById('admin-user-login-restriction-permanent').checked = Boolean(user.isLoginRestrictionPermanent);
@@ -1346,6 +1395,11 @@ async function saveUserDetail() {
 
     if (!Number.isInteger(totalPoints) || totalPoints < 0) {
         setAdminUserHelpMessage('포인트는 0 이상의 정수만 입력할 수 있습니다.', '#dc3545');
+        return;
+    }
+
+    if (role === 'ADMIN' && !isMasterAdmin) {
+        setAdminUserHelpMessage('마스터 관리자만 관리자 권한을 부여할 수 있습니다.', '#dc3545');
         return;
     }
 
