@@ -499,7 +499,7 @@ function bindProfileForm() {
             }
 
             if (password) {
-                alert('비밀번호가 변경되었습니다. 보안을 위해 다시 로그인해 주세요.');
+                alert('비밀번호가 변경되었습니다. 다시 로그인해 주세요.');
                 Auth.logout();
                 return;
             }

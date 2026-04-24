@@ -35,6 +35,7 @@ export const adminTemplate = `
             <div class="admin-tabs">
                 <button class="admin-tab active" data-tab="stats">통계 대시보드</button>
                 <button class="admin-tab" data-tab="users">회원 관리</button>
+                <button class="admin-tab" data-tab="users">관리자 관리</button>
                 <button class="admin-tab" data-tab="posts">게시글 관리</button>
                 <button class="admin-tab" data-tab="comments">댓글 관리</button>
                 <button class="admin-tab" data-tab="banner-ads">배너광고관리</button>

@@ -131,6 +131,11 @@
     color: #6c757d;
 }
 
+#admin-page-shell .tab-content,
+#admin-page-shell .tab-content * {
+    white-space: nowrap;
+}
+
 .admin-support-toolbar {
     display: flex;
     align-items: center;

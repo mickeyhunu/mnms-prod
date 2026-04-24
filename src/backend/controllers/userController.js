@@ -263,7 +263,7 @@ async function myLiveAccessStatus(req, res, next) {
         choice: true,
         chojoong: isAdmin || isPpakkomLevel || hasDailyActivity,
         waiting: isAdmin || isPpakkomLevel || hasDailyActivity,
-        entry: isRoomDoctorLevel || (isPpakkomLevel && hasDailyActivity)
+        entry: isAdmin || isRoomDoctorLevel || (isPpakkomLevel && hasDailyActivity)
       }
     });
   } catch (error) {
