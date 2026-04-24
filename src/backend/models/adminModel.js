@@ -22,6 +22,25 @@ async function listUsers() {
   return resolvedRows;
 }
 
+async function listAdmins() {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT *
+     FROM users
+     WHERE role = 'ADMIN'
+     ORDER BY created_at DESC, id DESC`
+  );
+  const resolvedRows = [];
+  for (const row of rows) {
+    const resolved = await ensureResolvedLoginRestriction(row);
+    resolvedRows.push({
+      ...pickUserRow(resolved || row),
+      isMasterAdmin: String((resolved || row)?.email || '').trim().toLowerCase() === 'master'
+    });
+  }
+  return resolvedRows;
+}
+
 async function findUserById(userId) {
   const pool = getPool();
   const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
@@ -847,6 +866,7 @@ module.exports = {
   decodeEntryId,
   deleteEntry,
   listUsers,
+  listAdmins,
   listEntryStores,
   listEntries,
   findUserById,
