@@ -15,7 +15,6 @@ const routes = [
   { path: '/register', component: PageView, meta: { pageKey: 'register', title: '회원가입', description: '미드나잇 맨즈 회원가입으로 커뮤니티 활동을 시작하세요.', noindex: true } },
   { path: '/create', component: PageView, meta: { pageKey: 'create-post', title: '게시글 작성', description: '자유게시판, 후기, 질문 게시판에 새 글을 작성해보세요.', noindex: true } },
   { path: '/post-detail', component: PageView, meta: { pageKey: 'post-detail', title: '게시글 상세', description: '게시글 상세 내용을 확인하고 댓글, 추천, 공유를 이용하세요.' } },
-  { path: '/bookmarks', component: PageView, meta: { pageKey: 'bookmarks', title: '북마크', description: '저장해둔 게시글을 빠르게 다시 확인하세요.', noindex: true } },
   { path: '/community', component: PageView, meta: { pageKey: 'community', title: '커뮤니티', description: '자유, 익명, 후기, 썰, 질문 게시판을 탐색해보세요.' } },
   { path: '/my-page', component: PageView, meta: { pageKey: 'my-page', title: '마이페이지', description: '내 계정 정보와 활동 내역, 포인트를 확인하세요.', noindex: true } },
   { path: '/my-page/profile', component: PageView, meta: { pageKey: 'my-page-profile', title: '내 프로필', description: '닉네임, 이메일 등 내 프로필 정보를 관리하세요.', noindex: true } },

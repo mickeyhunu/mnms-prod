@@ -12,7 +12,6 @@ const LINK_MAP = {
   'register.html': '/register',
   'create-post.html': '/create',
   'post-detail.html': '/post-detail',
-  'bookmarks.html': '/bookmarks',
   'community.html': '/community',
   'my-page.html': '/my-page',
   'admin.html': '/admin',
