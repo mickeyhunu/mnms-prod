@@ -102,6 +102,13 @@
     transition: all 0.2s;
 }
 
+.admin-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 .tab-btn:hover, .admin-tab:hover, .message-tab-btn:hover {
     color: #495057;
 }
@@ -190,15 +197,20 @@
     gap: 8px;
     flex: 1 1 360px;
     max-width: 520px;
+    min-width: 0;
+    flex-wrap: nowrap;
 }
 
 .admin-list-toolbar__filter {
     flex: 0 0 140px;
+    min-height: 44px;
 }
 
 .admin-list-toolbar__search {
     flex: 1 1 260px;
     max-width: none;
+    min-width: 0;
+    min-height: 44px;
 }
 
 .admin-pagination {
