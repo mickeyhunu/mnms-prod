@@ -98,6 +98,7 @@ export const userEditPanelTemplate = `
                                     </section>
                                     <section class="admin-user-activity-card">
                                         <h5>접속 IP 기록</h5>
+                                        <div id="admin-user-top-login-ips" class="admin-user-top-login-ips"></div>
                                         <div id="admin-user-login-history" class="admin-user-activity-list"></div>
                                     </section>
                                 </div>
