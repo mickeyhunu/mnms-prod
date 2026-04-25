@@ -197,6 +197,9 @@ async function initDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
+  // 회원 번호 1~100번은 예약 구간으로 비워두고, 실제 가입은 101번부터 시작한다.
+  await pool.query('ALTER TABLE users AUTO_INCREMENT = 101');
+
   const [totalPointsColumn] = await pool.query(
     `SELECT 1
      FROM INFORMATION_SCHEMA.COLUMNS
