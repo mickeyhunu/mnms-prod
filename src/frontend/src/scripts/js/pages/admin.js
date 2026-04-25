@@ -1139,8 +1139,23 @@ function formatAdminActivityBoardLabel(boardType) {
 function escapeHtmlAndPreserveLineBreaks(value, maxLength = 120) {
     const normalized = String(value || '').trim();
     if (!normalized) return '-';
-    const truncated = normalized.length > maxLength ? `${normalized.slice(0, maxLength)}…` : normalized;
+    const truncated = normalized.length > maxLength ? `${normalized.slice(0, maxLength)}...` : normalized;
     return sanitizeHTML(truncated).replace(/\n/g, '<br>');
+}
+
+function formatTopLoginIps(loginHistories = [], maxCount = 3) {
+    if (!Array.isArray(loginHistories) || !loginHistories.length) return [];
+
+    const counts = loginHistories.reduce((accumulator, history) => {
+        const key = String(history?.ipAddress || '').trim() || 'unknown';
+        accumulator.set(key, (accumulator.get(key) || 0) + 1);
+        return accumulator;
+    }, new Map());
+
+    return Array.from(counts.entries())
+        .sort((left, right) => right[1] - left[1])
+        .slice(0, Math.max(1, Number(maxCount) || 3))
+        .map(([ipAddress, count]) => ({ ipAddress, count }));
 }
 
 function renderAdminActivityItems(containerId, items, renderItem, emptyMessage) {
@@ -1157,6 +1172,7 @@ function renderAdminActivityItems(containerId, items, renderItem, emptyMessage) 
 
 function renderAdminUserActivity(activity = {}) {
     const stats = activity.stats || {};
+    const topIpContainer = document.getElementById('admin-user-top-login-ips');
     const statsContainer = document.getElementById('admin-user-activity-stats');
     if (statsContainer) {
         const statCards = [
@@ -1221,11 +1237,22 @@ function renderAdminUserActivity(activity = {}) {
             <article class="admin-user-activity-item">
                 <div class="admin-user-activity-item__meta">${formatDate(history.createdAt)}</div>
                 <div class="admin-user-activity-item__title admin-user-activity-item__title--plain">${sanitizeHTML(history.ipAddress || 'unknown')}</div>
-                <div class="admin-user-activity-item__sub">${escapeHtmlAndPreserveLineBreaks(history.userAgent || 'User-Agent 정보 없음', 140)}</div>
+                <div class="admin-user-activity-item__sub admin-user-activity-item__sub--single-line" title="${sanitizeHTML(String(history.userAgent || 'User-Agent 정보 없음').trim())}">${escapeHtmlAndPreserveLineBreaks(history.userAgent || 'User-Agent 정보 없음', 110)}</div>
             </article>
         `,
         '기록된 접속 IP가 없습니다.'
     );
+
+    if (topIpContainer) {
+        const topIps = formatTopLoginIps(activity.loginHistories, 3);
+        topIpContainer.innerHTML = topIps.length
+            ? topIps.map((entry, index) => `
+                <span class="admin-user-top-login-ips__item">
+                    TOP ${index + 1} ${sanitizeHTML(entry.ipAddress)} (${Number(entry.count).toLocaleString()}회)
+                </span>
+            `).join('')
+            : '<span class="admin-user-top-login-ips__empty">주 접속 IP 기록이 없습니다.</span>';
+    }
 }
 
 function resetAdminUserActivity() {

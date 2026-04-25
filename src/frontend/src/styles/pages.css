@@ -2067,6 +2067,33 @@
     color: #212529;
 }
 
+.admin-user-top-login-ips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.admin-user-top-login-ips__item,
+.admin-user-top-login-ips__empty {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.admin-user-top-login-ips__item {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.admin-user-top-login-ips__empty {
+    background: #f1f3f5;
+    color: #868e96;
+}
+
 .admin-user-activity-list {
     display: flex;
     flex-direction: column;
@@ -2108,6 +2135,12 @@
     color: #495057;
     line-height: 1.5;
     word-break: break-word;
+}
+
+.admin-user-activity-item__sub--single-line {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .admin-user-activity-empty {
