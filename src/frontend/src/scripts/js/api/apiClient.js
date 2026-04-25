@@ -1,6 +1,31 @@
 /**
  * 파일 역할: apiClient 관련 서버 API 호출 로직을 캡슐화한 클라이언트 API 모듈.
  */
+let refreshPromise = null;
+
+async function refreshAccessTokenIfNeeded() {
+    if (refreshPromise) {
+        return refreshPromise;
+    }
+
+    if (typeof AuthAPI === 'undefined' || typeof AuthAPI.refresh !== 'function') {
+        return false;
+    }
+
+    refreshPromise = (async () => {
+        try {
+            await AuthAPI.refresh();
+            return true;
+        } catch (_error) {
+            return false;
+        } finally {
+            refreshPromise = null;
+        }
+    })();
+
+    return refreshPromise;
+}
+
 const APIClient = {
     async get(endpoint, params = {}) {
         let url = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
@@ -21,12 +46,29 @@ const APIClient = {
                 headers['Authorization'] = 'Bearer ' + token;
             }
             
-            const response = await fetch(url, {
+            let response = await fetch(url, {
                 method: 'GET',
                 headers: headers,
                 credentials: 'include'
             });
-            
+
+            if (response.status === 401 && token && !endpoint.includes('/auth/refresh')) {
+                const refreshed = await refreshAccessTokenIfNeeded();
+                if (refreshed) {
+                    const newToken = Auth.getToken();
+                    if (newToken) {
+                        headers['Authorization'] = 'Bearer ' + newToken;
+                    } else {
+                        delete headers['Authorization'];
+                    }
+                    response = await fetch(url, {
+                        method: 'GET',
+                        headers: headers,
+                        credentials: 'include'
+                    });
+                }
+            }
+
             
             if (!response.ok) {
                 let errorData = {};
@@ -67,13 +109,31 @@ const APIClient = {
                 headers['Authorization'] = 'Bearer ' + token;
             }
             
-            const response = await fetch(url, {
+            let response = await fetch(url, {
                 method: 'POST',
                 headers: headers,
                 credentials: 'include',
                 body: JSON.stringify(data)
             });
-            
+
+            if (response.status === 401 && token && !endpoint.includes('/auth/refresh')) {
+                const refreshed = await refreshAccessTokenIfNeeded();
+                if (refreshed) {
+                    const newToken = Auth.getToken();
+                    if (newToken) {
+                        headers['Authorization'] = 'Bearer ' + newToken;
+                    } else {
+                        delete headers['Authorization'];
+                    }
+                    response = await fetch(url, {
+                        method: 'POST',
+                        headers: headers,
+                        credentials: 'include',
+                        body: JSON.stringify(data)
+                    });
+                }
+            }
+
             
             if (!response.ok) {
                 let errorData = {};
@@ -114,13 +174,31 @@ const APIClient = {
                 headers['Authorization'] = 'Bearer ' + token;
             }
             
-            const response = await fetch(url, {
+            let response = await fetch(url, {
                 method: 'PUT',
                 headers: headers,
                 credentials: 'include',
                 body: JSON.stringify(data)
             });
-            
+
+            if (response.status === 401 && token && !endpoint.includes('/auth/refresh')) {
+                const refreshed = await refreshAccessTokenIfNeeded();
+                if (refreshed) {
+                    const newToken = Auth.getToken();
+                    if (newToken) {
+                        headers['Authorization'] = 'Bearer ' + newToken;
+                    } else {
+                        delete headers['Authorization'];
+                    }
+                    response = await fetch(url, {
+                        method: 'PUT',
+                        headers: headers,
+                        credentials: 'include',
+                        body: JSON.stringify(data)
+                    });
+                }
+            }
+
             
             if (!response.ok) {
                 let errorData = {};
@@ -161,12 +239,30 @@ const APIClient = {
                 headers['Authorization'] = 'Bearer ' + token;
             }
 
-            const response = await fetch(url, {
+            let response = await fetch(url, {
                 method: 'PATCH',
                 headers: headers,
                 credentials: 'include',
                 body: JSON.stringify(data)
             });
+
+            if (response.status === 401 && token && !endpoint.includes('/auth/refresh')) {
+                const refreshed = await refreshAccessTokenIfNeeded();
+                if (refreshed) {
+                    const newToken = Auth.getToken();
+                    if (newToken) {
+                        headers['Authorization'] = 'Bearer ' + newToken;
+                    } else {
+                        delete headers['Authorization'];
+                    }
+                    response = await fetch(url, {
+                        method: 'PATCH',
+                        headers: headers,
+                        credentials: 'include',
+                        body: JSON.stringify(data)
+                    });
+                }
+            }
 
 
             if (!response.ok) {
@@ -208,14 +304,32 @@ const APIClient = {
                 headers['Authorization'] = 'Bearer ' + token;
             }
             
-            const response = await fetch(url, {
+            let response = await fetch(url, {
                 method: 'DELETE',
                 headers: headers,
                 credentials: 'include'
                 ,
                 body: data ? JSON.stringify(data) : undefined
             });
-            
+
+            if (response.status === 401 && token && !endpoint.includes('/auth/refresh')) {
+                const refreshed = await refreshAccessTokenIfNeeded();
+                if (refreshed) {
+                    const newToken = Auth.getToken();
+                    if (newToken) {
+                        headers['Authorization'] = 'Bearer ' + newToken;
+                    } else {
+                        delete headers['Authorization'];
+                    }
+                    response = await fetch(url, {
+                        method: 'DELETE',
+                        headers: headers,
+                        credentials: 'include',
+                        body: data ? JSON.stringify(data) : undefined
+                    });
+                }
+            }
+
             
             if (!response.ok) {
                 let errorData = {};

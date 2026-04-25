@@ -2,6 +2,7 @@
  * 파일 역할: auth에서 사용하는 공통 보조 함수/상수를 제공하는 유틸리티 파일.
  */
 const Auth = {
+    currentUser: null,
     resolveNicknameDisplayElement() {
         const label = document.getElementById('user-nickname-label');
         if (label) return label;
@@ -172,11 +173,66 @@ const Auth = {
         localStorage.setItem(STORAGE_KEYS.TOKEN, token);
     },
     getUser() {
-        const userData = localStorage.getItem(STORAGE_KEYS.USER);
-        return userData ? JSON.parse(userData) : null;
+        if (!this.isAuthenticated()) {
+            this.currentUser = null;
+            return null;
+        }
+
+        if (this.currentUser) return this.currentUser;
+
+        const sessionUserData = sessionStorage.getItem(STORAGE_KEYS.USER);
+        const localUserData = localStorage.getItem(STORAGE_KEYS.USER);
+        const userData = sessionUserData || localUserData;
+        if (!userData) return null;
+
+        try {
+            const parsed = JSON.parse(userData);
+            this.currentUser = parsed;
+
+            if (!sessionUserData && localUserData) {
+                sessionStorage.setItem(STORAGE_KEYS.USER, localUserData);
+                localStorage.removeItem(STORAGE_KEYS.USER);
+            }
+
+            return parsed;
+        } catch (_error) {
+            sessionStorage.removeItem(STORAGE_KEYS.USER);
+            localStorage.removeItem(STORAGE_KEYS.USER);
+            return null;
+        }
     },
     setUser(user) {
-        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+        const persistedUser = user ? {
+            id: user.id,
+            email: user.email,
+            nickname: user.nickname,
+            role: user.role,
+            memberType: user.memberType,
+            accountType: user.accountType,
+            isAdmin: user.isAdmin,
+            isAdvertiser: user.isAdvertiser,
+            isBusiness: user.isBusiness,
+            totalPoints: user.totalPoints,
+            level: user.level,
+            levelEmoji: user.levelEmoji,
+            levelTitle: user.levelTitle,
+            levelLabel: user.levelLabel,
+            accountStatus: user.accountStatus,
+            isLoginRestricted: user.isLoginRestricted,
+            loginRestrictedUntil: user.loginRestrictedUntil,
+            isLoginRestrictionPermanent: user.isLoginRestrictionPermanent
+        } : null;
+
+        this.currentUser = persistedUser;
+
+        if (persistedUser) {
+            sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(persistedUser));
+            localStorage.removeItem(STORAGE_KEYS.USER);
+        } else {
+            sessionStorage.removeItem(STORAGE_KEYS.USER);
+            localStorage.removeItem(STORAGE_KEYS.USER);
+        }
+
         this.updateHeaderUI();
     },
     isAuthenticated() {
@@ -192,7 +248,9 @@ const Auth = {
     },
     logout() {
         localStorage.removeItem(STORAGE_KEYS.TOKEN);
+        sessionStorage.removeItem(STORAGE_KEYS.USER);
         localStorage.removeItem(STORAGE_KEYS.USER);
+        this.currentUser = null;
         this.updateHeaderUI();
         window.location.href = '/';
     },
@@ -245,6 +303,12 @@ const Auth = {
             if (navUser) navUser.classList.add('hidden');
             if (userNickname) {
                 userNickname.textContent = '';
+            }
+            if (adminLink) {
+                adminLink.classList.add('hidden');
+            }
+            if (typeof HeaderNotificationCenter !== 'undefined' && typeof HeaderNotificationCenter.teardown === 'function') {
+                HeaderNotificationCenter.teardown();
             }
         }
 
