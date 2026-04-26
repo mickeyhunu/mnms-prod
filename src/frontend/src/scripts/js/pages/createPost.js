@@ -69,6 +69,13 @@ async function setupBoardOptions() {
     isBusinessUser = Boolean(me?.isBusiness || me?.isAdvertiser || String(me?.role || '').toUpperCase() === 'BUSINESS');
     const isAdmin = Boolean(me?.isAdmin || String(me?.role || '').toUpperCase() === 'ADMIN');
 
+    if (!isAdmin) {
+        const eventOption = Array.from(boardTypeSelect.options).find((option) => option.value === 'EVENT');
+        if (eventOption) {
+            eventOption.remove();
+        }
+    }
+
     if (!isBusinessUser && !isAdmin) {
         const promotionOption = Array.from(boardTypeSelect.options).find((option) => option.value === 'PROMOTION');
         if (promotionOption) {

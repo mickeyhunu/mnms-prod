@@ -481,8 +481,8 @@ function renderPostDetail(post) {
     const authorElement = document.getElementById('post-author');
     const dateElement = document.getElementById('post-date');
 
-    const boardNameMap = { FREE: '자유게시판', ANON: '익명게시판', REVIEW: '후기게시판', STORY: '썰게시판', QUESTION: '질문게시판', PROMOTION: '홍보게시판' };
-    const boardTagMap = { FREE: '자유', ANON: '익명', REVIEW: '후기', STORY: '썰', QUESTION: '질문', PROMOTION: '홍보' };
+    const boardNameMap = { FREE: '자유게시판', ANON: '익명게시판', REVIEW: '후기게시판', STORY: '썰게시판', QUESTION: '질문게시판', EVENT: '이벤트게시판', PROMOTION: '홍보게시판' };
+    const boardTagMap = { FREE: '자유', ANON: '익명', REVIEW: '후기', STORY: '썰', QUESTION: '질문', EVENT: '이벤트', PROMOTION: '홍보' };
     const boardType = String(post.boardType || '').toUpperCase();
     currentPostBoardType = boardType;
     const isCurrentAuthor = post.isAuthor || isCurrentUserPostAuthor(post);

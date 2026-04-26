@@ -176,6 +176,7 @@ function getBoardLabel(boardType) {
         REVIEW: '후기',
         STORY: '썰',
         QUESTION: '질문',
+        EVENT: '이벤트',
         PROMOTION: '홍보'
     };
 
@@ -483,6 +484,7 @@ function initBoardTabs() {
             currentBoardType = tab.dataset.boardType || 'ALL';
             tabs.forEach((item) => item.classList.toggle('active', item === tab));
             closeTabsPanel();
+            setupCommunityActions();
             updateBestPostsVisibility();
             loadPosts(0);
         });
@@ -494,7 +496,10 @@ function setupCommunityActions() {
     if (!communityActions) return;
 
     const user = Auth.getUser();
-    if (user) {
+    const isAdmin = String(user?.role || '').toUpperCase() === 'ADMIN' || Boolean(user?.isAdmin);
+    const canWrite = Boolean(user) && (currentBoardType !== 'EVENT' || isAdmin);
+
+    if (canWrite) {
         showElement(communityActions);
     } else {
         hideElement(communityActions);

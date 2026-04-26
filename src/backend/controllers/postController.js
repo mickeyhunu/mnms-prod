@@ -16,6 +16,7 @@ const BOARD_TYPES = postModel.BOARD_TYPES || {
   REVIEW: 'REVIEW',
   STORY: 'STORY',
   QUESTION: 'QUESTION',
+  EVENT: 'EVENT',
   PROMOTION: 'PROMOTION'
 };
 
@@ -357,6 +358,9 @@ async function createPost(req, res, next) {
 
     const boardType = parseBoardType(req.body.boardType);
     const isAdmin = req.user.role === 'ADMIN';
+    if (!isAdmin && boardType === BOARD_TYPES.EVENT) {
+      return res.status(403).json({ message: '이벤트게시판은 관리자만 글을 작성할 수 있습니다.' });
+    }
     if (!isAdmin && !isBusinessUser(req.user) && boardType === BOARD_TYPES.PROMOTION) {
       return res.status(403).json({ message: '홍보게시판은 광고자 또는 관리자만 글을 작성할 수 있습니다.' });
     }
