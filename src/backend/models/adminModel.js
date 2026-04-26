@@ -174,6 +174,30 @@ async function updateUserByAdmin(userId, payload) {
   await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
 }
 
+async function adjustUserPointsByAdmin(userId, { amount, reason, actionType }) {
+  const pool = getPool();
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    if (actionType === 'ADMIN_ADJUST_ADD') {
+      await connection.query('UPDATE users SET total_points = total_points + ? WHERE id = ?', [amount, userId]);
+    } else {
+      await connection.query('UPDATE users SET total_points = GREATEST(total_points - ?, 0) WHERE id = ?', [amount, userId]);
+    }
+    await connection.query(
+      'INSERT INTO point_histories (user_id, action_type, points, reason) VALUES (?, ?, ?, ?)',
+      [userId, actionType, actionType === 'ADMIN_ADJUST_ADD' ? amount : -amount, reason]
+    );
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 async function deleteUser(userId) {
   const pool = getPool();
   await pool.query('DELETE FROM users WHERE id = ?', [userId]);
@@ -877,6 +901,7 @@ module.exports = {
   updateUserRole,
   updateUserMemberType,
   updateUserByAdmin,
+  adjustUserPointsByAdmin,
   deleteUser,
   listAds,
   listLiveAdsByStore,

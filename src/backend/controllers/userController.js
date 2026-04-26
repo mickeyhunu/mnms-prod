@@ -144,7 +144,9 @@ const POINT_ACTION_LABELS = {
   REVOKE_CREATE_REVIEW_BONUS: '후기 보너스 포인트 차감',
   REVOKE_CREATE_COMMENT: '댓글 삭제로 포인트 차감',
   REVOKE_LIKE_POST: '좋아요 취소로 포인트 차감',
-  REVOKE_RECEIVE_POST_LIKE: '받은 좋아요 취소로 포인트 차감'
+  REVOKE_RECEIVE_POST_LIKE: '받은 좋아요 취소로 포인트 차감',
+  ADMIN_ADJUST_ADD: '관리자 수동 적립',
+  ADMIN_ADJUST_DEDUCT: '관리자 수동 차감'
 };
 
 function formatPointRule(ruleKey, rule) {
@@ -432,6 +434,7 @@ async function myPointHistories(req, res, next) {
         actionType: row.actionType,
         actionLabel: POINT_ACTION_LABELS[row.actionType] || row.actionType,
         points: Number(row.points || 0),
+        reason: row.reason || '',
         createdAt: row.createdAt
       })),
       pointRuleGuide,
