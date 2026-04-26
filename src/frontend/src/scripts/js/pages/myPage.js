@@ -679,7 +679,9 @@ function formatPointActionLabel(actionType) {
         REVOKE_CREATE_REVIEW_BONUS: '후기 보너스 포인트 차감',
         REVOKE_CREATE_COMMENT: '댓글 삭제로 포인트 차감',
         REVOKE_LIKE_POST: '좋아요 취소로 포인트 차감',
-        REVOKE_RECEIVE_POST_LIKE: '받은 좋아요 취소로 포인트 차감'
+        REVOKE_RECEIVE_POST_LIKE: '받은 좋아요 취소로 포인트 차감',
+        ADMIN_ADJUST_ADD: '관리자 수동 적립',
+        ADMIN_ADJUST_DEDUCT: '관리자 수동 차감'
     };
 
     return labels[actionType] || actionType;
@@ -792,6 +794,7 @@ async function loadPointHistories(page = 1) {
                                         <div class="mypage-point-history-row">
                                             <div>
                                                 <strong>${sanitizeHTML(item.actionLabel || formatPointActionLabel(item.actionType || ''))}</strong>
+                                                ${item.reason ? `<p>${sanitizeHTML(item.reason)}</p>` : ''}
                                                 <p>${sanitizeHTML(formatDate(item.createdAt))}</p>
                                             </div>
                                             <span class="point-change ${pointClass}">${pointText}</span>
