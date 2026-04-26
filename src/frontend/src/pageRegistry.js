@@ -577,6 +577,7 @@ const pageRegistry = {
                         <div style="margin-bottom:8px;">
                             <label for="support-form-board-type" class="form-label">노출 게시판</label>
                             <select id="support-form-board-type" class="form-control" style="max-width:260px;">
+                                <option value="SUPPORT_ONLY">커뮤니티 미노출 (고객센터 공지사항만)</option>
                                 <option value="FREE">자유게시판</option>
                                 <option value="ANON">익명게시판</option>
                                 <option value="REVIEW">후기게시판</option>
