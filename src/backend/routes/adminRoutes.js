@@ -176,7 +176,9 @@ router.put('/users/:id', async (req, res, next) => {
     const phone = String(req.body?.phone || '').trim();
     const role = String(req.body?.role || '').toUpperCase();
     const memberType = String(req.body?.memberType || '').toUpperCase();
-    const totalPoints = Number(req.body?.totalPoints);
+    const pointAdjustmentType = String(req.body?.pointAdjustmentType || 'NONE').toUpperCase();
+    const pointAdjustmentAmount = Number(req.body?.pointAdjustmentAmount || 0);
+    const pointAdjustmentReason = String(req.body?.pointAdjustmentReason || '').trim();
     const smsConsent = Boolean(req.body?.smsConsent);
     const accountStatus = String(req.body?.accountStatus || LOGIN_STATUS.ACTIVE).toUpperCase();
     const isLoginRestrictionPermanent = Boolean(req.body?.isLoginRestrictionPermanent);
@@ -213,8 +215,24 @@ router.put('/users/:id', async (req, res, next) => {
       return res.status(400).json({ message: '유효하지 않은 회원 구분입니다.' });
     }
 
-    if (!Number.isFinite(totalPoints) || totalPoints < 0 || !Number.isInteger(totalPoints)) {
-      return res.status(400).json({ message: '포인트는 0 이상의 정수만 입력할 수 있습니다.' });
+    if (!['NONE', 'ADD', 'DEDUCT'].includes(pointAdjustmentType)) {
+      return res.status(400).json({ message: '유효하지 않은 포인트 처리 유형입니다.' });
+    }
+
+    if (!Number.isInteger(pointAdjustmentAmount) || pointAdjustmentAmount < 0) {
+      return res.status(400).json({ message: '포인트 처리 수량은 0 이상의 정수만 입력할 수 있습니다.' });
+    }
+
+    if (pointAdjustmentType !== 'NONE' && pointAdjustmentAmount < 1) {
+      return res.status(400).json({ message: '포인트를 적립/차감하려면 수량을 1 이상 입력해주세요.' });
+    }
+
+    if (pointAdjustmentType === 'NONE' && pointAdjustmentAmount > 0) {
+      return res.status(400).json({ message: '포인트 처리 유형을 선택해주세요.' });
+    }
+
+    if (pointAdjustmentType !== 'NONE' && (!pointAdjustmentReason || pointAdjustmentReason.length > 255)) {
+      return res.status(400).json({ message: '지급 사유는 1자 이상 255자 이하로 입력해주세요.' });
     }
 
     if (![LOGIN_STATUS.ACTIVE, LOGIN_STATUS.SUSPENDED].includes(accountStatus)) {
@@ -242,8 +260,7 @@ router.put('/users/:id', async (req, res, next) => {
       login_restricted_until: accountStatus === LOGIN_STATUS.SUSPENDED && !isLoginRestrictionPermanent
         ? new Date(Date.now() + loginRestrictionDays * 24 * 60 * 60 * 1000)
         : null,
-      is_login_restriction_permanent: accountStatus === LOGIN_STATUS.SUSPENDED && isLoginRestrictionPermanent,
-      total_points: totalPoints
+      is_login_restriction_permanent: accountStatus === LOGIN_STATUS.SUSPENDED && isLoginRestrictionPermanent
     };
 
     if (password) {
@@ -251,6 +268,13 @@ router.put('/users/:id', async (req, res, next) => {
     }
 
     await adminModel.updateUserByAdmin(id, updates);
+    if (pointAdjustmentType !== 'NONE' && pointAdjustmentAmount > 0) {
+      await adminModel.adjustUserPointsByAdmin(id, {
+        amount: pointAdjustmentAmount,
+        reason: pointAdjustmentReason,
+        actionType: pointAdjustmentType === 'ADD' ? 'ADMIN_ADJUST_ADD' : 'ADMIN_ADJUST_DEDUCT'
+      });
+    }
     const updatedUser = await adminModel.getUserDetail(id);
 
     res.json({

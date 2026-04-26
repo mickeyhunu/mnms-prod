@@ -143,7 +143,7 @@ async function getUserPointHistories(userId, { limit = 20, page = 1 } = {}) {
   const totalCount = Number(countRows[0]?.totalCount || 0);
 
   const [rows] = await pool.query(
-    `SELECT id, action_type AS actionType, points, created_at AS createdAt
+    `SELECT id, action_type AS actionType, points, reason, created_at AS createdAt
      FROM point_histories
      WHERE user_id = ?
      ORDER BY created_at DESC, id DESC

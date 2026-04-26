@@ -1319,6 +1319,9 @@ function fillUserEditForm(user) {
     document.getElementById('admin-user-phone').value = formatPhoneNumber(user.phone || '');
     document.getElementById('admin-user-sms-consent').checked = Boolean(user.smsConsent);
     document.getElementById('admin-user-total-points').value = Number(user.totalPoints || 0);
+    document.getElementById('admin-user-point-adjustment-type').value = 'NONE';
+    document.getElementById('admin-user-point-adjustment-amount').value = '0';
+    document.getElementById('admin-user-point-adjustment-reason').value = '';
     const roleSelect = document.getElementById('admin-user-role');
     if (roleSelect) {
         roleSelect.value = user.role || 'MEMBER';
@@ -1384,7 +1387,9 @@ async function saveUserDetail() {
     const password = document.getElementById('admin-user-password')?.value?.trim() || '';
     const passwordConfirm = document.getElementById('admin-user-password-confirm')?.value?.trim() || '';
     const phone = formatPhoneNumber(document.getElementById('admin-user-phone')?.value?.trim() || '');
-    const totalPoints = Number.parseInt(document.getElementById('admin-user-total-points')?.value || '0', 10);
+    const pointAdjustmentType = document.getElementById('admin-user-point-adjustment-type')?.value || 'NONE';
+    const pointAdjustmentAmount = Number.parseInt(document.getElementById('admin-user-point-adjustment-amount')?.value || '0', 10);
+    const pointAdjustmentReason = document.getElementById('admin-user-point-adjustment-reason')?.value?.trim() || '';
     const role = document.getElementById('admin-user-role')?.value || 'MEMBER';
     const memberType = document.getElementById('admin-user-member-type')?.value || 'MEMBER';
     const smsConsent = document.getElementById('admin-user-sms-consent')?.checked || false;
@@ -1420,8 +1425,23 @@ async function saveUserDetail() {
         return;
     }
 
-    if (!Number.isInteger(totalPoints) || totalPoints < 0) {
-        setAdminUserHelpMessage('포인트는 0 이상의 정수만 입력할 수 있습니다.', '#dc3545');
+    if (!Number.isInteger(pointAdjustmentAmount) || pointAdjustmentAmount < 0) {
+        setAdminUserHelpMessage('포인트 처리 수량은 0 이상의 정수만 입력할 수 있습니다.', '#dc3545');
+        return;
+    }
+
+    if (pointAdjustmentType !== 'NONE' && pointAdjustmentAmount < 1) {
+        setAdminUserHelpMessage('포인트를 적립/차감하려면 수량을 1 이상 입력해주세요.', '#dc3545');
+        return;
+    }
+
+    if (pointAdjustmentType === 'NONE' && pointAdjustmentAmount > 0) {
+        setAdminUserHelpMessage('포인트 처리 유형을 선택해주세요.', '#dc3545');
+        return;
+    }
+
+    if (pointAdjustmentType !== 'NONE' && (!pointAdjustmentReason || pointAdjustmentReason.length > 255)) {
+        setAdminUserHelpMessage('지급 사유는 1자 이상 255자 이하로 입력해주세요.', '#dc3545');
         return;
     }
 
@@ -1441,7 +1461,9 @@ async function saveUserDetail() {
     const payload = {
         nickname,
         phone,
-        totalPoints,
+        pointAdjustmentType,
+        pointAdjustmentAmount,
+        pointAdjustmentReason,
         role,
         memberType,
         accountStatus,
