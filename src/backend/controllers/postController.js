@@ -70,7 +70,8 @@ function parseNoticeTargetBoards(value, fallbackBoardType = BOARD_TYPES.FREE) {
   const values = Array.isArray(value) ? value : (typeof value === 'string' ? value.split(',') : []);
   const normalized = Array.from(new Set(values
     .map((item) => parseBoardType(item))
-    .filter((item) => item !== 'ALL')));
+    .filter((item) => item !== 'ALL')))
+    .slice(0, 1);
 
   if (normalized.length) return normalized;
   return [parseBoardType(fallbackBoardType)];

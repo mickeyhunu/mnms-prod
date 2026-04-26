@@ -86,8 +86,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
   const boardFilter = normalizeBoardFilter(options.boardType);
 
   const whereConditions = [
-    'p.is_deleted = 0',
-    "(p.is_notice = 0 OR (p.is_notice = 1 AND p.notice_type = 'IMPORTANT' AND p.is_pinned = 1))"
+    'p.is_deleted = 0'
   ];
   const whereParams = [];
 
