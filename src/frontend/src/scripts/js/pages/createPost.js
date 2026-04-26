@@ -5,7 +5,6 @@ let isSubmitting = false;
 let isEditMode = false;
 let editingPostId = null;
 let existingImageUrls = [];
-let isAdminUser = false;
 let isBusinessUser = false;
 let businessPromotionFixedTitle = '';
 
@@ -25,7 +24,6 @@ async function initCreatePost() {
     await setupBoardOptions();
     await setupBusinessPromotionTitle();
     setupModeUI();
-    await setupAdminNoticeOptions();
     validateForm();
 
     if (isEditMode) {
@@ -155,41 +153,6 @@ async function setupBusinessPromotionTitle() {
 }
 
 
-
-async function setupAdminNoticeOptions() {
-    const noticeGroup = document.getElementById('notice-options-group');
-    const isNoticeInput = document.getElementById('is-notice');
-    const noticeTargetGroup = document.getElementById('notice-target-group');
-
-    if (!noticeGroup || !isNoticeInput || !noticeTargetGroup) return;
-
-    try {
-        const me = await APIClient.get('/auth/me');
-        isAdminUser = Boolean(me?.isAdmin);
-    } catch (error) {
-        isAdminUser = false;
-    }
-
-    if (!isAdminUser) return;
-
-    noticeGroup.classList.remove('hidden');
-
-    isNoticeInput.addEventListener('change', () => {
-        noticeTargetGroup.classList.toggle('hidden', !isNoticeInput.checked);
-    });
-}
-
-function getSelectedNoticeTargetBoards() {
-    const checkboxes = Array.from(document.querySelectorAll('input[name="notice-target-board"]:checked'));
-    return checkboxes.map((checkbox) => checkbox.value);
-}
-
-function setNoticeTargetBoards(boards = []) {
-    const selectedBoard = String(Array.isArray(boards) ? boards[0] : boards || '').toUpperCase();
-    document.querySelectorAll('input[name="notice-target-board"]').forEach((checkbox) => {
-        checkbox.checked = selectedBoard === String(checkbox.value || '').toUpperCase();
-    });
-}
 
 function setupEventListeners() {
     const postForm = document.getElementById('post-form');
@@ -365,15 +328,6 @@ async function loadPostForEdit() {
         updateCharCount('title', 255);
         updateCharCount('content', 1000);
 
-        const isNoticeInput = document.getElementById('is-notice');
-        const noticeTargetGroup = document.getElementById('notice-target-group');
-        if (isAdminUser && isNoticeInput && noticeTargetGroup) {
-            const isNotice = Boolean(post.isNotice);
-            isNoticeInput.checked = isNotice;
-            noticeTargetGroup.classList.toggle('hidden', !isNotice);
-            setNoticeTargetBoards(Array.isArray(post.noticeTargetBoards) ? post.noticeTargetBoards : []);
-        }
-
         validateForm();
     } catch (error) {
         console.error('수정할 게시글 로드 실패:', error);
@@ -396,8 +350,8 @@ async function handleSubmit(event) {
     const boardType = isBusinessUser
         ? 'PROMOTION'
         : (document.getElementById('board-type')?.value || 'FREE');
-    const isNotice = Boolean(document.getElementById('is-notice')?.checked) && isAdminUser;
-    const noticeTargetBoards = isNotice ? getSelectedNoticeTargetBoards() : [];
+    const isNotice = false;
+    const noticeTargetBoards = [];
 
     if (!titleValue || !contentValue) {
         alert('제목과 내용을 모두 입력해주세요.');
@@ -425,11 +379,6 @@ async function handleSubmit(event) {
 
     try {
         const imageUrls = await readSelectedImagesAsDataUrls();
-        if (isNotice && noticeTargetBoards.length === 0) {
-            alert('공지 노출 게시판을 1개 이상 선택해주세요.');
-            return;
-        }
-
         const payload = {
             title: titleValue,
             content: contentValue,
