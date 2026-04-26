@@ -1787,8 +1787,8 @@ async function handleAdminTableActionClick(event) {
     const action = actionElement.dataset.adminAction;
     const targetIdRaw = actionElement.dataset.targetId;
     const targetId = Number.parseInt(targetIdRaw, 10);
-    const targetType = actionElement.dataset.targetType;
-    const sourceType = actionElement.dataset.sourceType || 'SUPPORT';
+    const targetType = String(actionElement.dataset.targetType || '').trim().toLowerCase();
+    const sourceType = String(actionElement.dataset.sourceType || 'SUPPORT').trim().toUpperCase();
     const entryId = actionElement.dataset.entryId;
     const entryName = actionElement.dataset.entryName || '';
 
@@ -2083,6 +2083,10 @@ function openAdminActionModal(target) {
         if (title) title.textContent = '엔트리 삭제';
         if (message) message.textContent = `"${target.entryName || '선택한 엔트리'}" 항목을 삭제하시겠습니까?`;
         if (helpText) helpText.textContent = '삭제된 엔트리 이름은 복구할 수 없습니다.';
+    } else if (target.type === 'support') {
+        if (title) title.textContent = '공지/FAQ 삭제';
+        if (message) message.textContent = '이 글을 삭제하시겠습니까?';
+        if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
     } else {
         if (title) title.textContent = '공지/FAQ 삭제';
         if (message) message.textContent = '이 글을 삭제하시겠습니까?';
@@ -2148,10 +2152,12 @@ async function confirmDelete() {
             if (editingEntryId === adminActionTarget.entryId) resetEntryEditor();
             closeDeleteModal();
             await loadEntries();
-        } else {
+        } else if (adminActionTarget.type === 'support') {
             await APIClient.delete(`/admin/support/${adminActionTarget.id}?sourceType=${encodeURIComponent(adminActionTarget.sourceType || 'SUPPORT')}`);
             closeDeleteModal();
             await loadSupportArticles();
+        } else {
+            throw new Error('삭제 대상 유형을 확인할 수 없습니다.');
         }
     } catch (error) {
         const fallbackMessage = adminActionTarget.action === 'toggle-hide' ? '가리기 설정 변경에 실패했습니다.' : '삭제에 실패했습니다.';
