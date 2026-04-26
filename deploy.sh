@@ -13,6 +13,8 @@ sudo systemctl enable nginx
 sudo systemctl start nginx
 
 sudo nano /etc/nginx/sites-available/midnightmens  --- nginx reverse proxy 설정
+sudo nano /etc/nginx/sites-available/midnightmens-redirect
+
 
 sudo ln -s /etc/nginx/sites-available/midnightmens /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx --- 적용
