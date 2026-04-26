@@ -185,9 +185,9 @@ function getSelectedNoticeTargetBoards() {
 }
 
 function setNoticeTargetBoards(boards = []) {
-    const normalized = new Set(boards.map((board) => String(board || '').toUpperCase()));
+    const selectedBoard = String(Array.isArray(boards) ? boards[0] : boards || '').toUpperCase();
     document.querySelectorAll('input[name="notice-target-board"]').forEach((checkbox) => {
-        checkbox.checked = normalized.has(String(checkbox.value || '').toUpperCase());
+        checkbox.checked = selectedBoard === String(checkbox.value || '').toUpperCase();
     });
 }
 
