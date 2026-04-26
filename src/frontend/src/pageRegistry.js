@@ -493,25 +493,6 @@ const pageRegistry = {
                     </select>
                     </div>
 
-                    <div class="form-group hidden" id="notice-options-group">
-                        <label class="form-label">관리자 공지 옵션</label>
-                        <div style="display:flex;flex-direction:column;gap:8px;">
-                            <label><input type="checkbox" id="is-notice"> 공지로 등록</label>
-                            <div id="notice-target-group" class="hidden" style="padding:10px;border:1px solid #e8e8e8;border-radius:8px;">
-                                <small class="text-muted" style="display:block;margin-bottom:6px;">필독/공지 노출 게시판</small>
-                                <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                                    <label><input type="radio" name="notice-target-board" value="FREE"> 자유</label>
-                                    <label><input type="radio" name="notice-target-board" value="ANON"> 익명</label>
-                                    <label><input type="radio" name="notice-target-board" value="REVIEW"> 후기</label>
-                                    <label><input type="radio" name="notice-target-board" value="STORY"> 썰</label>
-                                    <label><input type="radio" name="notice-target-board" value="QUESTION"> 질문</label>
-                                    <label><input type="radio" name="notice-target-board" value="EVENT"> 이벤트</label>
-                                    <label><input type="radio" name="notice-target-board" value="PROMOTION"> 홍보</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
                     <div class="form-group">
                         <label for="title" class="form-label">제목</label>
                         <input type="text" id="title" name="title" class="form-control" placeholder="제목을 입력하세요" maxlength="255" required>
