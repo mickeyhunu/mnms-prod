@@ -4,6 +4,7 @@
 let isSubmitting = false;
 let editingTarget = null;
 const NOT_FOUND_PATH = '/404';
+const SUPPORT_ONLY_BOARD_TYPE = 'SUPPORT_ONLY';
 
 function initSupportCreatePage() {
     if (!Auth.isAuthenticated()) {
@@ -67,7 +68,22 @@ function syncBoardTypeByCategory(category) {
     const isNotice = String(category || '').toUpperCase() === 'NOTICE';
     boardTypeEl.disabled = !isNotice;
     if (!isNotice) {
-        boardTypeEl.value = 'FREE';
+        boardTypeEl.value = SUPPORT_ONLY_BOARD_TYPE;
+    }
+}
+
+function syncPinnedOptionByBoardSelection(category) {
+    const pinnedInput = document.getElementById('support-form-is-pinned');
+    const boardTypeEl = document.getElementById('support-form-board-type');
+    if (!pinnedInput || !boardTypeEl) return;
+
+    const isNotice = String(category || '').toUpperCase() === 'NOTICE';
+    const isSupportOnly = String(boardTypeEl.value || '').toUpperCase() === SUPPORT_ONLY_BOARD_TYPE;
+    const shouldDisablePin = !isNotice || isSupportOnly;
+
+    pinnedInput.disabled = shouldDisablePin;
+    if (shouldDisablePin) {
+        pinnedInput.checked = false;
     }
 }
 
@@ -77,6 +93,7 @@ function applyInitialCategory() {
     if (categorySelect) categorySelect.value = category;
     togglePinOptions(category);
     syncBoardTypeByCategory(category);
+    syncPinnedOptionByBoardSelection(category);
     applyPageTitle(category, false);
 }
 
@@ -110,13 +127,18 @@ async function loadEditTargetIfNeeded() {
         if (titleInput) titleInput.value = article.title || '';
         if (contentInput) contentInput.value = article.content || '';
         if (pinnedInput) pinnedInput.checked = Boolean(article.isPinned) && String(article.noticeType || '').toUpperCase() === 'IMPORTANT';
-        if (boardTypeInput) boardTypeInput.value = String(article.boardType || 'FREE').toUpperCase();
+        if (boardTypeInput) {
+            boardTypeInput.value = sourceType === 'POST'
+                ? String(article.boardType || 'FREE').toUpperCase()
+                : SUPPORT_ONLY_BOARD_TYPE;
+        }
 
         const submitBtn = document.getElementById('submit-btn');
         if (submitBtn) submitBtn.textContent = '수정';
 
         togglePinOptions(category);
         syncBoardTypeByCategory(category);
+        syncPinnedOptionByBoardSelection(category);
         applyPageTitle(category, true);
         validateSupportForm();
     } catch (error) {
@@ -143,6 +165,7 @@ async function fillUserInfo() {
 function bindSupportCreateEvents() {
     const form = document.getElementById('support-post-form');
     const categoryInput = document.getElementById('support-form-category');
+    const boardTypeInput = document.getElementById('support-form-board-type');
     const titleInput = document.getElementById('title');
     const contentInput = document.getElementById('content');
 
@@ -151,6 +174,7 @@ function bindSupportCreateEvents() {
         const category = String(categoryInput.value || 'NOTICE').toUpperCase();
         togglePinOptions(category);
         syncBoardTypeByCategory(category);
+        syncPinnedOptionByBoardSelection(category);
 
         if (category !== 'NOTICE') {
             const pinnedInput = document.getElementById('support-form-is-pinned');
@@ -158,6 +182,10 @@ function bindSupportCreateEvents() {
         }
 
         applyPageTitle(category, Boolean(editingTarget));
+    });
+    boardTypeInput?.addEventListener('change', () => {
+        const category = String(categoryInput?.value || 'NOTICE').toUpperCase();
+        syncPinnedOptionByBoardSelection(category);
     });
     titleInput?.addEventListener('input', validateSupportForm);
     contentInput?.addEventListener('input', validateSupportForm);
@@ -177,8 +205,9 @@ async function submitSupportPost(event) {
     if (isSubmitting) return;
 
     const category = document.getElementById('support-form-category')?.value || 'NOTICE';
-    const isPinned = Boolean(document.getElementById('support-form-is-pinned')?.checked);
-    const boardType = document.getElementById('support-form-board-type')?.value || 'FREE';
+    const boardType = document.getElementById('support-form-board-type')?.value || SUPPORT_ONLY_BOARD_TYPE;
+    const isSupportOnlyNotice = category === 'NOTICE' && String(boardType).toUpperCase() === SUPPORT_ONLY_BOARD_TYPE;
+    const isPinned = isSupportOnlyNotice ? false : Boolean(document.getElementById('support-form-is-pinned')?.checked);
     const noticeType = isPinned ? 'IMPORTANT' : 'NOTICE';
     const title = document.getElementById('title')?.value?.trim() || '';
     const content = document.getElementById('content')?.value?.trim() || '';
@@ -205,7 +234,11 @@ async function submitSupportPost(event) {
             category,
             title,
             content,
-            ...(category === 'NOTICE' ? { noticeType, isPinned, boardType } : {})
+            ...(category === 'NOTICE'
+                ? (isSupportOnlyNotice
+                    ? { sourceType: 'SUPPORT' }
+                    : { sourceType: 'POST', noticeType, isPinned, boardType })
+                : {})
         };
 
         if (editingTarget) {
