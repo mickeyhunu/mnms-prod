@@ -60,6 +60,7 @@ const postDetailTemplate = `
                                 <button type="button" class="menu-item" id="report-btn">신고하기</button>
                                 <button type="button" class="menu-item hidden" id="edit-btn">수정</button>
                                 <button type="button" class="menu-item danger hidden" id="delete-btn">삭제</button>
+                                <span class="menu-empty hidden" id="post-more-empty">없음</span>
                             </div>
                         </div>
                     </div>
