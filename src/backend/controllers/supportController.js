@@ -205,6 +205,51 @@ async function updateArticle(req, res, next) {
     if (!id) return res.status(400).json({ message: '유효하지 않은 글 ID입니다.' });
 
     const sourceType = supportModel.normalizeSourceType(req.query.sourceType || req.body.sourceType);
+    const desiredSourceType = supportModel.normalizeSourceType(req.body.desiredSourceType) || sourceType;
+
+    if (sourceType !== desiredSourceType) {
+      if (sourceType === supportModel.SOURCE_TYPES.SUPPORT && desiredSourceType === supportModel.SOURCE_TYPES.POST) {
+        const article = await supportModel.findArticleById(id);
+        if (!article || article.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
+
+        const category = supportModel.normalizeCategory(req.body.category) || article.category;
+        if (category !== supportModel.SUPPORT_CATEGORIES.NOTICE) {
+          return res.status(400).json({ message: 'FAQ는 커뮤니티 공지로 전환할 수 없습니다.' });
+        }
+
+        const title = String(req.body.title ?? article.title).trim();
+        const content = String(req.body.content ?? article.content).trim();
+        const noticeType = String(req.body.noticeType || 'NOTICE').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE';
+        const isPinned = Boolean(req.body.isPinned);
+        const boardType = parseBoardType(req.body.boardType);
+        if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
+
+        await supportModel.createNoticePost({
+          title,
+          content,
+          userId: req.user.id,
+          noticeType,
+          isPinned,
+          boardType
+        });
+        await supportModel.deleteArticle(id);
+        return res.json({ success: true });
+      }
+
+      if (sourceType === supportModel.SOURCE_TYPES.POST && desiredSourceType === supportModel.SOURCE_TYPES.SUPPORT) {
+        const post = await supportModel.findNoticePostById(id);
+        if (!post || post.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
+
+        const category = supportModel.normalizeCategory(req.body.category) || supportModel.SUPPORT_CATEGORIES.NOTICE;
+        const title = String(req.body.title ?? post.title).trim();
+        const content = String(req.body.content ?? post.content).trim();
+        if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
+
+        await supportModel.createArticle({ category, title, content, userId: req.user.id });
+        await supportModel.deleteNoticePost(id);
+        return res.json({ success: true });
+      }
+    }
 
     if (sourceType === supportModel.SOURCE_TYPES.POST) {
       const post = await supportModel.findNoticePostById(id);
@@ -242,7 +287,25 @@ async function deleteArticle(req, res, next) {
     const id = parseId(req.params.id);
     if (!id) return res.status(400).json({ message: '유효하지 않은 글 ID입니다.' });
 
-    const sourceType = supportModel.normalizeSourceType(req.query.sourceType);
+    const sourceType = supportModel.normalizeSourceType(req.query.sourceType || req.body?.sourceType);
+    if (!sourceType) {
+      const [post, article] = await Promise.all([
+        supportModel.findNoticePostById(id),
+        supportModel.findArticleById(id)
+      ]);
+
+      if (post && !post.is_deleted) {
+        await supportModel.deleteNoticePost(id);
+        return res.json({ success: true });
+      }
+
+      if (article && !article.is_deleted) {
+        await supportModel.deleteArticle(id);
+        return res.json({ success: true });
+      }
+
+      return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
+    }
     if (sourceType === supportModel.SOURCE_TYPES.POST) {
       const post = await supportModel.findNoticePostById(id);
       if (!post || post.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });

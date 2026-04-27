@@ -6,6 +6,10 @@ let editingTarget = null;
 const NOT_FOUND_PATH = '/404';
 const SUPPORT_ONLY_BOARD_TYPE = 'SUPPORT_ONLY';
 
+function normalizeSourceType(value, fallback = 'SUPPORT') {
+    return String(value || '').toUpperCase() === 'POST' ? 'POST' : fallback;
+}
+
 function initSupportCreatePage() {
     if (!Auth.isAuthenticated()) {
         window.location.href = '/login';
@@ -108,7 +112,7 @@ async function loadEditTargetIfNeeded() {
     const targetId = Number.parseInt(params.get('id') || '', 10);
     if (!Number.isInteger(targetId)) return;
 
-    const sourceType = String(params.get('sourceType') || 'SUPPORT').toUpperCase() === 'POST' ? 'POST' : 'SUPPORT';
+    const sourceType = normalizeSourceType(params.get('sourceType'));
 
     try {
         const article = await APIClient.get(`/admin/support/article/${targetId}`, { sourceType });
@@ -242,9 +246,14 @@ async function submitSupportPost(event) {
         };
 
         if (editingTarget) {
+            const desiredSourceType = category === 'NOTICE'
+                ? (isSupportOnlyNotice ? 'SUPPORT' : 'POST')
+                : 'SUPPORT';
+
             await APIClient.put(`/admin/support/${editingTarget.id}?sourceType=${encodeURIComponent(editingTarget.sourceType)}`, {
                 ...payload,
-                sourceType: editingTarget.sourceType
+                sourceType: editingTarget.sourceType,
+                desiredSourceType
             });
             alert('공지/FAQ 글이 수정되었습니다.');
         } else {
