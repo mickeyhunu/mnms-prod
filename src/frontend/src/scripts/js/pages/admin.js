@@ -1059,16 +1059,7 @@ function renderSupportTable() {
 }
 
 function resolveSupportSourceType(article = {}) {
-    const explicitSourceType = String(article.sourceType || '').trim().toUpperCase();
-    if (explicitSourceType === 'POST' || explicitSourceType === 'SUPPORT') {
-        return explicitSourceType;
-    }
-
-    if (String(article.category || '').toUpperCase() === 'FAQ') {
-        return 'SUPPORT';
-    }
-
-    return Number(article.isNotice || article.is_notice) > 0 ? 'POST' : 'SUPPORT';
+    return 'SUPPORT';
 }
 
 function bindSupportActionButtons(container) {
@@ -1769,30 +1760,11 @@ async function loadSupportArticles() {
 }
 
 async function fetchSupportArticles() {
-    if (currentSupportCategory !== 'NOTICE') {
-        const response = await APIClient.get('/admin/support', {
-            category: currentSupportCategory,
-            sourceType: 'SUPPORT'
-        });
-        return response.content || [];
-    }
-
-    const [postResponse, supportResponse] = await Promise.all([
-        APIClient.get('/admin/support', { category: 'NOTICE', sourceType: 'POST' }),
-        APIClient.get('/admin/support', { category: 'NOTICE', sourceType: 'SUPPORT' })
-    ]);
-
-    const merged = [...(postResponse.content || []), ...(supportResponse.content || [])];
-    return merged.sort((a, b) => {
-        const pinnedGap = Number(b.isPinned || 0) - Number(a.isPinned || 0);
-        if (pinnedGap !== 0) return pinnedGap;
-
-        const timeA = new Date(a.createdAt || a.created_at || 0).getTime();
-        const timeB = new Date(b.createdAt || b.created_at || 0).getTime();
-        if (timeA !== timeB) return timeB - timeA;
-
-        return Number(b.id || 0) - Number(a.id || 0);
+    const response = await APIClient.get('/admin/support', {
+        category: currentSupportCategory,
+        sourceType: 'SUPPORT'
     });
+    return response.content || [];
 }
 
 async function openSupportModal(id = null, sourceType = 'SUPPORT') {
@@ -1937,7 +1909,7 @@ async function saveSupportArticle() {
         if (supportEditTarget) {
             await APIClient.put(`/admin/support/${supportEditTarget.id}?sourceType=${encodeURIComponent(supportEditTarget.sourceType)}`, { category, title, content, noticeType, isPinned, sourceType: supportEditTarget.sourceType });
         } else {
-            await APIClient.post('/admin/support', { category, title, content, noticeType, isPinned, sourceType: category === 'NOTICE' ? 'POST' : 'SUPPORT' });
+            await APIClient.post('/admin/support', { category, title, content, noticeType, isPinned, sourceType: 'SUPPORT' });
         }
 
         currentSupportCategory = category;
@@ -2221,21 +2193,7 @@ async function confirmDelete() {
             await loadEntries();
         } else if (adminActionTarget.type === 'support') {
             const primarySourceType = String(adminActionTarget.sourceType || 'SUPPORT').trim().toUpperCase();
-            const fallbackSourceType = primarySourceType === 'POST' ? 'SUPPORT' : 'POST';
-            const canRetryWithFallback = (error) => [400, 404].includes(Number(error?.status));
-
-            try {
-                await APIClient.delete(`/admin/support/${adminActionTarget.id}?sourceType=${encodeURIComponent(primarySourceType)}`);
-            } catch (primaryError) {
-                if (!canRetryWithFallback(primaryError)) throw primaryError;
-
-                try {
-                    await APIClient.delete(`/admin/support/${adminActionTarget.id}?sourceType=${encodeURIComponent(fallbackSourceType)}`);
-                } catch (fallbackError) {
-                    if (Number(fallbackError?.status) === 404 && Number(primaryError?.status) !== 404) throw primaryError;
-                    throw fallbackError;
-                }
-            }
+            await APIClient.delete(`/admin/support/${adminActionTarget.id}?sourceType=${encodeURIComponent(primarySourceType)}`);
             closeDeleteModal();
             await loadSupportArticles();
         } else {

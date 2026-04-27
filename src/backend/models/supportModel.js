@@ -9,18 +9,7 @@ const SUPPORT_CATEGORIES = {
 };
 
 const SOURCE_TYPES = {
-  SUPPORT: 'SUPPORT',
-  POST: 'POST'
-};
-
-const BOARD_TYPES = {
-  FREE: 'FREE',
-  ANON: 'ANON',
-  REVIEW: 'REVIEW',
-  STORY: 'STORY',
-  QUESTION: 'QUESTION',
-  EVENT: 'EVENT',
-  PROMOTION: 'PROMOTION'
+  SUPPORT: 'SUPPORT'
 };
 
 const INQUIRY_STATUSES = {
@@ -59,11 +48,6 @@ function normalizeSourceType(sourceType) {
   return Object.values(SOURCE_TYPES).includes(normalized) ? normalized : null;
 }
 
-function normalizeBoardType(boardType) {
-  const normalized = String(boardType || '').toUpperCase();
-  return Object.values(BOARD_TYPES).includes(normalized) ? normalized : BOARD_TYPES.FREE;
-}
-
 
 function normalizeAttachmentUrls(attachmentUrls) {
   if (!Array.isArray(attachmentUrls)) return [];
@@ -97,27 +81,8 @@ async function listArticles(category, includeDeleted = false, { sourceType = nul
   if (!normalizedCategory) return [];
 
   const normalizedSourceType = normalizeSourceType(sourceType);
-  if (normalizedSourceType === SOURCE_TYPES.POST && normalizedCategory !== SUPPORT_CATEGORIES.NOTICE) {
+  if (normalizedSourceType && normalizedSourceType !== SOURCE_TYPES.SUPPORT) {
     return [];
-  }
-
-  if (normalizedSourceType === SOURCE_TYPES.POST) {
-    const [rows] = await pool.query(
-      `SELECT p.id, p.id AS sourceId, 'POST' AS sourceType,
-              'NOTICE' AS category, p.title, p.content,
-              p.user_id AS createdBy, p.user_id AS updatedBy,
-              p.board_type AS boardType,
-              p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
-              p.created_at AS createdAt, p.updated_at AS updatedAt,
-              COALESCE(u.nickname, '관리자') AS createdByNickname,
-              COALESCE(u.nickname, '관리자') AS updatedByNickname
-       FROM posts p
-       LEFT JOIN users u ON u.id = p.user_id
-       WHERE p.is_notice = 1
-         AND p.is_deleted = 0
-       ORDER BY p.is_pinned DESC, p.created_at DESC, p.id DESC`
-    );
-    return rows;
   }
 
   const whereDeleted = includeDeleted ? '' : 'AND a.is_deleted = 0';
@@ -165,27 +130,6 @@ async function findPublicArticleDetailById(id) {
   return rows[0] || null;
 }
 
-async function findPublicNoticePostDetailById(id) {
-  const pool = getPool();
-  const [rows] = await pool.query(
-    `SELECT p.id, 'NOTICE' AS category, p.title, p.content,
-            p.user_id AS createdBy, p.user_id AS updatedBy,
-            p.board_type AS boardType,
-            p.created_at AS createdAt, p.updated_at AS updatedAt,
-            COALESCE(u.nickname, '운영팀') AS createdByNickname,
-            COALESCE(u.nickname, '운영팀') AS updatedByNickname,
-            p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned
-     FROM posts p
-     LEFT JOIN users u ON u.id = p.user_id
-     WHERE p.id = ?
-       AND p.is_notice = 1
-       AND p.is_deleted = 0
-     LIMIT 1`,
-    [id]
-  );
-  return rows[0] || null;
-}
-
 async function createArticle({ category, title, content, userId }) {
   const pool = getPool();
   const normalizedCategory = normalizeCategory(category);
@@ -210,53 +154,6 @@ async function deleteArticle(id) {
   await pool.query('UPDATE support_articles SET is_deleted = 1 WHERE id = ?', [id]);
 }
 
-async function createNoticePost({ title, content, userId, noticeType = 'NOTICE', isPinned = false, boardType = BOARD_TYPES.FREE }) {
-  const pool = getPool();
-  const normalizedNoticeType = String(noticeType || '').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE';
-  const normalizedBoardType = normalizeBoardType(boardType);
-  const [result] = await pool.query(
-    `INSERT INTO posts
-      (user_id, board_type, is_notice, notice_type, is_pinned, notice_target_boards, title, content, image_urls)
-     VALUES (?, ?, 1, ?, ?, ?, ?, ?, '[]')`,
-    [userId, normalizedBoardType, normalizedNoticeType, isPinned ? 1 : 0, normalizedBoardType, title, content]
-  );
-  return result.insertId;
-}
-
-async function findNoticePostById(id) {
-  const pool = getPool();
-  const [rows] = await pool.query(
-    `SELECT p.id, p.id AS sourceId, 'POST' AS sourceType,
-            'NOTICE' AS category, p.title, p.content,
-            p.user_id AS createdBy, p.user_id AS updatedBy,
-            p.board_type AS boardType,
-            p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
-            p.is_deleted,
-            p.created_at AS createdAt, p.updated_at AS updatedAt
-     FROM posts p
-     WHERE p.id = ?
-     LIMIT 1`,
-    [id]
-  );
-  return rows[0] || null;
-}
-
-async function updateNoticePost(id, { title, content, noticeType = 'NOTICE', isPinned = false, boardType = BOARD_TYPES.FREE }) {
-  const pool = getPool();
-  const normalizedNoticeType = String(noticeType || '').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE';
-  const normalizedBoardType = normalizeBoardType(boardType);
-  await pool.query(
-    `UPDATE posts
-     SET title = ?, content = ?, board_type = ?, is_notice = 1, notice_type = ?, is_pinned = ?, notice_target_boards = ?
-     WHERE id = ?`,
-    [title, content, normalizedBoardType, normalizedNoticeType, isPinned ? 1 : 0, normalizedBoardType, id]
-  );
-}
-
-async function deleteNoticePost(id) {
-  const pool = getPool();
-  await pool.query("UPDATE posts SET is_deleted = 1, title = '[삭제된 게시글]', content = '삭제된 게시글입니다.' WHERE id = ?", [id]);
-}
 
 async function createInquiry({ userId, type, title, content, targetType = null, targetId = null, attachmentUrls = [] }) {
   const pool = getPool();
@@ -377,14 +274,9 @@ module.exports = {
   listArticles,
   findArticleById,
   findPublicArticleDetailById,
-  findPublicNoticePostDetailById,
   createArticle,
   updateArticle,
   deleteArticle,
-  createNoticePost,
-  findNoticePostById,
-  updateNoticePost,
-  deleteNoticePost,
   createInquiry,
   listInquiriesByUser,
   findInquiryById,
