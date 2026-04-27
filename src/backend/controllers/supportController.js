@@ -4,16 +4,6 @@
 const supportModel = require('../models/supportModel');
 const { normalizeExistingFileUrls, parseDataUrl, uploadDataUrlToS3 } = require('../utils/fileUpload');
 
-const BOARD_TYPES = {
-  FREE: 'FREE',
-  ANON: 'ANON',
-  REVIEW: 'REVIEW',
-  STORY: 'STORY',
-  QUESTION: 'QUESTION',
-  EVENT: 'EVENT',
-  PROMOTION: 'PROMOTION'
-};
-
 const EXTENSION_BY_MIME = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
@@ -56,35 +46,10 @@ async function resolveAttachmentUrls(payload) {
   return [...existingUrls, ...uploadedUrls].slice(0, 3);
 }
 
-function parseBoardType(value) {
-  const normalized = String(value || '').toUpperCase();
-  return Object.values(BOARD_TYPES).includes(normalized) ? normalized : BOARD_TYPES.FREE;
-}
-
 async function listPublicArticles(req, res, next) {
   try {
     const category = req.params.category;
-    let rows = [];
-
-    if (category === supportModel.SUPPORT_CATEGORIES.NOTICE) {
-      const [postNotices, legacyNotices] = await Promise.all([
-        supportModel.listArticles(category, false, { sourceType: supportModel.SOURCE_TYPES.POST }),
-        supportModel.listArticles(category, false, { sourceType: supportModel.SOURCE_TYPES.SUPPORT })
-      ]);
-
-      rows = [...postNotices, ...legacyNotices].sort((a, b) => {
-        const pinnedGap = Number(b.isPinned || 0) - Number(a.isPinned || 0);
-        if (pinnedGap !== 0) return pinnedGap;
-
-        const timeA = new Date(a.createdAt || a.created_at || 0).getTime();
-        const timeB = new Date(b.createdAt || b.created_at || 0).getTime();
-        if (timeA !== timeB) return timeB - timeA;
-
-        return Number(b.id || 0) - Number(a.id || 0);
-      });
-    } else {
-      rows = await supportModel.listArticles(category, false);
-    }
+    const rows = await supportModel.listArticles(category, false, { sourceType: supportModel.SOURCE_TYPES.SUPPORT });
 
     res.json({ content: rows, totalElements: rows.length });
   } catch (error) {
@@ -97,19 +62,6 @@ async function getPublicArticleDetail(req, res, next) {
   try {
     const id = parseId(req.params.id);
     if (!id) return res.status(400).json({ message: '유효하지 않은 글 ID입니다.' });
-
-    const sourceType = supportModel.normalizeSourceType(req.query.sourceType);
-
-    if (sourceType === supportModel.SOURCE_TYPES.POST) {
-      const article = await supportModel.findPublicNoticePostDetailById(id);
-      if (!article) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
-
-      res.json({
-        ...article,
-        sourceType: 'POST'
-      });
-      return;
-    }
 
     const article = await supportModel.findPublicArticleDetailById(id);
     if (!article) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
@@ -141,14 +93,6 @@ async function getAdminArticleDetail(req, res, next) {
     const id = parseId(req.params.id);
     if (!id) return res.status(400).json({ message: '유효하지 않은 글 ID입니다.' });
 
-    const sourceType = supportModel.normalizeSourceType(req.query.sourceType);
-
-    if (sourceType === supportModel.SOURCE_TYPES.POST) {
-      const post = await supportModel.findNoticePostById(id);
-      if (!post || post.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
-      return res.json(post);
-    }
-
     const article = await supportModel.findArticleById(id);
     if (!article || article.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
 
@@ -165,31 +109,11 @@ async function getAdminArticleDetail(req, res, next) {
 async function createArticle(req, res, next) {
   try {
     const category = supportModel.normalizeCategory(req.body.category) || supportModel.SUPPORT_CATEGORIES.NOTICE;
-    const sourceType = supportModel.normalizeSourceType(req.body.sourceType)
-      || (category === supportModel.SUPPORT_CATEGORIES.NOTICE ? supportModel.SOURCE_TYPES.POST : supportModel.SOURCE_TYPES.SUPPORT);
     const title = String(req.body.title || '').trim();
     const content = String(req.body.content || '').trim();
-    const noticeType = String(req.body.noticeType || '').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE';
-    const isPinned = Boolean(req.body.isPinned);
-    const boardType = parseBoardType(req.body.boardType);
 
     if (!category) return res.status(400).json({ message: '유효하지 않은 카테고리입니다.' });
     if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
-
-    if (sourceType === supportModel.SOURCE_TYPES.POST && category === supportModel.SUPPORT_CATEGORIES.NOTICE) {
-      const id = await supportModel.createNoticePost({
-        title,
-        content,
-        userId: req.user.id,
-        noticeType,
-        isPinned,
-        boardType
-      });
-
-      const created = await supportModel.findNoticePostById(id);
-      res.status(201).json({ success: true, article: created });
-      return;
-    }
 
     const id = await supportModel.createArticle({ category, title, content, userId: req.user.id });
     const created = await supportModel.findArticleById(id);
@@ -203,69 +127,6 @@ async function updateArticle(req, res, next) {
   try {
     const id = parseId(req.params.id);
     if (!id) return res.status(400).json({ message: '유효하지 않은 글 ID입니다.' });
-
-    const sourceType = supportModel.normalizeSourceType(req.query.sourceType || req.body.sourceType);
-    const desiredSourceType = supportModel.normalizeSourceType(req.body.desiredSourceType) || sourceType;
-
-    if (sourceType !== desiredSourceType) {
-      if (sourceType === supportModel.SOURCE_TYPES.SUPPORT && desiredSourceType === supportModel.SOURCE_TYPES.POST) {
-        const article = await supportModel.findArticleById(id);
-        if (!article || article.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
-
-        const category = supportModel.normalizeCategory(req.body.category) || article.category;
-        if (category !== supportModel.SUPPORT_CATEGORIES.NOTICE) {
-          return res.status(400).json({ message: 'FAQ는 커뮤니티 공지로 전환할 수 없습니다.' });
-        }
-
-        const title = String(req.body.title ?? article.title).trim();
-        const content = String(req.body.content ?? article.content).trim();
-        const noticeType = String(req.body.noticeType || 'NOTICE').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE';
-        const isPinned = Boolean(req.body.isPinned);
-        const boardType = parseBoardType(req.body.boardType);
-        if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
-
-        await supportModel.createNoticePost({
-          title,
-          content,
-          userId: req.user.id,
-          noticeType,
-          isPinned,
-          boardType
-        });
-        await supportModel.deleteArticle(id);
-        return res.json({ success: true });
-      }
-
-      if (sourceType === supportModel.SOURCE_TYPES.POST && desiredSourceType === supportModel.SOURCE_TYPES.SUPPORT) {
-        const post = await supportModel.findNoticePostById(id);
-        if (!post || post.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
-
-        const category = supportModel.normalizeCategory(req.body.category) || supportModel.SUPPORT_CATEGORIES.NOTICE;
-        const title = String(req.body.title ?? post.title).trim();
-        const content = String(req.body.content ?? post.content).trim();
-        if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
-
-        await supportModel.createArticle({ category, title, content, userId: req.user.id });
-        await supportModel.deleteNoticePost(id);
-        return res.json({ success: true });
-      }
-    }
-
-    if (sourceType === supportModel.SOURCE_TYPES.POST) {
-      const post = await supportModel.findNoticePostById(id);
-      if (!post || post.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
-
-      const title = String(req.body.title ?? post.title).trim();
-      const content = String(req.body.content ?? post.content).trim();
-      const noticeType = String(req.body.noticeType || post.noticeType || 'NOTICE').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE';
-      const isPinned = Boolean(req.body.isPinned ?? post.isPinned);
-      const boardType = parseBoardType(req.body.boardType ?? post.boardType);
-      if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
-
-      await supportModel.updateNoticePost(id, { title, content, noticeType, isPinned, boardType });
-      res.json({ success: true });
-      return;
-    }
 
     const article = await supportModel.findArticleById(id);
     if (!article || article.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
@@ -286,34 +147,6 @@ async function deleteArticle(req, res, next) {
   try {
     const id = parseId(req.params.id);
     if (!id) return res.status(400).json({ message: '유효하지 않은 글 ID입니다.' });
-
-    const sourceType = supportModel.normalizeSourceType(req.query.sourceType || req.body?.sourceType);
-    if (!sourceType) {
-      const [post, article] = await Promise.all([
-        supportModel.findNoticePostById(id),
-        supportModel.findArticleById(id)
-      ]);
-
-      if (post && !post.is_deleted) {
-        await supportModel.deleteNoticePost(id);
-        return res.json({ success: true });
-      }
-
-      if (article && !article.is_deleted) {
-        await supportModel.deleteArticle(id);
-        return res.json({ success: true });
-      }
-
-      return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
-    }
-    if (sourceType === supportModel.SOURCE_TYPES.POST) {
-      const post = await supportModel.findNoticePostById(id);
-      if (!post || post.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
-
-      await supportModel.deleteNoticePost(id);
-      res.json({ success: true });
-      return;
-    }
 
     const article = await supportModel.findArticleById(id);
     if (!article || article.is_deleted) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
