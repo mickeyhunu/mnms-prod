@@ -19,6 +19,7 @@ const TOP_AD_PLACEMENT_OPTIONS = [
     { value: '2', label: '커뮤니티 상단' }
 ];
 let isGlobalAdminClickBound = false;
+let isDeleteModalActionBound = false;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
@@ -217,8 +218,7 @@ function bindCommonEvents() {
     document.getElementById('support-retry-btn')?.addEventListener('click', loadSupportArticles);
     document.getElementById('inquiries-retry-btn')?.addEventListener('click', loadInquiries);
 
-    document.getElementById('delete-cancel-btn')?.addEventListener('click', closeDeleteModal);
-    document.getElementById('delete-confirm-btn')?.addEventListener('click', confirmDelete);
+    bindDeleteModalActions();
     document.getElementById('user-edit-cancel-btn')?.addEventListener('click', closeUserEditModal);
     document.getElementById('user-edit-cancel-btn-secondary')?.addEventListener('click', closeUserEditModal);
     document.getElementById('user-edit-save-btn')?.addEventListener('click', saveUserDetail);
@@ -256,6 +256,26 @@ function bindCommonEvents() {
         document.addEventListener('click', handleGlobalAdminClick);
         isGlobalAdminClickBound = true;
     }
+}
+
+function bindDeleteModalActions() {
+    if (isDeleteModalActionBound) return;
+    isDeleteModalActionBound = true;
+
+    document.addEventListener('click', async (event) => {
+        const cancelButton = event.target.closest('#delete-cancel-btn');
+        if (cancelButton) {
+            event.preventDefault();
+            closeDeleteModal();
+            return;
+        }
+
+        const confirmButton = event.target.closest('#delete-confirm-btn');
+        if (confirmButton) {
+            event.preventDefault();
+            await confirmDelete();
+        }
+    });
 }
 
 function bindAdminListControls() {
