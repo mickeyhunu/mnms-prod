@@ -130,7 +130,10 @@ async function loadEditTargetIfNeeded() {
         const boardTypeInput = document.getElementById('support-form-board-type');
         if (titleInput) titleInput.value = article.title || '';
         if (contentInput) contentInput.value = article.content || '';
-        if (pinnedInput) pinnedInput.checked = Boolean(article.isPinned) && String(article.noticeType || '').toUpperCase() === 'IMPORTANT';
+        if (pinnedInput) {
+            const noticeType = String(article.noticeType || article.notice_type || '').toUpperCase();
+            pinnedInput.checked = noticeType === 'IMPORTANT' || Boolean(article.isPinned || article.is_pinned);
+        }
         if (boardTypeInput) boardTypeInput.value = String(article.boardType || SUPPORT_ONLY_BOARD_TYPE).toUpperCase();
 
         const submitBtn = document.getElementById('submit-btn');

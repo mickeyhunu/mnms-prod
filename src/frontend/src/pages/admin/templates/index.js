@@ -326,7 +326,7 @@ export const adminTemplate = `
                         <input type="search" id="support-search-input" class="form-control admin-list-toolbar__search" placeholder="공지/FAQ 검색" aria-label="공지/FAQ 검색">
                     </div>
                     <div class="admin-table-container hidden" id="support-content">
-                        <table class="admin-table"><thead><tr><th>ID</th><th>구분</th><th>제목</th><th>작성일</th><th>관리</th></tr></thead><tbody id="support-tbody"></tbody></table>
+                        <table class="admin-table"><thead><tr><th>ID</th><th>구분</th><th>보드타입</th><th>제목</th><th>작성일</th><th>관리</th></tr></thead><tbody id="support-tbody"></tbody></table>
                     </div>
                     <div class="admin-pagination hidden" id="support-pagination"></div>
                 </div>

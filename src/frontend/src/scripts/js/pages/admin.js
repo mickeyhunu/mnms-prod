@@ -1032,16 +1032,21 @@ function renderSupportTable() {
     updateAdminTotal('support', filteredItems.length);
 
     if (!pageItems.length) {
-        tbody.innerHTML = `<tr><td colspan="5">${filteredItems.length ? '현재 페이지에 표시할 글이 없습니다.' : '등록된 글이 없습니다.'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6">${filteredItems.length ? '현재 페이지에 표시할 글이 없습니다.' : '등록된 글이 없습니다.'}</td></tr>`;
     } else {
         tbody.innerHTML = pageItems.map((article) => `
             ${(() => {
                 const sourceType = resolveSupportSourceType(article);
                 const sourceId = Number.parseInt(article.sourceId ?? article.id, 10);
+                const noticeType = String(article.noticeType || article.notice_type || 'NOTICE').toUpperCase();
+                const categoryLabel = article.category === 'FAQ'
+                    ? 'FAQ'
+                    : (noticeType === 'IMPORTANT' ? '공지사항(필독)' : '공지사항');
                 return `
             <tr>
                 <td>${article.id}</td>
-                <td>${article.category === 'FAQ' ? 'FAQ' : '공지사항'}</td>
+                <td>${categoryLabel}</td>
+                <td>${sanitizeHTML(getSupportBoardTypeLabel(article.boardType || article.board_type))}</td>
                 <td>${sanitizeHTML(article.title || '')}</td>
                 <td>${formatDate(article.createdAt || article.created_at)}</td>
                 <td>
@@ -1056,6 +1061,21 @@ function renderSupportTable() {
 
     bindSupportActionButtons(tbody);
     renderAdminPagination('support', totalPages, page);
+}
+
+function getSupportBoardTypeLabel(boardType) {
+    const normalized = String(boardType || '').toUpperCase();
+    const labels = {
+        SUPPORT_ONLY: '커뮤니티 미노출',
+        FREE: '자유게시판',
+        ANON: '익명게시판',
+        REVIEW: '후기게시판',
+        STORY: '썰게시판',
+        QUESTION: '질문게시판',
+        EVENT: '이벤트게시판',
+        PROMOTION: '홍보게시판'
+    };
+    return labels[normalized] || '커뮤니티 미노출';
 }
 
 function resolveSupportSourceType(article = {}) {
