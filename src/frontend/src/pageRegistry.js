@@ -573,7 +573,6 @@ const pageRegistry = {
                     </div>
 
                     <div class="form-group" id="support-pin-options">
-                        <label class="form-label">커뮤니티 노출</label>
                         <div style="margin-bottom:8px;">
                             <label for="support-form-board-type" class="form-label">노출 게시판</label>
                             <select id="support-form-board-type" class="form-control" style="max-width:260px;">

@@ -174,7 +174,6 @@ async function listPosts(page = 0, size = 10, options = {}) {
        FROM support_articles a
        WHERE a.is_deleted = 0
          AND a.category = 'NOTICE'
-         AND a.notice_type = 'IMPORTANT'
          AND ${supportBoardCondition}
        ORDER BY a.is_pinned DESC, a.created_at DESC, a.id DESC`,
       supportBoardParams

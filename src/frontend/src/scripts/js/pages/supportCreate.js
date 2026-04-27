@@ -134,7 +134,9 @@ async function loadEditTargetIfNeeded() {
             const noticeType = String(article.noticeType || article.notice_type || '').toUpperCase();
             pinnedInput.checked = noticeType === 'IMPORTANT' || Boolean(article.isPinned || article.is_pinned);
         }
-        if (boardTypeInput) boardTypeInput.value = String(article.boardType || SUPPORT_ONLY_BOARD_TYPE).toUpperCase();
+        if (boardTypeInput) {
+            boardTypeInput.value = String(article.boardType || article.board_type || SUPPORT_ONLY_BOARD_TYPE).toUpperCase();
+        }
 
         const submitBtn = document.getElementById('submit-btn');
         if (submitBtn) submitBtn.textContent = '수정';
