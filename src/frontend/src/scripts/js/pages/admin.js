@@ -1048,7 +1048,53 @@ function renderSupportTable() {
         `).join('');
     }
 
+    bindSupportActionButtons(tbody);
     renderAdminPagination('support', totalPages, page);
+}
+
+function bindSupportActionButtons(container) {
+    if (!container) return;
+
+    const editButtons = container.querySelectorAll('[data-admin-action="edit-support"]');
+    editButtons.forEach((button) => {
+        button.onclick = async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const targetId = Number.parseInt(button.dataset.targetId || '', 10);
+            if (!Number.isInteger(targetId)) {
+                alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
+                return;
+            }
+
+            const sourceType = String(button.dataset.sourceType || 'SUPPORT').trim().toUpperCase();
+            const category = encodeURIComponent(currentSupportCategory || 'NOTICE');
+            const query = `?id=${targetId}&sourceType=${encodeURIComponent(sourceType)}&category=${category}`;
+            window.location.href = `/admin/support/create${query}`;
+        };
+    });
+
+    const deleteButtons = container.querySelectorAll('[data-admin-action="delete"][data-target-type="support"]');
+    deleteButtons.forEach((button) => {
+        button.onclick = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const targetId = Number.parseInt(button.dataset.targetId || '', 10);
+            if (!Number.isInteger(targetId)) {
+                alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
+                return;
+            }
+
+            const sourceType = String(button.dataset.sourceType || 'SUPPORT').trim().toUpperCase();
+            openAdminActionModal({
+                action: 'delete',
+                type: 'support',
+                id: targetId,
+                sourceType
+            });
+        };
+    });
 }
 
 function renderInquiriesTable() {
@@ -1787,8 +1833,8 @@ async function handleAdminTableActionClick(event) {
     const action = actionElement.dataset.adminAction;
     const targetIdRaw = actionElement.dataset.targetId;
     const targetId = Number.parseInt(targetIdRaw, 10);
-    const targetType = actionElement.dataset.targetType;
-    const sourceType = actionElement.dataset.sourceType || 'SUPPORT';
+    const targetType = String(actionElement.dataset.targetType || '').trim().toLowerCase();
+    const sourceType = String(actionElement.dataset.sourceType || 'SUPPORT').trim().toUpperCase();
     const entryId = actionElement.dataset.entryId;
     const entryName = actionElement.dataset.entryName || '';
 
@@ -2148,10 +2194,12 @@ async function confirmDelete() {
             if (editingEntryId === adminActionTarget.entryId) resetEntryEditor();
             closeDeleteModal();
             await loadEntries();
-        } else {
+        } else if (adminActionTarget.type === 'support') {
             await APIClient.delete(`/admin/support/${adminActionTarget.id}?sourceType=${encodeURIComponent(adminActionTarget.sourceType || 'SUPPORT')}`);
             closeDeleteModal();
             await loadSupportArticles();
+        } else {
+            throw new Error('삭제 대상 유형을 확인할 수 없습니다.');
         }
     } catch (error) {
         const fallbackMessage = adminActionTarget.action === 'toggle-hide' ? '가리기 설정 변경에 실패했습니다.' : '삭제에 실패했습니다.';
