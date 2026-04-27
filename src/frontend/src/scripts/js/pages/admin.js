@@ -301,6 +301,21 @@ function updateAdminSearchInput(prefix, fallbackPlaceholder = '') {
     input.setAttribute('aria-label', placeholder);
 }
 
+
+function parseAdminTargetId(value) {
+    if (Number.isInteger(value)) return value;
+    const raw = String(value ?? '').trim();
+    if (!raw) return Number.NaN;
+
+    const direct = Number.parseInt(raw, 10);
+    if (Number.isInteger(direct)) return direct;
+
+    const matched = raw.match(/(\d+)(?!.*\d)/);
+    if (!matched) return Number.NaN;
+
+    return Number.parseInt(matched[1], 10);
+}
+
 function normalizeAdminSearchValue(value) {
     return String(value || '').trim().toLowerCase();
 }
@@ -1037,7 +1052,7 @@ function renderSupportTable() {
         tbody.innerHTML = pageItems.map((article) => `
             ${(() => {
                 const sourceType = resolveSupportSourceType(article);
-                const sourceId = Number.parseInt(article.sourceId ?? article.id, 10);
+                const sourceId = parseAdminTargetId(article.sourceId ?? article.id);
                 const noticeType = String(article.noticeType || article.notice_type || 'NOTICE').toUpperCase();
                 const categoryLabel = article.category === 'FAQ'
                     ? 'FAQ'
@@ -1095,7 +1110,7 @@ function bindSupportActionButtons(container) {
             event.preventDefault();
             event.stopPropagation();
 
-            const targetId = Number.parseInt(button.dataset.targetId || '', 10);
+            const targetId = parseAdminTargetId(button.dataset.targetId || '');
             if (!Number.isInteger(targetId)) {
                 alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
                 return;
@@ -1112,7 +1127,7 @@ function bindSupportActionButtons(container) {
             event.preventDefault();
             event.stopPropagation();
 
-            const targetId = Number.parseInt(button.dataset.targetId || '', 10);
+            const targetId = parseAdminTargetId(button.dataset.targetId || '');
             if (!Number.isInteger(targetId)) {
                 alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
                 return;
@@ -1849,7 +1864,7 @@ async function handleAdminTableActionClick(event) {
 
     const action = actionElement.dataset.adminAction;
     const targetIdRaw = actionElement.dataset.targetId;
-    const targetId = Number.parseInt(targetIdRaw, 10);
+    const targetId = parseAdminTargetId(targetIdRaw);
     const targetType = String(actionElement.dataset.targetType || '').trim().toLowerCase();
     const sourceType = String(actionElement.dataset.sourceType || 'SUPPORT').trim().toUpperCase();
     const entryId = actionElement.dataset.entryId;
@@ -2031,7 +2046,7 @@ function bindAdminHideToggleButtons(container) {
             event.preventDefault();
             event.stopPropagation();
 
-            const targetId = Number.parseInt(button.dataset.targetId || '', 10);
+            const targetId = parseAdminTargetId(button.dataset.targetId || '');
             const targetType = button.dataset.targetType;
             const isHidden = button.dataset.currentHidden === 'true';
 
