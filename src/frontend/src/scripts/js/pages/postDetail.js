@@ -524,7 +524,14 @@ function renderPostDetail(post) {
     const deleteBtn = document.getElementById('delete-btn');
     const reportBtn = document.getElementById('report-btn');
     const isGuestPost = !post.authorId && !post.userId;
+    const isCommunityNoticePost = Boolean(post.isNotice);
     if (isHiddenPost) {
+        if (messageBtn) messageBtn.style.display = 'none';
+        if (ownerActions) ownerActions.classList.add('hidden');
+        if (editBtn) editBtn.classList.add('hidden');
+        if (deleteBtn) deleteBtn.classList.add('hidden');
+        if (reportBtn) reportBtn.classList.add('hidden');
+    } else if (isCommunityNoticePost) {
         if (messageBtn) messageBtn.style.display = 'none';
         if (ownerActions) ownerActions.classList.add('hidden');
         if (editBtn) editBtn.classList.add('hidden');

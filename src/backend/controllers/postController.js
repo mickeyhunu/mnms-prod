@@ -415,6 +415,9 @@ async function updatePost(req, res, next) {
     if (!req.user || (post.user_id !== req.user.id && req.user.role !== 'ADMIN')) {
       return res.status(403).json({ message: '수정 권한이 없습니다.' });
     }
+    if (Boolean(post.is_notice)) {
+      return res.status(403).json({ message: '공지글/필독글은 관리자 페이지에서만 수정할 수 있습니다.' });
+    }
     const targetBoardType = parseBoardType(post.board_type || post.boardType);
     if (isBusinessUser(req.user) && targetBoardType !== BOARD_TYPES.PROMOTION) {
       return res.status(403).json({ message: '광고자 계정은 홍보게시판 글만 수정할 수 있습니다.' });
@@ -460,6 +463,9 @@ async function deletePost(req, res, next) {
     const post = await postModel.findPostByIdIncludingDeleted(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
     if (post.is_deleted) return res.status(400).json({ message: '이미 삭제된 게시글입니다.' });
+    if (Boolean(post.is_notice)) {
+      return res.status(403).json({ message: '공지글/필독글은 관리자 페이지에서만 삭제할 수 있습니다.' });
+    }
     if (!req.user || (post.user_id !== req.user.id && req.user.role !== 'ADMIN')) {
       return res.status(403).json({ message: '삭제 권한이 없습니다.' });
     }
