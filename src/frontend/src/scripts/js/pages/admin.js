@@ -1054,10 +1054,14 @@ function renderSupportTable() {
 
 function bindSupportActionButtons(container) {
     if (!container) return;
+    if (container.dataset.supportActionsBound === 'true') return;
+    container.dataset.supportActionsBound = 'true';
 
-    const editButtons = container.querySelectorAll('[data-admin-action="edit-support"]');
-    editButtons.forEach((button) => {
-        button.onclick = async (event) => {
+    container.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-admin-action]');
+        if (!button || !container.contains(button)) return;
+
+        if (button.dataset.adminAction === 'edit-support') {
             event.preventDefault();
             event.stopPropagation();
 
@@ -1071,12 +1075,10 @@ function bindSupportActionButtons(container) {
             const category = encodeURIComponent(currentSupportCategory || 'NOTICE');
             const query = `?id=${targetId}&sourceType=${encodeURIComponent(sourceType)}&category=${category}`;
             window.location.href = `/admin/support/create${query}`;
-        };
-    });
+            return;
+        }
 
-    const deleteButtons = container.querySelectorAll('[data-admin-action="delete"][data-target-type="support"]');
-    deleteButtons.forEach((button) => {
-        button.onclick = (event) => {
+        if (button.dataset.adminAction === 'delete' && String(button.dataset.targetType || '').toLowerCase() === 'support') {
             event.preventDefault();
             event.stopPropagation();
 
@@ -1093,7 +1095,7 @@ function bindSupportActionButtons(container) {
                 id: targetId,
                 sourceType
             });
-        };
+        }
     });
 }
 
