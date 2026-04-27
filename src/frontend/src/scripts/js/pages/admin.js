@@ -1035,21 +1035,40 @@ function renderSupportTable() {
         tbody.innerHTML = `<tr><td colspan="5">${filteredItems.length ? '현재 페이지에 표시할 글이 없습니다.' : '등록된 글이 없습니다.'}</td></tr>`;
     } else {
         tbody.innerHTML = pageItems.map((article) => `
+            ${(() => {
+                const sourceType = resolveSupportSourceType(article);
+                const sourceId = Number.parseInt(article.sourceId ?? article.id, 10);
+                return `
             <tr>
                 <td>${article.id}</td>
                 <td>${article.category === 'FAQ' ? 'FAQ' : '공지사항'}</td>
                 <td>${sanitizeHTML(article.title || '')}</td>
                 <td>${formatDate(article.createdAt || article.created_at)}</td>
                 <td>
-                    <button type="button" class="btn btn-sm btn-secondary" data-admin-action="edit-support" data-target-id="${article.sourceId || article.id}" data-source-type="${article.sourceType || 'SUPPORT'}">수정</button>
-                    <button type="button" class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="support" data-target-id="${article.sourceId || article.id}" data-source-type="${article.sourceType || 'SUPPORT'}">삭제</button>
+                    <button type="button" class="btn btn-sm btn-secondary" data-admin-action="edit-support" data-target-id="${sourceId}" data-source-type="${sourceType}">수정</button>
+                    <button type="button" class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="support" data-target-id="${sourceId}" data-source-type="${sourceType}">삭제</button>
                 </td>
             </tr>
+                `;
+            })()}
         `).join('');
     }
 
     bindSupportActionButtons(tbody);
     renderAdminPagination('support', totalPages, page);
+}
+
+function resolveSupportSourceType(article = {}) {
+    const explicitSourceType = String(article.sourceType || '').trim().toUpperCase();
+    if (explicitSourceType === 'POST' || explicitSourceType === 'SUPPORT') {
+        return explicitSourceType;
+    }
+
+    if (String(article.category || '').toUpperCase() === 'FAQ') {
+        return 'SUPPORT';
+    }
+
+    return Number(article.isNotice || article.is_notice) > 0 ? 'POST' : 'SUPPORT';
 }
 
 function bindSupportActionButtons(container) {
@@ -2201,7 +2220,15 @@ async function confirmDelete() {
             closeDeleteModal();
             await loadEntries();
         } else if (adminActionTarget.type === 'support') {
-            await APIClient.delete(`/admin/support/${adminActionTarget.id}?sourceType=${encodeURIComponent(adminActionTarget.sourceType || 'SUPPORT')}`);
+            const primarySourceType = String(adminActionTarget.sourceType || 'SUPPORT').trim().toUpperCase();
+            const fallbackSourceType = primarySourceType === 'POST' ? 'SUPPORT' : 'POST';
+
+            try {
+                await APIClient.delete(`/admin/support/${adminActionTarget.id}?sourceType=${encodeURIComponent(primarySourceType)}`);
+            } catch (error) {
+                if (error?.status !== 404) throw error;
+                await APIClient.delete(`/admin/support/${adminActionTarget.id}?sourceType=${encodeURIComponent(fallbackSourceType)}`);
+            }
             closeDeleteModal();
             await loadSupportArticles();
         } else {
