@@ -552,6 +552,7 @@ function renderPostDetail(post) {
         if (deleteBtn) deleteBtn.classList.add('hidden');
         if (reportBtn) reportBtn.classList.remove('hidden');
     }
+    updatePostMoreMenuEmptyState();
 
     renderAdjacentPosts(post.previousPost, post.nextPost);
 
@@ -583,6 +584,15 @@ function togglePostMoreMenu() {
     const menu = document.getElementById('post-more-menu');
     if (!menu) return;
     menu.classList.toggle('hidden');
+}
+
+function updatePostMoreMenuEmptyState() {
+    const menu = document.getElementById('post-more-menu');
+    const emptyLabel = document.getElementById('post-more-empty');
+    if (!menu || !emptyLabel) return;
+
+    const visibleItems = menu.querySelectorAll('.menu-item:not(.hidden)');
+    emptyLabel.classList.toggle('hidden', visibleItems.length > 0);
 }
 
 function setupShareSheet() {
