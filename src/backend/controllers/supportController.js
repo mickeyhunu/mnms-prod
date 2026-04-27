@@ -129,7 +129,7 @@ async function listAdminArticles(req, res, next) {
     if (!category) return res.status(400).json({ message: '유효하지 않은 카테고리입니다.' });
 
     const sourceType = supportModel.normalizeSourceType(req.query.sourceType);
-    const rows = await supportModel.listArticles(category, true, { sourceType });
+    const rows = await supportModel.listArticles(category, false, { sourceType });
     res.json({ content: rows, totalElements: rows.length });
   } catch (error) {
     next(error);

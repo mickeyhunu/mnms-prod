@@ -2222,12 +2222,19 @@ async function confirmDelete() {
         } else if (adminActionTarget.type === 'support') {
             const primarySourceType = String(adminActionTarget.sourceType || 'SUPPORT').trim().toUpperCase();
             const fallbackSourceType = primarySourceType === 'POST' ? 'SUPPORT' : 'POST';
+            const canRetryWithFallback = (error) => [400, 404].includes(Number(error?.status));
 
             try {
                 await APIClient.delete(`/admin/support/${adminActionTarget.id}?sourceType=${encodeURIComponent(primarySourceType)}`);
-            } catch (error) {
-                if (error?.status !== 404) throw error;
-                await APIClient.delete(`/admin/support/${adminActionTarget.id}?sourceType=${encodeURIComponent(fallbackSourceType)}`);
+            } catch (primaryError) {
+                if (!canRetryWithFallback(primaryError)) throw primaryError;
+
+                try {
+                    await APIClient.delete(`/admin/support/${adminActionTarget.id}?sourceType=${encodeURIComponent(fallbackSourceType)}`);
+                } catch (fallbackError) {
+                    if (Number(fallbackError?.status) === 404 && Number(primaryError?.status) !== 404) throw primaryError;
+                    throw fallbackError;
+                }
             }
             closeDeleteModal();
             await loadSupportArticles();
