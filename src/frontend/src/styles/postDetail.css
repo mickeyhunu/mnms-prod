@@ -155,7 +155,7 @@
     height: 36px;
     border-radius: 50%;
     display: block;
-    background: #eceff3;
+    background: #eceff3 url('/src/assets/image/img_profile.png') center / cover no-repeat;
     border: 1px solid #dfe3e8;
 }
 
@@ -423,7 +423,7 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: #e5e8ed;
+    background: #e5e8ed url('/src/assets/image/img_profile.png') center / cover no-repeat;
     flex-shrink: 0;
     margin-top: 2px;
 }
