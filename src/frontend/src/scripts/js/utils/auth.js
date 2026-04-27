@@ -3,6 +3,7 @@
  */
 const Auth = {
     currentUser: null,
+    tokenInMemory: '',
     resolveNicknameDisplayElement() {
         const label = document.getElementById('user-nickname-label');
         if (label) return label;
@@ -167,12 +168,41 @@ const Auth = {
         element.appendChild(badge);
     },
     getToken() {
-        return localStorage.getItem(STORAGE_KEYS.TOKEN);
+        if (this.tokenInMemory) {
+            return this.tokenInMemory;
+        }
+
+        const sessionToken = sessionStorage.getItem(STORAGE_KEYS.TOKEN);
+        if (sessionToken) {
+            this.tokenInMemory = sessionToken;
+            return sessionToken;
+        }
+
+        const legacyLocalToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
+        if (!legacyLocalToken) {
+            return '';
+        }
+
+        sessionStorage.setItem(STORAGE_KEYS.TOKEN, legacyLocalToken);
+        localStorage.removeItem(STORAGE_KEYS.TOKEN);
+        this.tokenInMemory = legacyLocalToken;
+        return legacyLocalToken;
     },
     setToken(token) {
-        localStorage.setItem(STORAGE_KEYS.TOKEN, token);
+        const normalizedToken = String(token || '').trim();
+        this.tokenInMemory = normalizedToken;
+
+        if (normalizedToken) {
+            sessionStorage.setItem(STORAGE_KEYS.TOKEN, normalizedToken);
+        } else {
+            sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
+        }
+
+        localStorage.removeItem(STORAGE_KEYS.TOKEN);
     },
     getUser() {
+        localStorage.removeItem(STORAGE_KEYS.USER);
+
         if (!this.isAuthenticated()) {
             this.currentUser = null;
             return null;
@@ -180,24 +210,16 @@ const Auth = {
 
         if (this.currentUser) return this.currentUser;
 
-        const sessionUserData = sessionStorage.getItem(STORAGE_KEYS.USER);
-        const localUserData = localStorage.getItem(STORAGE_KEYS.USER);
-        const userData = sessionUserData || localUserData;
+        const userData = sessionStorage.getItem(STORAGE_KEYS.USER);
         if (!userData) return null;
 
         try {
             const parsed = JSON.parse(userData);
             this.currentUser = parsed;
 
-            if (!sessionUserData && localUserData) {
-                sessionStorage.setItem(STORAGE_KEYS.USER, localUserData);
-                localStorage.removeItem(STORAGE_KEYS.USER);
-            }
-
             return parsed;
         } catch (_error) {
             sessionStorage.removeItem(STORAGE_KEYS.USER);
-            localStorage.removeItem(STORAGE_KEYS.USER);
             return null;
         }
     },
@@ -227,10 +249,8 @@ const Auth = {
 
         if (persistedUser) {
             sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(persistedUser));
-            localStorage.removeItem(STORAGE_KEYS.USER);
         } else {
             sessionStorage.removeItem(STORAGE_KEYS.USER);
-            localStorage.removeItem(STORAGE_KEYS.USER);
         }
 
         this.updateHeaderUI();
@@ -247,6 +267,8 @@ const Auth = {
         return true;
     },
     logout() {
+        this.tokenInMemory = '';
+        sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
         localStorage.removeItem(STORAGE_KEYS.TOKEN);
         sessionStorage.removeItem(STORAGE_KEYS.USER);
         localStorage.removeItem(STORAGE_KEYS.USER);
