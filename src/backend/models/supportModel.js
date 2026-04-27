@@ -12,6 +12,12 @@ const SOURCE_TYPES = {
   SUPPORT: 'SUPPORT'
 };
 
+const SUPPORT_ONLY_BOARD_TYPE = 'SUPPORT_ONLY';
+const NOTICE_TYPES = {
+  NOTICE: 'NOTICE',
+  IMPORTANT: 'IMPORTANT'
+};
+
 const INQUIRY_STATUSES = {
   PENDING: 'PENDING',
   ANSWERED: 'ANSWERED'
@@ -48,6 +54,18 @@ function normalizeSourceType(sourceType) {
   return Object.values(SOURCE_TYPES).includes(normalized) ? normalized : null;
 }
 
+function normalizeBoardType(boardType) {
+  const normalized = String(boardType || '').toUpperCase();
+  if (normalized === SUPPORT_ONLY_BOARD_TYPE) return SUPPORT_ONLY_BOARD_TYPE;
+  return ['FREE', 'ANON', 'REVIEW', 'STORY', 'QUESTION', 'EVENT', 'PROMOTION'].includes(normalized)
+    ? normalized
+    : SUPPORT_ONLY_BOARD_TYPE;
+}
+
+function normalizeNoticeType(noticeType) {
+  const normalized = String(noticeType || '').toUpperCase();
+  return Object.values(NOTICE_TYPES).includes(normalized) ? normalized : NOTICE_TYPES.NOTICE;
+}
 
 function normalizeAttachmentUrls(attachmentUrls) {
   if (!Array.isArray(attachmentUrls)) return [];
@@ -74,7 +92,6 @@ function normalizeInquiryRow(row) {
   };
 }
 
-
 async function listArticles(category, includeDeleted = false, { sourceType = null } = {}) {
   const pool = getPool();
   const normalizedCategory = normalizeCategory(category);
@@ -90,8 +107,9 @@ async function listArticles(category, includeDeleted = false, { sourceType = nul
     `SELECT a.id, a.id AS sourceId, 'SUPPORT' AS sourceType,
             a.category, a.title, a.content, a.created_by AS createdBy, a.updated_by AS updatedBy,
             a.created_at AS createdAt, a.updated_at AS updatedAt,
-            NULL AS boardType,
-            0 AS isNotice, NULL AS noticeType, 0 AS isPinned,
+            a.board_type AS boardType,
+            CASE WHEN a.category = 'NOTICE' THEN 1 ELSE 0 END AS isNotice,
+            a.notice_type AS noticeType, a.is_pinned AS isPinned,
             COALESCE(cu.nickname, '관리자') AS createdByNickname,
             COALESCE(uu.nickname, '관리자') AS updatedByNickname
      FROM support_articles a
@@ -115,6 +133,9 @@ async function findPublicArticleDetailById(id) {
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT a.id, a.category, a.title, a.content,
+            a.board_type AS boardType,
+            a.notice_type AS noticeType,
+            a.is_pinned AS isPinned,
             a.created_by AS createdBy, a.updated_by AS updatedBy,
             a.created_at AS createdAt, a.updated_at AS updatedAt,
             COALESCE(cu.nickname, '운영팀') AS createdByNickname,
@@ -130,22 +151,36 @@ async function findPublicArticleDetailById(id) {
   return rows[0] || null;
 }
 
-async function createArticle({ category, title, content, userId }) {
+async function createArticle({ category, title, content, userId, boardType = SUPPORT_ONLY_BOARD_TYPE, noticeType = NOTICE_TYPES.NOTICE, isPinned = false }) {
   const pool = getPool();
   const normalizedCategory = normalizeCategory(category);
+  const normalizedBoardType = normalizedCategory === SUPPORT_CATEGORIES.NOTICE ? normalizeBoardType(boardType) : SUPPORT_ONLY_BOARD_TYPE;
+  const normalizedNoticeType = normalizedCategory === SUPPORT_CATEGORIES.NOTICE ? normalizeNoticeType(noticeType) : null;
+  const normalizedIsPinned = normalizedCategory === SUPPORT_CATEGORIES.NOTICE
+    && normalizedBoardType !== SUPPORT_ONLY_BOARD_TYPE
+    && normalizedNoticeType === NOTICE_TYPES.IMPORTANT
+    && Boolean(isPinned);
+
   const [result] = await pool.query(
-    'INSERT INTO support_articles (category, title, content, created_by, updated_by) VALUES (?, ?, ?, ?, ?)',
-    [normalizedCategory, title, content, userId, userId]
+    'INSERT INTO support_articles (category, board_type, notice_type, is_pinned, title, content, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [normalizedCategory, normalizedBoardType, normalizedNoticeType, normalizedIsPinned ? 1 : 0, title, content, userId, userId]
   );
   return result.insertId;
 }
 
-async function updateArticle(id, { category, title, content, userId }) {
+async function updateArticle(id, { category, title, content, userId, boardType = SUPPORT_ONLY_BOARD_TYPE, noticeType = NOTICE_TYPES.NOTICE, isPinned = false }) {
   const pool = getPool();
   const normalizedCategory = normalizeCategory(category) || SUPPORT_CATEGORIES.NOTICE;
+  const normalizedBoardType = normalizedCategory === SUPPORT_CATEGORIES.NOTICE ? normalizeBoardType(boardType) : SUPPORT_ONLY_BOARD_TYPE;
+  const normalizedNoticeType = normalizedCategory === SUPPORT_CATEGORIES.NOTICE ? normalizeNoticeType(noticeType) : null;
+  const normalizedIsPinned = normalizedCategory === SUPPORT_CATEGORIES.NOTICE
+    && normalizedBoardType !== SUPPORT_ONLY_BOARD_TYPE
+    && normalizedNoticeType === NOTICE_TYPES.IMPORTANT
+    && Boolean(isPinned);
+
   await pool.query(
-    'UPDATE support_articles SET category = ?, title = ?, content = ?, updated_by = ? WHERE id = ?',
-    [normalizedCategory, title, content, userId, id]
+    'UPDATE support_articles SET category = ?, board_type = ?, notice_type = ?, is_pinned = ?, title = ?, content = ?, updated_by = ? WHERE id = ?',
+    [normalizedCategory, normalizedBoardType, normalizedNoticeType, normalizedIsPinned ? 1 : 0, title, content, userId, id]
   );
 }
 
@@ -153,7 +188,6 @@ async function deleteArticle(id) {
   const pool = getPool();
   await pool.query('UPDATE support_articles SET is_deleted = 1 WHERE id = ?', [id]);
 }
-
 
 async function createInquiry({ userId, type, title, content, targetType = null, targetId = null, attachmentUrls = [] }) {
   const pool = getPool();
@@ -223,7 +257,6 @@ async function listInquiriesForAdmin({ status = null } = {}) {
   return rows.map((row) => normalizeInquiryRow(row));
 }
 
-
 async function listAnsweredInquiriesByUser(userId, { limit = 20 } = {}) {
   const pool = getPool();
   const safeLimit = Math.max(1, Math.min(100, Number(limit) || 20));
@@ -265,12 +298,16 @@ async function answerInquiry(id, { answerContent, answeredBy }) {
 module.exports = {
   SUPPORT_CATEGORIES,
   SOURCE_TYPES,
+  SUPPORT_ONLY_BOARD_TYPE,
+  NOTICE_TYPES,
   INQUIRY_STATUSES,
   INQUIRY_TYPES,
   normalizeCategory,
   normalizeInquiryStatus,
   normalizeInquiryType,
   normalizeSourceType,
+  normalizeBoardType,
+  normalizeNoticeType,
   listArticles,
   findArticleById,
   findPublicArticleDetailById,

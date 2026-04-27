@@ -111,11 +111,22 @@ async function createArticle(req, res, next) {
     const category = supportModel.normalizeCategory(req.body.category) || supportModel.SUPPORT_CATEGORIES.NOTICE;
     const title = String(req.body.title || '').trim();
     const content = String(req.body.content || '').trim();
+    const boardType = supportModel.normalizeBoardType(req.body.boardType);
+    const noticeType = supportModel.normalizeNoticeType(req.body.noticeType);
+    const isPinned = Boolean(req.body.isPinned);
 
     if (!category) return res.status(400).json({ message: '유효하지 않은 카테고리입니다.' });
     if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
 
-    const id = await supportModel.createArticle({ category, title, content, userId: req.user.id });
+    const id = await supportModel.createArticle({
+      category,
+      title,
+      content,
+      userId: req.user.id,
+      boardType,
+      noticeType,
+      isPinned
+    });
     const created = await supportModel.findArticleById(id);
     res.status(201).json({ success: true, article: created });
   } catch (error) {
@@ -134,9 +145,20 @@ async function updateArticle(req, res, next) {
     const category = supportModel.normalizeCategory(req.body.category) || article.category;
     const title = String(req.body.title ?? article.title).trim();
     const content = String(req.body.content ?? article.content).trim();
+    const boardType = supportModel.normalizeBoardType(req.body.boardType ?? article.board_type ?? article.boardType);
+    const noticeType = supportModel.normalizeNoticeType(req.body.noticeType ?? article.notice_type ?? article.noticeType);
+    const isPinned = req.body.isPinned !== undefined ? Boolean(req.body.isPinned) : Boolean(article.is_pinned || article.isPinned);
     if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
 
-    await supportModel.updateArticle(id, { category, title, content, userId: req.user.id });
+    await supportModel.updateArticle(id, {
+      category,
+      title,
+      content,
+      userId: req.user.id,
+      boardType,
+      noticeType,
+      isPinned
+    });
     res.json({ success: true });
   } catch (error) {
     next(error);

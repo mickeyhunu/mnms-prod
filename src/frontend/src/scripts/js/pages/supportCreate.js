@@ -131,7 +131,7 @@ async function loadEditTargetIfNeeded() {
         if (titleInput) titleInput.value = article.title || '';
         if (contentInput) contentInput.value = article.content || '';
         if (pinnedInput) pinnedInput.checked = Boolean(article.isPinned) && String(article.noticeType || '').toUpperCase() === 'IMPORTANT';
-        if (boardTypeInput) boardTypeInput.value = SUPPORT_ONLY_BOARD_TYPE;
+        if (boardTypeInput) boardTypeInput.value = String(article.boardType || SUPPORT_ONLY_BOARD_TYPE).toUpperCase();
 
         const submitBtn = document.getElementById('submit-btn');
         if (submitBtn) submitBtn.textContent = '수정';
@@ -205,6 +205,8 @@ async function submitSupportPost(event) {
     if (isSubmitting) return;
 
     const category = document.getElementById('support-form-category')?.value || 'NOTICE';
+    const boardType = document.getElementById('support-form-board-type')?.value || SUPPORT_ONLY_BOARD_TYPE;
+    const isPinned = document.getElementById('support-form-is-pinned')?.checked || false;
     const title = document.getElementById('title')?.value?.trim() || '';
     const content = document.getElementById('content')?.value?.trim() || '';
     const submitBtn = document.getElementById('submit-btn');
@@ -226,7 +228,14 @@ async function submitSupportPost(event) {
             submitBtn.textContent = editingTarget ? '수정 중...' : '등록 중...';
         }
 
-        const payload = { category, title, content };
+        const payload = {
+            category,
+            title,
+            content,
+            boardType,
+            noticeType: isPinned ? 'IMPORTANT' : 'NOTICE',
+            isPinned
+        };
 
         if (editingTarget) {
             await APIClient.put(`/admin/support/${editingTarget.id}`, payload);

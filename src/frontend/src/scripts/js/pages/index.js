@@ -220,10 +220,14 @@ function createArticleItem(post) {
         ? '<span class="article-photo-badge" role="img" aria-label="사진 첨부">📷</span>'
         : '';
     const inlineIcon = getArticleInlineIcon(post, isNoticePost);
+    const sourceType = String(post.sourceType || '').toUpperCase();
+    const articleHref = sourceType === 'SUPPORT'
+        ? `/support?articleId=${encodeURIComponent(post.sourceId || post.id)}&sourceType=SUPPORT`
+        : `/post-detail?id=${encodeURIComponent(post.id)}`;
 
     return `
         <li class="article-item ${isViewedPost ? 'article-item-viewed' : 'article-item-unviewed'} ${isNoticePost ? 'article-item-notice' : ''} ${isNoticePost && noticeType === 'IMPORTANT' ? 'article-item-important' : ''}">
-            <a class="article-main" href="/post-detail?id=${post.id}" data-post-id="${post.id}">
+            <a class="article-main" href="${articleHref}" data-post-id="${post.id}">
                 <div class="article-title-row">
                     <span class="article-inline-icon" aria-hidden="true">${inlineIcon}</span>
                     <h3 class="article-title"><span class="${boardLabelClass}">[${boardLabel}]</span> ${sanitizeHTML(post.title || '제목 없음')} ${photoBadge}</h3>
