@@ -23,6 +23,22 @@ let isGlobalAdminClickBound = false;
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
 const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'admins', 'entries', 'banner-ads', 'business-ads', 'support', 'inquiries'];
+
+const ADMIN_SUPPORT_DEBUG_KEY = '__ADMIN_SUPPORT_DEBUG__';
+
+function isAdminSupportDebugEnabled() {
+    if (typeof window === 'undefined') return true;
+    if (window[ADMIN_SUPPORT_DEBUG_KEY] === undefined) {
+        window[ADMIN_SUPPORT_DEBUG_KEY] = true;
+    }
+    return Boolean(window[ADMIN_SUPPORT_DEBUG_KEY]);
+}
+
+function logAdminSupportDebug(step, payload = {}) {
+    if (!isAdminSupportDebugEnabled()) return;
+    console.log(`[AdminSupportDebug] ${step}`, payload);
+}
+
 const ADMIN_PAGE_SIZE = 20;
 const ADMIN_STATS_RANGE_DAYS = 14;
 const ADMIN_DASHBOARD_STATE = { summary: null, daily: [], series: [], period: 'daily', boardStats: [], selectedMetric: 'visitors' };
@@ -575,6 +591,13 @@ async function handleGlobalAdminClick(event) {
     }
 
     const actionButton = event.target.closest('[data-admin-action]');
+    if (actionButton) {
+        logAdminSupportDebug('global.click.actionButtonDetected', {
+            action: actionButton.dataset.adminAction || null,
+            targetType: actionButton.dataset.targetType || null,
+            targetId: actionButton.dataset.targetId || null
+        });
+    }
     if (!actionButton) return;
     await handleAdminTableActionClick(event);
 }
@@ -1099,11 +1122,21 @@ function resolveSupportSourceType(article = {}) {
 
 function bindSupportActionButtons(container) {
     if (!container) return;
-    if (container.dataset.supportActionsBound === 'true') return;
+    if (container.dataset.supportActionsBound === 'true') {
+        logAdminSupportDebug('bindSupportActionButtons.skipAlreadyBound');
+        return;
+    }
     container.dataset.supportActionsBound = 'true';
+    logAdminSupportDebug('bindSupportActionButtons.bound');
 
     container.addEventListener('click', (event) => {
         const button = event.target.closest('[data-admin-action]');
+        logAdminSupportDebug('supportTable.click', {
+            targetTag: event.target?.tagName || null,
+            action: button?.dataset?.adminAction || null,
+            targetType: button?.dataset?.targetType || null,
+            targetId: button?.dataset?.targetId || null
+        });
         if (!button || !container.contains(button)) return;
 
         if (button.dataset.adminAction === 'edit-support') {
@@ -1111,6 +1144,7 @@ function bindSupportActionButtons(container) {
             event.stopPropagation();
 
             const targetId = parseAdminTargetId(button.dataset.targetId || '');
+            logAdminSupportDebug('supportTable.edit.parseTargetId', { raw: button.dataset.targetId || '', targetId });
             if (!Number.isInteger(targetId)) {
                 alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
                 return;
@@ -1128,6 +1162,7 @@ function bindSupportActionButtons(container) {
             event.stopPropagation();
 
             const targetId = parseAdminTargetId(button.dataset.targetId || '');
+            logAdminSupportDebug('supportTable.delete.parseTargetId', { raw: button.dataset.targetId || '', targetId });
             if (!Number.isInteger(targetId)) {
                 alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
                 return;
@@ -1870,6 +1905,15 @@ async function handleAdminTableActionClick(event) {
     const entryId = actionElement.dataset.entryId;
     const entryName = actionElement.dataset.entryName || '';
 
+    logAdminSupportDebug('handleAdminTableActionClick.parsed', {
+        action,
+        targetType,
+        targetIdRaw,
+        targetId,
+        sourceType,
+        entryId
+    });
+
     if (action === 'delete' && targetType === 'entry' && entryId) {
         openAdminActionModal({
             action,
@@ -2139,6 +2183,7 @@ function showError(prefix, message) {
 
 function openAdminActionModal(target) {
     adminActionTarget = target;
+    logAdminSupportDebug('openAdminActionModal', { target });
     const modal = document.getElementById('delete-modal');
     const title = document.getElementById('delete-modal-title');
     const message = document.getElementById('delete-modal-message');
@@ -2209,6 +2254,7 @@ async function confirmDelete() {
             confirmButton.disabled = true;
             confirmButton.textContent = '삭제 중...';
         }
+        logAdminSupportDebug('confirmDelete.start', { target: adminActionTarget });
         if (adminActionTarget.type === 'post') {
             await APIClient.delete(`/admin/posts/${adminActionTarget.id}`);
             closeDeleteModal();
@@ -2240,6 +2286,7 @@ async function confirmDelete() {
         }
     } catch (error) {
         const fallbackMessage = adminActionTarget.action === 'toggle-hide' ? '가리기 설정 변경에 실패했습니다.' : '삭제에 실패했습니다.';
+        logAdminSupportDebug('confirmDelete.error', { error: error?.message || String(error), target: adminActionTarget });
         alert(error.message || fallbackMessage);
     } finally {
         if (confirmButton) {
