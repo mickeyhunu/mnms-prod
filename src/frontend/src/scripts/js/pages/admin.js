@@ -1822,13 +1822,17 @@ async function openSupportModal(id = null, sourceType = 'SUPPORT') {
             return;
         }
 
+        const targetCategory = String(target.category || currentSupportCategory || 'NOTICE').toUpperCase();
+        const targetNoticeType = String(target.noticeType || target.notice_type || 'NOTICE').toUpperCase();
+        const targetIsPinned = Boolean(target.isPinned ?? target.is_pinned);
+
         supportEditTarget = { id: Number(target.sourceId || target.id), sourceType: String(target.sourceType || sourceType || 'SUPPORT') };
         titleEl.textContent = '공지/FAQ 수정';
-        categoryEl.value = target.category || currentSupportCategory;
+        categoryEl.value = targetCategory;
         subjectEl.value = target.title || '';
         contentEl.value = target.content || '';
-        if (noticeTypeEl) noticeTypeEl.value = target.noticeType || 'NOTICE';
-        if (isPinnedEl) isPinnedEl.checked = Boolean(target.isPinned);
+        if (noticeTypeEl) noticeTypeEl.value = targetNoticeType;
+        if (isPinnedEl) isPinnedEl.checked = targetIsPinned;
     }
 
     categoryEl.onchange = syncNoticeOptionVisibility;
