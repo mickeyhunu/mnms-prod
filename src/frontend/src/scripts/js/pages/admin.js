@@ -1048,7 +1048,53 @@ function renderSupportTable() {
         `).join('');
     }
 
+    bindSupportActionButtons(tbody);
     renderAdminPagination('support', totalPages, page);
+}
+
+function bindSupportActionButtons(container) {
+    if (!container) return;
+
+    const editButtons = container.querySelectorAll('[data-admin-action="edit-support"]');
+    editButtons.forEach((button) => {
+        button.onclick = async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const targetId = Number.parseInt(button.dataset.targetId || '', 10);
+            if (!Number.isInteger(targetId)) {
+                alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
+                return;
+            }
+
+            const sourceType = String(button.dataset.sourceType || 'SUPPORT').trim().toUpperCase();
+            const category = encodeURIComponent(currentSupportCategory || 'NOTICE');
+            const query = `?id=${targetId}&sourceType=${encodeURIComponent(sourceType)}&category=${category}`;
+            window.location.href = `/admin/support/create${query}`;
+        };
+    });
+
+    const deleteButtons = container.querySelectorAll('[data-admin-action="delete"][data-target-type="support"]');
+    deleteButtons.forEach((button) => {
+        button.onclick = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const targetId = Number.parseInt(button.dataset.targetId || '', 10);
+            if (!Number.isInteger(targetId)) {
+                alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
+                return;
+            }
+
+            const sourceType = String(button.dataset.sourceType || 'SUPPORT').trim().toUpperCase();
+            openAdminActionModal({
+                action: 'delete',
+                type: 'support',
+                id: targetId,
+                sourceType
+            });
+        };
+    });
 }
 
 function renderInquiriesTable() {
