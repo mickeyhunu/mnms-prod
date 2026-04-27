@@ -848,6 +848,9 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS support_articles (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       category ENUM('NOTICE','FAQ') NOT NULL,
+      board_type VARCHAR(20) NOT NULL DEFAULT 'SUPPORT_ONLY',
+      notice_type ENUM('NOTICE','IMPORTANT') NULL,
+      is_pinned TINYINT(1) NOT NULL DEFAULT 0,
       title VARCHAR(255) NOT NULL,
       content TEXT NOT NULL,
       is_deleted TINYINT(1) NOT NULL DEFAULT 0,
@@ -859,6 +862,48 @@ async function initDatabase() {
       FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  const [supportBoardTypeColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'support_articles'
+       AND COLUMN_NAME = 'board_type'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!supportBoardTypeColumn.length) {
+    await pool.query("ALTER TABLE support_articles ADD COLUMN board_type VARCHAR(20) NOT NULL DEFAULT 'SUPPORT_ONLY' AFTER category");
+  }
+
+  const [supportNoticeTypeColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'support_articles'
+       AND COLUMN_NAME = 'notice_type'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!supportNoticeTypeColumn.length) {
+    await pool.query("ALTER TABLE support_articles ADD COLUMN notice_type ENUM('NOTICE','IMPORTANT') NULL AFTER board_type");
+  }
+
+  const [supportIsPinnedColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'support_articles'
+       AND COLUMN_NAME = 'is_pinned'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!supportIsPinnedColumn.length) {
+    await pool.query('ALTER TABLE support_articles ADD COLUMN is_pinned TINYINT(1) NOT NULL DEFAULT 0 AFTER notice_type');
+  }
 
 
 

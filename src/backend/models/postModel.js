@@ -145,6 +145,43 @@ async function listPosts(page = 0, size = 10, options = {}) {
     )
   ]);
 
+  let supportNoticeRows = [];
+  if (!keyword && page === 0) {
+    const supportBoardCondition = boardFilter === 'ALL'
+      ? "a.board_type <> 'SUPPORT_ONLY'"
+      : 'a.board_type = ?';
+    const supportBoardParams = boardFilter === 'ALL' ? [] : [boardFilter];
+    const [supportRows] = await pool.query(
+      `SELECT CONCAT('support-', a.id) AS id,
+              a.id AS sourceId,
+              'SUPPORT' AS sourceType,
+              a.title,
+              a.content,
+              a.board_type AS boardType,
+              1 AS isNotice,
+              a.notice_type AS noticeType,
+              a.is_pinned AS isPinned,
+              0 AS isHidden,
+              0 AS viewCount,
+              '[]' AS imageUrls,
+              a.created_at AS createdAt,
+              a.updated_at AS updatedAt,
+              '운영팀' AS authorNickname,
+              'ADMIN' AS authorRole,
+              0 AS commentCount,
+              0 AS likeCount,
+              '' AS noticeTargetBoards
+       FROM support_articles a
+       WHERE a.is_deleted = 0
+         AND a.category = 'NOTICE'
+         AND a.notice_type = 'IMPORTANT'
+         AND ${supportBoardCondition}
+       ORDER BY a.is_pinned DESC, a.created_at DESC, a.id DESC`,
+      supportBoardParams
+    );
+    supportNoticeRows = supportRows;
+  }
+
   const postIds = rows.map((row) => row.id);
   const commentCountMap = new Map();
   const likeCountMap = new Map();
@@ -178,7 +215,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
   }
 
   return {
-    rows: rows.map((row) => normalizePostImages({
+    rows: [...supportNoticeRows, ...rows].map((row) => normalizePostImages({
       ...row,
       noticeTargetBoards: parseNoticeTargetBoards(row.noticeTargetBoards),
       commentCount: commentCountMap.get(Number(row.id)) || 0,

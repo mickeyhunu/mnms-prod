@@ -47,6 +47,9 @@ function createBoardRow(post, isNotice = false, index = 0) {
         ? '<span class="badge-new" aria-label="24시간 이내 새 글">N</span>'
         : '';
     const numberLabel = isNotice ? (post.isPinned ? '📌' : noticeText) : post.id || index + 1;
+    const detailHref = String(post.sourceType || '').toUpperCase() === 'SUPPORT'
+        ? `/support?articleId=${encodeURIComponent(post.sourceId || post.id)}&sourceType=SUPPORT`
+        : `/post-detail?id=${encodeURIComponent(post.id)}`;
 
     const authorName = getDisplayAuthorName(post);
     const ownBadgeMarkup = getOwnContentBadgeMarkup(post);
@@ -56,7 +59,7 @@ function createBoardRow(post, isNotice = false, index = 0) {
             <td class="col-num">${numberLabel}</td>
             <td class="col-title">
                 ${noticeBadge}${hotBadge}
-                <a href="/post-detail?id=${post.id}">${sanitizeHTML(post.title || '제목 없음')}</a>
+                <a href="${detailHref}">${sanitizeHTML(post.title || '제목 없음')}</a>
                 ${newBadge}
                 ${post.commentCount > 0 ? `<small>[${post.commentCount}]</small>` : ''}
             </td>
