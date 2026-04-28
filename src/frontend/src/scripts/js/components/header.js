@@ -68,7 +68,8 @@ const HeaderNotificationCenter = {
 
         if (readAllButton && readAllButton.dataset.boundNotificationReadAll !== 'true') {
             readAllButton.dataset.boundNotificationReadAll = 'true';
-            readAllButton.addEventListener('click', () => {
+            readAllButton.addEventListener('click', (event) => {
+                event.stopPropagation();
                 if (this.showAllNotifications) {
                     this.showAllNotifications = false;
                     this.renderCurrentState();
@@ -82,6 +83,7 @@ const HeaderNotificationCenter = {
         if (list && list.dataset.boundNotificationList !== 'true') {
             list.dataset.boundNotificationList = 'true';
             list.addEventListener('click', async (event) => {
+                event.stopPropagation();
                 const viewAllButton = event.target.closest('[data-notification-action="view-all"]');
                 if (viewAllButton) {
                     this.showAllNotifications = true;
@@ -103,7 +105,12 @@ const HeaderNotificationCenter = {
         if (!this.outsideClickHandler) {
             this.outsideClickHandler = (event) => {
                 const wrapper = document.querySelector('.header-notification-wrapper');
-                if (!wrapper || wrapper.contains(event.target)) {
+                const eventPath = typeof event.composedPath === 'function' ? event.composedPath() : [];
+                const clickedInsideWrapper = wrapper && (
+                    wrapper.contains(event.target) || eventPath.includes(wrapper)
+                );
+
+                if (!wrapper || clickedInsideWrapper) {
                     return;
                 }
                 if (panel && !panel.classList.contains('hidden')) {
