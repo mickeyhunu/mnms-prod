@@ -105,7 +105,12 @@ const HeaderNotificationCenter = {
         if (!this.outsideClickHandler) {
             this.outsideClickHandler = (event) => {
                 const wrapper = document.querySelector('.header-notification-wrapper');
-                if (!wrapper || wrapper.contains(event.target)) {
+                const eventPath = typeof event.composedPath === 'function' ? event.composedPath() : [];
+                const clickedInsideWrapper = wrapper && (
+                    wrapper.contains(event.target) || eventPath.includes(wrapper)
+                );
+
+                if (!wrapper || clickedInsideWrapper) {
                     return;
                 }
                 if (panel && !panel.classList.contains('hidden')) {
