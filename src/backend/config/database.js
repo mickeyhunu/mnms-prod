@@ -931,6 +931,25 @@ async function initDatabase() {
   `);
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS community_edit_logs (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      target_type ENUM('post','comment') NOT NULL,
+      target_id BIGINT NOT NULL,
+      editor_user_id BIGINT NULL,
+      previous_title VARCHAR(255) NULL,
+      previous_content TEXT NULL,
+      next_title VARCHAR(255) NULL,
+      next_content TEXT NULL,
+      reported_at DATETIME NULL,
+      retention_until DATETIME NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_community_edit_logs_target (target_type, target_id, created_at),
+      INDEX idx_community_edit_logs_retention (retention_until),
+      FOREIGN KEY (editor_user_id) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS user_notification_reads (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       user_id BIGINT NOT NULL,
