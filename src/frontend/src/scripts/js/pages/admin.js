@@ -1504,7 +1504,7 @@ async function openUserEditModal(userId, options = {}) {
         document.getElementById('user-edit-modal-title').textContent = `회원 정보 수정 #${userId}`;
         fillUserEditForm(user);
         renderAdminUserActivity(response.activity || {});
-        document.getElementById('user-edit-modal')?.classList.remove('hidden');
+        showAdminModal('user-edit-modal');
         document.getElementById('user-edit-modal')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         if (syncHistory) {
@@ -1524,7 +1524,7 @@ function closeUserEditModal() {
     document.getElementById('admin-user-password-match-result').textContent = '';
     setAdminUserHelpMessage('');
     resetAdminUserActivity();
-    document.getElementById('user-edit-modal')?.classList.add('hidden');
+    hideAdminModal('user-edit-modal');
     syncAdminPageState({ activeTab: 'users', editUserId: null }, { replace: true });
 }
 
@@ -1908,7 +1908,7 @@ async function openSupportModal(id = null, sourceType = 'SUPPORT') {
     categoryEl.onchange = syncNoticeOptionVisibility;
     syncNoticeOptionVisibility();
 
-    document.getElementById('support-modal')?.classList.remove('hidden');
+    showAdminModal('support-modal');
 }
 
 async function handleAdminTableActionClick(event) {
@@ -1993,7 +1993,7 @@ async function handleAdminTableActionClick(event) {
 
 function closeSupportModal() {
     supportEditTarget = null;
-    document.getElementById('support-modal')?.classList.add('hidden');
+    hideAdminModal('support-modal');
 }
 
 async function saveSupportArticle() {
@@ -2072,7 +2072,7 @@ async function openInquiryAnswerModal(inquiryId) {
         document.getElementById('inquiry-answer-modal-title').textContent = `문의 #${target.id} 답변`;
         document.getElementById('inquiry-answer-target').textContent = `${toInquiryTypeLabel(target.type)} · ${target.userNickname || target.userEmail || `회원#${target.userId}`} · ${target.title || ''}`;
         document.getElementById('inquiry-answer-content').value = target.answerContent || '';
-        document.getElementById('inquiry-answer-modal')?.classList.remove('hidden');
+        showAdminModal('inquiry-answer-modal');
     } catch (error) {
         alert(error.message || '문의 정보를 불러오지 못했습니다.');
     }
@@ -2080,7 +2080,7 @@ async function openInquiryAnswerModal(inquiryId) {
 
 function closeInquiryAnswerModal() {
     inquiryAnswerTarget = null;
-    document.getElementById('inquiry-answer-modal')?.classList.add('hidden');
+    hideAdminModal('inquiry-answer-modal');
 }
 
 async function saveInquiryAnswer() {
@@ -2201,6 +2201,20 @@ function showError(prefix, message) {
     if (errorBox) errorBox.classList.remove('hidden');
 }
 
+function showAdminModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('show');
+}
+
+function hideAdminModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.classList.remove('show');
+    modal.classList.add('hidden');
+}
+
 function openAdminActionModal(target) {
     adminActionTarget = target;
     logAdminSupportDebug('openAdminActionModal', { target });
@@ -2237,12 +2251,12 @@ function openAdminActionModal(target) {
     }
 
     if (helpText && target.type !== 'entry') helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
-    modal?.classList.remove('hidden');
+    showAdminModal('delete-modal');
 }
 
 function closeDeleteModal() {
     adminActionTarget = null;
-    document.getElementById('delete-modal')?.classList.add('hidden');
+    hideAdminModal('delete-modal');
 }
 
 async function toggleAdminHiddenState(actionElement, target) {
