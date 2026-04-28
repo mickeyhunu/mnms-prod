@@ -1049,6 +1049,28 @@ const pageRegistry = {
             </div>
             <p id="profile-save-result" class="help-text" role="status"></p>
           </form>
+          <section class="profile-withdraw-section">
+            <button type="button" id="withdraw-open-btn" class="btn btn-outline btn-sm">회원탈퇴</button>
+          </section>
+          <section id="withdraw-form-section" class="withdraw-form-section hidden" aria-live="polite">
+            <div class="withdraw-panel">
+              <h4>회원 탈퇴 전 확인하세요.</h4>
+              <p>탈퇴 후 계정 및 정보는 복구할 수 없습니다. 아래 내용을 충분히 확인한 후 신중하게 결정해 주세요.</p>
+              <ul>
+                <li>개인정보 및 광고 관련 정보가 즉시 삭제됩니다.</li>
+                <li>한 번 사용한 닉네임은 재사용할 수 없습니다.</li>
+                <li>이용 정지(차단) 이력은 재가입 후에도 유지될 수 있습니다.</li>
+                <li>게시글, 댓글은 자동으로 삭제되지 않습니다.</li>
+              </ul>
+              <label for="withdraw-reason" class="withdraw-reason-label">탈퇴 사유를 남겨주세요.</label>
+              <textarea id="withdraw-reason" rows="4" maxlength="500" placeholder="탈퇴 사유"></textarea>
+              <p id="withdraw-result" class="help-text" role="status"></p>
+              <div class="withdraw-actions">
+                <button type="button" id="withdraw-cancel-btn" class="btn btn-outline btn-sm">회원 탈퇴 취소</button>
+                <button type="button" id="withdraw-submit-btn" class="btn btn-danger btn-sm">회원 탈퇴하기</button>
+              </div>
+            </div>
+          </section>
         </section>
       </div>
     </main>
