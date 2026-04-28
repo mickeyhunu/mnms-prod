@@ -13,6 +13,7 @@ const {
   markPostsAsRead,
   findByNicknameExceptUser,
   updateUserProfile,
+  withdrawUserById,
   findById,
   getBusinessProfileByUserId,
   upsertBusinessProfileByUserId
@@ -654,6 +655,26 @@ async function saveMyBusinessProfile(req, res, next) {
   }
 }
 
+async function withdrawMyAccount(req, res, next) {
+  try {
+    const reason = String(req.body?.reason || '').trim();
+    const identityVerificationId = String(req.body?.identityVerificationId || '').trim();
+
+    if (!reason) {
+      return res.status(400).json({ message: '탈퇴 사유를 입력해주세요.' });
+    }
+
+    if (!identityVerificationId) {
+      return res.status(400).json({ message: '본인인증 확인 정보가 필요합니다.' });
+    }
+
+    await withdrawUserById(req.user.id, { reason });
+    res.json({ success: true, message: '회원 탈퇴가 완료되었습니다.' });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   myStats,
   myPointHistories,
@@ -670,5 +691,6 @@ module.exports = {
   updateMyBusinessAd,
   deleteMyBusinessAd,
   getMyBusinessProfile,
-  saveMyBusinessProfile
+  saveMyBusinessProfile,
+  withdrawMyAccount
 };

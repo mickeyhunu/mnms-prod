@@ -677,6 +677,65 @@
     justify-content: flex-end;
     margin-top: 8px;
 }
+
+.profile-withdraw-section {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.withdraw-form-section {
+    margin-top: 16px;
+}
+
+.withdraw-panel {
+    border: 1px solid #f3c5cb;
+    background: #fff5f6;
+    border-radius: 10px;
+    padding: 16px;
+}
+
+.withdraw-panel h4 {
+    margin: 0 0 8px;
+}
+
+.withdraw-panel p {
+    margin: 0 0 10px;
+}
+
+.withdraw-panel ul {
+    margin: 0 0 14px 18px;
+    padding: 0;
+}
+
+.withdraw-panel li {
+    margin-bottom: 4px;
+}
+
+.withdraw-reason-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+#withdraw-reason {
+    width: 100%;
+    min-height: 100px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    padding: 10px;
+    resize: vertical;
+    font: inherit;
+}
+
+.withdraw-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
 .consent-wrap {
     display: flex;
     gap: 16px;

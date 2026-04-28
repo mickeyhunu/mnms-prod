@@ -3,6 +3,7 @@
  */
 const { getPool } = require('../config/database');
 const { getLoginRestrictionState, LOGIN_STATUS } = require('../utils/loginRestriction');
+const { hashPassword } = require('../utils/passwordHasher');
 
 async function createUser({
   email,
@@ -458,6 +459,105 @@ async function upsertBusinessProfileByUserId(userId, payload = {}) {
   );
 }
 
+async function withdrawUserById(userId, { reason = '' } = {}) {
+  const pool = getPool();
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    const [rows] = await connection.query(
+      'SELECT id, identity_ci_hash, identity_di_hash, phone_hash FROM users WHERE id = ? LIMIT 1',
+      [userId]
+    );
+    const user = rows[0];
+    if (!user) {
+      throw new Error('사용자를 찾을 수 없습니다.');
+    }
+
+    const restrictedUntil = new Date(Date.now() + (7 * 24 * 60 * 60 * 1000));
+    await connection.query(
+      `INSERT INTO signup_restrictions (ci_hash, di_hash, phone_hash, restriction_type, reason, restricted_until)
+       VALUES (?, ?, ?, 'REJOIN_WAIT', ?, ?)`,
+      [user.identity_ci_hash || null, user.identity_di_hash || null, user.phone_hash || null, reason || null, restrictedUntil]
+    );
+
+    const withdrawnNickname = `탈퇴회원${userId}`;
+    const maskedEmail = `withdrawn_${userId}_${Date.now()}@deleted.local`;
+    const withdrawnPasswordHash = await hashPassword(`withdrawn:${userId}:${Date.now()}`);
+    await connection.query(
+      `UPDATE users
+       SET nickname = ?,
+           last_nickname_changed_at = NOW(),
+           email = ?,
+           password = ?,
+           name = NULL,
+           birth_date = NULL,
+           gender_digit = NULL,
+           phone = NULL,
+           sms_consent = 0,
+           marketing_consent = 0,
+           privacy_consent = 0,
+           terms_consent = 0,
+           identity_ci_hash = NULL,
+           identity_di_hash = NULL,
+           phone_hash = NULL,
+           is_adult_verified = 0,
+           adult_verified_at = NULL,
+           last_identity_verified_at = NULL,
+           account_status = 'SUSPENDED',
+           login_restricted_until = NULL,
+           is_login_restriction_permanent = 1
+       WHERE id = ?`,
+      [withdrawnNickname, maskedEmail, withdrawnPasswordHash, userId]
+    );
+
+    await connection.query(
+      `UPDATE business_ads
+       SET business_name = '',
+           manager_name = '',
+           manager_contact = '',
+           description = NULL,
+           registration_status = 'UNREGISTERED'
+       WHERE owner_user_id = ?`,
+      [userId]
+    );
+
+    await connection.query(
+      `UPDATE business_profiles
+       SET company_name = NULL,
+           business_registration_number = NULL,
+           manager_name = NULL,
+           contact_phone = NULL,
+           has_ad_permission = 0,
+           registration_status = 'UNREGISTERED',
+           business_info = NULL
+       WHERE user_id = ?`,
+      [userId]
+    );
+
+    await connection.query(
+      'DELETE FROM user_login_histories WHERE user_id = ? AND created_at < DATE_SUB(NOW(), INTERVAL 3 MONTH)',
+      [userId]
+    );
+
+    await connection.query(
+      'DELETE FROM support_inquiries WHERE user_id = ? AND created_at < DATE_SUB(NOW(), INTERVAL 3 YEAR)',
+      [userId]
+    );
+
+    await connection.query(
+      'DELETE FROM point_histories WHERE user_id = ? AND created_at < DATE_SUB(NOW(), INTERVAL 5 YEAR)',
+      [userId]
+    );
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 module.exports = {
   clearExpiredLoginRestriction,
   ensureResolvedLoginRestriction,
@@ -467,6 +567,7 @@ module.exports = {
   findByNickname,
   findByNicknameExceptUser,
   updateUserProfile,
+  withdrawUserById,
   getBusinessProfileByUserId,
   upsertBusinessProfileByUserId,
   recordUserLoginHistory,

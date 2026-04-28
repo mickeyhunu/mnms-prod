@@ -275,6 +275,12 @@ function bindProfileForm() {
     const phoneInput = form.querySelector('#profile-phone');
     const phoneVerifyButton = form.querySelector('#phone-verify-btn');
     const phoneVerifyResult = form.querySelector('#phone-verify-result');
+    const withdrawOpenButton = document.getElementById('withdraw-open-btn');
+    const withdrawFormSection = document.getElementById('withdraw-form-section');
+    const withdrawCancelButton = document.getElementById('withdraw-cancel-btn');
+    const withdrawSubmitButton = document.getElementById('withdraw-submit-btn');
+    const withdrawReasonInput = document.getElementById('withdraw-reason');
+    const withdrawResult = document.getElementById('withdraw-result');
 
     if (phoneInput) phoneInput.readOnly = true;
 
@@ -411,6 +417,66 @@ function bindProfileForm() {
                 setHelpMessage(phoneVerifyResult, error?.message || '연락처 본인인증 중 오류가 발생했습니다.', '#dc3545');
             } finally {
                 phoneVerifyButton.disabled = false;
+            }
+        });
+    }
+
+    if (withdrawOpenButton && withdrawFormSection) {
+        withdrawOpenButton.addEventListener('click', () => {
+            withdrawFormSection.classList.remove('hidden');
+            withdrawOpenButton.classList.add('hidden');
+            if (withdrawReasonInput) withdrawReasonInput.focus();
+        });
+    }
+
+    if (withdrawCancelButton) {
+        withdrawCancelButton.addEventListener('click', () => {
+            window.history.back();
+        });
+    }
+
+    if (withdrawSubmitButton && withdrawReasonInput) {
+        withdrawSubmitButton.addEventListener('click', async () => {
+            const withdrawReason = String(withdrawReasonInput.value || '').trim();
+            if (!withdrawReason) {
+                setHelpMessage(withdrawResult, '탈퇴 사유를 입력해 주세요.', '#dc3545');
+                withdrawReasonInput.focus();
+                return;
+            }
+
+            if (!window.confirm('본인인증 후 회원 탈퇴를 진행합니다. 계속하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                withdrawSubmitButton.disabled = true;
+                setHelpMessage(withdrawResult, '본인인증을 진행합니다...', '#6c757d');
+
+                const PortOne = await loadMyPagePortOneSdk();
+                const identityConfig = await getMyPageIdentityConfig();
+                const response = await PortOne.requestIdentityVerification({
+                    storeId: identityConfig.storeId,
+                    identityVerificationId: `my-page-withdraw-${Date.now()}`,
+                    channelKey: identityConfig.channelKey
+                });
+
+                if (response?.code) {
+                    throw new Error(response.message || '본인인증에 실패했습니다.');
+                }
+
+                const identityVerificationId = String(response?.identityVerificationId || '').trim();
+                if (!identityVerificationId) {
+                    throw new Error('본인인증 거래 정보를 확인하지 못했습니다. 다시 시도해주세요.');
+                }
+
+                setHelpMessage(withdrawResult, '탈퇴 처리 중입니다...', '#6c757d');
+                await APIClient.delete('/users/me', { reason: withdrawReason, identityVerificationId });
+                alert('회원 탈퇴가 완료되었습니다.');
+                Auth.logout();
+            } catch (error) {
+                setHelpMessage(withdrawResult, error?.message || '회원 탈퇴 처리 중 오류가 발생했습니다.', '#dc3545');
+            } finally {
+                withdrawSubmitButton.disabled = false;
             }
         });
     }
