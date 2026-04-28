@@ -2,6 +2,7 @@
  * 파일 역할: 공지사항/FAQ 도메인 데이터의 DB 조회/저장 쿼리를 담당하는 모델 파일.
  */
 const { getPool } = require('../config/database');
+const communityEditLogModel = require('./communityEditLogModel');
 
 const SUPPORT_CATEGORIES = {
   NOTICE: 'NOTICE',
@@ -201,6 +202,15 @@ async function createInquiry({ userId, type, title, content, targetType = null, 
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [userId, normalizedType, normalizedTargetType, normalizedTargetId, title, content, JSON.stringify(normalizeAttachmentUrls(attachmentUrls)), INQUIRY_STATUSES.PENDING]
   );
+
+  const isReportInquiry = normalizedType === INQUIRY_TYPES.POST_REPORT || normalizedType === INQUIRY_TYPES.COMMENT_REPORT;
+  if (isReportInquiry && normalizedTargetId && (normalizedTargetType === communityEditLogModel.TARGET_TYPES.POST || normalizedTargetType === communityEditLogModel.TARGET_TYPES.COMMENT)) {
+    await communityEditLogModel.cleanupExpiredEditLogs();
+    await communityEditLogModel.extendRetentionForReportedTarget({
+      targetType: normalizedTargetType,
+      targetId: normalizedTargetId
+    });
+  }
 
   return result.insertId;
 }

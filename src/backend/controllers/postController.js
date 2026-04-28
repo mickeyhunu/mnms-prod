@@ -2,6 +2,7 @@
  * 파일 역할: postController 관련 HTTP 요청을 처리하고 모델/응답 로직을 조합하는 컨트롤러 파일.
  */
 const postModel = require('../models/postModel');
+const communityEditLogModel = require('../models/communityEditLogModel');
 const { awardPointByAction, revokePointByAction } = require('../models/pointModel');
 const {
   deleteS3ObjectsByUrls,
@@ -426,10 +427,26 @@ async function updatePost(req, res, next) {
     const previousImageUrls = extractImageUrlsFromPost(post);
 
     const nextImageUrls = await resolveImageUrls(req.body);
+    const nextTitle = req.body.title ?? post.title;
+    const nextContent = req.body.content ?? post.content;
+    const hasPostBodyChanged = String(nextTitle) !== String(post.title)
+      || String(nextContent) !== String(post.content);
+
+    if (hasPostBodyChanged) {
+      await communityEditLogModel.cleanupExpiredEditLogs();
+      await communityEditLogModel.createPostEditLog({
+        postId,
+        editorUserId: req.user.id,
+        previousTitle: post.title,
+        previousContent: post.content,
+        nextTitle,
+        nextContent
+      });
+    }
 
     await postModel.updatePost(postId, {
-      title: req.body.title ?? post.title,
-      content: req.body.content ?? post.content,
+      title: nextTitle,
+      content: nextContent,
       imageUrls: nextImageUrls,
       isNotice: req.user.role === 'ADMIN' ? Boolean(req.body.isNotice) : Boolean(post.is_notice),
       noticeType: req.user.role === 'ADMIN'
@@ -613,6 +630,16 @@ async function updateComment(req, res, next) {
 
     const content = (req.body.content || '').trim();
     if (!content) return res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
+
+    if (String(comment.content || '') !== content) {
+      await communityEditLogModel.cleanupExpiredEditLogs();
+      await communityEditLogModel.createCommentEditLog({
+        commentId,
+        editorUserId: req.user.id,
+        previousContent: comment.content,
+        nextContent: content
+      });
+    }
 
     await postModel.updateComment(commentId, content);
     const post = await postModel.findPostById(comment.post_id);
