@@ -46,7 +46,6 @@ const HeaderNotificationCenter = {
 
     bindEvents() {
         const button = document.getElementById('header-notification-button');
-        const panel = document.getElementById('header-notification-panel');
         const readAllButton = document.getElementById('header-notification-read-all');
 
         if (button && button.dataset.boundNotification !== 'true') {
@@ -54,14 +53,17 @@ const HeaderNotificationCenter = {
             button.addEventListener('click', async (event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                const isHidden = panel.classList.contains('hidden');
-                if (isHidden) {
-                    panel.classList.remove('hidden');
-                    button.setAttribute('aria-expanded', 'true');
+                const panel = document.getElementById('header-notification-panel');
+                if (!panel) {
+                    return;
+                }
+                const willOpen = panel.classList.contains('hidden');
+                this.setOpenState(willOpen);
+                if (willOpen) {
+                    if (typeof HeaderUserMenu !== 'undefined' && typeof HeaderUserMenu.setOpenState === 'function') {
+                        HeaderUserMenu.setOpenState(false);
+                    }
                     await this.refresh();
-                } else {
-                    panel.classList.add('hidden');
-                    button.setAttribute('aria-expanded', 'false');
                 }
             });
         }
@@ -113,15 +115,19 @@ const HeaderNotificationCenter = {
                 if (!wrapper || clickedInsideWrapper) {
                     return;
                 }
-                if (panel && !panel.classList.contains('hidden')) {
-                    panel.classList.add('hidden');
-                }
-                if (button) {
-                    button.setAttribute('aria-expanded', 'false');
-                }
+                this.setOpenState(false);
             };
             document.addEventListener('click', this.outsideClickHandler);
         }
+    },
+
+    setOpenState(isOpen) {
+        const button = document.getElementById('header-notification-button');
+        const panel = document.getElementById('header-notification-panel');
+        if (!button || !panel) return;
+
+        panel.classList.toggle('hidden', !isOpen);
+        button.setAttribute('aria-expanded', String(isOpen));
     },
 
     async markAsRead(notificationKey) {
@@ -300,6 +306,10 @@ const HeaderUserMenu = {
         const button = document.getElementById('user-nickname');
         const dropdown = document.getElementById('header-user-dropdown');
         if (!button || !dropdown) return;
+
+        if (isOpen && typeof HeaderNotificationCenter !== 'undefined' && typeof HeaderNotificationCenter.setOpenState === 'function') {
+            HeaderNotificationCenter.setOpenState(false);
+        }
 
         dropdown.classList.toggle('hidden', !isOpen);
         button.setAttribute('aria-expanded', String(isOpen));
