@@ -1814,6 +1814,14 @@
     background: transparent;
 }
 
+.mypage-linked-container .support-post-detail {
+    margin-bottom: 0;
+}
+
+.mypage-linked-container .support-detail-list-link-wrap {
+    margin-top: 12px;
+}
+
 .my-inquiry-info-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
