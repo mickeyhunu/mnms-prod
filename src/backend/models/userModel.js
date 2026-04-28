@@ -3,6 +3,7 @@
  */
 const { getPool } = require('../config/database');
 const { getLoginRestrictionState, LOGIN_STATUS } = require('../utils/loginRestriction');
+const { hashPassword } = require('../utils/passwordHasher');
 
 async function createUser({
   email,
@@ -480,11 +481,15 @@ async function withdrawUserById(userId, { reason = '' } = {}) {
       [user.identity_ci_hash || null, user.identity_di_hash || null, user.phone_hash || null, reason || null, restrictedUntil]
     );
 
+    const withdrawnNickname = `탈퇴회원${userId}`;
     const maskedEmail = `withdrawn_${userId}_${Date.now()}@deleted.local`;
+    const withdrawnPasswordHash = await hashPassword(`withdrawn:${userId}:${Date.now()}`);
     await connection.query(
       `UPDATE users
-       SET email = ?,
-           password = CONCAT('withdrawn:', id, ':', UNIX_TIMESTAMP()),
+       SET nickname = ?,
+           last_nickname_changed_at = NOW(),
+           email = ?,
+           password = ?,
            name = NULL,
            birth_date = NULL,
            gender_digit = NULL,
@@ -503,11 +508,47 @@ async function withdrawUserById(userId, { reason = '' } = {}) {
            login_restricted_until = NULL,
            is_login_restriction_permanent = 1
        WHERE id = ?`,
-      [maskedEmail, userId]
+      [withdrawnNickname, maskedEmail, withdrawnPasswordHash, userId]
     );
 
-    await connection.query('DELETE FROM business_ads WHERE owner_user_id = ?', [userId]);
-    await connection.query('DELETE FROM business_profiles WHERE user_id = ?', [userId]);
+    await connection.query(
+      `UPDATE business_ads
+       SET business_name = '',
+           manager_name = '',
+           manager_contact = '',
+           description = NULL,
+           registration_status = 'UNREGISTERED'
+       WHERE owner_user_id = ?`,
+      [userId]
+    );
+
+    await connection.query(
+      `UPDATE business_profiles
+       SET company_name = NULL,
+           business_registration_number = NULL,
+           manager_name = NULL,
+           contact_phone = NULL,
+           has_ad_permission = 0,
+           registration_status = 'UNREGISTERED',
+           business_info = NULL
+       WHERE user_id = ?`,
+      [userId]
+    );
+
+    await connection.query(
+      'DELETE FROM user_login_histories WHERE user_id = ? AND created_at < DATE_SUB(NOW(), INTERVAL 3 MONTH)',
+      [userId]
+    );
+
+    await connection.query(
+      'DELETE FROM support_inquiries WHERE user_id = ? AND created_at < DATE_SUB(NOW(), INTERVAL 3 YEAR)',
+      [userId]
+    );
+
+    await connection.query(
+      'DELETE FROM point_histories WHERE user_id = ? AND created_at < DATE_SUB(NOW(), INTERVAL 5 YEAR)',
+      [userId]
+    );
     await connection.commit();
   } catch (error) {
     await connection.rollback();
