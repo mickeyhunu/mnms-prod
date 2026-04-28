@@ -406,7 +406,7 @@
 
 .admin-notice:hover {
     background: rgba(217, 217, 217, 0.26);
-    border-color: #000000;
+    border-color: #d9e0ee;
 }
 
 .admin-notice .post-content {

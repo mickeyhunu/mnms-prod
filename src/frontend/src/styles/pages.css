@@ -1340,10 +1340,6 @@
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
-.mypage-linked-container .community-section-header {
-    margin: 0 0 12px;
-}
-
 .mypage-linked-container #support-public-list {
     overflow: hidden;
     background: #fff;
@@ -1816,8 +1812,7 @@
     margin-bottom: 0;
 }
 
-.mypage-linked-container .support-detail-list-link-wrap {
-    margin-top: 12px;
+.mypage-linked-container {
 }
 
 .my-inquiry-info-grid {

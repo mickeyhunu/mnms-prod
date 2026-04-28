@@ -304,28 +304,9 @@ async function loadArticleDetail(articleId, sourceType) {
 
         list.innerHTML = `
             <div class="bbs-view max-contents post-detail support-post-detail" id="post-detail">
-                <header class="post-detail-header">
-                    <div class="post-header-left">
-                        <button type="button" class="icon-btn icon-btn-square" id="back-btn" aria-label="뒤로가기">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="m15 18-6-6 6-6"></path>
-                            </svg>
-                        </button>
-                        <span class="post-board-name" id="post-board-name">공지사항</span>
-                    </div>
-                    <div class="post-header-right">
-                        <button type="button" class="icon-btn icon-btn-square" id="share-btn" aria-label="공유하기">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-                                <polyline points="16 6 12 2 8 6"></polyline>
-                                <line x1="12" x2="12" y1="2" y2="15"></line>
-                            </svg>
-                        </button>
-                    </div>
-                </header>
                 <div class="top">
                     <div class="tit">
-                        <h1 id="post-title">${detailTitle}</h1>
+                        <h1 id="post-title">[공지] ${detailTitle}</h1>
                     </div>
                     <div class="grid">
                         <div class="picture">
@@ -343,9 +324,9 @@ async function loadArticleDetail(articleId, sourceType) {
                 <div class="body">
                     <div class="content" id="post-content">${detailContent}</div>
                 </div>
-            </div>
-            <div class="support-detail-list-link-wrap">
-                <a class="btn btn-outline btn-sm" href="/support">목록으로</a>
+                <div class="post-actions">
+                    <a class="btn btn-outline btn-sm" href="/support">목록으로</a>
+                </div>
             </div>
         `;
 
