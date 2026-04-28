@@ -297,27 +297,59 @@ async function loadArticleDetail(articleId, sourceType) {
 
         if (!list) return;
 
-        const detailCreatedAt = formatDateOnly(article.createdAt || article.created_at) || '';
+        const detailCreatedAt = formatDateTime(article.createdAt || article.created_at) || '';
         const detailTitle = sanitizeHTML(article.title || '제목 없음');
         const detailContent = sanitizeHTML(article.content || '').replace(/\n/g, '<br>');
+        const detailViews = Number(article.viewCount || article.view_count || 0);
 
         list.innerHTML = `
-            <article class="post-card admin-notice" style="cursor:default;">
-                <div class="post-header">
+            <div class="bbs-view max-contents post-detail support-post-detail" id="post-detail">
+                <header class="post-detail-header">
                     <div class="post-header-left">
-                        <h3 class="post-title">${detailTitle}</h3>
-                        <div class="post-meta support-notice-meta">
-                            <span class="post-date support-notice-date">${detailCreatedAt}</span>
+                        <button type="button" class="icon-btn icon-btn-square" id="back-btn" aria-label="뒤로가기">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="m15 18-6-6 6-6"></path>
+                            </svg>
+                        </button>
+                        <span class="post-board-name" id="post-board-name">공지사항</span>
+                    </div>
+                    <div class="post-header-right">
+                        <button type="button" class="icon-btn icon-btn-square" id="share-btn" aria-label="공유하기">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                                <polyline points="16 6 12 2 8 6"></polyline>
+                                <line x1="12" x2="12" y1="2" y2="15"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </header>
+                <div class="top">
+                    <div class="tit">
+                        <h1 id="post-title">${detailTitle}</h1>
+                    </div>
+                    <div class="grid">
+                        <div class="picture">
+                            <span class="author-avatar" aria-hidden="true"></span>
+                        </div>
+                        <div class="user">
+                            <span id="post-author" class="s-fs-body">관리자 <img class="comment-level-badge" src="/src/assets/lv-badges/admin.png" alt="관리자 배지" loading="lazy"></span>
+                        </div>
+                        <div class="caption">
+                            <span id="post-date">${detailCreatedAt}</span>
+                            <span id="view-count">조회수 ${Number.isFinite(detailViews) ? detailViews : 0}</span>
                         </div>
                     </div>
                 </div>
-                <div class="post-content" style="white-space:normal;line-height:1.7;">${detailContent}</div>
-            </article>
-            <div style="margin-top:12px;">
+                <div class="body">
+                    <div class="content" id="post-content">${detailContent}</div>
+                </div>
+            </div>
+            <div class="support-detail-list-link-wrap">
                 <a class="btn btn-outline btn-sm" href="/support">목록으로</a>
             </div>
         `;
 
+        bindArticleDetailEvents();
         list.classList.remove('hidden');
     } catch (error) {
         if (errorBox) {
@@ -328,6 +360,58 @@ async function loadArticleDetail(articleId, sourceType) {
     } finally {
         loading?.classList.add('hidden');
     }
+}
+
+function bindArticleDetailEvents() {
+    const backBtn = document.getElementById('back-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            window.location.href = '/support';
+        });
+    }
+
+    const shareBtn = document.getElementById('share-btn');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', async () => {
+            const shareUrl = window.location.href;
+            try {
+                if (navigator.share) {
+                    await navigator.share({
+                        title: document.title || '공지사항',
+                        url: shareUrl
+                    });
+                    return;
+                }
+
+                if (navigator.clipboard?.writeText) {
+                    await navigator.clipboard.writeText(shareUrl);
+                    showNotification('링크가 복사되었습니다.', 'success');
+                    return;
+                }
+
+                throw new Error('clipboard-unsupported');
+            } catch (error) {
+                if (error?.name !== 'AbortError') {
+                    showNotification('공유 기능을 사용할 수 없습니다.', 'warning');
+                }
+            }
+        });
+    }
+}
+
+function formatDateTime(dateString) {
+    if (!dateString) return '';
+
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return String(dateString);
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${year}.${month}.${day}. ${hours}:${minutes}`;
 }
 
 function formatDateOnly(dateString) {
