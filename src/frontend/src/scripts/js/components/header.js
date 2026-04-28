@@ -4,6 +4,7 @@
 const HeaderNotificationCenter = {
     refreshTimer: null,
     outsideClickHandler: null,
+    showAllNotifications: false,
 
     async init() {
         const user = Auth.getUser();
@@ -15,6 +16,7 @@ const HeaderNotificationCenter = {
             return;
         }
 
+        this.showAllNotifications = false;
         this.bindEvents();
         await this.refresh();
         this.startAutoRefresh();
@@ -67,6 +69,11 @@ const HeaderNotificationCenter = {
         if (readAllButton && readAllButton.dataset.boundNotificationReadAll !== 'true') {
             readAllButton.dataset.boundNotificationReadAll = 'true';
             readAllButton.addEventListener('click', () => {
+                if (this.showAllNotifications) {
+                    this.showAllNotifications = false;
+                    this.renderCurrentState();
+                    return;
+                }
                 this.markAllAsRead();
             });
         }
@@ -75,6 +82,13 @@ const HeaderNotificationCenter = {
         if (list && list.dataset.boundNotificationList !== 'true') {
             list.dataset.boundNotificationList = 'true';
             list.addEventListener('click', async (event) => {
+                const viewAllButton = event.target.closest('[data-notification-action="view-all"]');
+                if (viewAllButton) {
+                    this.showAllNotifications = true;
+                    this.renderCurrentState();
+                    return;
+                }
+
                 const item = event.target.closest('[data-notification-key]');
                 if (!item) return;
                 const notificationKey = item.dataset.notificationKey;
@@ -154,15 +168,26 @@ const HeaderNotificationCenter = {
     renderCurrentState() {
         const list = document.getElementById('header-notification-list');
         const dot = document.getElementById('header-notification-dot');
-        if (!list || !dot) return;
+        const readAllButton = document.getElementById('header-notification-read-all');
+        if (!list || !dot || !readAllButton) return;
 
-        const notifications = this.currentNotifications || [];
-        const hasUnread = notifications.some((item) => !item.isRead);
+        const allNotifications = this.currentNotifications || [];
+        const unreadNotifications = allNotifications.filter((item) => !item.isRead);
+        const hasUnread = unreadNotifications.length > 0;
 
         dot.classList.toggle('hidden', !hasUnread);
+        readAllButton.textContent = this.showAllNotifications ? '새 알림' : '모두 확인';
+        readAllButton.classList.toggle('hidden', !this.showAllNotifications && !hasUnread);
+
+        const notifications = this.showAllNotifications ? allNotifications : unreadNotifications;
 
         if (!notifications.length) {
-            list.innerHTML = '<div class="header-notification-empty">새로운 알림이 없습니다.</div>';
+            list.innerHTML = `
+                <div class="header-notification-empty">
+                    <div>새로운 알림이 없습니다.</div>
+                    <button type="button" class="header-notification-view-all" data-notification-action="view-all">전체 알림함</button>
+                </div>
+            `;
             return;
         }
 
