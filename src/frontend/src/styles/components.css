@@ -357,8 +357,6 @@
 
 .admin-notice {
     background: #ffffff;
-    border-left: 4px solid #e53e3e;
-    border-radius: var(--radius-md);
     position: relative;
     overflow: hidden;
 }
@@ -372,7 +370,6 @@
 }
 
 .admin-notice .post-title {
-    color: #c53030;
     font-weight: 600;
     font-size: 16px;
     white-space: nowrap;
@@ -408,8 +405,8 @@
 }
 
 .admin-notice:hover {
-    background: #ffffff;
-    border-color: #e53e3e;
+    background: rgba(217, 217, 217, 0.26);
+    border-color: #000000;
 }
 
 .admin-notice .post-content {
