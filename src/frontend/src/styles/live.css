@@ -625,7 +625,7 @@ body[data-page="live"] .header {
 }
 
 
-.live-entry-list--entry-blurred .entry-live-card {
+.live-entry-list--entry-blurred .entry-live-card__chips {
     filter: blur(8px);
     user-select: none;
     pointer-events: none;
