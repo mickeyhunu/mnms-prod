@@ -624,12 +624,8 @@ body[data-page="live"] .header {
     backdrop-filter: blur(10px);
 }
 
-.live-entry-list--entry-blurred .entry-live-card__chips {
-    filter: blur(8px);
-    user-select: none;
-    pointer-events: none;
-}
-
+.live-chat-card__message-blur,
+.live-entry-list--entry-blurred .entry-live-card__chips,
 .live-entry-list--entry-blurred .entry-live-card__ranking-name {
     filter: blur(8px);
     user-select: none;
@@ -781,12 +777,6 @@ body[data-page="live"] .header {
     line-height: 1.9;
     white-space: pre-wrap;
     word-break: break-word;
-}
-
-.live-chat-card__message-blur {
-    filter: blur(8px);
-    user-select: none;
-    pointer-events: none;
 }
 
 
