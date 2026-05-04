@@ -1497,7 +1497,11 @@ function createEntrySummaryLiveCard(rows, titleColumn) {
     const latestTimestamp = findLatestEntryTimestamp(sortedRows);
     const storeName = resolveChoiceStoreName(sortedRows[0] || rows[0] || {}) || getSelectedStoreName();
     const title = storeName ? `${storeName} 엔트리` : '엔트리';
-    const entryNameRows = chunkEntryNames(entryNames, 5);
+    const isRestricted = isEntryRestrictedView();
+    const chipLabelRows = chunkEntryNames(
+        isRestricted ? entryNames.map(() => '블러') : entryNames,
+        5
+    );
     const contentHtml = `
         <div class="entry-live-card">
             <section class="entry-live-card__section entry-live-card__section--count">
@@ -1513,8 +1517,8 @@ function createEntrySummaryLiveCard(rows, titleColumn) {
                     <h3 class="entry-live-card__section-title">엔트리 목록</h3>
                 </div>
                 <div class="entry-live-card__chips">
-                    ${entryNameRows.length
-                        ? entryNameRows.map((row) => `
+                    ${chipLabelRows.length
+                        ? chipLabelRows.map((row) => `
                             <div class="entry-live-card__chip-row">
                                 ${row.map((name) => `<span class="entry-live-card__chip">${sanitizeHTML(name)}</span>`).join('')}
                             </div>
