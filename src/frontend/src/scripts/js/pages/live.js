@@ -818,7 +818,7 @@ function renderCategoryButtons(categories) {
         };
     });
     const selectedHasAccess = Boolean(liveState.accessRules?.access?.[liveState.selectedCategoryKey] ?? true);
-    if (!selectedHasAccess && liveState.selectedCategoryKey !== 'entry') {
+    if (!selectedHasAccess && !['entry', 'chojoong', 'waiting'].includes(liveState.selectedCategoryKey)) {
         liveState.selectedCategoryKey = 'choice';
     }
 
@@ -966,9 +966,12 @@ function isChoiceLikeCategory(categoryKey = liveState.selectedCategoryKey) {
     return categoryKey === 'choice' || categoryKey === 'chojoong';
 }
 
+function isCategoryRestrictedView(categoryKey = liveState.selectedCategoryKey) {
+    return !Boolean(liveState.accessRules?.access?.[categoryKey] ?? true);
+}
+
 function isEntryRestrictedView() {
-    return liveState.selectedCategoryKey === 'entry'
-        && !Boolean(liveState.accessRules?.access?.entry ?? true);
+    return liveState.selectedCategoryKey === 'entry' && isCategoryRestrictedView('entry');
 }
 
 function getChoiceLikeMessageCandidates() {
@@ -986,6 +989,7 @@ function syncLiveListLayout(listElement) {
     listElement.classList.toggle('live-entry-list--timeline', isHistoryTimeline);
     listElement.classList.toggle('live-entry-list--entry', liveState.selectedCategoryKey === 'entry');
     listElement.classList.toggle('live-entry-list--entry-blurred', isEntryRestrictedView());
+    listElement.classList.toggle('live-entry-list--content-blurred', ['chojoong', 'waiting'].includes(liveState.selectedCategoryKey) && isCategoryRestrictedView(liveState.selectedCategoryKey));
 }
 
 function buildLiveEntriesQuery({ appendOlder = false } = {}) {
