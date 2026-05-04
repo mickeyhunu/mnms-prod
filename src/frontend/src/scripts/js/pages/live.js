@@ -216,16 +216,11 @@ function bindLiveEvents() {
     categoryFilter?.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-category-option]');
         if (!button) return;
-        if (button.dataset.locked === 'true' && (button.dataset.categoryOption || '') !== 'entry') {
-            showLiveAccessConditionMessage(button.dataset.deniedReason || '열람 조건을 충족해야 합니다.');
-            return;
-        }
-
         const nextCategoryKey = button.dataset.categoryOption || 'choice';
         if (liveState.selectedCategoryKey === nextCategoryKey) return;
 
         liveState.selectedCategoryKey = nextCategoryKey;
-        if (button.dataset.locked === 'true' && nextCategoryKey === 'entry') {
+        if (button.dataset.locked === 'true') {
             showLiveAccessConditionMessage(button.dataset.deniedReason || '열람 조건을 충족해야 합니다.');
         }
         renderCategoryButtons(liveState.categories);
@@ -830,7 +825,8 @@ function renderCategoryButtons(categories) {
     categoryFilter.innerHTML = normalizedCategories.map((category) => {
         const hasAccess = Boolean(liveState.accessRules?.access?.[category.key] ?? true);
         const deniedReason = getLiveCategoryDeniedReason(category.key);
-        return `<button type="button" class="area-filter__button area-filter__button--district ${liveState.selectedCategoryKey === category.key ? 'is-active' : ''} ${hasAccess ? '' : 'is-locked'}" data-category-option="${category.key}" data-locked="${hasAccess ? 'false' : 'true'}" aria-disabled="${hasAccess ? 'false' : 'true'}" ${!hasAccess && deniedReason ? `data-denied-reason="${sanitizeHTML(deniedReason)}"` : ''}>${sanitizeHTML(category.label)}</button>`;
+        const shouldShowLockedStyle = !hasAccess && !['chojoong', 'waiting', 'entry'].includes(category.key);
+        return `<button type="button" class="area-filter__button area-filter__button--district ${liveState.selectedCategoryKey === category.key ? 'is-active' : ''} ${shouldShowLockedStyle ? 'is-locked' : ''}" data-category-option="${category.key}" data-locked="${hasAccess ? 'false' : 'true'}" aria-disabled="${hasAccess ? 'false' : 'true'}" ${!hasAccess && deniedReason ? `data-denied-reason="${sanitizeHTML(deniedReason)}"` : ''}>${sanitizeHTML(category.label)}</button>`;
     }).join('');
     syncScrollableFilterState(categoryFilter);
 }
