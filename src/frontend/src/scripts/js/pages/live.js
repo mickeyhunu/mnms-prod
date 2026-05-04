@@ -2089,7 +2089,10 @@ function buildWaitingMessage({ storeName, storeAddress, waitInfo, roomInfo, room
     );
 
     if (detailLines.length) {
-        lines.push('', ...detailLines);
+        const normalizedDetailLines = blurSensitiveLines
+            ? detailLines.map((line) => wrapBlurMarker(line))
+            : detailLines;
+        lines.push('', ...normalizedDetailLines);
     }
 
     lines.push('', blurSensitiveLines ? wrapBlurMarker(waitInfoLine) : waitInfoLine, '➖➖➖➖➖➖➖➖➖');
