@@ -323,7 +323,11 @@ const HeaderUserMenu = {
     }
 };
 
-function initHeader() {
+async function initHeader() {
+    if (typeof Auth.restoreSessionIfNeeded === 'function') {
+        await Auth.restoreSessionIfNeeded();
+    }
+
     Auth.updateHeaderUI();
     Auth.bindLogoutButton();
     HeaderUserMenu.init();
@@ -341,7 +345,10 @@ function autoInitHeader() {
         return;
     }
 
-    initHeader();
+    initHeader().catch((error) => {
+        console.error('Header initialization failed:', error);
+        Auth.updateHeaderUI();
+    });
 }
 
 function updateHeaderForUser(user) {
