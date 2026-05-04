@@ -624,6 +624,12 @@ body[data-page="live"] .header {
     backdrop-filter: blur(10px);
 }
 
+
+.live-entry-list--entry-blurred .entry-live-card {
+    filter: blur(8px);
+    user-select: none;
+    pointer-events: none;
+}
 .entry-live-card {
     width: 100%;
     color: #f4f4f5;

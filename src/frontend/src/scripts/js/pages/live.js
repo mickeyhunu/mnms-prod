@@ -216,7 +216,7 @@ function bindLiveEvents() {
     categoryFilter?.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-category-option]');
         if (!button) return;
-        if (button.dataset.locked === 'true') {
+        if (button.dataset.locked === 'true' && (button.dataset.categoryOption || '') !== 'entry') {
             showLiveAccessConditionMessage(button.dataset.deniedReason || '열람 조건을 충족해야 합니다.');
             return;
         }
@@ -225,6 +225,9 @@ function bindLiveEvents() {
         if (liveState.selectedCategoryKey === nextCategoryKey) return;
 
         liveState.selectedCategoryKey = nextCategoryKey;
+        if (button.dataset.locked === 'true' && nextCategoryKey === 'entry') {
+            showLiveAccessConditionMessage(button.dataset.deniedReason || '열람 조건을 충족해야 합니다.');
+        }
         renderCategoryButtons(liveState.categories);
         resetLiveEntriesState();
         await loadLiveEntries({ showLoading: true, syncToLatest: true });
@@ -820,7 +823,7 @@ function renderCategoryButtons(categories) {
         };
     });
     const selectedHasAccess = Boolean(liveState.accessRules?.access?.[liveState.selectedCategoryKey] ?? true);
-    if (!selectedHasAccess) {
+    if (!selectedHasAccess && liveState.selectedCategoryKey !== 'entry') {
         liveState.selectedCategoryKey = 'choice';
     }
 
@@ -967,6 +970,11 @@ function isChoiceLikeCategory(categoryKey = liveState.selectedCategoryKey) {
     return categoryKey === 'choice' || categoryKey === 'chojoong';
 }
 
+function isEntryRestrictedView() {
+    return liveState.selectedCategoryKey === 'entry'
+        && !Boolean(liveState.accessRules?.access?.entry ?? true);
+}
+
 function getChoiceLikeMessageCandidates() {
     if (liveState.selectedCategoryKey === 'chojoong') {
         return ['chojoongMsg', 'chojoong_msg', 'message', 'msg', 'content'];
@@ -981,6 +989,7 @@ function syncLiveListLayout(listElement) {
     const isHistoryTimeline = shouldUseHistoryPagination();
     listElement.classList.toggle('live-entry-list--timeline', isHistoryTimeline);
     listElement.classList.toggle('live-entry-list--entry', liveState.selectedCategoryKey === 'entry');
+    listElement.classList.toggle('live-entry-list--entry-blurred', isEntryRestrictedView());
 }
 
 function buildLiveEntriesQuery({ appendOlder = false } = {}) {
