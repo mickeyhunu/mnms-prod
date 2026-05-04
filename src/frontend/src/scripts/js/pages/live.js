@@ -1452,10 +1452,13 @@ function createChoiceLiveEntryCard(row, index, title, choiceMessage = '') {
         ? `<button type="button" class="live-chat-card__delete-button" data-live-chojoong-delete="${rowId}">삭제</button>`
         : '';
 
+    const normalizedMessage = formatFieldValue(choiceMessage);
+    const shouldBlurMessage = liveState.selectedCategoryKey === 'chojoong' && isCategoryRestrictedView('chojoong');
+
     return createLiveChatCard({
         index,
         title: resolveChoiceCardTitle(storeName, title),
-        message: formatFieldValue(choiceMessage),
+        body: `<p class="live-chat-card__message">${convertTextToHtml(shouldBlurMessage ? wrapBlurMarker(normalizedMessage) : normalizedMessage)}</p>`,
         timestamp,
         rawTimestamp: createdAt,
         avatarLabel: getChoiceAvatarLabel(storeName, index),
