@@ -625,6 +625,15 @@ body[data-page="live"] .header {
 }
 
 
+
+.live-entry-list--content-blurred .live-chat-card__message,
+.live-entry-list--content-blurred .live-chat-card__details,
+.live-entry-list--content-blurred .live-chat-card__detail-value {
+    filter: blur(8px);
+    user-select: none;
+    pointer-events: none;
+}
+
 .live-entry-list--entry-blurred .entry-live-card__chips {
     filter: blur(8px);
     user-select: none;
