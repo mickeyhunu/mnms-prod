@@ -235,6 +235,29 @@ const Auth = {
 
         this.updateHeaderUI();
     },
+
+    async restoreSessionIfNeeded() {
+        if (!this.isAuthenticated() || this.getUser()) {
+            return;
+        }
+
+        if (typeof AuthAPI === 'undefined') {
+            return;
+        }
+
+        try {
+            if (typeof AuthAPI.getCurrentUser === 'function') {
+                await AuthAPI.getCurrentUser();
+                return;
+            }
+
+            if (typeof AuthAPI.refresh === 'function') {
+                await AuthAPI.refresh();
+            }
+        } catch (_error) {
+            // AuthAPI 내부에서 만료 세션을 정리하므로 여기서는 별도 처리하지 않습니다.
+        }
+    },
     isAuthenticated() {
         return !!this.getToken();
     },
