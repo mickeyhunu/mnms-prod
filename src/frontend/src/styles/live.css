@@ -630,6 +630,12 @@ body[data-page="live"] .header {
     user-select: none;
     pointer-events: none;
 }
+
+.live-entry-list--entry-blurred .entry-live-card__ranking-name {
+    filter: blur(8px);
+    user-select: none;
+    pointer-events: none;
+}
 .entry-live-card {
     width: 100%;
     color: #f4f4f5;

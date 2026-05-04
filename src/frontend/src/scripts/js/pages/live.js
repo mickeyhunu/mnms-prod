@@ -1529,15 +1529,18 @@ function createEntrySummaryLiveCard(rows, titleColumn) {
                 </div>
                 ${rankedEntries.length ? `
                     <ol class="entry-live-card__ranking-list">
-                        ${rankedEntries.map((entry, index) => `
+                        ${rankedEntries.map((entry, index) => {
+                            const rankingName = isRestricted ? '블러' : entry.name;
+                            return `
                             <li class="entry-live-card__ranking-item">
                                 <div class="entry-live-card__ranking-main">
                                     <span class="entry-live-card__ranking-rank">${sanitizeHTML(String(index + 1))}.</span>
-                                    <span class="entry-live-card__ranking-name">${sanitizeHTML(entry.name)}</span>
+                                    <span class="entry-live-card__ranking-name">${sanitizeHTML(rankingName)}</span>
                                 </div>
                                 <span class="entry-live-card__ranking-score">합계 ${sanitizeHTML(String(entry.score))}</span>
                             </li>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </ol>
                 ` : `
                     <p class="entry-live-card__empty">표시할 인기 멤버가 없습니다.</p>
