@@ -784,9 +784,9 @@ body[data-page="live"] .header {
 }
 
 .live-chat-card__message-blur {
-    display: inline;
-    filter: blur(6px);
+    filter: blur(8px);
     user-select: none;
+    pointer-events: none;
 }
 
 
