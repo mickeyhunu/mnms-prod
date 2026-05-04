@@ -1652,7 +1652,8 @@ function createWaitingLiveEntryCard(row, index, title) {
         waitInfo,
         roomInfo,
         roomDetail,
-        updatedAt: displayUpdatedAt
+        updatedAt: displayUpdatedAt,
+        blurSensitiveLines: isCategoryRestrictedView('waiting')
     });
 
     return createLiveChatCard({
@@ -2064,7 +2065,7 @@ function buildWaitingDetailLines(roomDetail) {
         });
 }
 
-function buildWaitingMessage({ storeName, storeAddress, waitInfo, roomInfo, roomDetail, updatedAt }) {
+function buildWaitingMessage({ storeName, storeAddress, waitInfo, roomInfo, roomDetail, updatedAt, blurSensitiveLines = false }) {
     const normalizedStoreName = String(storeName || '전체').trim() || '전체';
     const normalizedStoreAddress = String(storeAddress || '').trim();
     const updatedText = formatWaitingUpdatedAt(updatedAt);
@@ -2079,18 +2080,25 @@ function buildWaitingMessage({ storeName, storeAddress, waitInfo, roomInfo, room
         lines.push(`        ${normalizedStoreAddress}`);
     }
 
+    const roomInfoLine = `● 빈방 : ${roomInfo}`;
+    const waitInfoLine = `● 웨이팅 : ${waitInfo}`;
+
     lines.push(
         '➖➖➖➖➖➖➖➖➖',
-        `● 빈방 : ${roomInfo}`
+        blurSensitiveLines ? wrapBlurMarker(roomInfoLine) : roomInfoLine
     );
 
     if (detailLines.length) {
         lines.push('', ...detailLines);
     }
 
-    lines.push('', `● 웨이팅 : ${waitInfo}`, '➖➖➖➖➖➖➖➖➖');
+    lines.push('', blurSensitiveLines ? wrapBlurMarker(waitInfoLine) : waitInfoLine, '➖➖➖➖➖➖➖➖➖');
 
     return lines.join('\n');
+}
+
+function wrapBlurMarker(text) {
+    return `[[BLUR]]${String(text || '')}[[/BLUR]]`;
 }
 
 function setupShareSheet() {
@@ -2243,7 +2251,22 @@ async function copyTextToClipboard(text) {
 }
 
 function convertTextToHtml(value) {
-    return sanitizeHTML(String(value || '')).replace(/\n/g, '<br>');
+    const markerStart = '[[BLUR]]';
+    const markerEnd = '[[/BLUR]]';
+    return String(value || '')
+        .split(markerStart)
+        .map((segment) => {
+            const [blurText, ...rest] = segment.split(markerEnd);
+            if (!rest.length) {
+                return sanitizeHTML(segment);
+            }
+
+            const safeBlurText = sanitizeHTML(blurText).replace(/\n/g, '<br>');
+            const remainingText = sanitizeHTML(rest.join(markerEnd));
+            return `<span class="live-chat-card__message-blur">${safeBlurText}</span>${remainingText}`;
+        })
+        .join('')
+        .replace(/\n/g, '<br>');
 }
 
 function formatLiveEntryTime(value) {

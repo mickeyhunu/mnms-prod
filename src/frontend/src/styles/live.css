@@ -783,6 +783,12 @@ body[data-page="live"] .header {
     word-break: break-word;
 }
 
+.live-chat-card__message-blur {
+    display: inline;
+    filter: blur(6px);
+    user-select: none;
+}
+
 
 .live-chat-card__details {
     list-style: none;
