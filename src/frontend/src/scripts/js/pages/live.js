@@ -933,7 +933,7 @@ function showLiveAccessConditionMessage(message) {
 
     closeTimerId = window.setTimeout(() => {
         closeBox();
-    }, 10000);
+    }, 5000);
 
     box.querySelector('.live-access-condition-box__close')?.addEventListener('click', () => {
         closeBox();
