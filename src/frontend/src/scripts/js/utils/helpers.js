@@ -273,6 +273,25 @@ function validateNicknameComposition(value) {
    return !hasStandaloneJamo(value);
 }
 
+
+function generateIdentityVerificationId(prefix = 'iv') {
+   const normalizedPrefix = String(prefix || 'iv').replace(/[^A-Za-z0-9]/g, '') || 'iv';
+   const timestampPart = Date.now().toString(36);
+   let randomPart = '';
+
+   if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+      randomPart = window.crypto.randomUUID().replace(/[^A-Za-z0-9]/g, '');
+   } else if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+      const randomValues = new Uint32Array(2);
+      window.crypto.getRandomValues(randomValues);
+      randomPart = Array.from(randomValues, value => value.toString(36)).join('');
+   } else {
+      randomPart = Math.random().toString(36).slice(2);
+   }
+
+   return `${normalizedPrefix}${timestampPart}${randomPart}`.slice(0, 40);
+}
+
 function formatDate(dateString) {
    if (!dateString) return '';
 
