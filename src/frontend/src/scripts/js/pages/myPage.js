@@ -381,7 +381,7 @@ function bindProfileForm() {
 
                 const response = await PortOne.requestIdentityVerification({
                     storeId: identityConfig.storeId,
-                    identityVerificationId: `my-page-phone-${Date.now()}`,
+                    identityVerificationId: generateIdentityVerificationId('myphone'),
                     channelKey: identityConfig.channelKey
                 });
 
@@ -456,7 +456,7 @@ function bindProfileForm() {
                 const identityConfig = await getMyPageIdentityConfig();
                 const response = await PortOne.requestIdentityVerification({
                     storeId: identityConfig.storeId,
-                    identityVerificationId: `my-page-withdraw-${Date.now()}`,
+                    identityVerificationId: generateIdentityVerificationId('withdraw'),
                     channelKey: identityConfig.channelKey
                 });
 
