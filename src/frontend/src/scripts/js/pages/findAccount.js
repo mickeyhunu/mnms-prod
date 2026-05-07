@@ -98,7 +98,7 @@ async function handleFindAccount() {
 
         const response = await PortOne.requestIdentityVerification({
             storeId: identityConfig.storeId,
-            identityVerificationId: `find-account-${Date.now()}`,
+            identityVerificationId: generateIdentityVerificationId('findaccount'),
             channelKey: identityConfig.channelKey
         });
 

@@ -287,7 +287,7 @@ async function handleIdentityVerification() {
 
         const response = await PortOne.requestIdentityVerification({
             storeId: identityConfig.storeId,
-            identityVerificationId: `test${Date.now()}`,
+            identityVerificationId: generateIdentityVerificationId('register'),
             channelKey: identityConfig.channelKey
         });
 
