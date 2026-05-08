@@ -4,6 +4,27 @@
 
 let verifiedIdentityVerificationId = '';
 
+function logFindAccountIdentityStep(step, details = {}) {
+    if (typeof console !== 'undefined' && typeof console.log === 'function') {
+        console.log('[FindAccount Identity]', step, details);
+    }
+}
+
+function maskFindAccountIdentityValue(value) {
+    if (window.KcpIdentity && typeof window.KcpIdentity.maskValue === 'function') {
+        return window.KcpIdentity.maskValue(value);
+    }
+
+    const normalizedValue = String(value || '').trim();
+    if (!normalizedValue) {
+        return '';
+    }
+
+    return normalizedValue.length <= 8
+        ? `${normalizedValue.slice(0, 2)}***`
+        : `${normalizedValue.slice(0, 4)}***${normalizedValue.slice(-4)}`;
+}
+
 
 function setFindAccountStatus(message, tone = 'muted') {
     const statusElement = document.getElementById('find-account-status');
@@ -42,6 +63,7 @@ function hideFoundAccountSection() {
 
 async function handleFindAccount() {
     const findButton = document.getElementById('find-account-btn');
+    logFindAccountIdentityStep('계정찾기 본인인증 시작');
     try {
         if (findButton) findButton.disabled = true;
         verifiedIdentityVerificationId = '';
@@ -49,29 +71,45 @@ async function handleFindAccount() {
         setFindAccountStatus('본인인증을 진행합니다.');
 
         if (!window.KcpIdentity || typeof window.KcpIdentity.request !== 'function') {
+            logFindAccountIdentityStep('KCP 모듈 확인 실패');
             throw new Error('KCP 본인인증 모듈을 찾을 수 없습니다.');
         }
 
-        const response = await window.KcpIdentity.request({
+        logFindAccountIdentityStep('KCP 모듈 확인 성공');
+        const requestOptions = {
             ordr_idxx: generateIdentityVerificationId('findaccount'),
             kcpPageSubmitYn: 'N'
+        };
+        logFindAccountIdentityStep('KCP 본인인증 요청 호출', requestOptions);
+        const response = await window.KcpIdentity.request(requestOptions);
+        logFindAccountIdentityStep('KCP 본인인증 요청 응답', {
+            success: Boolean(response?.success),
+            identityVerificationId: maskFindAccountIdentityValue(response?.identityVerificationId || response?.regCertKey)
         });
 
         const identityVerificationId = String(response?.identityVerificationId || response?.regCertKey || '').trim();
         if (!identityVerificationId) {
+            logFindAccountIdentityStep('인증 거래 ID 확인 실패');
             throw new Error('본인인증 거래 정보를 확인하지 못했습니다. 다시 시도해주세요.');
         }
 
+        logFindAccountIdentityStep('본인인증 기반 계정 조회 시작', { identityVerificationId: maskFindAccountIdentityValue(identityVerificationId) });
         const result = await AuthAPI.findAccountByIdentity(identityVerificationId);
+        logFindAccountIdentityStep('본인인증 기반 계정 조회 완료', { found: Boolean(result?.found), message: result?.message });
         if (!result?.found) {
             showFindAccountMessage(result?.message || '가입된 아이디가 없습니다.', 'error');
             return;
         }
 
         verifiedIdentityVerificationId = identityVerificationId;
+        logFindAccountIdentityStep('계정찾기 본인인증 흐름 완료', { identityVerificationId: maskFindAccountIdentityValue(identityVerificationId) });
         showFoundAccountSection(result.loginId);
         showFindAccountMessage(`가입된 아이디: ${result.loginId}`, 'success');
     } catch (error) {
+        logFindAccountIdentityStep('계정찾기 본인인증 흐름 오류', {
+            errorName: error?.name || 'Error',
+            errorMessage: error?.message || String(error || '')
+        });
         showFindAccountMessage(error.message || '계정 찾기 중 오류가 발생했습니다.', 'error');
     } finally {
         if (findButton) findButton.disabled = false;

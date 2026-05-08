@@ -3,6 +3,28 @@
  */
 
 
+
+function logRegisterIdentityStep(step, details = {}) {
+    if (typeof console !== 'undefined' && typeof console.log === 'function') {
+        console.log('[Register Identity]', step, details);
+    }
+}
+
+function maskRegisterIdentityValue(value) {
+    if (window.KcpIdentity && typeof window.KcpIdentity.maskValue === 'function') {
+        return window.KcpIdentity.maskValue(value);
+    }
+
+    const normalizedValue = String(value || '').trim();
+    if (!normalizedValue) {
+        return '';
+    }
+
+    return normalizedValue.length <= 8
+        ? `${normalizedValue.slice(0, 2)}***`
+        : `${normalizedValue.slice(0, 4)}***${normalizedValue.slice(-4)}`;
+}
+
 function showBlockingAlert(message) {
     const resolvedMessage = String(message || '').trim();
     if (!resolvedMessage) {
@@ -315,21 +337,38 @@ function waitForKcpIdentityResult(options = {}) {
 }
 
 async function handleIdentityVerification() {
+    logRegisterIdentityStep('본인인증 버튼 처리 시작');
     try {
         if (!window.KcpIdentity || typeof window.KcpIdentity.request !== 'function') {
+            logRegisterIdentityStep('KCP 모듈 확인 실패');
             throw new Error('KCP 본인인증 모듈을 찾을 수 없습니다.');
         }
 
-        const response = await window.KcpIdentity.request({
+        logRegisterIdentityStep('KCP 모듈 확인 성공');
+        const requestOptions = {
             ordr_idxx: generateIdentityVerificationId('register'),
             kcpPageSubmitYn: 'N'
+        };
+        logRegisterIdentityStep('KCP 본인인증 요청 호출', requestOptions);
+        const response = await window.KcpIdentity.request(requestOptions);
+        logRegisterIdentityStep('KCP 본인인증 요청 응답', {
+            success: Boolean(response?.success),
+            identityVerificationId: maskRegisterIdentityValue(response?.identityVerificationId || response?.regCertKey),
+            hasVerifiedCustomer: Boolean(response?.verifiedCustomer || response?.customer)
         });
         const identityVerificationId = String(response?.identityVerificationId || response?.regCertKey || '').trim();
         if (!identityVerificationId) {
+            logRegisterIdentityStep('인증 거래 ID 확인 실패');
             throw new Error('본인인증 거래 정보를 확인하지 못했습니다. 다시 시도해주세요.');
         }
 
+        logRegisterIdentityStep('인증 결과 상세 조회 시작', { identityVerificationId: maskRegisterIdentityValue(identityVerificationId) });
         const verificationResult = await AuthAPI.getIdentityVerificationResult(identityVerificationId);
+        logRegisterIdentityStep('인증 결과 상세 조회 완료', {
+            identityVerificationId: maskRegisterIdentityValue(verificationResult?.identityVerificationId || identityVerificationId),
+            hasVerifiedCustomer: Boolean(verificationResult?.verifiedCustomer || verificationResult?.customer),
+            signupAllowed: verificationResult?.signupEligibility?.allowed
+        });
         const mergedIdentityResult = {
             ...response,
             ...verificationResult,
@@ -337,6 +376,10 @@ async function handleIdentityVerification() {
         };
         const signupEligibility = verificationResult?.signupEligibility;
         if (signupEligibility && signupEligibility.allowed === false) {
+            logRegisterIdentityStep('회원가입 가능 여부 거부', {
+                reasonCode: signupEligibility.reasonCode,
+                message: signupEligibility.message
+            });
             if (signupEligibility.reasonCode === 'FEMALE_NOT_ALLOWED') {
                 showIdentityStatus('');
                 return;
@@ -346,17 +389,32 @@ async function handleIdentityVerification() {
         }
 
         const normalizedResponse = normalizeIdentityResponse(mergedIdentityResult);
+        logRegisterIdentityStep('인증 응답 정규화 완료', {
+            hasName: Boolean(normalizedResponse.name),
+            hasBirthDate: Boolean(normalizedResponse.birthDate),
+            hasPhone: Boolean(normalizedResponse.phone),
+            hasCi: Boolean(normalizedResponse.ci),
+            hasDi: Boolean(normalizedResponse.di),
+            identityVerificationId: maskRegisterIdentityValue(normalizedResponse.identityVerificationId)
+        });
 
         if (!isIdentityDataComplete(normalizedResponse)) {
+            logRegisterIdentityStep('정규화된 인증 데이터 검증 실패');
             throw new Error('본인인증 정보가 올바르게 전달되지 않았습니다. 다시 시도해주세요.');
         }
 
         applyIdentityResponse(normalizedResponse);
+        logRegisterIdentityStep('인증 결과 화면/hidden input 반영 완료');
 
         showNotification('본인인증이 완료되었습니다.', 'success');
         showIdentityStatus('본인인증 완료');
         showStep('detail');
+        logRegisterIdentityStep('회원가입 본인인증 흐름 완료');
     } catch (error) {
+        logRegisterIdentityStep('회원가입 본인인증 흐름 오류', {
+            errorName: error?.name || 'Error',
+            errorMessage: error?.message || String(error || '')
+        });
         const message = error.message || '본인인증 중 오류가 발생했습니다.';
         showIdentityStatus(message);
         showNotification(message, 'error');
