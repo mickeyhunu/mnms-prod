@@ -2,8 +2,6 @@
  * 파일 역할: register 페이지의 이벤트/데이터 흐름을 초기화하는 페이지 스크립트 파일.
  */
 
-const PORTONE_BROWSER_SDK_URL = 'https://cdn.portone.io/v2/browser-sdk.js';
-let portOneIdentityConfig = null;
 
 function showBlockingAlert(message) {
     const resolvedMessage = String(message || '').trim();
@@ -230,77 +228,104 @@ function setupNicknameCheck() {
     }
 }
 
-async function loadPortOneSdk() {
-    if (window.PortOne && typeof window.PortOne.requestIdentityVerification === 'function') {
-        return window.PortOne;
-    }
-
-    const existingScript = document.querySelector(`script[src="${PORTONE_BROWSER_SDK_URL}"]`);
-    if (existingScript) {
-        await new Promise((resolve, reject) => {
-            existingScript.addEventListener('load', resolve, { once: true });
-            existingScript.addEventListener('error', () => reject(new Error('PortOne SDK 로드에 실패했습니다.')), { once: true });
-        });
-        return window.PortOne;
-    }
-
-    await new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = PORTONE_BROWSER_SDK_URL;
-        script.async = true;
-        script.onload = resolve;
-        script.onerror = () => reject(new Error('PortOne SDK 로드에 실패했습니다.'));
-        document.head.appendChild(script);
-    });
-
-    return window.PortOne;
+function isMobileViewport() {
+    return window.matchMedia('(max-width: 768px)').matches;
 }
 
-async function getPortOneIdentityConfig() {
-    if (portOneIdentityConfig?.storeId && portOneIdentityConfig?.channelKey) {
-        return portOneIdentityConfig;
-    }
+function submitKcpV2AuthWindow({ callUrl, regCertKey, kcpPageSubmitYn }) {
+    const pageSubmitYn = String(kcpPageSubmitYn || (isMobileViewport() ? 'Y' : 'N')).toUpperCase() === 'Y' ? 'Y' : 'N';
+    const form = document.createElement('form');
+    form.method = 'post';
+    form.action = callUrl;
+    form.style.display = 'none';
 
-    const config = await AuthAPI.getIdentityVerificationConfig();
-    const storeId = String(config?.storeId || '').trim();
-    const channelKey = String(config?.channelKey || '').trim();
-
-    if (!storeId || !channelKey) {
-        throw new Error('PortOne 본인인증 설정값을 불러오지 못했습니다.');
-    }
-
-    portOneIdentityConfig = {
-        storeId,
-        channelKey
+    const appendHiddenInput = (name, value) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
     };
 
-    return portOneIdentityConfig;
+    appendHiddenInput('reg_cert_key', regCertKey);
+    appendHiddenInput('kcp_page_submit_yn', pageSubmitYn);
+    document.body.appendChild(form);
+
+    if (pageSubmitYn === 'N') {
+        const width = 410;
+        const height = 500;
+        const left = (screen.width / 2) - (width / 2);
+        const top = (screen.height / 2) - (height / 2);
+        const opts = `width=${width},height=${height},toolbar=no,status=no,menubar=no,scrollbars=no,resizable=no,left=${left},top=${top}`;
+        const popupName = `kcp_auth_${Date.now()}`;
+        const popup = window.open('', popupName, opts);
+        if (!popup) {
+            document.body.removeChild(form);
+            throw new Error('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.');
+        }
+        form.target = popupName;
+    } else {
+        form.target = '_self';
+    }
+
+    form.submit();
+    window.setTimeout(() => {
+        if (form.parentNode) {
+            form.parentNode.removeChild(form);
+        }
+    }, 1000);
+}
+
+function waitForKcpIdentityResult() {
+    return new Promise((resolve, reject) => {
+        const timeoutId = window.setTimeout(() => {
+            window.removeEventListener('message', handleMessage);
+            reject(new Error('본인인증 응답 대기 시간이 초과되었습니다.'));
+        }, 5 * 60 * 1000);
+
+        const handleMessage = (event) => {
+            if (event.origin !== window.location.origin) {
+                return;
+            }
+
+            const data = event?.data || {};
+            if (data.type !== 'KCP_IDENTITY_VERIFICATION_RESULT') {
+                return;
+            }
+
+            window.clearTimeout(timeoutId);
+            window.removeEventListener('message', handleMessage);
+            resolve(data.payload || null);
+        };
+
+        window.addEventListener('message', handleMessage);
+    });
 }
 
 async function handleIdentityVerification() {
     try {
-        const PortOne = await loadPortOneSdk();
-        const identityConfig = await getPortOneIdentityConfig();
-        if (!PortOne || typeof PortOne.requestIdentityVerification !== 'function') {
-            throw new Error('PortOne 본인인증 모듈을 찾을 수 없습니다.');
+        const registration = await AuthAPI.requestIdentityVerification({
+            kcpPageSubmitYn: isMobileViewport() ? 'Y' : 'N'
+        });
+        const callUrl = String(registration?.callUrl || '').trim();
+        const regCertKey = String(registration?.regCertKey || registration?.identityVerificationId || '').trim();
+        if (!callUrl || !regCertKey) {
+            throw new Error('KCP 본인인증 호출 정보를 받지 못했습니다. 다시 시도해주세요.');
         }
 
-        const response = await PortOne.requestIdentityVerification({
-            storeId: identityConfig.storeId,
-            identityVerificationId: generateIdentityVerificationId('register'),
-            channelKey: identityConfig.channelKey
+        const resultPromise = waitForKcpIdentityResult();
+        submitKcpV2AuthWindow({
+            callUrl,
+            regCertKey,
+            kcpPageSubmitYn: registration?.kcpPageSubmitYn
         });
 
-        if (response?.code) {
-            throw new Error(response.message || '본인인증에 실패했습니다.');
+        const response = await resultPromise;
+        if (!response?.success) {
+            throw new Error(response?.message || '본인인증에 실패했습니다.');
         }
 
-        const identityVerificationId = String(response?.identityVerificationId || '').trim();
-        if (!identityVerificationId) {
-            throw new Error('본인인증 거래 정보를 찾지 못했습니다. 다시 시도해주세요.');
-        }
-
-        const verificationResult = await AuthAPI.getIdentityVerificationResult(identityVerificationId);
+        const verificationResult = await AuthAPI.getIdentityVerificationResult(response.identityVerificationId || regCertKey);
         const mergedIdentityResult = {
             ...response,
             ...verificationResult,

@@ -78,6 +78,14 @@ const AuthAPI = {
         }
     },
 
+    async requestIdentityVerification(data = {}) {
+        try {
+            return await APIClient.post('/auth/request-identity-verification', data);
+        } catch (error) {
+            throw error;
+        }
+    },
+
     async getIdentityVerificationResult(identityVerificationId) {
         try {
             return await APIClient.get(`/auth/identity-verification/${encodeURIComponent(identityVerificationId)}`);

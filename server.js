@@ -11,6 +11,7 @@ require('./src/backend/config/loadEnv');
 
 const { initDatabase, dbConfig, useLocalDb } = require('./src/backend/config/database');
 const authRoutes = require('./src/backend/routes/authRoutes');
+const authController = require('./src/backend/controllers/authController');
 const postRoutes = require('./src/backend/routes/postRoutes');
 const userRoutes = require('./src/backend/routes/userRoutes');
 const adminRoutes = require('./src/backend/routes/adminRoutes');
@@ -34,40 +35,7 @@ app.use(cors());
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-app.all('/kcp/callback', (req, res) => {
-  const body = req.body || {};
-  const success = String(body.res_cd || body.result_cd || '').trim() === '0000';
-  const payload = {
-    success,
-    message: String(body.res_msg || body.result_msg || '').trim() || (success ? '본인인증이 완료되었습니다.' : '본인인증에 실패했습니다.'),
-    phone: String(body.phone_no || body.cellno || '').trim(),
-    ci: String(body.ci || body.CI || '').trim(),
-    genderDigit: String(body.sex_code || body.sex || '').trim()
-  };
-
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.send(`<!doctype html>
-<html lang="ko">
-<head>
-  <meta charset="utf-8" />
-  <title>KCP 본인인증 결과</title>
-</head>
-<body>
-  <script>
-    (function () {
-      var payload = ${JSON.stringify(payload)};
-      if (window.opener && !window.opener.closed) {
-        window.opener.postMessage({
-          type: 'KCP_IDENTITY_VERIFICATION_RESULT',
-          payload: payload
-        }, window.location.origin);
-      }
-      window.close();
-    })();
-  </script>
-</body>
-</html>`);
-});
+app.all('/kcp/callback', authController.handleKcpCallback);
 
 function parseCookies(cookieHeader = '') {
   return String(cookieHeader || '')
