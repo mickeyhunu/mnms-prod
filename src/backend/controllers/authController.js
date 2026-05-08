@@ -543,7 +543,7 @@ function resolveKcpApiUrl(kind) {
   if (directUrl) return directUrl;
 
   const pathEnvName = kind === 'register' ? 'KCP_CERT_REGISTER_PATH' : 'KCP_CERT_RESULT_PATH';
-  const defaultPath = kind === 'register' ? '/cert/v2/register' : '/cert/v2/result';
+  const defaultPath = kind === 'register' ? '/api/reg/certDataReg.do' : '/api/query/getCertData.do';
   const apiPath = String(process.env[pathEnvName] || defaultPath).trim();
   return `${getKcpCertHost()}${apiPath.startsWith('/') ? apiPath : `/${apiPath}`}`;
 }
@@ -552,7 +552,7 @@ function getKcpConfig() {
   return {
     siteCode: String(process.env.KCP_SITE_CODE || '').trim(),
     encKey: String(process.env.KCP_ENC_KEY || '').trim(),
-    cryptoModulePath: String(process.env.KCP_CRYPTO_MODULE_PATH || '').trim()
+    cryptoModulePath: String(process.env.KCP_CRYPTO_MODULE_PATH || path.join(__dirname, '../utils/kcpCrypto.js')).trim()
   };
 }
 
@@ -603,15 +603,28 @@ function deriveKcpFallbackIv(rv, siteCode) {
 }
 
 function fallbackEncryptJson(jsonText, encKey, siteCode) {
-  const rv = crypto.randomBytes(12).toString('base64');
-  const cipher = crypto.createCipheriv('aes-256-cbc', deriveKcpFallbackKey(encKey, siteCode), deriveKcpFallbackIv(rv, siteCode));
-  const encData = Buffer.concat([cipher.update(jsonText, 'utf8'), cipher.final()]).toString('base64');
-  return { enc_data: encData, rv };
+  const rv = crypto.randomBytes(16);
+  const key = crypto.pbkdf2Sync(Buffer.from(encKey, 'utf8'), rv, 10000, 32, 'sha256');
+  const iv = crypto.pbkdf2Sync(Buffer.from(siteCode, 'utf8'), rv, 10000, 32, 'sha256').subarray(0, 16);
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+  cipher.setAutoPadding(false);
+  const source = Buffer.from(jsonText, 'utf8');
+  const blockSize = 16;
+  const padding = blockSize - (source.length % blockSize);
+  const paddedSource = Buffer.concat([source, Buffer.alloc(padding, padding)]);
+  const encData = Buffer.concat([cipher.update(paddedSource), cipher.final()]).toString('base64');
+  return { enc_data: encData, rv: rv.toString('base64') };
 }
 
 function fallbackDecryptJson(encCertData, rv, encKey, siteCode) {
-  const decipher = crypto.createDecipheriv('aes-256-cbc', deriveKcpFallbackKey(encKey, siteCode), deriveKcpFallbackIv(rv, siteCode));
-  return Buffer.concat([decipher.update(String(encCertData || ''), 'base64'), decipher.final()]).toString('utf8');
+  const rvBuffer = Buffer.from(String(rv || ''), 'base64');
+  const key = crypto.pbkdf2Sync(Buffer.from(encKey, 'utf8'), rvBuffer, 10000, 32, 'sha256');
+  const iv = crypto.pbkdf2Sync(Buffer.from(siteCode, 'utf8'), rvBuffer, 10000, 32, 'sha256').subarray(0, 16);
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+  decipher.setAutoPadding(false);
+  const decrypted = Buffer.concat([decipher.update(String(encCertData || ''), 'base64'), decipher.final()]);
+  const padding = decrypted[decrypted.length - 1];
+  return decrypted.subarray(0, decrypted.length - padding).toString('utf8');
 }
 
 function encryptKcpJson(payload, { encKey, siteCode, cryptoModulePath }) {
@@ -711,7 +724,7 @@ function throwIfKcpBusinessError(payload, fallbackMessage) {
   throw businessError;
 }
 
-async function postKcpJson(url, body, headers = {}) {
+async function postKcpJson(url, body, headers = {}, options = {}) {
   let upstreamResponse;
   try {
     upstreamResponse = await fetch(url, {
@@ -721,7 +734,7 @@ async function postKcpJson(url, body, headers = {}) {
         Accept: 'application/json, text/plain, */*',
         ...headers
       },
-      body: JSON.stringify(body)
+      body: options.rawBody ? String(body || '') : JSON.stringify(body)
     });
   } catch (error) {
     const networkError = new Error('KCP 본인확인 서버와 통신하지 못했습니다.');
@@ -841,8 +854,9 @@ async function requestIdentityVerification(req, res) {
   try {
     registrationResult = await postKcpJson(
       resolveKcpApiUrl('register'),
-      { enc_data: encryptedPayload.enc_data },
-      { site_cd: kcpConfig.siteCode, rv: encryptedPayload.rv }
+      encryptedPayload.enc_data,
+      { site_cd: kcpConfig.siteCode, rv: encryptedPayload.rv },
+      { rawBody: true }
     );
   } catch (error) {
     return res.status(error.status || 502).json({ message: error.message, detail: error.detail, kcp: error.payload });
@@ -896,7 +910,10 @@ async function fetchKcpIdentityVerificationPayload(regCertKey) {
   try {
     inquiryResult = await postKcpJson(
       resolveKcpApiUrl('result'),
-      { site_cd: kcpConfig.siteCode, reg_cert_key: normalizedRegCertKey },
+      {
+        reg_cert_key: normalizedRegCertKey,
+        ordr_idxx: String(cachedTransaction?.orderNo || cachedTransaction?.ordr_idxx || '').trim()
+      },
       { site_cd: kcpConfig.siteCode }
     );
   } catch (error) {
@@ -937,7 +954,7 @@ async function fetchKcpIdentityVerificationPayload(regCertKey) {
 }
 
 async function handleKcpCallback(req, res) {
-  const body = req.body || {};
+  const body = { ...(req.query || {}), ...(req.body || {}) };
   const resCd = String(body.res_cd || body.result_cd || '').trim();
   const regCertKey = String(body.reg_cert_key || '').trim();
   const success = resCd === '0000';
@@ -995,24 +1012,21 @@ async function handleKcpCallback(req, res) {
 }
 
 async function getIdentityVerificationConfig(req, res) {
-  const storeId = String(process.env.PORTONE_STORE_ID || '').trim();
-  const channelKey = String(process.env.PORTONE_CHANNEL_KEY || '').trim();
-  const apiSecret = String(process.env.PORTONE_API_SECRET || '').trim();
+  const kcpConfig = getKcpConfig();
+  const missingEnvs = [];
+  if (!kcpConfig.siteCode) missingEnvs.push('KCP_SITE_CODE');
+  if (!kcpConfig.encKey) missingEnvs.push('KCP_ENC_KEY');
 
-  if (!storeId || !channelKey || !apiSecret) {
-    const missingEnvs = [];
-    if (!storeId) missingEnvs.push('PORTONE_STORE_ID');
-    if (!channelKey) missingEnvs.push('PORTONE_CHANNEL_KEY');
-    if (!apiSecret) missingEnvs.push('PORTONE_API_SECRET');
-
+  if (missingEnvs.length > 0) {
     return res.status(500).json({
-      message: `PortOne 연동 환경변수(${missingEnvs.join(', ')})가 설정되지 않았습니다.`
+      message: `KCP V2 연동 환경변수(${missingEnvs.join(', ')})가 설정되지 않았습니다.`
     });
   }
 
   return res.json({
-    storeId,
-    channelKey
+    provider: 'kcp-v2',
+    siteCode: kcpConfig.siteCode,
+    returnUrl: resolveReturnUrl(req)
   });
 }
 
@@ -1171,69 +1185,8 @@ async function getIdentityVerificationResult(req, res) {
   });
 }
 
-async function fetchPortOneIdentityVerificationPayload(identityVerificationId) {
-  const normalizedIdentityVerificationId = String(identityVerificationId || '').trim();
-  const apiSecret = String(process.env.PORTONE_API_SECRET || '').trim();
-
-  if (!normalizedIdentityVerificationId) {
-    return { error: { status: 400, body: { message: '본인인증 ID가 필요합니다.' } } };
-  }
-
-  if (!apiSecret) {
-    return { error: { status: 500, body: { message: 'PortOne 연동 환경변수(PORTONE_API_SECRET)가 설정되지 않았습니다.' } } };
-  }
-
-  const endpointUrl = `https://api.portone.io/identity-verifications/${encodeURIComponent(normalizedIdentityVerificationId)}`;
-
-  let upstreamResponse;
-  try {
-    upstreamResponse = await fetch(endpointUrl, {
-      method: 'GET',
-      headers: {
-        Authorization: `PortOne ${apiSecret}`,
-        Accept: 'application/json'
-      }
-    });
-  } catch (error) {
-    return {
-      error: {
-        status: 502,
-        body: {
-          message: 'PortOne 본인인증 결과 조회에 실패했습니다.',
-          detail: error.message
-        }
-      }
-    };
-  }
-
-  let payload = null;
-  try {
-    payload = await upstreamResponse.json();
-  } catch (error) {
-    return { error: { status: 502, body: { message: 'PortOne 본인인증 결과 응답을 해석할 수 없습니다.' } } };
-  }
-
-  if (!upstreamResponse.ok) {
-    return { error: { status: upstreamResponse.status, body: { message: payload?.message || 'PortOne 본인인증 결과 조회에 실패했습니다.' } } };
-  }
-
-  return { payload };
-}
-
 async function fetchIdentityVerificationPayload(identityVerificationId) {
-  const normalizedIdentityVerificationId = String(identityVerificationId || '').trim();
-  const cachedKcpTransaction = getKcpIdentityTransaction(normalizedIdentityVerificationId);
-  const looksLikePortOneGeneratedId = /^[A-Za-z]+[a-z0-9]{6,}/.test(normalizedIdentityVerificationId)
-    && !/^\d{10,}$/.test(normalizedIdentityVerificationId);
-
-  if (cachedKcpTransaction || !looksLikePortOneGeneratedId) {
-    const kcpResult = await fetchKcpIdentityVerificationPayload(normalizedIdentityVerificationId);
-    if (!kcpResult.error || !looksLikePortOneGeneratedId) {
-      return kcpResult;
-    }
-  }
-
-  return fetchPortOneIdentityVerificationPayload(normalizedIdentityVerificationId);
+  return fetchKcpIdentityVerificationPayload(identityVerificationId);
 }
 
 async function findAccountByIdentity(req, res) {

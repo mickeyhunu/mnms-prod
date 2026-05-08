@@ -4,8 +4,6 @@
 let currentUser = null;
 let nicknameCheckState = { checked: false, available: false, value: '' };
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
-const MYPAGE_PORTONE_SDK_URL = 'https://cdn.portone.io/v2/browser-sdk.js';
-let myPageIdentityConfig = null;
 
 function formatPhoneNumber(value) {
     const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
@@ -24,47 +22,6 @@ function setHelpMessage(element, message, color) {
     if (!element) return;
     element.textContent = message;
     if (color) element.style.color = color;
-}
-
-async function loadMyPagePortOneSdk() {
-    if (window.PortOne && typeof window.PortOne.requestIdentityVerification === 'function') {
-        return window.PortOne;
-    }
-
-    await new Promise((resolve, reject) => {
-        const existingScript = document.querySelector(`script[src="${MYPAGE_PORTONE_SDK_URL}"]`);
-        if (existingScript) {
-            existingScript.addEventListener('load', () => resolve(), { once: true });
-            existingScript.addEventListener('error', () => reject(new Error('PortOne SDK 로드에 실패했습니다.')), { once: true });
-            return;
-        }
-
-        const script = document.createElement('script');
-        script.src = MYPAGE_PORTONE_SDK_URL;
-        script.async = true;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error('PortOne SDK 로드에 실패했습니다.'));
-        document.head.appendChild(script);
-    });
-
-    return window.PortOne;
-}
-
-async function getMyPageIdentityConfig() {
-    if (myPageIdentityConfig?.storeId && myPageIdentityConfig?.channelKey) {
-        return myPageIdentityConfig;
-    }
-
-    const config = await APIClient.get('/auth/identity-verification-config');
-    const storeId = String(config?.storeId || '').trim();
-    const channelKey = String(config?.channelKey || '').trim();
-
-    if (!storeId || !channelKey) {
-        throw new Error('본인인증 설정 정보를 불러오지 못했습니다.');
-    }
-
-    myPageIdentityConfig = { storeId, channelKey };
-    return myPageIdentityConfig;
 }
 
 if (document.readyState === 'loading') {
@@ -373,23 +330,16 @@ function bindProfileForm() {
                 phoneVerifyButton.disabled = true;
                 setHelpMessage(phoneVerifyResult, '본인인증을 진행합니다...', '#6c757d');
 
-                const PortOne = await loadMyPagePortOneSdk();
-                const identityConfig = await getMyPageIdentityConfig();
-                if (!PortOne || typeof PortOne.requestIdentityVerification !== 'function') {
-                    throw new Error('본인인증 모듈을 찾을 수 없습니다.');
+                if (!window.KcpIdentity || typeof window.KcpIdentity.request !== 'function') {
+                    throw new Error('KCP 본인인증 모듈을 찾을 수 없습니다.');
                 }
 
-                const response = await PortOne.requestIdentityVerification({
-                    storeId: identityConfig.storeId,
-                    identityVerificationId: generateIdentityVerificationId('myphone'),
-                    channelKey: identityConfig.channelKey
+                const response = await window.KcpIdentity.request({
+                    ordr_idxx: generateIdentityVerificationId('myphone'),
+                    kcpPageSubmitYn: 'N'
                 });
 
-                if (response?.code) {
-                    throw new Error(response.message || '본인인증에 실패했습니다.');
-                }
-
-                const identityVerificationId = String(response?.identityVerificationId || '').trim();
+                const identityVerificationId = String(response?.identityVerificationId || response?.regCertKey || '').trim();
                 if (!identityVerificationId) {
                     throw new Error('본인인증 거래 정보를 확인하지 못했습니다. 다시 시도해주세요.');
                 }
@@ -452,19 +402,16 @@ function bindProfileForm() {
                 withdrawSubmitButton.disabled = true;
                 setHelpMessage(withdrawResult, '본인인증을 진행합니다...', '#6c757d');
 
-                const PortOne = await loadMyPagePortOneSdk();
-                const identityConfig = await getMyPageIdentityConfig();
-                const response = await PortOne.requestIdentityVerification({
-                    storeId: identityConfig.storeId,
-                    identityVerificationId: generateIdentityVerificationId('withdraw'),
-                    channelKey: identityConfig.channelKey
-                });
-
-                if (response?.code) {
-                    throw new Error(response.message || '본인인증에 실패했습니다.');
+                if (!window.KcpIdentity || typeof window.KcpIdentity.request !== 'function') {
+                    throw new Error('KCP 본인인증 모듈을 찾을 수 없습니다.');
                 }
 
-                const identityVerificationId = String(response?.identityVerificationId || '').trim();
+                const response = await window.KcpIdentity.request({
+                    ordr_idxx: generateIdentityVerificationId('withdraw'),
+                    kcpPageSubmitYn: 'N'
+                });
+
+                const identityVerificationId = String(response?.identityVerificationId || response?.regCertKey || '').trim();
                 if (!identityVerificationId) {
                     throw new Error('본인인증 거래 정보를 확인하지 못했습니다. 다시 시도해주세요.');
                 }

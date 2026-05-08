@@ -305,7 +305,7 @@ function waitForKcpIdentityResult() {
 async function handleIdentityVerification() {
     try {
         const registration = await AuthAPI.requestIdentityVerification({
-            kcpPageSubmitYn: isMobileViewport() ? 'Y' : 'N'
+            kcpPageSubmitYn: 'N'
         });
         const callUrl = String(registration?.callUrl || '').trim();
         const regCertKey = String(registration?.regCertKey || registration?.identityVerificationId || '').trim();

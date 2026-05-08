@@ -330,3 +330,118 @@ function getURLParams() {
    
    return params;
 }
+
+function isKcpMobileViewport() {
+   return window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+}
+
+function kcpIdentitySubmitAuthWindow({ callUrl, regCertKey, kcpPageSubmitYn }) {
+   const pageSubmitYn = String(kcpPageSubmitYn || 'N').toUpperCase() === 'Y' ? 'Y' : 'N';
+   const form = document.createElement('form');
+   form.method = 'post';
+   form.action = callUrl;
+   form.style.display = 'none';
+
+   const appendHiddenInput = (name, value) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+   };
+
+   appendHiddenInput('reg_cert_key', regCertKey);
+   appendHiddenInput('kcp_page_submit_yn', pageSubmitYn);
+   document.body.appendChild(form);
+
+   if (pageSubmitYn === 'N') {
+      const width = 410;
+      const height = 500;
+      const left = (screen.width / 2) - (width / 2);
+      const top = (screen.height / 2) - (height / 2);
+      const opts = `width=${width},height=${height},toolbar=no,status=no,menubar=no,scrollbars=no,resizable=no,left=${left},top=${top}`;
+      const popupName = `kcp_auth_${Date.now()}`;
+      const popup = window.open('', popupName, opts);
+      if (!popup) {
+         document.body.removeChild(form);
+         throw new Error('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.');
+      }
+      form.target = popupName;
+   } else {
+      form.target = '_self';
+   }
+
+   form.submit();
+   window.setTimeout(() => {
+      if (form.parentNode) {
+         form.parentNode.removeChild(form);
+      }
+   }, 1000);
+}
+
+function kcpIdentityWaitForResult() {
+   return new Promise((resolve, reject) => {
+      const timeoutId = window.setTimeout(() => {
+         window.removeEventListener('message', handleMessage);
+         reject(new Error('본인인증 응답 대기 시간이 초과되었습니다.'));
+      }, 5 * 60 * 1000);
+
+      const handleMessage = (event) => {
+         if (event.origin !== window.location.origin) {
+            return;
+         }
+
+         const data = event?.data || {};
+         if (data.type !== 'KCP_IDENTITY_VERIFICATION_RESULT') {
+            return;
+         }
+
+         window.clearTimeout(timeoutId);
+         window.removeEventListener('message', handleMessage);
+         resolve(data.payload || null);
+      };
+
+      window.addEventListener('message', handleMessage);
+   });
+}
+
+async function kcpIdentityRequestVerification(options = {}) {
+   if (typeof APIClient === 'undefined' || typeof APIClient.post !== 'function') {
+      throw new Error('API 클라이언트를 찾을 수 없습니다.');
+   }
+
+   const registration = await APIClient.post('/auth/request-identity-verification', {
+      ...options,
+      kcpPageSubmitYn: options.kcpPageSubmitYn || 'N'
+   });
+   const callUrl = String(registration?.callUrl || '').trim();
+   const regCertKey = String(registration?.regCertKey || registration?.identityVerificationId || '').trim();
+   if (!callUrl || !regCertKey) {
+      throw new Error('KCP 본인인증 호출 정보를 받지 못했습니다. 다시 시도해주세요.');
+   }
+
+   const resultPromise = kcpIdentityWaitForResult();
+   kcpIdentitySubmitAuthWindow({
+      callUrl,
+      regCertKey,
+      kcpPageSubmitYn: registration?.kcpPageSubmitYn || 'N'
+   });
+
+   const response = await resultPromise;
+   if (!response?.success) {
+      throw new Error(response?.message || '본인인증에 실패했습니다.');
+   }
+
+   return {
+      ...response,
+      identityVerificationId: response.identityVerificationId || regCertKey,
+      regCertKey
+   };
+}
+
+window.KcpIdentity = {
+   request: kcpIdentityRequestVerification,
+   submitAuthWindow: kcpIdentitySubmitAuthWindow,
+   waitForResult: kcpIdentityWaitForResult,
+   isMobileViewport: isKcpMobileViewport
+};
