@@ -530,12 +530,63 @@ function resolveReturnUrl(req) {
   return `${protocol}://${host}/kcp/callback`;
 }
 
+function getKcpCertEnvironment() {
+  const configuredEndpoint = String(
+    process.env.KCP_CERT_BASE_URL || process.env.KCP_CERT_REGISTER_URL || process.env.KCP_CERT_RESULT_URL || ''
+  ).trim();
+  if (configuredEndpoint) {
+    try {
+      const hostname = new URL(configuredEndpoint).hostname.toLowerCase();
+      if (hostname === 'testcert.kcp.co.kr') return 'test';
+      if (hostname === 'cert.kcp.co.kr') return 'production';
+    } catch (_error) {
+      return 'custom';
+    }
+    return 'custom';
+  }
+
+  const configuredEnv = String(process.env.KCP_CERT_ENV || '').trim().toLowerCase();
+  if (['test', 'sandbox', 'development', 'dev', 'local'].includes(configuredEnv)) {
+    return 'test';
+  }
+  if (['production', 'prod', 'live', 'real'].includes(configuredEnv)) {
+    return 'production';
+  }
+
+  return 'production';
+}
+
 function getKcpCertHost() {
   const configuredBaseUrl = String(process.env.KCP_CERT_BASE_URL || '').trim();
   if (configuredBaseUrl) return configuredBaseUrl.replace(/\/$/, '');
 
-  const isProduction = String(process.env.KCP_CERT_ENV || process.env.NODE_ENV || '').trim().toLowerCase() === 'production';
-  return isProduction ? 'https://cert.kcp.co.kr' : 'https://testcert.kcp.co.kr';
+  return getKcpCertEnvironment() === 'test' ? 'https://testcert.kcp.co.kr' : 'https://cert.kcp.co.kr';
+}
+
+function isLoopbackHostname(hostname = '') {
+  const normalizedHostname = String(hostname || '').trim().toLowerCase();
+  return ['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]'].includes(normalizedHostname);
+}
+
+function validateKcpReturnUrl(returnUrl) {
+  if (getKcpCertEnvironment() !== 'production') return null;
+
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(String(returnUrl || '').trim());
+  } catch (_error) {
+    return 'KCP_RETURN_URL은 KCP가 접근 가능한 공개 HTTPS URL이어야 합니다.';
+  }
+
+  if (parsedUrl.protocol !== 'https:') {
+    return '운영 KCP 본인확인은 KCP_RETURN_URL에 공개 HTTPS URL이 필요합니다.';
+  }
+
+  if (isLoopbackHostname(parsedUrl.hostname)) {
+    return '운영 KCP 본인확인은 localhost/127.0.0.1 콜백 URL을 사용할 수 없습니다. KCP_RETURN_URL을 실제 서비스 도메인의 /kcp/callback URL로 설정해주세요.';
+  }
+
+  return null;
 }
 
 function resolveKcpApiUrl(kind) {
@@ -841,6 +892,15 @@ async function requestIdentityVerification(req, res) {
     param_opt_3: String(req.body?.param_opt_3 || '').trim()
   };
 
+  const returnUrlValidationMessage = validateKcpReturnUrl(requestPayload.Ret_URL);
+  if (returnUrlValidationMessage) {
+    return res.status(500).json({
+      message: returnUrlValidationMessage,
+      detail: 'KCP_CERT_ENV=test로 명시한 경우에만 테스트 서버(testcert.kcp.co.kr)를 사용합니다. 운영 기본값은 cert.kcp.co.kr입니다.',
+      returnUrl: requestPayload.Ret_URL
+    });
+  }
+
   let encryptedPayload;
   try {
     encryptedPayload = encryptKcpJson(requestPayload, kcpConfig);
@@ -1028,10 +1088,14 @@ async function getIdentityVerificationConfig(req, res) {
     });
   }
 
+  const returnUrl = resolveReturnUrl(req);
   return res.json({
     provider: 'kcp-v2',
     siteCode: kcpConfig.siteCode,
-    returnUrl: resolveReturnUrl(req)
+    certEnvironment: getKcpCertEnvironment(),
+    certHost: getKcpCertHost(),
+    returnUrl,
+    returnUrlReady: !validateKcpReturnUrl(returnUrl)
   });
 }
 
