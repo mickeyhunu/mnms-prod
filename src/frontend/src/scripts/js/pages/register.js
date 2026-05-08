@@ -276,7 +276,19 @@ function submitKcpV2AuthWindow({ callUrl, regCertKey, kcpPageSubmitYn }) {
     }, 1000);
 }
 
-function waitForKcpIdentityResult() {
+function getKcpAllowedMessageOrigins(additionalOrigins) {
+    const origins = new Set([window.location.origin]);
+    (Array.isArray(additionalOrigins) ? additionalOrigins : [additionalOrigins]).forEach((origin) => {
+        const normalizedOrigin = String(origin || '').trim();
+        if (normalizedOrigin) {
+            origins.add(normalizedOrigin);
+        }
+    });
+    return origins;
+}
+
+function waitForKcpIdentityResult(options = {}) {
+    const allowedOrigins = getKcpAllowedMessageOrigins(options.allowedOrigins || options.allowedOrigin);
     return new Promise((resolve, reject) => {
         const timeoutId = window.setTimeout(() => {
             window.removeEventListener('message', handleMessage);
@@ -284,7 +296,7 @@ function waitForKcpIdentityResult() {
         }, 5 * 60 * 1000);
 
         const handleMessage = (event) => {
-            if (event.origin !== window.location.origin) {
+            if (!allowedOrigins.has(event.origin)) {
                 return;
             }
 
@@ -313,7 +325,9 @@ async function handleIdentityVerification() {
             throw new Error('KCP 본인인증 호출 정보를 받지 못했습니다. 다시 시도해주세요.');
         }
 
-        const resultPromise = waitForKcpIdentityResult();
+        const resultPromise = waitForKcpIdentityResult({
+            allowedOrigins: [registration?.returnOrigin]
+        });
         submitKcpV2AuthWindow({
             callUrl,
             regCertKey,
