@@ -27,7 +27,6 @@ const {
   REFRESH_EXPIRES_IN,
   parseExpiresInToSeconds
 } = require('../utils/jwt');
-const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { validateNickname } = require('../utils/nicknamePolicy');
@@ -645,56 +644,23 @@ function resolveKcpCryptoProvider(modulePath) {
   return require(resolvedPath);
 }
 
-function deriveKcpFallbackKey(encKey, siteCode) {
-  return crypto.createHash('sha256').update(`${encKey}:${siteCode}`).digest();
-}
-
-function deriveKcpFallbackIv(rv, siteCode) {
-  return crypto.createHash('sha256').update(`${siteCode}:${rv}`).digest().subarray(0, 16);
-}
-
-function fallbackEncryptJson(jsonText, encKey, siteCode) {
-  const rv = crypto.randomBytes(16);
-  const key = crypto.pbkdf2Sync(Buffer.from(encKey, 'utf8'), rv, 10000, 32, 'sha256');
-  const iv = crypto.pbkdf2Sync(Buffer.from(siteCode, 'utf8'), rv, 10000, 32, 'sha256').subarray(0, 16);
-  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-  cipher.setAutoPadding(false);
-  const source = Buffer.from(jsonText, 'utf8');
-  const blockSize = 16;
-  const padding = blockSize - (source.length % blockSize);
-  const paddedSource = Buffer.concat([source, Buffer.alloc(padding, padding)]);
-  const encData = Buffer.concat([cipher.update(paddedSource), cipher.final()]).toString('base64');
-  return { enc_data: encData, rv: rv.toString('base64') };
-}
-
-function fallbackDecryptJson(encCertData, rv, encKey, siteCode) {
-  const rvBuffer = Buffer.from(String(rv || ''), 'base64');
-  const key = crypto.pbkdf2Sync(Buffer.from(encKey, 'utf8'), rvBuffer, 10000, 32, 'sha256');
-  const iv = crypto.pbkdf2Sync(Buffer.from(siteCode, 'utf8'), rvBuffer, 10000, 32, 'sha256').subarray(0, 16);
-  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-  decipher.setAutoPadding(false);
-  const decrypted = Buffer.concat([decipher.update(String(encCertData || ''), 'base64'), decipher.final()]);
-  const padding = decrypted[decrypted.length - 1];
-  return decrypted.subarray(0, decrypted.length - padding).toString('utf8');
-}
-
 function encryptKcpJson(payload, { encKey, siteCode, cryptoModulePath }) {
   const provider = resolveKcpCryptoProvider(cryptoModulePath);
   const jsonText = JSON.stringify(payload);
+  const encryptFn = provider?.encryptJson || provider?.encrypJson;
 
-  if (provider?.encryptJson || provider?.encrypJson) {
-    const encryptFn = provider.encryptJson || provider.encrypJson;
-    const encrypted = encryptFn(jsonText, encKey, siteCode);
-    if (Array.isArray(encrypted)) {
-      return { enc_data: encrypted[0], rv: encrypted[1] };
-    }
-    return {
-      enc_data: encrypted?.enc_data || encrypted?.encData || encrypted?.enc_cert_data || encrypted?.data,
-      rv: encrypted?.rv
-    };
+  if (typeof encryptFn !== 'function') {
+    throw new Error('KCP 암복호화 모듈에 encryptJson 함수가 없습니다.');
   }
 
-  return fallbackEncryptJson(jsonText, encKey, siteCode);
+  const encrypted = encryptFn(jsonText, encKey, siteCode);
+  if (Array.isArray(encrypted)) {
+    return { enc_data: encrypted[0], rv: encrypted[1] };
+  }
+  return {
+    enc_data: encrypted?.enc_data || encrypted?.encData || encrypted?.enc_cert_data || encrypted?.data,
+    rv: encrypted?.rv
+  };
 }
 
 function decryptKcpJson(encCertData, rv, { encKey, siteCode, cryptoModulePath }) {
@@ -704,7 +670,7 @@ function decryptKcpJson(encCertData, rv, { encKey, siteCode, cryptoModulePath })
     return typeof decrypted === 'string' ? decrypted : JSON.stringify(decrypted || {});
   }
 
-  return fallbackDecryptJson(encCertData, rv, encKey, siteCode);
+  throw new Error('KCP 암복호화 모듈에 decryptJson 함수가 없습니다.');
 }
 
 function parseJsonText(jsonText, fallbackMessage) {
