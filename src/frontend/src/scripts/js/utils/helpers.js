@@ -331,11 +331,48 @@ function getURLParams() {
    return params;
 }
 
+
+function kcpIdentityMaskValue(value) {
+   const normalizedValue = String(value || '').trim();
+   if (!normalizedValue) {
+      return '';
+   }
+   if (normalizedValue.length <= 8) {
+      return `${normalizedValue.slice(0, 2)}***`;
+   }
+   return `${normalizedValue.slice(0, 4)}***${normalizedValue.slice(-4)}`;
+}
+
+function kcpIdentityLogStep(step, details = {}) {
+   if (typeof console === 'undefined' || typeof console.log !== 'function') {
+      return;
+   }
+
+   console.log('[KCP Identity]', step, details);
+}
+
+function kcpIdentityLogError(step, error, details = {}) {
+   if (typeof console === 'undefined' || typeof console.log !== 'function') {
+      return;
+   }
+
+   console.log('[KCP Identity]', step, {
+      ...details,
+      errorName: error?.name || 'Error',
+      errorMessage: error?.message || String(error || '')
+   });
+}
+
 function isKcpMobileViewport() {
    return window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
 }
 
 function kcpIdentitySubmitAuthWindow({ callUrl, regCertKey, kcpPageSubmitYn }) {
+   kcpIdentityLogStep('인증창 제출 준비', {
+      hasCallUrl: Boolean(String(callUrl || '').trim()),
+      regCertKey: kcpIdentityMaskValue(regCertKey),
+      requestedPageSubmitYn: kcpPageSubmitYn
+   });
    const pageSubmitYn = String(kcpPageSubmitYn || 'N').toUpperCase() === 'Y' ? 'Y' : 'N';
    const form = document.createElement('form');
    form.method = 'post';
@@ -353,6 +390,7 @@ function kcpIdentitySubmitAuthWindow({ callUrl, regCertKey, kcpPageSubmitYn }) {
    appendHiddenInput('reg_cert_key', regCertKey);
    appendHiddenInput('kcp_page_submit_yn', pageSubmitYn);
    document.body.appendChild(form);
+   kcpIdentityLogStep('KCP 인증 폼 생성 완료', { pageSubmitYn });
 
    if (pageSubmitYn === 'N') {
       const width = 410;
@@ -361,20 +399,26 @@ function kcpIdentitySubmitAuthWindow({ callUrl, regCertKey, kcpPageSubmitYn }) {
       const top = (screen.height / 2) - (height / 2);
       const opts = `width=${width},height=${height},toolbar=no,status=no,menubar=no,scrollbars=no,resizable=no,left=${left},top=${top}`;
       const popupName = `kcp_auth_${Date.now()}`;
+      kcpIdentityLogStep('팝업 인증창 열기 시도', { popupName, width, height });
       const popup = window.open('', popupName, opts);
       if (!popup) {
+         kcpIdentityLogStep('팝업 인증창 열기 실패', { reason: 'window.open returned null' });
          document.body.removeChild(form);
          throw new Error('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.');
       }
+      kcpIdentityLogStep('팝업 인증창 열기 성공', { popupName });
       form.target = popupName;
    } else {
+      kcpIdentityLogStep('현재 창에서 인증 페이지로 이동', { pageSubmitYn });
       form.target = '_self';
    }
 
+   kcpIdentityLogStep('KCP 인증 폼 submit 호출', { target: form.target, action: form.action });
    form.submit();
    window.setTimeout(() => {
       if (form.parentNode) {
          form.parentNode.removeChild(form);
+         kcpIdentityLogStep('KCP 인증 폼 정리 완료');
       }
    }, 1000);
 }
@@ -393,6 +437,10 @@ function getKcpAllowedMessageOrigins(additionalOrigins) {
 function kcpIdentityWaitForResult(options = {}) {
    const allowedOrigins = getKcpAllowedMessageOrigins(options.allowedOrigins || options.allowedOrigin);
    const timeoutMs = Number(options.timeoutMs || 5 * 60 * 1000);
+   kcpIdentityLogStep('인증 결과 postMessage 대기 시작', {
+      allowedOrigins: Array.from(allowedOrigins),
+      timeoutMs
+   });
    return new Promise((resolve, reject) => {
       let settled = false;
       const cleanup = () => {
@@ -408,19 +456,27 @@ function kcpIdentityWaitForResult(options = {}) {
          callback(value);
       };
       const timeoutId = window.setTimeout(() => {
+         kcpIdentityLogStep('인증 결과 postMessage 대기 시간 초과', { timeoutMs });
          settle(reject, new Error('본인인증 응답 대기 시간이 초과되었습니다.'));
       }, timeoutMs);
 
       const handleMessage = (event) => {
          if (!allowedOrigins.has(event.origin)) {
+            kcpIdentityLogStep('허용되지 않은 origin의 postMessage 무시', { origin: event.origin });
             return;
          }
 
          const data = event?.data || {};
          if (data.type !== 'KCP_IDENTITY_VERIFICATION_RESULT') {
+            kcpIdentityLogStep('다른 타입의 postMessage 무시', { origin: event.origin, type: data.type });
             return;
          }
 
+         kcpIdentityLogStep('인증 결과 postMessage 수신', {
+            origin: event.origin,
+            success: Boolean(data.payload?.success),
+            identityVerificationId: kcpIdentityMaskValue(data.payload?.identityVerificationId || data.payload?.regCertKey)
+         });
          settle(resolve, data.payload || null);
       };
 
@@ -439,6 +495,11 @@ function isKcpIdentityPollableError(error) {
 
 async function kcpIdentityPollForResult(identityVerificationId, options = {}) {
    const normalizedIdentityVerificationId = String(identityVerificationId || '').trim();
+   kcpIdentityLogStep('인증 결과 폴링 준비', {
+      identityVerificationId: kcpIdentityMaskValue(normalizedIdentityVerificationId),
+      timeoutMs: options.timeoutMs,
+      intervalMs: options.intervalMs
+   });
    if (!normalizedIdentityVerificationId) {
       throw new Error('본인인증 거래 정보를 확인하지 못했습니다. 다시 시도해주세요.');
    }
@@ -452,7 +513,15 @@ async function kcpIdentityPollForResult(identityVerificationId, options = {}) {
       await new Promise(resolve => window.setTimeout(resolve, intervalMs));
 
       try {
+         kcpIdentityLogStep('인증 결과 폴링 요청', {
+            identityVerificationId: kcpIdentityMaskValue(normalizedIdentityVerificationId),
+            elapsedMs: Date.now() - startedAt
+         });
          const result = await APIClient.get(`/auth/identity-verification/${encodeURIComponent(normalizedIdentityVerificationId)}`);
+         kcpIdentityLogStep('인증 결과 폴링 성공', {
+            identityVerificationId: kcpIdentityMaskValue(result?.identityVerificationId || normalizedIdentityVerificationId),
+            hasCustomer: Boolean(result?.customer || result?.verifiedCustomer)
+         });
          return {
             ...result,
             success: true,
@@ -461,30 +530,54 @@ async function kcpIdentityPollForResult(identityVerificationId, options = {}) {
          };
       } catch (error) {
          lastError = error;
+         kcpIdentityLogError('인증 결과 폴링 실패', error, {
+            identityVerificationId: kcpIdentityMaskValue(normalizedIdentityVerificationId),
+            pollable: isKcpIdentityPollableError(error)
+         });
          if (!isKcpIdentityPollableError(error)) {
             throw error;
          }
       }
    }
 
+   kcpIdentityLogError('인증 결과 폴링 최종 실패', lastError, {
+      identityVerificationId: kcpIdentityMaskValue(normalizedIdentityVerificationId),
+      timeoutMs
+   });
    throw new Error(lastError?.message || '본인인증 결과를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.');
 }
 
 async function kcpIdentityRequestVerification(options = {}) {
+   kcpIdentityLogStep('본인인증 요청 시작', {
+      ordrIdxx: options.ordr_idxx,
+      kcpPageSubmitYn: options.kcpPageSubmitYn || 'N',
+      enablePollingFallback: options.enablePollingFallback === true
+   });
+
    if (typeof APIClient === 'undefined' || typeof APIClient.post !== 'function') {
+      kcpIdentityLogStep('API 클라이언트 확인 실패');
       throw new Error('API 클라이언트를 찾을 수 없습니다.');
    }
 
+   kcpIdentityLogStep('거래등록 API 요청', { endpoint: '/auth/request-identity-verification' });
    const registration = await APIClient.post('/auth/request-identity-verification', {
       ...options,
       kcpPageSubmitYn: options.kcpPageSubmitYn || 'N'
    });
+   kcpIdentityLogStep('거래등록 API 응답 수신', {
+      hasCallUrl: Boolean(registration?.callUrl),
+      regCertKey: kcpIdentityMaskValue(registration?.regCertKey || registration?.identityVerificationId),
+      kcpPageSubmitYn: registration?.kcpPageSubmitYn,
+      returnOrigin: registration?.returnOrigin
+   });
    const callUrl = String(registration?.callUrl || '').trim();
    const regCertKey = String(registration?.regCertKey || registration?.identityVerificationId || '').trim();
    if (!callUrl || !regCertKey) {
+      kcpIdentityLogStep('거래등록 응답 검증 실패', { hasCallUrl: Boolean(callUrl), hasRegCertKey: Boolean(regCertKey) });
       throw new Error('KCP 본인인증 호출 정보를 받지 못했습니다. 다시 시도해주세요.');
    }
 
+   kcpIdentityLogStep('postMessage 대기 Promise 생성');
    const waitForCallbackPromise = kcpIdentityWaitForResult({
       allowedOrigins: [registration?.returnOrigin],
       timeoutMs: options.timeoutMs
@@ -492,6 +585,7 @@ async function kcpIdentityRequestVerification(options = {}) {
    // KCP 결과 조회 API는 인증 완료 전 반복 호출 시 upstream 재시도 한도 초과(502)를 유발할 수 있으므로,
    // 기본 흐름은 콜백 postMessage만 기다리고 명시적으로 요청한 경우에만 폴링을 사용합니다.
    const enablePollingFallback = options.enablePollingFallback === true;
+   kcpIdentityLogStep('인증 결과 대기 방식 결정', { enablePollingFallback });
    const resultPromise = enablePollingFallback
       ? Promise.race([
          waitForCallbackPromise,
@@ -501,17 +595,26 @@ async function kcpIdentityRequestVerification(options = {}) {
          })
       ])
       : waitForCallbackPromise;
+   kcpIdentityLogStep('인증창 호출 직전', { regCertKey: kcpIdentityMaskValue(regCertKey) });
    kcpIdentitySubmitAuthWindow({
       callUrl,
       regCertKey,
       kcpPageSubmitYn: registration?.kcpPageSubmitYn || 'N'
    });
 
+   kcpIdentityLogStep('인증 결과 대기 중');
    const response = await resultPromise;
+   kcpIdentityLogStep('인증 결과 수신 후 검증', {
+      success: Boolean(response?.success),
+      identityVerificationId: kcpIdentityMaskValue(response?.identityVerificationId || response?.regCertKey || regCertKey),
+      message: response?.message
+   });
    if (!response?.success) {
+      kcpIdentityLogStep('인증 실패 응답 처리', { message: response?.message });
       throw new Error(response?.message || '본인인증에 실패했습니다.');
    }
 
+   kcpIdentityLogStep('본인인증 요청 완료', { identityVerificationId: kcpIdentityMaskValue(response.identityVerificationId || regCertKey) });
    return {
       ...response,
       identityVerificationId: response.identityVerificationId || regCertKey,
@@ -524,5 +627,7 @@ window.KcpIdentity = {
    submitAuthWindow: kcpIdentitySubmitAuthWindow,
    waitForResult: kcpIdentityWaitForResult,
    pollForResult: kcpIdentityPollForResult,
+   logStep: kcpIdentityLogStep,
+   maskValue: kcpIdentityMaskValue,
    isMobileViewport: isKcpMobileViewport
 };

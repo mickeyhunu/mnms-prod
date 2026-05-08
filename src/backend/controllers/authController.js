@@ -517,6 +517,30 @@ function generateOrderNumber() {
 const KCP_TRANSACTION_TTL_MS = 10 * 60 * 1000;
 const kcpIdentityTransactions = new Map();
 
+function maskKcpIdentityValue(value) {
+  const normalizedValue = String(value || '').trim();
+  if (!normalizedValue) {
+    return '';
+  }
+  if (normalizedValue.length <= 8) {
+    return `${normalizedValue.slice(0, 2)}***`;
+  }
+  return `${normalizedValue.slice(0, 4)}***${normalizedValue.slice(-4)}`;
+}
+
+function logKcpIdentityStep(step, details = {}) {
+  console.log('[KCP Identity Server]', step, details);
+}
+
+function logKcpIdentityError(step, error, details = {}) {
+  console.log('[KCP Identity Server]', step, {
+    ...details,
+    errorName: error?.name || 'Error',
+    errorMessage: error?.message || String(error || '')
+  });
+}
+
+
 function resolveReturnUrl(req) {
   const configuredReturnUrl = String(process.env.KCP_RETURN_URL || '').trim();
   if (configuredReturnUrl) {
@@ -844,12 +868,17 @@ function normalizeKcpIdentityResult(decryptedPayload = {}, identityVerificationI
 }
 
 async function requestIdentityVerification(req, res) {
+  logKcpIdentityStep('거래등록 컨트롤러 시작', {
+    ordrIdxx: req.body?.ordr_idxx,
+    kcpPageSubmitYn: req.body?.kcpPageSubmitYn || req.body?.kcp_page_submit_yn
+  });
   const kcpConfig = getKcpConfig();
   const missingEnvs = [];
   if (!kcpConfig.siteCode) missingEnvs.push('KCP_SITE_CODE');
   if (!kcpConfig.encKey) missingEnvs.push('KCP_ENC_KEY');
 
   if (missingEnvs.length > 0) {
+    logKcpIdentityStep('거래등록 환경변수 누락', { missingEnvs });
     return res.status(500).json({
       message: `KCP V2 연동 환경변수(${missingEnvs.join(', ')})가 설정되지 않았습니다.`
     });
@@ -870,8 +899,15 @@ async function requestIdentityVerification(req, res) {
     requestPayload.param_opt_1 = requestPayload.ordr_idxx;
   }
 
+  logKcpIdentityStep('거래등록 요청 페이로드 준비 완료', {
+    orderNo: requestPayload.ordr_idxx,
+    returnUrl: requestPayload.Ret_URL,
+    certEnvironment: getKcpCertEnvironment()
+  });
+
   const returnUrlValidationMessage = validateKcpReturnUrl(requestPayload.Ret_URL);
   if (returnUrlValidationMessage) {
+    logKcpIdentityStep('거래등록 returnUrl 검증 실패', { message: returnUrlValidationMessage, returnUrl: requestPayload.Ret_URL });
     return res.status(500).json({
       message: returnUrlValidationMessage,
       detail: 'KCP_CERT_ENV=test로 명시한 경우에만 테스트 서버(testcert.kcp.co.kr)를 사용합니다. 운영 기본값은 cert.kcp.co.kr입니다.',
@@ -883,12 +919,16 @@ async function requestIdentityVerification(req, res) {
   try {
     encryptedPayload = encryptKcpJson(requestPayload, kcpConfig);
   } catch (error) {
+    logKcpIdentityError('거래등록 데이터 암호화 실패', error, { orderNo: requestPayload.ordr_idxx });
     return res.status(500).json({ message: 'KCP 본인확인 거래등록 데이터 암호화에 실패했습니다.', detail: error.message });
   }
 
   if (!encryptedPayload?.enc_data || !encryptedPayload?.rv) {
+    logKcpIdentityStep('거래등록 암호화 결과 검증 실패', { hasEncData: Boolean(encryptedPayload?.enc_data), hasRv: Boolean(encryptedPayload?.rv) });
     return res.status(500).json({ message: 'KCP 본인확인 거래등록 암호화 결과가 올바르지 않습니다.' });
   }
+
+  logKcpIdentityStep('거래등록 KCP API 요청 시작', { url: resolveKcpApiUrl('register'), orderNo: requestPayload.ordr_idxx });
 
   let registrationResult;
   try {
@@ -902,21 +942,26 @@ async function requestIdentityVerification(req, res) {
       { rawBody: encryptedPayload.enc_data }
     );
   } catch (error) {
+    logKcpIdentityError('거래등록 KCP API 요청 실패', error, { orderNo: requestPayload.ordr_idxx });
     return res.status(error.status || 502).json({ message: error.message, detail: error.detail, kcp: error.payload });
   }
 
+  logKcpIdentityStep('거래등록 KCP API 응답 수신', { resCd: registrationResult?.res_cd, hasCallUrl: Boolean(registrationResult?.call_url || registrationResult?.cert_url || registrationResult?.auth_url) });
   try {
     throwIfKcpBusinessError(registrationResult, 'KCP 본인확인 거래등록 요청이 실패했습니다.');
   } catch (error) {
+    logKcpIdentityError('거래등록 KCP 비즈니스 오류', error, { resCd: registrationResult?.res_cd, resMsg: registrationResult?.res_msg });
     return res.status(error.status || 502).json({ message: error.message, kcp: error.payload });
   }
 
   const regCertKey = String(registrationResult.reg_cert_key || '').trim();
   const callUrl = String(registrationResult.call_url || registrationResult.cert_url || registrationResult.auth_url || '').trim();
   if (!regCertKey || !callUrl) {
+    logKcpIdentityStep('거래등록 호출 정보 누락', { hasRegCertKey: Boolean(regCertKey), hasCallUrl: Boolean(callUrl) });
     return res.status(502).json({ message: 'KCP 본인확인 거래등록 응답에 인증창 호출 정보가 없습니다.', kcp: registrationResult });
   }
 
+  logKcpIdentityStep('거래등록 성공 및 캐시 저장', { regCertKey: maskKcpIdentityValue(regCertKey), orderNo: requestPayload.ordr_idxx });
   saveKcpIdentityTransaction(regCertKey, {
     orderNo: requestPayload.ordr_idxx,
     callUrl,
@@ -938,20 +983,33 @@ async function requestIdentityVerification(req, res) {
 
 async function fetchKcpIdentityVerificationPayload(regCertKey, orderNoHint = '') {
   const normalizedRegCertKey = String(regCertKey || '').trim();
+  logKcpIdentityStep('결과조회 준비', {
+    regCertKey: maskKcpIdentityValue(normalizedRegCertKey),
+    hasOrderNoHint: Boolean(String(orderNoHint || '').trim())
+  });
   const normalizedOrderNoHint = String(orderNoHint || '').trim();
   const kcpConfig = getKcpConfig();
 
   if (!normalizedRegCertKey) {
+    logKcpIdentityStep('결과조회 거래등록키 누락');
     return { error: { status: 400, body: { message: 'KCP 본인확인 거래등록키가 필요합니다.' } } };
   }
   if (!kcpConfig.siteCode || !kcpConfig.encKey) {
+    logKcpIdentityStep('결과조회 환경변수 누락', { hasSiteCode: Boolean(kcpConfig.siteCode), hasEncKey: Boolean(kcpConfig.encKey) });
     return { error: { status: 500, body: { message: 'KCP V2 연동 환경변수(KCP_SITE_CODE, KCP_ENC_KEY)가 설정되지 않았습니다.' } } };
   }
 
   const cachedTransaction = getKcpIdentityTransaction(normalizedRegCertKey);
   if (cachedTransaction?.payload) {
+    logKcpIdentityStep('결과조회 캐시 payload 사용', { regCertKey: maskKcpIdentityValue(normalizedRegCertKey) });
     return { payload: cachedTransaction.payload };
   }
+
+  logKcpIdentityStep('결과조회 KCP API 요청 시작', {
+    url: resolveKcpApiUrl('result'),
+    regCertKey: maskKcpIdentityValue(normalizedRegCertKey),
+    orderNo: String(cachedTransaction?.orderNo || cachedTransaction?.ordr_idxx || normalizedOrderNoHint).trim()
+  });
 
   let inquiryResult;
   try {
@@ -964,18 +1022,22 @@ async function fetchKcpIdentityVerificationPayload(regCertKey, orderNoHint = '')
       { site_cd: kcpConfig.siteCode }
     );
   } catch (error) {
+    logKcpIdentityError('결과조회 KCP API 요청 실패', error, { regCertKey: maskKcpIdentityValue(normalizedRegCertKey) });
     return { error: { status: error.status || 502, body: { message: error.message, detail: error.detail, kcp: error.payload } } };
   }
 
+  logKcpIdentityStep('결과조회 KCP API 응답 수신', { resCd: inquiryResult?.res_cd, hasEncCertData: Boolean(inquiryResult?.enc_cert_data || inquiryResult?.enc_data) });
   try {
     throwIfKcpBusinessError(inquiryResult, 'KCP 본인확인 결과 조회 요청이 실패했습니다.');
   } catch (error) {
+    logKcpIdentityError('결과조회 KCP 비즈니스 오류', error, { resCd: inquiryResult?.res_cd, resMsg: inquiryResult?.res_msg });
     return { error: { status: error.status || 502, body: { message: error.message, kcp: error.payload } } };
   }
 
   const encCertData = String(inquiryResult.enc_cert_data || inquiryResult.enc_data || '').trim();
   const rv = String(inquiryResult.rv || '').trim();
   if (!encCertData || !rv) {
+    logKcpIdentityStep('결과조회 복호화 데이터 누락', { hasEncCertData: Boolean(encCertData), hasRv: Boolean(rv) });
     return { error: { status: 502, body: { message: 'KCP 본인확인 결과 조회 응답에 복호화 데이터가 없습니다.', kcp: inquiryResult } } };
   }
 
@@ -986,10 +1048,18 @@ async function fetchKcpIdentityVerificationPayload(regCertKey, orderNoHint = '')
       'KCP 본인확인 결과 복호화 응답을 해석할 수 없습니다.'
     );
   } catch (error) {
+    logKcpIdentityError('결과조회 복호화 실패', error, { regCertKey: maskKcpIdentityValue(normalizedRegCertKey) });
     return { error: { status: 500, body: { message: 'KCP 본인확인 결과 복호화에 실패했습니다.', detail: error.detail || error.message } } };
   }
 
   const payload = normalizeKcpIdentityResult(decryptedPayload, normalizedRegCertKey);
+  logKcpIdentityStep('결과조회 정규화 완료', {
+    regCertKey: maskKcpIdentityValue(normalizedRegCertKey),
+    hasName: Boolean(payload?.normalized?.name || payload?.verifiedCustomer?.name),
+    hasPhone: Boolean(payload?.normalized?.phone || payload?.verifiedCustomer?.phoneNumber),
+    hasCi: Boolean(payload?.normalized?.ci || payload?.verifiedCustomer?.ci),
+    hasDi: Boolean(payload?.normalized?.di || payload?.verifiedCustomer?.di)
+  });
   saveKcpIdentityTransaction(normalizedRegCertKey, {
     ...(cachedTransaction || {}),
     inquiryResult,
@@ -1007,6 +1077,13 @@ async function handleKcpCallback(req, res) {
   const orderNoHint = String(body.ordr_idxx || body.param_opt_1 || '').trim();
   const success = resCd === '0000';
 
+  logKcpIdentityStep('KCP 콜백 수신', {
+    resCd,
+    success,
+    regCertKey: maskKcpIdentityValue(regCertKey),
+    hasOrderNoHint: Boolean(orderNoHint)
+  });
+
   let payload = {
     success,
     identityVerificationId: regCertKey,
@@ -1014,8 +1091,13 @@ async function handleKcpCallback(req, res) {
   };
 
   if (success) {
+    logKcpIdentityStep('KCP 콜백 성공 응답 결과조회 시작', { regCertKey: maskKcpIdentityValue(regCertKey) });
     const fetchedResult = await fetchKcpIdentityVerificationPayload(regCertKey, orderNoHint);
     if (fetchedResult.error) {
+      logKcpIdentityStep('KCP 콜백 결과조회 오류 payload 생성', {
+        status: fetchedResult.error.status,
+        message: fetchedResult.error.body.message
+      });
       payload = {
         success: false,
         identityVerificationId: regCertKey,
@@ -1023,6 +1105,7 @@ async function handleKcpCallback(req, res) {
         detail: fetchedResult.error.body.detail || ''
       };
     } else {
+      logKcpIdentityStep('KCP 콜백 결과조회 성공 payload 생성', { regCertKey: maskKcpIdentityValue(regCertKey) });
       payload = {
         ...fetchedResult.payload,
         success: true,
@@ -1068,6 +1151,7 @@ async function getIdentityVerificationConfig(req, res) {
   if (!kcpConfig.encKey) missingEnvs.push('KCP_ENC_KEY');
 
   if (missingEnvs.length > 0) {
+    logKcpIdentityStep('설정 조회 환경변수 누락', { missingEnvs });
     return res.status(500).json({
       message: `KCP V2 연동 환경변수(${missingEnvs.join(', ')})가 설정되지 않았습니다.`
     });
