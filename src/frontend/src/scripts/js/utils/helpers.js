@@ -485,12 +485,22 @@ async function kcpIdentityRequestVerification(options = {}) {
       throw new Error('KCP 본인인증 호출 정보를 받지 못했습니다. 다시 시도해주세요.');
    }
 
-   const resultPromise = Promise.race([
-      kcpIdentityWaitForResult({
-         allowedOrigins: [registration?.returnOrigin]
-      }),
-      kcpIdentityPollForResult(regCertKey)
-   ]);
+   const waitForCallbackPromise = kcpIdentityWaitForResult({
+      allowedOrigins: [registration?.returnOrigin],
+      timeoutMs: options.timeoutMs
+   });
+   // KCP 결과 조회 API는 인증 완료 전 반복 호출 시 upstream 재시도 한도 초과(502)를 유발할 수 있으므로,
+   // 기본 흐름은 콜백 postMessage만 기다리고 명시적으로 요청한 경우에만 폴링을 사용합니다.
+   const enablePollingFallback = options.enablePollingFallback === true;
+   const resultPromise = enablePollingFallback
+      ? Promise.race([
+         waitForCallbackPromise,
+         kcpIdentityPollForResult(regCertKey, {
+            timeoutMs: options.timeoutMs,
+            intervalMs: options.pollIntervalMs
+         })
+      ])
+      : waitForCallbackPromise;
    kcpIdentitySubmitAuthWindow({
       callUrl,
       regCertKey,
