@@ -151,13 +151,13 @@ aws s3api create-bucket \
 - 아래 환경변수를 반드시 설정해야 실제 KCP V2 인증 화면이 열립니다.
   - `KCP_SITE_CODE` (KCP 사이트 코드)
   - `KCP_ENC_KEY` (KCP 관리자에서 발급한 ENC_KEY)
+  - `KCP_CRYPTO_MODULE_PATH` (NHN KCP 제공 암복호화 라이브러리 모듈 경로. `encryptJson`/`decryptJson` 함수를 노출해야 합니다.)
 - 선택 환경변수:
   - `KCP_CERT_ENV` (`production`이면 `https://cert.kcp.co.kr`, 그 외 기본값은 `https://testcert.kcp.co.kr`)
   - `KCP_CERT_BASE_URL` (KCP 본인확인 서버 URL을 직접 지정할 때 사용)
-  - `KCP_CERT_REGISTER_URL` / `KCP_CERT_RESULT_URL` (거래등록/결과조회 API 전체 URL을 직접 지정할 때 사용)
+  - `KCP_CERT_REGISTER_URL` / `KCP_CERT_RESULT_URL` (거래등록/결과조회 API 전체 URL을 직접 지정할 때 사용. 기본값은 KCP V2 문서의 `/api/reg/certDataReg.do`, `/api/query/getCertData.do`입니다.)
   - `KCP_CERT_REGISTER_PATH` / `KCP_CERT_RESULT_PATH` (기본 호스트에 붙일 거래등록/결과조회 경로)
   - `KCP_RETURN_URL` (인증 완료 후 KCP가 리다이렉트할 URL. 미설정 시 `https?://<host>/kcp/callback` 자동 구성)
-  - `KCP_CRYPTO_MODULE_PATH` (NHN KCP 제공 암복호화 라이브러리 모듈 경로. `encryptJson`/`decryptJson` 함수를 노출해야 합니다.)
   - `KCP_WEB_SITE_ID` (가맹점 설정에 필요한 경우 전달할 웹사이트 ID)
 
 ### KCP 키/라이브러리 보관 위치

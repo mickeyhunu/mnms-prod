@@ -543,7 +543,7 @@ function resolveKcpApiUrl(kind) {
   if (directUrl) return directUrl;
 
   const pathEnvName = kind === 'register' ? 'KCP_CERT_REGISTER_PATH' : 'KCP_CERT_RESULT_PATH';
-  const defaultPath = kind === 'register' ? '/cert/v2/register' : '/cert/v2/result';
+  const defaultPath = kind === 'register' ? '/api/reg/certDataReg.do' : '/api/query/getCertData.do';
   const apiPath = String(process.env[pathEnvName] || defaultPath).trim();
   return `${getKcpCertHost()}${apiPath.startsWith('/') ? apiPath : `/${apiPath}`}`;
 }
@@ -594,53 +594,40 @@ function resolveKcpCryptoProvider(modulePath) {
   return require(resolvedPath);
 }
 
-function deriveKcpFallbackKey(encKey, siteCode) {
-  return crypto.createHash('sha256').update(`${encKey}:${siteCode}`).digest();
-}
+function normalizeKcpCryptoResult(encrypted) {
+  if (Array.isArray(encrypted)) {
+    return { enc_data: encrypted[0], rv: encrypted[1] };
+  }
 
-function deriveKcpFallbackIv(rv, siteCode) {
-  return crypto.createHash('sha256').update(`${siteCode}:${rv}`).digest().subarray(0, 16);
-}
-
-function fallbackEncryptJson(jsonText, encKey, siteCode) {
-  const rv = crypto.randomBytes(12).toString('base64');
-  const cipher = crypto.createCipheriv('aes-256-cbc', deriveKcpFallbackKey(encKey, siteCode), deriveKcpFallbackIv(rv, siteCode));
-  const encData = Buffer.concat([cipher.update(jsonText, 'utf8'), cipher.final()]).toString('base64');
-  return { enc_data: encData, rv };
-}
-
-function fallbackDecryptJson(encCertData, rv, encKey, siteCode) {
-  const decipher = crypto.createDecipheriv('aes-256-cbc', deriveKcpFallbackKey(encKey, siteCode), deriveKcpFallbackIv(rv, siteCode));
-  return Buffer.concat([decipher.update(String(encCertData || ''), 'base64'), decipher.final()]).toString('utf8');
+  return {
+    enc_data: encrypted?.enc_data || encrypted?.encData || encrypted?.enc_cert_data || encrypted?.data,
+    rv: encrypted?.rv
+  };
 }
 
 function encryptKcpJson(payload, { encKey, siteCode, cryptoModulePath }) {
   const provider = resolveKcpCryptoProvider(cryptoModulePath);
-  const jsonText = JSON.stringify(payload);
-
-  if (provider?.encryptJson || provider?.encrypJson) {
-    const encryptFn = provider.encryptJson || provider.encrypJson;
-    const encrypted = encryptFn(jsonText, encKey, siteCode);
-    if (Array.isArray(encrypted)) {
-      return { enc_data: encrypted[0], rv: encrypted[1] };
-    }
-    return {
-      enc_data: encrypted?.enc_data || encrypted?.encData || encrypted?.enc_cert_data || encrypted?.data,
-      rv: encrypted?.rv
-    };
+  const encryptFn = provider?.encryptJson || provider?.encrypJson;
+  if (typeof encryptFn !== 'function') {
+    throw new Error('KCP 암복호화 모듈에 encryptJson 함수가 없습니다.');
   }
 
-  return fallbackEncryptJson(jsonText, encKey, siteCode);
+  const encryptedPayload = normalizeKcpCryptoResult(encryptFn(JSON.stringify(payload), encKey, siteCode));
+  if (!encryptedPayload.enc_data || !encryptedPayload.rv) {
+    throw new Error('KCP 암복호화 모듈의 encryptJson 반환값에 enc_data/rv가 없습니다.');
+  }
+
+  return encryptedPayload;
 }
 
 function decryptKcpJson(encCertData, rv, { encKey, siteCode, cryptoModulePath }) {
   const provider = resolveKcpCryptoProvider(cryptoModulePath);
-  if (provider?.decryptJson) {
-    const decrypted = provider.decryptJson(encCertData, rv, encKey, siteCode);
-    return typeof decrypted === 'string' ? decrypted : JSON.stringify(decrypted || {});
+  if (typeof provider?.decryptJson !== 'function') {
+    throw new Error('KCP 암복호화 모듈에 decryptJson 함수가 없습니다.');
   }
 
-  return fallbackDecryptJson(encCertData, rv, encKey, siteCode);
+  const decrypted = provider.decryptJson(encCertData, rv, encKey, siteCode);
+  return typeof decrypted === 'string' ? decrypted : JSON.stringify(decrypted || {});
 }
 
 function parseJsonText(jsonText, fallbackMessage) {
@@ -808,6 +795,7 @@ async function requestIdentityVerification(req, res) {
   const missingEnvs = [];
   if (!kcpConfig.siteCode) missingEnvs.push('KCP_SITE_CODE');
   if (!kcpConfig.encKey) missingEnvs.push('KCP_ENC_KEY');
+  if (!kcpConfig.cryptoModulePath) missingEnvs.push('KCP_CRYPTO_MODULE_PATH');
 
   if (missingEnvs.length > 0) {
     return res.status(500).json({
@@ -819,12 +807,17 @@ async function requestIdentityVerification(req, res) {
     site_cd: kcpConfig.siteCode,
     ordr_idxx: String(req.body?.ordr_idxx || generateOrderNumber()).trim(),
     Ret_URL: String(req.body?.Ret_URL || resolveReturnUrl(req)).trim(),
-    cert_method: String(req.body?.cert_method || '01').trim(),
     web_siteid: String(req.body?.web_siteid || process.env.KCP_WEB_SITE_ID || '').trim(),
     param_opt_1: String(req.body?.param_opt_1 || '').trim(),
     param_opt_2: String(req.body?.param_opt_2 || '').trim(),
     param_opt_3: String(req.body?.param_opt_3 || '').trim()
   };
+
+  for (const key of ['web_siteid', 'param_opt_1', 'param_opt_2', 'param_opt_3']) {
+    if (!requestPayload[key]) {
+      delete requestPayload[key];
+    }
+  }
 
   let encryptedPayload;
   try {
@@ -883,8 +876,8 @@ async function fetchKcpIdentityVerificationPayload(regCertKey) {
   if (!normalizedRegCertKey) {
     return { error: { status: 400, body: { message: 'KCP 본인확인 거래등록키가 필요합니다.' } } };
   }
-  if (!kcpConfig.siteCode || !kcpConfig.encKey) {
-    return { error: { status: 500, body: { message: 'KCP V2 연동 환경변수(KCP_SITE_CODE, KCP_ENC_KEY)가 설정되지 않았습니다.' } } };
+  if (!kcpConfig.siteCode || !kcpConfig.encKey || !kcpConfig.cryptoModulePath) {
+    return { error: { status: 500, body: { message: 'KCP V2 연동 환경변수(KCP_SITE_CODE, KCP_ENC_KEY, KCP_CRYPTO_MODULE_PATH)가 설정되지 않았습니다.' } } };
   }
 
   const cachedTransaction = getKcpIdentityTransaction(normalizedRegCertKey);
@@ -892,11 +885,19 @@ async function fetchKcpIdentityVerificationPayload(regCertKey) {
     return { payload: cachedTransaction.payload };
   }
 
+  const orderNo = String(cachedTransaction?.orderNo || '').trim();
+  if (!orderNo) {
+    return { error: { status: 400, body: { message: 'KCP 본인확인 결과 조회에 필요한 주문번호가 없습니다. 본인인증을 다시 진행해주세요.' } } };
+  }
+
   let inquiryResult;
   try {
     inquiryResult = await postKcpJson(
       resolveKcpApiUrl('result'),
-      { site_cd: kcpConfig.siteCode, reg_cert_key: normalizedRegCertKey },
+      {
+        reg_cert_key: normalizedRegCertKey,
+        ordr_idxx: orderNo
+      },
       { site_cd: kcpConfig.siteCode }
     );
   } catch (error) {
