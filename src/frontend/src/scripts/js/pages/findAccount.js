@@ -2,9 +2,8 @@
  * 파일 역할: find-account 페이지의 본인인증 기반 계정 찾기/비밀번호 재설정 흐름을 처리하는 페이지 스크립트 파일.
  */
 
-const FIND_ACCOUNT_PORTONE_SDK_URL = 'https://cdn.portone.io/v2/browser-sdk.js';
-let findAccountIdentityConfig = null;
 let verifiedIdentityVerificationId = '';
+
 
 function setFindAccountStatus(message, tone = 'muted') {
     const statusElement = document.getElementById('find-account-status');
@@ -19,46 +18,6 @@ function showFindAccountMessage(message, tone = 'muted') {
     if (typeof showNotification === 'function' && message) {
         showNotification(message, tone === 'error' ? 'error' : tone === 'success' ? 'success' : 'info');
     }
-}
-
-async function loadFindAccountPortOneSdk() {
-    if (window.PortOne && typeof window.PortOne.requestIdentityVerification === 'function') {
-        return window.PortOne;
-    }
-
-    await new Promise((resolve, reject) => {
-        const existingScript = document.querySelector(`script[src="${FIND_ACCOUNT_PORTONE_SDK_URL}"]`);
-        if (existingScript) {
-            existingScript.addEventListener('load', () => resolve(), { once: true });
-            existingScript.addEventListener('error', () => reject(new Error('PortOne SDK 로드에 실패했습니다.')), { once: true });
-            return;
-        }
-
-        const script = document.createElement('script');
-        script.src = FIND_ACCOUNT_PORTONE_SDK_URL;
-        script.async = true;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error('PortOne SDK 로드에 실패했습니다.'));
-        document.head.appendChild(script);
-    });
-
-    return window.PortOne;
-}
-
-async function getFindAccountIdentityConfig() {
-    if (findAccountIdentityConfig?.storeId && findAccountIdentityConfig?.channelKey) {
-        return findAccountIdentityConfig;
-    }
-
-    const config = await AuthAPI.getIdentityVerificationConfig();
-    const storeId = String(config?.storeId || '').trim();
-    const channelKey = String(config?.channelKey || '').trim();
-    if (!storeId || !channelKey) {
-        throw new Error('본인인증 설정 정보를 불러오지 못했습니다.');
-    }
-
-    findAccountIdentityConfig = { storeId, channelKey };
-    return findAccountIdentityConfig;
 }
 
 function showFoundAccountSection(loginId) {
@@ -89,24 +48,16 @@ async function handleFindAccount() {
         hideFoundAccountSection();
         setFindAccountStatus('본인인증을 진행합니다.');
 
-        const PortOne = await loadFindAccountPortOneSdk();
-        const identityConfig = await getFindAccountIdentityConfig();
-
-        if (!PortOne || typeof PortOne.requestIdentityVerification !== 'function') {
-            throw new Error('본인인증 모듈을 찾을 수 없습니다.');
+        if (!window.KcpIdentity || typeof window.KcpIdentity.request !== 'function') {
+            throw new Error('KCP 본인인증 모듈을 찾을 수 없습니다.');
         }
 
-        const response = await PortOne.requestIdentityVerification({
-            storeId: identityConfig.storeId,
-            identityVerificationId: generateIdentityVerificationId('findaccount'),
-            channelKey: identityConfig.channelKey
+        const response = await window.KcpIdentity.request({
+            ordr_idxx: generateIdentityVerificationId('findaccount'),
+            kcpPageSubmitYn: 'N'
         });
 
-        if (response?.code) {
-            throw new Error(response.message || '본인인증에 실패했습니다.');
-        }
-
-        const identityVerificationId = String(response?.identityVerificationId || '').trim();
+        const identityVerificationId = String(response?.identityVerificationId || response?.regCertKey || '').trim();
         if (!identityVerificationId) {
             throw new Error('본인인증 거래 정보를 확인하지 못했습니다. 다시 시도해주세요.');
         }
