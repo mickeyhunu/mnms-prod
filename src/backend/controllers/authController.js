@@ -653,6 +653,64 @@ function parseJsonText(jsonText, fallbackMessage) {
   }
 }
 
+function truncateKcpResponseBody(text, maxLength = 500) {
+  const normalizedText = String(text || '').replace(/\s+/g, ' ').trim();
+  if (normalizedText.length <= maxLength) {
+    return normalizedText;
+  }
+  return `${normalizedText.slice(0, maxLength)}...`;
+}
+
+function parseKcpResponseBody(rawBody, contentType = '') {
+  const responseText = String(rawBody || '').trim();
+  if (!responseText) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(responseText);
+  } catch (_jsonError) {
+    const normalizedContentType = String(contentType || '').toLowerCase();
+    const looksLikeFormBody = normalizedContentType.includes('application/x-www-form-urlencoded')
+      || /^[^=]+=[\s\S]*(&[^=]+=[\s\S]*)*$/.test(responseText);
+
+    if (!looksLikeFormBody) {
+      return null;
+    }
+
+    const params = new URLSearchParams(responseText);
+    const payload = {};
+    for (const [key, value] of params.entries()) {
+      payload[key] = value;
+    }
+    return Object.keys(payload).length > 0 ? payload : null;
+  }
+}
+
+function createKcpParseError({ url, response, rawBody, contentType }) {
+  const parseError = new Error('KCP 본인확인 응답을 해석할 수 없습니다.');
+  parseError.status = 502;
+  parseError.detail = [
+    `status=${response.status}`,
+    contentType ? `content-type=${contentType}` : '',
+    `url=${url}`,
+    truncateKcpResponseBody(rawBody) ? `body=${truncateKcpResponseBody(rawBody)}` : ''
+  ].filter(Boolean).join(', ');
+  return parseError;
+}
+
+function throwIfKcpBusinessError(payload, fallbackMessage) {
+  const resultCode = String(payload?.res_cd || payload?.result_cd || '').trim();
+  if (!resultCode || resultCode === '0000') {
+    return;
+  }
+
+  const businessError = new Error(payload?.res_msg || payload?.result_msg || fallbackMessage);
+  businessError.status = 502;
+  businessError.payload = payload;
+  throw businessError;
+}
+
 async function postKcpJson(url, body, headers = {}) {
   let upstreamResponse;
   try {
@@ -660,7 +718,7 @@ async function postKcpJson(url, body, headers = {}) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Accept: 'application/json',
+        Accept: 'application/json, text/plain, */*',
         ...headers
       },
       body: JSON.stringify(body)
@@ -672,20 +730,28 @@ async function postKcpJson(url, body, headers = {}) {
     throw networkError;
   }
 
-  let payload = null;
-  try {
-    payload = await upstreamResponse.json();
-  } catch (error) {
-    const parseError = new Error('KCP 본인확인 응답을 해석할 수 없습니다.');
-    parseError.status = 502;
-    parseError.detail = error.message;
-    throw parseError;
+  const contentType = upstreamResponse.headers?.get?.('content-type') || '';
+  const rawBody = await upstreamResponse.text();
+  const payload = parseKcpResponseBody(rawBody, contentType);
+
+  if (!payload) {
+    throw createKcpParseError({
+      url,
+      response: upstreamResponse,
+      rawBody,
+      contentType
+    });
   }
 
   if (!upstreamResponse.ok) {
     const upstreamError = new Error(payload?.res_msg || payload?.message || 'KCP 본인확인 요청이 실패했습니다.');
     upstreamError.status = upstreamResponse.status;
     upstreamError.payload = payload;
+    upstreamError.detail = [
+      `status=${upstreamResponse.status}`,
+      contentType ? `content-type=${contentType}` : '',
+      `url=${url}`
+    ].filter(Boolean).join(', ');
     throw upstreamError;
   }
 
@@ -782,8 +848,14 @@ async function requestIdentityVerification(req, res) {
     return res.status(error.status || 502).json({ message: error.message, detail: error.detail, kcp: error.payload });
   }
 
+  try {
+    throwIfKcpBusinessError(registrationResult, 'KCP 본인확인 거래등록 요청이 실패했습니다.');
+  } catch (error) {
+    return res.status(error.status || 502).json({ message: error.message, kcp: error.payload });
+  }
+
   const regCertKey = String(registrationResult.reg_cert_key || '').trim();
-  const callUrl = String(registrationResult.call_url || '').trim();
+  const callUrl = String(registrationResult.call_url || registrationResult.cert_url || registrationResult.auth_url || '').trim();
   if (!regCertKey || !callUrl) {
     return res.status(502).json({ message: 'KCP 본인확인 거래등록 응답에 인증창 호출 정보가 없습니다.', kcp: registrationResult });
   }
@@ -829,6 +901,12 @@ async function fetchKcpIdentityVerificationPayload(regCertKey) {
     );
   } catch (error) {
     return { error: { status: error.status || 502, body: { message: error.message, detail: error.detail, kcp: error.payload } } };
+  }
+
+  try {
+    throwIfKcpBusinessError(inquiryResult, 'KCP 본인확인 결과 조회 요청이 실패했습니다.');
+  } catch (error) {
+    return { error: { status: error.status || 502, body: { message: error.message, kcp: error.payload } } };
   }
 
   const encCertData = String(inquiryResult.enc_cert_data || inquiryResult.enc_data || '').trim();
