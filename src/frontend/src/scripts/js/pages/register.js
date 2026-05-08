@@ -316,30 +316,20 @@ function waitForKcpIdentityResult(options = {}) {
 
 async function handleIdentityVerification() {
     try {
-        const registration = await AuthAPI.requestIdentityVerification({
+        if (!window.KcpIdentity || typeof window.KcpIdentity.request !== 'function') {
+            throw new Error('KCP 본인인증 모듈을 찾을 수 없습니다.');
+        }
+
+        const response = await window.KcpIdentity.request({
+            ordr_idxx: generateIdentityVerificationId('register'),
             kcpPageSubmitYn: 'N'
         });
-        const callUrl = String(registration?.callUrl || '').trim();
-        const regCertKey = String(registration?.regCertKey || registration?.identityVerificationId || '').trim();
-        if (!callUrl || !regCertKey) {
-            throw new Error('KCP 본인인증 호출 정보를 받지 못했습니다. 다시 시도해주세요.');
+        const identityVerificationId = String(response?.identityVerificationId || response?.regCertKey || '').trim();
+        if (!identityVerificationId) {
+            throw new Error('본인인증 거래 정보를 확인하지 못했습니다. 다시 시도해주세요.');
         }
 
-        const resultPromise = waitForKcpIdentityResult({
-            allowedOrigins: [registration?.returnOrigin]
-        });
-        submitKcpV2AuthWindow({
-            callUrl,
-            regCertKey,
-            kcpPageSubmitYn: registration?.kcpPageSubmitYn
-        });
-
-        const response = await resultPromise;
-        if (!response?.success) {
-            throw new Error(response?.message || '본인인증에 실패했습니다.');
-        }
-
-        const verificationResult = await AuthAPI.getIdentityVerificationResult(response.identityVerificationId || regCertKey);
+        const verificationResult = await AuthAPI.getIdentityVerificationResult(identityVerificationId);
         const mergedIdentityResult = {
             ...response,
             ...verificationResult,

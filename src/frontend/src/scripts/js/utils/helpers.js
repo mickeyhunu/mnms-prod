@@ -392,11 +392,24 @@ function getKcpAllowedMessageOrigins(additionalOrigins) {
 
 function kcpIdentityWaitForResult(options = {}) {
    const allowedOrigins = getKcpAllowedMessageOrigins(options.allowedOrigins || options.allowedOrigin);
+   const timeoutMs = Number(options.timeoutMs || 5 * 60 * 1000);
    return new Promise((resolve, reject) => {
-      const timeoutId = window.setTimeout(() => {
+      let settled = false;
+      const cleanup = () => {
+         window.clearTimeout(timeoutId);
          window.removeEventListener('message', handleMessage);
-         reject(new Error('본인인증 응답 대기 시간이 초과되었습니다.'));
-      }, 5 * 60 * 1000);
+      };
+      const settle = (callback, value) => {
+         if (settled) {
+            return;
+         }
+         settled = true;
+         cleanup();
+         callback(value);
+      };
+      const timeoutId = window.setTimeout(() => {
+         settle(reject, new Error('본인인증 응답 대기 시간이 초과되었습니다.'));
+      }, timeoutMs);
 
       const handleMessage = (event) => {
          if (!allowedOrigins.has(event.origin)) {
@@ -408,13 +421,53 @@ function kcpIdentityWaitForResult(options = {}) {
             return;
          }
 
-         window.clearTimeout(timeoutId);
-         window.removeEventListener('message', handleMessage);
-         resolve(data.payload || null);
+         settle(resolve, data.payload || null);
       };
 
       window.addEventListener('message', handleMessage);
    });
+}
+
+function isKcpIdentityPollableError(error) {
+   const message = String(error?.message || '').trim();
+   if (!message) {
+      return true;
+   }
+
+   return !message.includes('환경변수') && !message.includes('거래등록키가 필요합니다');
+}
+
+async function kcpIdentityPollForResult(identityVerificationId, options = {}) {
+   const normalizedIdentityVerificationId = String(identityVerificationId || '').trim();
+   if (!normalizedIdentityVerificationId) {
+      throw new Error('본인인증 거래 정보를 확인하지 못했습니다. 다시 시도해주세요.');
+   }
+
+   const timeoutMs = Number(options.timeoutMs || 5 * 60 * 1000);
+   const intervalMs = Number(options.intervalMs || 2000);
+   const startedAt = Date.now();
+   let lastError = null;
+
+   while (Date.now() - startedAt < timeoutMs) {
+      await new Promise(resolve => window.setTimeout(resolve, intervalMs));
+
+      try {
+         const result = await APIClient.get(`/auth/identity-verification/${encodeURIComponent(normalizedIdentityVerificationId)}`);
+         return {
+            ...result,
+            success: true,
+            identityVerificationId: result?.identityVerificationId || normalizedIdentityVerificationId,
+            message: result?.message || '본인인증이 완료되었습니다.'
+         };
+      } catch (error) {
+         lastError = error;
+         if (!isKcpIdentityPollableError(error)) {
+            throw error;
+         }
+      }
+   }
+
+   throw new Error(lastError?.message || '본인인증 결과를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.');
 }
 
 async function kcpIdentityRequestVerification(options = {}) {
@@ -432,9 +485,12 @@ async function kcpIdentityRequestVerification(options = {}) {
       throw new Error('KCP 본인인증 호출 정보를 받지 못했습니다. 다시 시도해주세요.');
    }
 
-   const resultPromise = kcpIdentityWaitForResult({
-      allowedOrigins: [registration?.returnOrigin]
-   });
+   const resultPromise = Promise.race([
+      kcpIdentityWaitForResult({
+         allowedOrigins: [registration?.returnOrigin]
+      }),
+      kcpIdentityPollForResult(regCertKey)
+   ]);
    kcpIdentitySubmitAuthWindow({
       callUrl,
       regCertKey,
@@ -457,5 +513,6 @@ window.KcpIdentity = {
    request: kcpIdentityRequestVerification,
    submitAuthWindow: kcpIdentitySubmitAuthWindow,
    waitForResult: kcpIdentityWaitForResult,
+   pollForResult: kcpIdentityPollForResult,
    isMobileViewport: isKcpMobileViewport
 };
