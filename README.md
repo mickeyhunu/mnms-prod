@@ -152,13 +152,18 @@ aws s3api create-bucket \
   - `KCP_SITE_CODE` (KCP 사이트 코드)
   - `KCP_ENC_KEY` (KCP 관리자에서 발급한 ENC_KEY)
 - 선택 환경변수:
-  - `KCP_CERT_ENV` (`production`이면 `https://cert.kcp.co.kr`, 그 외 기본값은 `https://testcert.kcp.co.kr`)
+  - `KCP_CERT_ENV` (기본값은 운영 `production`/`https://cert.kcp.co.kr`입니다. 테스트 샘플 계정으로 연동할 때만 `test`, `sandbox`, `development`, `dev`, `local` 중 하나를 설정해 `https://testcert.kcp.co.kr`를 사용하세요.)
   - `KCP_CERT_BASE_URL` (KCP 본인확인 서버 URL을 직접 지정할 때 사용)
   - `KCP_CERT_REGISTER_URL` / `KCP_CERT_RESULT_URL` (거래등록/결과조회 API 전체 URL을 직접 지정할 때 사용)
   - `KCP_CERT_REGISTER_PATH` / `KCP_CERT_RESULT_PATH` (기본 호스트에 붙일 거래등록/결과조회 경로)
-  - `KCP_RETURN_URL` (인증 완료 후 KCP가 리다이렉트할 URL. 미설정 시 `https?://<host>/kcp/callback` 자동 구성)
+  - `KCP_RETURN_URL` (인증 완료 후 KCP가 리다이렉트할 URL. 운영 환경에서는 KCP가 접근 가능한 공개 HTTPS `https://<서비스도메인>/kcp/callback` URL이어야 하며, `localhost`/`127.0.0.1`은 사용할 수 없습니다. 미설정 시 `https?://<host>/kcp/callback` 자동 구성)
   - `KCP_CRYPTO_MODULE_PATH` (NHN KCP 제공 암복호화 라이브러리 모듈 경로. `encryptJson`/`decryptJson` 함수를 노출해야 합니다.)
   - `KCP_WEB_SITE_ID` (가맹점 설정에 필요한 경우 전달할 웹사이트 ID)
+
+### KCP 운영/테스트 서버 선택 주의
+- `exampleV2`는 KCP 테스트 샘플 계정(`AO7F3`)과 테스트 서버(`testcert.kcp.co.kr`) 확인용 참고 코드입니다. 실제 운영 사이트 코드/ENC_KEY를 사용할 때는 운영 서버(`cert.kcp.co.kr`)로 거래등록해야 합니다.
+- 이 프로젝트는 실사용 기본값을 운영 서버로 두고, `KCP_CERT_ENV=test`처럼 명시한 경우에만 테스트 서버를 호출합니다. 운영 사이트 코드로 테스트 서버를 호출하면 KCP가 `비정상적인 접근입니다.` 같은 거래등록 실패 응답을 반환할 수 있습니다.
+- 로컬 브라우저에서 `http://localhost:8080`로 버튼을 눌러도 KCP 콜백은 서버 간/브라우저 리다이렉트로 돌아오므로, 운영 연동에는 `KCP_RETURN_URL=https://실제도메인/kcp/callback` 설정이 필요합니다.
 
 ### KCP 키/라이브러리 보관 위치
 - `KCP_ENC_KEY`와 KCP 제공 암복호화 라이브러리는 프론트엔드/레포에 직접 넣지 말고, 서버의 외부 안전 경로(예: `/etc/mnms/kcp/`)에 저장하세요.
