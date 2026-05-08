@@ -724,8 +724,10 @@ function throwIfKcpBusinessError(payload, fallbackMessage) {
   throw businessError;
 }
 
-async function postKcpJson(url, body, headers = {}) {
+async function postKcpJson(url, body, headers = {}, options = {}) {
   let upstreamResponse;
+  const requestBody = options.rawBody !== undefined ? options.rawBody : JSON.stringify(body || {});
+
   try {
     upstreamResponse = await fetch(url, {
       method: 'POST',
@@ -734,7 +736,7 @@ async function postKcpJson(url, body, headers = {}) {
         Accept: 'application/json, text/plain, */*',
         ...headers
       },
-      body: JSON.stringify(body || {})
+      body: requestBody
     });
   } catch (error) {
     const networkError = new Error('KCP 본인확인 서버와 통신하지 못했습니다.');
@@ -854,11 +856,12 @@ async function requestIdentityVerification(req, res) {
   try {
     registrationResult = await postKcpJson(
       resolveKcpApiUrl('register'),
+      null,
       {
         site_cd: kcpConfig.siteCode,
-        enc_data: encryptedPayload.enc_data,
         rv: encryptedPayload.rv
-      }
+      },
+      { rawBody: encryptedPayload.enc_data }
     );
   } catch (error) {
     return res.status(error.status || 502).json({ message: error.message, detail: error.detail, kcp: error.payload });
@@ -913,10 +916,10 @@ async function fetchKcpIdentityVerificationPayload(regCertKey) {
     inquiryResult = await postKcpJson(
       resolveKcpApiUrl('result'),
       {
-        site_cd: kcpConfig.siteCode,
         reg_cert_key: normalizedRegCertKey,
         ordr_idxx: String(cachedTransaction?.orderNo || cachedTransaction?.ordr_idxx || '').trim()
-      }
+      },
+      { site_cd: kcpConfig.siteCode }
     );
   } catch (error) {
     return { error: { status: error.status || 502, body: { message: error.message, detail: error.detail, kcp: error.payload } } };
