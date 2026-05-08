@@ -27,6 +27,9 @@ const {
   REFRESH_EXPIRES_IN,
   parseExpiresInToSeconds
 } = require('../utils/jwt');
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validateLoginId, validatePassword } = require('../utils/authPolicy');
 const { hashPassword, verifyPassword, isHashedPassword } = require('../utils/passwordHasher');
@@ -512,6 +515,9 @@ function generateOrderNumber() {
   return `MNMS_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
 }
 
+const KCP_TRANSACTION_TTL_MS = 10 * 60 * 1000;
+const kcpIdentityTransactions = new Map();
+
 function resolveReturnUrl(req) {
   const configuredReturnUrl = String(process.env.KCP_RETURN_URL || '').trim();
   if (configuredReturnUrl) {
@@ -524,48 +530,387 @@ function resolveReturnUrl(req) {
   return `${protocol}://${host}/kcp/callback`;
 }
 
-async function requestIdentityVerification(req, res) {
-  const kcpRequestUrl = String(process.env.KCP_REQUEST_URL || '').trim();
-  const siteCode = String(process.env.KCP_SITE_CODE || '').trim();
+function getKcpCertHost() {
+  const configuredBaseUrl = String(process.env.KCP_CERT_BASE_URL || '').trim();
+  if (configuredBaseUrl) return configuredBaseUrl.replace(/\/$/, '');
 
-  if (!kcpRequestUrl || !siteCode) {
+  const isProduction = String(process.env.KCP_CERT_ENV || process.env.NODE_ENV || '').trim().toLowerCase() === 'production';
+  return isProduction ? 'https://cert.kcp.co.kr' : 'https://testcert.kcp.co.kr';
+}
+
+function resolveKcpApiUrl(kind) {
+  const directUrl = String(process.env[kind === 'register' ? 'KCP_CERT_REGISTER_URL' : 'KCP_CERT_RESULT_URL'] || '').trim();
+  if (directUrl) return directUrl;
+
+  const pathEnvName = kind === 'register' ? 'KCP_CERT_REGISTER_PATH' : 'KCP_CERT_RESULT_PATH';
+  const defaultPath = kind === 'register' ? '/cert/v2/register' : '/cert/v2/result';
+  const apiPath = String(process.env[pathEnvName] || defaultPath).trim();
+  return `${getKcpCertHost()}${apiPath.startsWith('/') ? apiPath : `/${apiPath}`}`;
+}
+
+function getKcpConfig() {
+  return {
+    siteCode: String(process.env.KCP_SITE_CODE || '').trim(),
+    encKey: String(process.env.KCP_ENC_KEY || '').trim(),
+    cryptoModulePath: String(process.env.KCP_CRYPTO_MODULE_PATH || '').trim()
+  };
+}
+
+function cleanupKcpIdentityTransactions(now = Date.now()) {
+  for (const [key, value] of kcpIdentityTransactions.entries()) {
+    if (!value?.createdAt || now - value.createdAt > KCP_TRANSACTION_TTL_MS) {
+      kcpIdentityTransactions.delete(key);
+    }
+  }
+}
+
+function saveKcpIdentityTransaction(regCertKey, value = {}) {
+  const normalizedKey = String(regCertKey || '').trim();
+  if (!normalizedKey) return;
+  cleanupKcpIdentityTransactions();
+  kcpIdentityTransactions.set(normalizedKey, {
+    ...value,
+    createdAt: value.createdAt || Date.now()
+  });
+}
+
+function getKcpIdentityTransaction(regCertKey) {
+  cleanupKcpIdentityTransactions();
+  return kcpIdentityTransactions.get(String(regCertKey || '').trim()) || null;
+}
+
+function resolveKcpCryptoProvider(modulePath) {
+  const normalizedPath = String(modulePath || '').trim();
+  if (!normalizedPath) return null;
+
+  const resolvedPath = path.isAbsolute(normalizedPath)
+    ? normalizedPath
+    : path.resolve(process.cwd(), normalizedPath);
+
+  if (!fs.existsSync(resolvedPath)) {
+    throw new Error(`KCP 암복호화 모듈을 찾을 수 없습니다: ${resolvedPath}`);
+  }
+
+  return require(resolvedPath);
+}
+
+function deriveKcpFallbackKey(encKey, siteCode) {
+  return crypto.createHash('sha256').update(`${encKey}:${siteCode}`).digest();
+}
+
+function deriveKcpFallbackIv(rv, siteCode) {
+  return crypto.createHash('sha256').update(`${siteCode}:${rv}`).digest().subarray(0, 16);
+}
+
+function fallbackEncryptJson(jsonText, encKey, siteCode) {
+  const rv = crypto.randomBytes(12).toString('base64');
+  const cipher = crypto.createCipheriv('aes-256-cbc', deriveKcpFallbackKey(encKey, siteCode), deriveKcpFallbackIv(rv, siteCode));
+  const encData = Buffer.concat([cipher.update(jsonText, 'utf8'), cipher.final()]).toString('base64');
+  return { enc_data: encData, rv };
+}
+
+function fallbackDecryptJson(encCertData, rv, encKey, siteCode) {
+  const decipher = crypto.createDecipheriv('aes-256-cbc', deriveKcpFallbackKey(encKey, siteCode), deriveKcpFallbackIv(rv, siteCode));
+  return Buffer.concat([decipher.update(String(encCertData || ''), 'base64'), decipher.final()]).toString('utf8');
+}
+
+function encryptKcpJson(payload, { encKey, siteCode, cryptoModulePath }) {
+  const provider = resolveKcpCryptoProvider(cryptoModulePath);
+  const jsonText = JSON.stringify(payload);
+
+  if (provider?.encryptJson || provider?.encrypJson) {
+    const encryptFn = provider.encryptJson || provider.encrypJson;
+    const encrypted = encryptFn(jsonText, encKey, siteCode);
+    if (Array.isArray(encrypted)) {
+      return { enc_data: encrypted[0], rv: encrypted[1] };
+    }
+    return {
+      enc_data: encrypted?.enc_data || encrypted?.encData || encrypted?.enc_cert_data || encrypted?.data,
+      rv: encrypted?.rv
+    };
+  }
+
+  return fallbackEncryptJson(jsonText, encKey, siteCode);
+}
+
+function decryptKcpJson(encCertData, rv, { encKey, siteCode, cryptoModulePath }) {
+  const provider = resolveKcpCryptoProvider(cryptoModulePath);
+  if (provider?.decryptJson) {
+    const decrypted = provider.decryptJson(encCertData, rv, encKey, siteCode);
+    return typeof decrypted === 'string' ? decrypted : JSON.stringify(decrypted || {});
+  }
+
+  return fallbackDecryptJson(encCertData, rv, encKey, siteCode);
+}
+
+function parseJsonText(jsonText, fallbackMessage) {
+  try {
+    return JSON.parse(jsonText);
+  } catch (error) {
+    const parseError = new Error(fallbackMessage);
+    parseError.detail = error.message;
+    throw parseError;
+  }
+}
+
+async function postKcpJson(url, body, headers = {}) {
+  let upstreamResponse;
+  try {
+    upstreamResponse = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...headers
+      },
+      body: JSON.stringify(body)
+    });
+  } catch (error) {
+    const networkError = new Error('KCP 본인확인 서버와 통신하지 못했습니다.');
+    networkError.status = 502;
+    networkError.detail = error.message;
+    throw networkError;
+  }
+
+  let payload = null;
+  try {
+    payload = await upstreamResponse.json();
+  } catch (error) {
+    const parseError = new Error('KCP 본인확인 응답을 해석할 수 없습니다.');
+    parseError.status = 502;
+    parseError.detail = error.message;
+    throw parseError;
+  }
+
+  if (!upstreamResponse.ok) {
+    const upstreamError = new Error(payload?.res_msg || payload?.message || 'KCP 본인확인 요청이 실패했습니다.');
+    upstreamError.status = upstreamResponse.status;
+    upstreamError.payload = payload;
+    throw upstreamError;
+  }
+
+  return payload;
+}
+
+function safeDecodeURIComponent(value) {
+  const normalizedValue = String(value || '').trim();
+  if (!normalizedValue) return '';
+  try {
+    return decodeURIComponent(normalizedValue);
+  } catch (_error) {
+    return normalizedValue;
+  }
+}
+
+function normalizeKcpIdentityResult(decryptedPayload = {}, identityVerificationId = '') {
+  const ciUrl = pickIdentityValue(decryptedPayload, ['CI_URL', 'ci_url']);
+  const diUrl = pickIdentityValue(decryptedPayload, ['DI_URL', 'di_url']);
+  const ci = ciUrl ? safeDecodeURIComponent(ciUrl) : pickIdentityValue(decryptedPayload, ['CI', 'ci']);
+  const di = diUrl ? safeDecodeURIComponent(diUrl) : pickIdentityValue(decryptedPayload, ['DI', 'di']);
+  const sexCode = pickIdentityValue(decryptedPayload, ['sex_code', 'sex', 'genderDigit', 'gender']);
+
+  return {
+    identityVerificationId,
+    id: identityVerificationId,
+    res_cd: pickIdentityValue(decryptedPayload, ['res_cd', 'result_cd']),
+    res_msg: pickIdentityValue(decryptedPayload, ['res_msg', 'result_msg']),
+    phone: pickIdentityValue(decryptedPayload, ['phone_no', 'phone', 'phoneNumber', 'cellno']),
+    phoneNumber: pickIdentityValue(decryptedPayload, ['phone_no', 'phone', 'phoneNumber', 'cellno']),
+    name: pickIdentityValue(decryptedPayload, ['user_name', 'name', 'fullName']),
+    birthDate: pickIdentityValue(decryptedPayload, ['birth_day', 'birthDate', 'birthday', 'birth']),
+    genderDigit: normalizeGenderDigitValue(sexCode === '01' ? '1' : (sexCode === '02' ? '2' : sexCode)),
+    ci,
+    di,
+    verifiedCustomer: {
+      name: pickIdentityValue(decryptedPayload, ['user_name', 'name', 'fullName']),
+      birthDate: pickIdentityValue(decryptedPayload, ['birth_day', 'birthDate', 'birthday', 'birth']),
+      phoneNumber: pickIdentityValue(decryptedPayload, ['phone_no', 'phone', 'phoneNumber', 'cellno']),
+      genderDigit: normalizeGenderDigitValue(sexCode === '01' ? '1' : (sexCode === '02' ? '2' : sexCode)),
+      ci,
+      di
+    },
+    kcp: {
+      commId: pickIdentityValue(decryptedPayload, ['comm_id']),
+      sexCode,
+      localCode: pickIdentityValue(decryptedPayload, ['local_code'])
+    }
+  };
+}
+
+async function requestIdentityVerification(req, res) {
+  const kcpConfig = getKcpConfig();
+  const missingEnvs = [];
+  if (!kcpConfig.siteCode) missingEnvs.push('KCP_SITE_CODE');
+  if (!kcpConfig.encKey) missingEnvs.push('KCP_ENC_KEY');
+
+  if (missingEnvs.length > 0) {
     return res.status(500).json({
-      message: 'KCP 연동 환경변수(KCP_REQUEST_URL, KCP_SITE_CODE)가 설정되지 않았습니다.'
+      message: `KCP V2 연동 환경변수(${missingEnvs.join(', ')})가 설정되지 않았습니다.`
     });
   }
 
   const requestPayload = {
-    req_tx: String(req.body.req_tx || 'cert').trim() || 'cert',
-    site_cd: siteCode,
-    ordr_idxx: String(req.body.ordr_idxx || generateOrderNumber()).trim(),
-    Ret_URL: String(req.body.Ret_URL || resolveReturnUrl(req)).trim(),
-    cert_method: String(req.body.cert_method || '01').trim(),
-    cert_otp_use: String(req.body.cert_otp_use || 'Y').trim(),
-    user_name: String(req.body.user_name || '').trim(),
-    phone_no: String(req.body.phone_no || '').trim(),
-    user_birth: String(req.body.user_birth || '').trim(),
-    user_sex: String(req.body.user_sex || '').trim(),
-    user_ci: String(req.body.user_ci || '').trim()
+    site_cd: kcpConfig.siteCode,
+    ordr_idxx: String(req.body?.ordr_idxx || generateOrderNumber()).trim(),
+    Ret_URL: String(req.body?.Ret_URL || resolveReturnUrl(req)).trim(),
+    cert_method: String(req.body?.cert_method || '01').trim(),
+    web_siteid: String(req.body?.web_siteid || process.env.KCP_WEB_SITE_ID || '').trim(),
+    param_opt_1: String(req.body?.param_opt_1 || '').trim(),
+    param_opt_2: String(req.body?.param_opt_2 || '').trim(),
+    param_opt_3: String(req.body?.param_opt_3 || '').trim()
   };
 
-  const hiddenInputs = Object.entries(requestPayload)
-    .map(([name, value]) => buildHiddenInput(name, value))
-    .join('\n');
+  let encryptedPayload;
+  try {
+    encryptedPayload = encryptKcpJson(requestPayload, kcpConfig);
+  } catch (error) {
+    return res.status(500).json({ message: 'KCP 본인확인 거래등록 데이터 암호화에 실패했습니다.', detail: error.message });
+  }
+
+  if (!encryptedPayload?.enc_data || !encryptedPayload?.rv) {
+    return res.status(500).json({ message: 'KCP 본인확인 거래등록 암호화 결과가 올바르지 않습니다.' });
+  }
+
+  let registrationResult;
+  try {
+    registrationResult = await postKcpJson(
+      resolveKcpApiUrl('register'),
+      { enc_data: encryptedPayload.enc_data },
+      { site_cd: kcpConfig.siteCode, rv: encryptedPayload.rv }
+    );
+  } catch (error) {
+    return res.status(error.status || 502).json({ message: error.message, detail: error.detail, kcp: error.payload });
+  }
+
+  const regCertKey = String(registrationResult.reg_cert_key || '').trim();
+  const callUrl = String(registrationResult.call_url || '').trim();
+  if (!regCertKey || !callUrl) {
+    return res.status(502).json({ message: 'KCP 본인확인 거래등록 응답에 인증창 호출 정보가 없습니다.', kcp: registrationResult });
+  }
+
+  saveKcpIdentityTransaction(regCertKey, {
+    orderNo: requestPayload.ordr_idxx,
+    callUrl,
+    registrationResult
+  });
+
+  return res.json({
+    identityVerificationId: regCertKey,
+    regCertKey,
+    callUrl,
+    kcpPageSubmitYn: String(req.body?.kcp_page_submit_yn || req.body?.kcpPageSubmitYn || 'N').trim().toUpperCase() === 'Y' ? 'Y' : 'N',
+    resCd: registrationResult.res_cd,
+    resMsg: registrationResult.res_msg
+  });
+}
+
+async function fetchKcpIdentityVerificationPayload(regCertKey) {
+  const normalizedRegCertKey = String(regCertKey || '').trim();
+  const kcpConfig = getKcpConfig();
+
+  if (!normalizedRegCertKey) {
+    return { error: { status: 400, body: { message: 'KCP 본인확인 거래등록키가 필요합니다.' } } };
+  }
+  if (!kcpConfig.siteCode || !kcpConfig.encKey) {
+    return { error: { status: 500, body: { message: 'KCP V2 연동 환경변수(KCP_SITE_CODE, KCP_ENC_KEY)가 설정되지 않았습니다.' } } };
+  }
+
+  const cachedTransaction = getKcpIdentityTransaction(normalizedRegCertKey);
+  if (cachedTransaction?.payload) {
+    return { payload: cachedTransaction.payload };
+  }
+
+  let inquiryResult;
+  try {
+    inquiryResult = await postKcpJson(
+      resolveKcpApiUrl('result'),
+      { site_cd: kcpConfig.siteCode, reg_cert_key: normalizedRegCertKey },
+      { site_cd: kcpConfig.siteCode }
+    );
+  } catch (error) {
+    return { error: { status: error.status || 502, body: { message: error.message, detail: error.detail, kcp: error.payload } } };
+  }
+
+  const encCertData = String(inquiryResult.enc_cert_data || inquiryResult.enc_data || '').trim();
+  const rv = String(inquiryResult.rv || '').trim();
+  if (!encCertData || !rv) {
+    return { error: { status: 502, body: { message: 'KCP 본인확인 결과 조회 응답에 복호화 데이터가 없습니다.', kcp: inquiryResult } } };
+  }
+
+  let decryptedPayload;
+  try {
+    decryptedPayload = parseJsonText(
+      decryptKcpJson(encCertData, rv, kcpConfig),
+      'KCP 본인확인 결과 복호화 응답을 해석할 수 없습니다.'
+    );
+  } catch (error) {
+    return { error: { status: 500, body: { message: 'KCP 본인확인 결과 복호화에 실패했습니다.', detail: error.detail || error.message } } };
+  }
+
+  const payload = normalizeKcpIdentityResult(decryptedPayload, normalizedRegCertKey);
+  saveKcpIdentityTransaction(normalizedRegCertKey, {
+    ...(cachedTransaction || {}),
+    inquiryResult,
+    decryptedPayload,
+    payload
+  });
+
+  return { payload };
+}
+
+async function handleKcpCallback(req, res) {
+  const body = req.body || {};
+  const resCd = String(body.res_cd || body.result_cd || '').trim();
+  const regCertKey = String(body.reg_cert_key || '').trim();
+  const success = resCd === '0000';
+
+  let payload = {
+    success,
+    identityVerificationId: regCertKey,
+    message: String(body.res_msg || body.result_msg || '').trim() || (success ? '본인인증이 완료되었습니다.' : '본인인증에 실패했습니다.')
+  };
+
+  if (success) {
+    const fetchedResult = await fetchKcpIdentityVerificationPayload(regCertKey);
+    if (fetchedResult.error) {
+      payload = {
+        success: false,
+        identityVerificationId: regCertKey,
+        message: fetchedResult.error.body.message || 'KCP 본인확인 결과 조회에 실패했습니다.',
+        detail: fetchedResult.error.body.detail || ''
+      };
+    } else {
+      payload = {
+        ...fetchedResult.payload,
+        success: true,
+        message: fetchedResult.payload.res_msg || '본인인증이 완료되었습니다.'
+      };
+    }
+  }
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(`<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>KCP 본인인증 요청</title>
+  <title>KCP 본인인증 결과</title>
 </head>
 <body>
-  <form id="kcp-request-form" method="post" action="${escapeHtml(kcpRequestUrl)}">
-    ${hiddenInputs}
-  </form>
   <script>
-    document.getElementById('kcp-request-form').submit();
+    (function () {
+      var payload = ${JSON.stringify(payload)};
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({
+          type: 'KCP_IDENTITY_VERIFICATION_RESULT',
+          payload: payload
+        }, window.location.origin);
+      }
+      if (!window.opener || window.opener.closed) {
+        document.body.textContent = payload.message || '본인인증 처리가 완료되었습니다.';
+        return;
+      }
+      window.close();
+    })();
   </script>
 </body>
 </html>`);
@@ -748,26 +1093,16 @@ async function getIdentityVerificationResult(req, res) {
   });
 }
 
-async function fetchIdentityVerificationPayload(identityVerificationId) {
+async function fetchPortOneIdentityVerificationPayload(identityVerificationId) {
   const normalizedIdentityVerificationId = String(identityVerificationId || '').trim();
   const apiSecret = String(process.env.PORTONE_API_SECRET || '').trim();
 
   if (!normalizedIdentityVerificationId) {
-    return {
-      error: {
-        status: 400,
-        body: { message: '본인인증 ID가 필요합니다.' }
-      }
-    };
+    return { error: { status: 400, body: { message: '본인인증 ID가 필요합니다.' } } };
   }
 
   if (!apiSecret) {
-    return {
-      error: {
-        status: 500,
-        body: { message: 'PortOne 연동 환경변수(PORTONE_API_SECRET)가 설정되지 않았습니다.' }
-      }
-    };
+    return { error: { status: 500, body: { message: 'PortOne 연동 환경변수(PORTONE_API_SECRET)가 설정되지 않았습니다.' } } };
   }
 
   const endpointUrl = `https://api.portone.io/identity-verifications/${encodeURIComponent(normalizedIdentityVerificationId)}`;
@@ -797,24 +1132,30 @@ async function fetchIdentityVerificationPayload(identityVerificationId) {
   try {
     payload = await upstreamResponse.json();
   } catch (error) {
-    return {
-      error: {
-        status: 502,
-        body: { message: 'PortOne 본인인증 결과 응답을 해석할 수 없습니다.' }
-      }
-    };
+    return { error: { status: 502, body: { message: 'PortOne 본인인증 결과 응답을 해석할 수 없습니다.' } } };
   }
 
   if (!upstreamResponse.ok) {
-    return {
-      error: {
-        status: upstreamResponse.status,
-        body: { message: payload?.message || 'PortOne 본인인증 결과 조회에 실패했습니다.' }
-      }
-    };
+    return { error: { status: upstreamResponse.status, body: { message: payload?.message || 'PortOne 본인인증 결과 조회에 실패했습니다.' } } };
   }
 
   return { payload };
+}
+
+async function fetchIdentityVerificationPayload(identityVerificationId) {
+  const normalizedIdentityVerificationId = String(identityVerificationId || '').trim();
+  const cachedKcpTransaction = getKcpIdentityTransaction(normalizedIdentityVerificationId);
+  const looksLikePortOneGeneratedId = /^[A-Za-z]+[a-z0-9]{6,}/.test(normalizedIdentityVerificationId)
+    && !/^\d{10,}$/.test(normalizedIdentityVerificationId);
+
+  if (cachedKcpTransaction || !looksLikePortOneGeneratedId) {
+    const kcpResult = await fetchKcpIdentityVerificationPayload(normalizedIdentityVerificationId);
+    if (!kcpResult.error || !looksLikePortOneGeneratedId) {
+      return kcpResult;
+    }
+  }
+
+  return fetchPortOneIdentityVerificationPayload(normalizedIdentityVerificationId);
 }
 
 async function findAccountByIdentity(req, res) {
@@ -886,5 +1227,6 @@ module.exports = {
   getIdentityVerificationConfig,
   getIdentityVerificationResult,
   findAccountByIdentity,
-  resetPasswordByIdentity
+  resetPasswordByIdentity,
+  handleKcpCallback
 };

@@ -145,14 +145,21 @@ aws s3api create-bucket \
 - 이미지 URL 접근 불가: 버킷/CloudFront 공개 정책 또는 서명 URL 전략 확인
 - 게시글 작성 디버그가 필요하면 `/create-post?debugUpload=1`로 접속하면 성공 후 자동 이동 대신 콘솔에 업로드 결과를 남깁니다.
 
-## KCP 본인인증 연동 설정
-- 회원가입의 본인인증 버튼은 `POST /api/auth/request-identity-verification`로 요청을 보내고, 서버가 KCP 인증 화면으로 자동 전송합니다.
-- 아래 환경변수 2개를 반드시 설정해야 실제 KCP 화면이 열립니다.
-  - `KCP_REQUEST_URL` (KCP 인증 요청 URL)
+## KCP 본인인증 V2 연동 설정
+- 회원가입의 본인인증 버튼은 `POST /api/auth/request-identity-verification`로 KCP V2 거래등록을 요청하고, 응답받은 `call_url`/`reg_cert_key`로 인증창을 호출합니다.
+- 인증 완료 후 KCP가 `/kcp/callback`으로 전달한 `res_cd=0000` 결과에 대해 서버가 즉시 결과 조회 및 복호화를 수행합니다.
+- 아래 환경변수를 반드시 설정해야 실제 KCP V2 인증 화면이 열립니다.
   - `KCP_SITE_CODE` (KCP 사이트 코드)
+  - `KCP_ENC_KEY` (KCP 관리자에서 발급한 ENC_KEY)
 - 선택 환경변수:
+  - `KCP_CERT_ENV` (`production`이면 `https://cert.kcp.co.kr`, 그 외 기본값은 `https://testcert.kcp.co.kr`)
+  - `KCP_CERT_BASE_URL` (KCP 본인확인 서버 URL을 직접 지정할 때 사용)
+  - `KCP_CERT_REGISTER_URL` / `KCP_CERT_RESULT_URL` (거래등록/결과조회 API 전체 URL을 직접 지정할 때 사용)
+  - `KCP_CERT_REGISTER_PATH` / `KCP_CERT_RESULT_PATH` (기본 호스트에 붙일 거래등록/결과조회 경로)
   - `KCP_RETURN_URL` (인증 완료 후 KCP가 리다이렉트할 URL. 미설정 시 `https?://<host>/kcp/callback` 자동 구성)
+  - `KCP_CRYPTO_MODULE_PATH` (NHN KCP 제공 암복호화 라이브러리 모듈 경로. `encryptJson`/`decryptJson` 함수를 노출해야 합니다.)
+  - `KCP_WEB_SITE_ID` (가맹점 설정에 필요한 경우 전달할 웹사이트 ID)
 
-### PEM 키 보관 위치
-- `.pem` 키는 프론트엔드/레포에 직접 넣지 말고, 서버의 외부 안전 경로(예: `/etc/mnms/kcp/`)에 저장하세요.
+### KCP 키/라이브러리 보관 위치
+- `KCP_ENC_KEY`와 KCP 제공 암복호화 라이브러리는 프론트엔드/레포에 직접 넣지 말고, 서버의 외부 안전 경로(예: `/etc/mnms/kcp/`)에 저장하세요.
 - 경로가 필요하면 `.env.local` 같은 로컬 전용 환경 파일을 통해 주입하세요.
