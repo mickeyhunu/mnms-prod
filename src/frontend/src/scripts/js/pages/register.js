@@ -149,65 +149,6 @@ function setupIdentityVerification() {
     }
 }
 
-async function requestIdentityVerification({ popupName, popup, authForm }) {
-    if (!(authForm instanceof HTMLFormElement)) {
-        throw new Error('KCP 인증 폼을 찾을 수 없습니다.');
-    }
-
-    const submitUrl = String(authForm.action || '').trim();
-    if (!submitUrl || submitUrl === 'about:blank') {
-        throw new Error('KCP 인증 요청 URL이 설정되지 않았습니다.');
-    }
-
-    authForm.target = popupName;
-    authForm.submit();
-
-    popup.document.write(`
-        <html lang="ko">
-        <head><title>KCP 본인인증</title></head>
-        <body style="font-family:sans-serif;padding:24px;">
-            <h2>KCP 본인인증</h2>
-            <p>본인인증을 진행 중입니다...</p>
-        </body>
-        </html>
-    `);
-    popup.document.close();
-
-    if (typeof window.requestIdentityVerification !== 'function') {
-        return new Promise((resolve, reject) => {
-            const timeoutId = window.setTimeout(() => {
-                window.removeEventListener('message', handleMessage);
-                reject(new Error('본인인증 응답 대기 시간이 초과되었습니다.'));
-            }, 5 * 60 * 1000);
-
-            const handleMessage = (event) => {
-                const data = event?.data || {};
-                if (data.type !== 'KCP_IDENTITY_VERIFICATION_RESULT') {
-                    return;
-                }
-
-                window.clearTimeout(timeoutId);
-                window.removeEventListener('message', handleMessage);
-                resolve(data.payload || null);
-            };
-
-            window.addEventListener('message', handleMessage);
-        });
-    }
-
-    const response = window.requestIdentityVerification({
-        popupName,
-        popup,
-        form: authForm
-    });
-
-    if (response && typeof response.then === 'function') {
-        return response;
-    }
-
-    return response;
-}
-
 function setupNicknameCheck() {
     const checkNicknameBtn = document.getElementById('check-nickname-btn');
     const nicknameInput = document.getElementById('nickname');
