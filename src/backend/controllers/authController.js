@@ -614,6 +614,14 @@ function cleanupKcpIdentityTransactions(now = Date.now()) {
   }
 }
 
+function getOriginFromUrl(url) {
+  try {
+    return new URL(String(url || '').trim()).origin;
+  } catch (_error) {
+    return '';
+  }
+}
+
 function saveKcpIdentityTransaction(regCertKey, value = {}) {
   const normalizedKey = String(regCertKey || '').trim();
   if (!normalizedKey) return;
@@ -858,6 +866,10 @@ async function requestIdentityVerification(req, res) {
     param_opt_3: String(req.body?.param_opt_3 || '').trim()
   };
 
+  if (!requestPayload.param_opt_1) {
+    requestPayload.param_opt_1 = requestPayload.ordr_idxx;
+  }
+
   const returnUrlValidationMessage = validateKcpReturnUrl(requestPayload.Ret_URL);
   if (returnUrlValidationMessage) {
     return res.status(500).json({
@@ -916,13 +928,17 @@ async function requestIdentityVerification(req, res) {
     regCertKey,
     callUrl,
     kcpPageSubmitYn: String(req.body?.kcp_page_submit_yn || req.body?.kcpPageSubmitYn || 'N').trim().toUpperCase() === 'Y' ? 'Y' : 'N',
+    returnUrl: requestPayload.Ret_URL,
+    returnOrigin: getOriginFromUrl(requestPayload.Ret_URL),
+    orderNo: requestPayload.ordr_idxx,
     resCd: registrationResult.res_cd,
     resMsg: registrationResult.res_msg
   });
 }
 
-async function fetchKcpIdentityVerificationPayload(regCertKey) {
+async function fetchKcpIdentityVerificationPayload(regCertKey, orderNoHint = '') {
   const normalizedRegCertKey = String(regCertKey || '').trim();
+  const normalizedOrderNoHint = String(orderNoHint || '').trim();
   const kcpConfig = getKcpConfig();
 
   if (!normalizedRegCertKey) {
@@ -943,7 +959,7 @@ async function fetchKcpIdentityVerificationPayload(regCertKey) {
       resolveKcpApiUrl('result'),
       {
         reg_cert_key: normalizedRegCertKey,
-        ordr_idxx: String(cachedTransaction?.orderNo || cachedTransaction?.ordr_idxx || '').trim()
+        ordr_idxx: String(cachedTransaction?.orderNo || cachedTransaction?.ordr_idxx || normalizedOrderNoHint).trim()
       },
       { site_cd: kcpConfig.siteCode }
     );
@@ -988,6 +1004,7 @@ async function handleKcpCallback(req, res) {
   const body = { ...(req.query || {}), ...(req.body || {}) };
   const resCd = String(body.res_cd || body.result_cd || '').trim();
   const regCertKey = String(body.reg_cert_key || '').trim();
+  const orderNoHint = String(body.ordr_idxx || body.param_opt_1 || '').trim();
   const success = resCd === '0000';
 
   let payload = {
@@ -997,7 +1014,7 @@ async function handleKcpCallback(req, res) {
   };
 
   if (success) {
-    const fetchedResult = await fetchKcpIdentityVerificationPayload(regCertKey);
+    const fetchedResult = await fetchKcpIdentityVerificationPayload(regCertKey, orderNoHint);
     if (fetchedResult.error) {
       payload = {
         success: false,
@@ -1029,13 +1046,15 @@ async function handleKcpCallback(req, res) {
         window.opener.postMessage({
           type: 'KCP_IDENTITY_VERIFICATION_RESULT',
           payload: payload
-        }, window.location.origin);
+        }, '*');
       }
+      document.body.textContent = payload.message || '본인인증 처리가 완료되었습니다.';
       if (!window.opener || window.opener.closed) {
-        document.body.textContent = payload.message || '본인인증 처리가 완료되었습니다.';
         return;
       }
-      window.close();
+      window.setTimeout(function () {
+        window.close();
+      }, 300);
     })();
   </script>
 </body>
