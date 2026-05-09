@@ -63,6 +63,9 @@ async function getPublicArticleDetail(req, res, next) {
     const id = parseId(req.params.id);
     if (!id) return res.status(400).json({ message: '유효하지 않은 글 ID입니다.' });
 
+    const increased = await supportModel.incrementArticleViewCount(id);
+    if (!increased) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
+
     const article = await supportModel.findPublicArticleDetailById(id);
     if (!article) return res.status(404).json({ message: '글을 찾을 수 없습니다.' });
 
