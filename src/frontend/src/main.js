@@ -5,18 +5,32 @@ import { createApp } from 'vue';
 import router from './router/index.js';
 import App from './App.js';
 
-const isEditableTarget = (target) => {
+const INTERACTION_ALLOWED_SELECTOR = 'input, textarea, select, [contenteditable], [role="textbox"], #post-content, #post-content *';
+
+const isInteractionAllowedTarget = (target) => {
   if (!(target instanceof Element)) {
     return false;
   }
 
-  return Boolean(
-    target.closest('input, textarea, select, [contenteditable], [role="textbox"]'),
-  );
+  return Boolean(target.closest(INTERACTION_ALLOWED_SELECTOR));
+};
+
+const isSelectionInAllowedTarget = () => {
+  if (!window.getSelection) {
+    return false;
+  }
+
+  const selection = window.getSelection();
+  const selectedNode = selection?.anchorNode || selection?.focusNode;
+  const selectedElement = selectedNode?.nodeType === Node.ELEMENT_NODE
+    ? selectedNode
+    : selectedNode?.parentElement;
+
+  return isInteractionAllowedTarget(selectedElement);
 };
 
 const preventDefault = (event) => {
-  if (isEditableTarget(event.target)) {
+  if (isInteractionAllowedTarget(event.target)) {
     return;
   }
 
@@ -28,7 +42,7 @@ document.addEventListener('dragstart', preventDefault, true);
 document.addEventListener('drop', preventDefault, true);
 document.addEventListener('selectstart', preventDefault, true);
 document.addEventListener('mousedown', (event) => {
-  if (isEditableTarget(event.target)) {
+  if (isInteractionAllowedTarget(event.target)) {
     return;
   }
 
@@ -37,7 +51,7 @@ document.addEventListener('mousedown', (event) => {
   }
 }, true);
 document.addEventListener('selectionchange', (event) => {
-  if (isEditableTarget(document.activeElement)) {
+  if (isInteractionAllowedTarget(document.activeElement) || isSelectionInAllowedTarget()) {
     return;
   }
 
