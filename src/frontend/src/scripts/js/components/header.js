@@ -370,7 +370,9 @@ function updateHeaderForUser(user) {
         HeaderUserMenu.setOpenState(false);
 
         if (adminLink) {
-            toggleElement(adminLink, user.isAdmin);
+            toggleElement(adminLink, typeof Auth !== 'undefined' && typeof Auth.isAdminAccount === 'function'
+                ? Auth.isAdminAccount(user)
+                : user.isAdmin);
         }
     } else {
         HeaderUserMenu.setOpenState(false);
