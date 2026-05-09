@@ -153,7 +153,7 @@ async function initAdminPage() {
 
     try {
         const me = await APIClient.get('/auth/me');
-        if (!me.isAdmin) {
+        if (!Auth.isAdminAccount(me)) {
             window.location.replace(NOT_FOUND_PATH);
             return;
         }

@@ -480,8 +480,8 @@ async function initAdProfileManagementPage() {
         const me = await APIClient.get('/auth/me');
         adProfileState.me = me;
 
-        const nickname = document.getElementById('user-nickname');
-        if (nickname) nickname.textContent = Auth.formatNicknameWithLevel(me);
+        const nickname = Auth.resolveNicknameDisplayElement();
+        if (nickname) Auth.applyNicknameDisplay(nickname, me);
         const managerNameInput = document.getElementById('ad-profile-manager');
         if (managerNameInput) {
             managerNameInput.value = String(me?.name || me?.nickname || '').trim();
