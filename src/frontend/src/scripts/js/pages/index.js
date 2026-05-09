@@ -423,7 +423,12 @@ function isWithin12Hours(dateValue) {
 
 function getPreviewText(post) {
     const source = post.preview || post.content || post.body || '';
-    return String(source).replace(/\s+/g, ' ').trim().slice(0, 140) || '내용 미리보기가 없습니다.';
+    const firstLine = String(source)
+        .split(/\r?\n/)
+        .map((line) => line.replace(/\s+/g, ' ').trim())
+        .find(Boolean);
+
+    return firstLine?.slice(0, 140) || '내용 미리보기가 없습니다.';
 }
 
 function updatePagination() {
