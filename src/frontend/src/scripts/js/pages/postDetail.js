@@ -494,7 +494,7 @@ function renderPostDetail(post) {
 
     if (titleElement) titleElement.textContent = `[${boardTagMap[boardType] || '자유'}] ${post.title || ''}`;
     if (contentElement) {
-        contentElement.innerHTML = (post.content || '').replace(/\n/g, '<br>');
+        contentElement.innerHTML = renderPostContent(post.content || '');
         contentElement.classList.toggle('admin-restricted-content', isHiddenPost);
     }
     const boardNameEl = document.getElementById('post-board-name');
@@ -1369,6 +1369,55 @@ function showNotification(message, type = 'info') {
             }, 300);
         }
     }, 3000);
+}
+
+
+function renderPostContent(content) {
+    const rawContent = String(content || '');
+    const urlPattern = /https?:\/\/[^\s<>"']+/gi;
+    let rendered = '';
+    let lastIndex = 0;
+    let match;
+
+    while ((match = urlPattern.exec(rawContent)) !== null) {
+        const rawUrl = match[0];
+        const leadingText = rawContent.slice(lastIndex, match.index);
+        const { url, trailingText } = splitTrailingUrlPunctuation(rawUrl);
+
+        rendered += sanitizeHTML(leadingText);
+        rendered += renderExternalLink(url);
+        rendered += sanitizeHTML(trailingText);
+        lastIndex = match.index + rawUrl.length;
+    }
+
+    rendered += sanitizeHTML(rawContent.slice(lastIndex));
+    return rendered.replace(/\n/g, '<br>');
+}
+
+function splitTrailingUrlPunctuation(rawUrl) {
+    let url = rawUrl;
+    let trailingText = '';
+
+    while (/[.,!?;:)\]\}，。！？；：）］｝]$/.test(url)) {
+        trailingText = url.slice(-1) + trailingText;
+        url = url.slice(0, -1);
+    }
+
+    return { url, trailingText };
+}
+
+function renderExternalLink(rawUrl) {
+    try {
+        const parsedUrl = new URL(rawUrl);
+        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+            return sanitizeHTML(rawUrl);
+        }
+    } catch (error) {
+        return sanitizeHTML(rawUrl);
+    }
+
+    const safeUrl = sanitizeHTML(rawUrl);
+    return `<a class="post-content-link" href="${safeUrl}" target="_blank" rel="noopener noreferrer">${safeUrl}</a>`;
 }
 
 function sanitizeHTML(str) {
