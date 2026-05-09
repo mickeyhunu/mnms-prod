@@ -1,28 +1,6 @@
 /**
  * 파일 역할: authAPI 관련 서버 API 호출 로직을 캡슐화한 클라이언트 API 모듈.
  */
-
-function logAuthIdentityApiStep(step, details = {}) {
-    if (typeof console !== 'undefined' && typeof console.log === 'function') {
-        console.log('[AuthAPI Identity]', step, details);
-    }
-}
-
-function maskAuthIdentityValue(value) {
-    if (window.KcpIdentity && typeof window.KcpIdentity.maskValue === 'function') {
-        return window.KcpIdentity.maskValue(value);
-    }
-
-    const normalizedValue = String(value || '').trim();
-    if (!normalizedValue) {
-        return '';
-    }
-
-    return normalizedValue.length <= 8
-        ? `${normalizedValue.slice(0, 2)}***`
-        : `${normalizedValue.slice(0, 4)}***${normalizedValue.slice(-4)}`;
-}
-
 const AuthAPI = {
     mapAuthUserPayload(payload = {}) {
         return {
@@ -102,49 +80,27 @@ const AuthAPI = {
 
     async requestIdentityVerification(data = {}) {
         try {
-            logAuthIdentityApiStep('거래등록 요청 시작', { ordrIdxx: data?.ordr_idxx, kcpPageSubmitYn: data?.kcpPageSubmitYn });
             const result = await APIClient.post('/auth/request-identity-verification', data);
-            logAuthIdentityApiStep('거래등록 요청 완료', {
-                hasCallUrl: Boolean(result?.callUrl),
-                identityVerificationId: maskAuthIdentityValue(result?.identityVerificationId || result?.regCertKey)
-            });
             return result;
         } catch (error) {
-            logAuthIdentityApiStep('거래등록 요청 오류', { errorMessage: error?.message || String(error || '') });
             throw error;
         }
     },
 
     async getIdentityVerificationResult(identityVerificationId) {
         try {
-            logAuthIdentityApiStep('인증 결과 조회 시작', { identityVerificationId: maskAuthIdentityValue(identityVerificationId) });
             const result = await APIClient.get(`/auth/identity-verification/${encodeURIComponent(identityVerificationId)}`);
-            logAuthIdentityApiStep('인증 결과 조회 완료', {
-                identityVerificationId: maskAuthIdentityValue(result?.identityVerificationId || identityVerificationId),
-                hasVerifiedCustomer: Boolean(result?.verifiedCustomer || result?.customer),
-                signupAllowed: result?.signupEligibility?.allowed
-            });
             return result;
         } catch (error) {
-            logAuthIdentityApiStep('인증 결과 조회 오류', {
-                identityVerificationId: maskAuthIdentityValue(identityVerificationId),
-                errorMessage: error?.message || String(error || '')
-            });
             throw error;
         }
     },
 
     async findAccountByIdentity(identityVerificationId) {
         try {
-            logAuthIdentityApiStep('본인인증 계정찾기 요청 시작', { identityVerificationId: maskAuthIdentityValue(identityVerificationId) });
             const result = await APIClient.post('/auth/find-account-by-identity', { identityVerificationId });
-            logAuthIdentityApiStep('본인인증 계정찾기 요청 완료', { found: Boolean(result?.found), message: result?.message });
             return result;
         } catch (error) {
-            logAuthIdentityApiStep('본인인증 계정찾기 요청 오류', {
-                identityVerificationId: maskAuthIdentityValue(identityVerificationId),
-                errorMessage: error?.message || String(error || '')
-            });
             throw error;
         }
     },

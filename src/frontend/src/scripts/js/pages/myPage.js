@@ -4,28 +4,6 @@
 let currentUser = null;
 let nicknameCheckState = { checked: false, available: false, value: '' };
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
-
-function logMyPageIdentityStep(step, details = {}) {
-    if (typeof console !== 'undefined' && typeof console.log === 'function') {
-        console.log('[MyPage Identity]', step, details);
-    }
-}
-
-function maskMyPageIdentityValue(value) {
-    if (window.KcpIdentity && typeof window.KcpIdentity.maskValue === 'function') {
-        return window.KcpIdentity.maskValue(value);
-    }
-
-    const normalizedValue = String(value || '').trim();
-    if (!normalizedValue) {
-        return '';
-    }
-
-    return normalizedValue.length <= 8
-        ? `${normalizedValue.slice(0, 2)}***`
-        : `${normalizedValue.slice(0, 4)}***${normalizedValue.slice(-4)}`;
-}
-
 function formatPhoneNumber(value) {
     const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
     if (digits.length <= 3) return digits;
@@ -352,34 +330,21 @@ function bindProfileForm() {
                 setHelpMessage(phoneVerifyResult, '본인인증을 진행합니다...', '#6c757d');
 
                 if (!window.KcpIdentity || typeof window.KcpIdentity.request !== 'function') {
-                    logMyPageIdentityStep('KCP 모듈 확인 실패');
                     throw new Error('KCP 본인인증 모듈을 찾을 수 없습니다.');
                 }
 
-                logMyPageIdentityStep('KCP 모듈 확인 성공');
                 const requestOptions = {
                     ordr_idxx: generateIdentityVerificationId('myphone'),
                     kcpPageSubmitYn: 'N'
                 };
-                logMyPageIdentityStep('연락처 변경 본인인증 요청 호출', requestOptions);
                 const response = await window.KcpIdentity.request(requestOptions);
-                logMyPageIdentityStep('연락처 변경 본인인증 요청 응답', {
-                    success: Boolean(response?.success),
-                    identityVerificationId: maskMyPageIdentityValue(response?.identityVerificationId || response?.regCertKey)
-                });
 
                 const identityVerificationId = String(response?.identityVerificationId || response?.regCertKey || '').trim();
                 if (!identityVerificationId) {
-                    logMyPageIdentityStep('연락처 변경 인증 거래 ID 확인 실패');
                     throw new Error('본인인증 거래 정보를 확인하지 못했습니다. 다시 시도해주세요.');
                 }
 
-                logMyPageIdentityStep('연락처 변경 인증 결과 조회 시작', { identityVerificationId: maskMyPageIdentityValue(identityVerificationId) });
                 const verificationResult = await APIClient.get(`/auth/identity-verification/${encodeURIComponent(identityVerificationId)}`);
-                logMyPageIdentityStep('연락처 변경 인증 결과 조회 완료', {
-                    identityVerificationId: maskMyPageIdentityValue(verificationResult?.identityVerificationId || identityVerificationId),
-                    hasVerifiedCustomer: Boolean(verificationResult?.verifiedCustomer || verificationResult?.normalized)
-                });
                 const verifiedName = String(verificationResult?.normalized?.name || verificationResult?.verifiedCustomer?.name || '').trim();
                 const verifiedPhone = formatPhoneNumber(
                     verificationResult?.normalized?.phone
@@ -389,23 +354,16 @@ function bindProfileForm() {
                 );
 
                 if (!verifiedName || !verifiedPhone) {
-                    logMyPageIdentityStep('연락처 변경 인증 데이터 검증 실패', { hasName: Boolean(verifiedName), hasPhone: Boolean(verifiedPhone) });
                     throw new Error('본인인증 정보에서 이름 또는 연락처를 확인하지 못했습니다.');
                 }
 
                 if (!currentName || verifiedName !== currentName) {
-                    logMyPageIdentityStep('연락처 변경 동일 명의 검증 실패', { hasCurrentName: Boolean(currentName) });
                     throw new Error('동일 명의 본인인증만 연락처 변경이 가능합니다.');
                 }
 
                 phoneInput.value = verifiedPhone;
-                logMyPageIdentityStep('연락처 변경 본인인증 흐름 완료');
                 setHelpMessage(phoneVerifyResult, '본인인증 완료: 인증된 연락처가 자동 입력되었습니다.', '#198754');
             } catch (error) {
-                logMyPageIdentityStep('연락처 변경 본인인증 흐름 오류', {
-                    errorName: error?.name || 'Error',
-                    errorMessage: error?.message || String(error || '')
-                });
                 setHelpMessage(phoneVerifyResult, error?.message || '연락처 본인인증 중 오류가 발생했습니다.', '#dc3545');
             } finally {
                 phoneVerifyButton.disabled = false;
@@ -441,44 +399,29 @@ function bindProfileForm() {
             }
 
             try {
-                logMyPageIdentityStep('회원탈퇴 본인인증 시작');
                 withdrawSubmitButton.disabled = true;
                 setHelpMessage(withdrawResult, '본인인증을 진행합니다...', '#6c757d');
 
                 if (!window.KcpIdentity || typeof window.KcpIdentity.request !== 'function') {
-                    logMyPageIdentityStep('KCP 모듈 확인 실패');
                     throw new Error('KCP 본인인증 모듈을 찾을 수 없습니다.');
                 }
 
-                logMyPageIdentityStep('KCP 모듈 확인 성공');
                 const requestOptions = {
                     ordr_idxx: generateIdentityVerificationId('withdraw'),
                     kcpPageSubmitYn: 'N'
                 };
-                logMyPageIdentityStep('KCP 본인인증 요청 호출', requestOptions);
                 const response = await window.KcpIdentity.request(requestOptions);
-                logMyPageIdentityStep('KCP 본인인증 요청 응답', {
-                    success: Boolean(response?.success),
-                    identityVerificationId: maskMyPageIdentityValue(response?.identityVerificationId || response?.regCertKey)
-                });
 
                 const identityVerificationId = String(response?.identityVerificationId || response?.regCertKey || '').trim();
                 if (!identityVerificationId) {
-                    logMyPageIdentityStep('인증 거래 ID 확인 실패');
                     throw new Error('본인인증 거래 정보를 확인하지 못했습니다. 다시 시도해주세요.');
                 }
 
                 setHelpMessage(withdrawResult, '탈퇴 처리 중입니다...', '#6c757d');
-                logMyPageIdentityStep('회원탈퇴 API 요청 시작', { identityVerificationId: maskMyPageIdentityValue(identityVerificationId) });
                 await APIClient.delete('/users/me', { reason: withdrawReason, identityVerificationId });
-                logMyPageIdentityStep('회원탈퇴 API 요청 완료');
                 alert('회원 탈퇴가 완료되었습니다.');
                 Auth.logout();
             } catch (error) {
-                logMyPageIdentityStep('회원탈퇴 본인인증 흐름 오류', {
-                    errorName: error?.name || 'Error',
-                    errorMessage: error?.message || String(error || '')
-                });
                 setHelpMessage(withdrawResult, error?.message || '회원 탈퇴 처리 중 오류가 발생했습니다.', '#dc3545');
             } finally {
                 withdrawSubmitButton.disabled = false;

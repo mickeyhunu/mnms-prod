@@ -3,28 +3,6 @@
  */
 
 
-
-function logRegisterIdentityStep(step, details = {}) {
-    if (typeof console !== 'undefined' && typeof console.log === 'function') {
-        console.log('[Register Identity]', step, details);
-    }
-}
-
-function maskRegisterIdentityValue(value) {
-    if (window.KcpIdentity && typeof window.KcpIdentity.maskValue === 'function') {
-        return window.KcpIdentity.maskValue(value);
-    }
-
-    const normalizedValue = String(value || '').trim();
-    if (!normalizedValue) {
-        return '';
-    }
-
-    return normalizedValue.length <= 8
-        ? `${normalizedValue.slice(0, 2)}***`
-        : `${normalizedValue.slice(0, 4)}***${normalizedValue.slice(-4)}`;
-}
-
 function showBlockingAlert(message) {
     const resolvedMessage = String(message || '').trim();
     if (!resolvedMessage) {
@@ -171,65 +149,6 @@ function setupIdentityVerification() {
     }
 }
 
-async function requestIdentityVerification({ popupName, popup, authForm }) {
-    if (!(authForm instanceof HTMLFormElement)) {
-        throw new Error('KCP 인증 폼을 찾을 수 없습니다.');
-    }
-
-    const submitUrl = String(authForm.action || '').trim();
-    if (!submitUrl || submitUrl === 'about:blank') {
-        throw new Error('KCP 인증 요청 URL이 설정되지 않았습니다.');
-    }
-
-    authForm.target = popupName;
-    authForm.submit();
-
-    popup.document.write(`
-        <html lang="ko">
-        <head><title>KCP 본인인증</title></head>
-        <body style="font-family:sans-serif;padding:24px;">
-            <h2>KCP 본인인증</h2>
-            <p>본인인증을 진행 중입니다...</p>
-        </body>
-        </html>
-    `);
-    popup.document.close();
-
-    if (typeof window.requestIdentityVerification !== 'function') {
-        return new Promise((resolve, reject) => {
-            const timeoutId = window.setTimeout(() => {
-                window.removeEventListener('message', handleMessage);
-                reject(new Error('본인인증 응답 대기 시간이 초과되었습니다.'));
-            }, 5 * 60 * 1000);
-
-            const handleMessage = (event) => {
-                const data = event?.data || {};
-                if (data.type !== 'KCP_IDENTITY_VERIFICATION_RESULT') {
-                    return;
-                }
-
-                window.clearTimeout(timeoutId);
-                window.removeEventListener('message', handleMessage);
-                resolve(data.payload || null);
-            };
-
-            window.addEventListener('message', handleMessage);
-        });
-    }
-
-    const response = window.requestIdentityVerification({
-        popupName,
-        popup,
-        form: authForm
-    });
-
-    if (response && typeof response.then === 'function') {
-        return response;
-    }
-
-    return response;
-}
-
 function setupNicknameCheck() {
     const checkNicknameBtn = document.getElementById('check-nickname-btn');
     const nicknameInput = document.getElementById('nickname');
@@ -250,125 +169,23 @@ function setupNicknameCheck() {
     }
 }
 
-function isMobileViewport() {
-    return window.matchMedia('(max-width: 768px)').matches;
-}
-
-function submitKcpV2AuthWindow({ callUrl, regCertKey, kcpPageSubmitYn }) {
-    const pageSubmitYn = String(kcpPageSubmitYn || (isMobileViewport() ? 'Y' : 'N')).toUpperCase() === 'Y' ? 'Y' : 'N';
-    const form = document.createElement('form');
-    form.method = 'post';
-    form.action = callUrl;
-    form.style.display = 'none';
-
-    const appendHiddenInput = (name, value) => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = name;
-        input.value = value;
-        form.appendChild(input);
-    };
-
-    appendHiddenInput('reg_cert_key', regCertKey);
-    appendHiddenInput('kcp_page_submit_yn', pageSubmitYn);
-    document.body.appendChild(form);
-
-    if (pageSubmitYn === 'N') {
-        const width = 410;
-        const height = 500;
-        const left = (screen.width / 2) - (width / 2);
-        const top = (screen.height / 2) - (height / 2);
-        const opts = `width=${width},height=${height},toolbar=no,status=no,menubar=no,scrollbars=no,resizable=no,left=${left},top=${top}`;
-        const popupName = `kcp_auth_${Date.now()}`;
-        const popup = window.open('', popupName, opts);
-        if (!popup) {
-            document.body.removeChild(form);
-            throw new Error('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.');
-        }
-        form.target = popupName;
-    } else {
-        form.target = '_self';
-    }
-
-    form.submit();
-    window.setTimeout(() => {
-        if (form.parentNode) {
-            form.parentNode.removeChild(form);
-        }
-    }, 1000);
-}
-
-function getKcpAllowedMessageOrigins(additionalOrigins) {
-    const origins = new Set([window.location.origin]);
-    (Array.isArray(additionalOrigins) ? additionalOrigins : [additionalOrigins]).forEach((origin) => {
-        const normalizedOrigin = String(origin || '').trim();
-        if (normalizedOrigin) {
-            origins.add(normalizedOrigin);
-        }
-    });
-    return origins;
-}
-
-function waitForKcpIdentityResult(options = {}) {
-    const allowedOrigins = getKcpAllowedMessageOrigins(options.allowedOrigins || options.allowedOrigin);
-    return new Promise((resolve, reject) => {
-        const timeoutId = window.setTimeout(() => {
-            window.removeEventListener('message', handleMessage);
-            reject(new Error('본인인증 응답 대기 시간이 초과되었습니다.'));
-        }, 5 * 60 * 1000);
-
-        const handleMessage = (event) => {
-            if (!allowedOrigins.has(event.origin)) {
-                return;
-            }
-
-            const data = event?.data || {};
-            if (data.type !== 'KCP_IDENTITY_VERIFICATION_RESULT') {
-                return;
-            }
-
-            window.clearTimeout(timeoutId);
-            window.removeEventListener('message', handleMessage);
-            resolve(data.payload || null);
-        };
-
-        window.addEventListener('message', handleMessage);
-    });
-}
-
 async function handleIdentityVerification() {
-    logRegisterIdentityStep('본인인증 버튼 처리 시작');
     try {
         if (!window.KcpIdentity || typeof window.KcpIdentity.request !== 'function') {
-            logRegisterIdentityStep('KCP 모듈 확인 실패');
             throw new Error('KCP 본인인증 모듈을 찾을 수 없습니다.');
         }
 
-        logRegisterIdentityStep('KCP 모듈 확인 성공');
         const requestOptions = {
             ordr_idxx: generateIdentityVerificationId('register'),
             kcpPageSubmitYn: 'N'
         };
-        logRegisterIdentityStep('KCP 본인인증 요청 호출', requestOptions);
         const response = await window.KcpIdentity.request(requestOptions);
-        logRegisterIdentityStep('KCP 본인인증 요청 응답', {
-            success: Boolean(response?.success),
-            identityVerificationId: maskRegisterIdentityValue(response?.identityVerificationId || response?.regCertKey),
-            hasVerifiedCustomer: Boolean(response?.verifiedCustomer || response?.customer)
-        });
         const identityVerificationId = String(response?.identityVerificationId || response?.regCertKey || '').trim();
         if (!identityVerificationId) {
-            logRegisterIdentityStep('인증 거래 ID 확인 실패');
             throw new Error('본인인증 거래 정보를 확인하지 못했습니다. 다시 시도해주세요.');
         }
 
-        logRegisterIdentityStep('인증 결과 상세 조회 시작', { identityVerificationId: maskRegisterIdentityValue(identityVerificationId) });
         const verificationResult = await AuthAPI.getIdentityVerificationResult(identityVerificationId);
-        logRegisterIdentityStep('인증 결과 상세 조회 완료', {
-            identityVerificationId: maskRegisterIdentityValue(verificationResult?.identityVerificationId || identityVerificationId),
-            hasVerifiedCustomer: Boolean(verificationResult?.verifiedCustomer || verificationResult?.customer),
-            signupAllowed: verificationResult?.signupEligibility?.allowed
-        });
         const mergedIdentityResult = {
             ...response,
             ...verificationResult,
@@ -376,10 +193,6 @@ async function handleIdentityVerification() {
         };
         const signupEligibility = verificationResult?.signupEligibility;
         if (signupEligibility && signupEligibility.allowed === false) {
-            logRegisterIdentityStep('회원가입 가능 여부 거부', {
-                reasonCode: signupEligibility.reasonCode,
-                message: signupEligibility.message
-            });
             if (signupEligibility.reasonCode === 'FEMALE_NOT_ALLOWED') {
                 showIdentityStatus('');
                 return;
@@ -389,32 +202,17 @@ async function handleIdentityVerification() {
         }
 
         const normalizedResponse = normalizeIdentityResponse(mergedIdentityResult);
-        logRegisterIdentityStep('인증 응답 정규화 완료', {
-            hasName: Boolean(normalizedResponse.name),
-            hasBirthDate: Boolean(normalizedResponse.birthDate),
-            hasPhone: Boolean(normalizedResponse.phone),
-            hasCi: Boolean(normalizedResponse.ci),
-            hasDi: Boolean(normalizedResponse.di),
-            identityVerificationId: maskRegisterIdentityValue(normalizedResponse.identityVerificationId)
-        });
 
         if (!isIdentityDataComplete(normalizedResponse)) {
-            logRegisterIdentityStep('정규화된 인증 데이터 검증 실패');
             throw new Error('본인인증 정보가 올바르게 전달되지 않았습니다. 다시 시도해주세요.');
         }
 
         applyIdentityResponse(normalizedResponse);
-        logRegisterIdentityStep('인증 결과 화면/hidden input 반영 완료');
 
         showNotification('본인인증이 완료되었습니다.', 'success');
         showIdentityStatus('본인인증 완료');
         showStep('detail');
-        logRegisterIdentityStep('회원가입 본인인증 흐름 완료');
     } catch (error) {
-        logRegisterIdentityStep('회원가입 본인인증 흐름 오류', {
-            errorName: error?.name || 'Error',
-            errorMessage: error?.message || String(error || '')
-        });
         const message = error.message || '본인인증 중 오류가 발생했습니다.';
         showIdentityStatus(message);
         showNotification(message, 'error');
