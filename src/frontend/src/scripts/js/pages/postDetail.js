@@ -951,7 +951,7 @@ function createCommentItem(comment, depth = 0) {
                         ` : ''}
                     </div>
                 </div>
-                <div class="comment-content ${isAdminComment ? 'admin-comment-content' : ''} ${isHiddenComment ? 'admin-restricted-content' : ''}" id="comment-content-${comment.id}">${sanitizeHTML(comment.content).replace(/\n/g, '<br>')}</div>
+                <div class="comment-content ${isAdminComment ? 'admin-comment-content' : ''} ${isHiddenComment ? 'admin-restricted-content' : ''}" id="comment-content-${comment.id}">${renderLinkedText(comment.content)}</div>
                 <div class="comment-footer">
                     <span class="comment-date">${formatDateTime(comment.createdAt)}</span>
                     ${canReply ? `<button class="comment-reply-link" onclick="showReplyForm(${comment.id}, '${sanitizeHTML(comment.authorNickname)}')">답글쓰기</button>` : ''}
@@ -1373,51 +1373,7 @@ function showNotification(message, type = 'info') {
 
 
 function renderPostContent(content) {
-    const rawContent = String(content || '');
-    const urlPattern = /https?:\/\/[^\s<>"']+/gi;
-    let rendered = '';
-    let lastIndex = 0;
-    let match;
-
-    while ((match = urlPattern.exec(rawContent)) !== null) {
-        const rawUrl = match[0];
-        const leadingText = rawContent.slice(lastIndex, match.index);
-        const { url, trailingText } = splitTrailingUrlPunctuation(rawUrl);
-
-        rendered += sanitizeHTML(leadingText);
-        rendered += renderExternalLink(url);
-        rendered += sanitizeHTML(trailingText);
-        lastIndex = match.index + rawUrl.length;
-    }
-
-    rendered += sanitizeHTML(rawContent.slice(lastIndex));
-    return rendered.replace(/\n/g, '<br>');
-}
-
-function splitTrailingUrlPunctuation(rawUrl) {
-    let url = rawUrl;
-    let trailingText = '';
-
-    while (/[.,!?;:)\]\}，。！？；：）］｝]$/.test(url)) {
-        trailingText = url.slice(-1) + trailingText;
-        url = url.slice(0, -1);
-    }
-
-    return { url, trailingText };
-}
-
-function renderExternalLink(rawUrl) {
-    try {
-        const parsedUrl = new URL(rawUrl);
-        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-            return sanitizeHTML(rawUrl);
-        }
-    } catch (error) {
-        return sanitizeHTML(rawUrl);
-    }
-
-    const safeUrl = sanitizeHTML(rawUrl);
-    return `<a class="post-content-link" href="${safeUrl}" target="_blank" rel="noopener noreferrer">${safeUrl}</a>`;
+    return renderLinkedText(content || '');
 }
 
 function sanitizeHTML(str) {

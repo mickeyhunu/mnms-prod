@@ -134,7 +134,7 @@ function createSupportNoticeCard(item) {
 function createSupportFaqCard(item) {
     const createdAt = formatDateOnly(item.createdAt || item.created_at);
     const title = sanitizeHTML(item.title || '제목 없음');
-    const content = sanitizeHTML(item.content || '').replace(/\n/g, '<br>');
+    const content = renderLinkedText(item.content || '');
 
     return `
         <article class="post-card" style="cursor:default;">
@@ -167,7 +167,8 @@ function createFaqLayout(rows) {
         return {
             topic,
             question: sanitizeHTML(item.title || '제목 없음'),
-            answer: sanitizeHTML(item.content || '').replace(/\n/g, '<br>')
+            answer: renderLinkedText(item.content || ''),
+            searchText: `${item.title || ''} ${item.content || ''}`.toLowerCase()
         };
     });
 
@@ -176,7 +177,7 @@ function createFaqLayout(rows) {
     `).join('');
 
     const itemsMarkup = faqItems.map((item) => `
-        <article class="faq-item" data-topic="${item.topic}" data-search-text="${(item.question + ' ' + item.answer).toLowerCase()}">
+        <article class="faq-item" data-topic="${item.topic}" data-search-text="${sanitizeHTML(item.searchText)}">
             <button type="button" class="faq-question" data-faq-toggle>
                 <span class="faq-question-text">Q. ${item.question}</span>
                 <span class="faq-chevron" aria-hidden="true">⌄</span>
@@ -299,7 +300,7 @@ async function loadArticleDetail(articleId, sourceType) {
 
         const detailCreatedAt = formatDateTime(article.createdAt || article.created_at) || '';
         const detailTitle = sanitizeHTML(article.title || '제목 없음');
-        const detailContent = sanitizeHTML(article.content || '').replace(/\n/g, '<br>');
+        const detailContent = renderLinkedText(article.content || '');
         const detailViews = Number(article.viewCount || article.view_count || 0);
 
         list.innerHTML = `

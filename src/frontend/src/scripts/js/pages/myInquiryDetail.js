@@ -111,12 +111,12 @@ async function renderInquiryDetail() {
         </div>
         <div class="my-inquiry-detail-block">
             <h3>문의 내용</h3>
-            <p class="my-inquiry-content">${escapeHtml(inquiry.content || '').replace(/\n/g, '<br>')}</p>
+            <p class="my-inquiry-content">${renderLinkedText(inquiry.content || '')}</p>
         </div>
         ${renderAttachmentList(inquiry.attachmentUrls)}
         <div class="my-inquiry-detail-block my-inquiry-answer-block ${String(inquiry.status || '').toUpperCase() === 'ANSWERED' ? 'is-completed' : ''}">
             <h3>관리자 답변</h3>
-            <p class="my-inquiry-answer">${escapeHtml(answerText).replace(/\n/g, '<br>')}</p>
+            <p class="my-inquiry-answer">${renderLinkedText(answerText)}</p>
         </div>
         `;
     } catch (error) {
