@@ -853,6 +853,7 @@ async function initDatabase() {
       is_pinned TINYINT(1) NOT NULL DEFAULT 0,
       title VARCHAR(255) NOT NULL,
       content TEXT NOT NULL,
+      view_count BIGINT NOT NULL DEFAULT 0,
       is_deleted TINYINT(1) NOT NULL DEFAULT 0,
       created_by BIGINT NULL,
       updated_by BIGINT NULL,
@@ -903,6 +904,20 @@ async function initDatabase() {
 
   if (!supportIsPinnedColumn.length) {
     await pool.query('ALTER TABLE support_articles ADD COLUMN is_pinned TINYINT(1) NOT NULL DEFAULT 0 AFTER notice_type');
+  }
+
+  const [supportViewCountColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'support_articles'
+       AND COLUMN_NAME = 'view_count'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!supportViewCountColumn.length) {
+    await pool.query('ALTER TABLE support_articles ADD COLUMN view_count BIGINT NOT NULL DEFAULT 0 AFTER content');
   }
 
 
