@@ -1114,6 +1114,18 @@ async function handleKcpCallback(req, res) {
     }
   }
 
+  if (regCertKey) {
+    saveKcpIdentityTransaction(regCertKey, {
+      ...(getKcpIdentityTransaction(regCertKey) || {}),
+      callbackPayload: body,
+      payload
+    });
+    logKcpIdentityStep('KCP 콜백 payload 캐시 저장', {
+      regCertKey: maskKcpIdentityValue(regCertKey),
+      success: Boolean(payload.success)
+    });
+  }
+
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(`<!doctype html>
 <html lang="ko">
@@ -1301,11 +1313,30 @@ async function evaluateIdentitySignupEligibility({ identityVerificationId, ci = 
 
 async function getIdentityVerificationResult(req, res) {
   const identityVerificationId = String(req.params.identityVerificationId || '').trim();
-  const fetchedResult = await fetchIdentityVerificationPayload(identityVerificationId);
+  const cacheOnly = ['1', 'true', 'Y', 'y'].includes(String(req.query?.cacheOnly || '').trim());
+  const fetchedResult = await fetchIdentityVerificationPayload(identityVerificationId, { cacheOnly });
+  if (fetchedResult.pending) {
+    return res.status(cacheOnly ? 200 : 202).json({
+      pending: true,
+      identityVerificationId,
+      message: 'KCP 본인인증 콜백 결과를 기다리는 중입니다.'
+    });
+  }
   if (fetchedResult.error) {
     return res.status(fetchedResult.error.status).json(fetchedResult.error.body);
   }
   const payload = fetchedResult.payload;
+
+  if (cacheOnly) {
+    return res.json(payload);
+  }
+
+  if (payload.success === false) {
+    return res.status(400).json({
+      ...payload,
+      message: payload.message || '본인인증에 실패했습니다.'
+    });
+  }
 
   const normalizedPayload = normalizeIdentityVerificationPayload(payload);
   const signupEligibility = await evaluateIdentitySignupEligibility({
@@ -1323,7 +1354,15 @@ async function getIdentityVerificationResult(req, res) {
   });
 }
 
-async function fetchIdentityVerificationPayload(identityVerificationId) {
+async function fetchIdentityVerificationPayload(identityVerificationId, options = {}) {
+  if (options.cacheOnly) {
+    const cachedTransaction = getKcpIdentityTransaction(identityVerificationId);
+    if (cachedTransaction?.payload) {
+      return { payload: cachedTransaction.payload };
+    }
+    return { pending: true };
+  }
+
   return fetchKcpIdentityVerificationPayload(identityVerificationId);
 }
 
