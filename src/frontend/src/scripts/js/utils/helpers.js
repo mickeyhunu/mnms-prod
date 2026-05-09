@@ -443,6 +443,52 @@ function getKcpAllowedMessageOrigins(additionalOrigins) {
    return origins;
 }
 
+function parseKcpIdentityMessageData(data) {
+   if (!data) {
+      return null;
+   }
+
+   if (typeof data === 'string') {
+      const normalizedData = data.trim();
+      if (!normalizedData) {
+         return null;
+      }
+
+      try {
+         return parseKcpIdentityMessageData(JSON.parse(normalizedData));
+      } catch (_error) {
+         const params = new URLSearchParams(normalizedData);
+         const payload = {};
+         for (const [key, value] of params.entries()) {
+            payload[key] = value;
+         }
+         return Object.keys(payload).length > 0 ? parseKcpIdentityMessageData(payload) : null;
+      }
+   }
+
+   if (typeof data !== 'object') {
+      return null;
+   }
+
+   if (data.type === 'KCP_IDENTITY_VERIFICATION_RESULT') {
+      return data.payload || null;
+   }
+
+   const regCertKey = String(data.reg_cert_key || data.regCertKey || data.identityVerificationId || '').trim();
+   const resultCode = String(data.res_cd || data.result_cd || '').trim();
+   if (!regCertKey && !resultCode) {
+      return null;
+   }
+
+   return {
+      ...data,
+      success: resultCode ? resultCode === '0000' : data.success !== false,
+      identityVerificationId: data.identityVerificationId || regCertKey,
+      regCertKey,
+      message: data.res_msg || data.result_msg || data.message || (resultCode === '0000' ? '본인인증이 완료되었습니다.' : '본인인증 결과를 수신했습니다.')
+   };
+}
+
 function kcpIdentityWaitForResult(options = {}) {
    const allowedOrigins = getKcpAllowedMessageOrigins(options.allowedOrigins || options.allowedOrigin);
    const timeoutMs = Number(options.timeoutMs || 5 * 60 * 1000);
@@ -475,18 +521,23 @@ function kcpIdentityWaitForResult(options = {}) {
             return;
          }
 
-         const data = event?.data || {};
-         if (data.type !== 'KCP_IDENTITY_VERIFICATION_RESULT') {
-            kcpIdentityLogStep('다른 타입의 postMessage 무시', { origin: event.origin, type: data.type });
+         const payload = parseKcpIdentityMessageData(event?.data);
+         if (!payload) {
+            const data = event?.data || {};
+            kcpIdentityLogStep('본인인증 결과가 아닌 postMessage 무시', {
+               origin: event.origin,
+               type: data.type,
+               keys: typeof data === 'object' && data ? Object.keys(data).slice(0, 10) : []
+            });
             return;
          }
 
          kcpIdentityLogStep('인증 결과 postMessage 수신', {
             origin: event.origin,
-            success: Boolean(data.payload?.success),
-            identityVerificationId: kcpIdentityMaskValue(data.payload?.identityVerificationId || data.payload?.regCertKey)
+            success: Boolean(payload?.success),
+            identityVerificationId: kcpIdentityMaskValue(payload?.identityVerificationId || payload?.regCertKey || payload?.reg_cert_key)
          });
-         settle(resolve, data.payload || null);
+         settle(resolve, payload || null);
       };
 
       window.addEventListener('message', handleMessage);
@@ -500,6 +551,57 @@ function isKcpIdentityPollableError(error) {
    }
 
    return !message.includes('환경변수') && !message.includes('거래등록키가 필요합니다');
+}
+
+function kcpIdentityWaitForPopupClose(popup, options = {}) {
+   const timeoutMs = Number(options.timeoutMs || 5 * 60 * 1000);
+   const intervalMs = Number(options.intervalMs || 500);
+   if (!popup) {
+      return null;
+   }
+
+   return new Promise((resolve, reject) => {
+      const startedAt = Date.now();
+      const intervalId = window.setInterval(() => {
+         if (popup.closed) {
+            window.clearInterval(intervalId);
+            resolve(true);
+            return;
+         }
+
+         if (Date.now() - startedAt >= timeoutMs) {
+            window.clearInterval(intervalId);
+            reject(new Error('본인인증 팝업 종료 대기 시간이 초과되었습니다.'));
+         }
+      }, intervalMs);
+   });
+}
+
+async function kcpIdentityFetchResultAfterPopupClosed(popup, identityVerificationId, options = {}) {
+   if (!popup) {
+      return null;
+   }
+
+   const normalizedIdentityVerificationId = String(identityVerificationId || '').trim();
+   kcpIdentityLogStep('팝업 종료 후 인증 결과 조회 대기 시작', {
+      identityVerificationId: kcpIdentityMaskValue(normalizedIdentityVerificationId)
+   });
+   await kcpIdentityWaitForPopupClose(popup, {
+      timeoutMs: options.timeoutMs,
+      intervalMs: options.popupCloseIntervalMs
+   });
+   await new Promise(resolve => window.setTimeout(resolve, Number(options.fetchDelayMs || 1000)));
+
+   kcpIdentityLogStep('팝업 종료 감지 후 인증 결과 직접 조회', {
+      identityVerificationId: kcpIdentityMaskValue(normalizedIdentityVerificationId)
+   });
+   const result = await APIClient.get(`/auth/identity-verification/${encodeURIComponent(normalizedIdentityVerificationId)}`);
+   return {
+      ...result,
+      success: result?.success !== false,
+      identityVerificationId: result?.identityVerificationId || normalizedIdentityVerificationId,
+      message: result?.message || '본인인증이 완료되었습니다.'
+   };
 }
 
 async function kcpIdentityPollForResult(identityVerificationId, options = {}) {
@@ -621,6 +723,13 @@ async function kcpIdentityRequestVerification(options = {}) {
          timeoutMs: options.timeoutMs,
          intervalMs: options.pollIntervalMs,
          cacheOnly: true
+      }));
+   }
+   if (authWindow?.popup) {
+      waitPromises.push(kcpIdentityFetchResultAfterPopupClosed(authWindow.popup, regCertKey, {
+         timeoutMs: options.timeoutMs,
+         popupCloseIntervalMs: options.popupCloseIntervalMs,
+         fetchDelayMs: options.popupCloseFetchDelayMs
       }));
    }
    const resultPromise = Promise.race(waitPromises);
