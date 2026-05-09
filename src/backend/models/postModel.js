@@ -162,7 +162,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
               a.notice_type AS noticeType,
               a.is_pinned AS isPinned,
               0 AS isHidden,
-              0 AS viewCount,
+              a.view_count AS viewCount,
               '[]' AS imageUrls,
               a.created_at AS createdAt,
               a.updated_at AS updatedAt,
