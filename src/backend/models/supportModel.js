@@ -109,6 +109,7 @@ async function listArticles(category, includeDeleted = false, { sourceType = nul
             a.category, a.title, a.content, a.created_by AS createdBy, a.updated_by AS updatedBy,
             a.created_at AS createdAt, a.updated_at AS updatedAt,
             a.board_type AS boardType,
+            a.view_count AS viewCount,
             CASE WHEN a.category = 'NOTICE' THEN 1 ELSE 0 END AS isNotice,
             a.notice_type AS noticeType, a.is_pinned AS isPinned,
             COALESCE(cu.nickname, '관리자') AS createdByNickname,
@@ -130,6 +131,15 @@ async function findArticleById(id) {
   return rows[0] || null;
 }
 
+async function incrementArticleViewCount(id) {
+  const pool = getPool();
+  const [result] = await pool.query(
+    'UPDATE support_articles SET view_count = view_count + 1 WHERE id = ? AND is_deleted = 0',
+    [id]
+  );
+  return result.affectedRows > 0;
+}
+
 async function findPublicArticleDetailById(id) {
   const pool = getPool();
   const [rows] = await pool.query(
@@ -137,6 +147,7 @@ async function findPublicArticleDetailById(id) {
             a.board_type AS boardType,
             a.notice_type AS noticeType,
             a.is_pinned AS isPinned,
+            a.view_count AS viewCount,
             a.created_by AS createdBy, a.updated_by AS updatedBy,
             a.created_at AS createdAt, a.updated_at AS updatedAt,
             COALESCE(cu.nickname, '운영팀') AS createdByNickname,
@@ -323,6 +334,7 @@ module.exports = {
   findPublicArticleDetailById,
   createArticle,
   updateArticle,
+  incrementArticleViewCount,
   deleteArticle,
   createInquiry,
   listInquiriesByUser,
