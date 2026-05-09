@@ -866,7 +866,7 @@ function renderCommentsTable() {
                     <td>
                         <div class="admin-comment-cell">
                             <div class="admin-comment-flags">${renderAdminCommentFlags(comment)}</div>
-                            <div class="admin-comment-text">${sanitizeHTML((comment.content || '').slice(0, 100))}</div>
+                            <div class="admin-comment-text">${renderLinkedText((comment.content || '').slice(0, 100))}</div>
                         </div>
                     </td>
                     <td><a href="/post-detail?id=${comment.postId || comment.post_id}" target="_blank">게시글 보기</a></td>
@@ -1254,7 +1254,7 @@ function escapeHtmlAndPreserveLineBreaks(value, maxLength = 120) {
     const normalized = String(value || '').trim();
     if (!normalized) return '-';
     const truncated = normalized.length > maxLength ? `${normalized.slice(0, maxLength)}...` : normalized;
-    return sanitizeHTML(truncated).replace(/\n/g, '<br>');
+    return renderLinkedText(truncated);
 }
 
 function formatTopLoginIps(loginHistories = [], maxCount = 3) {

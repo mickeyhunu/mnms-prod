@@ -136,7 +136,7 @@ function renderInquiryInfo(inquiry) {
             renderMetaItem('접수일시', formatDateTime(inquiry.createdAt || inquiry.created_at))
         ].join('');
     }
-    if (contentEl) contentEl.textContent = inquiry.content || '-';
+    if (contentEl) contentEl.innerHTML = renderLinkedText(inquiry.content || '-');
     if (attachmentsEl) attachmentsEl.innerHTML = renderAttachmentList(inquiry.attachmentUrls);
     const hasExistingAnswer = Boolean((inquiry.answerContent || '').trim());
     if (answerEl) answerEl.value = inquiry.answerContent || '';

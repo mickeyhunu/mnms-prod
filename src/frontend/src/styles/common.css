@@ -46,6 +46,17 @@ a:hover {
     text-decoration: underline;
 }
 
+.post-content-link {
+    color: #1d4ed8;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    word-break: break-all;
+}
+
+.post-content-link:hover {
+    color: #153eaa;
+}
+
 .btn {
     display: inline-block;
     padding: 9px 16px;

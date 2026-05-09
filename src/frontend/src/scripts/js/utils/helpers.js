@@ -209,6 +209,58 @@ function sanitizeHTML(str) {
    return temp.innerHTML;
 }
 
+function splitTrailingUrlPunctuation(rawUrl) {
+   let url = String(rawUrl || '');
+   let trailingText = '';
+
+   while (/[.,!?;:)\]\}，。！？；：）］｝]$/.test(url)) {
+      trailingText = url.slice(-1) + trailingText;
+      url = url.slice(0, -1);
+   }
+
+   return { url, trailingText };
+}
+
+function renderExternalTextLink(rawUrl) {
+   const displayUrl = String(rawUrl || '');
+   const href = /^www\./i.test(displayUrl) ? `https://${displayUrl}` : displayUrl;
+
+   try {
+      const parsedUrl = new URL(href);
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+         return sanitizeHTML(displayUrl);
+      }
+   } catch (error) {
+      return sanitizeHTML(displayUrl);
+   }
+
+   const safeHref = sanitizeHTML(href);
+   const safeDisplayUrl = sanitizeHTML(displayUrl);
+   return `<a class="post-content-link" href="${safeHref}" target="_blank" rel="noopener noreferrer">${safeDisplayUrl}</a>`;
+}
+
+function renderLinkedText(value) {
+   const rawText = String(value || '');
+   const urlPattern = /(?:https?:\/\/|www\.)[^\s<>"']+/gi;
+   let rendered = '';
+   let lastIndex = 0;
+   let match;
+
+   while ((match = urlPattern.exec(rawText)) !== null) {
+      const rawUrl = match[0];
+      const leadingText = rawText.slice(lastIndex, match.index);
+      const { url, trailingText } = splitTrailingUrlPunctuation(rawUrl);
+
+      rendered += sanitizeHTML(leadingText);
+      rendered += renderExternalTextLink(url);
+      rendered += sanitizeHTML(trailingText);
+      lastIndex = match.index + rawUrl.length;
+   }
+
+   rendered += sanitizeHTML(rawText.slice(lastIndex));
+   return rendered.replace(/\n/g, '<br>');
+}
+
 function findBlockedExpression(text) {
    const profanityFilter = window.KoProfanityFilter;
    if (profanityFilter && typeof profanityFilter.findProfanity === 'function') {
