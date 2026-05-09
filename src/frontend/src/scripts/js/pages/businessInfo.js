@@ -479,8 +479,8 @@ async function initBusinessManagementPage() {
     }
 
     const me = await APIClient.get('/auth/me');
-    const nickname = document.getElementById('user-nickname');
-    if (nickname) nickname.textContent = Auth.formatNicknameWithLevel(me);
+    const nickname = Auth.resolveNicknameDisplayElement();
+    if (nickname) Auth.applyNicknameDisplay(nickname, me);
 
     if (typeof initHeader === 'function') initHeader();
     Auth.bindLogoutButton();

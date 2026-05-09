@@ -226,13 +226,13 @@ async function initAdminInquiryAnswerPage() {
 
     try {
         const me = await APIClient.get('/auth/me');
-        if (!me.isAdmin) {
+        if (!Auth.isAdminAccount(me)) {
             window.location.replace(NOT_FOUND_PATH);
             return;
         }
 
-        const nickname = document.getElementById('user-nickname');
-        if (nickname) nickname.textContent = Auth.formatNicknameWithLevel(me);
+        const nickname = Auth.resolveNicknameDisplayElement();
+        if (nickname) Auth.applyNicknameDisplay(nickname, me);
 
         await loadInquiryDetail();
     } catch (error) {

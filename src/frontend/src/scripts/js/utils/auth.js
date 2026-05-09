@@ -29,9 +29,8 @@ const Auth = {
     },
     isAdminAccount(user) {
         if (!user) return false;
-        if (typeof user.isAdmin === 'boolean') return user.isAdmin;
         const role = String(user.role || '').toUpperCase();
-        return role === 'ADMIN';
+        return role === 'ADMIN' || user.isAdmin === true;
     },
     normalizeBusinessAdPlan(plan) {
         const normalized = String(plan || '').trim().toLowerCase();
@@ -108,7 +107,7 @@ const Auth = {
         if (!user) return '';
 
         const nickname = user.nickname || user.email || '';
-        const levelEmoji = this.isBusinessAccount(user) ? '' : (user.levelEmoji || '');
+        const levelEmoji = this.isBusinessAccount(user) || this.isAdminAccount(user) ? '' : (user.levelEmoji || '');
 
         return levelEmoji ? `${nickname} ${levelEmoji}` : nickname;
     },
@@ -316,7 +315,7 @@ const Auth = {
             if (navGuest) navGuest.classList.add('hidden');
             if (navUser) navUser.classList.remove('hidden');
             if (userNickname) this.applyNicknameDisplay(userNickname, user);
-            if (adminLink && user.isAdmin) {
+            if (adminLink && this.isAdminAccount(user)) {
                 adminLink.classList.remove('hidden');
             } else if (adminLink) {
                 adminLink.classList.add('hidden');
