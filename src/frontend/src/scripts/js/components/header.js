@@ -239,10 +239,20 @@ const HeaderNotificationCenter = {
 
     buildSubText(item) {
         const chunks = [];
+        const contentFirstLine = this.getContentFirstLine(item.content);
         if (item.actorNickname) chunks.push(this.escapeHtml(item.actorNickname));
-        if (item.postTitle) chunks.push(this.escapeHtml(item.postTitle));
-        if (item.title) chunks.push(this.escapeHtml(item.title));
+        if (contentFirstLine) chunks.push(this.escapeHtml(contentFirstLine));
         return chunks.join(' · ');
+    },
+
+    getContentFirstLine(value) {
+        return String(value || '')
+            .replace(/<br\s*\/?\s*>/gi, '\n')
+            .replace(/<\/(p|div|li|h[1-6])>/gi, '\n')
+            .replace(/<[^>]*>/g, '')
+            .split(/\r?\n/)
+            .map((line) => line.trim().replace(/\s+/g, ' '))
+            .find(Boolean) || '';
     },
 
     formatDate(value) {
