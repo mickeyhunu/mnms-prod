@@ -16,6 +16,25 @@ const { hashPassword } = require('../utils/passwordHasher');
 
 const router = express.Router();
 
+function isBusinessAuthor(item) {
+  const role = String(item?.authorRole || item?.author_role || item?.role || '').toUpperCase();
+  const memberType = String(item?.authorMemberType || item?.memberType || item?.member_type || '').toUpperCase();
+  return role === 'BUSINESS' || memberType === 'BUSINESS';
+}
+
+function revealAnonymousAuthorForAdmin(item) {
+  const boardType = String(item?.boardType || item?.board_type || '').toUpperCase();
+  if (boardType !== 'ANON' || isBusinessAuthor(item)) {
+    return item;
+  }
+
+  const nickname = String(item?.authorNickname || '').trim();
+  return {
+    ...item,
+    authorNickname: nickname && nickname !== '익명' ? `익명(${nickname})` : '익명'
+  };
+}
+
 router.use(authMiddleware, adminMiddleware);
 
 router.get('/stats/dashboard', async (req, res, next) => {
@@ -32,7 +51,8 @@ router.get('/stats/dashboard', async (req, res, next) => {
 router.get('/posts', async (req, res, next) => {
   try {
     const { rows, total } = await postModel.listPosts(0, 10000, { boardType: 'ALL' });
-    res.json({ content: rows, totalElements: total });
+    const content = rows.map((post) => revealAnonymousAuthorForAdmin(post));
+    res.json({ content, totalElements: total });
   } catch (error) {
     next(error);
   }
@@ -41,7 +61,8 @@ router.get('/posts', async (req, res, next) => {
 router.get('/comments', async (req, res, next) => {
   try {
     const rows = await postModel.listAllCommentsForAdmin();
-    res.json({ content: rows, totalElements: rows.length });
+    const content = rows.map((comment) => revealAnonymousAuthorForAdmin(comment));
+    res.json({ content, totalElements: content.length });
   } catch (error) {
     next(error);
   }

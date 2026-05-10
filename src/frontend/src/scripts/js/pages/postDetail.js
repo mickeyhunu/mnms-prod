@@ -488,8 +488,11 @@ function renderPostDetail(post) {
     const isCurrentAuthor = post.isAuthor || isCurrentUserPostAuthor(post);
     const isHiddenPost = Boolean(post.isHidden);
     const authorBadgeMarkup = resolveAuthorBadgeMarkup(post);
+    const currentUser = Auth.getUser();
+    const isAdminViewer = String(currentUser?.role || '').toUpperCase() === 'ADMIN';
+    const anonymousAuthorLabel = isAdminViewer && post.authorNickname ? post.authorNickname : '익명';
     const postAuthorLabel = boardType === 'ANON' && !post.authorIsBusiness
-        ? `익명${isCurrentAuthor ? ' (본인)' : ''}`
+        ? `${anonymousAuthorLabel}${isCurrentAuthor ? ' (본인)' : ''}`
         : `${post.authorNickname || ''}`;
 
     if (titleElement) titleElement.textContent = `[${boardTagMap[boardType] || '자유'}] ${post.title || ''}`;
