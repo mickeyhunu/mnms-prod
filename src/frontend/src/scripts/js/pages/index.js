@@ -100,7 +100,7 @@ function renderBestPosts(posts, container, emptyElement) {
                 <a class="best-post-link" href="/post-detail?id=${post.id}">
                     <span class="best-post-rank">${index + 1}</span>
                     <span class="best-post-text">[${sanitizeHTML(getBoardLabel(post.boardType))}] ${sanitizeHTML(post.title || '제목 없음')}</span>
-                    <span class="best-post-meta">점수 ${score} · 👍 ${likeCount} · 💬 ${commentCount} · 👁 ${viewCount}</span>
+                    <span class="best-post-meta">👍 ${likeCount} · 💬 ${commentCount} · 👁 ${viewCount}</span>
                 </a>
             </li>
         `;
