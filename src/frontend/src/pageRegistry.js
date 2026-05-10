@@ -482,7 +482,8 @@ const pageRegistry = {
                     
                     <div class="form-group">
                     <label for="board-type" class="form-label">게시판 선택</label>
-                    <select id="board-type" name="boardType" class="form-control">
+                    <select id="board-type" name="boardType" class="form-control" required>
+                    <option value="" selected>선택</option>
                     <option value="FREE">자유게시판</option>
                     <option value="ANON">익명게시판</option>
                     <option value="REVIEW">후기게시판</option>
