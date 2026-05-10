@@ -16,6 +16,11 @@ const LIVE_HISTORY_TOP_THRESHOLD_PX = 160;
 const LIVE_BOTTOM_BUTTON_THRESHOLD_PX = 220;
 const LIVE_AVATAR_IMAGE_BASE_PATH = '/src/assets/live-avatars';
 const LIVE_AD_AUTOPLAY_INTERVAL_MS = 5000;
+const LIVE_LEVEL_BADGE_TOKEN_PATTERN = /\{\{LIVE_LEVEL_BADGE:(\d+)\}\}/g;
+const LIVE_LEVEL_BADGE_ALT_TEXT = {
+    3: 'LV3 계급 배지',
+    4: 'LV4 계급 배지'
+};
 let shareSheetOpen = false;
 
 function removeLivePageSharedChrome() {
@@ -836,7 +841,7 @@ function getLiveCategoryDeniedReason(categoryKey) {
 
     if (categoryKey === 'chojoong' || categoryKey === 'waiting') {
         if (level >= 3) return '';
-        return '초중/룸웨이팅은 <빠꼼이> 미만 등급의 경우 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.\n\n<빠꼼이> 등급이 되면 제한이 해제됩니다.';
+        return '초중/룸웨이팅은 {{LIVE_LEVEL_BADGE:3}} 미만 계급의 경우 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.\n\n{{LIVE_LEVEL_BADGE:3}} 계급이 되면 제한이 해제됩니다.';
     }
 
     if (categoryKey === 'entry') {
@@ -844,12 +849,38 @@ function getLiveCategoryDeniedReason(categoryKey) {
             return '';
         }
         if (level < 3) {
-            return '엔트리는 <빠꼼이> 등급부터 열람할 수 있습니다.';
+            return '엔트리는 {{LIVE_LEVEL_BADGE:3}} 계급부터 열람할 수 있습니다.';
         }
-        return '엔트리는 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.\n\n<룸박사> 등급이 되면 제한이 해제됩니다.';
+        return '엔트리는 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.\n\n{{LIVE_LEVEL_BADGE:4}} 계급이 되면 제한이 해제됩니다.';
     }
 
     return '';
+}
+
+function renderLiveLevelBadgeToken(level) {
+    const badgeLevel = Number(level || 0);
+    const altText = LIVE_LEVEL_BADGE_ALT_TEXT[badgeLevel];
+    if (!altText) return '';
+
+    return `<img class="live-access-condition-box__level-badge" src="/src/assets/lv-badges/lv${badgeLevel}.png" alt="${sanitizeHTML(altText)}" loading="lazy">`;
+}
+
+function renderLiveAccessConditionMessage(message) {
+    const rawMessage = String(message || '');
+    if (!rawMessage) return '';
+
+    let lastIndex = 0;
+    const fragments = [];
+
+    rawMessage.replace(LIVE_LEVEL_BADGE_TOKEN_PATTERN, (match, level, offset) => {
+        fragments.push(sanitizeHTML(rawMessage.slice(lastIndex, offset)).replace(/\n/g, '<br>'));
+        fragments.push(renderLiveLevelBadgeToken(level));
+        lastIndex = offset + match.length;
+        return match;
+    });
+
+    fragments.push(sanitizeHTML(rawMessage.slice(lastIndex)).replace(/\n/g, '<br>'));
+    return fragments.join('');
 }
 
 function showLiveAccessConditionMessage(message) {
@@ -878,7 +909,7 @@ function showLiveAccessConditionMessage(message) {
     box.className = 'live-access-condition-box';
     box.innerHTML = `
         <button type="button" class="live-access-condition-box__close" aria-label="안내창 닫기">×</button>
-        <p class="live-access-condition-box__message">${sanitizeHTML(normalizedMessage).replace(/\n/g, '<br>')}</p>
+        <p class="live-access-condition-box__message">${renderLiveAccessConditionMessage(normalizedMessage)}</p>
         <div class="live-access-condition-box__actions">${actionsHtml}</div>
     `;
     document.body.appendChild(box);
