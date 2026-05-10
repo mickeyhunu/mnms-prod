@@ -187,7 +187,6 @@ function createArticleItem(post) {
     const createdAt = formatDate(post.createdAt);
     const commentCount = Number(post.commentCount || 0);
     const viewCount = Number(post.viewCount || 0);
-    const recommendCount = Number(post.likeCount || post.recommendCount || 0);
     const previewText = sanitizeHTML(getPreviewText(post));
     const authorName = sanitizeHTML(post.boardType === 'ANON' ? '익명' : (post.authorNickname || '익명'));
     const isNoticePost = Boolean(post.isNotice);
@@ -224,6 +223,12 @@ function createArticleItem(post) {
     const articleHref = sourceType === 'SUPPORT'
         ? `/support?articleId=${encodeURIComponent(post.sourceId || post.id)}&sourceType=SUPPORT`
         : `/post-detail?id=${encodeURIComponent(post.id)}`;
+    const commentInlineMarkup = isNoticePost
+        ? ''
+        : `<span class="article-comment-inline">[${commentCount}]</span>`;
+    const recommendMarkup = isNoticePost
+        ? ''
+        : `<span class="article-recommend">추천수 : ${Number(post.likeCount || post.recommendCount || 0)}</span>`;
 
     return `
         <li class="article-item ${isViewedPost ? 'article-item-viewed' : 'article-item-unviewed'} ${isNoticePost ? 'article-item-notice' : ''} ${isNoticePost && noticeType === 'IMPORTANT' ? 'article-item-important' : ''}">
@@ -231,7 +236,7 @@ function createArticleItem(post) {
                 <div class="article-title-row">
                     <span class="article-inline-icon" aria-hidden="true">${inlineIcon}</span>
                     <h3 class="article-title"><span class="${boardLabelClass}">[${boardLabel}]</span> ${sanitizeHTML(post.title || '제목 없음')} ${photoBadge}</h3>
-                    <span class="article-comment-inline">[${commentCount}]</span>
+                    ${commentInlineMarkup}
                     ${shouldShowNewBadge ? '<span class="article-new-badge">NEW</span>' : ''}
                 </div>
                 <p class="article-preview">${previewText}</p>
@@ -239,7 +244,7 @@ function createArticleItem(post) {
                     <span>${authorBadge}</span>
                     <span>${createdAt}</span>
                     <span>조회수 : ${viewCount}</span>
-                    <span class="article-recommend">추천수 : ${recommendCount}</span>
+                    ${recommendMarkup}
                 </div>
             </a>
             <div class="article-side">
