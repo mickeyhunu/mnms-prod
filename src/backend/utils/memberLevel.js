@@ -35,4 +35,16 @@ function resolveMemberLevel(totalPoints) {
   };
 }
 
-module.exports = { MEMBER_LEVELS, resolveMemberLevel };
+
+function buildMemberLevelCaseSql(pointsExpression = 'total_points', nullExpression = null) {
+  const normalizedPointsExpression = `COALESCE(${pointsExpression}, 0)`;
+  const clauses = [...MEMBER_LEVELS]
+    .sort((a, b) => b.minPoints - a.minPoints)
+    .map((info) => `WHEN ${normalizedPointsExpression} >= ${info.minPoints} THEN ${info.level}`)
+    .join('\n');
+  const nullClause = nullExpression ? `WHEN ${nullExpression} IS NULL THEN NULL\n` : '';
+
+  return `CASE\n${nullClause}${clauses}\nEND`;
+}
+
+module.exports = { MEMBER_LEVELS, resolveMemberLevel, buildMemberLevelCaseSql };

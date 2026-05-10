@@ -2,6 +2,9 @@
  * 파일 역할: postModel 도메인 데이터의 DB 조회/저장 쿼리를 담당하는 모델 파일.
  */
 const { getPool } = require('../config/database');
+const { buildMemberLevelCaseSql } = require('../utils/memberLevel');
+
+const AUTHOR_LEVEL_SQL = buildMemberLevelCaseSql('u.total_points', 'u.id');
 
 const BOARD_TYPES = {
   FREE: 'FREE',
@@ -133,7 +136,8 @@ async function listPosts(page = 0, size = 10, options = {}) {
               p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
               COALESCE(u.nickname, '비회원') AS authorNickname,
               COALESCE(u.role, 'MEMBER') AS authorRole,
-              COALESCE(u.member_type, 'MEMBER') AS authorMemberType
+              COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
+              ${AUTHOR_LEVEL_SQL} AS authorLevel
        FROM posts p
        LEFT JOIN users u ON u.id = p.user_id
        ${whereClause}
@@ -170,6 +174,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
               '운영팀' AS authorNickname,
               'ADMIN' AS authorRole,
               'MEMBER' AS authorMemberType,
+              NULL AS authorLevel,
               0 AS commentCount,
               0 AS likeCount,
               '' AS noticeTargetBoards
@@ -271,16 +276,7 @@ async function findPostDetailById(id) {
                  AND ba.is_active = 1
                LIMIT 1
             ) AS authorHasActiveBusinessAd,
-            CASE
-              WHEN u.id IS NULL THEN NULL
-              WHEN COALESCE(u.total_points, 0) >= 15000 THEN 7
-              WHEN COALESCE(u.total_points, 0) >= 5000 THEN 6
-              WHEN COALESCE(u.total_points, 0) >= 2000 THEN 5
-              WHEN COALESCE(u.total_points, 0) >= 800 THEN 4
-              WHEN COALESCE(u.total_points, 0) >= 300 THEN 3
-              WHEN COALESCE(u.total_points, 0) >= 100 THEN 2
-              ELSE 1
-            END AS authorLevel,
+            ${AUTHOR_LEVEL_SQL} AS authorLevel,
             (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
@@ -387,16 +383,7 @@ async function listComments(postId) {
                  AND ba.is_active = 1
                LIMIT 1
             ) AS authorHasActiveBusinessAd,
-            CASE
-              WHEN u.id IS NULL THEN NULL
-              WHEN COALESCE(u.total_points, 0) >= 15000 THEN 7
-              WHEN COALESCE(u.total_points, 0) >= 5000 THEN 6
-              WHEN COALESCE(u.total_points, 0) >= 2000 THEN 5
-              WHEN COALESCE(u.total_points, 0) >= 800 THEN 4
-              WHEN COALESCE(u.total_points, 0) >= 300 THEN 3
-              WHEN COALESCE(u.total_points, 0) >= 100 THEN 2
-              ELSE 1
-            END AS authorLevel
+            ${AUTHOR_LEVEL_SQL} AS authorLevel
      FROM comments c
      LEFT JOIN users u ON u.id = c.user_id
      WHERE c.post_id = ?
@@ -535,6 +522,7 @@ async function listBestPosts() {
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'MEMBER') AS authorRole,
             COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
+            ${AUTHOR_LEVEL_SQL} AS authorLevel,
             COALESCE(stats.commentCount, 0) AS commentCount,
             COALESCE(stats.likeCount, 0) AS likeCount,
             ((COALESCE(stats.likeCount, 0) * 5) + (COALESCE(stats.commentCount, 0) * 2) + (p.view_count * 0.1)) AS score

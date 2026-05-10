@@ -183,6 +183,29 @@ function getBoardLabel(boardType) {
     return boardMap[String(boardType || '').toUpperCase()] || '자유';
 }
 
+
+function resolveAuthorLevelBadgeImage(level) {
+    const numericLevel = Number(level);
+    if (!Number.isFinite(numericLevel) || numericLevel <= 0) {
+        return '';
+    }
+
+    const normalizedLevel = Math.min(7, Math.max(1, Math.floor(numericLevel)));
+    return `/src/assets/lv-badges/lv${normalizedLevel}.png`;
+}
+
+function getAuthorGradeBadgeMarkup(post = {}) {
+    const normalizedRole = String(post?.authorRole || post?.author_role || post?.role || '').toUpperCase();
+    if (normalizedRole === 'ADMIN') {
+        return ' <img class="user-level-badge" src="/src/assets/lv-badges/admin.png" alt="관리자 배지" loading="lazy">';
+    }
+
+    const badgeImage = resolveAuthorLevelBadgeImage(post?.authorLevel ?? post?.level ?? post?.authorRank ?? post?.rank ?? post?.authorGrade ?? post?.grade);
+    return badgeImage
+        ? ` <img class="user-level-badge" src="${badgeImage}" alt="회원 등급 배지" loading="lazy">`
+        : '';
+}
+
 function createArticleItem(post) {
     const createdAt = formatDate(post.createdAt);
     const commentCount = Number(post.commentCount || 0);
@@ -201,11 +224,7 @@ function createArticleItem(post) {
     const boardLabelClass = isNoticePost
         ? (noticeType === 'IMPORTANT' ? 'article-board-label article-board-label-important' : 'article-board-label article-board-label-notice')
         : 'article-board-label';
-    const normalizedRole = String(post.authorRole || post.author_role || post.role || '').toUpperCase();
-    const adminBadgeMarkup = normalizedRole === 'ADMIN'
-        ? ' <img class="user-level-badge" src="/src/assets/lv-badges/admin.png" alt="관리자 배지" loading="lazy">'
-        : '';
-    const authorBadge = `${authorName}${adminBadgeMarkup}`;
+    const authorBadge = `${authorName}${getAuthorGradeBadgeMarkup(post)}`;
     const categoryTag = '';
     const isNewPost = isWithin12Hours(post.createdAt);
     const isNewComment = isWithin12Hours(

@@ -140,6 +140,13 @@
     color: #6c0391;
 }
 
+.community-author-badge {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    vertical-align: text-bottom;
+}
+
 .board-table .badge-notice {
     color: #ff6d01;
     font-weight: 700;

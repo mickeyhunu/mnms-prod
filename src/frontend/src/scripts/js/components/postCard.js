@@ -52,6 +52,7 @@ function createBoardRow(post, isNotice = false, index = 0) {
         : `/post-detail?id=${encodeURIComponent(post.id)}`;
 
     const authorName = getDisplayAuthorName(post);
+    const authorBadgeMarkup = getAuthorGradeBadgeMarkup(post);
     const ownBadgeMarkup = getOwnContentBadgeMarkup(post);
 
     return `
@@ -63,7 +64,7 @@ function createBoardRow(post, isNotice = false, index = 0) {
                 ${newBadge}
                 ${post.commentCount > 0 ? `<small>[${post.commentCount}]</small>` : ''}
             </td>
-            <td class="col-author">${sanitizeHTML(authorName || `작성자 #${post.authorId || ''}`)}${ownBadgeMarkup}</td>
+            <td class="col-author">${sanitizeHTML(authorName || `작성자 #${post.authorId || ''}`)}${authorBadgeMarkup}${ownBadgeMarkup}</td>
             <td class="col-date">${formatDate(post.createdAt)}</td>
             <td class="col-like">${post.likeCount || 0}</td>
             <td class="col-view">${post.viewCount || 0}</td>
@@ -95,6 +96,7 @@ function createPostCard(post) {
     const isLikedByMe = Boolean(post.isLiked || post.liked || post.likedByMe);
 
     const authorName = getDisplayAuthorName(post);
+    const authorBadgeMarkup = getAuthorGradeBadgeMarkup(post);
     const ownBadgeMarkup = getOwnContentBadgeMarkup(post);
 
     return `
@@ -105,7 +107,7 @@ function createPostCard(post) {
                         <a href="/post-detail?id=${post.id}" onclick="handlePostClick(${post.id}); return false;">${titlePrefix}${sanitizeHTML(post.title)}</a>
                     </h3>
                     <div class="post-meta">
-                        <span class="post-author">${sanitizeHTML(authorName || '작성자 #' + post.authorId)}${ownBadgeMarkup}</span>
+                        <span class="post-author">${sanitizeHTML(authorName || '작성자 #' + post.authorId)}${authorBadgeMarkup}${ownBadgeMarkup}</span>
                         <span class="post-date">${formatDate(post.createdAt)}</span>
                         <span class="post-stats">
                             <span class="like-count">👍 ${post.likeCount || 0}</span>
@@ -128,6 +130,29 @@ function createPostCard(post) {
             </div>
         </div>
     `;
+}
+
+
+function resolveAuthorLevelBadgeImage(level) {
+    const numericLevel = Number(level);
+    if (!Number.isFinite(numericLevel) || numericLevel <= 0) {
+        return '';
+    }
+
+    const normalizedLevel = Math.min(7, Math.max(1, Math.floor(numericLevel)));
+    return `/src/assets/lv-badges/lv${normalizedLevel}.png`;
+}
+
+function getAuthorGradeBadgeMarkup(post = {}) {
+    const normalizedRole = String(post?.authorRole || post?.author_role || post?.role || '').toUpperCase();
+    if (normalizedRole === 'ADMIN') {
+        return ' <img class="community-author-badge" src="/src/assets/lv-badges/admin.png" alt="관리자 배지" loading="lazy">';
+    }
+
+    const badgeImage = resolveAuthorLevelBadgeImage(post?.authorLevel ?? post?.level ?? post?.authorRank ?? post?.rank ?? post?.authorGrade ?? post?.grade);
+    return badgeImage
+        ? ` <img class="community-author-badge" src="${badgeImage}" alt="회원 등급 배지" loading="lazy">`
+        : '';
 }
 
 function getOwnContentBadgeMarkup(post) {
