@@ -491,9 +491,7 @@ function renderPostDetail(post) {
     const currentUser = Auth.getUser();
     const isAdminViewer = String(currentUser?.role || '').toUpperCase() === 'ADMIN';
     const anonymousAuthorLabel = isAdminViewer && post.authorNickname ? post.authorNickname : '익명';
-    const postAuthorLabel = boardType === 'ANON' && !post.authorIsBusiness
-        ? `${anonymousAuthorLabel}${isCurrentAuthor ? ' (본인)' : ''}`
-        : `${post.authorNickname || ''}`;
+    const postAuthorLabel = boardType === 'ANON' && !post.authorIsBusiness ? anonymousAuthorLabel : `${post.authorNickname || ''}`;
 
     if (titleElement) titleElement.textContent = `[${boardTagMap[boardType] || '자유'}] ${post.title || ''}`;
     if (contentElement) {
