@@ -158,6 +158,7 @@ function setupEventListeners() {
     const postForm = document.getElementById('post-form');
     const titleInput = document.getElementById('title');
     const contentInput = document.getElementById('content');
+    const boardTypeSelect = document.getElementById('board-type');
 
     if (postForm) {
         postForm.addEventListener('submit', handleSubmit);
@@ -175,6 +176,10 @@ function setupEventListeners() {
             updateCharCount('content', 1000);
             validateForm();
         });
+    }
+
+    if (boardTypeSelect) {
+        boardTypeSelect.addEventListener('change', validateForm);
     }
 
 }
@@ -274,9 +279,12 @@ function validateForm() {
     const title = document.getElementById('title');
     const content = document.getElementById('content');
     const submitBtn = document.getElementById('submit-btn');
+    const boardTypeSelect = document.getElementById('board-type');
     if (!title || !content || !submitBtn) return;
 
-    const isValid = title.value.trim().length > 0 &&
+    const hasSelectedBoard = isBusinessUser || Boolean(boardTypeSelect?.value);
+    const isValid = hasSelectedBoard &&
+        title.value.trim().length > 0 &&
         content.value.trim().length >= 6 &&
         title.value.length <= 255 &&
         content.value.length <= 1000;
@@ -313,6 +321,11 @@ async function loadPostForEdit() {
         if (titleInput) titleInput.value = post.title || '';
         if (contentInput) contentInput.value = post.content || '';
 
+        const boardTypeSelect = document.getElementById('board-type');
+        if (boardTypeSelect && post.boardType) {
+            boardTypeSelect.value = String(post.boardType).toUpperCase();
+        }
+
         const normalizedImageUrls = Array.isArray(post.imageUrls)
             ? post.imageUrls
             : Array.isArray(post.images)
@@ -347,11 +360,18 @@ async function handleSubmit(event) {
         : enteredTitle;
     const contentValue = document.getElementById('content')?.value.trim() || '';
     const submitBtn = document.getElementById('submit-btn');
+    const boardTypeSelect = document.getElementById('board-type');
     const boardType = isBusinessUser
         ? 'PROMOTION'
-        : (document.getElementById('board-type')?.value || 'FREE');
+        : (boardTypeSelect?.value || '');
     const isNotice = false;
     const noticeTargetBoards = [];
+
+    if (!boardType) {
+        alert('게시판을 선택해주세요.');
+        boardTypeSelect?.focus();
+        return;
+    }
 
     if (!titleValue || !contentValue) {
         alert('제목과 내용을 모두 입력해주세요.');

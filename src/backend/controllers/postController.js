@@ -370,6 +370,9 @@ async function createPost(req, res, next) {
 
     const { title, content } = req.body;
     if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
+    if (!String(req.body.boardType || '').trim()) {
+      return res.status(400).json({ message: '게시판을 선택해주세요.' });
+    }
 
     const boardType = parseBoardType(req.body.boardType);
     const isAdmin = req.user.role === 'ADMIN';
