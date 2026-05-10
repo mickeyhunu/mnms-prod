@@ -132,7 +132,8 @@ async function listPosts(page = 0, size = 10, options = {}) {
               p.is_hidden AS isHidden,
               p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
               COALESCE(u.nickname, '비회원') AS authorNickname,
-              COALESCE(u.role, 'MEMBER') AS authorRole
+              COALESCE(u.role, 'MEMBER') AS authorRole,
+              COALESCE(u.member_type, 'MEMBER') AS authorMemberType
        FROM posts p
        LEFT JOIN users u ON u.id = p.user_id
        ${whereClause}
@@ -168,6 +169,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
               a.updated_at AS updatedAt,
               '운영팀' AS authorNickname,
               'ADMIN' AS authorRole,
+              'MEMBER' AS authorMemberType,
               0 AS commentCount,
               0 AS likeCount,
               '' AS noticeTargetBoards
@@ -408,9 +410,13 @@ async function listAllCommentsForAdmin() {
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.parent_id AS parentId, c.is_secret AS isSecret, c.is_hidden AS isHidden, c.is_deleted AS isDeleted, c.content, c.created_at AS createdAt,
-            COALESCE(u.nickname, '비회원') AS authorNickname
+            COALESCE(u.nickname, '비회원') AS authorNickname,
+            COALESCE(u.role, 'MEMBER') AS authorRole,
+            COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
+            p.board_type AS boardType
      FROM comments c
      LEFT JOIN users u ON u.id = c.user_id
+     LEFT JOIN posts p ON p.id = c.post_id
      ORDER BY c.created_at DESC`
   );
   return rows;
@@ -528,6 +534,7 @@ async function listBestPosts() {
             p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'MEMBER') AS authorRole,
+            COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
             COALESCE(stats.commentCount, 0) AS commentCount,
             COALESCE(stats.likeCount, 0) AS likeCount,
             ((COALESCE(stats.likeCount, 0) * 5) + (COALESCE(stats.commentCount, 0) * 2) + (p.view_count * 0.1)) AS score
