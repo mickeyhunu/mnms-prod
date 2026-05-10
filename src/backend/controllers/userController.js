@@ -252,8 +252,8 @@ async function myLiveAccessStatus(req, res, next) {
     const todayPostCount = Number(dailyStats.todayPostCount || 0);
     const todayCommentCount = Number(dailyStats.todayCommentCount || 0);
     const levelInfo = resolveMemberLevel(req.user.total_points || 0);
-    const isPpakkomLevel = Number(levelInfo.level || 0) >= 3;
-    const isRoomDoctorLevel = Number(levelInfo.level || 0) >= 4;
+    const isChojoongUnlockedLevel = Number(levelInfo.level || 0) >= 3;
+    const isEntryUnlockedLevel = Number(levelInfo.level || 0) >= 4;
     const hasDailyActivity = todayPostCount >= 1 || todayCommentCount >= 5;
 
     res.json({
@@ -264,9 +264,9 @@ async function myLiveAccessStatus(req, res, next) {
       hasDailyActivity,
       access: {
         choice: true,
-        chojoong: isAdmin || isPpakkomLevel || hasDailyActivity,
-        waiting: isAdmin || isPpakkomLevel || hasDailyActivity,
-        entry: isAdmin || isRoomDoctorLevel || (isPpakkomLevel && hasDailyActivity)
+        chojoong: isAdmin || isChojoongUnlockedLevel || hasDailyActivity,
+        waiting: isAdmin || isChojoongUnlockedLevel || hasDailyActivity,
+        entry: isAdmin || isEntryUnlockedLevel || (isChojoongUnlockedLevel && hasDailyActivity)
       }
     });
   } catch (error) {
