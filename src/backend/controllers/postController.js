@@ -161,7 +161,20 @@ function canReplyToComment(comment, post, currentUser) {
 }
 
 
-function sanitizePostForViewer(post) {
+function isAdminViewer(user) {
+  return String(user?.role || '').toUpperCase() === 'ADMIN';
+}
+
+function formatAnonymousAuthorNickname(nickname, currentUser) {
+  const trimmedNickname = String(nickname || '').trim();
+  if (!isAdminViewer(currentUser) || !trimmedNickname || trimmedNickname === '익명') {
+    return '익명';
+  }
+
+  return `익명(${trimmedNickname})`;
+}
+
+function sanitizePostForViewer(post, currentUser = null) {
   if (!post) return post;
 
   const normalized = {
@@ -183,7 +196,7 @@ function sanitizePostForViewer(post) {
   if (normalized.boardType === BOARD_TYPES.ANON) {
     normalized.authorIsBusiness = isAdvertiserAuthor(normalized);
     if (!normalized.authorIsBusiness) {
-      normalized.authorNickname = '익명';
+      normalized.authorNickname = formatAnonymousAuthorNickname(normalized.authorNickname, currentUser);
     }
   } else {
     normalized.authorIsBusiness = isAdvertiserAuthor(normalized);
@@ -215,15 +228,15 @@ function sanitizeCommentForViewer(comment, post, currentUser) {
 
   normalized.canReply = canReplyToComment(normalized, post, currentUser);
 
-  const isAdminViewer = currentUser?.role === 'ADMIN';
+  const isAdminUser = isAdminViewer(currentUser);
 
   normalized.authorIsBusiness = isAdvertiserAuthor(normalized);
 
   if ((post.board_type === BOARD_TYPES.ANON || post.boardType === BOARD_TYPES.ANON) && !normalized.authorIsBusiness) {
-    normalized.authorNickname = '익명';
+    normalized.authorNickname = formatAnonymousAuthorNickname(normalized.authorNickname, currentUser);
   }
 
-  if (normalized.isDeleted && !isAdminViewer) {
+  if (normalized.isDeleted && !isAdminUser) {
     return {
       ...normalized,
       content: '삭제된 댓글입니다.',
@@ -256,7 +269,7 @@ async function listPosts(req, res, next) {
     const searchType = typeof req.query.search === 'string' ? req.query.search : 'bbs_title';
     const boardType = parseBoardType(req.query.boardType || 'ALL');
     const { rows, total } = await postModel.listPosts(page, size, { keyword, searchType, boardType });
-    const normalizedRows = rows.map((item) => sanitizePostForViewer(item));
+    const normalizedRows = rows.map((item) => sanitizePostForViewer(item, req.user));
     res.json({ content: normalizedRows, totalElements: total, page, size, totalPages: Math.ceil(total / size) });
   } catch (error) {
     next(error);
@@ -266,7 +279,7 @@ async function listPosts(req, res, next) {
 async function listBestPosts(req, res, next) {
   try {
     const result = await postModel.listBestPosts();
-    const normalizeRows = (rows = []) => rows.map((item) => sanitizePostForViewer(item));
+    const normalizeRows = (rows = []) => rows.map((item) => sanitizePostForViewer(item, req.user));
 
     res.json({
       daily: normalizeRows(result.daily),
@@ -298,7 +311,7 @@ async function getPost(req, res, next) {
       : false;
 
     res.json({
-      ...sanitizePostForViewer(postDetail),
+      ...sanitizePostForViewer(postDetail, req.user),
       isLiked,
       comments: visibleComments,
       previousPost: adjacentPosts.previous,

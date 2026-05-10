@@ -188,7 +188,9 @@ function createArticleItem(post) {
     const commentCount = Number(post.commentCount || 0);
     const viewCount = Number(post.viewCount || 0);
     const previewText = sanitizeHTML(getPreviewText(post));
-    const authorName = sanitizeHTML(post.boardType === 'ANON' ? '익명' : (post.authorNickname || '익명'));
+    const currentUser = Auth.getUser();
+    const isAdminViewer = String(currentUser?.role || '').toUpperCase() === 'ADMIN';
+    const authorName = sanitizeHTML(post.boardType === 'ANON' && !isAdminViewer ? '익명' : (post.authorNickname || '익명'));
     const isNoticePost = Boolean(post.isNotice);
     const noticeType = String(post.noticeType || 'NOTICE').toUpperCase();
     const boardLabel = sanitizeHTML(

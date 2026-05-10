@@ -160,8 +160,11 @@ function getCommentIcon(post, isAdminNotice) {
 
 function getDisplayAuthorName(post) {
     const boardType = String(post?.boardType || post?.board_type || '').toUpperCase();
+    const currentUser = Auth.getUser();
+    const isAdminViewer = String(currentUser?.role || '').toUpperCase() === 'ADMIN';
+
     if (boardType === 'ANON') {
-        return '익명';
+        return isAdminViewer && post?.authorNickname ? post.authorNickname : '익명';
     }
 
     return post?.authorNickname;
