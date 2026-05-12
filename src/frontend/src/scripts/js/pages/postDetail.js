@@ -793,30 +793,34 @@ function renderPostImages(imageUrls) {
         return;
     }
 
-    if (!imageUrls || imageUrls.length === 0) {
+    const cleanImageUrls = Array.isArray(imageUrls)
+        ? imageUrls.map((url) => String(url || '').trim()).filter(Boolean)
+        : [];
+
+    if (cleanImageUrls.length === 0) {
         imagesGrid.innerHTML = '';
         imagesContainer.classList.add('hidden');
         return;
     }
 
     imagesGrid.className = 'images-grid';
-    if (imageUrls.length === 1) {
+    if (cleanImageUrls.length === 1) {
         imagesGrid.classList.add('single-image');
-    } else if (imageUrls.length === 2) {
+    } else if (cleanImageUrls.length === 2) {
         imagesGrid.classList.add('two-images');
-    } else if (imageUrls.length === 3) {
+    } else if (cleanImageUrls.length === 3) {
         imagesGrid.classList.add('three-images');
     } else {
         imagesGrid.classList.add('many-images');
     }
 
     let html = '';
-    imageUrls.forEach((url, index) => {
-        const cleanUrl = url.trim();
+    cleanImageUrls.forEach((url, index) => {
+        const safeUrl = sanitizeHTML(url);
         html += `
-            <div class="image-item ${imageUrls.length === 1 ? 'single' : ''}" onclick="showImageModal(${JSON.stringify(imageUrls)}, ${index})">
-                <img src="${cleanUrl}" alt="게시글 이미지 ${index + 1}" loading="lazy" 
-                     onerror="this.parentElement.style.display='none'" 
+            <div class="image-item ${cleanImageUrls.length === 1 ? 'single' : ''}" data-post-image-index="${index}">
+                <img src="${safeUrl}" alt="게시글 이미지 ${index + 1}" loading="lazy"
+                     onerror="this.parentElement.style.display='none'"
                      onload="this.style.opacity='1'">
                 <div class="image-overlay">
                     <span>🔍</span>
@@ -826,6 +830,16 @@ function renderPostImages(imageUrls) {
     });
 
     imagesGrid.innerHTML = html;
+    imagesGrid.querySelectorAll('.image-item').forEach((imageItem) => {
+        imageItem.addEventListener('click', () => {
+            const imageIndex = Number(imageItem.dataset.postImageIndex || 0);
+            if (typeof showImageModal === 'function') {
+                showImageModal(cleanImageUrls, imageIndex);
+                return;
+            }
+            window.open(cleanImageUrls[imageIndex], '_blank', 'noopener');
+        });
+    });
     imagesContainer.classList.remove('hidden');
 }
 
