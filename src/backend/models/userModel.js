@@ -224,7 +224,17 @@ async function getUserNotifications(userId, { limit = 50 } = {}) {
          c.parent_id AS parentId,
          c.content AS content,
          c.created_at AS createdAt,
-         COALESCE(u.nickname, '익명') AS actorNickname,
+         CASE
+           WHEN p.board_type = 'ANON'
+             AND NOT EXISTS (
+               SELECT 1
+                 FROM business_ads ba
+                WHERE ba.owner_user_id = u.id
+                  AND ba.is_active = 1
+                LIMIT 1
+             ) THEN '익명'
+           ELSE COALESCE(u.nickname, '익명')
+         END AS actorNickname,
          CONCAT('내 게시글 "', p.title, '"에 새로운 댓글이 달렸습니다.') AS message
        FROM comments c
        INNER JOIN posts p ON p.id = c.post_id
@@ -249,7 +259,17 @@ async function getUserNotifications(userId, { limit = 50 } = {}) {
          c.parent_id AS parentId,
          c.content AS content,
          c.created_at AS createdAt,
-         COALESCE(u.nickname, '익명') AS actorNickname,
+         CASE
+           WHEN p.board_type = 'ANON'
+             AND NOT EXISTS (
+               SELECT 1
+                 FROM business_ads ba
+                WHERE ba.owner_user_id = u.id
+                  AND ba.is_active = 1
+                LIMIT 1
+             ) THEN '익명'
+           ELSE COALESCE(u.nickname, '익명')
+         END AS actorNickname,
          CONCAT('내 댓글에 새로운 대댓글이 달렸습니다.') AS message
        FROM comments c
        INNER JOIN comments parent ON parent.id = c.parent_id
