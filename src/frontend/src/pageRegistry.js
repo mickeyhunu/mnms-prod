@@ -513,7 +513,7 @@ const pageRegistry = {
                     <div class="form-group">
                         <label for="image-files" class="form-label">이미지 첨부</label>
                         <input type="file" id="image-files" name="files" class="form-control" multiple accept="image/*,.heic,.heif">
-                        <small class="text-muted">최대 5개의 이미지를 업로드할 수 있습니다 (JPG, PNG, GIF, WEBP, HEIC)</small>
+                        <small class="text-muted">최대 5개의 이미지를 업로드할 수 있습니다 (JPG, PNG, GIF, WEBP, HEIC, 각 8MB 이하)</small>
                         <div id="image-preview" class="image-preview mt-2"></div>
                     </div>
 

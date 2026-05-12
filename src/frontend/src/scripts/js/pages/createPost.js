@@ -9,28 +9,70 @@ let isBusinessUser = false;
 let businessPromotionFixedTitle = '';
 
 const MAX_POST_IMAGE_COUNT = 5;
-const MAX_POST_IMAGE_BYTES = 3 * 1024 * 1024;
+const MAX_POST_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024;
+const IMAGE_COMPRESSION_TARGET_BYTES = 3 * 1024 * 1024;
 const IMAGE_RESIZE_MAX_DIMENSION = 1920;
 const COMPRESSIBLE_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 const DIRECT_UPLOAD_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
 
 function getFileMimeType(file) {
     const type = String(file?.type || '').toLowerCase();
-    if (type) return type;
-
     const name = String(file?.name || '').toLowerCase();
+
     if (/\.jpe?g$/.test(name)) return 'image/jpeg';
     if (/\.png$/.test(name)) return 'image/png';
     if (/\.gif$/.test(name)) return 'image/gif';
     if (/\.webp$/.test(name)) return 'image/webp';
     if (/\.heic$/.test(name)) return 'image/heic';
     if (/\.heif$/.test(name)) return 'image/heif';
+
+    if (type && type !== 'application/octet-stream') return type;
+
+    // 일부 모바일 브라우저는 갤러리 사진명을 `image:...` 또는 `image%3A...`처럼 주고 MIME 타입을 비워둡니다.
+    if (/^image(?::|%3a)/i.test(name)) return 'image/jpeg';
+
     return '';
+}
+
+function hasKnownNonImageExtension(file) {
+    const name = String(file?.name || '').toLowerCase();
+    if (!/\.[a-z0-9]{2,10}$/.test(name)) return false;
+    return !/\.(jpe?g|png|gif|webp|heic|heif)$/i.test(name);
 }
 
 function isImageFile(file) {
     const mimeType = getFileMimeType(file);
-    return mimeType.startsWith('image/');
+    if (mimeType) return mimeType.startsWith('image/');
+
+    // accept="image/*"로 열린 모바일 선택기는 실제 이미지여도 type/name이 비어 있을 수 있어 우선 허용하고, 제출 직전에 헤더로 재검증합니다.
+    return !hasKnownNonImageExtension(file);
+}
+
+async function detectImageMimeTypeFromHeader(file) {
+    try {
+        const headerBuffer = await file.slice(0, 16).arrayBuffer();
+        const bytes = new Uint8Array(headerBuffer);
+        const ascii = Array.from(bytes).map((byte) => String.fromCharCode(byte)).join('');
+
+        if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg';
+        if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return 'image/png';
+        if (ascii.startsWith('GIF87a') || ascii.startsWith('GIF89a')) return 'image/gif';
+        if (ascii.startsWith('RIFF') && ascii.slice(8, 12) === 'WEBP') return 'image/webp';
+        if (ascii.slice(4, 8) === 'ftyp' && /(heic|heix|hevc|hevx|mif1|msf1)/i.test(ascii.slice(8, 16))) {
+            return 'image/heic';
+        }
+    } catch (_error) {
+        return '';
+    }
+
+    return '';
+}
+
+function normalizeDataUrlMimeType(dataUrl, mimeType) {
+    const normalizedMimeType = String(mimeType || '').toLowerCase();
+    if (!normalizedMimeType.startsWith('image/')) return dataUrl;
+
+    return String(dataUrl || '').replace(/^data:[^;,]*;base64,/i, `data:${normalizedMimeType};base64,`);
 }
 
 function estimateDataUrlBytes(dataUrl) {
@@ -88,12 +130,12 @@ async function compressImageFile(file) {
 
     let quality = 0.85;
     let blob = await canvasToBlob(canvas, 'image/jpeg', quality);
-    while (blob.size > MAX_POST_IMAGE_BYTES && quality > 0.45) {
+    while (blob.size > IMAGE_COMPRESSION_TARGET_BYTES && quality > 0.45) {
         quality -= 0.1;
         blob = await canvasToBlob(canvas, 'image/jpeg', quality);
     }
 
-    if (blob.size > MAX_POST_IMAGE_BYTES) {
+    if (blob.size > IMAGE_COMPRESSION_TARGET_BYTES) {
         const reducedCanvas = document.createElement('canvas');
         reducedCanvas.width = Math.max(1, Math.round(canvas.width * 0.75));
         reducedCanvas.height = Math.max(1, Math.round(canvas.height * 0.75));
@@ -101,39 +143,43 @@ async function compressImageFile(file) {
         blob = await canvasToBlob(reducedCanvas, 'image/jpeg', 0.65);
     }
 
-    if (blob.size > MAX_POST_IMAGE_BYTES) {
-        throw new Error('이미지 용량이 너무 큽니다. 더 작은 사진을 선택해주세요.');
+    if (blob.size > MAX_POST_IMAGE_UPLOAD_BYTES) {
+        throw new Error('이미지 용량이 너무 큽니다. 8MB 이하의 사진을 선택해주세요.');
     }
 
     return readFileAsDataUrl(blob);
 }
 
 async function prepareImageForUpload(file) {
-    const mimeType = getFileMimeType(file);
+    const declaredMimeType = getFileMimeType(file);
+    const headerMimeType = await detectImageMimeTypeFromHeader(file);
+    const mimeType = headerMimeType || declaredMimeType;
+
     if (!DIRECT_UPLOAD_IMAGE_TYPES.includes(mimeType)) {
         throw new Error('JPG, PNG, GIF, WEBP, HEIC 이미지만 업로드할 수 있습니다.');
     }
 
+    if (file.size > MAX_POST_IMAGE_UPLOAD_BYTES) {
+        throw new Error('이미지 용량이 너무 큽니다. 8MB 이하의 사진을 선택해주세요.');
+    }
+
     if (mimeType === 'image/gif') {
-        if (file.size > MAX_POST_IMAGE_BYTES) {
-            throw new Error('GIF 이미지는 3MB 이하만 업로드할 수 있습니다.');
-        }
-        return readFileAsDataUrl(file);
+        return normalizeDataUrlMimeType(await readFileAsDataUrl(file), mimeType);
     }
 
     if (COMPRESSIBLE_IMAGE_TYPES.includes(mimeType)) {
         try {
             return await compressImageFile(file);
         } catch (error) {
-            if (file.size > MAX_POST_IMAGE_BYTES) {
-                throw error;
-            }
+            // iOS/Android 일부 브라우저는 HEIC 또는 content URI 이미지를 canvas로 열지 못할 수 있습니다.
+            // 서버 허용 용량(8MB) 이내라면 원본 data URL로 폴백해 모바일 업로드 실패를 방지합니다.
+            console.warn('이미지 압축 실패, 원본 업로드로 전환:', error);
         }
     }
 
-    const dataUrl = await readFileAsDataUrl(file);
-    if (estimateDataUrlBytes(dataUrl) > MAX_POST_IMAGE_BYTES) {
-        throw new Error('이미지 용량이 너무 큽니다. 더 작은 사진을 선택해주세요.');
+    const dataUrl = normalizeDataUrlMimeType(await readFileAsDataUrl(file), mimeType);
+    if (estimateDataUrlBytes(dataUrl) > MAX_POST_IMAGE_UPLOAD_BYTES) {
+        throw new Error('이미지 용량이 너무 큽니다. 8MB 이하의 사진을 선택해주세요.');
     }
     return dataUrl;
 }
