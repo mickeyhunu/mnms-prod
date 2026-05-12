@@ -90,13 +90,24 @@ async function resolveImageUrls(payload) {
     .filter((url) => parseDataUrl(url)?.mimeType?.startsWith('image/'))
     .slice(0, 5);
 
+  const extensionByMimeType = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/gif': 'gif',
+    'image/webp': 'webp',
+    'image/heic': 'heic',
+    'image/heif': 'heif'
+  };
+
   const uploadedUrls = [];
   for (const [index, dataUrl] of newDataUrls.entries()) {
+    const parsed = parseDataUrl(dataUrl);
+    const extension = extensionByMimeType[parsed?.mimeType] || 'jpg';
     const uploadResult = await uploadDataUrlToS3({
       dataUrl,
-      fileName: `post-image-${index + 1}.png`,
+      fileName: `post-image-${index + 1}.${extension}`,
       folder: 'posts',
-      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'],
       maxBytes: 8 * 1024 * 1024
     });
     uploadedUrls.push(uploadResult.url);
