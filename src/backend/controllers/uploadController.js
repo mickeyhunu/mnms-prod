@@ -3,7 +3,7 @@
  */
 const { uploadDataUrlToS3 } = require('../utils/fileUpload');
 
-const IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
 const ATTACHMENT_MIME_TYPES = [...IMAGE_MIME_TYPES, 'application/pdf'];
 
 async function uploadPostImages(req, res, next) {

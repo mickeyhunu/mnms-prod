@@ -8,6 +8,136 @@ let existingImageUrls = [];
 let isBusinessUser = false;
 let businessPromotionFixedTitle = '';
 
+const MAX_POST_IMAGE_COUNT = 5;
+const MAX_POST_IMAGE_BYTES = 3 * 1024 * 1024;
+const IMAGE_RESIZE_MAX_DIMENSION = 1920;
+const COMPRESSIBLE_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+const DIRECT_UPLOAD_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
+
+function getFileMimeType(file) {
+    const type = String(file?.type || '').toLowerCase();
+    if (type) return type;
+
+    const name = String(file?.name || '').toLowerCase();
+    if (/\.jpe?g$/.test(name)) return 'image/jpeg';
+    if (/\.png$/.test(name)) return 'image/png';
+    if (/\.gif$/.test(name)) return 'image/gif';
+    if (/\.webp$/.test(name)) return 'image/webp';
+    if (/\.heic$/.test(name)) return 'image/heic';
+    if (/\.heif$/.test(name)) return 'image/heif';
+    return '';
+}
+
+function isImageFile(file) {
+    const mimeType = getFileMimeType(file);
+    return mimeType.startsWith('image/');
+}
+
+function estimateDataUrlBytes(dataUrl) {
+    const base64Body = String(dataUrl || '').split(',')[1] || '';
+    if (!base64Body) return 0;
+    const padding = base64Body.endsWith('==') ? 2 : (base64Body.endsWith('=') ? 1 : 0);
+    return Math.floor((base64Body.length * 3) / 4) - padding;
+}
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('이미지 읽기에 실패했습니다.'));
+        reader.readAsDataURL(file);
+    });
+}
+
+function loadImageFromFile(file) {
+    return new Promise((resolve, reject) => {
+        const imageUrl = URL.createObjectURL(file);
+        const image = new Image();
+        image.onload = () => {
+            URL.revokeObjectURL(imageUrl);
+            resolve(image);
+        };
+        image.onerror = () => {
+            URL.revokeObjectURL(imageUrl);
+            reject(new Error('이미지 미리보기 변환에 실패했습니다.'));
+        };
+        image.src = imageUrl;
+    });
+}
+
+function canvasToBlob(canvas, type, quality) {
+    return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('이미지 압축에 실패했습니다.'));
+        }, type, quality);
+    });
+}
+
+async function compressImageFile(file) {
+    const image = await loadImageFromFile(file);
+    const originalWidth = image.naturalWidth || image.width;
+    const originalHeight = image.naturalHeight || image.height;
+    const scale = Math.min(1, IMAGE_RESIZE_MAX_DIMENSION / Math.max(originalWidth, originalHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(originalWidth * scale));
+    canvas.height = Math.max(1, Math.round(originalHeight * scale));
+
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    let quality = 0.85;
+    let blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+    while (blob.size > MAX_POST_IMAGE_BYTES && quality > 0.45) {
+        quality -= 0.1;
+        blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+    }
+
+    if (blob.size > MAX_POST_IMAGE_BYTES) {
+        const reducedCanvas = document.createElement('canvas');
+        reducedCanvas.width = Math.max(1, Math.round(canvas.width * 0.75));
+        reducedCanvas.height = Math.max(1, Math.round(canvas.height * 0.75));
+        reducedCanvas.getContext('2d').drawImage(canvas, 0, 0, reducedCanvas.width, reducedCanvas.height);
+        blob = await canvasToBlob(reducedCanvas, 'image/jpeg', 0.65);
+    }
+
+    if (blob.size > MAX_POST_IMAGE_BYTES) {
+        throw new Error('이미지 용량이 너무 큽니다. 더 작은 사진을 선택해주세요.');
+    }
+
+    return readFileAsDataUrl(blob);
+}
+
+async function prepareImageForUpload(file) {
+    const mimeType = getFileMimeType(file);
+    if (!DIRECT_UPLOAD_IMAGE_TYPES.includes(mimeType)) {
+        throw new Error('JPG, PNG, GIF, WEBP, HEIC 이미지만 업로드할 수 있습니다.');
+    }
+
+    if (mimeType === 'image/gif') {
+        if (file.size > MAX_POST_IMAGE_BYTES) {
+            throw new Error('GIF 이미지는 3MB 이하만 업로드할 수 있습니다.');
+        }
+        return readFileAsDataUrl(file);
+    }
+
+    if (COMPRESSIBLE_IMAGE_TYPES.includes(mimeType)) {
+        try {
+            return await compressImageFile(file);
+        } catch (error) {
+            if (file.size > MAX_POST_IMAGE_BYTES) {
+                throw error;
+            }
+        }
+    }
+
+    const dataUrl = await readFileAsDataUrl(file);
+    if (estimateDataUrlBytes(dataUrl) > MAX_POST_IMAGE_BYTES) {
+        throw new Error('이미지 용량이 너무 큽니다. 더 작은 사진을 선택해주세요.');
+    }
+    return dataUrl;
+}
+
 function getModeFromQuery() {
     const params = new URLSearchParams(window.location.search);
     const mode = params.get('mode');
@@ -190,10 +320,18 @@ function setupImageUpload() {
 
     imageInput.addEventListener('change', function(event) {
         const files = event.target.files;
-        const maxNewImageCount = 5 - existingImageUrls.length;
+        const maxNewImageCount = MAX_POST_IMAGE_COUNT - existingImageUrls.length;
+        const selectedFiles = Array.from(files);
 
-        if (files.length > maxNewImageCount) {
-            alert(`현재 기존 이미지를 포함해 최대 5개까지 업로드할 수 있습니다. (추가 가능: ${Math.max(0, maxNewImageCount)}개)`);
+        if (selectedFiles.some((file) => !isImageFile(file))) {
+            alert('이미지 파일만 업로드할 수 있습니다.');
+            imageInput.value = '';
+            renderImagePreview();
+            return;
+        }
+
+        if (selectedFiles.length > maxNewImageCount) {
+            alert(`현재 기존 이미지를 포함해 최대 ${MAX_POST_IMAGE_COUNT}개까지 업로드할 수 있습니다. (추가 가능: ${Math.max(0, maxNewImageCount)}개)`);
             imageInput.value = '';
             renderImagePreview();
             return;
@@ -224,7 +362,7 @@ function renderImagePreview() {
     const files = document.getElementById('image-files')?.files || [];
 
     Array.from(files).forEach((file, index) => {
-        if (!file.type.startsWith('image/')) return;
+        if (!isImageFile(file)) return;
 
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -299,15 +437,10 @@ function readSelectedImagesAsDataUrls() {
     }
 
     const imageFiles = Array.from(imageInput.files)
-        .filter((file) => file.type.startsWith('image/'))
-        .slice(0, 5);
+        .filter(isImageFile)
+        .slice(0, MAX_POST_IMAGE_COUNT - existingImageUrls.length);
 
-    return Promise.all(imageFiles.map((file) => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error('이미지 읽기에 실패했습니다.'));
-        reader.readAsDataURL(file);
-    })));
+    return Promise.all(imageFiles.map(prepareImageForUpload));
 }
 
 async function loadPostForEdit() {
@@ -335,7 +468,7 @@ async function loadPostForEdit() {
         existingImageUrls = normalizedImageUrls
             .map((url) => String(url || '').trim())
             .filter((url) => url.length > 0)
-            .slice(0, 5);
+            .slice(0, MAX_POST_IMAGE_COUNT);
         renderImagePreview();
 
         updateCharCount('title', 255);
@@ -406,7 +539,7 @@ async function handleSubmit(event) {
             isNotice,
             noticeType: isNotice ? 'IMPORTANT' : null,
             noticeTargetBoards,
-            imageUrls: [...existingImageUrls, ...imageUrls].slice(0, 5)
+            imageUrls: [...existingImageUrls, ...imageUrls].slice(0, MAX_POST_IMAGE_COUNT)
         };
 
         if (isEditMode) {
