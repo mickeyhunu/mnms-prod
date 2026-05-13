@@ -4,7 +4,7 @@
 const {
   createUser,
   findById,
-  findByEmail,
+  findByLoginId,
   findByNickname,
   recordUserLoginHistory,
   updateUserProfile
@@ -169,7 +169,7 @@ function resolveRegisterConflictError(error) {
     };
   }
 
-  if (messageSource.includes('users.email')) {
+  if (messageSource.includes('users.login_id') || messageSource.includes('users.email')) {
     return {
       status: 409,
       message: '이미 사용 중인 아이디입니다.'
@@ -191,10 +191,10 @@ function resolveRegisterConflictError(error) {
 
 async function register(req, res, next) {
   try {
-    const { loginId, email, password, nickname, genderDigit } = req.body;
+    const { loginId, password, nickname, genderDigit } = req.body;
     const ipAddress = getClientIp(req);
     const accountType = normalizeAccountType(req.body.accountType || req.body.memberType);
-    const resolvedLoginId = (loginId || email || '').trim();
+    const resolvedLoginId = String(loginId || '').trim();
     const name = String(req.body.name || '').trim() || null;
     const identityVerificationId = String(req.body.identityVerificationId || '').trim();
     const identityCi = String(req.body.identityCi || req.body.ci || '').trim();
@@ -297,7 +297,7 @@ async function register(req, res, next) {
     }
     const { ciHash, diHash, phoneHash } = signupEligibility.identityHashes;
 
-    if (await findByEmail(resolvedLoginId)) {
+    if (await findByLoginId(resolvedLoginId)) {
       console.warn('[AuthController.register] 중복 아이디', { loginId: resolvedLoginId });
       return res.status(400).json({ message: '이미 사용 중인 아이디입니다.' });
     }
@@ -309,7 +309,7 @@ async function register(req, res, next) {
     const hashedPassword = await hashPassword(password);
     const role = resolveRoleByAccountType(accountType);
     const userId = await createUser({
-      email: resolvedLoginId,
+      loginId: resolvedLoginId,
       password: hashedPassword,
       nickname: normalizedNickname,
       name,
@@ -339,7 +339,7 @@ async function register(req, res, next) {
     });
     await awardPointByAction(userId, 'REGISTER');
 
-    const user = await findByEmail(resolvedLoginId);
+    const user = await findByLoginId(resolvedLoginId);
     res.json({ success: true, message: '회원가입이 완료되었습니다.', user: pickUserRow({ ...user, id: userId }) });
   } catch (error) {
     const conflictError = resolveRegisterConflictError(error);
@@ -362,11 +362,11 @@ async function register(req, res, next) {
 
 async function login(req, res, next) {
   try {
-    const { loginId, email, password } = req.body;
-    const resolvedLoginId = (loginId || email || '').trim();
+    const { loginId, password } = req.body;
+    const resolvedLoginId = String(loginId || '').trim();
     const ipAddress = getClientIp(req);
     const userAgent = req.headers['user-agent'] || null;
-    const user = await findByEmail(resolvedLoginId);
+    const user = await findByLoginId(resolvedLoginId);
     const isPasswordValid = user ? await verifyPassword(password, user.password) : false;
     if (!user || !isPasswordValid) {
       recordLoginAttemptResult(req, { success: false });
@@ -415,7 +415,7 @@ async function login(req, res, next) {
       await updateUserProfile(user.id, { password: rehashedPassword });
     }
 
-    const refreshedUser = await findByEmail(resolvedLoginId);
+    const refreshedUser = await findByLoginId(resolvedLoginId);
     const refreshToken = signRefreshToken(user);
     res.append('Set-Cookie', buildRefreshCookie(req, refreshToken, parseExpiresInToSeconds(REFRESH_EXPIRES_IN)));
     res.json({
@@ -1392,7 +1392,7 @@ async function findAccountByIdentity(req, res) {
 
   return res.json({
     found: true,
-    loginId: user.email,
+    loginId: user.login_id,
     message: '가입된 아이디를 확인했습니다.'
   });
 }

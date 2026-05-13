@@ -106,7 +106,7 @@ const Auth = {
     formatNicknameWithLevel(user) {
         if (!user) return '';
 
-        const nickname = user.nickname || user.email || '';
+        const nickname = user.nickname || user.loginId || '';
         const levelEmoji = this.isBusinessAccount(user) || this.isAdminAccount(user) ? '' : (user.levelEmoji || '');
 
         return levelEmoji ? `${nickname} ${levelEmoji}` : nickname;
@@ -127,7 +127,7 @@ const Auth = {
     applyNicknameDisplay(element, user) {
         if (!element) return;
 
-        const nickname = user?.nickname || user?.email || '';
+        const nickname = user?.nickname || user?.loginId || '';
         element.textContent = nickname;
 
         const adminBadgeImage = this.resolveAdminBadgeImage(user);
@@ -203,7 +203,7 @@ const Auth = {
     setUser(user) {
         const persistedUser = user ? {
             id: user.id,
-            email: user.email,
+            loginId: user.loginId,
             nickname: user.nickname,
             role: user.role,
             memberType: user.memberType,

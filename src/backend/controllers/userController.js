@@ -119,7 +119,7 @@ async function updateMyProfile(req, res, next) {
       message: '내 정보가 저장되었습니다.',
       user: {
         id: updatedUser.id,
-        email: updatedUser.email,
+        loginId: updatedUser.login_id,
         nickname: updatedUser.nickname,
         phone: updatedUser.phone || '',
         name: updatedUser.name || '',
@@ -180,7 +180,7 @@ async function myStats(req, res, next) {
       : 100;
 
     res.json({
-      loginId: req.user.email,
+      loginId: req.user.login_id,
       nickname: req.user.nickname,
       totalPoints,
       level: currentLevel.level,

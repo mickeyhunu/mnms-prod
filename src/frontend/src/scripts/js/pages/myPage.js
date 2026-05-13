@@ -203,7 +203,7 @@ function renderProfileForm(user) {
     const birthField = document.getElementById('profile-birth');
     const smsConsent = document.getElementById('sms-consent');
 
-    if (loginIdField) loginIdField.value = user.email || '';
+    if (loginIdField) loginIdField.value = user.loginId || '';
     if (nicknameInput) nicknameInput.value = user.nickname || '';
 
     if (phoneField) {

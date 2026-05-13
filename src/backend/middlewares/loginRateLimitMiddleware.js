@@ -7,7 +7,7 @@ const BLOCK_MS = 10 * 60 * 1000;
 const store = new Map();
 
 function normalizeLoginId(req) {
-  return String(req.body?.loginId || req.body?.email || '')
+  return String(req.body?.loginId || '')
     .trim()
     .toLowerCase();
 }

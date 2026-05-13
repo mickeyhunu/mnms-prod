@@ -6,7 +6,7 @@ const { getLoginRestrictionState, LOGIN_STATUS } = require('../utils/loginRestri
 const { hashPassword } = require('../utils/passwordHasher');
 
 async function createUser({
-  email,
+  loginId,
   password,
   nickname,
   name = null,
@@ -29,16 +29,16 @@ async function createUser({
   const pool = getPool();
   const [result] = await pool.query(
     `INSERT INTO users
-      (email, password, nickname, name, birth_date, gender_digit, role, member_type, phone, terms_consent, privacy_consent, marketing_consent, sms_consent, identity_ci_hash, identity_di_hash, phone_hash, is_adult_verified, adult_verified_at, last_identity_verified_at, total_points)
+      (login_id, password, nickname, name, birth_date, gender_digit, role, member_type, phone, terms_consent, privacy_consent, marketing_consent, sms_consent, identity_ci_hash, identity_di_hash, phone_hash, is_adult_verified, adult_verified_at, last_identity_verified_at, total_points)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [email, password, nickname, name, birthDate, genderDigit, role, memberType, phone, termsConsent ? 1 : 0, privacyConsent ? 1 : 0, marketingConsent ? 1 : 0, smsConsent ? 1 : 0, identityCiHash, identityDiHash, phoneHash, isAdultVerified ? 1 : 0, adultVerifiedAt, lastIdentityVerifiedAt, 0]
+    [loginId, password, nickname, name, birthDate, genderDigit, role, memberType, phone, termsConsent ? 1 : 0, privacyConsent ? 1 : 0, marketingConsent ? 1 : 0, smsConsent ? 1 : 0, identityCiHash, identityDiHash, phoneHash, isAdultVerified ? 1 : 0, adultVerifiedAt, lastIdentityVerifiedAt, 0]
   );
   return result.insertId;
 }
 
-async function findByEmail(email) {
+async function findByLoginId(loginId) {
   const pool = getPool();
-  const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+  const [rows] = await pool.query('SELECT * FROM users WHERE login_id = ?', [loginId]);
   return ensureResolvedLoginRestriction(rows[0] || null);
 }
 
@@ -502,13 +502,13 @@ async function withdrawUserById(userId, { reason = '' } = {}) {
     );
 
     const withdrawnNickname = `탈퇴회원${userId}`;
-    const maskedEmail = `withdrawn_${userId}_${Date.now()}@deleted.local`;
+    const withdrawnLoginId = `withdrawn${userId}${Date.now()}`;
     const withdrawnPasswordHash = await hashPassword(`withdrawn:${userId}:${Date.now()}`);
     await connection.query(
       `UPDATE users
        SET nickname = ?,
            last_nickname_changed_at = NOW(),
-           email = ?,
+           login_id = ?,
            password = ?,
            name = NULL,
            birth_date = NULL,
@@ -582,7 +582,7 @@ module.exports = {
   clearExpiredLoginRestriction,
   ensureResolvedLoginRestriction,
   createUser,
-  findByEmail,
+  findByLoginId,
   findById,
   findByNickname,
   findByNicknameExceptUser,

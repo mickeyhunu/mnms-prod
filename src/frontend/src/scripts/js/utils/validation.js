@@ -5,7 +5,7 @@ function validateRegisterForm(data) {
     const errors = {};
 
     if (!data.loginId || !VALIDATION.LOGIN_ID_REGEX.test(data.loginId.trim())) {
-        errors.loginId = '아이디는 4자 이상으로 입력해주세요.';
+        errors.loginId = '아이디는 4~20자의 영문 대소문자와 숫자만 사용할 수 있습니다.';
     }
 
     if (!data.password || !VALIDATION.PASSWORD_REGEX.test(data.password)) {

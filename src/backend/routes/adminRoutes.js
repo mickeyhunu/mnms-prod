@@ -227,7 +227,7 @@ router.put('/users/:id', async (req, res, next) => {
       return res.status(400).json({ message: '유효하지 않은 권한입니다.' });
     }
 
-    const isMasterAdmin = String(req.user?.email || '').trim().toLowerCase() === 'master';
+    const isMasterAdmin = String(req.user?.login_id || '').trim().toLowerCase() === 'master';
     if (role === 'ADMIN' && !isMasterAdmin) {
       return res.status(403).json({ message: '마스터 관리자만 관리자 권한을 부여할 수 있습니다.' });
     }
@@ -314,7 +314,7 @@ router.patch('/users/:id/role', async (req, res, next) => {
     const role = String(req.body?.role || '').toUpperCase();
     if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 회원 ID입니다.' });
     if (!['MEMBER', 'ADMIN'].includes(role)) return res.status(400).json({ message: '유효하지 않은 권한입니다.' });
-    if (role === 'ADMIN' && String(req.user?.email || '').trim().toLowerCase() !== 'master') {
+    if (role === 'ADMIN' && String(req.user?.login_id || '').trim().toLowerCase() !== 'master') {
       return res.status(403).json({ message: '마스터 관리자만 관리자 권한을 부여할 수 있습니다.' });
     }
 

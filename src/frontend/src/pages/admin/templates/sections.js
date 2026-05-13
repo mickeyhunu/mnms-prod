@@ -14,7 +14,7 @@ export const userEditPanelTemplate = `
                         <form id="user-edit-form" class="admin-user-detail-form">
                             <div class="profile-form-grid admin-user-form-grid">
                                 <label>아이디
-                                    <input type="text" id="admin-user-email" name="email" readonly>
+                                    <input type="text" id="admin-user-login-id" name="loginId" readonly>
                                 </label>
                                 <label>비밀번호
                                     <input type="password" id="admin-user-password" name="password" minlength="4" placeholder="변경 시 입력">
@@ -32,9 +32,6 @@ export const userEditPanelTemplate = `
                                 </label>
                                 <label>생년월일
                                     <input type="text" id="admin-user-birth" name="birthDate" readonly>
-                                </label>
-                                <label>이메일
-                                    <input type="email" id="admin-user-email-display" name="emailDisplay" readonly>
                                 </label>
                                 <label>연락처
                                     <input type="text" id="admin-user-phone" name="phone" placeholder="010-0000-0000">

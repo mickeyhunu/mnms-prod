@@ -260,7 +260,7 @@ async function listInquiriesForAdmin({ status = null } = {}) {
 
   const [rows] = await pool.query(
     `SELECT i.id, i.user_id AS userId,
-            u.nickname AS userNickname, u.email AS userEmail,
+            u.nickname AS userNickname, u.login_id AS userLoginId,
             i.inquiry_type AS type,
             i.target_type AS targetType, i.target_id AS targetId,
             i.title, i.content, i.attachment_urls AS attachmentUrls, i.status,

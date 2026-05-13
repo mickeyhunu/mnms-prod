@@ -160,7 +160,7 @@ async function initAdminPage() {
 
         revealAdminPageShell();
         bindCommonEvents();
-        isMasterAdmin = String(me.email || '').trim().toLowerCase() === 'master';
+        isMasterAdmin = String(me.loginId || '').trim().toLowerCase() === 'master';
 
         const nickname = Auth.resolveNicknameDisplayElement();
         if (nickname) Auth.applyNicknameDisplay(nickname, me);
@@ -357,12 +357,12 @@ function getAdminFilteredItems(prefix) {
     const matchers = {
         posts: ['id', 'title', 'authorNickname', 'user_id', 'userId'],
         comments: ['id', 'content', 'authorNickname', 'user_id', 'userId', 'postId', 'post_id'],
-        users: ['id', 'email', 'nickname', 'role', 'memberType', 'member_type', 'phone'],
-        admins: ['id', 'email', 'nickname', 'role'],
+        users: ['id', 'loginId', 'nickname', 'role', 'memberType', 'member_type', 'phone'],
+        admins: ['id', 'loginId', 'nickname', 'role'],
         entries: ['workerName', 'entryId'],
         ads: ['id', 'title', 'adType', 'storeNo', 'linkUrl', 'imageUrl', 'displayOrder'],
         support: ['id', 'title', 'category', 'sourceType'],
-        inquiries: ['id', 'title', 'userNickname', 'userEmail', 'userId', 'type', 'status']
+        inquiries: ['id', 'title', 'userNickname', 'userLoginId', 'userId', 'type', 'status']
     };
 
     const searchConfig = getAdminSearchConfig(prefix);
@@ -895,7 +895,7 @@ function renderUsersTable() {
         tbody.innerHTML = pageItems.map((user) => `
             <tr>
                 <td>${user.id}</td>
-                <td>${sanitizeHTML(user.email || '')}</td>
+                <td>${sanitizeHTML(user.loginId || '')}</td>
                 <td>${sanitizeHTML(user.nickname || '')}</td>
                 <td>${formatAdminRestrictionStatus(user)}</td>
                 <td>${Number(user.totalPoints || 0).toLocaleString()} P</td>
@@ -928,7 +928,7 @@ function renderAdminsTable() {
         tbody.innerHTML = pageItems.map((admin) => `
             <tr>
                 <td>${admin.id}</td>
-                <td>${sanitizeHTML(admin.email || '-')}</td>
+                <td>${sanitizeHTML(admin.loginId || '-')}</td>
                 <td>${sanitizeHTML(admin.nickname || '-')}</td>
                 <td>${admin.isMasterAdmin ? 'MASTER' : 'ADMIN'}</td>
                 <td>${formatDate(admin.createdAt || admin.created_at)}</td>
@@ -1180,7 +1180,7 @@ function renderInquiriesTable() {
             return `
                 <tr>
                     <td>${inquiry.id}</td>
-                    <td>${sanitizeHTML(inquiry.userNickname || inquiry.userEmail || `회원#${inquiry.userId}`)}</td>
+                    <td>${sanitizeHTML(inquiry.userNickname || inquiry.userLoginId || `회원#${inquiry.userId}`)}</td>
                     <td>${toInquiryTypeLabel(inquiry.type)}</td>
                     <td>${sanitizeHTML(inquiry.title || '')}</td>
                     <td><span class="my-inquiry-status ${status.className}">${status.text}</span></td>
@@ -1425,8 +1425,7 @@ function bindUserEditForm() {
 }
 
 function fillUserEditForm(user) {
-    document.getElementById('admin-user-email').value = user.email || '';
-    document.getElementById('admin-user-email-display').value = user.email || '';
+    document.getElementById('admin-user-login-id').value = user.loginId || '';
     document.getElementById('admin-user-name').value = user.name || user.nickname || '';
     document.getElementById('admin-user-birth').value = user.birthDate || '';
     document.getElementById('admin-user-nickname').value = user.nickname || '';
@@ -2027,7 +2026,7 @@ async function openInquiryAnswerModal(inquiryId) {
 
         inquiryAnswerTarget = target;
         document.getElementById('inquiry-answer-modal-title').textContent = `문의 #${target.id} 답변`;
-        document.getElementById('inquiry-answer-target').textContent = `${toInquiryTypeLabel(target.type)} · ${target.userNickname || target.userEmail || `회원#${target.userId}`} · ${target.title || ''}`;
+        document.getElementById('inquiry-answer-target').textContent = `${toInquiryTypeLabel(target.type)} · ${target.userNickname || target.userLoginId || `회원#${target.userId}`} · ${target.title || ''}`;
         document.getElementById('inquiry-answer-content').value = target.answerContent || '';
         showAdminModal('inquiry-answer-modal');
     } catch (error) {
