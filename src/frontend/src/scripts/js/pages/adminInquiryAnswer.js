@@ -102,6 +102,40 @@ function validateForm() {
     saveButton.disabled = isSaving || !answer;
 }
 
+function getInquiryTargetTypeLabel(targetType) {
+    const normalized = String(targetType || '').toLowerCase();
+    if (normalized === 'post') return '게시글';
+    if (normalized === 'comment') return '댓글';
+    return '대상';
+}
+
+function truncateText(value, maxLength = 120) {
+    const normalized = String(value || '').replace(/\s+/g, ' ').trim();
+    if (normalized.length <= maxLength) return normalized;
+    return `${normalized.slice(0, maxLength)}...`;
+}
+
+function renderInquiryTargetInfo(inquiry) {
+    const target = inquiry?.target;
+    const targetType = target?.type || inquiry?.targetType;
+    const targetId = target?.id || inquiry?.targetId;
+    if (!targetType || !targetId) return '-';
+
+    const typeLabel = getInquiryTargetTypeLabel(targetType);
+    const postTitle = target?.postTitle || target?.title || '';
+    const content = target?.content || '';
+    const href = target?.url || (target?.postId ? `/post-detail?id=${encodeURIComponent(target.postId)}` : '');
+    const statusText = target?.isDeleted ? '삭제됨' : (target?.isHidden ? '가려짐' : '');
+    const statusBadge = statusText ? ` <span class="text-muted">(${escapeHtml(statusText)})</span>` : '';
+    const titleLine = postTitle ? escapeHtml(truncateText(postTitle, 100)) : `${escapeHtml(typeLabel)} #${escapeHtml(targetId)}`;
+    const linkedTitle = href
+        ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${titleLine}</a>`
+        : titleLine;
+    const contentLine = content ? `<div class="text-muted" style="margin-top:4px;">${escapeHtml(truncateText(content, 140))}</div>` : '';
+
+    return `<strong>${escapeHtml(typeLabel)} #${escapeHtml(targetId)}</strong>${statusBadge}<div>${linkedTitle}</div>${contentLine}`;
+}
+
 function renderMetaItem(label, value, modifierClass = '') {
     const safeValue = value || '-';
     const className = modifierClass ? `admin-inquiry-meta-value ${modifierClass}` : 'admin-inquiry-meta-value';
@@ -132,6 +166,7 @@ function renderInquiryInfo(inquiry) {
             renderMetaItem('문의번호', `#${inquiry.id}`),
             renderMetaItem('문의자', userLabel),
             renderMetaItem('문의유형', toInquiryTypeLabel(inquiry.type)),
+            renderMetaItem('신고대상', renderInquiryTargetInfo(inquiry)),
             renderMetaItem('진행상태', statusLabel, statusClass),
             renderMetaItem('접수일시', formatDateTime(inquiry.createdAt || inquiry.created_at))
         ].join('');

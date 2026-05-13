@@ -234,6 +234,7 @@ async function getMyInquiryDetail(req, res, next) {
       type: inquiry.inquiry_type,
       targetType: inquiry.target_type,
       targetId: inquiry.target_id,
+      target: inquiry.target,
       title: inquiry.title,
       content: inquiry.content,
       attachmentUrls: inquiry.attachmentUrls || [],
