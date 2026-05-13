@@ -35,7 +35,7 @@ async function listAdmins() {
     const resolved = await ensureResolvedLoginRestriction(row);
     resolvedRows.push({
       ...pickUserRow(resolved || row),
-      isMasterAdmin: String((resolved || row)?.email || '').trim().toLowerCase() === 'master'
+      isMasterAdmin: String((resolved || row)?.login_id || '').trim().toLowerCase() === 'master'
     });
   }
   return resolvedRows;

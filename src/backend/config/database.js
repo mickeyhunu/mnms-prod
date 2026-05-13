@@ -169,7 +169,7 @@ async function initDatabase() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
-      email VARCHAR(255) NOT NULL UNIQUE,
+      login_id VARCHAR(255) NOT NULL UNIQUE,
       password VARCHAR(255) NOT NULL,
       nickname VARCHAR(255) NOT NULL UNIQUE,
       name VARCHAR(100) NULL,
@@ -196,6 +196,49 @@ async function initDatabase() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  const [loginIdColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'users'
+       AND COLUMN_NAME = 'login_id'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!loginIdColumn.length) {
+    const [legacyEmailColumn] = await pool.query(
+      `SELECT 1
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = ?
+         AND TABLE_NAME = 'users'
+         AND COLUMN_NAME = 'email'
+       LIMIT 1`,
+      [dbConfig.database]
+    );
+
+    if (legacyEmailColumn.length) {
+      await pool.query('ALTER TABLE users CHANGE COLUMN email login_id VARCHAR(255) NOT NULL');
+    } else {
+      await pool.query('ALTER TABLE users ADD COLUMN login_id VARCHAR(255) NOT NULL UNIQUE AFTER id');
+    }
+  }
+
+  const [legacyEmailColumnAfterLoginId] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'users'
+       AND COLUMN_NAME = 'email'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (legacyEmailColumnAfterLoginId.length) {
+    await pool.query('UPDATE users SET login_id = email WHERE (login_id IS NULL OR login_id = \'\') AND email IS NOT NULL');
+    await pool.query('ALTER TABLE users DROP COLUMN email');
+  }
 
   const [totalPointsColumn] = await pool.query(
     `SELECT 1
@@ -1018,11 +1061,11 @@ async function initDatabase() {
     await pool.query('ALTER TABLE support_inquiries ADD COLUMN attachment_urls LONGTEXT NULL AFTER content');
   }
 
-  const [adminRows] = await pool.query('SELECT id, password FROM users WHERE email = ?', ['master']);
+  const [adminRows] = await pool.query('SELECT id, password FROM users WHERE login_id = ?', ['master']);
   if (!adminRows.length) {
     const adminPasswordHash = await hashPassword('admin1234');
     await pool.query(
-      'INSERT INTO users (email, password, nickname, role, member_type) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO users (login_id, password, nickname, role, member_type) VALUES (?, ?, ?, ?, ?)',
       ['master', adminPasswordHash, '관리자', 'ADMIN', 'MEMBER']
     );
   } else if (!isHashedPassword(adminRows[0].password)) {

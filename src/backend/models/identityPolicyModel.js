@@ -36,7 +36,7 @@ async function findUserByIdentityHashes({ ciHash = null, diHash = null, phoneHas
   if (!conditions.length) return null;
 
   const [rows] = await pool.query(
-    `SELECT id, email, account_status, created_at AS createdAt
+    `SELECT id, login_id, account_status, created_at AS createdAt
      FROM users
      WHERE ${conditions.join(' OR ')}
      ORDER BY id DESC

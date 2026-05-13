@@ -5,7 +5,7 @@ const AuthAPI = {
     mapAuthUserPayload(payload = {}) {
         return {
             id: payload.id,
-            email: payload.email,
+            loginId: payload.loginId,
             nickname: payload.nickname,
             role: payload.role,
             memberType: payload.memberType,

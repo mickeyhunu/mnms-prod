@@ -29,7 +29,7 @@ function pickUserRow(user) {
 
   return {
     id: user.id,
-    email: user.email,
+    loginId: user.login_id || user.loginId,
     nickname: user.nickname,
     role: user.role,
     memberType,

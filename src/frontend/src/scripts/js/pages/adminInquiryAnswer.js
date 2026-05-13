@@ -122,7 +122,7 @@ function renderInquiryInfo(inquiry) {
 
     if (titleEl) titleEl.textContent = inquiry.title || '(제목 없음)';
 
-    const userLabel = inquiry.userNickname || inquiry.userEmail || `회원#${inquiry.userId}`;
+    const userLabel = inquiry.userNickname || inquiry.userLoginId || `회원#${inquiry.userId}`;
     const statusLabel = toInquiryStatusLabel(inquiry.status);
     const statusClass = String(inquiry.status || '').toUpperCase() === 'ANSWERED'
         ? 'admin-inquiry-meta-status is-completed'
