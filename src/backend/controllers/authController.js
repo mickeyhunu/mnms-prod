@@ -169,7 +169,7 @@ function resolveRegisterConflictError(error) {
     };
   }
 
-  if (messageSource.includes('users.login_id') || messageSource.includes('users.email')) {
+  if (messageSource.includes('users.login_id')) {
     return {
       status: 409,
       message: '이미 사용 중인 아이디입니다.'
