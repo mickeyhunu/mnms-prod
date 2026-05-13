@@ -91,7 +91,7 @@ cp src/backend/.env.local.example src/backend/.env.local
 - `CHATBOT_MYSQL_DATABASE` (기본값: `chatBot_DB`)
 
 ## 기본 관리자 계정
-- email: `admin@company.com`
+- login_id: `master`
 - password: `admin1234`
 
 ## S3 파일 업로드 전환 (게시글 이미지 / 문의 첨부)
