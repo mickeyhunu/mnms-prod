@@ -144,18 +144,54 @@ function extractImageUrlsFromPost(post) {
   return normalizeExistingFileUrls([post.imageUrl], { maxCount: 5 });
 }
 
+function getPostAuthorId(post) {
+  return post?.user_id ?? post?.userId;
+}
+
+function getCommentAuthorId(comment) {
+  return comment?.userId ?? comment?.user_id;
+}
+
+function getCommentParentId(comment) {
+  return comment?.parentId ?? comment?.parent_id;
+}
+
+function isAdminViewer(user) {
+  return String(user?.role || '').toUpperCase() === 'ADMIN';
+}
+
+function isSameUserId(left, right) {
+  if (left == null || right == null) return false;
+  return Number(left) === Number(right);
+}
+
+function getSecretThreadOwnerId(comment) {
+  return comment?.secretThreadOwnerId ?? comment?.secret_thread_owner_id;
+}
+
+function canParticipateInSecretComment(comment, post, currentUser) {
+  if (!currentUser) return false;
+
+  const currentUserId = currentUser.id;
+  return isSameUserId(currentUserId, getCommentAuthorId(comment))
+    || isSameUserId(currentUserId, getPostAuthorId(post))
+    || isSameUserId(currentUserId, getSecretThreadOwnerId(comment));
+}
+
+
+function stripSecretThreadMetadata(comment) {
+  const sanitized = { ...comment };
+  delete sanitized.secretThreadOwnerId;
+  delete sanitized.secret_thread_owner_id;
+  return sanitized;
+}
+
 function canViewSecretComment(comment, post, currentUser) {
   if (!comment.isSecret) {
     return true;
   }
 
-  if (!currentUser) {
-    return false;
-  }
-
-  return Number(currentUser.id) === Number(comment.userId)
-    || Number(currentUser.id) === Number(post.user_id)
-    || currentUser.role === 'ADMIN';
+  return canParticipateInSecretComment(comment, post, currentUser) || isAdminViewer(currentUser);
 }
 
 function canReplyToComment(comment, post, currentUser) {
@@ -167,14 +203,46 @@ function canReplyToComment(comment, post, currentUser) {
     return true;
   }
 
-  return Number(currentUser.id) === Number(comment.userId)
-    || Number(currentUser.id) === Number(post.user_id);
+  return canParticipateInSecretComment(comment, post, currentUser);
 }
 
+function annotateSecretThreadOwnerIds(comments = []) {
+  const commentMap = new Map();
 
-function isAdminViewer(user) {
-  return String(user?.role || '').toUpperCase() === 'ADMIN';
+  comments.forEach((comment) => {
+    commentMap.set(Number(comment.id), comment);
+  });
+
+  const resolveSecretThreadOwnerId = (comment, visiting = new Set()) => {
+    if (!comment || !comment.isSecret) return null;
+    if (Object.prototype.hasOwnProperty.call(comment, 'secretThreadOwnerId')) {
+      return comment.secretThreadOwnerId;
+    }
+
+    if (visiting.has(Number(comment.id))) {
+      comment.secretThreadOwnerId = getCommentAuthorId(comment);
+      return comment.secretThreadOwnerId;
+    }
+
+    visiting.add(Number(comment.id));
+    const parentId = getCommentParentId(comment);
+    const parentComment = parentId ? commentMap.get(Number(parentId)) : null;
+    const parentSecretThreadOwnerId = parentComment && parentComment.isSecret
+      ? resolveSecretThreadOwnerId(parentComment, visiting)
+      : null;
+
+    comment.secretThreadOwnerId = parentSecretThreadOwnerId ?? getCommentAuthorId(comment);
+    visiting.delete(Number(comment.id));
+    return comment.secretThreadOwnerId;
+  };
+
+  comments.forEach((comment) => {
+    comment.secretThreadOwnerId = comment.isSecret ? resolveSecretThreadOwnerId(comment) : null;
+  });
+
+  return comments;
 }
+
 
 function formatAnonymousAuthorNickname(nickname, currentUser) {
   const trimmedNickname = String(nickname || '').trim();
@@ -248,29 +316,29 @@ function sanitizeCommentForViewer(comment, post, currentUser) {
   }
 
   if (normalized.isDeleted && !isAdminUser) {
-    return {
+    return stripSecretThreadMetadata({
       ...normalized,
       content: '삭제된 댓글입니다.',
       authorNickname: '알 수 없음'
-    };
+    });
   }
 
   if (normalized.isHidden) {
-    return {
+    return stripSecretThreadMetadata({
       ...normalized,
       content: '관리자에 의해 제한된 댓글입니다.'
-    };
+    });
   }
 
   if (canViewSecretComment(normalized, post, currentUser)) {
-    return normalized;
+    return stripSecretThreadMetadata(normalized);
   }
 
-  return {
+  return stripSecretThreadMetadata({
     ...normalized,
     content: '비밀댓글입니다.',
     authorNickname: '비공개'
-  };
+  });
 }
 
 async function listPosts(req, res, next) {
@@ -313,7 +381,7 @@ async function getPost(req, res, next) {
     await postModel.incrementPostViewCount(postId);
 
     const postDetail = await postModel.findPostDetailById(postId);
-    const comments = await postModel.listComments(postId);
+    const comments = annotateSecretThreadOwnerIds(await postModel.listComments(postId));
     const visibleComments = comments.map((comment) => sanitizeCommentForViewer(comment, post, req.user));
     const adjacentPosts = await postModel.findAdjacentPosts(postId);
 
@@ -561,7 +629,7 @@ async function listComments(req, res, next) {
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
     if (!ensurePostAccessible(post, res)) return;
 
-    const comments = await postModel.listComments(postId);
+    const comments = annotateSecretThreadOwnerIds(await postModel.listComments(postId));
     const visibleComments = comments.map((comment) => sanitizeCommentForViewer(comment, post, req.user));
     res.json(visibleComments);
   } catch (error) {
@@ -590,15 +658,17 @@ async function createComment(req, res, next) {
 
     let parentComment = null;
     if (parentId) {
-      parentComment = await postModel.findCommentById(parentId);
-      if (!parentComment || Number(parentComment.post_id) !== Number(postId)) {
+      const existingComments = annotateSecretThreadOwnerIds(await postModel.listComments(postId));
+      parentComment = existingComments.find((comment) => Number(comment.id) === Number(parentId));
+      if (!parentComment) {
         return res.status(400).json({ message: '같은 게시글의 댓글에만 답글을 작성할 수 있습니다.' });
       }
 
       const normalizedParent = {
-        userId: parentComment.user_id,
-        isSecret: Boolean(parentComment.is_secret),
-        isDeleted: Boolean(parentComment.is_deleted)
+        userId: getCommentAuthorId(parentComment),
+        isSecret: Boolean(parentComment.isSecret),
+        isDeleted: Boolean(parentComment.isDeleted),
+        secretThreadOwnerId: getSecretThreadOwnerId(parentComment)
       };
 
       if (!canReplyToComment(normalizedParent, post, req.user)) {
@@ -607,7 +677,7 @@ async function createComment(req, res, next) {
     }
 
     const secretCommentRequested = Boolean(isSecret);
-    const inheritedSecretFromParent = Boolean(parentComment && parentComment.is_secret);
+    const inheritedSecretFromParent = Boolean(parentComment && parentComment.isSecret);
     const shouldCreateSecretComment = secretCommentRequested || inheritedSecretFromParent;
 
     if (isBusinessUser(req.user) && secretCommentRequested && !inheritedSecretFromParent) {
@@ -624,7 +694,7 @@ async function createComment(req, res, next) {
     const pointResult = await awardPointByAction(req.user.id, 'CREATE_COMMENT');
     await postModel.updateCommentPointAwarded(commentId, pointResult.awarded);
 
-    const comments = await postModel.listComments(postId);
+    const comments = annotateSecretThreadOwnerIds(await postModel.listComments(postId));
     const visibleComments = comments.map((comment) => sanitizeCommentForViewer(comment, post, req.user));
     res.status(201).json({ success: true, comments: visibleComments });
   } catch (error) {
@@ -670,7 +740,7 @@ async function updateComment(req, res, next) {
 
     await postModel.updateComment(commentId, content);
     const post = await postModel.findPostById(comment.post_id);
-    const comments = await postModel.listComments(comment.post_id);
+    const comments = annotateSecretThreadOwnerIds(await postModel.listComments(comment.post_id));
     const visibleComments = comments.map((item) => sanitizeCommentForViewer(item, post, req.user));
     res.json({ success: true, comments: visibleComments });
   } catch (error) {
@@ -703,7 +773,7 @@ async function deleteComment(req, res, next) {
 
     await postModel.deleteComment(commentId);
     const post = await postModel.findPostById(comment.post_id);
-    const comments = await postModel.listComments(comment.post_id);
+    const comments = annotateSecretThreadOwnerIds(await postModel.listComments(comment.post_id));
     const visibleComments = comments.map((item) => sanitizeCommentForViewer(item, post, req.user));
     res.json({ success: true, comments: visibleComments });
   } catch (error) {
