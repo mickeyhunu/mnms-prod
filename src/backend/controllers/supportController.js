@@ -2,6 +2,7 @@
  * 파일 역할: 공지사항/FAQ 요청을 처리하는 컨트롤러 파일.
  */
 const supportModel = require('../models/supportModel');
+const postModel = require('../models/postModel');
 const { normalizeExistingFileUrls, parseDataUrl, uploadDataUrlToS3 } = require('../utils/fileUpload');
 
 const EXTENSION_BY_MIME = {
@@ -15,6 +16,61 @@ const EXTENSION_BY_MIME = {
 function parseId(value) {
   const id = Number.parseInt(value, 10);
   return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+function isSameUserId(left, right) {
+  if (left == null || right == null) return false;
+  return Number(left) === Number(right);
+}
+
+async function resolveSecretCommentOwnerId(comment) {
+  if (!comment?.is_secret) {
+    return null;
+  }
+
+  let current = comment;
+  const visitedCommentIds = new Set();
+
+  while (current?.parent_id) {
+    if (visitedCommentIds.has(Number(current.id))) {
+      break;
+    }
+
+    visitedCommentIds.add(Number(current.id));
+    const parentComment = await postModel.findCommentById(current.parent_id);
+    if (!parentComment?.is_secret) {
+      break;
+    }
+
+    current = parentComment;
+  }
+
+  return current?.user_id ?? current?.userId ?? null;
+}
+
+async function canCreateCommentReport({ type, targetType, targetId, currentUser }) {
+  if (type !== supportModel.INQUIRY_TYPES.COMMENT_REPORT || targetType !== 'comment' || !targetId) {
+    return true;
+  }
+
+  const comment = await postModel.findCommentById(targetId);
+  if (!comment) {
+    return false;
+  }
+
+  if (!comment.is_secret) {
+    return true;
+  }
+
+  const post = await postModel.findPostById(comment.post_id);
+  if (!post) {
+    return false;
+  }
+
+  const secretCommentOwnerId = await resolveSecretCommentOwnerId(comment);
+
+  return isSameUserId(currentUser?.id, post.user_id ?? post.userId)
+    || isSameUserId(currentUser?.id, secretCommentOwnerId);
 }
 
 
@@ -192,6 +248,16 @@ async function createInquiry(req, res, next) {
     const targetId = parseId(req.body.targetId);
 
     if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
+
+    const canReport = await canCreateCommentReport({
+      type,
+      targetType,
+      targetId,
+      currentUser: req.user
+    });
+    if (!canReport) {
+      return res.status(403).json({ message: '비밀댓글은 게시글 작성자와 비밀댓글 작성자만 신고할 수 있습니다.' });
+    }
 
     const id = await supportModel.createInquiry({
       userId: req.user.id,

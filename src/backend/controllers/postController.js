@@ -206,6 +206,23 @@ function canReplyToComment(comment, post, currentUser) {
   return canParticipateInSecretComment(comment, post, currentUser);
 }
 
+function canReportComment(comment, post, currentUser) {
+  if (!currentUser || comment.isDeleted || comment.isHidden) {
+    return false;
+  }
+
+  if (isSameUserId(currentUser.id, getCommentAuthorId(comment))) {
+    return false;
+  }
+
+  if (!comment.isSecret) {
+    return true;
+  }
+
+  return isSameUserId(currentUser.id, getPostAuthorId(post))
+    || isSameUserId(currentUser.id, getSecretThreadOwnerId(comment));
+}
+
 function annotateSecretThreadOwnerIds(comments = []) {
   const commentMap = new Map();
 
@@ -306,6 +323,7 @@ function sanitizeCommentForViewer(comment, post, currentUser) {
   };
 
   normalized.canReply = canReplyToComment(normalized, post, currentUser);
+  normalized.canReport = canReportComment(normalized, post, currentUser);
 
   const isAdminUser = isAdminViewer(currentUser);
 
