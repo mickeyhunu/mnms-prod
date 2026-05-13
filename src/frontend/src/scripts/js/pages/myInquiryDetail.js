@@ -62,6 +62,46 @@ function renderAttachmentList(attachmentUrls = []) {
     `;
 }
 
+function getInquiryTargetTypeLabel(targetType) {
+    const normalized = String(targetType || '').toLowerCase();
+    if (normalized === 'post') return '게시글';
+    if (normalized === 'comment') return '댓글';
+    return '대상';
+}
+
+function truncateText(value, maxLength = 120) {
+    const normalized = String(value || '').replace(/\s+/g, ' ').trim();
+    if (normalized.length <= maxLength) return normalized;
+    return `${normalized.slice(0, maxLength)}...`;
+}
+
+function renderInquiryTargetBlock(inquiry) {
+    const target = inquiry?.target;
+    const targetType = target?.type || inquiry?.targetType;
+    const targetId = target?.id || inquiry?.targetId;
+    if (!targetType || !targetId) return '';
+
+    const typeLabel = getInquiryTargetTypeLabel(targetType);
+    const postTitle = target?.postTitle || target?.title || '';
+    const content = target?.content || '';
+    const href = target?.url || (target?.postId ? `/post-detail?id=${encodeURIComponent(target.postId)}` : '');
+    const statusText = target?.isDeleted ? '삭제됨' : (target?.isHidden ? '가려짐' : '');
+    const statusBadge = statusText ? ` <span class="my-inquiry-info-value">(${escapeHtml(statusText)})</span>` : '';
+    const titleLine = postTitle ? escapeHtml(truncateText(postTitle, 100)) : `${escapeHtml(typeLabel)} #${escapeHtml(targetId)}`;
+    const linkedTitle = href
+        ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${titleLine}</a>`
+        : titleLine;
+    const contentLine = content ? `<p class="my-inquiry-content">${escapeHtml(truncateText(content, 160))}</p>` : '';
+
+    return `
+        <div class="my-inquiry-detail-block">
+            <h3>신고 대상</h3>
+            <p class="my-inquiry-content"><strong>${escapeHtml(typeLabel)} #${escapeHtml(targetId)}</strong>${statusBadge}<br>${linkedTitle}</p>
+            ${contentLine}
+        </div>
+    `;
+}
+
 function getInquiryTypeLabel(type) {
     const normalized = String(type || '').toLowerCase();
     if (normalized === 'post_report') return '게시글 신고';
@@ -109,6 +149,7 @@ async function renderInquiryDetail() {
                 <time class="my-inquiry-info-value">${escapeHtml(createdAt)}</time>
             </div>
         </div>
+        ${renderInquiryTargetBlock(inquiry)}
         <div class="my-inquiry-detail-block">
             <h3>문의 내용</h3>
             <p class="my-inquiry-content">${renderLinkedText(inquiry.content || '')}</p>
