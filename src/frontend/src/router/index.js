@@ -24,7 +24,7 @@ const routes = [
   { path: '/post-detail', component: PageView, meta: { pageKey: 'post-detail', title: '업소 리뷰 상세', description: '회원이 작성한 업소 추천 리뷰, 방문 후기, 가격 정보를 상세하게 확인하세요.', keywords: ['업소 리뷰', '방문 후기', '업소 가격 정보', '추천 업소', '커뮤니티 후기'] } },
   { path: '/community', component: PageView, meta: { pageKey: 'community', title: '업소 추천 커뮤니티', description: '자유·익명·후기 게시판에서 최저가 업소 추천과 리얼 리뷰 후기를 탐색해보세요.', keywords: ['업소 추천 커뮤니티', '리뷰 후기', '최저가 업소', '익명 게시판', '남성 커뮤니티', '유흥 커뮤니티', '밤문화'] } },
   { path: '/my-page', component: PageView, meta: { pageKey: 'my-page', title: '마이페이지', description: '내 계정 정보와 활동 내역, 포인트를 확인하세요.', noindex: true } },
-  { path: '/my-page/profile', component: PageView, meta: { pageKey: 'my-page-profile', title: '내 프로필', description: '닉네임, 이메일 등 내 프로필 정보를 관리하세요.', noindex: true } },
+  { path: '/my-page/profile', component: PageView, meta: { pageKey: 'my-page-profile', title: '내 프로필', description: '닉네임, 비밀번호 등 내 프로필 정보를 관리하세요.', noindex: true } },
   { path: '/my-page/activity', component: PageView, meta: { pageKey: 'my-page-activity', title: '내 활동', description: '내가 작성한 게시글, 댓글, 활동 기록을 확인하세요.', noindex: true } },
   { path: '/my-page/points', component: PageView, meta: { pageKey: 'my-page-points', title: '포인트', description: '보유 포인트와 적립/차감 내역을 확인하세요.', noindex: true } },
   { path: '/my-page/support', component: PageView, meta: { pageKey: 'my-page-support', title: '고객센터', description: '문의, FAQ, 공지사항 등 고객지원 메뉴를 확인하세요.' } },
