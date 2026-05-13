@@ -86,12 +86,55 @@ function parseAttachmentUrls(raw) {
   }
 }
 
-function normalizeInquiryRow(row) {
+function buildInquiryTarget(row) {
+  const targetType = String(row.targetType || row.target_type || '').trim().toLowerCase();
+  const targetId = Number(row.targetId || row.target_id || 0);
+  if (!targetType || !targetId) return null;
+
+  const postId = Number(row.targetPostId || row.target_post_id || (targetType === 'post' ? targetId : 0)) || null;
+  const postTitle = row.targetPostTitle || row.target_post_title || null;
+  const content = row.targetContent || row.target_content || null;
+  const authorNickname = row.targetAuthorNickname || row.target_author_nickname || null;
+  const isDeleted = Boolean(row.targetIsDeleted ?? row.target_is_deleted);
+  const isHidden = Boolean(row.targetIsHidden ?? row.target_is_hidden);
+
   return {
-    ...row,
-    attachmentUrls: parseAttachmentUrls(row.attachmentUrls)
+    type: targetType,
+    id: targetId,
+    postId,
+    postTitle,
+    title: targetType === 'post' ? postTitle : null,
+    content,
+    authorNickname,
+    isDeleted,
+    isHidden,
+    url: postId ? `/post-detail?id=${encodeURIComponent(postId)}` : null
   };
 }
+
+function normalizeInquiryRow(row) {
+  const target = buildInquiryTarget(row);
+  return {
+    ...row,
+    attachmentUrls: parseAttachmentUrls(row.attachmentUrls),
+    target
+  };
+}
+
+const INQUIRY_TARGET_SELECT_SQL = `
+            CASE WHEN i.target_type = 'post' THEN p.id WHEN i.target_type = 'comment' THEN c.post_id ELSE NULL END AS targetPostId,
+            CASE WHEN i.target_type = 'post' THEN p.title WHEN i.target_type = 'comment' THEN cp.title ELSE NULL END AS targetPostTitle,
+            CASE WHEN i.target_type = 'post' THEN p.content WHEN i.target_type = 'comment' THEN c.content ELSE NULL END AS targetContent,
+            CASE WHEN i.target_type = 'post' THEN COALESCE(pu.nickname, '비회원') WHEN i.target_type = 'comment' THEN COALESCE(cu.nickname, '비회원') ELSE NULL END AS targetAuthorNickname,
+            CASE WHEN i.target_type = 'post' THEN p.is_deleted WHEN i.target_type = 'comment' THEN c.is_deleted ELSE NULL END AS targetIsDeleted,
+            CASE WHEN i.target_type = 'post' THEN p.is_hidden WHEN i.target_type = 'comment' THEN c.is_hidden ELSE NULL END AS targetIsHidden`;
+
+const INQUIRY_TARGET_JOIN_SQL = `
+     LEFT JOIN posts p ON i.target_type = 'post' AND p.id = i.target_id
+     LEFT JOIN users pu ON pu.id = p.user_id
+     LEFT JOIN comments c ON i.target_type = 'comment' AND c.id = i.target_id
+     LEFT JOIN posts cp ON cp.id = c.post_id
+     LEFT JOIN users cu ON cu.id = c.user_id`;
 
 async function listArticles(category, includeDeleted = false, { sourceType = null } = {}) {
   const pool = getPool();
@@ -233,8 +276,10 @@ async function listInquiriesByUser(userId) {
             i.target_type AS targetType, i.target_id AS targetId,
             i.title, i.content, i.attachment_urls AS attachmentUrls, i.status,
             i.answer_content AS answerContent, i.answered_at AS answeredAt,
-            i.created_at AS createdAt, i.updated_at AS updatedAt
+            i.created_at AS createdAt, i.updated_at AS updatedAt,
+${INQUIRY_TARGET_SELECT_SQL}
      FROM support_inquiries i
+${INQUIRY_TARGET_JOIN_SQL}
      WHERE i.user_id = ?
      ORDER BY i.created_at DESC, i.id DESC`,
     [userId]
@@ -244,7 +289,16 @@ async function listInquiriesByUser(userId) {
 
 async function findInquiryById(id) {
   const pool = getPool();
-  const [rows] = await pool.query('SELECT *, attachment_urls AS attachmentUrls FROM support_inquiries WHERE id = ? LIMIT 1', [id]);
+  const [rows] = await pool.query(
+    `SELECT i.*, i.attachment_urls AS attachmentUrls,
+            i.target_type AS targetType, i.target_id AS targetId,
+${INQUIRY_TARGET_SELECT_SQL}
+     FROM support_inquiries i
+${INQUIRY_TARGET_JOIN_SQL}
+     WHERE i.id = ?
+     LIMIT 1`,
+    [id]
+  );
   return rows[0] ? normalizeInquiryRow(rows[0]) : null;
 }
 
@@ -267,10 +321,12 @@ async function listInquiriesForAdmin({ status = null } = {}) {
             i.answer_content AS answerContent, i.answered_at AS answeredAt,
             i.created_at AS createdAt, i.updated_at AS updatedAt,
             i.answered_by AS answeredBy,
-            au.nickname AS answeredByNickname
+            au.nickname AS answeredByNickname,
+${INQUIRY_TARGET_SELECT_SQL}
      FROM support_inquiries i
      INNER JOIN users u ON u.id = i.user_id
      LEFT JOIN users au ON au.id = i.answered_by
+${INQUIRY_TARGET_JOIN_SQL}
      WHERE ${conditions.join(' AND ')}
      ORDER BY i.created_at DESC, i.id DESC`,
     values

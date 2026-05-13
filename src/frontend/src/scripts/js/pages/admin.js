@@ -362,7 +362,7 @@ function getAdminFilteredItems(prefix) {
         entries: ['workerName', 'entryId'],
         ads: ['id', 'title', 'adType', 'storeNo', 'linkUrl', 'imageUrl', 'displayOrder'],
         support: ['id', 'title', 'category', 'sourceType'],
-        inquiries: ['id', 'title', 'userNickname', 'userLoginId', 'userId', 'type', 'status']
+        inquiries: ['id', 'title', 'userNickname', 'userLoginId', 'userId', 'type', 'status', (item) => item.target?.postTitle, (item) => item.target?.content, 'targetId', 'targetType']
     };
 
     const searchConfig = getAdminSearchConfig(prefix);
@@ -819,7 +819,7 @@ function renderPostsTable() {
     updateAdminTotal('posts', filteredItems.length);
 
     if (!pageItems.length) {
-        tbody.innerHTML = `<tr><td colspan="7">${filteredItems.length ? '현재 페이지에 표시할 게시글이 없습니다.' : '게시글이 없습니다.'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8">${filteredItems.length ? '현재 페이지에 표시할 게시글이 없습니다.' : '게시글이 없습니다.'}</td></tr>`;
     } else {
         tbody.innerHTML = pageItems.map((post) => {
             const isHidden = isHiddenPost(post);
@@ -1165,6 +1165,40 @@ function bindSupportActionButtons(container) {
     });
 }
 
+function getInquiryTargetTypeLabel(targetType) {
+    const normalized = String(targetType || '').toLowerCase();
+    if (normalized === 'post') return '게시글';
+    if (normalized === 'comment') return '댓글';
+    return '대상';
+}
+
+function truncateText(value, maxLength = 80) {
+    const normalized = String(value || '').replace(/\s+/g, ' ').trim();
+    if (normalized.length <= maxLength) return normalized;
+    return `${normalized.slice(0, maxLength)}...`;
+}
+
+function renderInquiryTargetSummary(inquiry, { compact = false } = {}) {
+    const target = inquiry?.target;
+    const targetType = target?.type || inquiry?.targetType;
+    const targetId = target?.id || inquiry?.targetId;
+    if (!targetType || !targetId) return '<span class="text-muted">-</span>';
+
+    const typeLabel = getInquiryTargetTypeLabel(targetType);
+    const postTitle = target?.postTitle || target?.title || '';
+    const content = target?.content || '';
+    const deletedOrHidden = target?.isDeleted ? '삭제됨' : (target?.isHidden ? '가려짐' : '');
+    const statusBadge = deletedOrHidden ? ` <span class="text-muted">(${sanitizeHTML(deletedOrHidden)})</span>` : '';
+    const titleLine = postTitle ? sanitizeHTML(truncateText(postTitle, compact ? 34 : 70)) : `${typeLabel} #${sanitizeHTML(targetId)}`;
+    const contentLine = content ? `<div class="text-muted">${sanitizeHTML(truncateText(content, compact ? 42 : 100))}</div>` : '';
+    const href = target?.url || (target?.postId ? `/post-detail?id=${encodeURIComponent(target.postId)}` : '');
+    const linkedTitle = href
+        ? `<a href="${sanitizeHTML(href)}" target="_blank" rel="noopener noreferrer">${titleLine}</a>`
+        : titleLine;
+
+    return `<div class="admin-inquiry-target-summary"><strong>${sanitizeHTML(typeLabel)} #${sanitizeHTML(targetId)}</strong>${statusBadge}<div>${linkedTitle}</div>${contentLine}</div>`;
+}
+
 function renderInquiriesTable() {
     const tbody = document.getElementById('inquiries-tbody');
     if (!tbody) return;
@@ -1173,7 +1207,7 @@ function renderInquiriesTable() {
     updateAdminTotal('inquiries', filteredItems.length);
 
     if (!pageItems.length) {
-        tbody.innerHTML = `<tr><td colspan="7">${filteredItems.length ? '현재 페이지에 표시할 문의가 없습니다.' : '접수된 문의가 없습니다.'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8">${filteredItems.length ? '현재 페이지에 표시할 문의가 없습니다.' : '접수된 문의가 없습니다.'}</td></tr>`;
     } else {
         tbody.innerHTML = pageItems.map((inquiry) => {
             const status = toInquiryStatusInfo(inquiry.status);
@@ -1182,6 +1216,7 @@ function renderInquiriesTable() {
                     <td>${inquiry.id}</td>
                     <td>${sanitizeHTML(inquiry.userNickname || inquiry.userLoginId || `회원#${inquiry.userId}`)}</td>
                     <td>${toInquiryTypeLabel(inquiry.type)}</td>
+                    <td>${renderInquiryTargetSummary(inquiry, { compact: true })}</td>
                     <td>${sanitizeHTML(inquiry.title || '')}</td>
                     <td><span class="my-inquiry-status ${status.className}">${status.text}</span></td>
                     <td>${formatDate(inquiry.createdAt || inquiry.created_at)}</td>
@@ -2026,7 +2061,7 @@ async function openInquiryAnswerModal(inquiryId) {
 
         inquiryAnswerTarget = target;
         document.getElementById('inquiry-answer-modal-title').textContent = `문의 #${target.id} 답변`;
-        document.getElementById('inquiry-answer-target').textContent = `${toInquiryTypeLabel(target.type)} · ${target.userNickname || target.userLoginId || `회원#${target.userId}`} · ${target.title || ''}`;
+        document.getElementById('inquiry-answer-target').innerHTML = `${sanitizeHTML(toInquiryTypeLabel(target.type))} · ${sanitizeHTML(target.userNickname || target.userLoginId || `회원#${target.userId}`)} · ${sanitizeHTML(target.title || '')}<div style="margin-top:6px;">${renderInquiryTargetSummary(target)}</div>`;
         document.getElementById('inquiry-answer-content').value = target.answerContent || '';
         showAdminModal('inquiry-answer-modal');
     } catch (error) {
