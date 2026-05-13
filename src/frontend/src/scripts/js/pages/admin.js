@@ -1207,7 +1207,7 @@ function renderInquiriesTable() {
     updateAdminTotal('inquiries', filteredItems.length);
 
     if (!pageItems.length) {
-        tbody.innerHTML = `<tr><td colspan="8">${filteredItems.length ? '현재 페이지에 표시할 문의가 없습니다.' : '접수된 문의가 없습니다.'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7">${filteredItems.length ? '현재 페이지에 표시할 문의가 없습니다.' : '접수된 문의가 없습니다.'}</td></tr>`;
     } else {
         tbody.innerHTML = pageItems.map((inquiry) => {
             const status = toInquiryStatusInfo(inquiry.status);
@@ -1216,7 +1216,6 @@ function renderInquiriesTable() {
                     <td>${inquiry.id}</td>
                     <td>${sanitizeHTML(inquiry.userNickname || inquiry.userLoginId || `회원#${inquiry.userId}`)}</td>
                     <td>${toInquiryTypeLabel(inquiry.type)}</td>
-                    <td>${renderInquiryTargetSummary(inquiry, { compact: true })}</td>
                     <td>${sanitizeHTML(inquiry.title || '')}</td>
                     <td><span class="my-inquiry-status ${status.className}">${status.text}</span></td>
                     <td>${formatDate(inquiry.createdAt || inquiry.created_at)}</td>
