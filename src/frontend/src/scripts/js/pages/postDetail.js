@@ -934,7 +934,9 @@ function createCommentItem(comment, depth = 0) {
     const canReply = Auth.isAuthenticated() && depth < 3 && !isDeletedComment && !isHiddenComment && canReplyByServer;
     const canGuestEdit = !Auth.isAuthenticated() && !comment.userId;
     const isOtherUser = Auth.isAuthenticated() && currentUser && !isAuthor;
-    const hasActionMenu = !isDeletedComment && !isHiddenComment && (isAuthor || canGuestEdit || isOtherUser);
+    const canReportCommentByServer = comment.canReport !== false;
+    const canReport = isOtherUser && canReportCommentByServer;
+    const hasActionMenu = !isDeletedComment && !isHiddenComment && (isAuthor || canGuestEdit || canReport);
     const replyMarker = depth > 0 ? '<span class="comment-reply-marker" aria-hidden="true"></span>' : '';
     
     
@@ -960,7 +962,7 @@ function createCommentItem(comment, depth = 0) {
                                         <button class="comment-action-menu-btn" type="button" onclick="showCommentEditForm(${comment.id})">수정</button>
                                         <button class="comment-action-menu-btn danger" type="button" onclick="deleteComment(${comment.id})">삭제</button>
                                     ` : ''}
-                                    ${isOtherUser ? `<button class="comment-action-menu-btn danger" type="button" onclick="reportComment(${comment.id})">신고</button>` : ''}
+                                    ${canReport ? `<button class="comment-action-menu-btn danger" type="button" onclick="reportComment(${comment.id})">신고</button>` : ''}
                                 </div>
                             </div>
                         ` : ''}
