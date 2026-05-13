@@ -141,7 +141,7 @@ export const adminTemplate = `
                         <input type="search" id="users-search-input" class="form-control admin-list-toolbar__search" placeholder="회원 검색" aria-label="회원 검색">
                     </div>
                     <div class="admin-table-container hidden" id="users-content">
-                        <table class="admin-table"><thead><tr><th>ID</th><th>이메일</th><th>닉네임</th><th>계정상태</th><th>포인트</th><th>가입일</th><th>권한</th><th>회원구분</th><th>관리</th></tr></thead><tbody id="users-tbody"></tbody></table>
+                        <table class="admin-table"><thead><tr><th>ID</th><th>아이디</th><th>닉네임</th><th>계정상태</th><th>포인트</th><th>가입일</th><th>권한</th><th>회원구분</th><th>관리</th></tr></thead><tbody id="users-tbody"></tbody></table>
                     </div>
                     <div class="admin-pagination hidden" id="users-pagination"></div>
                 </div>
