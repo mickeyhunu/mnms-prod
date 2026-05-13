@@ -340,7 +340,7 @@ export const adminTemplate = `
                         <input type="search" id="inquiries-search-input" class="form-control admin-list-toolbar__search" placeholder="1:1 문의 검색" aria-label="1:1 문의 검색">
                     </div>
                     <div class="admin-table-container hidden" id="inquiries-content">
-                        <table class="admin-table"><thead><tr><th>ID</th><th>회원</th><th>유형</th><th>신고 대상</th><th>제목</th><th>상태</th><th>접수일</th><th>관리</th></tr></thead><tbody id="inquiries-tbody"></tbody></table>
+                        <table class="admin-table"><thead><tr><th>ID</th><th>회원</th><th>유형</th><th>제목</th><th>상태</th><th>접수일</th><th>관리</th></tr></thead><tbody id="inquiries-tbody"></tbody></table>
                     </div>
                     <div class="admin-pagination hidden" id="inquiries-pagination"></div>
                 </div>
