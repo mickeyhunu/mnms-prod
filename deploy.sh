@@ -1,5 +1,5 @@
 cd Documents/aws
-ssh -i .\mmnsKey.pem ubuntu@43.202.61.53 --- cmd에서 우분투 접속
+ssh -i .\mmnsKey.pem ubuntu@43.200.206.187 --- cmd에서 우분투 접속
 
 
 @pm2
