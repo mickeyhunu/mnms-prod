@@ -11,6 +11,7 @@ const BOARD_TYPES = {
   ANON: 'ANON',
   REVIEW: 'REVIEW',
   STORY: 'STORY',
+  ATTENDANCE: 'ATTENDANCE',
   QUESTION: 'QUESTION',
   EVENT: 'EVENT',
   PROMOTION: 'PROMOTION'
@@ -229,6 +230,23 @@ async function listPosts(page = 0, size = 10, options = {}) {
     })),
     total: Number(countRows[0].total)
   };
+}
+
+
+async function findUserAttendancePostForCurrentDbDay(userId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT id, created_at AS createdAt
+       FROM posts
+      WHERE user_id = ?
+        AND board_type = ?
+        AND created_at >= CURRENT_DATE()
+        AND created_at < DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)
+      ORDER BY created_at ASC, id ASC
+      LIMIT 1`,
+    [userId, BOARD_TYPES.ATTENDANCE]
+  );
+  return rows[0] || null;
 }
 
 async function createPost({ userId, title, content, imageUrls = [], boardType = BOARD_TYPES.FREE, isNotice = false, noticeType = null, isPinned = false, noticeTargetBoards = [] }) {
@@ -563,6 +581,7 @@ async function listBestPosts() {
 module.exports = {
   BOARD_TYPES,
   listPosts,
+  findUserAttendancePostForCurrentDbDay,
   createPost,
   findPostById,
   findPostDetailById,
