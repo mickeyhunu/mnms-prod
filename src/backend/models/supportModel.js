@@ -58,7 +58,7 @@ function normalizeSourceType(sourceType) {
 function normalizeBoardType(boardType) {
   const normalized = String(boardType || '').toUpperCase();
   if (normalized === SUPPORT_ONLY_BOARD_TYPE) return SUPPORT_ONLY_BOARD_TYPE;
-  return ['FREE', 'ANON', 'REVIEW', 'STORY', 'QUESTION', 'EVENT', 'PROMOTION'].includes(normalized)
+  return ['FREE', 'ANON', 'REVIEW', 'STORY', 'ATTENDANCE', 'QUESTION', 'EVENT', 'PROMOTION'].includes(normalized)
     ? normalized
     : SUPPORT_ONLY_BOARD_TYPE;
 }

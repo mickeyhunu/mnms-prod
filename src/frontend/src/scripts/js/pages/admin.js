@@ -444,6 +444,7 @@ function getBoardTypeLabel(boardType) {
         ANON: '익명',
         REVIEW: '후기',
         STORY: '썰',
+        ATTENDANCE: '출석',
         QUESTION: '질문',
         PROMOTION: '홍보'
     };
@@ -1107,6 +1108,7 @@ function getSupportBoardTypeLabel(boardType) {
         ANON: '익명게시판',
         REVIEW: '후기게시판',
         STORY: '썰게시판',
+        ATTENDANCE: '출석게시판',
         QUESTION: '질문게시판',
         EVENT: '이벤트게시판',
         PROMOTION: '홍보게시판'
@@ -1279,6 +1281,7 @@ function formatAdminActivityBoardLabel(boardType) {
     if (normalized === 'ANON') return '익명';
     if (normalized === 'REVIEW') return '후기';
     if (normalized === 'STORY') return '썰';
+    if (normalized === 'ATTENDANCE') return '출석';
     if (normalized === 'QUESTION') return '질문';
     if (normalized === 'PROMOTION') return '홍보';
     return normalized || '-';

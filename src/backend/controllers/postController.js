@@ -16,6 +16,7 @@ const BOARD_TYPES = postModel.BOARD_TYPES || {
   ANON: 'ANON',
   REVIEW: 'REVIEW',
   STORY: 'STORY',
+  ATTENDANCE: 'ATTENDANCE',
   QUESTION: 'QUESTION',
   EVENT: 'EVENT',
   PROMOTION: 'PROMOTION'
@@ -481,6 +482,12 @@ async function createPost(req, res, next) {
     }
     if (isBusinessUser(req.user) && boardType !== BOARD_TYPES.PROMOTION) {
       return res.status(403).json({ message: '광고자 계정은 홍보게시판에만 글을 작성할 수 있습니다.' });
+    }
+    if (boardType === BOARD_TYPES.ATTENDANCE) {
+      const existingAttendancePost = await postModel.findUserAttendancePostForCurrentDbDay(req.user.id);
+      if (existingAttendancePost) {
+        return res.status(409).json({ message: '출석게시판은 한국시간 기준 하루에 한 번만 글을 작성할 수 있습니다.' });
+      }
     }
     const isNotice = isAdmin ? Boolean(req.body.isNotice) : false;
     const noticeType = isNotice ? parseNoticeType(req.body.noticeType) || 'NOTICE' : null;
