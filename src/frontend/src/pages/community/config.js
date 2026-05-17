@@ -34,6 +34,7 @@ const communityTemplate = `
                         <button type="button" class="board-tab" data-board-type="ANON">익명게시판</button>
                         <button type="button" class="board-tab" data-board-type="REVIEW">후기게시판</button>
                         <button type="button" class="board-tab" data-board-type="STORY">썰게시판</button>
+                        <button type="button" class="board-tab" data-board-type="ATTENDANCE">출석게시판</button>
                         <button type="button" class="board-tab" data-board-type="QUESTION">질문게시판</button>
                         <button type="button" class="board-tab" data-board-type="EVENT">이벤트게시판</button>
                         <button type="button" class="board-tab" data-board-type="PROMOTION">홍보게시판</button>
