@@ -486,7 +486,7 @@ async function createPost(req, res, next) {
     if (boardType === BOARD_TYPES.ATTENDANCE) {
       const existingAttendancePost = await postModel.findUserAttendancePostForCurrentDbDay(req.user.id);
       if (existingAttendancePost) {
-        return res.status(409).json({ message: '출석게시판은 한국시간 기준 하루에 한 번만 글을 작성할 수 있습니다.' });
+        return res.status(409).json({ message: '출석게시판은 하루에 한 번만 글을 작성할 수 있습니다.' });
       }
     }
     const isNotice = isAdmin ? Boolean(req.body.isNotice) : false;
