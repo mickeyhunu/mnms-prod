@@ -558,7 +558,7 @@ async function listBestPosts() {
 
   const [todayRows] = await pool.query(
     `${selectQuery}
-     AND DATE(p.created_at) = CURDATE()
+     AND p.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
      AND COALESCE(stats.likeCount, 0) >= 3
      ORDER BY score DESC, p.created_at DESC
      LIMIT 5`
@@ -566,7 +566,7 @@ async function listBestPosts() {
 
   const [weeklyRows] = await pool.query(
     `${selectQuery}
-     AND p.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+     AND p.created_at >= DATE_SUB(NOW(), INTERVAL 168 HOUR)
      AND COALESCE(stats.likeCount, 0) >= 5
      ORDER BY score DESC, p.created_at DESC
      LIMIT 3`
