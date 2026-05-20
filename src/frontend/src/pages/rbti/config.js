@@ -2,7 +2,7 @@ import { createPageConfig } from '../shared/createPageConfig.js';
 
 const rbtiTemplate = `
 <main class="main-content">
-  <div class="container" style="max-width: 760px;">
+  <div class="container">
     <header class="community-section-header">
       <div class="community-header-left">
         <button type="button" class="icon-btn icon-btn-square" id="rbti-back-btn" aria-label="뒤로가기">
@@ -10,7 +10,7 @@ const rbtiTemplate = `
             <path d="m15 18-6-6 6-6"></path>
           </svg>
         </button>
-        <span class="community-board-name community-board-name--live"><span class="live-status-dot" aria-hidden="true"></span><span>LIVE</span></span>
+        <span class="community-board-name community-board-name--live"><span>RBTI</span></span>
       </div>
       <div class="community-actions" id="rbti-header-actions">
         <button type="button" class="icon-btn icon-btn-square" id="rbti-share-btn" aria-label="공유하기">

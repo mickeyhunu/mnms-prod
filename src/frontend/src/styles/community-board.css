@@ -297,12 +297,6 @@
     color: #666;
 }
 
-.community-container {
-    max-width: var(--main-content-unified-max-width, 920px);
-    background: #ffffff;
-    padding: 0 0 24px;
-}
-
 .notice-area {
     margin: 0 12px 12px;
 }

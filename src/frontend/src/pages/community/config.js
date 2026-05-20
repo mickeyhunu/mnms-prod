@@ -22,7 +22,7 @@ const communityTemplate = `
     </header>
 
     <main class="main-content">
-        <div class="container community-container">
+        <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
                     <button type="button" class="board-menu-toggle" id="board-menu-toggle" aria-label="카테고리 열기" aria-expanded="false" aria-controls="board-tabs-panel">
