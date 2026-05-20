@@ -1,14 +1,19 @@
 import { createPageConfig } from '../shared/createPageConfig.js';
 
 const rbtiTemplate = `
-<header class="header">
-  <div class="header-container">
-    <a href="/" class="logo"><h1>미드나잇 맨즈</h1></a>
-  </div>
-</header>
-
 <main class="main-content">
   <div class="container" style="max-width: 760px;">
+    <header class="community-section-header">
+      <div class="community-header-left">
+        <button type="button" class="community-back-link" id="rbti-back-btn" aria-label="뒤로가기">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+        </button>
+        <span class="community-board-name">RBTI</span>
+      </div>
+      <button type="button" class="community-more-btn" id="rbti-share-btn" aria-label="공유">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1L8.91 8.13A3 3 0 0 0 6 7a3 3 0 1 0 2.91 4.13l6.26 3.13A3 3 0 1 0 16 13c0 .34-.06.66-.17.97L9.57 10.84A3 3 0 0 0 9 9.5c0-.48.11-.93.31-1.34l6.26-3.13c.52.6 1.28.97 2.13.97a3 3 0 0 0 .3-6"></path></svg>
+      </button>
+    </header>
     <section class="card" style="padding: 20px; margin-top: 20px;">
       <h2 id="rbti-test-title">RBTI</h2>
       <p id="rbti-test-description" class="text-muted">질문을 불러오는 중...</p>
