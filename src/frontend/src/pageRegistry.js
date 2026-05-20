@@ -5,9 +5,11 @@ import { adminPageConfig } from './pages/admin/config.js';
 import { communityPageConfig } from './pages/community/config.js';
 import { livePageConfig } from './pages/live/config.js';
 import { postDetailPageConfig } from './pages/post-detail/config.js';
+import { rbtiPageConfig } from './pages/rbti/config.js';
 
 const pageRegistry = {
   'admin': adminPageConfig,
+  'rbti': rbtiPageConfig,
   'business-info': {
     template: `<header class="header">
         <div class="header-container">
