@@ -104,6 +104,7 @@
     }
   });
 
+
   submitButtonEl.addEventListener('click', () => {
     alert('결과 계산 로직은 다음 단계에서 연결됩니다.');
   });
