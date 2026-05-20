@@ -39,6 +39,7 @@ const routes = [
   { path: '/ad-profile-management', component: PageView, meta: { pageKey: 'ad-profile-management', title: '광고프로필 관리', description: '광고프로필 기본 정보와 상세 소개를 등록하고 미리보기를 확인하세요.', noindex: true } },
   { path: '/business-management', component: PageView, meta: { pageKey: 'business-management', title: '사업자정보 관리', description: '사업자등록증, 사업자 상세정보, 계산서 발행 정보를 관리하세요.', noindex: true } },
   { path: '/live', component: PageView, meta: { pageKey: 'live', title: '실시간 업소 라이브', description: '실시간 업소 라이브 소식, 엔트리 현황, 오늘의 추천 정보를 빠르게 확인하세요.', keywords: ['실시간 업소', '라이브 정보', '오늘의 추천 업소', '엔트리 현황', '지역 업소'] } },
+  { path: '/rbti', component: PageView, meta: { pageKey: 'rbti', title: 'RBTI 테스트', description: 'RBTI 성향 테스트 템플릿 페이지입니다.' } },
   { path: '/support', component: PageView, meta: { pageKey: 'support-board', title: '공지 및 고객지원', description: '커뮤니티 운영 공지, 이용 가이드, 자주 묻는 질문으로 서비스를 안전하게 이용하세요.', keywords: ['커뮤니티 공지', '고객지원', 'FAQ', '이용 가이드', '운영 정책'] } },
   { path: '/support/faq', component: PageView, meta: { pageKey: 'support-board', title: 'FAQ', description: '자주 묻는 질문과 답변을 모아볼 수 있습니다.' } },
   { path: '/customer-service', component: PageView, meta: { pageKey: 'customer-service', title: '1:1 문의', description: '서비스 이용 중 문제를 1:1 문의로 접수하세요.', noindex: true } },
