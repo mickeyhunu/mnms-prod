@@ -331,7 +331,6 @@ a:hover {
 body,
 .main-content,
 .container,
-.community-container,
 .board-table,
 .board-table-header th,
 .article-list,
@@ -347,7 +346,6 @@ body,
 .post-card,
 .message-card,
 .stats-card,
-.community-container,
 .notice-item,
 .service-item {
     border-radius: 0;
