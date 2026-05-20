@@ -1,12 +1,6 @@
 import { createPageConfig } from '../shared/createPageConfig.js';
 
 const rbtiTemplate = `
-<header class="header">
-  <div class="header-container">
-    <a href="/" class="logo"><h1>미드나잇 맨즈</h1></a>
-  </div>
-</header>
-
 <main class="main-content">
   <div class="container" style="max-width: 760px;">
     <section class="card" style="padding: 20px; margin-top: 20px;">
@@ -32,6 +26,7 @@ const rbtiTemplate = `
   </div>
 </main>
 `;
+
 
 export const rbtiPageConfig = createPageConfig({
   template: rbtiTemplate,
