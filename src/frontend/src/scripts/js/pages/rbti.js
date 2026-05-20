@@ -16,6 +16,8 @@
   const prevButtonEl = document.getElementById('rbti-prev-btn');
   const nextButtonEl = document.getElementById('rbti-next-btn');
   const submitButtonEl = document.getElementById('rbti-submit-btn');
+  const backButtonEl = document.getElementById('rbti-back-btn');
+  const shareButtonEl = document.getElementById('rbti-share-btn');
 
   const fallbackData = {
     testName: 'RBTI',
