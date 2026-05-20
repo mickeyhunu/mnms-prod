@@ -40,6 +40,7 @@ const rbtiTemplate = `
 </main>
 `;
 
+
 export const rbtiPageConfig = createPageConfig({
   template: rbtiTemplate,
   styles: ['styles/common.css', 'styles/layout.css', 'styles/components.css', 'styles/pages.css'],

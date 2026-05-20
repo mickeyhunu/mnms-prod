@@ -107,46 +107,6 @@
   });
 
 
-  if (backButtonEl) {
-    backButtonEl.addEventListener('click', () => {
-      if (window.history.length > 1) {
-        window.history.back();
-        return;
-      }
-      window.location.href = '/';
-    });
-  }
-
-  if (shareButtonEl) {
-    shareButtonEl.addEventListener('click', async () => {
-      const shareData = {
-        title: document.title || 'RBTI',
-        text: 'RBTI 테스트를 해보세요.',
-        url: window.location.href
-      };
-
-      if (navigator.share) {
-        try {
-          await navigator.share(shareData);
-          return;
-        } catch (error) {
-          if (error && error.name === 'AbortError') return;
-        }
-      }
-
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(window.location.href);
-          alert('링크가 복사되었습니다.');
-          return;
-        }
-      } catch (error) {
-      }
-
-      window.prompt('아래 링크를 복사하세요.', window.location.href);
-    });
-  }
-
   submitButtonEl.addEventListener('click', () => {
     alert('결과 계산 로직은 다음 단계에서 연결됩니다.');
   });
