@@ -41,8 +41,8 @@ I : Indicator
           <h3 style="margin: 0 0 12px; font-size: 18px; font-weight: 700; color: #1f2937;">검사 안내</h3>
           <ul style="display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 14px; color: #4b5563; line-height: 1.55;">
             <li>• RBTI는 자신의 유흥주점 이용 행동 검사로 본인 유형을 알아보는 검사입니다.</li>
-            <li>• 총 20문항 (약 3~5분 소요)</li>
-            <li>• 각 질문에 A 또는 B 중 하나를 선택하세요</li>
+            <li>• 검사 소요 시간은 약 3~5분입니다</li>
+            <li>• 각 질문에 '매우 아니다'부터 '매우 그렇다'까지 중 하나를 선택하세요</li>
             <li>• 너무 고민하지 말고 평소 행동에 가까운 것을 고르세요</li>
             <li>• 모든 답변은 브라우저에서만 처리됩니다</li>
           </ul>
