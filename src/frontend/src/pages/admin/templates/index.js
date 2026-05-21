@@ -24,7 +24,7 @@ export const adminTemplate = `
         <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
-                    <a href="/" class="community-back-link" aria-label="홈으로 이동">
+                    <a href="/" class="community-back-link icon-btn icon-btn-square" aria-label="홈으로 이동">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
                     </a>
                     <span class="community-board-name">관리자 페이지</span>
