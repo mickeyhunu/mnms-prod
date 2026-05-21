@@ -32,9 +32,9 @@ const rbtiTemplate = `
           <p id="rbti-test-description" style="margin: 0; color: rgba(255,255,255,0.92);">R : Room B : Behavior T : Type I : Indicator</p>
         </div>
 
-        <div id="rbti-intro" class="calc-card p-6 mb-6 text-left" style="margin-top: 16px;">
-          <h3 class="font-semibold text-gray-800 mb-3">검사 안내</h3>
-          <ul class="space-y-2 text-sm text-gray-600">
+        <div id="rbti-intro" class="card" style="padding: 22px; margin-top: 16px; border-radius: 16px; border: 1px solid #e5e7eb; text-align: left;">
+          <h3 style="margin: 0 0 12px; font-size: 18px; font-weight: 700; color: #1f2937;">검사 안내</h3>
+          <ul style="display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 14px; color: #4b5563; line-height: 1.55;">
             <li>• RBTI는 자신의 유흥주점 이용 행동 검사로 본인 유형을 알아보는 검사입니다.</li>
             <li>• 총 20문항 (약 3~5분 소요)</li>
             <li>• 각 질문에 A 또는 B 중 하나를 선택하세요</li>
@@ -43,7 +43,7 @@ const rbtiTemplate = `
           </ul>
         </div>
 
-        <button type="button" id="rbti-start-btn" class="w-full py-4 bg-indigo-500 text-white font-bold text-lg rounded-xl hover:bg-indigo-600 transition-colors shadow-md">검사 시작하기</button>
+        <button type="button" id="rbti-start-btn" style="width: 100%; margin-top: 12px; padding: 16px; border: 0; border-radius: 16px; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: #ffffff; font-size: 18px; font-weight: 800; box-shadow: 0 10px 24px rgba(79,70,229,0.24); cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;">검사 시작하기</button>
 
         <section id="rbti-test-card" class="card hidden" style="padding: 22px; margin-top: 16px; border-radius: 16px; border: 1px solid #e5e7eb;">
           <div style="margin: 0 0 18px;">
