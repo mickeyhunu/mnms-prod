@@ -98,12 +98,12 @@ function validatePostForm(data) {
         errors.title = '제목은 255글자 이하로 입력해주세요.';
     }
 
-    if (!data.content || data.content.trim().length < 10) {
-        errors.content = '내용은 10글자 이상 입력해주세요.';
+    if (!data.content || data.content.trim().length < 6) {
+        errors.content = '내용은 6글자 이상 입력해주세요.';
     }
 
-    if (data.content && data.content.length > 5000) {
-        errors.content = '내용은 5000글자 이하로 입력해주세요.';
+    if (data.content && data.content.length > 1000) {
+        errors.content = '내용은 1000글자 이하로 입력해주세요.';
     }
 
     return errors;
