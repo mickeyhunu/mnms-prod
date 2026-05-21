@@ -1,4 +1,5 @@
 import { createPageConfig } from '../shared/createPageConfig.js';
+import { shareSheetTemplate } from '../post-detail/templates/shareSheet.js';
 
 const rbtiTemplate = `
 <main class="main-content">
@@ -42,6 +43,7 @@ const rbtiTemplate = `
         <button type="button" class="btn btn-primary hidden" id="rbti-submit-btn">결과 보기</button>
       </div>
     </section>
+    ${shareSheetTemplate}
   </div>
 </main>
 `;

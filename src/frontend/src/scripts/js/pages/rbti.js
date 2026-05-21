@@ -1,4 +1,5 @@
 (function () {
+  let shareSheetOpen = false;
   const state = {
     questions: [],
     answerScale: [],
@@ -106,10 +107,155 @@
     }
   });
 
+  backButtonEl?.addEventListener('click', () => {
+    if (window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+
+    window.location.href = '/';
+  });
+
+  shareButtonEl?.addEventListener('click', handleSharePost);
+  setupShareSheet();
+  document.addEventListener('keydown', handleShareSheetKeydown);
+
 
   submitButtonEl.addEventListener('click', () => {
     alert('결과 계산 로직은 다음 단계에서 연결됩니다.');
   });
 
   loadQuestions().then(bootstrap);
+
+  function setupShareSheet() {
+    const shareSheet = document.getElementById('share-sheet');
+    if (!shareSheet) return;
+
+    document.getElementById('share-sheet-overlay')?.addEventListener('click', closeShareSheet);
+    document.getElementById('share-sheet-close')?.addEventListener('click', closeShareSheet);
+    document.getElementById('share-kakao-btn')?.addEventListener('click', handleKakaoShare);
+    document.getElementById('share-sms-btn')?.addEventListener('click', handleSmsShare);
+    document.getElementById('share-copy-btn')?.addEventListener('click', handleCopyShareLink);
+  }
+
+  function handleShareSheetKeydown(event) {
+    if (event.key === 'Escape' && shareSheetOpen) {
+      closeShareSheet();
+    }
+  }
+
+  function getShareData() {
+    return {
+      title: '미드나인 맨즈 커뮤니티',
+      text: 'RBTI 페이지를 공유합니다.',
+      url: window.location.href
+    };
+  }
+
+  function openShareSheet() {
+    const shareSheet = document.getElementById('share-sheet');
+    if (!shareSheet) return;
+
+    shareSheet.classList.remove('hidden');
+    shareSheet.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('share-sheet-open');
+    shareSheetOpen = true;
+  }
+
+  function closeShareSheet() {
+    const shareSheet = document.getElementById('share-sheet');
+    if (!shareSheet) return;
+
+    shareSheet.classList.add('hidden');
+    shareSheet.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('share-sheet-open');
+    shareSheetOpen = false;
+  }
+
+  function handleSharePost() {
+    openShareSheet();
+  }
+
+  async function handleKakaoShare() {
+    const shareData = getShareData();
+
+    try {
+      if (window.Kakao && window.Kakao.Share && typeof window.Kakao.Share.sendDefault === 'function') {
+        window.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: shareData.title,
+            description: shareData.text,
+            link: {
+              mobileWebUrl: shareData.url,
+              webUrl: shareData.url
+            }
+          },
+          buttons: [{
+            title: 'RBTI 보기',
+            link: {
+              mobileWebUrl: shareData.url,
+              webUrl: shareData.url
+            }
+          }]
+        });
+        closeShareSheet();
+        return;
+      }
+
+      if (navigator.share) {
+        await navigator.share(shareData);
+        closeShareSheet();
+        return;
+      }
+
+      await copyTextToClipboard(shareData.url);
+      closeShareSheet();
+      alert('카카오톡 공유를 직접 열 수 없어 링크를 복사했습니다. 카카오톡에 붙여넣어 공유해주세요.');
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        return;
+      }
+      console.error('카카오톡 공유 실패:', error);
+      alert('카카오톡 공유에 실패했습니다.');
+    }
+  }
+
+  function handleSmsShare() {
+    const shareData = getShareData();
+    const message = `${shareData.title}\n제목 ${document.title}\n주소 ${shareData.url}`;
+    const isAppleDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const separator = isAppleDevice ? '&' : '?';
+    window.location.href = `sms:${separator}body=${encodeURIComponent(message)}`;
+    closeShareSheet();
+  }
+
+  async function handleCopyShareLink() {
+    try {
+      await copyTextToClipboard(getShareData().url);
+      closeShareSheet();
+      alert('RBTI 페이지 링크가 복사되었습니다.');
+    } catch (error) {
+      console.error('링크 복사 실패:', error);
+      closeShareSheet();
+      prompt('아래 링크를 복사하세요.', getShareData().url);
+    }
+  }
+
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = String(text || '');
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    textarea.remove();
+  }
 })();
