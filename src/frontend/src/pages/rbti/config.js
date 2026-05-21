@@ -2,52 +2,68 @@ import { createPageConfig } from '../shared/createPageConfig.js';
 import { shareSheetTemplate } from '../post-detail/templates/shareSheet.js';
 
 const rbtiTemplate = `
-<main class="main-content">
-  <div class="container">
-    <header class="community-section-header">
-      <div class="community-header-left">
-        <button type="button" class="icon-btn icon-btn-square" id="rbti-back-btn" aria-label="뒤로가기">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="m15 18-6-6 6-6"></path>
-          </svg>
-        </button>
-        <span class="community-board-name community-board-name--live"><span>RBTI</span></span>
-      </div>
-      <div class="community-actions" id="rbti-header-actions">
-        <button type="button" class="icon-btn icon-btn-square" id="rbti-share-btn" aria-label="공유하기">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-            <polyline points="16 6 12 2 8 6"></polyline>
-            <line x1="12" x2="12" y1="2" y2="15"></line>
-          </svg>
-        </button>
-      </div>
-    </header>
-    <section class="card" style="padding: 20px; margin-top: 20px;">
-      <h2 id="rbti-test-title">RBTI</h2>
-      <p id="rbti-test-description" class="text-muted">질문을 불러오는 중...</p>
+<main class="main-content rbti-page">
+  <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 24px 16px 40px; display: flex; gap: 20px;">
+    <aside class="rbti-sidebar" style="width: 220px; flex-shrink: 0; display: none;">
+      <nav style="position: sticky; top: 84px; border: 1px solid #e5e7eb; border-radius: 14px; background: #fff; padding: 14px;">
+        <p style="font-size: 12px; color: #9ca3af; font-weight: 700; letter-spacing: 0.04em; margin: 0 0 10px;">성격 / 심리 테스트</p>
+        <ul style="list-style: none; padding: 0; margin: 0; display: grid; gap: 6px;">
+          <li><a href="/tools/psychology-test" style="display: block; padding: 8px 10px; border-radius: 10px; color: #4b5563; text-decoration: none;">심리 테스트</a></li>
+          <li><a href="/calculators/mbti-compatibility" style="display: block; padding: 8px 10px; border-radius: 10px; color: #4b5563; text-decoration: none;">MBTI 궁합</a></li>
+          <li><a href="/tools/rbti" style="display: block; padding: 8px 10px; border-radius: 10px; color: #2563eb; background: #eff6ff; font-weight: 700; text-decoration: none;">RBTI 성향 검사</a></li>
+        </ul>
+      </nav>
+    </aside>
 
-      <div style="margin: 20px 0;">
-        <p class="text-muted">진행도 <span id="rbti-progress-current">0</span>/<span id="rbti-progress-total">0</span></p>
-        <div style="height: 8px; border-radius: 999px; background: #eee; overflow: hidden;">
-          <div id="rbti-progress-bar" style="height: 100%; width: 0%; background: #4f46e5;"></div>
+    <section style="flex: 1; min-width: 0;">
+      <header class="community-section-header">
+        <div class="community-header-left">
+          <button type="button" class="icon-btn icon-btn-square" id="rbti-back-btn" aria-label="뒤로가기">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m15 18-6-6 6-6"></path>
+            </svg>
+          </button>
+          <span class="community-board-name community-board-name--live"><span>RBTI</span></span>
         </div>
+        <div class="community-actions" id="rbti-header-actions">
+          <button type="button" class="icon-btn icon-btn-square" id="rbti-share-btn" aria-label="공유하기">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+              <polyline points="16 6 12 2 8 6"></polyline>
+              <line x1="12" x2="12" y1="2" y2="15"></line>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div style="margin-top: 18px; border-radius: 18px; padding: 26px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #fff; box-shadow: 0 10px 30px rgba(79,70,229,0.22); text-align: center;">
+        <div style="font-size: 40px; margin-bottom: 8px;">🧠</div>
+        <h1 id="rbti-test-title" style="font-size: 30px; margin: 0 0 8px; font-weight: 800;">RBTI</h1>
+        <p id="rbti-test-description" style="margin: 0; color: rgba(255,255,255,0.92);">질문을 불러오는 중...</p>
       </div>
 
-      <h3 id="rbti-question-text" style="margin-bottom: 16px;">질문 준비 중...</h3>
-      <div id="rbti-answer-list" style="display: grid; gap: 8px;"></div>
+      <section class="card" style="padding: 22px; margin-top: 16px; border-radius: 16px; border: 1px solid #e5e7eb;">
+        <div style="margin: 0 0 18px;">
+          <p style="font-size: 13px; color: #6b7280; margin: 0 0 8px;">진행도 <span id="rbti-progress-current">0</span>/<span id="rbti-progress-total">0</span></p>
+          <div style="height: 9px; border-radius: 999px; background: #eef2ff; overflow: hidden;">
+            <div id="rbti-progress-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg,#4f46e5,#7c3aed);"></div>
+          </div>
+        </div>
 
-      <div style="display: flex; justify-content: space-between; margin-top: 20px; gap: 8px;">
-        <button type="button" class="btn btn-outline" id="rbti-prev-btn">이전</button>
-        <button type="button" class="btn btn-primary" id="rbti-next-btn">다음</button>
-        <button type="button" class="btn btn-primary hidden" id="rbti-submit-btn">결과 보기</button>
-      </div>
+        <h3 id="rbti-question-text" style="margin-bottom: 14px; font-size: 20px; line-height: 1.45;">질문 준비 중...</h3>
+        <div id="rbti-answer-list" style="display: grid; gap: 8px;"></div>
+
+        <div style="display: flex; justify-content: space-between; margin-top: 20px; gap: 8px;">
+          <button type="button" class="btn btn-outline" id="rbti-prev-btn">이전</button>
+          <button type="button" class="btn btn-primary" id="rbti-next-btn">다음</button>
+          <button type="button" class="btn btn-primary hidden" id="rbti-submit-btn">결과 보기</button>
+        </div>
+      </section>
     </section>
-    ${shareSheetTemplate}
   </div>
+  ${shareSheetTemplate}
 </main>
 `;
-
 
 export const rbtiPageConfig = createPageConfig({
   template: rbtiTemplate,
