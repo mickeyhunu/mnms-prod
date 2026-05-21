@@ -25,7 +25,7 @@
 
   const fallbackData = {
     testName: 'RBTI',
-    description: 'R : Room B : Behavior T : Type I : Indicator',
+    description: 'R : Room\nB : Behavior\nT : Type\nI : Indicator\n\n자신의 유흥주점 이용 행동 검사',
     answerScale: [
       { label: '매우 아니다', value: -2 },
       { label: '아니다', value: -1 },
@@ -86,7 +86,7 @@
     state.answerScale = Array.isArray(data.answerScale) ? data.answerScale : fallbackData.answerScale;
 
     testTitleEl.textContent = data.testName || 'RBTI';
-    testDescriptionEl.textContent = 'R : Room \nB : Behavior \nT : Type \nI : Indicator  \n자신의 유흥주점 이용 행동 검사';
+    testDescriptionEl.textContent = 'R : Room\nB : Behavior\nT : Type\nI : Indicator\n\n자신의 유흥주점 이용 행동 검사';
 
     if (state.questions.length === 0) {
       startButtonEl && (startButtonEl.disabled = true);

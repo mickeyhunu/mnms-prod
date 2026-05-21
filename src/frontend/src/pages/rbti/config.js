@@ -29,7 +29,12 @@ const rbtiTemplate = `
         <div style="margin-top: 18px; border-radius: 18px; padding: 26px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #fff; box-shadow: 0 10px 30px rgba(79,70,229,0.22); text-align: center;">
           <div style="font-size: 40px; margin-bottom: 8px;">🧠</div>
           <h1 id="rbti-test-title" style="font-size: 30px; margin: 0 0 8px; font-weight: 800;">RBTI</h1>
-          <p id="rbti-test-description" style="margin: 0; color: rgba(255,255,255,0.92);">R : Room B : Behavior T : Type I : Indicator</p>
+          <p id="rbti-test-description" style="margin: 0; color: rgba(255,255,255,0.92); white-space: pre-line;">R : Room
+B : Behavior
+T : Type
+I : Indicator
+
+자신의 유흥주점 이용 행동 검사</p>
         </div>
 
         <div id="rbti-intro" class="card" style="padding: 22px; margin-top: 16px; border-radius: 16px; border: 1px solid #e5e7eb; text-align: left;">
