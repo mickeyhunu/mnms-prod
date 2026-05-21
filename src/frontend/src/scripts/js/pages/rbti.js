@@ -19,10 +19,13 @@
   const submitButtonEl = document.getElementById('rbti-submit-btn');
   const backButtonEl = document.getElementById('rbti-back-btn');
   const shareButtonEl = document.getElementById('rbti-share-btn');
+  const introSectionEl = document.getElementById('rbti-intro');
+  const startButtonEl = document.getElementById('rbti-start-btn');
+  const testCardEl = document.getElementById('rbti-test-card');
 
   const fallbackData = {
     testName: 'RBTI',
-    description: 'Room Behavior Type Indicator',
+    description: 'R : Room B : Behavior T : Type I : Indicator',
     answerScale: [
       { label: '매우 아니다', value: -2 },
       { label: '아니다', value: -1 },
@@ -83,15 +86,27 @@
     state.answerScale = Array.isArray(data.answerScale) ? data.answerScale : fallbackData.answerScale;
 
     testTitleEl.textContent = data.testName || 'RBTI';
-    testDescriptionEl.textContent = data.description || '';
+    testDescriptionEl.textContent = 'R : Room B : Behavior T : Type I : Indicator · 자신의 유흥주점 이용 행동 검사';
 
     if (state.questions.length === 0) {
-      questionTextEl.textContent = '문항 데이터가 없습니다.';
+      startButtonEl && (startButtonEl.disabled = true);
+      return;
+    }
+
+  }
+
+  startButtonEl?.addEventListener('click', () => {
+    introSectionEl?.classList.add('hidden');
+    startButtonEl.classList.add('hidden');
+    testCardEl?.classList.remove('hidden');
+
+    if (state.questions.length === 0) {
+      startButtonEl && (startButtonEl.disabled = true);
       return;
     }
 
     renderQuestion();
-  }
+  });
 
   prevButtonEl.addEventListener('click', () => {
     if (state.currentIndex > 0) {
