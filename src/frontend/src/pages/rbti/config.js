@@ -3,18 +3,7 @@ import { shareSheetTemplate } from '../post-detail/templates/shareSheet.js';
 
 const rbtiTemplate = `
 <main class="main-content rbti-page">
-  <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 24px 16px 40px; display: flex; gap: 20px;">
-    <aside class="rbti-sidebar" style="width: 220px; flex-shrink: 0; display: none;">
-      <nav style="position: sticky; top: 84px; border: 1px solid #e5e7eb; border-radius: 14px; background: #fff; padding: 14px;">
-        <p style="font-size: 12px; color: #9ca3af; font-weight: 700; letter-spacing: 0.04em; margin: 0 0 10px;">성격 / 심리 테스트</p>
-        <ul style="list-style: none; padding: 0; margin: 0; display: grid; gap: 6px;">
-          <li><a href="/tools/psychology-test" style="display: block; padding: 8px 10px; border-radius: 10px; color: #4b5563; text-decoration: none;">심리 테스트</a></li>
-          <li><a href="/calculators/mbti-compatibility" style="display: block; padding: 8px 10px; border-radius: 10px; color: #4b5563; text-decoration: none;">MBTI 궁합</a></li>
-          <li><a href="/tools/rbti" style="display: block; padding: 8px 10px; border-radius: 10px; color: #2563eb; background: #eff6ff; font-weight: 700; text-decoration: none;">RBTI 성향 검사</a></li>
-        </ul>
-      </nav>
-    </aside>
-
+  <div class="container">
     <section style="flex: 1; min-width: 0;">
       <header class="community-section-header">
         <div class="community-header-left">

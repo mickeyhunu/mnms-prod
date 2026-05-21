@@ -86,7 +86,7 @@
     state.answerScale = Array.isArray(data.answerScale) ? data.answerScale : fallbackData.answerScale;
 
     testTitleEl.textContent = data.testName || 'RBTI';
-    testDescriptionEl.textContent = 'R : Room B : Behavior T : Type I : Indicator · 자신의 유흥주점 이용 행동 검사';
+    testDescriptionEl.textContent = 'R : Room \nB : Behavior \nT : Type \nI : Indicator  \n자신의 유흥주점 이용 행동 검사';
 
     if (state.questions.length === 0) {
       startButtonEl && (startButtonEl.disabled = true);
