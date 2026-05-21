@@ -95,6 +95,60 @@
     submitButtonEl.classList.toggle('hidden', state.currentIndex !== state.questions.length - 1);
   }
 
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function calculateResults() {
+    const axisScores = { E: 0, I: 0, S: 0, N: 0, F: 0, T: 0, J: 0, P: 0 };
+    const oppositeAxis = { E: 'I', I: 'E', S: 'N', N: 'S', F: 'T', T: 'F', J: 'P', P: 'J' };
+    const hiddenRaw = {};
+    const hiddenRange = {};
+
+    state.questions.forEach((question) => {
+      const answerValue = Number(state.answers[question.id]);
+      if (Number.isNaN(answerValue)) return;
+
+      const axis = question.axis;
+      if (axis && oppositeAxis[axis]) {
+        if (answerValue >= 0) {
+          axisScores[axis] += answerValue;
+        } else {
+          axisScores[oppositeAxis[axis]] += Math.abs(answerValue);
+        }
+      }
+
+      const hiddenScores = question.hiddenScores || {};
+      Object.entries(hiddenScores).forEach(([key, weight]) => {
+        const numericWeight = Number(weight) || 0;
+        hiddenRaw[key] = (hiddenRaw[key] || 0) + (answerValue * numericWeight);
+        hiddenRange[key] = (hiddenRange[key] || 0) + (Math.abs(numericWeight) * 2);
+      });
+    });
+
+    const hiddenPercent = Object.entries(hiddenRaw).reduce((acc, [key, value]) => {
+      const range = hiddenRange[key] || 0;
+      if (range === 0) {
+        acc[key] = 50;
+        return acc;
+      }
+
+      const normalized = ((value + range) / (range * 2)) * 100;
+      acc[key] = Math.round(clamp(normalized, 0, 100));
+      return acc;
+    }, {});
+
+    const type = [
+      axisScores.E >= axisScores.I ? 'E' : 'I',
+      axisScores.S >= axisScores.N ? 'S' : 'N',
+      axisScores.F >= axisScores.T ? 'F' : 'T',
+      axisScores.J >= axisScores.P ? 'J' : 'P'
+    ].join('');
+
+    return { type, axisScores, hiddenRaw, hiddenPercent };
+  }
+
   function bootstrap(data) {
     state.questions = Array.isArray(data.questions) ? data.questions : [];
     state.answerScale = Array.isArray(data.answerScale) ? data.answerScale : fallbackData.answerScale;
@@ -173,7 +227,18 @@
 
 
   submitButtonEl.addEventListener('click', () => {
-    alert('결과 계산 로직은 다음 단계에서 연결됩니다.');
+    if (Object.keys(state.answers).length !== state.questions.length) {
+      alert('모든 질문에 답변을 선택해주세요.');
+      return;
+    }
+
+    const result = calculateResults();
+    const scoreLines = Object.entries(result.hiddenPercent)
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, score]) => `${name}: ${score}%`)
+      .join('\n');
+
+    alert(`RBTI 유형: ${result.type}\n\n히든 스코어(0~100 보정):\n${scoreLines}`);
   });
 
   loadQuestions().then(bootstrap);
