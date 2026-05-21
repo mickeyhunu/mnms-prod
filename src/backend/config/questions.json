@@ -1,7 +1,7 @@
 {
   "testName": "RBTI",
   "fullName": "Room Behavior Type Indicator",
-  "description": "업계 사람 입장에서 보는 밤문화 성향검사",
+  "description": "밤문화 성향검사",
   "answerScale": [
     { "label": "매우 아니다", "value": -2 },
     { "label": "아니다", "value": -1 },
