@@ -20,12 +20,26 @@
   const backButtonEl = document.getElementById('rbti-back-btn');
   const shareButtonEl = document.getElementById('rbti-share-btn');
   const introSectionEl = document.getElementById('rbti-intro');
+  const aboutTitleEl = document.getElementById('rbti-about-title');
+  const aboutDescriptionEl = document.getElementById('rbti-about-description');
+  const axisListEl = document.getElementById('rbti-axis-list');
   const startButtonEl = document.getElementById('rbti-start-btn');
   const testCardEl = document.getElementById('rbti-test-card');
 
   const fallbackData = {
     testName: 'RBTI',
-    description: 'Room Behavior Type Indicator \n밤문화 성향검사',
+    fullName: 'Room Behavior Type Indicator',
+    description: '밤문화 성향검사',
+    axes: {
+      E: 'Exciter - 하이텐션/술자리 분위기형',
+      I: 'Immersive - 조용한 몰입/대화형',
+      S: 'Skinship - 스킨십/수위 중시형',
+      N: 'Narrative - 대화/감성/케미형',
+      F: 'Flex - 소비/구찌형',
+      T: 'Tactician - 빠꼼이/계산형',
+      J: 'Judger - 주도/정리형',
+      P: 'Playmaker - 즉흥/흐름형'
+    },
     answerScale: [
       { label: '매우 아니다', value: -2 },
       { label: '아니다', value: -1 },
@@ -86,13 +100,35 @@
     state.answerScale = Array.isArray(data.answerScale) ? data.answerScale : fallbackData.answerScale;
 
     testTitleEl.textContent = data.testName || 'RBTI';
-    testDescriptionEl.textContent = 'Room Behavior Type Indicator \n밤문화 성향검사';
+    testDescriptionEl.textContent = `${data.fullName || fallbackData.fullName}\n${data.description || fallbackData.description}`;
+    renderIntro(data);
 
     if (state.questions.length === 0) {
       startButtonEl && (startButtonEl.disabled = true);
       return;
     }
 
+  }
+
+  function renderIntro(data) {
+    if (aboutTitleEl) {
+      aboutTitleEl.textContent = `${data.testName || fallbackData.testName} 검사란?`;
+    }
+
+    if (aboutDescriptionEl) {
+      aboutDescriptionEl.textContent = `${data.fullName || fallbackData.fullName}는 ${data.description || fallbackData.description}를 위한 테스트입니다. 질문에 답하고 나의 성향 유형을 확인해보세요.`;
+    }
+
+    if (!axisListEl) return;
+    const axes = data.axes || fallbackData.axes;
+    const axisPairs = [['E', 'I'], ['S', 'N'], ['F', 'T'], ['J', 'P']];
+    axisListEl.innerHTML = axisPairs.map(([left, right]) => `
+      <div class="bg-gray-50 rounded-lg p-4">
+        <h3 class="font-medium text-gray-900">${left} vs ${right}</h3>
+        <p class="text-gray-600 text-sm mt-1">${axes[left] || fallbackData.axes[left]}</p>
+        <p class="text-gray-600 text-sm mt-1">${axes[right] || fallbackData.axes[right]}</p>
+      </div>
+    `).join('');
   }
 
   startButtonEl?.addEventListener('click', () => {
