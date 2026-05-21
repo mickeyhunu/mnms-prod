@@ -25,42 +25,44 @@ const rbtiTemplate = `
         </div>
       </header>
 
-      <div style="margin-top: 18px; border-radius: 18px; padding: 26px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #fff; box-shadow: 0 10px 30px rgba(79,70,229,0.22); text-align: center;">
-        <div style="font-size: 40px; margin-bottom: 8px;">🧠</div>
-        <h1 id="rbti-test-title" style="font-size: 30px; margin: 0 0 8px; font-weight: 800;">RBTI</h1>
-        <p id="rbti-test-description" style="margin: 0; color: rgba(255,255,255,0.92);">R : Room B : Behavior T : Type I : Indicator</p>
-      </div>
+      <div style="margin: 5%">
+        <div style="margin-top: 18px; border-radius: 18px; padding: 26px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #fff; box-shadow: 0 10px 30px rgba(79,70,229,0.22); text-align: center;">
+          <div style="font-size: 40px; margin-bottom: 8px;">🧠</div>
+          <h1 id="rbti-test-title" style="font-size: 30px; margin: 0 0 8px; font-weight: 800;">RBTI</h1>
+          <p id="rbti-test-description" style="margin: 0; color: rgba(255,255,255,0.92);">R : Room B : Behavior T : Type I : Indicator</p>
+        </div>
 
-      <div id="rbti-intro" class="calc-card p-6 mb-6 text-left" style="margin-top: 16px;">
-        <h3 class="font-semibold text-gray-800 mb-3">검사 안내</h3>
-        <ul class="space-y-2 text-sm text-gray-600">
-          <li>• RBTI는 자신의 유흥주점 이용 행동 검사로 본인 유형을 알아보는 검사입니다.</li>
-          <li>• 총 20문항 (약 3~5분 소요)</li>
-          <li>• 각 질문에 A 또는 B 중 하나를 선택하세요</li>
-          <li>• 너무 고민하지 말고 평소 행동에 가까운 것을 고르세요</li>
-          <li>• 모든 답변은 브라우저에서만 처리됩니다</li>
-        </ul>
-      </div>
+        <div id="rbti-intro" class="calc-card p-6 mb-6 text-left" style="margin-top: 16px;">
+          <h3 class="font-semibold text-gray-800 mb-3">검사 안내</h3>
+          <ul class="space-y-2 text-sm text-gray-600">
+            <li>• RBTI는 자신의 유흥주점 이용 행동 검사로 본인 유형을 알아보는 검사입니다.</li>
+            <li>• 총 20문항 (약 3~5분 소요)</li>
+            <li>• 각 질문에 A 또는 B 중 하나를 선택하세요</li>
+            <li>• 너무 고민하지 말고 평소 행동에 가까운 것을 고르세요</li>
+            <li>• 모든 답변은 브라우저에서만 처리됩니다</li>
+          </ul>
+        </div>
 
-      <button type="button" id="rbti-start-btn" class="w-full py-4 bg-indigo-500 text-white font-bold text-lg rounded-xl hover:bg-indigo-600 transition-colors shadow-md">검사 시작하기</button>
+        <button type="button" id="rbti-start-btn" class="w-full py-4 bg-indigo-500 text-white font-bold text-lg rounded-xl hover:bg-indigo-600 transition-colors shadow-md">검사 시작하기</button>
 
-      <section id="rbti-test-card" class="card hidden" style="padding: 22px; margin-top: 16px; border-radius: 16px; border: 1px solid #e5e7eb;">
-        <div style="margin: 0 0 18px;">
-          <p style="font-size: 13px; color: #6b7280; margin: 0 0 8px;">진행도 <span id="rbti-progress-current">0</span>/<span id="rbti-progress-total">0</span></p>
-          <div style="height: 9px; border-radius: 999px; background: #eef2ff; overflow: hidden;">
-            <div id="rbti-progress-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg,#4f46e5,#7c3aed);"></div>
+        <section id="rbti-test-card" class="card hidden" style="padding: 22px; margin-top: 16px; border-radius: 16px; border: 1px solid #e5e7eb;">
+          <div style="margin: 0 0 18px;">
+            <p style="font-size: 13px; color: #6b7280; margin: 0 0 8px;">진행도 <span id="rbti-progress-current">0</span>/<span id="rbti-progress-total">0</span></p>
+            <div style="height: 9px; border-radius: 999px; background: #eef2ff; overflow: hidden;">
+              <div id="rbti-progress-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg,#4f46e5,#7c3aed);"></div>
+            </div>
           </div>
-        </div>
 
-        <h3 id="rbti-question-text" style="margin-bottom: 14px; font-size: 20px; line-height: 1.45;">질문 준비 중...</h3>
-        <div id="rbti-answer-list" style="display: grid; gap: 8px;"></div>
+          <h3 id="rbti-question-text" style="margin-bottom: 14px; font-size: 20px; line-height: 1.45;">질문 준비 중...</h3>
+          <div id="rbti-answer-list" style="display: grid; gap: 8px;"></div>
 
-        <div style="display: flex; justify-content: space-between; margin-top: 20px; gap: 8px;">
-          <button type="button" class="btn btn-outline" id="rbti-prev-btn">이전</button>
-          <button type="button" class="btn btn-primary" id="rbti-next-btn">다음</button>
-          <button type="button" class="btn btn-primary hidden" id="rbti-submit-btn">결과 보기</button>
-        </div>
-      </section>
+          <div style="display: flex; justify-content: space-between; margin-top: 20px; gap: 8px;">
+            <button type="button" class="btn btn-outline" id="rbti-prev-btn">이전</button>
+            <button type="button" class="btn btn-primary" id="rbti-next-btn">다음</button>
+            <button type="button" class="btn btn-primary hidden" id="rbti-submit-btn">결과 보기</button>
+          </div>
+        </section>
+      </div>
     </section>
   </div>
   ${shareSheetTemplate}
