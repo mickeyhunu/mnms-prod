@@ -508,7 +508,7 @@ const pageRegistry = {
                         <label for="content" class="form-label">내용</label>
                         <textarea id="content" name="content" class="form-control" placeholder="내용을 입력하세요" rows="15" required></textarea>
                         <div class="error-message hidden" id="content-error"></div>
-                        <small class="text-muted">최소 6자 이상 입력해주세요</small>
+                        <small class="text-muted">내용은 6자 이상 1000자 이하로 입력해주세요</small>
                     </div>
 
 
@@ -602,7 +602,7 @@ const pageRegistry = {
                     <div class="form-group">
                         <label for="content" class="form-label">내용</label>
                         <textarea id="content" class="form-control" rows="15" placeholder="내용을 입력하세요" required></textarea>
-                        <small class="text-muted">최소 6자 이상 입력해주세요</small>
+                        <small class="text-muted">내용은 6자 이상 1000자 이하로 입력해주세요</small>
                     </div>
 
                     <div class="form-actions form-actions-inline" style="display:flex;justify-content:flex-end;gap:8px;">
