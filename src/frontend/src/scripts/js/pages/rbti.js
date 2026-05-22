@@ -177,7 +177,7 @@
     const axes = data.axes || fallbackData.axes;
     const axisPairs = [['E', 'I'], ['S', 'N'], ['F', 'T'], ['J', 'P']];
     axisListEl.innerHTML = axisPairs.map(([left, right]) => `
-      <div class="bg-gray-50 rounded-lg p-4">
+      <div class="bg-gray-50 rounded-lg p-1">
         <h3 class="font-medium text-gray-900">${left} vs ${right}</h3>
         <p class="text-gray-600 text-sm mt-1">${axes[left] || fallbackData.axes[left]}</p>
         <p class="text-gray-600 text-sm mt-1">${axes[right] || fallbackData.axes[right]}</p>
