@@ -205,7 +205,15 @@
           <div class="bg-indigo-400 transition-all duration-700" style="width: ${leftPercent}%;"></div>
           <div class="bg-purple-400 transition-all duration-700" style="width: ${rightPercent}%;"></div>
         </div>
-        <p class="text-xs text-center mt-1 text-gray-600">${leftPercent}% : ${rightPercent}%</p>
+        <div class="mt-2">
+          <div class="relative h-2 rounded-full bg-gray-200 overflow-hidden" role="img" aria-label="${leftPercent}% 대 ${rightPercent}% 비율 그래프">
+            <div class="absolute left-0 top-0 h-full bg-indigo-500 transition-all duration-700" style="width: ${leftPercent}%;"></div>
+          </div>
+          <div class="mt-1 flex justify-between text-xs text-gray-600">
+            <span>${leftPercent}%</span>
+            <span>${rightPercent}%</span>
+          </div>
+        </div>
       </div>
     `).join('');
 
