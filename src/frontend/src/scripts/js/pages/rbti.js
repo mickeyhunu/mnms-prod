@@ -198,14 +198,17 @@
     const axisRows = getAxisPercentages(result.axisScores).map(({ left, right, leftPercent, rightPercent }) => `
       <div>
         <div class="flex justify-between text-sm mb-1">
-          <span class="font-bold text-indigo-600">${axisLabels[left]} (${left}) ${leftPercent}%</span>
-          <span class="text-gray-500">${rightPercent}% ${axisLabels[right]} (${right})</span>
+          <span class="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 font-bold text-indigo-700">${axisLabels[left]} (${left}) <strong>${leftPercent}%</strong></span>
+          <span class="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-purple-700"><strong>${rightPercent}%</strong> ${axisLabels[right]} (${right})</span>
         </div>
         <div class="flex h-4 rounded-full overflow-hidden bg-gray-100" role="img" aria-label="${axisLabels[left]} ${leftPercent}%, ${axisLabels[right]} ${rightPercent}%">
           <div class="bg-indigo-400 transition-all duration-700" style="width: ${leftPercent}%;"></div>
           <div class="bg-purple-400 transition-all duration-700" style="width: ${rightPercent}%;"></div>
         </div>
-        <p class="text-xs text-center mt-1 text-gray-600">${leftPercent}% : ${rightPercent}%</p>
+        <div class="mt-2 flex h-3 rounded-full overflow-hidden bg-gray-100" role="img" aria-label="${leftPercent}% 대 ${rightPercent}% 비율 그래프">
+          <div class="bg-indigo-400 transition-all duration-700" style="width: ${leftPercent}%;"></div>
+          <div class="bg-purple-400 transition-all duration-700" style="width: ${rightPercent}%;"></div>
+        </div>
       </div>
     `).join('');
 
