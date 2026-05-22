@@ -203,8 +203,8 @@
         </div>
         <div class="h-3 w-full overflow-hidden rounded-full bg-gray-200 shadow-inner" style="height: 12px; border-radius: 5px; border: 1px solid;" role="img" aria-label="${leftPercent}% 대 ${rightPercent}% 비율 그래프">
           <div class="flex h-full w-full">
-            <div class="h-full bg-indigo-500 transition-all duration-700" style="background-color:blue; width: ${leftPercent}%;"></div>
-            <div class="h-full bg-purple-500 transition-all duration-700" style="background-color:red; width: ${rightPercent}%;"></div>
+            <div class="h-full bg-indigo-500 transition-all duration-700" style="background-color:lab(59.866% 22.4834 -64.4485); width: ${leftPercent}%;"></div>
+            <div class="h-full bg-purple-500 transition-all duration-700" style="background-color:lab(63.6946% 47.6127 -59.2066); width: ${rightPercent}%;"></div>
           </div>
         </div>
       </div>
