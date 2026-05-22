@@ -50,7 +50,8 @@
       "axis": "I",
       "hiddenScores": {
         "comfortRoom": 20,
-        "alcoholJinsang": -10
+        "alcoholJinsang": -10,
+        "lookismProb": 8
       }
     },
     {
@@ -78,7 +79,8 @@
       "axis": "S",
       "hiddenScores": {
         "touchJinsang": 10,
-        "staffFatigue": 5
+        "staffFatigue": 5,
+        "lookismProb": -10
       }
     },
     {
@@ -87,7 +89,8 @@
       "axis": "S",
       "hiddenScores": {
         "touchJinsang": 20,
-        "comfortRoom": -15
+        "comfortRoom": -15,
+        "lookismProb": -10
       }
     },
     {
@@ -97,7 +100,8 @@
       "hiddenScores": {
         "touchJinsang": 30,
         "staffFatigue": 20,
-        "comfortRoom": -20
+        "comfortRoom": -20,
+        "lookismProb": -12
       }
     },
     {
@@ -254,6 +258,92 @@
         "touchJinsang": 15,
         "staffFatigue": 25,
         "comfortRoom": -25
+      }
+    },
+    {
+      "id": 25,
+      "text": "초이스를 쉽게 결정하지 못하는 편이다.",
+      "axis": "J",
+      "hiddenScores": {
+        "touchJinsang": 15,
+        "staffFatigue": 20,
+        "salesPreference": -15,
+        "choiceJinsang": 25,
+        "lookismProb": 8
+      }
+    },
+    {
+      "id": 26,
+      "text": "외상(다음날 결제 제외)을 자주 하는 편이다.",
+      "axis": "P",
+      "hiddenScores": {
+        "salesPreference": -25,
+        "regularPotential": -10
+      }
+    },
+    {
+      "id": 27,
+      "text": "룸 방문은 늦은 새벽~아침/점심 시간대가 더 많다.",
+      "axis": "T",
+      "hiddenScores": {
+        "bbakkomPower": 20,
+        "regularPotential": 5,
+        "nightWorkerProb": 25,
+        "officeWorkerProb": -10
+      }
+    },
+    {
+      "id": 28,
+      "text": "룸 방문은 초저녁~저녁 시간대가 더 많다.",
+      "axis": "J",
+      "hiddenScores": {
+        "salesPreference": 10,
+        "regularPotential": 10,
+        "officeWorkerProb": 20,
+        "nightWorkerProb": -10
+      }
+    },
+    {
+      "id": 29,
+      "text": "아가씨나 영업진에게 고름을 짜달라고 한 적이 있다.",
+      "axis": "S",
+      "hiddenScores": {
+        "touchJinsang": 20,
+        "staffFatigue": 25,
+        "comfortRoom": -20,
+        "gangsterProb": 25
+      }
+    },
+    {
+      "id": 30,
+      "text": "테더 또는 현금(계좌이체 제외) 결제를 자주 한다.",
+      "axis": "P",
+      "hiddenScores": {
+        "bbakkomPower": 15,
+        "salesPreference": -10,
+        "illegalProb": 25,
+        "officeWorkerProb": -10
+      }
+    },
+    {
+      "id": 31,
+      "text": "카드결제를 자주 하는 편이다.",
+      "axis": "J",
+      "hiddenScores": {
+        "salesPreference": 20,
+        "regularPotential": 10,
+        "officeWorkerProb": 25,
+        "illegalProb": -10
+      }
+    },
+    {
+      "id": 32,
+      "text": "나는 외모를 중요시하는 편이다.",
+      "axis": "S",
+      "hiddenScores": {
+        "lookismProb": 25,
+        "staffFatigue": 15,
+        "touchJinsang": 8
       }
     }
   ],
@@ -516,6 +606,168 @@
         "max": 100,
         "label": "장타괴물"
       }
+    ],
+    "choiceJinsang": [
+      {
+        "min": 0,
+        "max": 20,
+        "label": "초이스 깔끔형"
+      },
+      {
+        "min": 21,
+        "max": 40,
+        "label": "가끔 고민형"
+      },
+      {
+        "min": 41,
+        "max": 60,
+        "label": "초이스 고민형"
+      },
+      {
+        "min": 61,
+        "max": 80,
+        "label": "초이스 진상 주의"
+      },
+      {
+        "min": 81,
+        "max": 100,
+        "label": "초이스 진상 확정"
+      }
+    ],
+    "officeWorkerProb": [
+      {
+        "min": 0,
+        "max": 20,
+        "label": "회사원 가능성 낮음"
+      },
+      {
+        "min": 21,
+        "max": 40,
+        "label": "회사원 가능성 보통"
+      },
+      {
+        "min": 41,
+        "max": 60,
+        "label": "회사원 가능성 있음"
+      },
+      {
+        "min": 61,
+        "max": 80,
+        "label": "회사원 가능성 높음"
+      },
+      {
+        "min": 81,
+        "max": 100,
+        "label": "회사원 가능성 매우 높음"
+      }
+    ],
+    "nightWorkerProb": [
+      {
+        "min": 0,
+        "max": 20,
+        "label": "밤일러 가능성 낮음"
+      },
+      {
+        "min": 21,
+        "max": 40,
+        "label": "밤일러 가능성 보통"
+      },
+      {
+        "min": 41,
+        "max": 60,
+        "label": "밤일러 가능성 있음"
+      },
+      {
+        "min": 61,
+        "max": 80,
+        "label": "밤일러 가능성 높음"
+      },
+      {
+        "min": 81,
+        "max": 100,
+        "label": "밤일러 가능성 매우 높음"
+      }
+    ],
+    "gangsterProb": [
+      {
+        "min": 0,
+        "max": 20,
+        "label": "가오충 가능성 낮음"
+      },
+      {
+        "min": 21,
+        "max": 40,
+        "label": "가오충 가능성 보통"
+      },
+      {
+        "min": 41,
+        "max": 60,
+        "label": "가오충 가능성 있음"
+      },
+      {
+        "min": 61,
+        "max": 80,
+        "label": "꼬마건달 주의"
+      },
+      {
+        "min": 81,
+        "max": 100,
+        "label": "꼬마건달 가능성 높음"
+      }
+    ],
+    "illegalProb": [
+      {
+        "min": 0,
+        "max": 20,
+        "label": "불법충 가능성 낮음"
+      },
+      {
+        "min": 21,
+        "max": 40,
+        "label": "불법충 가능성 보통"
+      },
+      {
+        "min": 41,
+        "max": 60,
+        "label": "불법충 가능성 있음"
+      },
+      {
+        "min": 61,
+        "max": 80,
+        "label": "불법충 주의"
+      },
+      {
+        "min": 81,
+        "max": 100,
+        "label": "불법충 가능성 높음"
+      }
+    ],
+    "lookismProb": [
+      {
+        "min": 0,
+        "max": 20,
+        "label": "얼빠 가능성 낮음"
+      },
+      {
+        "min": 21,
+        "max": 40,
+        "label": "얼빠 성향 약함"
+      },
+      {
+        "min": 41,
+        "max": 60,
+        "label": "얼빠 성향 보통"
+      },
+      {
+        "min": 61,
+        "max": 80,
+        "label": "얼빠 성향 높음"
+      },
+      {
+        "min": 81,
+        "max": 100,
+        "label": "얼빠 성향 매우 높음"
+      }
     ]
   },
   "hiddenScoreComments": {
@@ -527,6 +779,12 @@
     "longTimePower": "장타충 확률.",
     "staffFatigue": "아가씨 방포 확률.",
     "salesPreference": "영업진 선호도.",
-    "regularPotential": "룸 중독률."
+    "regularPotential": "룸 중독률.",
+    "choiceJinsang": "초이스 진상률.",
+    "officeWorkerProb": "회사원 확률.",
+    "nightWorkerProb": "밤일러 확률.",
+    "gangsterProb": "꼬마건달일 확률.",
+    "illegalProb": "불법충 확률.",
+    "lookismProb": "얼빠일 확률."
   }
 }
