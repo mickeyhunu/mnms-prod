@@ -19,6 +19,7 @@ const supportRoutes = require('./src/backend/routes/supportRoutes');
 const chatbotRoutes = require('./src/backend/routes/chatbotRoutes');
 const liveRoutes = require('./src/backend/routes/liveRoutes');
 const uploadRoutes = require('./src/backend/routes/uploadRoutes');
+const rbtiRoutes = require('./src/backend/routes/rbtiRoutes');
 const adminModel = require('./src/backend/models/adminModel');
 const { startLiveHistoryScheduler } = require('./src/backend/utils/liveHistoryScheduler');
 const { ensureS3BucketExists, isS3UploadEnabled, s3BucketName } = require('./src/backend/config/s3');
@@ -109,7 +110,7 @@ app.use(express.static(FRONTEND_DIR, {
 }));
 
 app.use('/api', (req, res, next) => {
-  if (req.path.startsWith('/live')) {
+  if (req.path.startsWith('/live') || req.path.startsWith('/rbti')) {
     return next();
   }
 
@@ -127,6 +128,7 @@ app.use('/api/support', supportRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/live', liveRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/rbti', rbtiRoutes);
 
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ message: 'Not Found' });

@@ -65,6 +65,14 @@ const rbtiTemplate = `
           </div>
         </section>
 
+        <section id="rbti-result-section" class="card hidden" style="padding: 22px; margin-top: 16px; border-radius: 16px; border: 1px solid #e5e7eb; text-align: left;">
+          <h3 style="margin: 0 0 10px; font-size: 20px; font-weight: 800;">검사 결과</h3>
+          <p id="rbti-result-type" style="margin: 0 0 8px; font-size: 18px; font-weight: 700;"></p>
+          <p id="rbti-result-axis" style="margin: 0 0 10px; color: #374151; white-space: pre-line;"></p>
+          <p style="margin: 0 0 8px; font-weight: 700;">질문 포인트 합산 결과</p>
+          <ul id="rbti-result-hidden" style="margin: 0; padding-left: 18px; color: #374151;"></ul>
+        </section>
+
         <section class="mt-12 space-y-8" style="margin-top: 40px;">
           <div>
             <h2 id="rbti-about-title" class="text-xl font-semibold text-gray-900 mt-3">RBTI 검사란?</h2>
