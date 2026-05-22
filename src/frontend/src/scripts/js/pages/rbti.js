@@ -15,9 +15,6 @@
   const progressBarEl = document.getElementById('rbti-progress-bar');
   const questionTextEl = document.getElementById('rbti-question-text');
   const answerListEl = document.getElementById('rbti-answer-list');
-  const prevButtonEl = document.getElementById('rbti-prev-btn');
-  const nextButtonEl = document.getElementById('rbti-next-btn');
-  const submitButtonEl = document.getElementById('rbti-submit-btn');
   const backButtonEl = document.getElementById('rbti-back-btn');
   const shareButtonEl = document.getElementById('rbti-share-btn');
   const introSectionEl = document.getElementById('rbti-intro');
@@ -98,15 +95,19 @@
 
       button.addEventListener('click', () => {
         state.answers[question.id] = answer.value;
-        renderQuestion();
+
+        if (state.currentIndex < state.questions.length - 1) {
+          state.currentIndex += 1;
+          renderQuestion();
+          return;
+        }
+
+        submitAnswers();
       });
 
       answerListEl.appendChild(button);
     });
 
-    prevButtonEl.disabled = state.currentIndex === 0;
-    nextButtonEl.classList.toggle('hidden', state.currentIndex === state.questions.length - 1);
-    submitButtonEl.classList.toggle('hidden', state.currentIndex !== state.questions.length - 1);
   }
 
 
@@ -305,20 +306,6 @@
     renderQuestion();
   });
 
-  prevButtonEl.addEventListener('click', () => {
-    if (state.currentIndex > 0) {
-      state.currentIndex -= 1;
-      renderQuestion();
-    }
-  });
-
-  nextButtonEl.addEventListener('click', () => {
-    if (state.currentIndex < state.questions.length - 1) {
-      state.currentIndex += 1;
-      renderQuestion();
-    }
-  });
-
   backButtonEl?.addEventListener('click', () => {
     if (window.history.length > 1) {
       window.history.back();
@@ -333,7 +320,7 @@
   document.addEventListener('keydown', handleShareSheetKeydown);
 
 
-  submitButtonEl.addEventListener('click', () => {
+  function submitAnswers() {
     if (Object.keys(state.answers).length !== state.questions.length) {
       alert('모든 질문에 답변을 선택해주세요.');
       return;
@@ -349,7 +336,7 @@
     answerListEl?.classList.add('hidden');
     questionActionsEl?.classList.add('hidden');
     testCardEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
+  }
 
   loadQuestions().then(bootstrap);
 

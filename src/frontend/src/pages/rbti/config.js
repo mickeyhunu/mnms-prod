@@ -66,13 +66,6 @@ const rbtiTemplate = `
 
           <h3 id="rbti-question-text" style="margin-bottom: 14px; font-size: 20px; line-height: 1.45;">질문 준비 중...</h3>
           <div id="rbti-answer-list" style="display: grid; gap: 8px;"></div>
-
-          <div id="rbti-question-actions" style="display: flex; justify-content: space-between; margin-top: 20px; gap: 8px;">
-            <button type="button" class="btn btn-outline" id="rbti-prev-btn">이전</button>
-            <button type="button" class="btn btn-primary" id="rbti-next-btn">다음</button>
-            <button type="button" class="btn btn-primary hidden" id="rbti-submit-btn">결과 보기</button>
-          </div>
-
           <div id="rbti-inline-result" class="hidden" style="margin-top: 18px;"></div>
         </section>
 
