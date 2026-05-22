@@ -25,14 +25,14 @@
     }
   ],
   "axes": {
-    "E": "Exciter - 하이텐션/술자리 분위기형",
-    "I": "Immersive - 조용한 몰입/대화형",
-    "S": "Skinship - 스킨십/수위 중시형",
-    "N": "Narrative - 대화/감성/케미형",
-    "F": "Flex - 소비/구찌형",
-    "T": "Tactician - 빠꼼이/계산형",
-    "J": "Judger - 주도/정리형",
-    "P": "Playmaker - 즉흥/흐름형"
+    "E": "Exciter - 분위기 메이커",
+    "I": "Immersive - 조용한 노는타입",
+    "S": "Skinship - 수위충",
+    "N": "Narrative - 말빨충",
+    "F": "Flex - 구찌형",
+    "T": "Tactician - 계산기형",
+    "J": "Judger - 룸반장형",
+    "P": "Playmaker - 일단달림형"
   },
   "questions": [
     {
@@ -64,7 +64,7 @@
     },
     {
       "id": 4,
-      "text": "샷잔 분위기를 자주 만드는 편이다.",
+      "text": "샷잔(양주) 강요를 하는 편이다.",
       "axis": "E",
       "hiddenScores": {
         "alcoholJinsang": 25,
@@ -83,7 +83,7 @@
     },
     {
       "id": 6,
-      "text": "스킨십 분위기를 중요하게 생각한다.",
+      "text": "스킨십에 집착한다.",
       "axis": "S",
       "hiddenScores": {
         "touchJinsang": 20,
@@ -102,7 +102,7 @@
     },
     {
       "id": 8,
-      "text": "접객원과 감정적인 케미를 중요하게 생각한다.",
+      "text": "아가씨와 감정적인 접촉을 중요하게 생각한다.",
       "axis": "N",
       "hiddenScores": {
         "comfortRoom": 15,
@@ -120,7 +120,7 @@
     },
     {
       "id": 10,
-      "text": "분위기가 좋으면 예상보다 더 소비하는 편이다.",
+      "text": "술을 마시다보면 예상보다 더 소비하는 편이다.",
       "axis": "F",
       "hiddenScores": {
         "gucciPower": 25,
@@ -139,7 +139,7 @@
     },
     {
       "id": 12,
-      "text": "접객원 리액션에 따라 소비가 커지는 편이다.",
+      "text": "아가씨 리액션에 따라 소비가 커지는 편이다.",
       "axis": "F",
       "hiddenScores": {
         "gucciPower": 20,
@@ -148,7 +148,7 @@
     },
     {
       "id": 13,
-      "text": "술 추가 주문을 자주 하는 편이다.",
+      "text": "술 추가를 자주 하는 편이다.",
       "axis": "F",
       "hiddenScores": {
         "gucciPower": 20,
@@ -167,7 +167,7 @@
     },
     {
       "id": 15,
-      "text": "킵술 여부를 중요하게 생각한다.",
+      "text": "킵술 요청을 자주한다.",
       "axis": "T",
       "hiddenScores": {
         "bbakkomPower": 25,
@@ -274,17 +274,17 @@
   },
   "results": {
     "ESTP": {
-      "title": "하이텐션 술진상형",
+      "title": "술또라이",
       "summary": "분위기 띄우는 능력은 좋은데 샷잔이 끝없이 도는 스타일.",
       "staffComment": "처음엔 재밌는데 뒤로 갈수록 체력 소모가 큰 손님."
     },
     "ESFP": {
-      "title": "구찌 텐션형",
+      "title": "구찌 형님",
       "summary": "분위기 좋으면 소비가 커지고 리액션에 약한 스타일.",
       "staffComment": "잘 맞으면 매출도 분위기도 같이 올라가는 손님."
     },
     "ESTJ": {
-      "title": "빠꼼이 술주도형",
+      "title": "빠꼼이 술진상",
       "summary": "텐션도 높고 시스템도 잘 알아서 룸 흐름을 직접 잡는 스타일.",
       "staffComment": "쉽지 않지만 말은 잘 통하는 손님."
     },
@@ -294,22 +294,22 @@
       "staffComment": "접객원과 영업진 모두 기억하기 쉬운 손님."
     },
     "ENTP": {
-      "title": "말빨 술텐션형",
+      "title": "말빨 술진상형",
       "summary": "대화도 잘하고 텐션도 높지만 흐름이 예측불가한 스타일.",
       "staffComment": "재밌는데 방향이 어디로 튈지 모르는 손님."
     },
     "ENFP": {
-      "title": "감성 텐션형",
+      "title": "감성 로진형",
       "summary": "술자리에서 감정선과 분위기를 동시에 즐기는 스타일.",
       "staffComment": "케미 맞으면 단골 가능성 높은 손님."
     },
     "ENTJ": {
-      "title": "룸 지휘관형",
+      "title": "룸 히틀러",
       "summary": "초이스, 술, 분위기, 계산까지 직접 흐름을 잡는 스타일.",
-      "staffComment": "영업진 입장에선 편하지만 접객원은 긴장할 수 있는 손님."
+      "staffComment": "영업진 입장에선 편하지만 아가씨는 긴장할 수 있는 손님."
     },
     "ENFJ": {
-      "title": "단골 조련형",
+      "title": "단골 큰형님",
       "summary": "사람을 잘 챙기고 관계를 만들 줄 아는 스타일.",
       "staffComment": "한 번 잡히면 오래 가는 단골형 손님."
     },
@@ -339,17 +339,17 @@
       "staffComment": "말은 적어도 시스템 이해도가 높은 손님."
     },
     "INFP": {
-      "title": "감성 몰입형",
+      "title": "감성 로진형",
       "summary": "술보다 사람, 분위기보다 케미를 중요하게 보는 스타일.",
       "staffComment": "감정선만 맞으면 오래 기억하는 손님."
     },
     "INTJ": {
-      "title": "냉정한 시스템형",
+      "title": "핵진상",
       "summary": "즉흥보다 계획, 감정보다 흐름과 효율을 보는 스타일.",
       "staffComment": "영업진 입장에선 실수하면 바로 티 나는 손님."
     },
     "INFJ": {
-      "title": "숨은 단골형",
+      "title": "진또배기 형님",
       "summary": "조용하지만 한 번 마음에 들면 오래 가는 스타일.",
       "staffComment": "크게 티는 안 나지만 신뢰가 쌓이면 좋은 손님."
     }
@@ -413,7 +413,7 @@
       {
         "min": 0,
         "max": 20,
-        "label": "가성비형"
+        "label": "거지손님"
       },
       {
         "min": 21,
@@ -433,7 +433,7 @@
       {
         "min": 81,
         "max": 100,
-        "label": "매출 효자"
+        "label": "회장님"
       }
     ],
     "bbakkomPower": [
@@ -460,7 +460,7 @@
       {
         "min": 81,
         "max": 100,
-        "label": "업계 룰 마스터"
+        "label": "거의 밤일러"
       }
     ],
     "comfortRoom": [
@@ -519,14 +519,14 @@
     ]
   },
   "hiddenScoreComments": {
-    "touchJinsang": "스킨십 수위 기대치가 높은 편이라 가이드가 중요합니다.",
-    "alcoholJinsang": "주량/샷 텐션이 높아지면 접객 피로도가 빠르게 오를 수 있습니다.",
-    "gucciPower": "리액션과 케미가 맞으면 추가 소비 전환 가능성이 높습니다.",
-    "bbakkomPower": "시스템 이해도가 높아 진행 설명은 명확하고 빠르게 하는 것이 좋습니다.",
-    "comfortRoom": "접객원이 느끼는 체감 난이도와 룸 안정감을 보여주는 지표입니다.",
-    "longTimePower": "연장/장타 성향 지표로 후반 집중력 관리가 중요합니다.",
-    "staffFatigue": "접객원 체력 소모 관점의 경고 지표입니다.",
-    "salesPreference": "매출 포인트 반응도를 보여주는 지표입니다.",
-    "regularPotential": "관계 형성 후 재방문 가능성을 보여주는 지표입니다."
+    "touchJinsang": "수위 진상 확률.",
+    "alcoholJinsang": "술진상 확률.",
+    "gucciPower": "구찌형 확률.",
+    "bbakkomPower": "빠꼼이 확률.",
+    "comfortRoom": "꿀방 확률.",
+    "longTimePower": "장타충 확률.",
+    "staffFatigue": "아가씨 방포 확률.",
+    "salesPreference": "영업진 선호도.",
+    "regularPotential": "룸 중독률."
   }
 }
