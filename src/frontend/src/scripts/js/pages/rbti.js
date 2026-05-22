@@ -32,10 +32,13 @@
   const resultHiddenEl = document.getElementById('rbti-result-hidden');
   const inlineResultEl = document.getElementById('rbti-inline-result');
   const heroResultEl = document.getElementById('rbti-hero-result');
+  const heroIntroEl = document.getElementById('rbti-hero-intro');
   const heroTypeEl = document.getElementById('rbti-hero-type');
   const heroTitleEl = document.getElementById('rbti-hero-title');
   const heroSummaryEl = document.getElementById('rbti-hero-summary');
   const heroCommentEl = document.getElementById('rbti-hero-comment');
+  const questionProgressEl = document.getElementById('rbti-question-progress');
+  const questionActionsEl = document.getElementById('rbti-question-actions');
 
   const fallbackData = {
     testName: 'RBTI',
@@ -283,6 +286,11 @@
     resultSectionEl?.classList.add('hidden');
     inlineResultEl?.classList.add('hidden');
     heroResultEl?.classList.add('hidden');
+    heroIntroEl?.classList.remove('hidden');
+    questionProgressEl?.classList.remove('hidden');
+    questionTextEl?.classList.remove('hidden');
+    answerListEl?.classList.remove('hidden');
+    questionActionsEl?.classList.remove('hidden');
     renderQuestion();
   });
 
@@ -324,6 +332,11 @@
     renderInlineResult(state.meta, result);
 
     resultSectionEl?.classList.add('hidden');
+    heroIntroEl?.classList.add('hidden');
+    questionProgressEl?.classList.add('hidden');
+    questionTextEl?.classList.add('hidden');
+    answerListEl?.classList.add('hidden');
+    questionActionsEl?.classList.add('hidden');
     testCardEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
