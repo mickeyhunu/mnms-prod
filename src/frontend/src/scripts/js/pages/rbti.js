@@ -197,14 +197,14 @@
 
     const axisRows = getAxisPercentages(result.axisScores).map(({ left, right, leftPercent, rightPercent }) => `
       <div>
-        <div class="mb-1 flex items-center justify-between gap-3 text-sm">
+        <div class="mt-1 flex items-center gap-3 text-sm" style="justify-content: space-between;">
           <span class="inline-flex flex-1 items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 font-bold text-indigo-700">${axisLabels[left]} (${left}) <strong>${leftPercent}%</strong></span>
           <span class="inline-flex flex-1 items-center justify-end gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-right text-purple-700"><strong>${rightPercent}%</strong> ${axisLabels[right]} (${right})</span>
         </div>
-        <div class="h-3 w-full overflow-hidden rounded-full bg-gray-200 shadow-inner" role="img" aria-label="${leftPercent}% 대 ${rightPercent}% 비율 그래프">
+        <div class="h-3 w-full overflow-hidden rounded-full bg-gray-200 shadow-inner" style="height: 12px; border-radius: 5px; border: 1px solid;" role="img" aria-label="${leftPercent}% 대 ${rightPercent}% 비율 그래프">
           <div class="flex h-full w-full">
-            <div class="h-full bg-indigo-500 transition-all duration-700" style="width: ${leftPercent}%;"></div>
-            <div class="h-full bg-purple-500 transition-all duration-700" style="width: ${rightPercent}%;"></div>
+            <div class="h-full bg-indigo-500 transition-all duration-700" style="background-color:blue; width: ${leftPercent}%;"></div>
+            <div class="h-full bg-purple-500 transition-all duration-700" style="background-color:red; width: ${rightPercent}%;"></div>
           </div>
         </div>
       </div>
