@@ -25,6 +25,10 @@
   const axisListEl = document.getElementById('rbti-axis-list');
   const startButtonEl = document.getElementById('rbti-start-btn');
   const testCardEl = document.getElementById('rbti-test-card');
+  const resultSectionEl = document.getElementById('rbti-result-section');
+  const resultTypeEl = document.getElementById('rbti-result-type');
+  const resultAxisEl = document.getElementById('rbti-result-axis');
+  const resultHiddenEl = document.getElementById('rbti-result-hidden');
 
   const fallbackData = {
     testName: 'RBTI',
@@ -195,6 +199,7 @@
       return;
     }
 
+    resultSectionEl?.classList.add('hidden');
     renderQuestion();
   });
 
@@ -233,12 +238,21 @@
     }
 
     const result = calculateResults();
-    const scoreLines = Object.entries(result.hiddenPercent)
-      .sort((a, b) => b[1] - a[1])
-      .map(([name, score]) => `${name}: ${score}%`)
-      .join('\n');
+    const sortedAxis = Object.entries(result.axisScores).sort((a, b) => b[1] - a[1]);
+    const axisSummary = sortedAxis.map(([axis, score]) => `${axis}: ${score}점`).join(' / ');
 
-    alert(`RBTI 유형: ${result.type}\n\n히든 스코어(0~100 보정):\n${scoreLines}`);
+    resultTypeEl && (resultTypeEl.textContent = `RBTI 유형: ${result.type}`);
+    resultAxisEl && (resultAxisEl.textContent = `축별 점수: ${axisSummary}`);
+
+    if (resultHiddenEl) {
+      const hiddenEntries = Object.entries(result.hiddenPercent).sort((a, b) => b[1] - a[1]);
+      resultHiddenEl.innerHTML = hiddenEntries
+        .map(([name, score]) => `<li>${name}: ${score}%</li>`)
+        .join('');
+    }
+
+    resultSectionEl?.classList.remove('hidden');
+    resultSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   loadQuestions().then(bootstrap);
