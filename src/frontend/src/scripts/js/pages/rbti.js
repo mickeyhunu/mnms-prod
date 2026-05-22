@@ -184,7 +184,16 @@
     const resultMap = data.results || {};
     const typeInfo = resultMap[result.type] || {};
     const hiddenComments = data.hiddenScoreComments || {};
-    const axisLabels = { E: '외향', I: '내향', S: '감각', N: '직관', T: '사고', F: '감정', J: '판단', P: '인식' };
+    const axisLabels = {
+      E: '하이텐션/술자리 분위기형',
+      I: '조용한 몰입/대화형',
+      S: '스킨십/수위 중시형',
+      N: '대화/감성/케미형',
+      F: '소비/구찌형',
+      T: '빠꼼이/계산형',
+      J: '주도/정리형',
+      P: '즉흥/흐름형'
+    };
 
     const axisRows = getAxisPercentages(result.axisScores).map(({ left, right, leftPercent, rightPercent }) => `
       <div>
@@ -192,10 +201,11 @@
           <span class="font-bold text-indigo-600">${axisLabels[left]} (${left}) ${leftPercent}%</span>
           <span class="text-gray-500">${rightPercent}% ${axisLabels[right]} (${right})</span>
         </div>
-        <div class="flex h-4 rounded-full overflow-hidden bg-gray-100">
+        <div class="flex h-4 rounded-full overflow-hidden bg-gray-100" role="img" aria-label="${axisLabels[left]} ${leftPercent}%, ${axisLabels[right]} ${rightPercent}%">
           <div class="bg-indigo-400 transition-all duration-700" style="width: ${leftPercent}%;"></div>
           <div class="bg-purple-400 transition-all duration-700" style="width: ${rightPercent}%;"></div>
         </div>
+        <p class="text-xs text-center mt-1 text-gray-600">${leftPercent}% : ${rightPercent}%</p>
       </div>
     `).join('');
 
