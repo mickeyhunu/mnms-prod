@@ -32,6 +32,13 @@ const rbtiTemplate = `
           <p id="rbti-test-description" style="margin: 0; color: rgba(255,255,255,0.92); white-space: pre-line;">Room Behavior Type Indicator
 
 밤문화 성향검사</p>
+          <div id="rbti-hero-result" class="hidden" style="margin-top: 12px;">
+            <p class="text-white/70 text-sm mb-2">당신의 RBTI는...</p>
+            <h2 id="rbti-hero-type" class="text-6xl font-black tracking-wider mb-3">ESFP</h2>
+            <p id="rbti-hero-title" class="text-2xl font-bold mb-3">구찌 텐션형</p>
+            <p id="rbti-hero-summary" class="text-white/90 leading-relaxed text-sm mb-2"></p>
+            <p id="rbti-hero-comment" class="text-white/90 leading-relaxed text-sm"></p>
+          </div>
         </div>
 
         <div id="rbti-intro" class="card" style="padding: 22px; margin-top: 16px; border-radius: 16px; border: 1px solid #e5e7eb; text-align: left;">
