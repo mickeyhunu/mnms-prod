@@ -47,6 +47,24 @@ const rbtiTemplate = `
 
         <button type="button" id="rbti-start-btn" style="width: 100%; margin-top: 12px; padding: 16px; border: 0; border-radius: 16px; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: #ffffff; font-size: 18px; font-weight: 800; box-shadow: 0 10px 24px rgba(79,70,229,0.24); cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;">검사 시작하기</button>
 
+        <section id="rbti-test-card" class="card hidden" style="padding: 22px; margin-top: 16px; border-radius: 16px; border: 1px solid #e5e7eb;">
+          <div style="margin: 0 0 18px;">
+            <p style="font-size: 13px; color: #6b7280; margin: 0 0 8px;">진행도 <span id="rbti-progress-current">0</span>/<span id="rbti-progress-total">0</span></p>
+            <div style="height: 9px; border-radius: 999px; background: #eef2ff; overflow: hidden;">
+              <div id="rbti-progress-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg,#4f46e5,#7c3aed);"></div>
+            </div>
+          </div>
+
+          <h3 id="rbti-question-text" style="margin-bottom: 14px; font-size: 20px; line-height: 1.45;">질문 준비 중...</h3>
+          <div id="rbti-answer-list" style="display: grid; gap: 8px;"></div>
+
+          <div style="display: flex; justify-content: space-between; margin-top: 20px; gap: 8px;">
+            <button type="button" class="btn btn-outline" id="rbti-prev-btn">이전</button>
+            <button type="button" class="btn btn-primary" id="rbti-next-btn">다음</button>
+            <button type="button" class="btn btn-primary hidden" id="rbti-submit-btn">결과 보기</button>
+          </div>
+        </section>
+
         <section class="mt-12 space-y-8" style="margin-top: 40px;">
           <div>
             <h2 id="rbti-about-title" class="text-xl font-semibold text-gray-900 mt-3">RBTI 검사란?</h2>
@@ -80,24 +98,6 @@ const rbtiTemplate = `
                 <p class="text-gray-600 text-sm mb-1">업계 사람들의 시선으로 분석하기 때문에 뜨끔할 수 있습니다.</p>
               </div>
             </div>
-          </div>
-        </section>
-
-        <section id="rbti-test-card" class="card hidden" style="padding: 22px; margin-top: 16px; border-radius: 16px; border: 1px solid #e5e7eb;">
-          <div style="margin: 0 0 18px;">
-            <p style="font-size: 13px; color: #6b7280; margin: 0 0 8px;">진행도 <span id="rbti-progress-current">0</span>/<span id="rbti-progress-total">0</span></p>
-            <div style="height: 9px; border-radius: 999px; background: #eef2ff; overflow: hidden;">
-              <div id="rbti-progress-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg,#4f46e5,#7c3aed);"></div>
-            </div>
-          </div>
-
-          <h3 id="rbti-question-text" style="margin-bottom: 14px; font-size: 20px; line-height: 1.45;">질문 준비 중...</h3>
-          <div id="rbti-answer-list" style="display: grid; gap: 8px;"></div>
-
-          <div style="display: flex; justify-content: space-between; margin-top: 20px; gap: 8px;">
-            <button type="button" class="btn btn-outline" id="rbti-prev-btn">이전</button>
-            <button type="button" class="btn btn-primary" id="rbti-next-btn">다음</button>
-            <button type="button" class="btn btn-primary hidden" id="rbti-submit-btn">결과 보기</button>
           </div>
         </section>
       </div>
