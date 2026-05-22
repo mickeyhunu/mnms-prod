@@ -897,7 +897,7 @@ function renderUsersTable() {
             <tr>
                 <td>${user.id}</td>
                 <td>${sanitizeHTML(user.loginId || '')}</td>
-                <td>${sanitizeHTML(user.nickname || '')}</td>
+                <td>${sanitizeHTML(user.nickname || '')}${user.name ? ` <span class="text-muted">(${sanitizeHTML(user.name)})</span>` : ''}</td>
                 <td>${formatAdminRestrictionStatus(user)}</td>
                 <td>${Number(user.totalPoints || 0).toLocaleString()} P</td>
                 <td>${formatDate(user.createdAt || user.created_at)}</td>
