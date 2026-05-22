@@ -4,7 +4,8 @@
     questions: [],
     answerScale: [],
     currentIndex: 0,
-    answers: {}
+    answers: {},
+    meta: {}
   };
 
   const testTitleEl = document.getElementById('rbti-test-title');
@@ -29,6 +30,7 @@
   const resultTypeEl = document.getElementById('rbti-result-type');
   const resultAxisEl = document.getElementById('rbti-result-axis');
   const resultHiddenEl = document.getElementById('rbti-result-hidden');
+  const inlineResultEl = document.getElementById('rbti-inline-result');
 
   const fallbackData = {
     testName: 'RBTI',
@@ -153,7 +155,73 @@
     return { type, axisScores, hiddenRaw, hiddenPercent };
   }
 
+
+  function getAxisPercentages(axisScores) {
+    const pairs = [['E', 'I'], ['S', 'N'], ['T', 'F'], ['J', 'P']];
+    return pairs.map(([left, right]) => {
+      const total = axisScores[left] + axisScores[right];
+      const leftPercent = total === 0 ? 50 : Math.round((axisScores[left] / total) * 100);
+      return {
+        left,
+        right,
+        leftPercent,
+        rightPercent: 100 - leftPercent
+      };
+    });
+  }
+
+  function renderInlineResult(data, result) {
+    if (!inlineResultEl) return;
+
+    const resultMap = data.results || {};
+    const typeInfo = resultMap[result.type] || {};
+    const hiddenComments = data.hiddenScoreComments || {};
+    const axisLabels = { E: '외향', I: '내향', S: '감각', N: '직관', T: '사고', F: '감정', J: '판단', P: '인식' };
+
+    const axisRows = getAxisPercentages(result.axisScores).map(({ left, right, leftPercent, rightPercent }) => `
+      <div>
+        <div class="flex justify-between text-sm mb-1">
+          <span class="font-bold text-indigo-600">${axisLabels[left]} (${left}) ${leftPercent}%</span>
+          <span class="text-gray-500">${rightPercent}% ${axisLabels[right]} (${right})</span>
+        </div>
+        <div class="flex h-4 rounded-full overflow-hidden bg-gray-100">
+          <div class="bg-indigo-400 transition-all duration-700" style="width: ${leftPercent}%;"></div>
+          <div class="bg-purple-400 transition-all duration-700" style="width: ${rightPercent}%;"></div>
+        </div>
+      </div>
+    `).join('');
+
+    const hiddenEntries = Object.entries(result.hiddenPercent).sort((a, b) => b[1] - a[1]);
+    const hiddenRows = hiddenEntries.map(([key, score]) => {
+      const comment = hiddenComments[key] || `${key} 지표`;
+      return `<li><strong>${score}%</strong> · ${comment}</li>`;
+    }).join('');
+
+    inlineResultEl.innerHTML = `
+      <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-8 text-center text-white shadow-lg mb-6">
+        <p class="text-white/70 text-sm mb-2">당신의 RBTI는...</p>
+        <h2 class="text-6xl font-black tracking-wider mb-3">${result.type}</h2>
+        <p class="text-2xl font-bold mb-3">${typeInfo.title || '유형 분석 중'}</p>
+        <p class="text-white/90 leading-relaxed text-sm mb-2">${typeInfo.summary || '요약 데이터가 없습니다.'}</p>
+        <p class="text-white/90 leading-relaxed text-sm">접객원 코멘트: ${typeInfo.staffComment || '코멘트 데이터가 없습니다.'}</p>
+      </div>
+
+      <div class="calc-card p-6 mb-6">
+        <h3 class="font-semibold text-gray-800 mb-4">축별 분석 결과</h3>
+        <div class="space-y-5">${axisRows}</div>
+      </div>
+
+      <div class="calc-card p-6">
+        <h3 class="font-semibold text-gray-800 mb-4">접객원 관점 추가 코멘트</h3>
+        <ul class="space-y-2 text-sm text-gray-700">${hiddenRows}</ul>
+      </div>
+    `;
+
+    inlineResultEl.classList.remove('hidden');
+  }
+
   function bootstrap(data) {
+    state.meta = data || {};
     state.questions = Array.isArray(data.questions) ? data.questions : [];
     state.answerScale = Array.isArray(data.answerScale) ? data.answerScale : fallbackData.answerScale;
 
@@ -200,6 +268,7 @@
     }
 
     resultSectionEl?.classList.add('hidden');
+    inlineResultEl?.classList.add('hidden');
     renderQuestion();
   });
 
@@ -238,21 +307,10 @@
     }
 
     const result = calculateResults();
-    const sortedAxis = Object.entries(result.axisScores).sort((a, b) => b[1] - a[1]);
-    const axisSummary = sortedAxis.map(([axis, score]) => `${axis}: ${score}점`).join(' / ');
+    renderInlineResult(state.meta, result);
 
-    resultTypeEl && (resultTypeEl.textContent = `RBTI 유형: ${result.type}`);
-    resultAxisEl && (resultAxisEl.textContent = `축별 점수: ${axisSummary}`);
-
-    if (resultHiddenEl) {
-      const hiddenEntries = Object.entries(result.hiddenPercent).sort((a, b) => b[1] - a[1]);
-      resultHiddenEl.innerHTML = hiddenEntries
-        .map(([name, score]) => `<li>${name}: ${score}%</li>`)
-        .join('');
-    }
-
-    resultSectionEl?.classList.remove('hidden');
-    resultSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    resultSectionEl?.classList.add('hidden');
+    testCardEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   loadQuestions().then(bootstrap);

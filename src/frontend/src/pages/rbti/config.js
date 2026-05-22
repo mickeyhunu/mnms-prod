@@ -47,7 +47,7 @@ const rbtiTemplate = `
 
         <button type="button" id="rbti-start-btn" style="width: 100%; margin-top: 12px; padding: 16px; border: 0; border-radius: 16px; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: #ffffff; font-size: 18px; font-weight: 800; box-shadow: 0 10px 24px rgba(79,70,229,0.24); cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;">검사 시작하기</button>
 
-        <section id="rbti-test-card" class="card hidden" style="padding: 22px; margin-top: 16px; border-radius: 16px; border: 1px solid #e5e7eb;">
+        <section id="rbti-test-card" class="card hidden" style="padding: 22px; margin-top: 16px; border-radius: 16px; border: 1px solid #e5e7eb; text-align: left;">
           <div style="margin: 0 0 18px;">
             <p style="font-size: 13px; color: #6b7280; margin: 0 0 8px;">진행도 <span id="rbti-progress-current">0</span>/<span id="rbti-progress-total">0</span></p>
             <div style="height: 9px; border-radius: 999px; background: #eef2ff; overflow: hidden;">
@@ -63,6 +63,8 @@ const rbtiTemplate = `
             <button type="button" class="btn btn-primary" id="rbti-next-btn">다음</button>
             <button type="button" class="btn btn-primary hidden" id="rbti-submit-btn">결과 보기</button>
           </div>
+
+          <div id="rbti-inline-result" class="hidden" style="margin-top: 18px;"></div>
         </section>
 
         <section id="rbti-result-section" class="card hidden" style="padding: 22px; margin-top: 16px; border-radius: 16px; border: 1px solid #e5e7eb; text-align: left;">

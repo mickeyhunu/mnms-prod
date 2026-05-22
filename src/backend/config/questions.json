@@ -3,11 +3,26 @@
   "fullName": "Room Behavior Type Indicator",
   "description": "밤문화 성향검사",
   "answerScale": [
-    { "label": "매우 아니다", "value": -2 },
-    { "label": "아니다", "value": -1 },
-    { "label": "보통", "value": 0 },
-    { "label": "그렇다", "value": 1 },
-    { "label": "매우 그렇다", "value": 2 }
+    {
+      "label": "매우 아니다",
+      "value": -2
+    },
+    {
+      "label": "아니다",
+      "value": -1
+    },
+    {
+      "label": "보통",
+      "value": 0
+    },
+    {
+      "label": "그렇다",
+      "value": 1
+    },
+    {
+      "label": "매우 그렇다",
+      "value": 2
+    }
   ],
   "axes": {
     "E": "Exciter - 하이텐션/술자리 분위기형",
@@ -341,46 +356,177 @@
   },
   "hiddenScoreLabels": {
     "touchJinsang": [
-      { "min": 0, "max": 20, "label": "손 얌전함" },
-      { "min": 21, "max": 40, "label": "가벼운 터치형" },
-      { "min": 41, "max": 60, "label": "손 자주 가는 스타일" },
-      { "min": 61, "max": 80, "label": "손진상 주의" },
-      { "min": 81, "max": 100, "label": "손진상 확정" }
+      {
+        "min": 0,
+        "max": 20,
+        "label": "손 얌전함"
+      },
+      {
+        "min": 21,
+        "max": 40,
+        "label": "가벼운 터치형"
+      },
+      {
+        "min": 41,
+        "max": 60,
+        "label": "손 자주 가는 스타일"
+      },
+      {
+        "min": 61,
+        "max": 80,
+        "label": "손진상 주의"
+      },
+      {
+        "min": 81,
+        "max": 100,
+        "label": "손진상 확정"
+      }
     ],
     "alcoholJinsang": [
-      { "min": 0, "max": 20, "label": "술 얌전함" },
-      { "min": 21, "max": 40, "label": "적당한 술텐션" },
-      { "min": 41, "max": 60, "label": "술 분위기 좋아함" },
-      { "min": 61, "max": 80, "label": "술진상 주의" },
-      { "min": 81, "max": 100, "label": "샷잔 폭격기" }
+      {
+        "min": 0,
+        "max": 20,
+        "label": "술 얌전함"
+      },
+      {
+        "min": 21,
+        "max": 40,
+        "label": "적당한 술텐션"
+      },
+      {
+        "min": 41,
+        "max": 60,
+        "label": "술 분위기 좋아함"
+      },
+      {
+        "min": 61,
+        "max": 80,
+        "label": "술진상 주의"
+      },
+      {
+        "min": 81,
+        "max": 100,
+        "label": "샷잔 폭격기"
+      }
     ],
     "gucciPower": [
-      { "min": 0, "max": 20, "label": "가성비형" },
-      { "min": 21, "max": 40, "label": "적당소비형" },
-      { "min": 41, "max": 60, "label": "분위기 소비형" },
-      { "min": 61, "max": 80, "label": "구찌손님" },
-      { "min": 81, "max": 100, "label": "매출 효자" }
+      {
+        "min": 0,
+        "max": 20,
+        "label": "가성비형"
+      },
+      {
+        "min": 21,
+        "max": 40,
+        "label": "적당소비형"
+      },
+      {
+        "min": 41,
+        "max": 60,
+        "label": "분위기 소비형"
+      },
+      {
+        "min": 61,
+        "max": 80,
+        "label": "구찌손님"
+      },
+      {
+        "min": 81,
+        "max": 100,
+        "label": "매출 효자"
+      }
     ],
     "bbakkomPower": [
-      { "min": 0, "max": 20, "label": "초보 손님" },
-      { "min": 21, "max": 40, "label": "룰 알아가는 중" },
-      { "min": 41, "max": 60, "label": "눈치 빠른 손님" },
-      { "min": 61, "max": 80, "label": "빠꼼이" },
-      { "min": 81, "max": 100, "label": "업계 룰 마스터" }
+      {
+        "min": 0,
+        "max": 20,
+        "label": "초보 손님"
+      },
+      {
+        "min": 21,
+        "max": 40,
+        "label": "룰 알아가는 중"
+      },
+      {
+        "min": 41,
+        "max": 60,
+        "label": "눈치 빠른 손님"
+      },
+      {
+        "min": 61,
+        "max": 80,
+        "label": "빠꼼이"
+      },
+      {
+        "min": 81,
+        "max": 100,
+        "label": "업계 룰 마스터"
+      }
     ],
     "comfortRoom": [
-      { "min": 0, "max": 20, "label": "접객 난이도 높음" },
-      { "min": 21, "max": 40, "label": "살짝 피곤한 방" },
-      { "min": 41, "max": 60, "label": "보통방" },
-      { "min": 61, "max": 80, "label": "편한 손님" },
-      { "min": 81, "max": 100, "label": "꿀방손님" }
+      {
+        "min": 0,
+        "max": 20,
+        "label": "접객 난이도 높음"
+      },
+      {
+        "min": 21,
+        "max": 40,
+        "label": "살짝 피곤한 방"
+      },
+      {
+        "min": 41,
+        "max": 60,
+        "label": "보통방"
+      },
+      {
+        "min": 61,
+        "max": 80,
+        "label": "편한 손님"
+      },
+      {
+        "min": 81,
+        "max": 100,
+        "label": "꿀방손님"
+      }
     ],
     "longTimePower": [
-      { "min": 0, "max": 20, "label": "짧게 노는 편" },
-      { "min": 21, "max": 40, "label": "보통 타임" },
-      { "min": 41, "max": 60, "label": "연장 가능성 있음" },
-      { "min": 61, "max": 80, "label": "장타손님" },
-      { "min": 81, "max": 100, "label": "장타괴물" }
+      {
+        "min": 0,
+        "max": 20,
+        "label": "짧게 노는 편"
+      },
+      {
+        "min": 21,
+        "max": 40,
+        "label": "보통 타임"
+      },
+      {
+        "min": 41,
+        "max": 60,
+        "label": "연장 가능성 있음"
+      },
+      {
+        "min": 61,
+        "max": 80,
+        "label": "장타손님"
+      },
+      {
+        "min": 81,
+        "max": 100,
+        "label": "장타괴물"
+      }
     ]
+  },
+  "hiddenScoreComments": {
+    "touchJinsang": "스킨십 수위 기대치가 높은 편이라 가이드가 중요합니다.",
+    "alcoholJinsang": "주량/샷 텐션이 높아지면 접객 피로도가 빠르게 오를 수 있습니다.",
+    "gucciPower": "리액션과 케미가 맞으면 추가 소비 전환 가능성이 높습니다.",
+    "bbakkomPower": "시스템 이해도가 높아 진행 설명은 명확하고 빠르게 하는 것이 좋습니다.",
+    "comfortRoom": "접객원이 느끼는 체감 난이도와 룸 안정감을 보여주는 지표입니다.",
+    "longTimePower": "연장/장타 성향 지표로 후반 집중력 관리가 중요합니다.",
+    "staffFatigue": "접객원 체력 소모 관점의 경고 지표입니다.",
+    "salesPreference": "매출 포인트 반응도를 보여주는 지표입니다.",
+    "regularPotential": "관계 형성 후 재방문 가능성을 보여주는 지표입니다."
   }
 }
