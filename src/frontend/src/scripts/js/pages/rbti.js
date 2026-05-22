@@ -31,6 +31,11 @@
   const resultAxisEl = document.getElementById('rbti-result-axis');
   const resultHiddenEl = document.getElementById('rbti-result-hidden');
   const inlineResultEl = document.getElementById('rbti-inline-result');
+  const heroResultEl = document.getElementById('rbti-hero-result');
+  const heroTypeEl = document.getElementById('rbti-hero-type');
+  const heroTitleEl = document.getElementById('rbti-hero-title');
+  const heroSummaryEl = document.getElementById('rbti-hero-summary');
+  const heroCommentEl = document.getElementById('rbti-hero-comment');
 
   const fallbackData = {
     testName: 'RBTI',
@@ -197,15 +202,23 @@
       return `<li><strong>${score}%</strong> · ${comment}</li>`;
     }).join('');
 
-    inlineResultEl.innerHTML = `
-      <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-8 text-center text-white shadow-lg mb-6">
-        <p class="text-white/70 text-sm mb-2">당신의 RBTI는...</p>
-        <h2 class="text-6xl font-black tracking-wider mb-3">${result.type}</h2>
-        <p class="text-2xl font-bold mb-3">${typeInfo.title || '유형 분석 중'}</p>
-        <p class="text-white/90 leading-relaxed text-sm mb-2">${typeInfo.summary || '요약 데이터가 없습니다.'}</p>
-        <p class="text-white/90 leading-relaxed text-sm">접객원 코멘트: ${typeInfo.staffComment || '코멘트 데이터가 없습니다.'}</p>
-      </div>
+    if (heroResultEl) {
+      heroResultEl.classList.remove('hidden');
+    }
+    if (heroTypeEl) {
+      heroTypeEl.textContent = result.type;
+    }
+    if (heroTitleEl) {
+      heroTitleEl.textContent = typeInfo.title || '유형 분석 중';
+    }
+    if (heroSummaryEl) {
+      heroSummaryEl.textContent = typeInfo.summary || '요약 데이터가 없습니다.';
+    }
+    if (heroCommentEl) {
+      heroCommentEl.textContent = `접객원 코멘트: ${typeInfo.staffComment || '코멘트 데이터가 없습니다.'}`;
+    }
 
+    inlineResultEl.innerHTML = `
       <div class="calc-card p-6 mb-6">
         <h3 class="font-semibold text-gray-800 mb-4">축별 분석 결과</h3>
         <div class="space-y-5">${axisRows}</div>
@@ -269,6 +282,7 @@
 
     resultSectionEl?.classList.add('hidden');
     inlineResultEl?.classList.add('hidden');
+    heroResultEl?.classList.add('hidden');
     renderQuestion();
   });
 
