@@ -214,7 +214,16 @@
     const hiddenEntries = Object.entries(result.hiddenPercent).sort((a, b) => b[1] - a[1]);
     const hiddenRows = hiddenEntries.map(([key, score]) => {
       const comment = hiddenComments[key] || `${key} 지표`;
-      return `<li><strong>${score}%</strong> · ${comment}</li>`;
+      return `
+        <li class="space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-gray-800">${comment} ${score}%</span>
+          </div>
+          <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200" role="img" aria-label="${comment} ${score}% 막대그래프">
+            <div class="h-full rounded-full bg-indigo-500 transition-all duration-700" style="width: ${score}%;"></div>
+          </div>
+        </li>
+      `;
     }).join('');
 
     if (heroResultEl) {
