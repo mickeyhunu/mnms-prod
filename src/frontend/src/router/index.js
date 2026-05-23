@@ -8,6 +8,8 @@ const BRAND_NAME = '미드나잇 맨즈';
 const SITE_NAME = 'Midnight Men\'s';
 const DEFAULT_TITLE = BRAND_NAME;
 const DEFAULT_DESCRIPTION = '남성 유흥 커뮤니티 미드나잇 맨즈에서 최저가 업소 추천, 리얼 후기, 지역별 업소 정보를 빠르게 확인하세요.';
+const DEFAULT_SHARE_IMAGE_PATH = '/src/assets/live-avatars/brand-logo.png';
+
 const DEFAULT_KEYWORDS = [
   '남성 유흥 커뮤니티',
   '최저가 업소 추천',
@@ -116,6 +118,7 @@ router.afterEach((to) => {
     ? to.meta.description.trim()
     : DEFAULT_DESCRIPTION;
   const canonicalUrl = buildAbsoluteUrl(to.path, to.path === '/post-detail' ? { id: to.query?.id } : {});
+  const shareImageUrl = buildAbsoluteUrl(DEFAULT_SHARE_IMAGE_PATH);
   const robotsValue = to.meta?.noindex ? 'noindex, nofollow' : 'index, follow';
   const keywords = getMetaKeywords(to.meta);
 
@@ -126,9 +129,12 @@ router.afterEach((to) => {
   upsertMetaTag('meta[property="og:type"]', { property: 'og:type', content: to.path === '/post-detail' ? 'article' : 'website' });
   upsertMetaTag('meta[property="og:site_name"]', { property: 'og:site_name', content: SITE_NAME });
   upsertMetaTag('meta[property="og:url"]', { property: 'og:url', content: canonicalUrl });
-  upsertMetaTag('meta[name="twitter:card"]', { name: 'twitter:card', content: 'summary' });
+  upsertMetaTag('meta[property="og:image"]', { property: 'og:image', content: shareImageUrl });
+  upsertMetaTag('meta[property="og:image:secure_url"]', { property: 'og:image:secure_url', content: shareImageUrl });
+  upsertMetaTag('meta[name="twitter:card"]', { name: 'twitter:card', content: 'summary_large_image' });
   upsertMetaTag('meta[name="twitter:title"]', { name: 'twitter:title', content: document.title });
   upsertMetaTag('meta[name="twitter:description"]', { name: 'twitter:description', content: description });
+  upsertMetaTag('meta[name="twitter:image"]', { name: 'twitter:image', content: shareImageUrl });
   upsertMetaTag('meta[name="keywords"]', { name: 'keywords', content: keywords.join(', ') });
   upsertMetaTag('meta[name="robots"]', { name: 'robots', content: robotsValue });
   upsertMetaTag('meta[property="og:locale"]', { property: 'og:locale', content: 'ko_KR' });
