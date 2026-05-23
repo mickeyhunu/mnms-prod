@@ -242,11 +242,16 @@
     if (heroSummaryEl) {
       heroSummaryEl.textContent = typeInfo.summary || '요약 데이터가 없습니다.';
     }
-    const scoreLabelTags = Object.entries(result.hiddenPercent).map(([key, score]) => {
-      const labelConfig = Array.isArray(hiddenScoreLabels[key]) ? hiddenScoreLabels[key] : [];
-      const matchedLabel = labelConfig.find((item) => score >= Number(item.min) && score <= Number(item.max));
-      return matchedLabel?.label ? `#${matchedLabel.label}` : null;
-    }).filter(Boolean);
+    const scoreLabelTags = Object.entries(result.hiddenPercent)
+      .filter(([, score]) => Number.isFinite(Number(score)))
+      .sort((a, b) => Number(b[1]) - Number(a[1]))
+      .slice(0, 5)
+      .map(([key, score]) => {
+        const labelConfig = Array.isArray(hiddenScoreLabels[key]) ? hiddenScoreLabels[key] : [];
+        const matchedLabel = labelConfig.find((item) => score >= Number(item.min) && score <= Number(item.max));
+        return matchedLabel?.label ? `#${matchedLabel.label}` : null;
+      })
+      .filter(Boolean);
 
     if (heroCommentEl) {
       heroCommentEl.textContent = typeInfo.staffComment || '코멘트 데이터가 없습니다.';
