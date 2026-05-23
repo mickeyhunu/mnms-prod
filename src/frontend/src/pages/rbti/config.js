@@ -40,6 +40,7 @@ const rbtiTemplate = `
             <h2 id="rbti-hero-title" class="text-3xl font-bold mb-3">구찌 텐션형</h2>
             <p id="rbti-hero-summary" class="text-white/90 leading-relaxed text-sm mb-2"></p>
             <p id="rbti-hero-comment" class="text-white/90 leading-relaxed text-sm"></p>
+            <p id="rbti-hero-score-labels" class="text-white/70 leading-relaxed text-xs mt-1"></p>
           </div>
         </div>
 
