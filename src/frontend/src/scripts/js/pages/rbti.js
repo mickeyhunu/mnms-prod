@@ -220,7 +220,7 @@
       const comment = hiddenComments[key] || `${key} 지표`;
       return `
         <div class="space-y-1 flex-between">
-          <div class="flex-between" style="width: 27%;">
+          <div class="flex-between" style="min-width: 130px;">
             <span class="font-medium text-gray-800" style="white-space: nowrap;">${comment}</span>
             <strong class="font-semibold text-gray-900">${score}%</strong>
           </div>
