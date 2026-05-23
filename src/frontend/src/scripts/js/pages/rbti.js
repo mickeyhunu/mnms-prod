@@ -202,10 +202,10 @@
           <span class="inline-flex flex-1 items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 font-bold text-indigo-700">${getAxisLabelFromConfig(axisConfig, left)} (${left}) <strong>${leftPercent}%</strong></span>
           <span class="inline-flex flex-1 items-center justify-end gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-right text-purple-700"><strong>${rightPercent}%</strong> ${getAxisLabelFromConfig(axisConfig, right)} (${right})</span>
         </div>
-        <div class="h-3 w-full overflow-hidden rounded-full bg-gray-200 shadow-inner" style="height: 12px; border-radius: 5px; border: 1px solid;" role="img" aria-label="${leftPercent}% 대 ${rightPercent}% 비율 그래프">
+        <div class="h-3 w-full overflow-hidden rounded-full bg-gray-200 shadow-inner" style="height: 12px;" role="img" aria-label="${leftPercent}% 대 ${rightPercent}% 비율 그래프">
           <div class="flex h-full w-full">
-            <div class="h-full bg-indigo-500 transition-all duration-700" style="background-color:lab(59.866% 22.4834 -64.4485); width: ${leftPercent + 0.5}%;"></div>
-            <div class="h-full bg-purple-500 transition-all duration-700" style="background-color:lab(63.6946% 47.6127 -59.2066); width: ${rightPercent + 0.5}%;"></div>
+            <div class="h-full bg-indigo-500 transition-all duration-700" style="border-radius: 5px 0 0 5px; background-color:lab(59.866% 22.4834 -64.4485); width: ${leftPercent}%;"></div>
+            <div class="h-full bg-purple-500 transition-all duration-700" style="border-radius: 0 5px 5px 0; background-color:lab(63.6946% 47.6127 -59.2066); width: ${rightPercent}%;"></div>
           </div>
         </div>
       </div>
@@ -221,11 +221,11 @@
       return `
         <div class="space-y-1 flex-between">
           <div class="flex-between" style="width: 27%;">
-            <span class="font-medium text-gray-800">${comment}</span>
+            <span class="font-medium text-gray-800" style="white-space: nowrap;">${comment}</span>
             <strong class="font-semibold text-gray-900">${score}%</strong>
           </div>
-          <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200" style= "margin-left: 3%; height: 12px; border-radius: 5px; border: 1px solid;"; role="img" aria-label="${comment} ${score}% 막대그래프">
-            <div class="h-full rounded-full ${barColor} transition-all duration-700" style="width: ${score}%;"></div>
+          <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200" style="margin-left: 3%; height: 12px;"; role="img" aria-label="${comment} ${score}% 막대그래프">
+            <div class="h-full rounded-full ${barColor} transition-all duration-700" style="border-radius: 5px; width: ${score}%;"></div>
           </div>
         </div>
       `;
