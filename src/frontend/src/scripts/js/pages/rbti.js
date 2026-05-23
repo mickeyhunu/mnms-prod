@@ -219,12 +219,12 @@
 
       const comment = hiddenComments[key] || `${key} 지표`;
       return `
-        <div class="space-y-1 flex-between">
-          <div class="flex-between" style="width: 27%;">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div class="flex-between w-full sm:w-[27%]">
             <span class="font-medium text-gray-800" style="white-space: nowrap;">${comment}</span>
             <strong class="font-semibold text-gray-900">${score}%</strong>
           </div>
-          <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200" style="margin-left: 3%; height: 12px;"; role="img" aria-label="${comment} ${score}% 막대그래프">
+          <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200 sm:ml-[3%]" style="height: 12px;" role="img" aria-label="${comment} ${score}% 막대그래프">
             <div class="h-full rounded-full ${barColor} transition-all duration-700" style="border-radius: 5px; width: ${score}%;"></div>
           </div>
         </div>
