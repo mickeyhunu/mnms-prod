@@ -26,9 +26,9 @@
   ],
   "axes": {
     "E": "Exciter - 분위기 메이커",
-    "I": "Immersive - 조용한 노는타입",
+    "I": "Immersive - 조용히 노는타입",
     "S": "Skinship - 수위충",
-    "N": "Narrative - 말빨충",
+    "N": "Narrative - 도파민 or 말빨충",
     "F": "Flex - 구찌형",
     "T": "Tactician - 계산기형",
     "J": "Judger - 룸반장형",
@@ -252,7 +252,7 @@
     },
     {
       "id": 24,
-      "text": "접객원의 리액션이 마음에 안 들면 티가 나는 편이다.",
+      "text": "아가씨의 리액션이 마음에 안 들면 티가 나는 편이다.",
       "axis": "S",
       "hiddenScores": {
         "touchJinsang": 15,
@@ -305,7 +305,7 @@
     },
     {
       "id": 29,
-      "text": "아가씨나 영업진에게 고름을 짜달라고 한 적이 있다.",
+      "text": "아가씨나 영업진에게 고름 짠적이 있다.",
       "axis": "S",
       "hiddenScores": {
         "touchJinsang": 20,
@@ -381,7 +381,7 @@
     "ESFJ": {
       "title": "분위기 구찌형",
       "summary": "사람 챙기고 분위기 챙기고 소비도 챙기는 타입.",
-      "staffComment": "접객원과 영업진 모두 기억하기 쉬운 손님."
+      "staffComment": "아가씨와 영업진 모두 기억하기 쉬운 손님."
     },
     "ENTP": {
       "title": "말빨 술진상형",
@@ -420,7 +420,7 @@
     },
     "ISFJ": {
       "title": "꿀방 단골형",
-      "summary": "대화 중심이고 무리한 요구가 적어 접객원이 편한 스타일.",
+      "summary": "대화 중심이고 무리한 요구가 적어 아가씨가 편한 스타일.",
       "staffComment": "방 분위기가 편하고 안정적인 손님."
     },
     "INTP": {
@@ -771,20 +771,20 @@
     ]
   },
   "hiddenScoreComments": {
-    "touchJinsang": "수위 진상 확률.",
-    "alcoholJinsang": "술진상 확률.",
-    "gucciPower": "구찌형 확률.",
-    "bbakkomPower": "빠꼼이 확률.",
-    "comfortRoom": "꿀방 확률.",
-    "longTimePower": "장타충 확률.",
-    "staffFatigue": "아가씨 방포 확률.",
-    "salesPreference": "영업진 선호도.",
-    "regularPotential": "룸 중독률.",
-    "choiceJinsang": "초이스 진상률.",
-    "officeWorkerProb": "회사원 확률.",
-    "nightWorkerProb": "밤일러 확률.",
-    "gangsterProb": "꼬마건달일 확률.",
-    "illegalProb": "불법충 확률.",
-    "lookismProb": "얼빠일 확률."
+    "touchJinsang": "수위 진상 확률",
+    "alcoholJinsang": "술진상 확률",
+    "gucciPower": "구찌형 확률",
+    "bbakkomPower": "빠꼼이 확률",
+    "comfortRoom": "꿀방 확률",
+    "longTimePower": "장타충 확률",
+    "staffFatigue": "아가씨 방포 확률",
+    "salesPreference": "영업진 선호도",
+    "regularPotential": "룸 중독률",
+    "choiceJinsang": "초이스 진상률",
+    "officeWorkerProb": "회사원 확률",
+    "nightWorkerProb": "밤일러 확률",
+    "gangsterProb": "꼬마건달 확률",
+    "illegalProb": "불법충 확률",
+    "lookismProb": "얼빠 확률"
   }
 }
