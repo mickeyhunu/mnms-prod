@@ -179,28 +179,25 @@
     });
   }
 
+  function getAxisLabelFromConfig(axes, axisKey) {
+    const rawLabel = axes?.[axisKey] || fallbackData.axes[axisKey] || axisKey;
+    const [, localizedLabel] = String(rawLabel).split(' - ');
+    return (localizedLabel || rawLabel).trim();
+  }
+
   function renderInlineResult(data, result) {
     if (!inlineResultEl) return;
 
     const resultMap = data.results || {};
     const typeInfo = resultMap[result.type] || {};
     const hiddenComments = data.hiddenScoreComments || {};
-    const axisLabels = {
-      E: '하이텐션/술자리 분위기형',
-      I: '조용한 몰입/대화형',
-      S: '스킨십/수위 중시형',
-      N: '대화/감성/케미형',
-      F: '소비/구찌형',
-      T: '빠꼼이/계산형',
-      J: '주도/정리형',
-      P: '즉흥/흐름형'
-    };
+    const axisConfig = data.axes || fallbackData.axes;
 
     const axisRows = getAxisPercentages(result.axisScores).map(({ left, right, leftPercent, rightPercent }) => `
       <div>
         <div class="mt-1 flex items-center gap-3 text-sm" style="justify-content: space-between;">
-          <span class="inline-flex flex-1 items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 font-bold text-indigo-700">${axisLabels[left]} (${left}) <strong>${leftPercent}%</strong></span>
-          <span class="inline-flex flex-1 items-center justify-end gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-right text-purple-700"><strong>${rightPercent}%</strong> ${axisLabels[right]} (${right})</span>
+          <span class="inline-flex flex-1 items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 font-bold text-indigo-700">${getAxisLabelFromConfig(axisConfig, left)} (${left}) <strong>${leftPercent}%</strong></span>
+          <span class="inline-flex flex-1 items-center justify-end gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-right text-purple-700"><strong>${rightPercent}%</strong> ${getAxisLabelFromConfig(axisConfig, right)} (${right})</span>
         </div>
         <div class="h-3 w-full overflow-hidden rounded-full bg-gray-200 shadow-inner" style="height: 12px; border-radius: 5px; border: 1px solid;" role="img" aria-label="${leftPercent}% 대 ${rightPercent}% 비율 그래프">
           <div class="flex h-full w-full">
