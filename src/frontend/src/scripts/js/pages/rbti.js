@@ -31,6 +31,7 @@
   const heroResultEl = document.getElementById('rbti-hero-result');
   const heroIntroEl = document.getElementById('rbti-hero-intro');
   const heroTypeEl = document.getElementById('rbti-hero-type');
+  const heroAvatarEl = document.getElementById('rbti-hero-avatar');
   const heroTitleEl = document.getElementById('rbti-hero-title');
   const heroSummaryEl = document.getElementById('rbti-hero-summary');
   const heroCommentEl = document.getElementById('rbti-hero-comment');
@@ -235,6 +236,10 @@
     }
     if (heroTypeEl) {
       heroTypeEl.textContent = result.type;
+    }
+    if (heroAvatarEl) {
+      heroAvatarEl.src = `/src/assets/rbti-avatars/${String(result.type || '').toLowerCase()}.png`;
+      heroAvatarEl.alt = `${result.type} RBTI 아바타`;
     }
     if (heroTitleEl) {
       heroTitleEl.textContent = typeInfo.title || '유형 분석 중';
