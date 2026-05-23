@@ -224,3 +224,7 @@ div.community-section-header p {
 .p-4 { padding: 32px; }
 .w-full { width: 100%; }
 .h-full { height: 100%; }
+.bg-red-500 { background-color: #ef4444; }
+.bg-orange-400 { background-color: #fb923c; }
+.bg-yellow-400 { background-color: #facc15; }
+.bg-green-400 { background-color: #4ade80; }

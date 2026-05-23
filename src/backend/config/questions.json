@@ -25,14 +25,14 @@
     }
   ],
   "axes": {
-    "E": "Exciter - 분위기 메이커",
-    "I": "Immersive - 조용히 노는타입",
-    "S": "Skinship - 수위충",
-    "N": "Narrative - 도파민 or 말빨충",
-    "F": "Flex - 구찌형",
-    "T": "Tactician - 계산기형",
-    "J": "Judger - 룸반장형",
-    "P": "Playmaker - 일단달림형"
+    "E": "Exciter - 인싸",
+    "I": "Immersive - 아싸",
+    "S": "Skinship - 수위",
+    "N": "Narrative - 로맨스",
+    "F": "Flex - 구찌",
+    "T": "Tactician - 가성비",
+    "J": "Judger - 진상",
+    "P": "Playmaker - 말랑이"
   },
   "questions": [
     {

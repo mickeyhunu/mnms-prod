@@ -208,18 +208,23 @@
       </div>
     `).join('');
 
+    
+
     const hiddenEntries = Object.entries(result.hiddenPercent).sort((a, b) => b[1] - a[1]);
     const hiddenRows = hiddenEntries.map(([key, score]) => {
+      const barColor = score >= 80 ? "bg-red-500" : score >= 60 ? "bg-orange-400" : score >= 40 ? "bg-yellow-400" : "bg-green-400";
+
       const comment = hiddenComments[key] || `${key} 지표`;
       return `
-        <li class="space-y-1">
-          <div class="flex items-center justify-between">
-            <span class="font-medium text-gray-800">${comment} ${score}%</span>
+        <div class="space-y-1 flex-between">
+          <div class="flex-between" style="width: 27%;">
+            <span class="font-medium text-gray-800">${comment}</span>
+            <strong class="font-semibold text-gray-900">${score}%</strong>
           </div>
-          <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200" role="img" aria-label="${comment} ${score}% 막대그래프">
-            <div class="h-full rounded-full bg-indigo-500 transition-all duration-700" style="width: ${score}%;"></div>
+          <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200" style= "margin-left: 3%; height: 12px; border-radius: 5px; border: 1px solid;"; role="img" aria-label="${comment} ${score}% 막대그래프">
+            <div class="h-full rounded-full ${barColor} transition-all duration-700" style="width: ${score}%;"></div>
           </div>
-        </li>
+        </div>
       `;
     }).join('');
 
@@ -236,7 +241,7 @@
       heroSummaryEl.textContent = typeInfo.summary || '요약 데이터가 없습니다.';
     }
     if (heroCommentEl) {
-      heroCommentEl.textContent = `접객원 코멘트: ${typeInfo.staffComment || '코멘트 데이터가 없습니다.'}`;
+      heroCommentEl.textContent = `${typeInfo.staffComment || '코멘트 데이터가 없습니다.'}`;
     }
 
     inlineResultEl.innerHTML = `
@@ -246,7 +251,7 @@
       </div>
 
       <div class="calc-card p-6">
-        <h3 class="font-semibold text-gray-800 mb-4">접객원 관점 추가 코멘트</h3>
+        <h3 class="font-semibold text-gray-800 mb-4">유형 확률 표</h3>
         <ul class="space-y-2 text-sm text-gray-700">${hiddenRows}</ul>
       </div>
     `;
