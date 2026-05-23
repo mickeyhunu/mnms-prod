@@ -34,6 +34,7 @@
   const heroTitleEl = document.getElementById('rbti-hero-title');
   const heroSummaryEl = document.getElementById('rbti-hero-summary');
   const heroCommentEl = document.getElementById('rbti-hero-comment');
+  const heroScoreLabelsEl = document.getElementById('rbti-hero-score-labels');
   const questionProgressEl = document.getElementById('rbti-question-progress');
   const questionActionsEl = document.getElementById('rbti-question-actions');
 
@@ -241,17 +242,18 @@
     if (heroSummaryEl) {
       heroSummaryEl.textContent = typeInfo.summary || '요약 데이터가 없습니다.';
     }
-    if (heroCommentEl) {
-      const scoreLabelTags = Object.entries(result.hiddenPercent).map(([key, score]) => {
-        const labelConfig = Array.isArray(hiddenScoreLabels[key]) ? hiddenScoreLabels[key] : [];
-        const matchedLabel = labelConfig.find((item) => score >= Number(item.min) && score <= Number(item.max));
-        return matchedLabel?.label ? `#${matchedLabel.label}` : null;
-      }).filter(Boolean);
+    const scoreLabelTags = Object.entries(result.hiddenPercent).map(([key, score]) => {
+      const labelConfig = Array.isArray(hiddenScoreLabels[key]) ? hiddenScoreLabels[key] : [];
+      const matchedLabel = labelConfig.find((item) => score >= Number(item.min) && score <= Number(item.max));
+      return matchedLabel?.label ? `#${matchedLabel.label}` : null;
+    }).filter(Boolean);
 
-      const staffComment = typeInfo.staffComment || '코멘트 데이터가 없습니다.';
-      const labelLine = scoreLabelTags.join(' ');
-      heroCommentEl.textContent = labelLine ? `${staffComment}
-${labelLine}` : staffComment;
+    if (heroCommentEl) {
+      heroCommentEl.textContent = typeInfo.staffComment || '코멘트 데이터가 없습니다.';
+    }
+
+    if (heroScoreLabelsEl) {
+      heroScoreLabelsEl.textContent = scoreLabelTags.join(' ');
     }
 
     inlineResultEl.innerHTML = `
