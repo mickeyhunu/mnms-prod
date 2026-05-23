@@ -36,7 +36,7 @@ const rbtiTemplate = `
           </div>
           <div id="rbti-hero-result" class="hidden" style="margin-top: 12px;">
             <p class="text-white/70 text-sm mb-2">당신의 RBTI는...</p>
-            <img id="rbti-hero-avatar" src="/src/assets/rbti-avatars/esfp.png" alt="RBTI 아바타" style="width: 200px; max-width: 65%; height: auto; margin: 0 auto 12px; border-radius: 16px; display: block;" loading="lazy">
+            <img id="rbti-hero-avatar" src="/src/assets/rbti-avatars/esfp.png" alt="RBTI 아바타" style="width: 200px; max-width: 65%; height: auto; margin: 0 auto 12px; border-radius: 18px; display: block; background: #ffffff; border: 4px solid #ffffff; box-shadow: 0 14px 30px rgba(15,23,42,0.28), inset 0 0 0 1px rgba(99,102,241,0.2); padding: 10px;" loading="lazy">
             <h1 id="rbti-hero-type" class="text-9xl font-black tracking-wider mb-3">ESFP</h1>
             <h2 id="rbti-hero-title" class="text-3xl font-bold mb-3">구찌 텐션형</h2>
             <p id="rbti-hero-summary" class="text-white/90 leading-relaxed text-sm mb-2"></p>
