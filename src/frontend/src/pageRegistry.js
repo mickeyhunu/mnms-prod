@@ -1290,49 +1290,42 @@ const pageRegistry = {
             <h2 class="alcohol-title">🍺 음주 측정기</h2>
             <p class="alcohol-description">음주량과 시간을 입력하면 예상 혈중알코올농도(BAC)를 계산합니다.</p>
 
-            <div class="alcohol-grid">
+            <div class="alcohol-grid alcohol-grid--top">
                 <label class="alcohol-field">
                 <span>성별</span>
-                <input id="alcohol-gender" type="hidden" value="0.68" />
-                <div class="flex gap-3" id="alcohol-gender-buttons">
-                    <button type="button" class="flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors bg-blue-600 text-white border-blue-600" data-gender-value="0.68">남성</button>
-                    <button type="button" class="flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors bg-white text-gray-700 border-gray-300 hover:bg-gray-50" data-gender-value="0.55">여성</button>
+                <input id="alcohol-gender" type="hidden" value="0.55" />
+                <div class="alcohol-gender-buttons" id="alcohol-gender-buttons">
+                    <button type="button" class="alcohol-gender-btn" data-gender-value="0.68">남성</button>
+                    <button type="button" class="alcohol-gender-btn" data-gender-value="0.55">여성</button>
                 </div>
                 </label>
                 <label class="alcohol-field">
-                <span>체중 (kg)</span>
-                <input id="alcohol-weight" class="alcohol-input" type="number" min="30" max="200" placeholder="70" />
-                </label>
-                <label class="alcohol-field">
-                <span>소주 (1잔)</span>
-                <input id="alcohol-soju" type="hidden" value="0" />
-                <div class="flex items-center gap-3" id="alcohol-soju-stepper">
-                    <button type="button" class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-200 transition-colors" data-step="-1">−</button>
-                    <span class="w-6 text-center font-medium" id="alcohol-soju-display">0</span>
-                    <button type="button" class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-200 transition-colors" data-step="1">+</button>
+                <span>체중</span>
+                <div class="alcohol-input-wrap">
+                  <input id="alcohol-weight" class="alcohol-input" type="number" min="30" max="200" placeholder="70" />
+                  <span class="alcohol-input-unit">kg</span>
                 </div>
-                </label>
-                <label class="alcohol-field">
-                <span>맥주 (1잔 500ml)</span>
-                <input id="alcohol-beer" class="alcohol-input" type="number" min="0" step="1" value="0" />
-                </label>
-                <label class="alcohol-field">
-                <span>와인 (1잔 150ml)</span>
-                <input id="alcohol-wine" class="alcohol-input" type="number" min="0" step="1" value="0" />
-                </label>
-                <label class="alcohol-field">
-                <span>양주 (1잔 30ml)</span>
-                <input id="alcohol-whiskey" class="alcohol-input" type="number" min="0" step="1" value="0" />
-                </label>
-                <label class="alcohol-field">
-                <span>막걸리 (1사발 300ml)</span>
-                <input id="alcohol-makgeolli" class="alcohol-input" type="number" min="0" step="1" value="0" />
-                </label>
-                <label class="alcohol-field">
-                <span>음주 후 경과 시간</span>
-                <input id="alcohol-hours" class="alcohol-input" type="number" min="0" step="0.5" placeholder="0" />
                 </label>
             </div>
+
+            <label class="alcohol-field">
+              <span>음주량</span>
+              <div class="alcohol-drink-list">
+                <div class="alcohol-drink-row"><span>소주 (1잔)</span><input id="alcohol-soju" type="hidden" value="0" /><div class="alcohol-stepper" data-stepper-target="alcohol-soju"><button type="button" class="alcohol-stepper-btn" data-step="-1">−</button><span data-stepper-display>0</span><button type="button" class="alcohol-stepper-btn" data-step="1">+</button></div></div>
+                <div class="alcohol-drink-row"><span>맥주 (1잔 500ml)</span><input id="alcohol-beer" type="hidden" value="0" /><div class="alcohol-stepper" data-stepper-target="alcohol-beer"><button type="button" class="alcohol-stepper-btn" data-step="-1">−</button><span data-stepper-display>0</span><button type="button" class="alcohol-stepper-btn" data-step="1">+</button></div></div>
+                <div class="alcohol-drink-row"><span>와인 (1잔 150ml)</span><input id="alcohol-wine" type="hidden" value="0" /><div class="alcohol-stepper" data-stepper-target="alcohol-wine"><button type="button" class="alcohol-stepper-btn" data-step="-1">−</button><span data-stepper-display>0</span><button type="button" class="alcohol-stepper-btn" data-step="1">+</button></div></div>
+                <div class="alcohol-drink-row"><span>양주 (1잔 30ml)</span><input id="alcohol-whiskey" type="hidden" value="0" /><div class="alcohol-stepper" data-stepper-target="alcohol-whiskey"><button type="button" class="alcohol-stepper-btn" data-step="-1">−</button><span data-stepper-display>0</span><button type="button" class="alcohol-stepper-btn" data-step="1">+</button></div></div>
+                <div class="alcohol-drink-row"><span>막걸리 (1사발 300ml)</span><input id="alcohol-makgeolli" type="hidden" value="0" /><div class="alcohol-stepper" data-stepper-target="alcohol-makgeolli"><button type="button" class="alcohol-stepper-btn" data-step="-1">−</button><span data-stepper-display>0</span><button type="button" class="alcohol-stepper-btn" data-step="1">+</button></div></div>
+              </div>
+            </label>
+
+            <label class="alcohol-field">
+                <span>음주 후 경과 시간</span>
+                <div class="alcohol-input-wrap">
+                  <input id="alcohol-hours" class="alcohol-input" type="number" min="0" step="0.5" placeholder="0" />
+                  <span class="alcohol-input-unit">시간</span>
+                </div>
+            </label></div>
 
             <div class="alcohol-actions">
                 <button id="alcohol-calc" class="btn btn-primary btn-sm" type="button">계산하기</button>
