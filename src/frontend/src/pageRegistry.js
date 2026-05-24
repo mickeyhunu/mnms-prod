@@ -1332,7 +1332,6 @@ const pageRegistry = {
             </div>
 
             <div id="alcohol-result" class="alcohol-result" aria-live="polite">값을 입력하고 계산해보세요.</div>
-            <p class="alcohol-note">공식: BAC(%) = (섭취 알코올량(g) / (체중(kg) × 성별계수)) - (0.015 × 경과시간)</p>
         </section>
 
         <section class="alcohol-info">
