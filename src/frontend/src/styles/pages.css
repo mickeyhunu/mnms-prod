@@ -60,8 +60,11 @@
 
 .play-tool-card__description {
     margin: 4px 0 0;
-    font-size: 12px;
+    font-size: 11px;
     color: #6b7280;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .my-page-section-nav {

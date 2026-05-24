@@ -773,9 +773,9 @@ const pageRegistry = {
         <div class="container"><section class="top-ads hidden" id="top-ads-container" data-top-ad-placement="HOME" aria-label="홈 상단 광고"></section></div>
         <div class="container home-service-wrap">
             <section class="service-category-grid" aria-label="홈 카테고리">
-                <a class="service-item" href="live.html">
-                    <span class="service-icon">🔴</span>
-                    <span class="service-label">LIVE</span>
+                <a class="service-item" href="play.html">
+                    <span class="service-icon">🎲</span>
+                    <span class="service-label">PLAY</span>
                 </a>
                 <a class="service-item" href="community.html">
                     <span class="service-icon">📝</span>
@@ -1209,7 +1209,7 @@ const pageRegistry = {
             <span class="community-board-name">PLAY</span>
           </div>
         </header>
-        <div class="grid-collapse" style="max-height: 1600px; opacity: 1;">
+        <div class="grid-collapse" style="max-height: 1600px; opacity: 1; padding: 5%;">
           <div class="play-tool-grid">
             <div class="card-enter" style="animation-delay: 0ms;">
               <a class="play-tool-card" href="/play/live">
@@ -1217,7 +1217,7 @@ const pageRegistry = {
                   <span class="play-tool-card__icon">🔴</span>
                   <div class="play-tool-card__text">
                     <p class="play-tool-card__title">LIVE</p>
-                    <p class="play-tool-card__description">실시간 업소 라이브</p>
+                    <p class="play-tool-card__description">실시간 초톡/웨이팅/초중/엔트리</p>
                   </div>
                 </div>
               </a>
@@ -1228,7 +1228,7 @@ const pageRegistry = {
                   <span class="play-tool-card__icon">🧪</span>
                   <div class="play-tool-card__text">
                     <p class="play-tool-card__title">RBTI</p>
-                    <p class="play-tool-card__description">RBTI 성향 테스트</p>
+                    <p class="play-tool-card__description">유흥 MBTI 성향 테스트 RBTI 검사</p>
                   </div>
                 </div>
               </a>
