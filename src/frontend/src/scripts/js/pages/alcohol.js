@@ -11,7 +11,7 @@
 
   function bindGenderButtons() {
     var genderInput = document.getElementById('alcohol-gender');
-    var genderButtons = document.querySelectorAll('[data-gender-value]');
+    var genderButtons = document.querySelectorAll('#alcohol-gender-buttons [data-gender-value]');
     if (!genderInput || !genderButtons.length) return;
 
     function syncGenderButtons(value) {
@@ -92,7 +92,7 @@
       }
     });
 
-    document.querySelectorAll('[data-gender-value], [data-step]').forEach(function (button) {
+    document.querySelectorAll('#alcohol-gender-buttons [data-gender-value], [data-step]').forEach(function (button) {
       button.addEventListener('click', function () {
         window.requestAnimationFrame(renderCalculation);
       });
@@ -104,7 +104,7 @@
       ['alcohol-soju', 'alcohol-beer', 'alcohol-wine', 'alcohol-whiskey', 'alcohol-makgeolli'].forEach(function (id) { document.getElementById(id).value = '0'; });
       document.getElementById('alcohol-gender').value = '0.68';
       document.querySelectorAll('[data-stepper-display]').forEach(function (display) { display.textContent = '0'; });
-      document.querySelectorAll('[data-gender-value]').forEach(function (button) {
+      document.querySelectorAll('#alcohol-gender-buttons [data-gender-value]').forEach(function (button) {
         var selected = button.getAttribute('data-gender-value') === '0.68';
         button.classList.toggle('alcohol-gender-btn--active', selected);
       });
