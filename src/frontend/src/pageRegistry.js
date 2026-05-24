@@ -1184,6 +1184,72 @@ const pageRegistry = {
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/supportBoard.js", "scripts/js/components/sectionHeader.js", "scripts/js/components/footerNav.js"]
   },
   'post-detail': postDetailPageConfig,
+  'play': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="/login" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="/register" class="btn btn-outline btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="/admin" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+      <div class="container">
+        <header class="community-section-header">
+          <div class="community-header-left">
+            <span class="community-board-name">PLAY</span>
+          </div>
+        </header>
+        <div class="grid-collapse" style="max-height: 1600px; opacity: 1;">
+          <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div class="group card-enter" style="animation-delay: 0ms;">
+              <a class="tool-card block bg-white rounded-2xl border border-blue-100 hover:bg-blue-50/50 p-4 h-full relative overflow-hidden" href="/play/live">
+                <div class="absolute top-0 left-0 right-0 h-[2px] bg-blue-100 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="flex items-center gap-2 sm:gap-3.5">
+                  <span class="text-lg sm:text-[1.35rem] w-9 h-9 sm:w-11 sm:h-11 flex-shrink-0 bg-blue-100 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110 group-hover:shadow-sm">🔴</span>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-xs sm:text-[0.8125rem] font-bold text-gray-900 truncate group-hover:text-gray-800">LIVE</p>
+                    <p class="hidden sm:block text-[0.6875rem] text-gray-400 mt-0.5 truncate group-hover:text-gray-500 transition-colors">실시간 업소 라이브</p>
+                  </div>
+                </div>
+              </a>
+            </div>
+            <div class="group card-enter" style="animation-delay: 40ms;">
+              <a class="tool-card block bg-white rounded-2xl border border-blue-100 hover:bg-blue-50/50 p-4 h-full relative overflow-hidden" href="/play/rbti">
+                <div class="absolute top-0 left-0 right-0 h-[2px] bg-blue-100 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="flex items-center gap-2 sm:gap-3.5">
+                  <span class="text-lg sm:text-[1.35rem] w-9 h-9 sm:w-11 sm:h-11 flex-shrink-0 bg-blue-100 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110 group-hover:shadow-sm">🧪</span>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-xs sm:text-[0.8125rem] font-bold text-gray-900 truncate group-hover:text-gray-800">RBTI</p>
+                    <p class="hidden sm:block text-[0.6875rem] text-gray-400 mt-0.5 truncate group-hover:text-gray-500 transition-colors">RBTI 성향 테스트</p>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="scripts/js/utils/constants.js"></script>
+    <script src="scripts/js/utils/helpers.js"></script>
+    <script src="scripts/js/utils/auth.js"></script>
+    <script src="scripts/js/api/apiClient.js"></script>
+    <script src="scripts/js/api/authAPI.js"></script>
+    <script src="scripts/js/components/header.js"></script>
+    <script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js"]
+  },
   'register': {
     template: `<header class="header">
         <div class="header-container">
