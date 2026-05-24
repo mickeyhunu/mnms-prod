@@ -1285,55 +1285,57 @@ const pageRegistry = {
             <span class="community-board-name">음주 측정기</span>
           </div>
         </header>
-        <section class="alcohol-calculator card-enter">
-          <h2 class="alcohol-title">🍺 음주 측정기</h2>
-          <p class="alcohol-description">음주량과 시간을 입력하면 예상 혈중알코올농도(BAC)를 계산합니다.</p>
+        <section class="alcohol-calculator card-enter" style="margin: 5%;">
+          <div style="padding: 22px;">
+            <h2 class="alcohol-title">🍺 음주 측정기</h2>
+            <p class="alcohol-description">음주량과 시간을 입력하면 예상 혈중알코올농도(BAC)를 계산합니다.</p>
 
-          <div class="alcohol-grid">
-            <label class="alcohol-field">
-              <span>성별</span>
-              <select id="alcohol-gender" class="alcohol-input">
-                <option value="0.68">남성</option>
-                <option value="0.55">여성</option>
-              </select>
-            </label>
-            <label class="alcohol-field">
-              <span>체중 (kg)</span>
-              <input id="alcohol-weight" class="alcohol-input" type="number" min="30" max="200" placeholder="70" />
-            </label>
-            <label class="alcohol-field">
-              <span>소주 (1잔)</span>
-              <input id="alcohol-soju" class="alcohol-input" type="number" min="0" step="1" value="0" />
-            </label>
-            <label class="alcohol-field">
-              <span>맥주 (1잔 500ml)</span>
-              <input id="alcohol-beer" class="alcohol-input" type="number" min="0" step="1" value="0" />
-            </label>
-            <label class="alcohol-field">
-              <span>와인 (1잔 150ml)</span>
-              <input id="alcohol-wine" class="alcohol-input" type="number" min="0" step="1" value="0" />
-            </label>
-            <label class="alcohol-field">
-              <span>양주 (1잔 30ml)</span>
-              <input id="alcohol-whiskey" class="alcohol-input" type="number" min="0" step="1" value="0" />
-            </label>
-            <label class="alcohol-field">
-              <span>막걸리 (1사발 300ml)</span>
-              <input id="alcohol-makgeolli" class="alcohol-input" type="number" min="0" step="1" value="0" />
-            </label>
-            <label class="alcohol-field">
-              <span>음주 후 경과 시간</span>
-              <input id="alcohol-hours" class="alcohol-input" type="number" min="0" step="0.5" placeholder="0" />
-            </label>
+            <div class="alcohol-grid">
+                <label class="alcohol-field">
+                <span>성별</span>
+                <select id="alcohol-gender" class="alcohol-input">
+                    <option value="0.68">남성</option>
+                    <option value="0.55">여성</option>
+                </select>
+                </label>
+                <label class="alcohol-field">
+                <span>체중 (kg)</span>
+                <input id="alcohol-weight" class="alcohol-input" type="number" min="30" max="200" placeholder="70" />
+                </label>
+                <label class="alcohol-field">
+                <span>소주 (1잔)</span>
+                <input id="alcohol-soju" class="alcohol-input" type="number" min="0" step="1" value="0" />
+                </label>
+                <label class="alcohol-field">
+                <span>맥주 (1잔 500ml)</span>
+                <input id="alcohol-beer" class="alcohol-input" type="number" min="0" step="1" value="0" />
+                </label>
+                <label class="alcohol-field">
+                <span>와인 (1잔 150ml)</span>
+                <input id="alcohol-wine" class="alcohol-input" type="number" min="0" step="1" value="0" />
+                </label>
+                <label class="alcohol-field">
+                <span>양주 (1잔 30ml)</span>
+                <input id="alcohol-whiskey" class="alcohol-input" type="number" min="0" step="1" value="0" />
+                </label>
+                <label class="alcohol-field">
+                <span>막걸리 (1사발 300ml)</span>
+                <input id="alcohol-makgeolli" class="alcohol-input" type="number" min="0" step="1" value="0" />
+                </label>
+                <label class="alcohol-field">
+                <span>음주 후 경과 시간</span>
+                <input id="alcohol-hours" class="alcohol-input" type="number" min="0" step="0.5" placeholder="0" />
+                </label>
+            </div>
+
+            <div class="alcohol-actions">
+                <button id="alcohol-calc" class="btn btn-primary btn-sm" type="button">계산하기</button>
+                <button id="alcohol-reset" class="btn btn-outline btn-sm" type="button">초기화</button>
+            </div>
+
+            <div id="alcohol-result" class="alcohol-result" aria-live="polite">값을 입력하고 계산해보세요.</div>
+            <p class="alcohol-note">공식: BAC(%) = (섭취 알코올량(g) / (체중(kg) × 성별계수)) - (0.015 × 경과시간)</p>
           </div>
-
-          <div class="alcohol-actions">
-            <button id="alcohol-calc" class="btn btn-primary btn-sm" type="button">계산하기</button>
-            <button id="alcohol-reset" class="btn btn-outline btn-sm" type="button">초기화</button>
-          </div>
-
-          <div id="alcohol-result" class="alcohol-result" aria-live="polite">값을 입력하고 계산해보세요.</div>
-          <p class="alcohol-note">공식: BAC(%) = (섭취 알코올량(g) / (체중(kg) × 성별계수)) - (0.015 × 경과시간)</p>
         </section>
       </div>
     </main>
