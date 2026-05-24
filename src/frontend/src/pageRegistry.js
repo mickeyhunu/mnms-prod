@@ -1239,7 +1239,7 @@ const pageRegistry = {
                   <span class="play-tool-card__icon">🍺</span>
                   <div class="play-tool-card__text">
                     <p class="play-tool-card__title">음주 측정기</p>
-                    <p class="play-tool-card__description">간단하게 취기 자가진단</p>
+                    <p class="play-tool-card__description">혈중알콜농도 자가진단</p>
                   </div>
                 </div>
               </a>
