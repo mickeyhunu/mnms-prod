@@ -58,30 +58,44 @@
   }
 
   function bindAlcoholCalculator() {
-    var calcBtn = document.getElementById('alcohol-calc');
     var resetBtn = document.getElementById('alcohol-reset');
     var resultEl = document.getElementById('alcohol-result');
 
-    if (!calcBtn || !resetBtn || !resultEl) return;
+    if (!resetBtn || !resultEl) return;
 
-    calcBtn.addEventListener('click', function () {
+    function renderCalculation() {
       var genderFactor = Number(document.getElementById('alcohol-gender').value || 0.68);
       var weight = num('alcohol-weight');
+      var elapsedHoursInput = document.getElementById('alcohol-hours');
       var elapsedHours = num('alcohol-hours');
+      var grams = (num('alcohol-soju') * 9.8) + (num('alcohol-beer') * 20) + (num('alcohol-wine') * 14) + (num('alcohol-whiskey') * 8.4) + (num('alcohol-makgeolli') * 14.4);
 
-      if (!weight) {
-        resultEl.textContent = '체중을 입력해주세요.';
-        resultEl.className = 'alcohol-result alcohol-result--warn';
+      if (!weight || !elapsedHoursInput || elapsedHoursInput.value === '' || grams <= 0) {
+        resultEl.className = 'alcohol-result';
+        resultEl.textContent = '값을 입력하고 계산해보세요.';
         return;
       }
 
-      var grams = (num('alcohol-soju') * 9.8) + (num('alcohol-beer') * 20) + (num('alcohol-wine') * 14) + (num('alcohol-whiskey') * 8.4) + (num('alcohol-makgeolli') * 14.4);
       var bac = Math.max(0, (grams / (weight * genderFactor)) - (0.015 * elapsedHours));
       var bacRounded = round3(bac);
       var caution = bacRounded >= 0.03;
 
       resultEl.className = caution ? 'alcohol-result alcohol-result--warn' : 'alcohol-result alcohol-result--safe';
       resultEl.textContent = '예상 BAC: ' + bacRounded.toFixed(3) + '% · ' + (caution ? '운전 금지 권장 (면허정지 기준 0.03% 이상)' : '운전 가능 범위일 수 있으나 절대적 기준은 아닙니다.');
+    }
+
+    ['alcohol-weight', 'alcohol-hours'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', renderCalculation);
+        el.addEventListener('change', renderCalculation);
+      }
+    });
+
+    document.querySelectorAll('[data-gender-value], [data-step]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        window.requestAnimationFrame(renderCalculation);
+      });
     });
 
     resetBtn.addEventListener('click', function () {
@@ -96,6 +110,8 @@
       resultEl.className = 'alcohol-result';
       resultEl.textContent = '값을 입력하고 계산해보세요.';
     });
+
+    renderCalculation();
   }
 
   function initAlcoholPage() {

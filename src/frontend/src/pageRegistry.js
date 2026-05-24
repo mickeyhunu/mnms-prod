@@ -1328,7 +1328,6 @@ const pageRegistry = {
             </label></div>
 
             <div class="alcohol-actions">
-                <button id="alcohol-calc" class="btn btn-primary btn-sm" type="button">계산하기</button>
                 <button id="alcohol-reset" class="btn btn-outline btn-sm" type="button">초기화</button>
             </div>
 
