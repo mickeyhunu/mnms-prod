@@ -1293,10 +1293,11 @@ const pageRegistry = {
             <div class="alcohol-grid">
                 <label class="alcohol-field">
                 <span>성별</span>
-                <select id="alcohol-gender" class="alcohol-input">
-                    <option value="0.68">남성</option>
-                    <option value="0.55">여성</option>
-                </select>
+                <input id="alcohol-gender" type="hidden" value="0.68" />
+                <div class="flex gap-3" id="alcohol-gender-buttons">
+                    <button type="button" class="flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors bg-blue-600 text-white border-blue-600" data-gender-value="0.68">남성</button>
+                    <button type="button" class="flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors bg-white text-gray-700 border-gray-300 hover:bg-gray-50" data-gender-value="0.55">여성</button>
+                </div>
                 </label>
                 <label class="alcohol-field">
                 <span>체중 (kg)</span>
@@ -1304,7 +1305,12 @@ const pageRegistry = {
                 </label>
                 <label class="alcohol-field">
                 <span>소주 (1잔)</span>
-                <input id="alcohol-soju" class="alcohol-input" type="number" min="0" step="1" value="0" />
+                <input id="alcohol-soju" type="hidden" value="0" />
+                <div class="flex items-center gap-3" id="alcohol-soju-stepper">
+                    <button type="button" class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-200 transition-colors" data-step="-1">−</button>
+                    <span class="w-6 text-center font-medium" id="alcohol-soju-display">0</span>
+                    <button type="button" class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-200 transition-colors" data-step="1">+</button>
+                </div>
                 </label>
                 <label class="alcohol-field">
                 <span>맥주 (1잔 500ml)</span>
