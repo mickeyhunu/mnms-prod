@@ -1217,7 +1217,7 @@ const pageRegistry = {
                   <span class="play-tool-card__icon">🔴</span>
                   <div class="play-tool-card__text">
                     <p class="play-tool-card__title">LIVE</p>
-                    <p class="play-tool-card__description">실시간 초톡/웨이팅/초중/엔트리</p>
+                    <p class="play-tool-card__description">실시간 출근부</p>
                   </div>
                 </div>
               </a>
@@ -1228,7 +1228,7 @@ const pageRegistry = {
                   <span class="play-tool-card__icon">🧪</span>
                   <div class="play-tool-card__text">
                     <p class="play-tool-card__title">RBTI</p>
-                    <p class="play-tool-card__description">유흥 MBTI 성향 테스트 RBTI 검사</p>
+                    <p class="play-tool-card__description">유흥 MBTI</p>
                   </div>
                 </div>
               </a>

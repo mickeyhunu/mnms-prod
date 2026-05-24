@@ -16,7 +16,7 @@
     display: block;
     height: 100%;
     padding: 16px;
-    border: 1px solid #dbeafe;
+    border: 2px solid #dbeafe;
     border-radius: 14px;
     background: #ffffff;
     text-decoration: none;
@@ -60,7 +60,7 @@
 
 .play-tool-card__description {
     margin: 4px 0 0;
-    font-size: 11px;
+    font-size: 12px;
     color: #6b7280;
     overflow: hidden;
     white-space: nowrap;
