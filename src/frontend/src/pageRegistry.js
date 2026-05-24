@@ -1285,10 +1285,55 @@ const pageRegistry = {
             <span class="community-board-name">음주측정</span>
           </div>
         </header>
-        <section class="card-enter" style="padding: 20px; background: #fff; border-radius: 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);">
-          <h2 style="margin: 0 0 10px; font-size: 24px;">🍺 음주측정 페이지</h2>
-          <p style="margin: 0 0 8px; color: #4b5563; line-height: 1.7;">현재는 베타 버전으로, 곧 더 정확한 문진형 음주 상태 체크 기능이 추가될 예정입니다.</p>
-          <p style="margin: 0; color: #6b7280; line-height: 1.7;">지금은 PLAY 메뉴에 정상 연결되도록 기본 페이지를 먼저 오픈했습니다.</p>
+        <section class="alcohol-calculator card-enter">
+          <h2 class="alcohol-title">🍺 음주 측정기</h2>
+          <p class="alcohol-description">음주량과 시간을 입력하면 예상 혈중알코올농도(BAC)를 계산합니다.</p>
+
+          <div class="alcohol-grid">
+            <label class="alcohol-field">
+              <span>성별</span>
+              <select id="alcohol-gender" class="alcohol-input">
+                <option value="0.68">남성</option>
+                <option value="0.55">여성</option>
+              </select>
+            </label>
+            <label class="alcohol-field">
+              <span>체중 (kg)</span>
+              <input id="alcohol-weight" class="alcohol-input" type="number" min="30" max="200" placeholder="70" />
+            </label>
+            <label class="alcohol-field">
+              <span>소주 잔 수 (1잔)</span>
+              <input id="alcohol-soju" class="alcohol-input" type="number" min="0" step="1" value="0" />
+            </label>
+            <label class="alcohol-field">
+              <span>맥주 잔 수 (500ml)</span>
+              <input id="alcohol-beer" class="alcohol-input" type="number" min="0" step="1" value="0" />
+            </label>
+            <label class="alcohol-field">
+              <span>와인 잔 수 (150ml)</span>
+              <input id="alcohol-wine" class="alcohol-input" type="number" min="0" step="1" value="0" />
+            </label>
+            <label class="alcohol-field">
+              <span>양주 잔 수 (30ml)</span>
+              <input id="alcohol-whiskey" class="alcohol-input" type="number" min="0" step="1" value="0" />
+            </label>
+            <label class="alcohol-field">
+              <span>막걸리 사발 수 (300ml)</span>
+              <input id="alcohol-makgeolli" class="alcohol-input" type="number" min="0" step="1" value="0" />
+            </label>
+            <label class="alcohol-field">
+              <span>음주 후 경과 시간</span>
+              <input id="alcohol-hours" class="alcohol-input" type="number" min="0" step="0.5" placeholder="0" />
+            </label>
+          </div>
+
+          <div class="alcohol-actions">
+            <button id="alcohol-calc" class="btn btn-primary btn-sm" type="button">계산하기</button>
+            <button id="alcohol-reset" class="btn btn-outline btn-sm" type="button">초기화</button>
+          </div>
+
+          <div id="alcohol-result" class="alcohol-result" aria-live="polite">값을 입력하고 계산해보세요.</div>
+          <p class="alcohol-note">공식: BAC(%) = (섭취 알코올량(g) / (체중(kg) × 성별계수)) - (0.015 × 경과시간)</p>
         </section>
       </div>
     </main>
@@ -1299,9 +1344,10 @@ const pageRegistry = {
     <script src="scripts/js/api/apiClient.js"></script>
     <script src="scripts/js/api/authAPI.js"></script>
     <script src="scripts/js/components/header.js"></script>
+    <script src="scripts/js/pages/alcohol.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js"]
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css", "styles/alcohol.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/alcohol.js", "scripts/js/components/footerNav.js"]
   },
 
   'register': {
