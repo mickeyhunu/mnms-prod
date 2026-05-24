@@ -1210,27 +1210,25 @@ const pageRegistry = {
           </div>
         </header>
         <div class="grid-collapse" style="max-height: 1600px; opacity: 1;">
-          <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <div class="group card-enter" style="animation-delay: 0ms;">
-              <a class="tool-card block bg-white rounded-2xl border border-blue-100 hover:bg-blue-50/50 p-4 h-full relative overflow-hidden" href="/play/live">
-                <div class="absolute top-0 left-0 right-0 h-[2px] bg-blue-100 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="flex items-center gap-2 sm:gap-3.5">
-                  <span class="text-lg sm:text-[1.35rem] w-9 h-9 sm:w-11 sm:h-11 flex-shrink-0 bg-blue-100 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110 group-hover:shadow-sm">🔴</span>
-                  <div class="min-w-0 flex-1">
-                    <p class="text-xs sm:text-[0.8125rem] font-bold text-gray-900 truncate group-hover:text-gray-800">LIVE</p>
-                    <p class="hidden sm:block text-[0.6875rem] text-gray-400 mt-0.5 truncate group-hover:text-gray-500 transition-colors">실시간 업소 라이브</p>
+          <div class="play-tool-grid">
+            <div class="card-enter" style="animation-delay: 0ms;">
+              <a class="play-tool-card" href="/play/live">
+                <div class="play-tool-card__content">
+                  <span class="play-tool-card__icon">🔴</span>
+                  <div class="play-tool-card__text">
+                    <p class="play-tool-card__title">LIVE</p>
+                    <p class="play-tool-card__description">실시간 업소 라이브</p>
                   </div>
                 </div>
               </a>
             </div>
-            <div class="group card-enter" style="animation-delay: 40ms;">
-              <a class="tool-card block bg-white rounded-2xl border border-blue-100 hover:bg-blue-50/50 p-4 h-full relative overflow-hidden" href="/play/rbti">
-                <div class="absolute top-0 left-0 right-0 h-[2px] bg-blue-100 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="flex items-center gap-2 sm:gap-3.5">
-                  <span class="text-lg sm:text-[1.35rem] w-9 h-9 sm:w-11 sm:h-11 flex-shrink-0 bg-blue-100 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110 group-hover:shadow-sm">🧪</span>
-                  <div class="min-w-0 flex-1">
-                    <p class="text-xs sm:text-[0.8125rem] font-bold text-gray-900 truncate group-hover:text-gray-800">RBTI</p>
-                    <p class="hidden sm:block text-[0.6875rem] text-gray-400 mt-0.5 truncate group-hover:text-gray-500 transition-colors">RBTI 성향 테스트</p>
+            <div class="card-enter" style="animation-delay: 40ms;">
+              <a class="play-tool-card" href="/play/rbti">
+                <div class="play-tool-card__content">
+                  <span class="play-tool-card__icon">🧪</span>
+                  <div class="play-tool-card__text">
+                    <p class="play-tool-card__title">RBTI</p>
+                    <p class="play-tool-card__description">RBTI 성향 테스트</p>
                   </div>
                 </div>
               </a>
