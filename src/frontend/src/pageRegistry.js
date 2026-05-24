@@ -1334,11 +1334,9 @@ const pageRegistry = {
 
             <div id="alcohol-result" class="alcohol-result" aria-live="polite">값을 입력하고 계산해보세요.</div>
             <p class="alcohol-note">공식: BAC(%) = (섭취 알코올량(g) / (체중(kg) × 성별계수)) - (0.015 × 경과시간)</p>
-          </div>
         </section>
 
-        <section class="alcohol-info prose prose-gray max-w-none">
-          <div class="space-y-8">
+        <section class="alcohol-info">
             <div>
               <h2 class="text-xl font-semibold text-gray-900 mb-4">음주 운전 처벌 기준</h2>
               <p class="text-gray-600 leading-relaxed">2019년 6월 25일부터 시행된 <strong>윤창호법</strong>(도로교통법 개정)으로 음주운전 처벌 기준이 대폭 강화되었습니다. 기존 0.05%였던 면허정지 기준이 0.03%로 낮아졌습니다.</p>
@@ -1405,7 +1403,6 @@ const pageRegistry = {
                 </div>
               </div>
             </div>
-          </div>
         </section>
       </div>
     </main>
