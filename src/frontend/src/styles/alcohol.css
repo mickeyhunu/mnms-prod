@@ -15,10 +15,17 @@
 .alcohol-stepper-btn { width: 40px; height: 40px; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff; }
 .alcohol-stepper [data-stepper-display] { min-width: 12px; text-align: center; font-weight: 700; }
 .alcohol-actions { display: flex; gap: 10px; margin-top: 16px; }
-.alcohol-result { margin-top: 16px; padding: 14px; border-radius: 10px; background: #f8fafc; color: #1f2937; line-height: 5; }
+.alcohol-result { margin-top: 16px; padding: 18px; border-radius: 12px; background: #0f172a; color: #fff; text-align: center; }
 .alcohol-note { margin: 10px 0 0; font-size: 13px; color: #6b7280; }
-.alcohol-result--warn { background: #fef2f2; color: #991b1b; }
-.alcohol-result--safe { background: #ecfdf5; color: #065f46; }
+.alcohol-result--warn { background: #7f1d1d; }
+.alcohol-result--safe { background: #14532d; }
+.alcohol-result-title { font-size: 14px; opacity: 0.9; }
+.alcohol-result-bac { font-size: 42px; font-weight: 800; line-height: 1.1; margin-top: 6px; }
+.alcohol-result-state { margin-top: 6px; font-size: 16px; font-weight: 700; }
+.alcohol-result-grid { margin-top: 14px; display: grid; gap: 8px; text-align: left; }
+.alcohol-result-row { background: rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.alcohol-result-good { color: #22c55e; }
+.alcohol-result-bad { color: #f87171; }
 @media (max-width: 768px) { .alcohol-grid--top { grid-template-columns: 1fr; } }
 
 .alcohol-gender-btn--active { background: #2563eb; color: #fff; border-color: #2563eb; }

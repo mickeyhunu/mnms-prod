@@ -8,6 +8,23 @@
     return Math.round(value * 1000) / 1000;
   }
 
+  function renderResultSummary(resultEl, bacValue, caution) {
+    var remainingHours = bacValue > 0 ? (bacValue / 0.015) : 0;
+    var roundedHours = Math.ceil(remainingHours * 10) / 10;
+    var drivingState = caution ? '불가능' : '가능';
+    var legalState = caution ? '면허정지 수준' : '정상 (운전가능)';
+
+    resultEl.className = caution ? 'alcohol-result alcohol-result--warn' : 'alcohol-result alcohol-result--safe';
+    resultEl.innerHTML = '' +
+      '<div class="alcohol-result-title">예상 혈중알콜농도</div>' +
+      '<div class="alcohol-result-bac">' + bacValue.toFixed(3) + '%</div>' +
+      '<div class="alcohol-result-state">' + legalState + '</div>' +
+      '<div class="alcohol-result-grid">' +
+        '<div class="alcohol-result-row"><span>운전 가능 여부</span><strong class="' + (caution ? 'alcohol-result-bad' : 'alcohol-result-good') + '">' + drivingState + '</strong></div>' +
+        '<div class="alcohol-result-row"><span>완전 분해 예상 시간</span><strong>약 ' + roundedHours.toFixed(1) + '시간 후</strong></div>' +
+      '</div>';
+  }
+
 
   function bindGenderButtons() {
     var genderInput = document.getElementById('alcohol-gender');
@@ -109,8 +126,7 @@
         }
       });
 
-      resultEl.className = caution ? 'alcohol-result alcohol-result--warn' : 'alcohol-result alcohol-result--safe';
-      resultEl.textContent = '예상 BAC: ' + bacRounded.toFixed(3) + '% · ' + (caution ? '운전 금지 권장 (면허정지 기준 0.03% 이상)' : '운전 가능 범위일 수 있으나 절대적 기준은 아닙니다.');
+      renderResultSummary(resultEl, bacRounded, caution);
     }
 
     ['alcohol-weight', 'alcohol-hours'].forEach(function (id) {
