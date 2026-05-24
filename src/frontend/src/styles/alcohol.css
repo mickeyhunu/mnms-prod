@@ -1,16 +1,24 @@
-.alcohol-calculator {
-  padding: 24px;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-}
+
+.alcohol-calculator { padding: 24px; background: #fff; border-radius: 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); }
 .alcohol-title { margin: 0 0 8px; font-size: 24px; }
 .alcohol-description { margin: 0 0 16px; color: #4b5563; }
-.alcohol-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 12px; }
-.alcohol-field { display: flex; flex-direction: column; gap: 6px; color: #374151; font-size: 14px; }
-.alcohol-input { border: 1px solid #d1d5db; border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.alcohol-grid--top { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.alcohol-field { display: flex; flex-direction: column; gap: 6px; color: #111827; font-size: 14px; }
+.alcohol-gender-buttons { display: flex; gap: 10px; }
+.alcohol-gender-btn { flex: 1; height: 42px; border: 1px solid #d1d5db; border-radius: 10px; background: #fff; font-weight: 600; color: #374151; }
+.alcohol-input-wrap { position: relative; }
+.alcohol-input { width: 100%; border: 1px solid #d1d5db; border-radius: 12px; padding: 12px 46px 12px 14px; font-size: 30px; }
+.alcohol-input-unit { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 14px; }
+.alcohol-drink-list { background: #f3f4f6; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+.alcohol-drink-row { background: #f9fafb; border-radius: 10px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; }
+.alcohol-stepper { display: inline-flex; align-items: center; gap: 14px; }
+.alcohol-stepper-btn { width: 40px; height: 40px; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff; }
+.alcohol-stepper [data-stepper-display] { min-width: 12px; text-align: center; font-weight: 700; }
 .alcohol-actions { display: flex; gap: 10px; margin-top: 16px; }
 .alcohol-result { margin-top: 16px; padding: 14px; border-radius: 10px; background: #f8fafc; color: #1f2937; line-height: 1.6; }
 .alcohol-note { margin: 10px 0 0; font-size: 13px; color: #6b7280; }
 .alcohol-result--warn { background: #fef2f2; color: #991b1b; }
 .alcohol-result--safe { background: #ecfdf5; color: #065f46; }
+@media (max-width: 768px) { .alcohol-grid--top { grid-template-columns: 1fr; } }
+
+.alcohol-gender-btn--active { background: #2563eb; color: #fff; border-color: #2563eb; }

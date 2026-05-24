@@ -17,12 +17,7 @@
     function syncGenderButtons(value) {
       genderButtons.forEach(function (button) {
         var selected = button.getAttribute('data-gender-value') === value;
-        button.classList.toggle('bg-blue-600', selected);
-        button.classList.toggle('text-white', selected);
-        button.classList.toggle('border-blue-600', selected);
-        button.classList.toggle('bg-white', !selected);
-        button.classList.toggle('text-gray-700', !selected);
-        button.classList.toggle('border-gray-300', !selected);
+        button.classList.toggle('alcohol-gender-btn--active', selected);
       });
     }
 
@@ -37,26 +32,29 @@
     syncGenderButtons(genderInput.value || '0.68');
   }
 
-  function bindSojuStepper() {
-    var sojuInput = document.getElementById('alcohol-soju');
-    var sojuDisplay = document.getElementById('alcohol-soju-display');
-    var sojuStepper = document.getElementById('alcohol-soju-stepper');
-    if (!sojuInput || !sojuDisplay || !sojuStepper) return;
+  function bindDrinkSteppers() {
+    document.querySelectorAll('[data-stepper-target]').forEach(function (stepper) {
+      var targetId = stepper.getAttribute('data-stepper-target');
+      if (!targetId) return;
+      var input = document.getElementById(targetId);
+      var display = stepper.querySelector('[data-stepper-display]');
+      if (!input || !display) return;
 
-    function syncSoju(value) {
-      var nextValue = Math.max(0, Number(value) || 0);
-      sojuInput.value = String(nextValue);
-      sojuDisplay.textContent = String(nextValue);
-    }
+      function syncValue(value) {
+        var nextValue = Math.max(0, Number(value) || 0);
+        input.value = String(nextValue);
+        display.textContent = String(nextValue);
+      }
 
-    sojuStepper.querySelectorAll('[data-step]').forEach(function (button) {
-      button.addEventListener('click', function () {
-        var step = Number(button.getAttribute('data-step') || 0);
-        syncSoju((Number(sojuInput.value) || 0) + step);
+      stepper.querySelectorAll('[data-step]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var step = Number(button.getAttribute('data-step') || 0);
+          syncValue((Number(input.value) || 0) + step);
+        });
       });
-    });
 
-    syncSoju(sojuInput.value);
+      syncValue(input.value);
+    });
   }
 
   function bindAlcoholCalculator() {
@@ -89,17 +87,11 @@
     resetBtn.addEventListener('click', function () {
       ['alcohol-weight', 'alcohol-hours'].forEach(function (id) { document.getElementById(id).value = ''; });
       ['alcohol-soju', 'alcohol-beer', 'alcohol-wine', 'alcohol-whiskey', 'alcohol-makgeolli'].forEach(function (id) { document.getElementById(id).value = '0'; });
-      document.getElementById('alcohol-gender').value = '0.68';
-      var sojuDisplay = document.getElementById('alcohol-soju-display');
-      if (sojuDisplay) sojuDisplay.textContent = '0';
+      document.getElementById('alcohol-gender').value = '0.55';
+      document.querySelectorAll('[data-stepper-display]').forEach(function (display) { display.textContent = '0'; });
       document.querySelectorAll('[data-gender-value]').forEach(function (button) {
-        var selected = button.getAttribute('data-gender-value') === '0.68';
-        button.classList.toggle('bg-blue-600', selected);
-        button.classList.toggle('text-white', selected);
-        button.classList.toggle('border-blue-600', selected);
-        button.classList.toggle('bg-white', !selected);
-        button.classList.toggle('text-gray-700', !selected);
-        button.classList.toggle('border-gray-300', !selected);
+        var selected = button.getAttribute('data-gender-value') === '0.55';
+        button.classList.toggle('alcohol-gender-btn--active', selected);
       });
       resultEl.className = 'alcohol-result';
       resultEl.textContent = '값을 입력하고 계산해보세요.';
@@ -108,7 +100,7 @@
 
   function initAlcoholPage() {
     bindGenderButtons();
-    bindSojuStepper();
+    bindDrinkSteppers();
     bindAlcoholCalculator();
   }
 
