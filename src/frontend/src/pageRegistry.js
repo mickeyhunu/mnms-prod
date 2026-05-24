@@ -1076,7 +1076,7 @@ const pageRegistry = {
               </div>
             </div>
           </section>
-        </section>
+        </section></div>
       </div>
     </main>
 
@@ -1285,7 +1285,7 @@ const pageRegistry = {
             <span class="community-board-name">음주 측정기</span>
           </div>
         </header>
-        <section class="alcohol-calculator card-enter" style="margin: 5%;">
+        <div class="alcohol-content"><section class="alcohol-calculator card-enter">
           <div style="padding: 22px;">
             <h2 class="alcohol-title">🍺 음주 측정기</h2>
             <p class="alcohol-description">음주량과 시간을 입력하면 예상 혈중알코올농도(BAC)를 계산합니다.</p>
@@ -1337,7 +1337,7 @@ const pageRegistry = {
           </div>
         </section>
 
-        <section class="mt-12 prose prose-gray max-w-none" style="margin: 5%;">
+        <section class="alcohol-info prose prose-gray max-w-none">
           <div class="space-y-8">
             <div>
               <h2 class="text-xl font-semibold text-gray-900 mb-4">음주 운전 처벌 기준</h2>
