@@ -76,13 +76,13 @@
         return;
       }
 
-      var rawBac = (grams / (weight * genderFactor)) - (0.015 * elapsedHours);
+      var rawBac = (grams / (weight * genderFactor * 10)) - (0.015 * elapsedHours);
       var bac = Math.max(0, rawBac);
       var bacRounded = round3(bac);
       var caution = bacRounded >= 0.03;
 
       console.log('[AlcoholCalculator] BAC calculation', {
-        formula: 'BAC(%) = max(0, (grams / (weight * genderFactor)) - (0.015 * elapsedHours))',
+        formula: 'BAC(%) = max(0, (grams / (weight * genderFactor * 10)) - (0.015 * elapsedHours))',
         inputs: {
           genderFactor: genderFactor,
           weightKg: weight,

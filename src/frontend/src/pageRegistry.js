@@ -1322,13 +1322,13 @@ const pageRegistry = {
             <label class="alcohol-field">
                 <span>음주 후 경과 시간</span>
                 <div class="alcohol-input-wrap">
-                  <input id="alcohol-hours" class="alcohol-input" type="number" min="0" step="0.5" placeholder="0" value="0" />
+                  <input id="alcohol-hours" class="alcohol-input" type="number" min="0" step="1" placeholder="0" value="0" />
                   <span class="alcohol-input-unit">시간</span>
                 </div>
             </label></div>
 
             <div class="alcohol-actions">
-                <button id="alcohol-reset" class="btn btn-outline btn-sm" type="button">초기화</button>
+                <button id="alcohol-reset" class="alcohol-gender-btn" type="button">초기화</button>
             </div>
 
             <div id="alcohol-result" class="alcohol-result" aria-live="polite">값을 입력하고 계산해보세요.</div>

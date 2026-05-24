@@ -15,7 +15,7 @@
 .alcohol-stepper-btn { width: 40px; height: 40px; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff; }
 .alcohol-stepper [data-stepper-display] { min-width: 12px; text-align: center; font-weight: 700; }
 .alcohol-actions { display: flex; gap: 10px; margin-top: 16px; }
-.alcohol-result { margin-top: 16px; padding: 14px; border-radius: 10px; background: #f8fafc; color: #1f2937; line-height: 1.6; }
+.alcohol-result { margin-top: 16px; padding: 14px; border-radius: 10px; background: #f8fafc; color: #1f2937; line-height: 5; }
 .alcohol-note { margin: 10px 0 0; font-size: 13px; color: #6b7280; }
 .alcohol-result--warn { background: #fef2f2; color: #991b1b; }
 .alcohol-result--safe { background: #ecfdf5; color: #065f46; }
