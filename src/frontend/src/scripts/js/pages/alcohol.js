@@ -68,7 +68,7 @@
       var weight = num('alcohol-weight');
       var elapsedHoursInput = document.getElementById('alcohol-hours');
       var elapsedHours = num('alcohol-hours');
-      var grams = (num('alcohol-soju') * 9.8) + (num('alcohol-beer') * 20) + (num('alcohol-wine') * 14) + (num('alcohol-whiskey') * 8.4) + (num('alcohol-makgeolli') * 14.4);
+      var grams = (num('alcohol-soju') * 6.3) + (num('alcohol-beer') * 19.7) + (num('alcohol-wine') * 14.2) + (num('alcohol-whiskey') * 9.5) + (num('alcohol-makgeolli') * 14.2);
 
       if (!weight || !elapsedHoursInput || elapsedHoursInput.value === '' || grams <= 0) {
         resultEl.className = 'alcohol-result';
@@ -76,9 +76,38 @@
         return;
       }
 
-      var bac = Math.max(0, (grams / (weight * genderFactor)) - (0.015 * elapsedHours));
+      var rawBac = (grams / (weight * genderFactor)) - (0.015 * elapsedHours);
+      var bac = Math.max(0, rawBac);
       var bacRounded = round3(bac);
       var caution = bacRounded >= 0.03;
+
+      console.log('[AlcoholCalculator] BAC calculation', {
+        formula: 'BAC(%) = max(0, (grams / (weight * genderFactor)) - (0.015 * elapsedHours))',
+        inputs: {
+          genderFactor: genderFactor,
+          weightKg: weight,
+          elapsedHours: elapsedHours,
+          sojuCups: num('alcohol-soju'),
+          beerCups: num('alcohol-beer'),
+          wineCups: num('alcohol-wine'),
+          whiskeyCups: num('alcohol-whiskey'),
+          makgeolliBowls: num('alcohol-makgeolli')
+        },
+        gramsBreakdown: {
+          soju: num('alcohol-soju') * 6.3,
+          beer: num('alcohol-beer') * 19.7,
+          wine: num('alcohol-wine') * 14.2,
+          whiskey: num('alcohol-whiskey') * 9.5,
+          makgeolli: num('alcohol-makgeolli') * 14.2,
+          totalGrams: grams
+        },
+        outputs: {
+          rawBac: rawBac,
+          clampedBac: bac,
+          roundedBac: bacRounded,
+          caution: caution
+        }
+      });
 
       resultEl.className = caution ? 'alcohol-result alcohol-result--warn' : 'alcohol-result alcohol-result--safe';
       resultEl.textContent = '예상 BAC: ' + bacRounded.toFixed(3) + '% · ' + (caution ? '운전 금지 권장 (면허정지 기준 0.03% 이상)' : '운전 가능 범위일 수 있으나 절대적 기준은 아닙니다.');
