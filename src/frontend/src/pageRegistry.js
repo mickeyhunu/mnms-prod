@@ -1293,9 +1293,9 @@ const pageRegistry = {
             <div class="alcohol-grid alcohol-grid--top">
                 <label class="alcohol-field">
                 <span>성별</span>
-                <input id="alcohol-gender" type="hidden" value="0.55" />
+                <input id="alcohol-gender" type="hidden" value="0.68" />
                 <div class="alcohol-gender-buttons" id="alcohol-gender-buttons">
-                    <button type="button" class="alcohol-gender-btn" data-gender-value="0.68">남성</button>
+                    <button type="button" class="alcohol-gender-btn alcohol-gender-btn--active" data-gender-value="0.68">남성</button>
                     <button type="button" class="alcohol-gender-btn" data-gender-value="0.55">여성</button>
                 </div>
                 </label>
@@ -1322,7 +1322,7 @@ const pageRegistry = {
             <label class="alcohol-field">
                 <span>음주 후 경과 시간</span>
                 <div class="alcohol-input-wrap">
-                  <input id="alcohol-hours" class="alcohol-input" type="number" min="0" step="0.5" placeholder="0" />
+                  <input id="alcohol-hours" class="alcohol-input" type="number" min="0" step="0.5" placeholder="0" value="0" />
                   <span class="alcohol-input-unit">시간</span>
                 </div>
             </label></div>
