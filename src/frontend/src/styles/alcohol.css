@@ -22,3 +22,6 @@
 @media (max-width: 768px) { .alcohol-grid--top { grid-template-columns: 1fr; } }
 
 .alcohol-gender-btn--active { background: #2563eb; color: #fff; border-color: #2563eb; }
+
+.alcohol-content { margin: 5%; }
+.alcohol-info { margin-top: 3rem; }
