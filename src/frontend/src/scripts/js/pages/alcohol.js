@@ -99,12 +99,13 @@
     });
 
     resetBtn.addEventListener('click', function () {
-      ['alcohol-weight', 'alcohol-hours'].forEach(function (id) { document.getElementById(id).value = ''; });
+      document.getElementById('alcohol-weight').value = '';
+      document.getElementById('alcohol-hours').value = '0';
       ['alcohol-soju', 'alcohol-beer', 'alcohol-wine', 'alcohol-whiskey', 'alcohol-makgeolli'].forEach(function (id) { document.getElementById(id).value = '0'; });
-      document.getElementById('alcohol-gender').value = '0.55';
+      document.getElementById('alcohol-gender').value = '0.68';
       document.querySelectorAll('[data-stepper-display]').forEach(function (display) { display.textContent = '0'; });
       document.querySelectorAll('[data-gender-value]').forEach(function (button) {
-        var selected = button.getAttribute('data-gender-value') === '0.55';
+        var selected = button.getAttribute('data-gender-value') === '0.68';
         button.classList.toggle('alcohol-gender-btn--active', selected);
       });
       resultEl.className = 'alcohol-result';
