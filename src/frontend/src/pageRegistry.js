@@ -1233,6 +1233,17 @@ const pageRegistry = {
                 </div>
               </a>
             </div>
+            <div class="card-enter" style="animation-delay: 80ms;">
+              <a class="play-tool-card" href="/play/alcohol">
+                <div class="play-tool-card__content">
+                  <span class="play-tool-card__icon">🍺</span>
+                  <div class="play-tool-card__text">
+                    <p class="play-tool-card__title">음주측정</p>
+                    <p class="play-tool-card__description">간단하게 취기 자가진단</p>
+                  </div>
+                </div>
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -1248,6 +1259,51 @@ const pageRegistry = {
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js"]
   },
+  'alcohol': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="/login" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="/register" class="btn btn-outline btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="/admin" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+      <div class="container">
+        <header class="community-section-header">
+          <div class="community-header-left">
+            <a href="/play" class="community-back-link icon-btn icon-btn-square" aria-label="PLAY로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a>
+            <span class="community-board-name">음주측정</span>
+          </div>
+        </header>
+        <section class="card-enter" style="padding: 20px; background: #fff; border-radius: 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);">
+          <h2 style="margin: 0 0 10px; font-size: 24px;">🍺 음주측정 페이지</h2>
+          <p style="margin: 0 0 8px; color: #4b5563; line-height: 1.7;">현재는 베타 버전으로, 곧 더 정확한 문진형 음주 상태 체크 기능이 추가될 예정입니다.</p>
+          <p style="margin: 0; color: #6b7280; line-height: 1.7;">지금은 PLAY 메뉴에 정상 연결되도록 기본 페이지를 먼저 오픈했습니다.</p>
+        </section>
+      </div>
+    </main>
+
+    <script src="scripts/js/utils/constants.js"></script>
+    <script src="scripts/js/utils/helpers.js"></script>
+    <script src="scripts/js/utils/auth.js"></script>
+    <script src="scripts/js/api/apiClient.js"></script>
+    <script src="scripts/js/api/authAPI.js"></script>
+    <script src="scripts/js/components/header.js"></script>
+    <script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js"]
+  },
+
   'register': {
     template: `<header class="header">
         <div class="header-container">
