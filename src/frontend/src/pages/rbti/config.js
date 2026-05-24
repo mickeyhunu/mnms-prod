@@ -79,37 +79,37 @@ const rbtiTemplate = `
           <ul id="rbti-result-hidden" style="margin: 0; padding-left: 18px; color: #374151;"></ul>
         </section>
 
-        <section class="mt-12 space-y-8" style="margin-top: 40px;">
+        <section style="margin-top: 40px; display: flex; flex-direction: column; gap: 32px;">
           <div>
-            <h2 id="rbti-about-title" class="text-xl font-semibold text-gray-900 mt-3">RBTI 검사란?</h2>
+            <h2 id="rbti-about-title" class="text-xl font-semibold text-gray-900 mb-4">RBTI 검사란?</h2>
             <p id="rbti-about-description" class="text-gray-600 leading-relaxed">RBTI는 자신의 유흥주점 이용 행동 성향을 알아보는 검사입니다.</p>
           </div>
           <div>
-            <h2 class="text-xl font-semibold text-gray-900 mt-3">4가지 선호 지표</h2>
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">4가지 선호 지표</h2>
             <div id="rbti-axis-list" class="space-y-3"></div>
           </div>
           <div>
-            <h2 class="text-xl font-semibold text-gray-900 mt-3">자주 묻는 질문 (FAQ)</h2>
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">자주 묻는 질문 (FAQ)</h2>
             <div class="space-y-4">
               <div>
-                <h3 class="font-medium text-gray-900">왜 이렇게 현실 반영이 잘 되나요?</h3>
-                <p class="text-gray-600 text-sm mb-1">실제 업계 문화와 술자리 유형을 바탕으로 제작되어 생각보다 정확할 수 있습니다.</p>
+                <h3 class="text-base font-medium text-gray-800">왜 이렇게 현실 반영이 잘 되나요?</h3>
+                <p class="text-gray-600 leading-relaxed mt-1 mb-1">실제 업계 문화와 술자리 유형을 바탕으로 제작되어 생각보다 정확할 수 있습니다.</p>
               </div>
               <div>
-                <h3 class="font-medium text-gray-900">이 검사는 공식 심리검사인가요?</h3>
-                <p class="text-gray-600 text-sm mb-1">아닙니다. RBTI는 업계 밈과 실제 술자리 문화를 바탕으로 제작된 재미용 성향검사입니다.</p>
+                <h3 class="text-base font-medium text-gray-800">이 검사는 공식 심리검사인가요?</h3>
+                <p class="text-gray-600 leading-relaxed mt-1 mb-1">아닙니다. RBTI는 업계 밈과 실제 술자리 문화를 바탕으로 제작된 재미용 성향검사입니다.</p>
               </div>
               <div>
-                <h3 class="font-medium text-gray-900">결과는 변할 수 있나요?</h3>
-                <p class="text-gray-600 text-sm mb-1">함께 노는 사람, 텐션, 술 상태, 지갑 상태에 따라 당신의 RBTI는 달라질 수 있습니다.</p>
+                <h3 class="text-base font-medium text-gray-800">결과는 변할 수 있나요?</h3>
+                <p class="text-gray-600 leading-relaxed mt-1 mb-1">함께 노는 사람, 텐션, 술 상태, 지갑 상태에 따라 당신의 RBTI는 달라질 수 있습니다.</p>
               </div>
               <div>
-                <h3 class="font-medium text-gray-900">데이터가 저장되나요?</h3>
-                <p class="text-gray-600 text-sm mb-1">모든 답변과 결과는 브라우저에서만 처리되며 서버에 저장되지 않습니다.</p>
+                <h3 class="text-base font-medium text-gray-800">데이터가 저장되나요?</h3>
+                <p class="text-gray-600 leading-relaxed mt-1 mb-1">모든 답변과 결과는 브라우저에서만 처리되며 서버에 저장되지 않습니다.</p>
               </div>
               <div>
-                <h3 class="font-medium text-gray-900">결과가 너무 정확한데요?</h3>
-                <p class="text-gray-600 text-sm mb-1">업계 사람들의 시선으로 분석하기 때문에 뜨끔할 수 있습니다.</p>
+                <h3 class="text-base font-medium text-gray-800">결과가 너무 정확한데요?</h3>
+                <p class="text-gray-600 leading-relaxed mt-1 mb-1">업계 사람들의 시선으로 분석하기 때문에 뜨끔할 수 있습니다.</p>
               </div>
             </div>
           </div>
