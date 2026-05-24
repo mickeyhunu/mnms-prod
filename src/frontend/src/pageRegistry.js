@@ -1238,7 +1238,7 @@ const pageRegistry = {
                 <div class="play-tool-card__content">
                   <span class="play-tool-card__icon">🍺</span>
                   <div class="play-tool-card__text">
-                    <p class="play-tool-card__title">음주측정</p>
+                    <p class="play-tool-card__title">음주 측정기</p>
                     <p class="play-tool-card__description">간단하게 취기 자가진단</p>
                   </div>
                 </div>
@@ -1282,7 +1282,7 @@ const pageRegistry = {
         <header class="community-section-header">
           <div class="community-header-left">
             <a href="/play" class="community-back-link icon-btn icon-btn-square" aria-label="PLAY로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a>
-            <span class="community-board-name">음주측정</span>
+            <span class="community-board-name">음주 측정기</span>
           </div>
         </header>
         <section class="alcohol-calculator card-enter">
@@ -1302,23 +1302,23 @@ const pageRegistry = {
               <input id="alcohol-weight" class="alcohol-input" type="number" min="30" max="200" placeholder="70" />
             </label>
             <label class="alcohol-field">
-              <span>소주 잔 수 (1잔)</span>
+              <span>소주 (1잔)</span>
               <input id="alcohol-soju" class="alcohol-input" type="number" min="0" step="1" value="0" />
             </label>
             <label class="alcohol-field">
-              <span>맥주 잔 수 (500ml)</span>
+              <span>맥주 (1잔 500ml)</span>
               <input id="alcohol-beer" class="alcohol-input" type="number" min="0" step="1" value="0" />
             </label>
             <label class="alcohol-field">
-              <span>와인 잔 수 (150ml)</span>
+              <span>와인 (1잔 150ml)</span>
               <input id="alcohol-wine" class="alcohol-input" type="number" min="0" step="1" value="0" />
             </label>
             <label class="alcohol-field">
-              <span>양주 잔 수 (30ml)</span>
+              <span>양주 (1잔 30ml)</span>
               <input id="alcohol-whiskey" class="alcohol-input" type="number" min="0" step="1" value="0" />
             </label>
             <label class="alcohol-field">
-              <span>막걸리 사발 수 (300ml)</span>
+              <span>막걸리 (1사발 300ml)</span>
               <input id="alcohol-makgeolli" class="alcohol-input" type="number" min="0" step="1" value="0" />
             </label>
             <label class="alcohol-field">
