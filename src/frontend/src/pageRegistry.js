@@ -939,6 +939,7 @@ const pageRegistry = {
                             <span id="mypage-business-info-status" class="mypage-status-badge mypage-status-badge--unregistered">미등록</span>
                         </a>
                         <a class="mypage-link-item" href="/ad-order-history"><span>광고 구매 내역</span></a>
+                        <a class="mypage-link-item hidden" id="business-member-apply-link" href="/business-management"><span>기업회원 신청</span></a>
                     </div>
                 </section>
 

@@ -123,11 +123,17 @@ function resolveRankMarkup(user, fallbackLabel = '') {
 function renderAdCenterSection(user) {
     const adCenterWrapper = document.getElementById('ad-center-wrapper');
     const adCenterSection = document.getElementById('ad-center-section');
+    const businessApplyLink = document.getElementById('business-member-apply-link');
     if (!adCenterWrapper || !adCenterSection) return;
 
-    const shouldShow = isAdAccount(user);
-    adCenterWrapper.classList.toggle('hidden', !shouldShow);
-    adCenterSection.classList.toggle('hidden', !shouldShow);
+    adCenterWrapper.classList.remove('hidden');
+    adCenterSection.classList.remove('hidden');
+
+    const isLocalEnvironment = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    const shouldShowBusinessApplyButton = isLocalEnvironment && !isAdAccount(user);
+    if (businessApplyLink) {
+        businessApplyLink.classList.toggle('hidden', !shouldShowBusinessApplyButton);
+    }
 }
 
 function normalizeRegistrationStatus(status) {
