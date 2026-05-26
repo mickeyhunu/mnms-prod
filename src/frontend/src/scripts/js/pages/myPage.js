@@ -124,16 +124,22 @@ function renderAdCenterSection(user) {
     const adCenterWrapper = document.getElementById('ad-center-wrapper');
     const adCenterSection = document.getElementById('ad-center-section');
     const businessApplyLink = document.getElementById('business-member-apply-link');
-    if (!adCenterWrapper || !adCenterSection) return;
+    if (!adCenterWrapper || !adCenterSection || !businessApplyLink) return;
 
     adCenterWrapper.classList.remove('hidden');
     adCenterSection.classList.remove('hidden');
 
-    const isLocalEnvironment = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-    const shouldShowBusinessApplyButton = isLocalEnvironment && !isAdAccount(user);
-    if (businessApplyLink) {
-        businessApplyLink.classList.toggle('hidden', !shouldShowBusinessApplyButton);
-    }
+    const isBusinessMember = isAdAccount(user);
+    const adCenterItems = adCenterSection.querySelectorAll('.mypage-link-item');
+
+    adCenterItems.forEach((item) => {
+        const isBusinessApplyItem = item.id === 'business-member-apply-link';
+        if (isBusinessMember) {
+            item.classList.toggle('hidden', isBusinessApplyItem);
+            return;
+        }
+        item.classList.toggle('hidden', !isBusinessApplyItem);
+    });
 }
 
 function normalizeRegistrationStatus(status) {
