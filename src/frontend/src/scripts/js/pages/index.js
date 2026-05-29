@@ -466,28 +466,24 @@ function updatePagination() {
     const blockStart = Math.floor(currentPage / blockSize) * blockSize;
     const blockEnd = Math.min(blockStart + blockSize, totalPages);
 
-    const previousPage = Math.max(0, currentPage - 1);
-    const nextPage = Math.min(totalPages - 1, currentPage + 1);
-    const previousDisabled = currentPage <= 0 ? ' disabled' : '';
-    const nextDisabled = currentPage >= totalPages - 1 ? ' disabled' : '';
-    const previousAriaDisabled = currentPage <= 0 ? ' aria-disabled="true" tabindex="-1"' : '';
-    const nextAriaDisabled = currentPage >= totalPages - 1 ? ' aria-disabled="true" tabindex="-1"' : '';
-
-    let html = `<a href="#" class="page-nav page-nav-prev${previousDisabled}" data-page="${previousPage}"${previousAriaDisabled}>이전</a>`;
+    let html = '';
+    if (blockStart > 0) {
+        html += `<a href="#" class="page-nav page-nav-prev" data-page="${blockStart - 1}">이전</a>`;
+    }
 
     for (let i = blockStart; i < blockEnd; i += 1) {
         const activeClass = i === currentPage ? 'active' : '';
         html += `<a href="#" class="page ${activeClass}" data-page="${i}">${i + 1}</a>`;
     }
 
-    html += `<a href="#" class="page-nav page-nav-next${nextDisabled}" data-page="${nextPage}"${nextAriaDisabled}>다음</a>`;
+    if (blockEnd < totalPages) {
+        html += `<a href="#" class="page-nav page-nav-next" data-page="${blockEnd}">다음</a>`;
+    }
 
     pagination.innerHTML = html;
     pagination.querySelectorAll('a[data-page]').forEach((link) => {
         link.addEventListener('click', (event) => {
             event.preventDefault();
-            if (link.classList.contains('disabled')) return;
-
             const target = Number(link.dataset.page);
             if (!isLoading) loadPosts(target);
         });

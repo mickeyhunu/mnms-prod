@@ -575,14 +575,8 @@
     margin-right: 8px;
 }
 
-.board-https://github.com/mickeyhunu/mnms-prod/pull/801/conflict?name=src%252Ffrontend%252Fsrc%252Fstyles%252Fcommunity-board.css&ancestor_oid=21ddc2f48d33f0a68ebf9fa74679ffff746fd380&base_oid=b8a37cf97f3f1c0cd3f85f079f4b24499ac760bd&head_oid=87fc3dd3fcad47f12d3eb2f8d5976df24820b949pagination .page-nav-next {
+.board-pagination .page-nav-next {
     margin-left: 8px;
-}
-
-.board-pagination .page-nav.disabled {
-    color: #aaa;
-    cursor: default;
-    pointer-events: none;
 }
 
 .board-search-wrap {
