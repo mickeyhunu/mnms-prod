@@ -379,11 +379,10 @@ async function loadLiveEntries({ showLoading = false, appendOlder = false, syncT
 
         if (appendOlder) {
             restoreLiveScrollAnchor(scrollAnchor);
-        } else if (syncToLatest && shouldUseHistoryPagination()) {
+        } else if (syncToLatest && shouldSyncLatestCardViewport()) {
             const isInitialViewportSync = !liveState.hasAlignedInitialViewport;
             scrollLiveToLatest({
-                behavior: isInitialViewportSync ? 'auto' : 'smooth',
-                alignToBottom: isInitialViewportSync
+                behavior: isInitialViewportSync ? 'auto' : 'smooth'
             });
             liveState.hasAlignedInitialViewport = true;
         }
@@ -993,6 +992,10 @@ function shouldUseHistoryPagination(categoryKey = liveState.selectedCategoryKey)
     return categoryKey === 'choice' || categoryKey === 'chojoong' || categoryKey === 'waiting';
 }
 
+function shouldSyncLatestCardViewport(categoryKey = liveState.selectedCategoryKey) {
+    return Boolean(LIVE_CATEGORIES[categoryKey]);
+}
+
 function isChoiceLikeCategory(categoryKey = liveState.selectedCategoryKey) {
     return categoryKey === 'choice' || categoryKey === 'chojoong';
 }
@@ -1294,21 +1297,12 @@ function restoreLiveScrollAnchor(anchor) {
     });
 }
 
-function scrollLiveToLatest({ behavior = 'smooth', alignToBottom = false } = {}) {
+function scrollLiveToLatest({ behavior = 'smooth' } = {}) {
     window.requestAnimationFrame(() => {
         const latestCard = document.querySelector('#live-entry-list .live-chat-card:last-of-type');
         if (latestCard) {
-            const stickyStackHeight = document.querySelector('.live-page__sticky-stack')?.offsetHeight || 0;
-            const adsHeight = getLiveAdsOffsetHeight();
-            const visibleViewportHeight = Math.max(window.innerHeight - adsHeight, 0);
-            const latestCardTop = window.scrollY + latestCard.getBoundingClientRect().top;
-            const latestCardBottom = latestCardTop + latestCard.offsetHeight;
-            const bottomViewportOffset = alignToBottom
-                ? Math.max(stickyStackHeight + 24, visibleViewportHeight - 24)
-                : visibleViewportHeight;
-
             window.scrollTo({
-                top: Math.max(0, latestCardBottom - bottomViewportOffset),
+                top: getLiveLatestCardScrollTop(latestCard),
                 behavior
             });
             return;
@@ -1319,6 +1313,14 @@ function scrollLiveToLatest({ behavior = 'smooth', alignToBottom = false } = {})
             behavior
         });
     });
+}
+
+function getLiveLatestCardScrollTop(latestCard) {
+    const stickyStackHeight = document.querySelector('.live-page__sticky-stack')?.offsetHeight || 0;
+    const cardViewportTop = stickyStackHeight + 16;
+    const latestCardTop = window.scrollY + latestCard.getBoundingClientRect().top;
+
+    return Math.max(0, latestCardTop - cardViewportTop);
 }
 
 function isLiveViewportNearBottom() {
