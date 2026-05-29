@@ -467,13 +467,17 @@ function updatePagination() {
     const blockEnd = Math.min(blockStart + blockSize, totalPages);
 
     let html = '';
+    if (blockStart > 0) {
+        html += `<a href="#" class="page-nav page-nav-prev" data-page="${blockStart - 1}">이전</a>`;
+    }
+
     for (let i = blockStart; i < blockEnd; i += 1) {
         const activeClass = i === currentPage ? 'active' : '';
         html += `<a href="#" class="page ${activeClass}" data-page="${i}">${i + 1}</a>`;
     }
 
     if (blockEnd < totalPages) {
-        html += `<a href="#" class="page-nav" data-page="${blockEnd}">다음</a>`;
+        html += `<a href="#" class="page-nav page-nav-next" data-page="${blockEnd}">다음</a>`;
     }
 
     pagination.innerHTML = html;
