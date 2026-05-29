@@ -1298,17 +1298,8 @@ function scrollLiveToLatest({ behavior = 'smooth', alignToBottom = false } = {})
     window.requestAnimationFrame(() => {
         const latestCard = document.querySelector('#live-entry-list .live-chat-card:last-of-type');
         if (latestCard) {
-            const stickyStackHeight = document.querySelector('.live-page__sticky-stack')?.offsetHeight || 0;
-            const adsHeight = getLiveAdsOffsetHeight();
-            const visibleViewportHeight = Math.max(window.innerHeight - adsHeight, 0);
-            const latestCardTop = window.scrollY + latestCard.getBoundingClientRect().top;
-            const latestCardBottom = latestCardTop + latestCard.offsetHeight;
-            const bottomViewportOffset = alignToBottom
-                ? Math.max(stickyStackHeight + 24, visibleViewportHeight - 24)
-                : visibleViewportHeight;
-
             window.scrollTo({
-                top: Math.max(0, latestCardBottom - bottomViewportOffset),
+                top: getLiveLatestCardScrollTop(latestCard, { alignToBottom }),
                 behavior
             });
             return;
@@ -1319,6 +1310,27 @@ function scrollLiveToLatest({ behavior = 'smooth', alignToBottom = false } = {})
             behavior
         });
     });
+}
+
+function getLiveLatestCardScrollTop(latestCard, { alignToBottom = false } = {}) {
+    const stickyStackHeight = document.querySelector('.live-page__sticky-stack')?.offsetHeight || 0;
+    const adsHeight = getLiveAdsOffsetHeight();
+    const visibleViewportHeight = Math.max(window.innerHeight - adsHeight, 0);
+    const cardViewportTop = stickyStackHeight + 16;
+    const cardViewportBottom = Math.max(visibleViewportHeight - 16, cardViewportTop);
+    const availableCardHeight = Math.max(cardViewportBottom - cardViewportTop, 0);
+    const latestCardTop = window.scrollY + latestCard.getBoundingClientRect().top;
+    const latestCardBottom = latestCardTop + latestCard.offsetHeight;
+
+    if (latestCard.offsetHeight > availableCardHeight) {
+        return Math.max(0, latestCardTop - cardViewportTop);
+    }
+
+    const bottomViewportOffset = alignToBottom
+        ? Math.max(stickyStackHeight + 24, visibleViewportHeight - 24)
+        : visibleViewportHeight;
+
+    return Math.max(0, latestCardBottom - bottomViewportOffset);
 }
 
 function isLiveViewportNearBottom() {
