@@ -379,11 +379,12 @@ async function loadLiveEntries({ showLoading = false, appendOlder = false, syncT
 
         if (appendOlder) {
             restoreLiveScrollAnchor(scrollAnchor);
-        } else if (syncToLatest && shouldUseHistoryPagination()) {
+        } else if (syncToLatest && shouldSyncLatestCardViewport()) {
             const isInitialViewportSync = !liveState.hasAlignedInitialViewport;
             scrollLiveToLatest({
                 behavior: isInitialViewportSync ? 'auto' : 'smooth',
-                alignToBottom: isInitialViewportSync
+                alignToBottom: isInitialViewportSync && liveState.selectedCategoryKey !== 'entry',
+                alignToTop: liveState.selectedCategoryKey === 'entry'
             });
             liveState.hasAlignedInitialViewport = true;
         }
@@ -993,6 +994,10 @@ function shouldUseHistoryPagination(categoryKey = liveState.selectedCategoryKey)
     return categoryKey === 'choice' || categoryKey === 'chojoong' || categoryKey === 'waiting';
 }
 
+function shouldSyncLatestCardViewport(categoryKey = liveState.selectedCategoryKey) {
+    return shouldUseHistoryPagination(categoryKey) || categoryKey === 'entry';
+}
+
 function isChoiceLikeCategory(categoryKey = liveState.selectedCategoryKey) {
     return categoryKey === 'choice' || categoryKey === 'chojoong';
 }
@@ -1294,12 +1299,12 @@ function restoreLiveScrollAnchor(anchor) {
     });
 }
 
-function scrollLiveToLatest({ behavior = 'smooth', alignToBottom = false } = {}) {
+function scrollLiveToLatest({ behavior = 'smooth', alignToBottom = false, alignToTop = false } = {}) {
     window.requestAnimationFrame(() => {
         const latestCard = document.querySelector('#live-entry-list .live-chat-card:last-of-type');
         if (latestCard) {
             window.scrollTo({
-                top: getLiveLatestCardScrollTop(latestCard, { alignToBottom }),
+                top: getLiveLatestCardScrollTop(latestCard, { alignToBottom, alignToTop }),
                 behavior
             });
             return;
@@ -1312,7 +1317,7 @@ function scrollLiveToLatest({ behavior = 'smooth', alignToBottom = false } = {})
     });
 }
 
-function getLiveLatestCardScrollTop(latestCard, { alignToBottom = false } = {}) {
+function getLiveLatestCardScrollTop(latestCard, { alignToBottom = false, alignToTop = false } = {}) {
     const stickyStackHeight = document.querySelector('.live-page__sticky-stack')?.offsetHeight || 0;
     const adsHeight = getLiveAdsOffsetHeight();
     const visibleViewportHeight = Math.max(window.innerHeight - adsHeight, 0);
@@ -1322,7 +1327,7 @@ function getLiveLatestCardScrollTop(latestCard, { alignToBottom = false } = {}) 
     const latestCardTop = window.scrollY + latestCard.getBoundingClientRect().top;
     const latestCardBottom = latestCardTop + latestCard.offsetHeight;
 
-    if (latestCard.offsetHeight > availableCardHeight) {
+    if (alignToTop || latestCard.offsetHeight > availableCardHeight) {
         return Math.max(0, latestCardTop - cardViewportTop);
     }
 
