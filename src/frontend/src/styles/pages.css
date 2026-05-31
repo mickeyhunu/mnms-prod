@@ -3319,7 +3319,8 @@
     font-size: 18px;
 }
 
-.business-apply-checklist {
+.business-apply-checklist,
+.business-apply-policy-list {
     margin: 0;
     padding-left: 22px;
     color: #343a40;
@@ -3329,6 +3330,10 @@
     margin-top: 18px;
 }
 
+.business-apply-policy-list li + li {
+    margin-top: 10px;
+}
+
 .business-apply-checklist strong {
     display: block;
     margin-bottom: 8px;
@@ -3336,7 +3341,8 @@
     font-size: 15px;
 }
 
-.business-apply-checklist p {
+.business-apply-checklist p,
+.business-apply-policy-list li {
     margin: 6px 0 0;
     color: #495057;
     font-size: 14px;
@@ -3368,6 +3374,17 @@
 .business-apply-consent-item input {
     margin-top: 3px;
     flex: 0 0 auto;
+}
+
+.business-apply-bottom-notice {
+    margin: 16px 18px 0;
+    color: #6c757d;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.business-apply-bottom-notice p {
+    margin: 4px 0 0;
 }
 
 .business-apply-page .ad-profile-actions {

@@ -255,59 +255,34 @@ const pageRegistry = {
 
             <section class="business-apply-page" aria-label="기업회원 신청 안내 및 동의">
                 <div class="business-apply-hero">
-                    <p class="business-apply-eyebrow">기업회원 신청</p>
-                    <h2>기업회원 안내</h2>
-                    <p>기업회원은 미드나잇 맨즈에 업체 정보 및 광고를 등록할 수 있는 회원 유형입니다.</p>
-                    <p>기업회원으로 승인될 경우 광고상품 구매 및 광고 등록이 가능하며, 일부 커뮤니티 기능이 제한될 수 있습니다.</p>
+                    <p class="business-apply-eyebrow">기업회원 전환 안내</p>
+                    <h2>기업회원 전환 안내</h2>
+                    <p>기업회원은 광고 및 홍보 활동을 위한 계정으로, 일반회원과 이용 권한이 다르게 적용됩니다.</p>
                 </div>
 
                 <div class="business-apply-section">
-                    <h3>신청 전 확인사항</h3>
-                    <ol class="business-apply-checklist">
-                        <li>
-                            <strong>허위 정보 제출 금지</strong>
-                            <p>사업자등록증, 영업허가증 및 기타 제출 자료를 허위로 제출한 경우 기업회원 승인이 취소될 수 있으며, 계정 이용이 제한될 수 있습니다.</p>
-                        </li>
-                        <li>
-                            <strong>관련 법령 준수</strong>
-                            <p>기업회원은 대한민국 법령을 준수하는 업소만 등록할 수 있습니다.</p>
-                            <p>불법 영업, 무허가 영업 또는 관계 법령에 위반되는 업소는 등록이 제한되며 발견 시 즉시 삭제 및 이용 제한될 수 있습니다.</p>
-                        </li>
-                        <li>
-                            <strong>광고 내용 책임</strong>
-                            <p>등록된 광고 내용, 이미지, 연락처, 가격정보 등에 대한 책임은 해당 기업회원에게 있습니다.</p>
-                            <p>미드나잇 맨즈는 광고 내용의 진실성을 보증하지 않습니다.</p>
-                        </li>
-                        <li>
-                            <strong>서류 검토</strong>
-                            <p>제출된 서류는 기업회원 승인 심사를 위해서만 사용되며 심사 완료 후 관련 법령 및 내부 정책에 따라 보관 또는 폐기됩니다.</p>
-                        </li>
-                        <li>
-                            <strong>승인 기간</strong>
-                            <p>기업회원 심사는 영업일 기준 1~3일 정도 소요될 수 있습니다.</p>
-                        </li>
-                        <li>
-                            <strong>승인 후 의무</strong>
-                            <p>승인 후 사업자 정보가 변경된 경우 즉시 수정 신청해야 합니다.</p>
-                            <p>폐업 또는 영업정지 상태가 확인될 경우 기업회원 자격이 정지될 수 있습니다.</p>
-                        </li>
-                    </ol>
+                    <h3>이용 권한 변경</h3>
+                    <ul class="business-apply-policy-list">
+                        <li>기업회원으로 전환된 계정은 일반회원으로 복구할 수 없습니다.</li>
+                        <li>기업회원은 일반 커뮤니티 게시판 이용이 제한됩니다.</li>
+                        <li>기업회원은 홍보게시판만 이용할 수 있으며, 이용 조건은 운영정책에 따라 적용됩니다.</li>
+                        <li>기업회원은 일반 게시판의 게시글 작성, 댓글 작성 등 일부 커뮤니티 활동이 제한될 수 있습니다.</li>
+                        <li>PLAY - LIVE 서비스 이용 조건은 일반회원과 다르게 적용됩니다.</li>
+                        <li>기업회원 관련 정책은 서비스 운영정책에 따라 변경될 수 있습니다.</li>
+                    </ul>
                 </div>
 
                 <div class="business-apply-section business-apply-consent-box">
                     <h3>필수 동의</h3>
                     <label class="business-apply-consent-item">
                         <input type="checkbox" data-business-apply-consent required>
-                        <span>위 내용을 모두 확인하였으며 동의합니다.</span>
+                        <span>위 기업회원 이용정책 및 권한 변경 사항을 확인하였으며 이에 동의합니다.</span>
                     </label>
-                    <label class="business-apply-consent-item">
-                        <input type="checkbox" data-business-apply-consent required>
-                        <span>제출한 정보가 사실과 다름없음을 확인합니다.</span>
-                    </label>
-                    <label class="business-apply-consent-item">
-                        <input type="checkbox" data-business-apply-consent required>
-                        <span>허위 정보 제출 시 기업회원 자격 박탈에 동의합니다.</span>
-                    </label>
+                </div>
+
+                <div class="business-apply-bottom-notice" aria-label="기업회원 전환 유의사항">
+                    <p>※ 기업회원 전환 전 일반회원 권한 및 이용 범위를 충분히 확인하시기 바랍니다.</p>
+                    <p>※ 기업회원 전환 후에는 일반회원으로 복구되지 않습니다.</p>
                 </div>
 
                 <div class="ad-profile-actions">
