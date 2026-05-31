@@ -23,7 +23,26 @@ const REGION_DISTRICT_MAP = {
 
 const BUSINESS_CATEGORIES = ['룸', '바', '클럽', '기타'];
 const KAKAO_POSTCODE_SCRIPT_URL = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+const BUSINESS_APPLY_AGREEMENT_KEY = 'mnmsBusinessApplyAgreedAt';
 let kakaoPostcodeLoader = null;
+
+function isBusinessApplicationMode() {
+    const searchParams = new URLSearchParams(window.location.search || '');
+    return searchParams.get('apply') === '1' || Boolean(window.sessionStorage?.getItem(BUSINESS_APPLY_AGREEMENT_KEY));
+}
+
+function syncBusinessManagementModeLabels() {
+    const isApplyMode = isBusinessApplicationMode();
+    const pageTitle = document.getElementById('business-management-page-title');
+    const formSection = document.getElementById('business-management-form');
+    const saveButton = document.getElementById('business-info-save-btn');
+
+    if (pageTitle) pageTitle.textContent = isApplyMode ? '기업회원 신청' : '사업자정보 관리';
+    if (formSection) {
+        formSection.setAttribute('aria-label', isApplyMode ? '기업회원 신청용 사업자 정보 제출 폼' : '사업자 정보 관리 폼');
+    }
+    if (saveButton) saveButton.textContent = isApplyMode ? '기업회원 신청' : '사업자정보 저장';
+}
 
 function normalizeAreaLabel(value) {
     const raw = String(value || '').trim();
@@ -462,7 +481,11 @@ function bindBusinessManagementEvents() {
                 registrationStatus: 'REGISTERED',
                 businessInfo: formData
             });
-            alert('사업자정보가 저장되었습니다.');
+            const isApplyMode = isBusinessApplicationMode();
+            if (isApplyMode) {
+                window.sessionStorage?.removeItem(BUSINESS_APPLY_AGREEMENT_KEY);
+            }
+            alert(isApplyMode ? '기업회원 신청이 접수되었습니다.' : '사업자정보가 저장되었습니다.');
             window.location.href = '/my-page';
         } catch (error) {
             alert(error.message || '사업자정보 저장에 실패했습니다.');
@@ -484,6 +507,7 @@ async function initBusinessManagementPage() {
 
     if (typeof initHeader === 'function') initHeader();
     Auth.bindLogoutButton();
+    syncBusinessManagementModeLabels();
 
     const profile = await APIClient.get('/users/me/business-profile');
     applyBusinessFormData(profile?.businessInfo || {});

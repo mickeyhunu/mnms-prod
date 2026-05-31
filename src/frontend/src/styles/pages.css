@@ -3276,3 +3276,104 @@
     margin-bottom: 20px;
     color: #6c757d;
 }
+
+.business-apply-page {
+    border: 1px solid #e9ecef;
+    background: #fff;
+    overflow: hidden;
+}
+
+.business-apply-hero {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f3f5 100%);
+    padding: 28px 18px;
+    color: #343a40;
+    line-height: 1.65;
+}
+
+.business-apply-eyebrow {
+    margin: 0 0 8px;
+    color: #2b6fdb;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+.business-apply-hero h2 {
+    margin: 0 0 14px;
+    color: #111827;
+    font-size: 24px;
+}
+
+.business-apply-hero p {
+    margin: 8px 0 0;
+    font-size: 14px;
+}
+
+.business-apply-section {
+    padding: 28px 18px 0;
+}
+
+.business-apply-section h3 {
+    margin: 0 0 16px;
+    color: #212529;
+    font-size: 18px;
+}
+
+.business-apply-checklist {
+    margin: 0;
+    padding-left: 22px;
+    color: #343a40;
+}
+
+.business-apply-checklist li + li {
+    margin-top: 18px;
+}
+
+.business-apply-checklist strong {
+    display: block;
+    margin-bottom: 8px;
+    color: #111827;
+    font-size: 15px;
+}
+
+.business-apply-checklist p {
+    margin: 6px 0 0;
+    color: #495057;
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.business-apply-consent-box {
+    margin: 28px 18px 0;
+    padding: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: 16px;
+    background: #fbfcfd;
+}
+
+.business-apply-consent-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: #212529;
+    font-size: 14px;
+    line-height: 1.45;
+    cursor: pointer;
+}
+
+.business-apply-consent-item + .business-apply-consent-item {
+    margin-top: 12px;
+}
+
+.business-apply-consent-item input {
+    margin-top: 3px;
+    flex: 0 0 auto;
+}
+
+.business-apply-page .ad-profile-actions {
+    padding: 28px 18px;
+}
+
+.business-apply-page .ad-profile-actions .btn {
+    width: 100%;
+}
