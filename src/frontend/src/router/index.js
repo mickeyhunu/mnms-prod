@@ -38,6 +38,7 @@ const routes = [
   { path: '/ad-purchase', component: PageView, meta: { pageKey: 'ad-purchase', title: '광고 구매', description: '광고 요금제와 상품 구성을 확인하고 구매를 진행하세요.', noindex: true } },
   { path: '/ad-order-history', component: PageView, meta: { pageKey: 'ad-order-history', title: '광고 구매 내역', description: '내가 주문한 광고 상품 내역을 확인하세요.', noindex: true } },
   { path: '/business-info', component: PageView, meta: { pageKey: 'business-info', title: '업체정보', description: '업체정보 메뉴 준비중 안내 페이지입니다.' } },
+  { path: '/business-apply', component: PageView, meta: { pageKey: 'business-apply', title: '기업회원 신청', description: '기업회원 신청 전 안내 사항을 확인하고 필수 동의 후 사업자정보를 제출하세요.', noindex: true } },
   { path: '/ad-profile-management', component: PageView, meta: { pageKey: 'ad-profile-management', title: '광고프로필 관리', description: '광고프로필 기본 정보와 상세 소개를 등록하고 미리보기를 확인하세요.', noindex: true } },
   { path: '/business-management', component: PageView, meta: { pageKey: 'business-management', title: '사업자정보 관리', description: '사업자등록증, 사업자 상세정보, 계산서 발행 정보를 관리하세요.', noindex: true } },
   { path: '/play', component: PageView, meta: { pageKey: 'play', title: 'PLAY', description: 'LIVE와 RBTI를 한 번에 이동할 수 있는 PLAY 메뉴입니다.' } },
