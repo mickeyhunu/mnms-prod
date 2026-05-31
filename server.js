@@ -2,6 +2,7 @@
  * 파일 역할: Node/Express 서버를 초기화하고 백엔드 라우트를 연결하는 진입점 파일.
  */
 const crypto = require('crypto');
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -27,6 +28,10 @@ const { ensureS3BucketExists, isS3UploadEnabled, s3BucketName } = require('./src
 const app = express();
 const PORT = Number(process.env.PORT || 8080);
 const FRONTEND_DIR = path.join(__dirname, 'src/frontend');
+const LOCAL_ENV_CANDIDATE_PATHS = [
+  path.join(process.cwd(), '.env.local'),
+  path.resolve(__dirname, 'src/backend/.env.local')
+];
 let isDatabaseReady = false;
 const trustProxyValue = String(process.env.TRUST_PROXY || '1').trim();
 
@@ -35,6 +40,19 @@ app.set('trust proxy', trustProxyValue);
 app.use(cors());
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+
+function hasLocalEnvFile() {
+  return LOCAL_ENV_CANDIDATE_PATHS.some((envPath) => fs.existsSync(envPath));
+}
+
+function getClientFeatureConfig() {
+  return {
+    features: {
+      adCenterEnabled: hasLocalEnvFile()
+    }
+  };
+}
 
 app.all('/kcp/callback', authController.handleKcpCallback);
 
@@ -108,6 +126,10 @@ app.use(express.static(FRONTEND_DIR, {
     }
   }
 }));
+
+app.get('/api/client-config', (req, res) => {
+  res.json(getClientFeatureConfig());
+});
 
 app.use('/api', (req, res, next) => {
   if (req.path.startsWith('/live') || req.path.startsWith('/rbti')) {
