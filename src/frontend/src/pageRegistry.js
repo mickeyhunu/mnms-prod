@@ -361,7 +361,7 @@ const pageRegistry = {
                 <div class="business-info-section">
                     <h3>사업자 상세정보</h3>
                     <div class="business-verify-row">
-                        <input id="business-number" type="text" maxlength="12" placeholder="사업자 번호를 입력해주세요.">
+                        <input id="business-number" type="text" maxlength="10" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="사업자 번호를 숫자만 입력해주세요.">
                         <button id="business-verify-btn" type="button" disabled>검증</button>
                     </div>
                     <input id="business-name" type="text" maxlength="100" placeholder="사업자 상호를 입력해주세요.">
