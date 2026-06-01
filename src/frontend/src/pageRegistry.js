@@ -340,7 +340,6 @@ const pageRegistry = {
                                     <path d="M9 4.5 7.6 6H5.25A2.25 2.25 0 0 0 3 8.25v8.25a2.25 2.25 0 0 0 2.25 2.25h13.5A2.25 2.25 0 0 0 21 16.5V8.25A2.25 2.25 0 0 0 18.75 6H16.4L15 4.5H9Zm3 11.25a3.75 3.75 0 1 1 0-7.5 3.75 3.75 0 0 1 0 7.5Zm0-2.25a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"></path>
                                 </svg>
                             </button>
-                            <p id="business-license-file-name" class="business-license-file-name">등록할 이미지를 선택해주세요.</p>
                         </div>
                         <div class="business-license-upload-item">
                             <h3>영업허가증</h3>
@@ -350,12 +349,12 @@ const pageRegistry = {
                                     <path d="M9 4.5 7.6 6H5.25A2.25 2.25 0 0 0 3 8.25v8.25a2.25 2.25 0 0 0 2.25 2.25h13.5A2.25 2.25 0 0 0 21 16.5V8.25A2.25 2.25 0 0 0 18.75 6H16.4L15 4.5H9Zm3 11.25a3.75 3.75 0 1 1 0-7.5 3.75 3.75 0 0 1 0 7.5Zm0-2.25a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"></path>
                                 </svg>
                             </button>
-                            <p id="business-permit-file-name" class="business-license-file-name">등록할 이미지를 선택해주세요.</p>
                         </div>
                     </div>
                     <div class="business-info-guide">
                         <p>• 사업자등록증과 영업허가증에 가려지는 부분이 없어야해요.</p>
                         <p>• 이미지에 왜곡이나 흐린 부분이 있는지 확인해주세요.</p>
+                        <p>• 흐릿하거나 어두운 사진은 승인 지연의 원인이 될 수 있습니다.</p>
                     </div>
                 </div>
 
