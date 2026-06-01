@@ -328,9 +328,16 @@ function bindBusinessFilterEvents() {
 
 function collectBusinessManagementFormData() {
     const selectedBilling = document.querySelector('input[name="billing-type"]:checked');
+    const licenseButton = document.getElementById('business-license-upload-btn');
+    const permitButton = document.getElementById('business-permit-upload-btn');
+    const licensePreview = document.getElementById('business-license-preview');
+    const permitPreview = document.getElementById('business-permit-preview');
+
     return {
-        licenseImageName: String(document.getElementById('business-license-file-name')?.textContent || '').trim(),
-        permitImageName: String(document.getElementById('business-permit-file-name')?.textContent || '').trim(),
+        licenseImageName: String(licenseButton?.dataset.fileName || '').trim(),
+        licenseImageDataUrl: String(licensePreview?.getAttribute('src') || '').trim(),
+        permitImageName: String(permitButton?.dataset.fileName || '').trim(),
+        permitImageDataUrl: String(permitPreview?.getAttribute('src') || '').trim(),
         businessNumber: String(document.getElementById('business-number')?.value || '').trim(),
         businessName: String(document.getElementById('business-name')?.value || '').trim(),
         businessOwner: String(document.getElementById('business-owner')?.value || '').trim(),
@@ -340,10 +347,64 @@ function collectBusinessManagementFormData() {
     };
 }
 
+function isBusinessPreviewImageUrl(value) {
+    return /^data:image\//u.test(String(value || '').trim());
+}
+
+function updateBusinessUploadPreview(button, { fileName = '', imageUrl = '' } = {}) {
+    if (!button) return;
+
+    const normalizedFileName = String(fileName || '').trim();
+    const normalizedImageUrl = String(imageUrl || '').trim();
+    const previewId = button.id === 'business-permit-upload-btn' ? 'business-permit-preview' : 'business-license-preview';
+    const defaultLabel = button.getAttribute('aria-label') || '이미지 업로드';
+    let preview = button.querySelector('.business-license-preview');
+
+    if (!preview) {
+        preview = document.createElement('img');
+        preview.id = previewId;
+        preview.className = 'business-license-preview hidden';
+        preview.alt = '';
+        button.appendChild(preview);
+    }
+
+    button.dataset.fileName = normalizedFileName;
+    if (isBusinessPreviewImageUrl(normalizedImageUrl)) {
+        preview.src = normalizedImageUrl;
+        preview.alt = normalizedFileName || defaultLabel;
+        preview.classList.remove('hidden');
+        button.classList.add('has-preview');
+        button.setAttribute('aria-label', normalizedFileName ? `${normalizedFileName} 변경` : defaultLabel);
+        return;
+    }
+
+    preview.removeAttribute('src');
+    preview.alt = '';
+    preview.classList.add('hidden');
+    button.classList.remove('has-preview');
+    button.setAttribute('aria-label', normalizedFileName ? `${normalizedFileName} 변경` : defaultLabel);
+}
+
+function readBusinessImageFile(file) {
+    return new Promise((resolve, reject) => {
+        if (!file) {
+            resolve('');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('이미지를 불러오지 못했습니다.'));
+        reader.readAsDataURL(file);
+    });
+}
+
 function hasAnyBusinessValue(data) {
     const candidate = { ...data };
     delete candidate.licenseImageName;
+    delete candidate.licenseImageDataUrl;
     delete candidate.permitImageName;
+    delete candidate.permitImageDataUrl;
     delete candidate.billingType;
     const hasText = Object.values(candidate).some((value) => String(value || '').trim());
     const hasLicenseImage = data?.licenseImageName && data.licenseImageName !== BUSINESS_IMAGE_PLACEHOLDER;
@@ -402,15 +463,15 @@ function applyBusinessFormData(savedData) {
     setValue('business-address', savedData.businessAddress);
     setValue('business-address-detail', savedData.businessAddressDetail);
 
-    const fileName = document.getElementById('business-license-file-name');
-    if (fileName && savedData.licenseImageName) {
-        fileName.textContent = savedData.licenseImageName;
-    }
+    updateBusinessUploadPreview(document.getElementById('business-license-upload-btn'), {
+        fileName: savedData.licenseImageName,
+        imageUrl: savedData.licenseImageDataUrl
+    });
 
-    const permitFileName = document.getElementById('business-permit-file-name');
-    if (permitFileName && savedData.permitImageName) {
-        permitFileName.textContent = savedData.permitImageName;
-    }
+    updateBusinessUploadPreview(document.getElementById('business-permit-upload-btn'), {
+        fileName: savedData.permitImageName,
+        imageUrl: savedData.permitImageDataUrl
+    });
 
     const billingType = String(savedData.billingType || '').trim();
     if (billingType) {
@@ -426,8 +487,6 @@ function bindBusinessManagementEvents() {
     const permitInput = document.getElementById('business-permit-input');
     const uploadButton = document.getElementById('business-license-upload-btn');
     const permitUploadButton = document.getElementById('business-permit-upload-btn');
-    const fileName = document.getElementById('business-license-file-name');
-    const permitFileName = document.getElementById('business-permit-file-name');
     const saveButton = document.getElementById('business-info-save-btn');
     const draftButton = document.getElementById('business-info-draft-btn');
     const addressSearchButton = document.getElementById('business-address-search-btn');
@@ -435,16 +494,34 @@ function bindBusinessManagementEvents() {
     const fields = ['business-number', 'business-name', 'business-owner', 'business-address', 'business-address-detail'];
 
     uploadButton?.addEventListener('click', () => licenseInput?.click());
-    licenseInput?.addEventListener('change', () => {
+    licenseInput?.addEventListener('change', async () => {
         const file = licenseInput.files?.[0];
-        if (fileName && file) fileName.textContent = file.name;
+        if (file) {
+            try {
+                updateBusinessUploadPreview(uploadButton, {
+                    fileName: file.name,
+                    imageUrl: await readBusinessImageFile(file)
+                });
+            } catch (error) {
+                alert(error.message || '이미지를 불러오지 못했습니다.');
+            }
+        }
         updateBusinessActionButtons();
     });
 
     permitUploadButton?.addEventListener('click', () => permitInput?.click());
-    permitInput?.addEventListener('change', () => {
+    permitInput?.addEventListener('change', async () => {
         const file = permitInput.files?.[0];
-        if (permitFileName && file) permitFileName.textContent = file.name;
+        if (file) {
+            try {
+                updateBusinessUploadPreview(permitUploadButton, {
+                    fileName: file.name,
+                    imageUrl: await readBusinessImageFile(file)
+                });
+            } catch (error) {
+                alert(error.message || '이미지를 불러오지 못했습니다.');
+            }
+        }
         updateBusinessActionButtons();
     });
 
