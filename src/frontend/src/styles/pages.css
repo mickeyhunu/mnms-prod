@@ -2844,7 +2844,6 @@
 
 .business-license-clear-btn {
     position: absolute;
-    top: 34px;
     right: -10px;
     z-index: 2;
     display: inline-flex;
@@ -2920,7 +2919,7 @@
 .business-address-wrap button {
     position: absolute;
     right: 12px;
-    top: 50%;
+    top: 60%;
     transform: translateY(-50%);
     border: 0;
     background: transparent;
