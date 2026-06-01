@@ -632,6 +632,32 @@ function detectBusinessDocumentType(text) {
     return 'unknown';
 }
 
+function hasLenientBusinessRegistrationSignals(text) {
+    const normalizedText = normalizeBusinessOcrText(text);
+    const compactText = normalizedText.replace(/\s/g, '');
+
+    if (!compactText) return false;
+
+    const strongRegistrationSignals = [
+        /사업자/u,
+        /등록번호/u,
+        /사업자등록/u
+    ];
+    if (strongRegistrationSignals.some((pattern) => pattern.test(compactText))) return true;
+
+    const supportingRegistrationSignals = [
+        /등록/u,
+        /상호|법인명/u,
+        /성명|대표자/u,
+        /사업장|소재지/u,
+        /개업/u,
+        /업태|종목/u
+    ];
+    const signalCount = supportingRegistrationSignals.reduce((count, pattern) => count + (pattern.test(compactText) ? 1 : 0), 0);
+
+    return signalCount >= 2;
+}
+
 function hasLenientBusinessPermitSignals(text) {
     const normalizedText = normalizeBusinessOcrText(text);
     const compactText = normalizedText.replace(/\s/g, '');
@@ -641,17 +667,20 @@ function hasLenientBusinessPermitSignals(text) {
     const permitSignals = [
         /영업/u,
         /허가|신고|등록/u,
-        /식품|접객|업소|소재지|대표자|상호/u,
+        /식품접객/u,
         /제\d+호/u
     ];
     const signalCount = permitSignals.reduce((count, pattern) => count + (pattern.test(compactText) ? 1 : 0), 0);
-    const readableTextLength = (compactText.match(/[가-힣A-Za-z0-9]/gu) || []).length;
 
-    return signalCount >= 1 || readableTextLength >= 8;
+    return signalCount >= 1;
 }
 
 function isBusinessOcrDocumentValid({ text, expectedDocumentType, detectedDocumentType }) {
     if (detectedDocumentType === expectedDocumentType) return true;
+
+    if (expectedDocumentType === 'business_registration_certificate' && detectedDocumentType === 'unknown') {
+        return hasLenientBusinessRegistrationSignals(text);
+    }
 
     if (expectedDocumentType === 'business_permit_certificate' && detectedDocumentType === 'unknown') {
         return hasLenientBusinessPermitSignals(text);
@@ -795,18 +824,11 @@ function hasBlockingBusinessImageInspection(data) {
 
 function isBusinessInfoComplete(data) {
     if (!data) return false;
-<<<<<<< codex/enable-business-verification-button-on-input
-    const hasLicenseImage = data.licenseImageName && data.licenseImageName !== BUSINESS_IMAGE_PLACEHOLDER;
     const hasCompleteBusinessNumber = getBusinessNumberDigits(data.businessNumber).length === 10;
-    return Boolean(
-        hasLicenseImage
-        && hasCompleteBusinessNumber
-=======
     return Boolean(
         hasBusinessImageInspectionPassed(data, 'license')
         && hasBusinessImageInspectionPassed(data, 'permit')
-        && data.businessNumber
->>>>>>> main
+        && hasCompleteBusinessNumber
         && data.businessName
         && data.businessOwner
         && data.businessAddress
