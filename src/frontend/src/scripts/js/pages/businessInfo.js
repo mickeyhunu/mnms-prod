@@ -28,7 +28,6 @@ const KAKAO_POSTCODE_SCRIPT_URL = 'https://t1.daumcdn.net/mapjsapi/bundle/postco
 const BUSINESS_APPLY_AGREEMENT_KEY = 'mnmsBusinessApplyAgreedAt';
 const BUSINESS_OCR_SCRIPT_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
 const BUSINESS_OCR_LANGUAGE = 'kor+eng';
-const BUSINESS_OCR_LOG_PREFIX = '[MNMS Business OCR]';
 let kakaoPostcodeLoader = null;
 let businessOcrLoader = null;
 let businessOcrRequestId = 0;
@@ -423,6 +422,7 @@ function updateBusinessUploadPreview(button, { fileName = '', imageUrl = '' } = 
     }
 
     button.dataset.fileName = normalizedFileName;
+    updateBusinessOcrVisualState(button);
     if (isBusinessPreviewImageUrl(normalizedImageUrl)) {
         preview.src = normalizedImageUrl;
         preview.alt = normalizedFileName || defaultLabel;
@@ -498,104 +498,68 @@ function normalizeBusinessOcrText(value) {
         .trim();
 }
 
-function normalizeBusinessNumber(value) {
-    const digits = String(value || '').replace(/\D/g, '').slice(0, 10);
-    if (digits.length !== 10) return String(value || '').trim();
-    return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
+function resolveExpectedBusinessDocumentType(documentLabel = '') {
+    return /영업/u.test(String(documentLabel || '')) ? 'business_permit_certificate' : 'business_registration_certificate';
 }
 
-function findBusinessOcrLine(lines, patterns) {
-    return lines.find((line) => patterns.some((pattern) => pattern.test(line))) || '';
-}
+function detectBusinessDocumentType(text) {
+    const normalizedText = normalizeBusinessOcrText(text);
+    const compactText = normalizedText.replace(/\s/g, '');
 
-function extractBusinessOcrValueFromLine(line, patterns) {
-    const matchedPattern = patterns.find((pattern) => pattern.test(line));
-    if (!matchedPattern) return '';
+    if (/사업자등록증|사업자등록번호|사업자등록번호증/u.test(compactText)) {
+        return 'business_registration_certificate';
+    }
 
-    return line
-        .replace(matchedPattern, '')
-        .replace(/^[\s:：|\-]+/u, '')
-        .trim();
-}
+    if (/영업(허가|신고|등록)증|영업(허가|신고|등록)번호|식품접객업영업(허가|신고)증|허가증|신고증/u.test(compactText)) {
+        return 'business_permit_certificate';
+    }
 
-function extractBusinessOcrValue(lines, patterns) {
-    const matchedIndex = lines.findIndex((line) => patterns.some((pattern) => pattern.test(line)));
-    if (matchedIndex < 0) return '';
-
-    const inlineValue = extractBusinessOcrValueFromLine(lines[matchedIndex], patterns);
-    if (inlineValue) return inlineValue;
-
-    const nextLine = lines.slice(matchedIndex + 1).find((line) => line && !patterns.some((pattern) => pattern.test(line)));
-    return String(nextLine || '').trim();
+    return 'unknown';
 }
 
 function parseBusinessOcrText(text, { documentLabel = '', fileName = '', confidence = 0 } = {}) {
-    const normalizedText = normalizeBusinessOcrText(text);
-    const lines = normalizedText
-        .split('\n')
-        .map((line) => line.trim())
-        .filter(Boolean);
-    const compactText = normalizedText.replace(/\s/g, '');
-    const businessNumberMatch = compactText.match(/(?:\d{3}-?\d{2}-?\d{5})/u);
-    const businessNamePatterns = [/^(상\s*호|법\s*인\s*명|단\s*체\s*명|업\s*체\s*명)/u];
-    const ownerPatterns = [/^(대표자\s*성명|대표\s*자|대표자?|성\s*명)/u];
-    const addressPatterns = [/^(사업장\s*소재지|소\s*재\s*지|사업장\s*주소|주소)/u];
-    const permitNumberPatterns = [/^(허가\s*번호|신고\s*번호|등록\s*번호)/u];
-    const issueDatePatterns = [/^(발급\s*일|교부\s*일|신고\s*일|허가\s*일|등록\s*일)/u];
-
-    const businessName = extractBusinessOcrValue(lines, businessNamePatterns);
-    const owner = extractBusinessOcrValue(lines, ownerPatterns);
-    const address = extractBusinessOcrValue(lines, addressPatterns);
-    const permitNumber = extractBusinessOcrValue(lines, permitNumberPatterns);
-    const issueDate = extractBusinessOcrValue(lines, issueDatePatterns);
-
-    let detectedDocumentType = 'unknown';
-    if (/사업자등록증|사업자등록번호/u.test(normalizedText)) {
-        detectedDocumentType = 'business_registration_certificate';
-    } else if (/영업\s*(허가|신고)|허가증|신고증|등록증/u.test(normalizedText)) {
-        detectedDocumentType = 'business_permit_certificate';
-    }
+    const expectedDocumentType = resolveExpectedBusinessDocumentType(documentLabel);
+    const detectedDocumentType = detectBusinessDocumentType(text);
 
     return {
         documentLabel,
         fileName,
+        expectedDocumentType,
         detectedDocumentType,
-        businessNumber: businessNumberMatch ? normalizeBusinessNumber(businessNumberMatch[0]) : '',
-        businessName,
-        owner,
-        address,
-        permitNumber,
-        issueDate,
-        confidence: Number.isFinite(Number(confidence)) ? Math.round(Number(confidence) * 100) / 100 : 0,
-        matchedTitleLine: findBusinessOcrLine(lines, [/사업자등록증/u, /영업\s*(허가|신고)/u, /허가증|신고증/u]),
-        rawText: normalizedText
+        isValidDocument: detectedDocumentType === expectedDocumentType,
+        confidence: Number.isFinite(Number(confidence)) ? Math.round(Number(confidence) * 100) / 100 : 0
     };
 }
 
-function logBusinessOcrResult(result) {
-    const { rawText, ...summary } = result;
+function updateBusinessOcrVisualState(button, state = 'idle') {
+    if (!button) return;
 
-    console.groupCollapsed(`${BUSINESS_OCR_LOG_PREFIX} ${summary.documentLabel || '첨부 이미지'} 판별 결과`);
-    console.table(summary);
-    console.log('rawText:', rawText || '(OCR 텍스트 없음)');
-    console.groupEnd();
+    button.classList.remove('is-ocr-checking', 'is-ocr-valid', 'is-ocr-invalid');
+    delete button.dataset.ocrStatus;
+
+    if (state === 'checking') {
+        button.classList.add('is-ocr-checking');
+        button.dataset.ocrStatus = 'OCR 검사 중';
+    } else if (state === 'valid') {
+        button.classList.add('is-ocr-valid');
+        button.dataset.ocrStatus = '통과';
+    } else if (state === 'invalid') {
+        button.classList.add('is-ocr-invalid');
+        button.dataset.ocrStatus = '확인 필요';
+    }
 }
 
 async function recognizeBusinessImageFile({ file, imageUrl, documentLabel, uploadButton }) {
     const requestId = String(++businessOcrRequestId);
     const fileName = String(file?.name || '').trim();
-    if (uploadButton) uploadButton.dataset.ocrRequestId = requestId;
+    if (uploadButton) {
+        uploadButton.dataset.ocrRequestId = requestId;
+        updateBusinessOcrVisualState(uploadButton, 'checking');
+    }
 
     try {
-        console.info(`${BUSINESS_OCR_LOG_PREFIX} ${documentLabel} OCR 판별 시작`, { fileName });
         const Tesseract = await loadBusinessOcrScript();
-        const recognized = await Tesseract.recognize(imageUrl, BUSINESS_OCR_LANGUAGE, {
-            logger: (progress) => {
-                if (progress?.status) {
-                    console.debug(`${BUSINESS_OCR_LOG_PREFIX} ${documentLabel} 진행 상태`, progress);
-                }
-            }
-        });
+        const recognized = await Tesseract.recognize(imageUrl, BUSINESS_OCR_LANGUAGE);
 
         if (uploadButton?.dataset.ocrRequestId !== requestId) {
             return null;
@@ -606,13 +570,12 @@ async function recognizeBusinessImageFile({ file, imageUrl, documentLabel, uploa
             fileName,
             confidence: recognized?.data?.confidence
         });
-        logBusinessOcrResult(result);
+        updateBusinessOcrVisualState(uploadButton, result.isValidDocument ? 'valid' : 'invalid');
         return result;
     } catch (error) {
-        console.error(`${BUSINESS_OCR_LOG_PREFIX} ${documentLabel} OCR 판별 실패`, {
-            fileName,
-            message: error.message || String(error)
-        });
+        if (uploadButton?.dataset.ocrRequestId === requestId) {
+            updateBusinessOcrVisualState(uploadButton, 'invalid');
+        }
         return null;
     }
 }

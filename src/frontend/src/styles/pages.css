@@ -2767,6 +2767,71 @@
     background: #f8f9fa;
 }
 
+.business-license-upload-btn.has-preview.is-ocr-checking {
+    border-color: #2b6fdb;
+    background: #eef5ff;
+    box-shadow: 0 0 0 3px rgba(43, 111, 219, 0.14);
+}
+
+.business-license-upload-btn.has-preview.is-ocr-valid {
+    border-color: #18a957;
+    background: #eafaf1;
+    box-shadow: 0 0 0 3px rgba(24, 169, 87, 0.2);
+}
+
+.business-license-upload-btn.has-preview.is-ocr-invalid {
+    border-color: #e23b4a;
+    background: #fff0f1;
+    box-shadow: 0 0 0 3px rgba(226, 59, 74, 0.2);
+}
+
+.business-license-upload-btn.has-preview.is-ocr-valid::before,
+.business-license-upload-btn.has-preview.is-ocr-invalid::before,
+.business-license-upload-btn.has-preview.is-ocr-checking::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.business-license-upload-btn.has-preview.is-ocr-valid::before {
+    background: rgba(24, 169, 87, 0.18);
+}
+
+.business-license-upload-btn.has-preview.is-ocr-invalid::before {
+    background: rgba(226, 59, 74, 0.18);
+}
+
+.business-license-upload-btn.has-preview.is-ocr-checking::before {
+    background: rgba(43, 111, 219, 0.12);
+}
+
+.business-license-upload-btn[data-ocr-status]::after {
+    content: attr(data-ocr-status);
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    z-index: 2;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: rgba(33, 37, 41, 0.82);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+    pointer-events: none;
+}
+
+.business-license-upload-btn.is-ocr-valid::after {
+    background: #18a957;
+}
+
+.business-license-upload-btn.is-ocr-invalid::after {
+    background: #e23b4a;
+}
+
+
 .business-license-upload-btn.has-preview svg {
     display: none;
 }
