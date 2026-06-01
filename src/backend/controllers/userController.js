@@ -755,6 +755,11 @@ async function saveMyBusinessProfile(req, res, next) {
         || !hasValidBusinessImageInspection(businessInfo, 'permitImageName', 'permitImageOcrStatus')) {
         return res.status(400).json({ message: '사업자등록증과 영업허가증 이미지 검사 통과 후 기업회원 신청/사업자정보 저장이 가능합니다.' });
       }
+
+      const verification = await verifyBusinessRegistrationNumberWithNts(requiredValues.businessNumber);
+      if (!verification.valid) {
+        return res.status(400).json({ message: verification.message || '국세청에 등록된 계속사업자 번호가 아닙니다.' });
+      }
     }
 
     const normalizedBusinessInfo = {
