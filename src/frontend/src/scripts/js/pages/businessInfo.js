@@ -351,13 +351,62 @@ function isBusinessPreviewImageUrl(value) {
     return /^data:image\//u.test(String(value || '').trim());
 }
 
+function getBusinessUploadConfig(button) {
+    const isPermit = button?.id === 'business-permit-upload-btn';
+    return {
+        inputId: isPermit ? 'business-permit-input' : 'business-license-input',
+        previewId: isPermit ? 'business-permit-preview' : 'business-license-preview',
+        clearLabel: isPermit ? '영업허가증 첨부 이미지 삭제' : '사업자등록증 첨부 이미지 삭제'
+    };
+}
+
+function ensureBusinessUploadClearButton(button) {
+    if (!button) return null;
+
+    const { clearLabel } = getBusinessUploadConfig(button);
+    let clearButton = button.parentElement?.querySelector(`[data-business-upload-clear-for="${button.id}"]`);
+
+    if (!clearButton) {
+        clearButton = document.createElement('button');
+        clearButton.type = 'button';
+        clearButton.className = 'business-license-clear-btn hidden';
+        clearButton.dataset.businessUploadClearFor = button.id;
+        clearButton.setAttribute('aria-label', clearLabel);
+        clearButton.innerHTML = '<span aria-hidden="true">×</span>';
+        button.insertAdjacentElement('afterend', clearButton);
+
+        clearButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            clearBusinessUpload(button);
+        });
+    }
+
+    return clearButton;
+}
+
+function clearBusinessUpload(button) {
+    if (!button) return;
+
+    const { inputId } = getBusinessUploadConfig(button);
+    const input = document.getElementById(inputId);
+    if (input) input.value = '';
+
+    updateBusinessUploadPreview(button);
+    updateBusinessActionButtons();
+}
+
 function updateBusinessUploadPreview(button, { fileName = '', imageUrl = '' } = {}) {
     if (!button) return;
 
     const normalizedFileName = String(fileName || '').trim();
     const normalizedImageUrl = String(imageUrl || '').trim();
-    const previewId = button.id === 'business-permit-upload-btn' ? 'business-permit-preview' : 'business-license-preview';
-    const defaultLabel = button.getAttribute('aria-label') || '이미지 업로드';
+    const { previewId } = getBusinessUploadConfig(button);
+    if (!button.dataset.defaultLabel) {
+        button.dataset.defaultLabel = button.getAttribute('aria-label') || '이미지 업로드';
+    }
+    const defaultLabel = button.dataset.defaultLabel;
+    const clearButton = ensureBusinessUploadClearButton(button);
     let preview = button.querySelector('.business-license-preview');
 
     if (!preview) {
@@ -375,6 +424,7 @@ function updateBusinessUploadPreview(button, { fileName = '', imageUrl = '' } = 
         preview.classList.remove('hidden');
         button.classList.add('has-preview');
         button.setAttribute('aria-label', normalizedFileName ? `${normalizedFileName} 변경` : defaultLabel);
+        clearButton?.classList.remove('hidden');
         return;
     }
 
@@ -382,7 +432,8 @@ function updateBusinessUploadPreview(button, { fileName = '', imageUrl = '' } = 
     preview.alt = '';
     preview.classList.add('hidden');
     button.classList.remove('has-preview');
-    button.setAttribute('aria-label', normalizedFileName ? `${normalizedFileName} 변경` : defaultLabel);
+    button.setAttribute('aria-label', defaultLabel);
+    clearButton?.classList.add('hidden');
 }
 
 function readBusinessImageFile(file) {
