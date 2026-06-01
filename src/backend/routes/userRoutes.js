@@ -20,7 +20,8 @@ const {
   updateMyBusinessAd,
   deleteMyBusinessAd,
   getMyBusinessProfile,
-  saveMyBusinessProfile
+  saveMyBusinessProfile,
+  verifyMyBusinessRegistration
 } = require('../controllers/userController');
 
 const router = express.Router();
@@ -41,6 +42,7 @@ router.post('/me/business-ads', authMiddleware, createMyBusinessAd);
 router.put('/me/business-ads/:id', authMiddleware, updateMyBusinessAd);
 router.delete('/me/business-ads/:id', authMiddleware, deleteMyBusinessAd);
 router.get('/me/business-profile', authMiddleware, getMyBusinessProfile);
+router.post('/me/business-profile/verify-registration', authMiddleware, verifyMyBusinessRegistration);
 router.put('/me/business-profile', authMiddleware, saveMyBusinessProfile);
 
 module.exports = router;
