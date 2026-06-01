@@ -28,6 +28,12 @@ const KAKAO_POSTCODE_SCRIPT_URL = 'https://t1.daumcdn.net/mapjsapi/bundle/postco
 const BUSINESS_APPLY_AGREEMENT_KEY = 'mnmsBusinessApplyAgreedAt';
 const BUSINESS_OCR_SCRIPT_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
 const BUSINESS_OCR_LANGUAGE = 'kor+eng';
+const BUSINESS_OCR_STATUS = {
+    IDLE: 'idle',
+    CHECKING: 'checking',
+    VALID: 'valid',
+    INVALID: 'invalid'
+};
 let kakaoPostcodeLoader = null;
 let businessOcrLoader = null;
 let businessOcrRequestId = 0;
@@ -668,21 +674,25 @@ function parseBusinessOcrText(text, { documentLabel = '', fileName = '', confide
     };
 }
 
-function updateBusinessOcrVisualState(button, state = 'idle') {
+function updateBusinessOcrVisualState(button, state = BUSINESS_OCR_STATUS.IDLE) {
     if (!button) return;
 
     button.classList.remove('is-ocr-checking', 'is-ocr-valid', 'is-ocr-invalid');
     delete button.dataset.ocrStatus;
+    delete button.dataset.ocrState;
 
-    if (state === 'checking') {
+    if (state === BUSINESS_OCR_STATUS.CHECKING) {
         button.classList.add('is-ocr-checking');
+        button.dataset.ocrState = BUSINESS_OCR_STATUS.CHECKING;
         button.dataset.ocrStatus = '이미지 검사 중';
-    } else if (state === 'valid') {
+    } else if (state === BUSINESS_OCR_STATUS.VALID) {
         button.classList.add('is-ocr-valid');
+        button.dataset.ocrState = BUSINESS_OCR_STATUS.VALID;
         button.dataset.ocrStatus = '통과';
-    } else if (state === 'invalid') {
+    } else if (state === BUSINESS_OCR_STATUS.INVALID) {
         button.classList.add('is-ocr-invalid');
-        button.dataset.ocrStatus = '확인 필요';
+        button.dataset.ocrState = BUSINESS_OCR_STATUS.INVALID;
+        button.dataset.ocrStatus = '불통과';
     }
 }
 
@@ -691,7 +701,7 @@ async function recognizeBusinessImageFile({ file, imageUrl, documentLabel, uploa
     const fileName = String(file?.name || '').trim();
     if (uploadButton) {
         uploadButton.dataset.ocrRequestId = requestId;
-        updateBusinessOcrVisualState(uploadButton, 'checking');
+        updateBusinessOcrVisualState(uploadButton, BUSINESS_OCR_STATUS.CHECKING);
     }
 
     try {
@@ -707,11 +717,11 @@ async function recognizeBusinessImageFile({ file, imageUrl, documentLabel, uploa
             fileName,
             confidence: recognized?.data?.confidence
         });
-        updateBusinessOcrVisualState(uploadButton, result.isValidDocument ? 'valid' : 'invalid');
+        updateBusinessOcrVisualState(uploadButton, result.isValidDocument ? BUSINESS_OCR_STATUS.VALID : BUSINESS_OCR_STATUS.INVALID);
         return result;
     } catch (error) {
         if (uploadButton?.dataset.ocrRequestId === requestId) {
-            updateBusinessOcrVisualState(uploadButton, 'invalid');
+            updateBusinessOcrVisualState(uploadButton, BUSINESS_OCR_STATUS.INVALID);
         }
         return null;
     }
@@ -726,7 +736,8 @@ async function handleBusinessImageSelection({ file, uploadButton, documentLabel 
             fileName: file.name,
             imageUrl
         });
-        recognizeBusinessImageFile({ file, imageUrl, documentLabel, uploadButton });
+        await recognizeBusinessImageFile({ file, imageUrl, documentLabel, uploadButton });
+        updateBusinessActionButtons();
     } catch (error) {
         alert(error.message || '이미지를 불러오지 못했습니다.');
     }
@@ -738,6 +749,8 @@ function hasAnyBusinessValue(data) {
     delete candidate.licenseImageDataUrl;
     delete candidate.permitImageName;
     delete candidate.permitImageDataUrl;
+    delete candidate.licenseImageOcrStatus;
+    delete candidate.permitImageOcrStatus;
     delete candidate.billingType;
     const hasText = Object.values(candidate).some((value) => String(value || '').trim());
     const hasLicenseImage = data?.licenseImageName && data.licenseImageName !== BUSINESS_IMAGE_PLACEHOLDER;
@@ -751,19 +764,49 @@ function stripEmptyBusinessValues(data) {
         const normalized = String(value || '').trim();
         if (!normalized) return acc;
         if ((key === 'licenseImageName' || key === 'permitImageName') && normalized === BUSINESS_IMAGE_PLACEHOLDER) return acc;
+        if ((key === 'licenseImageOcrStatus' || key === 'permitImageOcrStatus') && normalized === BUSINESS_OCR_STATUS.IDLE) return acc;
         acc[key] = normalized;
         return acc;
     }, {});
     return trimmed;
 }
 
+function hasBusinessImageInspectionPassed(data, imageType = 'license') {
+    if (!data) return false;
+
+    const imageNameKey = imageType === 'permit' ? 'permitImageName' : 'licenseImageName';
+    const statusKey = imageType === 'permit' ? 'permitImageOcrStatus' : 'licenseImageOcrStatus';
+    const hasImage = data[imageNameKey] && data[imageNameKey] !== BUSINESS_IMAGE_PLACEHOLDER;
+
+    if (!hasImage) return false;
+    return data[statusKey] === BUSINESS_OCR_STATUS.VALID;
+}
+
+function hasBlockingBusinessImageInspection(data) {
+    if (!data) return false;
+
+    const licenseHasImage = data.licenseImageName && data.licenseImageName !== BUSINESS_IMAGE_PLACEHOLDER;
+    const permitHasImage = data.permitImageName && data.permitImageName !== BUSINESS_IMAGE_PLACEHOLDER;
+    const licenseBlocked = licenseHasImage && data.licenseImageOcrStatus !== BUSINESS_OCR_STATUS.VALID;
+    const permitBlocked = permitHasImage && data.permitImageOcrStatus !== BUSINESS_OCR_STATUS.VALID;
+
+    return Boolean(licenseBlocked || permitBlocked);
+}
+
 function isBusinessInfoComplete(data) {
     if (!data) return false;
+<<<<<<< codex/enable-business-verification-button-on-input
     const hasLicenseImage = data.licenseImageName && data.licenseImageName !== BUSINESS_IMAGE_PLACEHOLDER;
     const hasCompleteBusinessNumber = getBusinessNumberDigits(data.businessNumber).length === 10;
     return Boolean(
         hasLicenseImage
         && hasCompleteBusinessNumber
+=======
+    return Boolean(
+        hasBusinessImageInspectionPassed(data, 'license')
+        && hasBusinessImageInspectionPassed(data, 'permit')
+        && data.businessNumber
+>>>>>>> main
         && data.businessName
         && data.businessOwner
         && data.businessAddress
@@ -780,7 +823,7 @@ function updateBusinessActionButtons() {
 
     saveButton?.classList.toggle('hidden', !isComplete);
     draftButton?.classList.toggle('hidden', isComplete);
-    if (draftButton) draftButton.disabled = !hasAnyValue;
+    if (draftButton) draftButton.disabled = !hasAnyValue || hasBlockingBusinessImageInspection(formData);
 }
 
 function applyBusinessFormData(savedData) {
@@ -798,15 +841,24 @@ function applyBusinessFormData(savedData) {
     setValue('business-address', savedData.businessAddress);
     setValue('business-address-detail', savedData.businessAddressDetail);
 
-    updateBusinessUploadPreview(document.getElementById('business-license-upload-btn'), {
+    const licenseUploadButton = document.getElementById('business-license-upload-btn');
+    const permitUploadButton = document.getElementById('business-permit-upload-btn');
+
+    updateBusinessUploadPreview(licenseUploadButton, {
         fileName: savedData.licenseImageName,
         imageUrl: savedData.licenseImageDataUrl
     });
+    if (savedData.licenseImageOcrStatus === BUSINESS_OCR_STATUS.VALID) {
+        updateBusinessOcrVisualState(licenseUploadButton, BUSINESS_OCR_STATUS.VALID);
+    }
 
-    updateBusinessUploadPreview(document.getElementById('business-permit-upload-btn'), {
+    updateBusinessUploadPreview(permitUploadButton, {
         fileName: savedData.permitImageName,
         imageUrl: savedData.permitImageDataUrl
     });
+    if (savedData.permitImageOcrStatus === BUSINESS_OCR_STATUS.VALID) {
+        updateBusinessOcrVisualState(permitUploadButton, BUSINESS_OCR_STATUS.VALID);
+    }
 
     const billingType = String(savedData.billingType || '').trim();
     if (billingType) {
@@ -894,6 +946,11 @@ function bindBusinessManagementEvents() {
                 updateBusinessActionButtons();
                 return;
             }
+            if (hasBlockingBusinessImageInspection(collectedFormData)) {
+                alert('이미지 검사 통과 후 사업자정보를 저장할 수 있습니다. 불통과 또는 검사 중인 이미지는 다시 첨부해주세요.');
+                updateBusinessActionButtons();
+                return;
+            }
             const formData = stripEmptyBusinessValues(collectedFormData);
 
             await APIClient.put('/users/me/business-profile', {
@@ -911,7 +968,7 @@ function bindBusinessManagementEvents() {
         try {
             const formData = collectBusinessManagementFormData();
             if (!isBusinessInfoComplete(formData)) {
-                alert('사업자정보 필수 항목을 모두 입력해주세요.');
+                alert('사업자등록증과 영업허가증 이미지를 모두 첨부하고 이미지 검사 통과 후 필수 항목을 모두 입력해야 신청/저장할 수 있습니다.');
                 updateBusinessActionButtons();
                 return;
             }

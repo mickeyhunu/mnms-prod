@@ -115,10 +115,31 @@ async function verifyBusinessRegistrationNumberWithNts(businessNumber) {
 }
 
 const REGISTRATION_STATUSES = new Set(['UNREGISTERED', 'DRAFT', 'REGISTERED']);
+const BUSINESS_IMAGE_PLACEHOLDER = '등록할 이미지를 선택해주세요.';
+const BUSINESS_IMAGE_OCR_VALID_STATUS = 'valid';
 
 function normalizeRegistrationStatus(value, fallback = 'UNREGISTERED') {
   const status = String(value || '').trim().toUpperCase();
   return REGISTRATION_STATUSES.has(status) ? status : fallback;
+}
+
+function hasSubmittedBusinessImage(businessInfo = {}, imageNameKey) {
+  const imageName = String(businessInfo?.[imageNameKey] || '').trim();
+  return Boolean(imageName && imageName !== BUSINESS_IMAGE_PLACEHOLDER);
+}
+
+function hasValidBusinessImageInspection(businessInfo = {}, imageNameKey, statusKey) {
+  if (!hasSubmittedBusinessImage(businessInfo, imageNameKey)) return false;
+  return String(businessInfo?.[statusKey] || '').trim() === BUSINESS_IMAGE_OCR_VALID_STATUS;
+}
+
+function hasBlockedBusinessImageInspection(businessInfo = {}) {
+  const licenseBlocked = hasSubmittedBusinessImage(businessInfo, 'licenseImageName')
+    && !hasValidBusinessImageInspection(businessInfo, 'licenseImageName', 'licenseImageOcrStatus');
+  const permitBlocked = hasSubmittedBusinessImage(businessInfo, 'permitImageName')
+    && !hasValidBusinessImageInspection(businessInfo, 'permitImageName', 'permitImageOcrStatus');
+
+  return licenseBlocked || permitBlocked;
 }
 
 function isCompleteBusinessAdPayload(payload = {}) {
@@ -712,6 +733,10 @@ async function saveMyBusinessProfile(req, res, next) {
     const businessInfo = (req.body?.businessInfo && typeof req.body.businessInfo === 'object') ? req.body.businessInfo : {};
     const registrationStatus = normalizeRegistrationStatus(req.body?.registrationStatus, 'UNREGISTERED');
 
+    if (hasBlockedBusinessImageInspection(businessInfo)) {
+      return res.status(400).json({ message: '이미지 검사 통과 후 사업자정보를 저장할 수 있습니다.' });
+    }
+
     if (registrationStatus === 'REGISTERED') {
       const requiredValues = {
         licenseImageName: String(businessInfo.licenseImageName || '').trim(),
@@ -724,6 +749,11 @@ async function saveMyBusinessProfile(req, res, next) {
 
       if (Object.values(requiredValues).some((value) => !value) || requiredValues.businessNumber.length !== 10) {
         return res.status(400).json({ message: '사업자정보 필수 항목을 모두 입력해주세요.' });
+      }
+
+      if (!hasValidBusinessImageInspection(businessInfo, 'licenseImageName', 'licenseImageOcrStatus')
+        || !hasValidBusinessImageInspection(businessInfo, 'permitImageName', 'permitImageOcrStatus')) {
+        return res.status(400).json({ message: '사업자등록증과 영업허가증 이미지 검사 통과 후 기업회원 신청/사업자정보 저장이 가능합니다.' });
       }
     }
 
