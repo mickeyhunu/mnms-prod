@@ -2721,20 +2721,42 @@
     color: #212529;
 }
 
+.business-license-upload-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px 30px;
+}
+
+.business-license-upload-item {
+    width: 120px;
+}
+
+.business-license-upload-item h3 {
+    font-size: 15px;
+    font-weight: 500;
+}
+
 .business-license-upload-btn {
-    width: 70px;
-    height: 70px;
-    margin-top: 16px;
-    border-radius: 14px;
-    border: 1px solid #dee2e6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 154px;
+    margin-top: 10px;
+    border-radius: 4px;
+    border: 1px solid #c5c8cc;
     background: #fff;
-    color: #868e96;
+    color: #212529;
 }
 
 .business-license-file-name {
-    margin: 10px 0 0;
-    font-size: 12px;
+    width: 120px;
+    margin: 8px 0 0;
+    overflow: hidden;
     color: #6c757d;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .business-info-guide {

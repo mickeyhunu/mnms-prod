@@ -331,16 +331,30 @@ const pageRegistry = {
                 </div>
 
                 <div class="business-info-section">
-                    <h3>사업자등록증 이미지</h3>
-                    <input id="business-license-input" class="hidden" type="file" accept="image/*">
-                    <button id="business-license-upload-btn" class="business-license-upload-btn" type="button" aria-label="사업자등록증 업로드">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 20 20" width="18" height="18">
-                            <path stroke-linecap="round" stroke-width="1.5" d="M9.754.75v18M18.75 9.753h-18"></path>
-                        </svg>
-                    </button>
-                    <p id="business-license-file-name" class="business-license-file-name">등록할 이미지를 선택해주세요.</p>
+                    <div class="business-license-upload-grid" aria-label="사업자 증빙 이미지 첨부">
+                        <div class="business-license-upload-item">
+                            <h3>사업자등록증</h3>
+                            <input id="business-license-input" class="hidden" type="file" accept="image/*">
+                            <button id="business-license-upload-btn" class="business-license-upload-btn" type="button" aria-label="사업자등록증 업로드">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                                    <path d="M9 4.5 7.6 6H5.25A2.25 2.25 0 0 0 3 8.25v8.25a2.25 2.25 0 0 0 2.25 2.25h13.5A2.25 2.25 0 0 0 21 16.5V8.25A2.25 2.25 0 0 0 18.75 6H16.4L15 4.5H9Zm3 11.25a3.75 3.75 0 1 1 0-7.5 3.75 3.75 0 0 1 0 7.5Zm0-2.25a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"></path>
+                                </svg>
+                            </button>
+                            <p id="business-license-file-name" class="business-license-file-name">등록할 이미지를 선택해주세요.</p>
+                        </div>
+                        <div class="business-license-upload-item">
+                            <h3>영업허가증</h3>
+                            <input id="business-permit-input" class="hidden" type="file" accept="image/*">
+                            <button id="business-permit-upload-btn" class="business-license-upload-btn" type="button" aria-label="영업허가증 업로드">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                                    <path d="M9 4.5 7.6 6H5.25A2.25 2.25 0 0 0 3 8.25v8.25a2.25 2.25 0 0 0 2.25 2.25h13.5A2.25 2.25 0 0 0 21 16.5V8.25A2.25 2.25 0 0 0 18.75 6H16.4L15 4.5H9Zm3 11.25a3.75 3.75 0 1 1 0-7.5 3.75 3.75 0 0 1 0 7.5Zm0-2.25a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"></path>
+                                </svg>
+                            </button>
+                            <p id="business-permit-file-name" class="business-license-file-name">등록할 이미지를 선택해주세요.</p>
+                        </div>
+                    </div>
                     <div class="business-info-guide">
-                        <p>• 사업자등록증에 가려지는 부분이 없어야해요.</p>
+                        <p>• 사업자등록증과 영업허가증에 가려지는 부분이 없어야해요.</p>
                         <p>• 이미지에 왜곡이나 흐린 부분이 있는지 확인해주세요.</p>
                     </div>
                 </div>
