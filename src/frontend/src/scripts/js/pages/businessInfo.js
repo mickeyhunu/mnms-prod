@@ -517,6 +517,34 @@ function detectBusinessDocumentType(text) {
     return 'unknown';
 }
 
+function hasLenientBusinessPermitSignals(text) {
+    const normalizedText = normalizeBusinessOcrText(text);
+    const compactText = normalizedText.replace(/\s/g, '');
+
+    if (!compactText) return false;
+
+    const permitSignals = [
+        /영업/u,
+        /허가|신고|등록/u,
+        /식품|접객|업소|소재지|대표자|상호/u,
+        /제\d+호/u
+    ];
+    const signalCount = permitSignals.reduce((count, pattern) => count + (pattern.test(compactText) ? 1 : 0), 0);
+    const readableTextLength = (compactText.match(/[가-힣A-Za-z0-9]/gu) || []).length;
+
+    return signalCount >= 1 || readableTextLength >= 8;
+}
+
+function isBusinessOcrDocumentValid({ text, expectedDocumentType, detectedDocumentType }) {
+    if (detectedDocumentType === expectedDocumentType) return true;
+
+    if (expectedDocumentType === 'business_permit_certificate' && detectedDocumentType === 'unknown') {
+        return hasLenientBusinessPermitSignals(text);
+    }
+
+    return false;
+}
+
 function parseBusinessOcrText(text, { documentLabel = '', fileName = '', confidence = 0 } = {}) {
     const expectedDocumentType = resolveExpectedBusinessDocumentType(documentLabel);
     const detectedDocumentType = detectBusinessDocumentType(text);
@@ -526,7 +554,7 @@ function parseBusinessOcrText(text, { documentLabel = '', fileName = '', confide
         fileName,
         expectedDocumentType,
         detectedDocumentType,
-        isValidDocument: detectedDocumentType === expectedDocumentType,
+        isValidDocument: isBusinessOcrDocumentValid({ text, expectedDocumentType, detectedDocumentType }),
         confidence: Number.isFinite(Number(confidence)) ? Math.round(Number(confidence) * 100) / 100 : 0
     };
 }
