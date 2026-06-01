@@ -342,12 +342,19 @@ function getBusinessNumberDigits(value) {
 }
 
 function formatBusinessRegistrationNumber(value) {
-    const digits = getBusinessNumberDigits(value);
-    const first = digits.slice(0, 3);
-    const second = digits.slice(3, 5);
-    const third = digits.slice(5, 10);
+    return getBusinessNumberDigits(value);
+}
 
-    return [first, second, third].filter(Boolean).join('-');
+function isCurrentBusinessNumberVerified() {
+    const businessNumberInput = document.getElementById('business-number');
+    if (!businessNumberInput) return false;
+
+    const currentDigits = getBusinessNumberDigits(businessNumberInput.value);
+    return Boolean(
+        currentDigits.length === 10
+        && businessNumberInput.dataset.businessVerificationStatus === 'valid'
+        && businessNumberInput.dataset.verifiedBusinessNumber === currentDigits
+    );
 }
 
 function getBusinessVerifyStatusElement() {
@@ -429,7 +436,9 @@ async function verifyBusinessRegistrationNumber() {
 
     try {
         const result = await APIClient.post('/users/me/business-profile/verify-registration', { businessNumber });
-        if (result?.valid) {
+        if (getBusinessNumberDigits(businessNumberInput?.value) !== businessNumber) {
+            updateBusinessVerificationStatus('사업자등록번호가 변경되었습니다. 다시 검증해주세요.', 'invalid');
+        } else if (result?.valid) {
             updateBusinessVerificationStatus(result.message || '유효한 사업자등록번호입니다.', 'valid');
         } else {
             updateBusinessVerificationStatus(result?.message || '유효하지 않은 사업자등록번호입니다.', 'invalid');
@@ -829,6 +838,7 @@ function isBusinessInfoComplete(data) {
         hasBusinessImageInspectionPassed(data, 'license')
         && hasBusinessImageInspectionPassed(data, 'permit')
         && hasCompleteBusinessNumber
+        && isCurrentBusinessNumberVerified()
         && data.businessName
         && data.businessOwner
         && data.businessAddress
@@ -943,6 +953,8 @@ function bindBusinessManagementEvents() {
 
     syncBusinessNumberVerificationControls();
     businessNumberInput?.setAttribute('inputmode', 'numeric');
+    businessNumberInput?.setAttribute('pattern', '[0-9]*');
+    businessNumberInput?.setAttribute('maxlength', '10');
     businessNumberInput?.setAttribute('autocomplete', 'off');
     verifyButton?.addEventListener('click', verifyBusinessRegistrationNumber);
 
@@ -990,7 +1002,7 @@ function bindBusinessManagementEvents() {
         try {
             const formData = collectBusinessManagementFormData();
             if (!isBusinessInfoComplete(formData)) {
-                alert('사업자등록증과 영업허가증 이미지를 모두 첨부하고 이미지 검사 통과 후 필수 항목을 모두 입력해야 신청/저장할 수 있습니다.');
+                alert('사업자등록증과 영업허가증 이미지를 모두 첨부하고 이미지 검사 통과, 사업자등록번호 검증 완료 후 필수 항목을 모두 입력해야 신청/저장할 수 있습니다.');
                 updateBusinessActionButtons();
                 return;
             }
