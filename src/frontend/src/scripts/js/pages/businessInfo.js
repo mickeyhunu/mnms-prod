@@ -446,7 +446,6 @@ async function verifyBusinessRegistrationNumber() {
 }
 
 function collectBusinessManagementFormData() {
-    const selectedBilling = document.querySelector('input[name="billing-type"]:checked');
     const licenseButton = document.getElementById('business-license-upload-btn');
     const permitButton = document.getElementById('business-permit-upload-btn');
     const licensePreview = document.getElementById('business-license-preview');
@@ -461,8 +460,7 @@ function collectBusinessManagementFormData() {
         businessName: String(document.getElementById('business-name')?.value || '').trim(),
         businessOwner: String(document.getElementById('business-owner')?.value || '').trim(),
         businessAddress: String(document.getElementById('business-address')?.value || '').trim(),
-        businessAddressDetail: String(document.getElementById('business-address-detail')?.value || '').trim(),
-        billingType: String(selectedBilling?.value || '').trim()
+        businessAddressDetail: String(document.getElementById('business-address-detail')?.value || '').trim()
     };
 }
 
@@ -780,7 +778,6 @@ function hasAnyBusinessValue(data) {
     delete candidate.permitImageDataUrl;
     delete candidate.licenseImageOcrStatus;
     delete candidate.permitImageOcrStatus;
-    delete candidate.billingType;
     const hasText = Object.values(candidate).some((value) => String(value || '').trim());
     const hasLicenseImage = data?.licenseImageName && data.licenseImageName !== BUSINESS_IMAGE_PLACEHOLDER;
     const hasPermitImage = data?.permitImageName && data.permitImageName !== BUSINESS_IMAGE_PLACEHOLDER;
@@ -832,7 +829,6 @@ function isBusinessInfoComplete(data) {
         && data.businessName
         && data.businessOwner
         && data.businessAddress
-        && data.billingType
     );
 }
 
@@ -880,12 +876,6 @@ function applyBusinessFormData(savedData) {
     });
     if (savedData.permitImageOcrStatus === BUSINESS_OCR_STATUS.VALID) {
         updateBusinessOcrVisualState(permitUploadButton, BUSINESS_OCR_STATUS.VALID);
-    }
-
-    const billingType = String(savedData.billingType || '').trim();
-    if (billingType) {
-        const target = document.querySelector(`input[name="billing-type"][value="${billingType}"]`);
-        if (target) target.checked = true;
     }
 
     updateBusinessActionButtons();
@@ -945,10 +935,6 @@ function bindBusinessManagementEvents() {
     businessNumberInput?.setAttribute('inputmode', 'numeric');
     businessNumberInput?.setAttribute('autocomplete', 'off');
     verifyButton?.addEventListener('click', verifyBusinessRegistrationNumber);
-
-    document.querySelectorAll('input[name="billing-type"]').forEach((radio) => {
-        radio.addEventListener('change', updateBusinessActionButtons);
-    });
 
     const handleAddressSearch = async () => {
         try {
