@@ -1,6 +1,8 @@
 /**
  * 파일 역할: business-info 페이지의 업체 광고 프로필 목록/지역 필터 렌더링을 담당하는 스크립트 파일.
  */
+const BUSINESS_IMAGE_PLACEHOLDER = '등록할 이미지를 선택해주세요.';
+
 const REGION_DISTRICT_MAP = {
     서울: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
     경기: ['가평군', '고양시', '과천시', '광명시', '광주시', '구리시', '군포시', '김포시', '남양주시', '동두천시', '부천시', '성남시', '수원시', '시흥시', '안산시', '안성시', '안양시', '양주시', '양평군', '여주시', '연천군', '오산시', '용인시', '의왕시', '의정부시', '이천시', '파주시', '평택시', '포천시', '하남시', '화성시'],
@@ -328,6 +330,7 @@ function collectBusinessManagementFormData() {
     const selectedBilling = document.querySelector('input[name="billing-type"]:checked');
     return {
         licenseImageName: String(document.getElementById('business-license-file-name')?.textContent || '').trim(),
+        permitImageName: String(document.getElementById('business-permit-file-name')?.textContent || '').trim(),
         businessNumber: String(document.getElementById('business-number')?.value || '').trim(),
         businessName: String(document.getElementById('business-name')?.value || '').trim(),
         businessOwner: String(document.getElementById('business-owner')?.value || '').trim(),
@@ -340,9 +343,12 @@ function collectBusinessManagementFormData() {
 function hasAnyBusinessValue(data) {
     const candidate = { ...data };
     delete candidate.licenseImageName;
+    delete candidate.permitImageName;
     delete candidate.billingType;
     const hasText = Object.values(candidate).some((value) => String(value || '').trim());
-    const hasImage = data?.licenseImageName && data.licenseImageName !== '등록할 이미지를 선택해주세요.';
+    const hasLicenseImage = data?.licenseImageName && data.licenseImageName !== BUSINESS_IMAGE_PLACEHOLDER;
+    const hasPermitImage = data?.permitImageName && data.permitImageName !== BUSINESS_IMAGE_PLACEHOLDER;
+    const hasImage = hasLicenseImage || hasPermitImage;
     return Boolean(hasText || hasImage);
 }
 
@@ -350,7 +356,7 @@ function stripEmptyBusinessValues(data) {
     const trimmed = Object.entries(data || {}).reduce((acc, [key, value]) => {
         const normalized = String(value || '').trim();
         if (!normalized) return acc;
-        if (key === 'licenseImageName' && normalized === '등록할 이미지를 선택해주세요.') return acc;
+        if ((key === 'licenseImageName' || key === 'permitImageName') && normalized === BUSINESS_IMAGE_PLACEHOLDER) return acc;
         acc[key] = normalized;
         return acc;
     }, {});
@@ -359,7 +365,7 @@ function stripEmptyBusinessValues(data) {
 
 function isBusinessInfoComplete(data) {
     if (!data) return false;
-    const hasLicenseImage = data.licenseImageName && data.licenseImageName !== '등록할 이미지를 선택해주세요.';
+    const hasLicenseImage = data.licenseImageName && data.licenseImageName !== BUSINESS_IMAGE_PLACEHOLDER;
     return Boolean(
         hasLicenseImage
         && data.businessNumber
@@ -401,6 +407,11 @@ function applyBusinessFormData(savedData) {
         fileName.textContent = savedData.licenseImageName;
     }
 
+    const permitFileName = document.getElementById('business-permit-file-name');
+    if (permitFileName && savedData.permitImageName) {
+        permitFileName.textContent = savedData.permitImageName;
+    }
+
     const billingType = String(savedData.billingType || '').trim();
     if (billingType) {
         const target = document.querySelector(`input[name="billing-type"][value="${billingType}"]`);
@@ -412,8 +423,11 @@ function applyBusinessFormData(savedData) {
 
 function bindBusinessManagementEvents() {
     const licenseInput = document.getElementById('business-license-input');
+    const permitInput = document.getElementById('business-permit-input');
     const uploadButton = document.getElementById('business-license-upload-btn');
+    const permitUploadButton = document.getElementById('business-permit-upload-btn');
     const fileName = document.getElementById('business-license-file-name');
+    const permitFileName = document.getElementById('business-permit-file-name');
     const saveButton = document.getElementById('business-info-save-btn');
     const draftButton = document.getElementById('business-info-draft-btn');
     const addressSearchButton = document.getElementById('business-address-search-btn');
@@ -424,6 +438,13 @@ function bindBusinessManagementEvents() {
     licenseInput?.addEventListener('change', () => {
         const file = licenseInput.files?.[0];
         if (fileName && file) fileName.textContent = file.name;
+        updateBusinessActionButtons();
+    });
+
+    permitUploadButton?.addEventListener('click', () => permitInput?.click());
+    permitInput?.addEventListener('change', () => {
+        const file = permitInput.files?.[0];
+        if (permitFileName && file) permitFileName.textContent = file.name;
         updateBusinessActionButtons();
     });
 
