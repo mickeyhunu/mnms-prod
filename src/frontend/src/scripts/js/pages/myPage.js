@@ -80,6 +80,7 @@ function renderHeaderUser(user) {
 
 function isAdAccount(user) {
     if (!user) return false;
+    //if (typeof Auth !== 'undefined' && typeof Auth.isAdminAccount === 'function' && Auth.isAdminAccount(user)) return true;
 
     if (typeof user.isAdAccount === 'boolean') return user.isAdAccount;
     if (typeof user.isAdvertiser === 'boolean') return user.isAdvertiser;

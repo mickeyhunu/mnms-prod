@@ -539,7 +539,7 @@ function updateBusinessOcrVisualState(button, state = 'idle') {
 
     if (state === 'checking') {
         button.classList.add('is-ocr-checking');
-        button.dataset.ocrStatus = 'OCR 검사 중';
+        button.dataset.ocrStatus = '이미지 검사 중';
     } else if (state === 'valid') {
         button.classList.add('is-ocr-valid');
         button.dataset.ocrStatus = '통과';
