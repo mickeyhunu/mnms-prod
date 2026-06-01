@@ -377,14 +377,14 @@ const pageRegistry = {
                     <input id="business-address-detail" type="text" maxlength="100" placeholder="(선택) 상세 주소를 입력해주세요.">
                 </div>
 
-                <div class="business-info-notice business-info-notice--bottom">
-                    <p>광고프로필과 다른 사업자이거나 상세정보에 오탈자가 있을 경우,</p>
-                    <p>별도 안내 없이 수정되거나 반려될 수 있어요.</p>
-                </div>
-
                 <div class="ad-profile-actions">
                     <button id="business-info-draft-btn" class="btn btn-secondary hidden" type="button">임시저장</button>
                     <button id="business-info-save-btn" class="btn btn-primary" type="button">사업자정보 저장</button>
+                </div>
+
+                <div class="business-info-notice business-info-notice--bottom">
+                    <p>광고프로필과 다른 사업자이거나 상세정보에 오탈자가 있을 경우,</p>
+                    <p>별도 안내 없이 수정되거나 반려될 수 있어요.</p>
                 </div>
             </section>
         </div>
