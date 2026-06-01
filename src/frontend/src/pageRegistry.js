@@ -377,20 +377,6 @@ const pageRegistry = {
                     <input id="business-address-detail" type="text" maxlength="100" placeholder="(선택) 상세 주소를 입력해주세요.">
                 </div>
 
-                <div class="business-info-section business-billing">
-                    <h3>계산서 발행</h3>
-                    <label class="business-billing-option">
-                        <input type="radio" name="billing-type" value="cash" checked>
-                        <span>현금영수증</span>
-                    </label>
-                    <p class="business-billing-help">광고프로필에 등록한 연락처로 발급해드려요.</p>
-                    <label class="business-billing-option">
-                        <input type="radio" name="billing-type" value="tax">
-                        <span>세금계산서</span>
-                    </label>
-                    <p class="business-billing-help">사업자정보에 등록한 사업자번호로 발급해드려요.</p>
-                </div>
-
                 <div class="business-info-notice business-info-notice--bottom">
                     <p>광고프로필과 다른 사업자이거나 상세정보에 오탈자가 있을 경우,</p>
                     <p>별도 안내 없이 수정되거나 반려될 수 있어요.</p>
