@@ -743,8 +743,7 @@ async function saveMyBusinessProfile(req, res, next) {
         businessNumber: normalizeBusinessRegistrationNumber(businessInfo.businessNumber),
         businessName: String(businessInfo.businessName || '').trim(),
         businessOwner: String(businessInfo.businessOwner || '').trim(),
-        businessAddress: String(businessInfo.businessAddress || '').trim(),
-        billingType: String(businessInfo.billingType || '').trim()
+        businessAddress: String(businessInfo.businessAddress || '').trim()
       };
 
       if (Object.values(requiredValues).some((value) => !value) || requiredValues.businessNumber.length !== 10) {
@@ -761,6 +760,7 @@ async function saveMyBusinessProfile(req, res, next) {
       ...businessInfo,
       businessNumber: formatBusinessRegistrationNumber(businessInfo.businessNumber)
     };
+    delete normalizedBusinessInfo.billingType;
 
     await upsertBusinessProfileByUserId(req.user.id, {
       companyName: String(businessInfo.businessName || '').trim() || null,
