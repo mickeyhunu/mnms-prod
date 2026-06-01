@@ -27,6 +27,93 @@ const { validateNickname } = require('../utils/nicknamePolicy');
 const { validatePassword } = require('../utils/authPolicy');
 const { hashPassword } = require('../utils/passwordHasher');
 
+
+const NTS_BUSINESS_STATUS_API_URL = 'https://api.odcloud.kr/api/nts-businessman/v1/status';
+
+function normalizeBusinessRegistrationNumber(value) {
+  return String(value || '').replace(/\D/g, '').slice(0, 10);
+}
+
+function formatBusinessRegistrationNumber(value) {
+  const digits = normalizeBusinessRegistrationNumber(value);
+  return [digits.slice(0, 3), digits.slice(3, 5), digits.slice(5, 10)].filter(Boolean).join('-');
+}
+
+function resolveBusinessRegistrationServiceKey() {
+  const serviceKey = String(
+    process.env.NTS_BUSINESS_API_SERVICE_KEY
+    || process.env.NTS_BUSINESSMAN_API_SERVICE_KEY
+    || process.env.BUSINESS_REGISTRATION_SERVICE_KEY
+    || ''
+  ).trim();
+
+  try {
+    return decodeURIComponent(serviceKey);
+  } catch (error) {
+    return serviceKey;
+  }
+}
+
+function resolveNtsBusinessStatus(data = {}) {
+  const statusCode = String(data.b_stt_cd || '').trim();
+  const statusName = String(data.b_stt || '').trim();
+  const taxType = String(data.tax_type || '').trim();
+  const isNotRegistered = /등록되지 않은/u.test(taxType);
+  const isActive = statusCode === '01';
+
+  return {
+    valid: Boolean(isActive && !isNotRegistered),
+    statusCode,
+    statusName,
+    taxType,
+    message: isActive && !isNotRegistered
+      ? `유효한 사업자등록번호입니다.${statusName ? ` (${statusName})` : ''}`
+      : '국세청에 등록된 계속사업자 번호가 아닙니다.'
+  };
+}
+
+async function verifyBusinessRegistrationNumberWithNts(businessNumber) {
+  const serviceKey = resolveBusinessRegistrationServiceKey();
+  if (!serviceKey) {
+    const error = new Error('사업자등록번호 검증 API 키가 설정되지 않았습니다.');
+    error.status = 503;
+    throw error;
+  }
+
+  const endpoint = new URL(NTS_BUSINESS_STATUS_API_URL);
+  endpoint.searchParams.set('serviceKey', serviceKey);
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ b_no: [businessNumber] })
+  });
+
+  let payload = {};
+  try {
+    payload = await response.json();
+  } catch (error) {
+    payload = {};
+  }
+
+  if (!response.ok) {
+    const error = new Error(payload?.message || '사업자등록번호 검증 API 호출에 실패했습니다.');
+    error.status = 502;
+    error.payload = payload;
+    throw error;
+  }
+
+  const result = Array.isArray(payload?.data) ? payload.data[0] : null;
+  if (!result) {
+    const error = new Error('사업자등록번호 검증 API 응답을 확인할 수 없습니다.');
+    error.status = 502;
+    error.payload = payload;
+    throw error;
+  }
+
+  return resolveNtsBusinessStatus(result);
+}
+
 const REGISTRATION_STATUSES = new Set(['UNREGISTERED', 'DRAFT', 'REGISTERED']);
 const BUSINESS_IMAGE_PLACEHOLDER = '등록할 이미지를 선택해주세요.';
 const BUSINESS_IMAGE_OCR_VALID_STATUS = 'valid';
@@ -653,15 +740,14 @@ async function saveMyBusinessProfile(req, res, next) {
     if (registrationStatus === 'REGISTERED') {
       const requiredValues = {
         licenseImageName: String(businessInfo.licenseImageName || '').trim(),
-        permitImageName: String(businessInfo.permitImageName || '').trim(),
-        businessNumber: String(businessInfo.businessNumber || '').trim(),
+        businessNumber: normalizeBusinessRegistrationNumber(businessInfo.businessNumber),
         businessName: String(businessInfo.businessName || '').trim(),
         businessOwner: String(businessInfo.businessOwner || '').trim(),
         businessAddress: String(businessInfo.businessAddress || '').trim(),
         billingType: String(businessInfo.billingType || '').trim()
       };
 
-      if (Object.values(requiredValues).some((value) => !value)) {
+      if (Object.values(requiredValues).some((value) => !value) || requiredValues.businessNumber.length !== 10) {
         return res.status(400).json({ message: '사업자정보 필수 항목을 모두 입력해주세요.' });
       }
 
@@ -671,16 +757,40 @@ async function saveMyBusinessProfile(req, res, next) {
       }
     }
 
+    const normalizedBusinessInfo = {
+      ...businessInfo,
+      businessNumber: formatBusinessRegistrationNumber(businessInfo.businessNumber)
+    };
+
     await upsertBusinessProfileByUserId(req.user.id, {
       companyName: String(businessInfo.businessName || '').trim() || null,
-      businessRegistrationNumber: String(businessInfo.businessNumber || '').trim() || null,
+      businessRegistrationNumber: normalizedBusinessInfo.businessNumber || null,
       managerName: String(businessInfo.businessOwner || '').trim() || null,
       contactPhone: String(req.user.phone || '').trim() || null,
       registrationStatus,
-      businessInfo
+      businessInfo: normalizedBusinessInfo
     });
 
     res.json({ success: true, registrationStatus });
+  } catch (error) {
+    next(error);
+  }
+}
+
+
+async function verifyMyBusinessRegistration(req, res, next) {
+  try {
+    const businessNumber = normalizeBusinessRegistrationNumber(req.body?.businessNumber);
+    if (businessNumber.length !== 10) {
+      return res.status(400).json({ message: '사업자등록번호 숫자 10자리를 입력해주세요.' });
+    }
+
+    const verification = await verifyBusinessRegistrationNumberWithNts(businessNumber);
+    res.json({
+      success: true,
+      businessNumber: formatBusinessRegistrationNumber(businessNumber),
+      ...verification
+    });
   } catch (error) {
     next(error);
   }
@@ -723,5 +833,6 @@ module.exports = {
   deleteMyBusinessAd,
   getMyBusinessProfile,
   saveMyBusinessProfile,
+  verifyMyBusinessRegistration,
   withdrawMyAccount
 };

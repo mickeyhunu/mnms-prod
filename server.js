@@ -137,7 +137,12 @@ app.get('*', (req, res) => {
 
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).json({ message: '서버 오류가 발생했습니다.', detail: err.message });
+  const status = Number(err.status || err.statusCode || 500);
+  const safeStatus = status >= 400 && status < 600 ? status : 500;
+  res.status(safeStatus).json({
+    message: err.message || '서버 오류가 발생했습니다.',
+    detail: safeStatus >= 500 ? err.message : undefined
+  });
 });
 
 Promise.resolve()

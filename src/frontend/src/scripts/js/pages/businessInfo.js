@@ -336,6 +336,115 @@ function bindBusinessFilterEvents() {
     syncBadgeLabels();
 }
 
+
+function getBusinessNumberDigits(value) {
+    return String(value || '').replace(/\D/g, '').slice(0, 10);
+}
+
+function formatBusinessRegistrationNumber(value) {
+    const digits = getBusinessNumberDigits(value);
+    const first = digits.slice(0, 3);
+    const second = digits.slice(3, 5);
+    const third = digits.slice(5, 10);
+
+    return [first, second, third].filter(Boolean).join('-');
+}
+
+function getBusinessVerifyStatusElement() {
+    const row = document.querySelector('.business-verify-row');
+    if (!row) return null;
+
+    let statusElement = document.getElementById('business-verify-status');
+    if (!statusElement) {
+        statusElement = document.createElement('p');
+        statusElement.id = 'business-verify-status';
+        statusElement.className = 'business-verify-status';
+        statusElement.setAttribute('aria-live', 'polite');
+        row.insertAdjacentElement('afterend', statusElement);
+    }
+
+    return statusElement;
+}
+
+function updateBusinessVerificationStatus(message = '', state = 'idle') {
+    const businessNumberInput = document.getElementById('business-number');
+    const statusElement = getBusinessVerifyStatusElement();
+
+    if (businessNumberInput) {
+        delete businessNumberInput.dataset.verifiedBusinessNumber;
+        delete businessNumberInput.dataset.businessVerificationStatus;
+        if (state === 'valid') {
+            businessNumberInput.dataset.verifiedBusinessNumber = getBusinessNumberDigits(businessNumberInput.value);
+            businessNumberInput.dataset.businessVerificationStatus = 'valid';
+        } else if (state === 'invalid') {
+            businessNumberInput.dataset.businessVerificationStatus = 'invalid';
+        }
+    }
+
+    if (!statusElement) return;
+
+    statusElement.textContent = message;
+    statusElement.classList.remove('is-valid', 'is-invalid', 'is-checking');
+    statusElement.classList.toggle('hidden', !message);
+    if (state === 'valid') statusElement.classList.add('is-valid');
+    if (state === 'invalid') statusElement.classList.add('is-invalid');
+    if (state === 'checking') statusElement.classList.add('is-checking');
+}
+
+function syncBusinessNumberVerificationControls({ resetStatus = false } = {}) {
+    const businessNumberInput = document.getElementById('business-number');
+    const verifyButton = document.getElementById('business-verify-btn');
+    if (!businessNumberInput) return;
+
+    const formatted = formatBusinessRegistrationNumber(businessNumberInput.value);
+    if (businessNumberInput.value !== formatted) {
+        businessNumberInput.value = formatted;
+    }
+
+    const digits = getBusinessNumberDigits(formatted);
+    if (verifyButton) verifyButton.disabled = digits.length !== 10;
+
+    if (resetStatus) {
+        updateBusinessVerificationStatus('', 'idle');
+    }
+}
+
+async function verifyBusinessRegistrationNumber() {
+    const businessNumberInput = document.getElementById('business-number');
+    const verifyButton = document.getElementById('business-verify-btn');
+    const businessNumber = getBusinessNumberDigits(businessNumberInput?.value);
+
+    if (businessNumber.length !== 10) {
+        updateBusinessVerificationStatus('사업자등록번호 숫자 10자리를 입력해주세요.', 'invalid');
+        syncBusinessNumberVerificationControls();
+        return;
+    }
+
+    const originalLabel = verifyButton?.textContent || '검증';
+    if (verifyButton) {
+        verifyButton.disabled = true;
+        verifyButton.textContent = '검증중';
+    }
+    updateBusinessVerificationStatus('사업자등록번호를 조회하고 있습니다.', 'checking');
+
+    try {
+        const result = await APIClient.post('/users/me/business-profile/verify-registration', { businessNumber });
+        if (result?.valid) {
+            updateBusinessVerificationStatus(result.message || '유효한 사업자등록번호입니다.', 'valid');
+        } else {
+            updateBusinessVerificationStatus(result?.message || '유효하지 않은 사업자등록번호입니다.', 'invalid');
+        }
+    } catch (error) {
+        updateBusinessVerificationStatus(error.message || '사업자등록번호 검증에 실패했습니다.', 'invalid');
+    } finally {
+        if (verifyButton) {
+            verifyButton.textContent = originalLabel;
+        }
+        syncBusinessNumberVerificationControls();
+        updateBusinessActionButtons();
+    }
+}
+
 function collectBusinessManagementFormData() {
     const selectedBilling = document.querySelector('input[name="billing-type"]:checked');
     const licenseButton = document.getElementById('business-license-upload-btn');
@@ -348,9 +457,7 @@ function collectBusinessManagementFormData() {
         licenseImageDataUrl: String(licensePreview?.getAttribute('src') || '').trim(),
         permitImageName: String(permitButton?.dataset.fileName || '').trim(),
         permitImageDataUrl: String(permitPreview?.getAttribute('src') || '').trim(),
-        licenseImageOcrStatus: String(licenseButton?.dataset.ocrState || '').trim(),
-        permitImageOcrStatus: String(permitButton?.dataset.ocrState || '').trim(),
-        businessNumber: String(document.getElementById('business-number')?.value || '').trim(),
+        businessNumber: formatBusinessRegistrationNumber(document.getElementById('business-number')?.value || ''),
         businessName: String(document.getElementById('business-name')?.value || '').trim(),
         businessOwner: String(document.getElementById('business-owner')?.value || '').trim(),
         businessAddress: String(document.getElementById('business-address')?.value || '').trim(),
@@ -688,10 +795,18 @@ function hasBlockingBusinessImageInspection(data) {
 
 function isBusinessInfoComplete(data) {
     if (!data) return false;
+<<<<<<< codex/enable-business-verification-button-on-input
+    const hasLicenseImage = data.licenseImageName && data.licenseImageName !== BUSINESS_IMAGE_PLACEHOLDER;
+    const hasCompleteBusinessNumber = getBusinessNumberDigits(data.businessNumber).length === 10;
+    return Boolean(
+        hasLicenseImage
+        && hasCompleteBusinessNumber
+=======
     return Boolean(
         hasBusinessImageInspectionPassed(data, 'license')
         && hasBusinessImageInspectionPassed(data, 'permit')
         && data.businessNumber
+>>>>>>> main
         && data.businessName
         && data.businessOwner
         && data.businessAddress
@@ -719,7 +834,8 @@ function applyBusinessFormData(savedData) {
         if (element && value) element.value = value;
     };
 
-    setValue('business-number', savedData.businessNumber);
+    setValue('business-number', formatBusinessRegistrationNumber(savedData.businessNumber));
+    syncBusinessNumberVerificationControls();
     setValue('business-name', savedData.businessName);
     setValue('business-owner', savedData.businessOwner);
     setValue('business-address', savedData.businessAddress);
@@ -762,6 +878,8 @@ function bindBusinessManagementEvents() {
     const draftButton = document.getElementById('business-info-draft-btn');
     const addressSearchButton = document.getElementById('business-address-search-btn');
     const addressInput = document.getElementById('business-address');
+    const businessNumberInput = document.getElementById('business-number');
+    const verifyButton = document.getElementById('business-verify-btn');
     const fields = ['business-number', 'business-name', 'business-owner', 'business-address', 'business-address-detail'];
 
     uploadButton?.addEventListener('click', () => licenseInput?.click());
@@ -786,9 +904,25 @@ function bindBusinessManagementEvents() {
 
     fields.forEach((id) => {
         const input = document.getElementById(id);
+        if (id === 'business-number') {
+            input?.addEventListener('input', () => {
+                syncBusinessNumberVerificationControls({ resetStatus: true });
+                updateBusinessActionButtons();
+            });
+            input?.addEventListener('change', () => {
+                syncBusinessNumberVerificationControls({ resetStatus: true });
+                updateBusinessActionButtons();
+            });
+            return;
+        }
         input?.addEventListener('input', updateBusinessActionButtons);
         input?.addEventListener('change', updateBusinessActionButtons);
     });
+
+    syncBusinessNumberVerificationControls();
+    businessNumberInput?.setAttribute('inputmode', 'numeric');
+    businessNumberInput?.setAttribute('autocomplete', 'off');
+    verifyButton?.addEventListener('click', verifyBusinessRegistrationNumber);
 
     document.querySelectorAll('input[name="billing-type"]').forEach((radio) => {
         radio.addEventListener('change', updateBusinessActionButtons);
