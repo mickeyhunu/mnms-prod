@@ -456,6 +456,8 @@ function collectBusinessManagementFormData() {
         licenseImageDataUrl: String(licensePreview?.getAttribute('src') || '').trim(),
         permitImageName: String(permitButton?.dataset.fileName || '').trim(),
         permitImageDataUrl: String(permitPreview?.getAttribute('src') || '').trim(),
+        licenseImageOcrStatus: String(licenseButton?.dataset.ocrState || '').trim(),
+        permitImageOcrStatus: String(permitButton?.dataset.ocrState || '').trim(),
         businessNumber: formatBusinessRegistrationNumber(document.getElementById('business-number')?.value || ''),
         businessName: String(document.getElementById('business-name')?.value || '').trim(),
         businessOwner: String(document.getElementById('business-owner')?.value || '').trim(),
@@ -819,13 +821,23 @@ function hasBlockingBusinessImageInspection(data) {
     return Boolean(licenseBlocked || permitBlocked);
 }
 
+function hasBusinessRegistrationVerificationPassed(data) {
+    const businessNumberInput = document.getElementById('business-number');
+    const currentDigits = getBusinessNumberDigits(data?.businessNumber || businessNumberInput?.value);
+    const verifiedDigits = String(businessNumberInput?.dataset.verifiedBusinessNumber || '').trim();
+    return Boolean(
+        currentDigits.length === 10
+        && businessNumberInput?.dataset.businessVerificationStatus === 'valid'
+        && verifiedDigits === currentDigits
+    );
+}
+
 function isBusinessInfoComplete(data) {
     if (!data) return false;
-    const hasCompleteBusinessNumber = getBusinessNumberDigits(data.businessNumber).length === 10;
     return Boolean(
         hasBusinessImageInspectionPassed(data, 'license')
         && hasBusinessImageInspectionPassed(data, 'permit')
-        && hasCompleteBusinessNumber
+        && hasBusinessRegistrationVerificationPassed(data)
         && data.businessName
         && data.businessOwner
         && data.businessAddress
@@ -839,8 +851,8 @@ function updateBusinessActionButtons() {
     const isComplete = isBusinessInfoComplete(formData);
     const hasAnyValue = hasAnyBusinessValue(formData);
 
-    saveButton?.classList.toggle('hidden', !isComplete);
-    draftButton?.classList.toggle('hidden', isComplete);
+    if (saveButton) saveButton.disabled = !isComplete;
+    draftButton?.classList.toggle('hidden', isComplete || isBusinessApplicationMode());
     if (draftButton) draftButton.disabled = !hasAnyValue || hasBlockingBusinessImageInspection(formData);
 }
 
@@ -854,6 +866,9 @@ function applyBusinessFormData(savedData) {
 
     setValue('business-number', formatBusinessRegistrationNumber(savedData.businessNumber));
     syncBusinessNumberVerificationControls();
+    if (savedData.businessNumberVerificationStatus === 'valid') {
+        updateBusinessVerificationStatus('저장된 사업자등록번호 검증 통과 이력이 있습니다. 번호를 변경하면 다시 검증해주세요.', 'valid');
+    }
     setValue('business-name', savedData.businessName);
     setValue('business-owner', savedData.businessOwner);
     setValue('business-address', savedData.businessAddress);
@@ -981,15 +996,18 @@ function bindBusinessManagementEvents() {
                 return;
             }
 
+            const isApplyMode = isBusinessApplicationMode();
             await APIClient.put('/users/me/business-profile', {
                 registrationStatus: 'REGISTERED',
-                businessInfo: formData
+                businessInfo: {
+                    ...formData,
+                    businessNumberVerificationStatus: 'valid'
+                }
             });
-            const isApplyMode = isBusinessApplicationMode();
             if (isApplyMode) {
                 window.sessionStorage?.removeItem(BUSINESS_APPLY_AGREEMENT_KEY);
             }
-            alert(isApplyMode ? '기업회원 신청이 접수되었습니다.' : '사업자정보가 저장되었습니다.');
+            alert(isApplyMode ? '기업회원 신청 접수가 완료되었습니다. 관리자가 신청서를 검토한 뒤 최종 승인하면 기업회원으로 전환됩니다.' : '사업자정보가 저장되었습니다.');
             window.location.href = '/my-page';
         } catch (error) {
             alert(error.message || '사업자정보 저장에 실패했습니다.');
