@@ -104,14 +104,58 @@
         overflow-x: auto;
     }
 
+    .admin-workspace,
+    .admin-workspace.is-sidebar-collapsed {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .admin-sidebar {
+        position: static;
+        border-radius: 14px;
+    }
+
     .admin-tabs {
         display: flex;
+        flex-direction: row;
         flex-wrap: nowrap;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
 
-    .tab-btn, .admin-tab, .message-tab-btn {
+    .admin-tab {
+        width: auto;
+        min-width: max-content;
+        padding: 10px 14px;
+        border-left: none;
+        border-bottom: 2px solid transparent;
+        font-size: 14px;
+        white-space: nowrap;
+    }
+
+    .admin-tab.active {
+        border-bottom-color: #007bff;
+        border-left-color: transparent;
+    }
+
+    .admin-workspace.is-sidebar-collapsed .admin-sidebar-header {
+        justify-content: space-between;
+        padding: 12px 14px;
+    }
+
+    .admin-workspace.is-sidebar-collapsed .admin-tabs {
+        display: none;
+    }
+
+    .admin-workspace.is-sidebar-collapsed .admin-sidebar-title {
+        position: static;
+        width: auto;
+        height: auto;
+        overflow: visible;
+        clip: auto;
+    }
+
+    .tab-btn, .message-tab-btn {
         padding: 10px 15px;
         font-size: 14px;
         white-space: nowrap;
