@@ -162,7 +162,7 @@ router.put('/business-applications/:userId/review', async (req, res, next) => {
       return res.status(400).json({ message: '기업회원 신청 반려 사유는 1자 이상 500자 이하로 입력해주세요.' });
     }
 
-    const profile = (await adminModel.listBusinessApplications()).find((item) => Number(item.userId) === userId);
+    const profile = await adminModel.findBusinessApplicationByUserId(userId);
     if (!profile) return res.status(404).json({ message: '기업회원 신청서를 찾을 수 없습니다.' });
 
     await adminModel.reviewBusinessApplication(userId, { approvalStatus, rejectionReason });

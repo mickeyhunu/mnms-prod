@@ -376,6 +376,7 @@ async function initDatabase() {
       business_info JSON NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_business_profiles_review_queue (registration_status, approval_status, updated_at, user_id),
       CONSTRAINT fk_business_profiles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
@@ -629,6 +630,13 @@ async function initDatabase() {
   if (!businessProfileRejectionReasonColumn.length) {
     await pool.query('ALTER TABLE business_profiles ADD COLUMN rejection_reason VARCHAR(500) NULL AFTER approval_status');
   }
+
+  await ensureIndex(
+    pool,
+    'business_profiles',
+    'idx_business_profiles_review_queue',
+    'CREATE INDEX idx_business_profiles_review_queue ON business_profiles (registration_status, approval_status, updated_at, user_id)'
+  );
 
   const [adsAdTypeColumn] = await pool.query(
     `SELECT 1
