@@ -1259,17 +1259,24 @@ function renderAdminsTable() {
     updateAdminTotal('admins', filteredItems.length);
 
     if (!pageItems.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">관리자 계정이 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">관리자 계정이 없습니다.</td></tr>';
     } else {
-        tbody.innerHTML = pageItems.map((admin) => `
+        tbody.innerHTML = pageItems.map((admin) => {
+            const canRevokeAdmin = isMasterAdmin && !admin.isMasterAdmin;
+            const actionCell = canRevokeAdmin
+                ? `<button type="button" class="btn btn-sm btn-danger" data-admin-action="revoke-admin" data-target-id="${admin.id}" data-admin-login-id="${sanitizeHTML(admin.loginId || '')}">관리자 해지</button>`
+                : '<span class="text-muted">-</span>';
+
+            return `
             <tr>
                 <td>${admin.id}</td>
                 <td>${sanitizeHTML(admin.loginId || '-')}</td>
                 <td>${sanitizeHTML(admin.nickname || '-')}</td>
                 <td>${admin.isMasterAdmin ? 'MASTER' : 'ADMIN'}</td>
                 <td>${formatDate(admin.createdAt || admin.created_at)}</td>
-            </tr>
-        `).join('');
+                <td>${actionCell}</td>
+            </tr>`;
+        }).join('');
     }
 
     renderAdminPagination('admins', totalPages, page);
@@ -1888,6 +1895,36 @@ function closeUserEditModal() {
     syncAdminPageState({ activeTab: getActiveUserManagementTab(), editUserId: null }, { replace: true });
 }
 
+async function revokeAdminRole(actionElement) {
+    if (!isMasterAdmin) {
+        alert('마스터 관리자만 관리자 권한을 해지할 수 있습니다.');
+        return;
+    }
+
+    const targetId = parseAdminTargetId(actionElement.dataset.targetId);
+    if (!Number.isInteger(targetId)) {
+        alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
+        return;
+    }
+
+    const loginId = actionElement.dataset.adminLoginId || '선택한 관리자';
+    if (!window.confirm(`${loginId} 계정의 관리자 권한을 해지하시겠습니까?`)) return;
+
+    const originalText = actionElement.textContent;
+    try {
+        actionElement.disabled = true;
+        actionElement.textContent = '해지 중...';
+        await APIClient.patch(`/admin/users/${targetId}/role`, { role: 'MEMBER' });
+        await loadAdmins();
+        alert('관리자 권한이 해지되었습니다.');
+    } catch (error) {
+        alert(error.message || '관리자 권한 해지에 실패했습니다.');
+    } finally {
+        actionElement.disabled = false;
+        actionElement.textContent = originalText;
+    }
+}
+
 async function saveUserDetail() {
     if (!editingUserId) return;
 
@@ -2346,6 +2383,11 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
+    if (action === 'revoke-admin') {
+        await revokeAdminRole(actionElement);
+        return;
+    }
+
     if (action === 'answer-inquiry' && Number.isInteger(targetId)) {
         await openInquiryAnswerModal(targetId);
         return;
@@ -2356,7 +2398,7 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
-    if (['delete', 'toggle-hide', 'edit-ad', 'edit-support', 'edit-user', 'answer-inquiry', 'review-business-application', 'preview-business-document'].includes(action) && !entryId && !Number.isInteger(targetId)) {
+    if (['delete', 'toggle-hide', 'edit-ad', 'edit-support', 'edit-user', 'answer-inquiry', 'review-business-application', 'preview-business-document', 'revoke-admin'].includes(action) && !entryId && !Number.isInteger(targetId)) {
         alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
     }
 }
