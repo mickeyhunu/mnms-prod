@@ -45,7 +45,7 @@ export const adminModalTemplates = [
   }),
   createModalTemplate({
     id: 'business-document-modal',
-    titleHtml: '<h3 id="business-document-preview-title">첨부 서류 확인</h3>',
+    titleHtml: '<h3 id="business-document-preview-title">첨부 서류 확인</h3><button type="button" class="admin-business-document-modal-close" id="business-document-x-close-btn" aria-label="첨부 서류 확인 창 닫기">&times;</button>',
     body: businessDocumentModalBody,
     actions: '<button class="btn btn-secondary" id="business-document-close-btn">닫기</button>',
     panelClass: 'modal-content admin-business-document-modal-content'
