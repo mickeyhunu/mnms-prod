@@ -17,6 +17,13 @@ const inquiryAnswerModalBody = `
 
 const deleteModalBody = `<p id="delete-modal-message">정말로 삭제하시겠습니까?</p><p class="text-muted text-sm">삭제된 내용은 복구할 수 없습니다.</p>`;
 
+const businessDocumentModalBody = `
+                <p id="business-document-preview-file-name" class="text-muted text-sm"></p>
+                <div class="admin-business-document-preview" id="business-document-preview-body">
+                    <img id="business-document-preview-image" alt="기업회원 신청 첨부 서류 미리보기">
+                </div>
+`;
+
 export const adminModalTemplates = [
   createModalTemplate({
     id: 'support-modal',
@@ -35,5 +42,12 @@ export const adminModalTemplates = [
     titleHtml: '<h3 id="delete-modal-title">삭제 확인</h3>',
     body: deleteModalBody,
     actions: '<button class="btn btn-secondary" id="delete-cancel-btn">취소</button><button class="btn btn-danger" id="delete-confirm-btn">삭제</button>'
+  }),
+  createModalTemplate({
+    id: 'business-document-modal',
+    titleHtml: '<h3 id="business-document-preview-title">첨부 서류 확인</h3>',
+    body: businessDocumentModalBody,
+    actions: '<button class="btn btn-secondary" id="business-document-close-btn">닫기</button>',
+    panelClass: 'modal-content admin-business-document-modal-content'
   })
 ].join('\n\n');
