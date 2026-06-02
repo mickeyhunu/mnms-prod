@@ -443,6 +443,7 @@ async function getBusinessProfileByUserId(userId) {
             contact_phone AS contactPhone,
             has_ad_permission AS hasAdPermission,
             approval_status AS approvalStatus,
+            rejection_reason AS rejectionReason,
             registration_status AS registrationStatus,
             business_info AS businessInfo,
             created_at AS createdAt,
@@ -462,21 +463,39 @@ async function upsertBusinessProfileByUserId(userId, payload = {}) {
     managerName = null,
     contactPhone = null,
     registrationStatus = 'UNREGISTERED',
-    businessInfo = null
+    businessInfo = null,
+    approvalStatus = null,
+    rejectionReason = null
   } = payload;
 
   await pool.query(
     `INSERT INTO business_profiles (
-      user_id, company_name, business_registration_number, manager_name, contact_phone, registration_status, business_info
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      user_id, company_name, business_registration_number, manager_name, contact_phone, registration_status, business_info, approval_status, rejection_reason
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'PENDING'), ?)
     ON DUPLICATE KEY UPDATE
       company_name = VALUES(company_name),
       business_registration_number = VALUES(business_registration_number),
       manager_name = VALUES(manager_name),
       contact_phone = VALUES(contact_phone),
       registration_status = VALUES(registration_status),
-      business_info = VALUES(business_info)`,
-    [userId, companyName, businessRegistrationNumber, managerName, contactPhone, registrationStatus, businessInfo ? JSON.stringify(businessInfo) : null]
+      business_info = VALUES(business_info),
+      approval_status = IF(? IS NULL, approval_status, VALUES(approval_status)),
+      rejection_reason = IF(? IS NULL, rejection_reason, VALUES(rejection_reason))`,
+    [userId, companyName, businessRegistrationNumber, managerName, contactPhone, registrationStatus, businessInfo ? JSON.stringify(businessInfo) : null, approvalStatus, rejectionReason, approvalStatus, approvalStatus]
+  );
+}
+
+async function updateBusinessProfileReviewByUserId(userId, { approvalStatus = 'PENDING', rejectionReason = '' } = {}) {
+  const pool = getPool();
+  const normalizedApprovalStatus = String(approvalStatus || 'PENDING').trim().toUpperCase();
+  const normalizedRejectionReason = normalizedApprovalStatus === 'REJECTED' ? String(rejectionReason || '').trim().slice(0, 500) : null;
+
+  await pool.query(
+    `UPDATE business_profiles
+        SET approval_status = ?,
+            rejection_reason = ?
+      WHERE user_id = ?`,
+    [normalizedApprovalStatus, normalizedRejectionReason, userId]
   );
 }
 
@@ -550,6 +569,8 @@ async function withdrawUserById(userId, { reason = '' } = {}) {
            manager_name = NULL,
            contact_phone = NULL,
            has_ad_permission = 0,
+           approval_status = 'PENDING',
+           rejection_reason = NULL,
            registration_status = 'UNREGISTERED',
            business_info = NULL
        WHERE user_id = ?`,
@@ -591,6 +612,7 @@ module.exports = {
   withdrawUserById,
   getBusinessProfileByUserId,
   upsertBusinessProfileByUserId,
+  updateBusinessProfileReviewByUserId,
   recordUserLoginHistory,
   getUserLoginHistories,
   getUserActivityStats,

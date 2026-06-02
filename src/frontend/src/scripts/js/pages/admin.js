@@ -1423,6 +1423,7 @@ function bindUserEditForm() {
     const passwordMatchResult = document.getElementById('admin-user-password-match-result');
     const accountStatusEl = document.getElementById('admin-user-account-status');
     const loginRestrictionPermanentEl = document.getElementById('admin-user-login-restriction-permanent');
+    const businessApprovalStatusEl = document.getElementById('admin-user-business-approval-status');
 
     phoneInput?.addEventListener('input', () => {
         phoneInput.value = formatPhoneNumber(phoneInput.value);
@@ -1459,6 +1460,20 @@ function bindUserEditForm() {
     passwordConfirmInput?.addEventListener('input', syncPasswordMatchMessage);
     accountStatusEl?.addEventListener('change', syncLoginRestrictionFields);
     loginRestrictionPermanentEl?.addEventListener('change', syncLoginRestrictionFields);
+    businessApprovalStatusEl?.addEventListener('change', syncBusinessRejectionReasonField);
+}
+
+function syncBusinessRejectionReasonField() {
+    const statusEl = document.getElementById('admin-user-business-approval-status');
+    const reasonEl = document.getElementById('admin-user-business-rejection-reason');
+    const reasonField = document.querySelector('.admin-user-business-rejection-reason-field');
+    const isRejected = statusEl?.value === 'REJECTED';
+
+    if (reasonEl) {
+        reasonEl.disabled = !isRejected;
+        if (!isRejected) reasonEl.value = '';
+    }
+    if (reasonField) reasonField.classList.toggle('admin-user-business-rejection-reason-field--disabled', !isRejected);
 }
 
 function fillUserEditForm(user) {
@@ -1480,6 +1495,9 @@ function fillUserEditForm(user) {
         roleSelect.disabled = !isMasterAdmin;
     }
     document.getElementById('admin-user-member-type').value = user.memberType || 'MEMBER';
+    const businessProfile = user.businessProfile || null;
+    document.getElementById('admin-user-business-approval-status').value = businessProfile?.approvalStatus || '';
+    document.getElementById('admin-user-business-rejection-reason').value = businessProfile?.rejectionReason || '';
     document.getElementById('admin-user-account-status').value = user.accountStatus || ACCOUNT_STATUS.ACTIVE;
     document.getElementById('admin-user-login-restriction-permanent').checked = Boolean(user.isLoginRestrictionPermanent);
     document.getElementById('admin-user-login-restriction-days').value = '';
@@ -1492,6 +1510,7 @@ function fillUserEditForm(user) {
     document.getElementById('admin-user-password-match-result').textContent = '';
     setAdminUserHelpMessage('');
     syncLoginRestrictionFields();
+    syncBusinessRejectionReasonField();
 }
 
 async function openUserEditModal(userId, options = {}) {
@@ -1542,6 +1561,8 @@ async function saveUserDetail() {
     const pointAdjustmentReason = document.getElementById('admin-user-point-adjustment-reason')?.value?.trim() || '';
     const role = document.getElementById('admin-user-role')?.value || 'MEMBER';
     const memberType = document.getElementById('admin-user-member-type')?.value || 'MEMBER';
+    const businessApprovalStatus = document.getElementById('admin-user-business-approval-status')?.value || '';
+    const businessRejectionReason = document.getElementById('admin-user-business-rejection-reason')?.value?.trim() || '';
     const smsConsent = document.getElementById('admin-user-sms-consent')?.checked || false;
     const accountStatus = document.getElementById('admin-user-account-status')?.value || ACCOUNT_STATUS.ACTIVE;
     const loginRestrictionDaysValue = document.getElementById('admin-user-login-restriction-days')?.value || '';
@@ -1595,6 +1616,11 @@ async function saveUserDetail() {
         return;
     }
 
+    if (businessApprovalStatus === 'REJECTED' && (!businessRejectionReason || businessRejectionReason.length > 500)) {
+        setAdminUserHelpMessage('기업회원 신청 반려 사유는 1자 이상 500자 이하로 입력해주세요.', '#dc3545');
+        return;
+    }
+
     if (role === 'ADMIN' && !isMasterAdmin) {
         setAdminUserHelpMessage('마스터 관리자만 관리자 권한을 부여할 수 있습니다.', '#dc3545');
         return;
@@ -1616,6 +1642,8 @@ async function saveUserDetail() {
         pointAdjustmentReason,
         role,
         memberType,
+        businessApprovalStatus,
+        businessRejectionReason,
         accountStatus,
         loginRestrictionDays: accountStatus === ACCOUNT_STATUS.SUSPENDED && !isLoginRestrictionPermanent
             ? Number.parseInt(loginRestrictionDaysValue, 10)

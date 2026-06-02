@@ -371,6 +371,7 @@ async function initDatabase() {
       contact_phone VARCHAR(30) NULL,
       has_ad_permission TINYINT(1) NOT NULL DEFAULT 0,
       approval_status ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
+      rejection_reason VARCHAR(500) NULL,
       registration_status ENUM('UNREGISTERED','DRAFT','REGISTERED') NOT NULL DEFAULT 'UNREGISTERED',
       business_info JSON NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -613,6 +614,20 @@ async function initDatabase() {
 
   if (!businessProfileRegistrationStatusColumn.length) {
     await pool.query("ALTER TABLE business_profiles ADD COLUMN registration_status ENUM('UNREGISTERED','DRAFT','REGISTERED') NOT NULL DEFAULT 'UNREGISTERED' AFTER approval_status");
+  }
+
+  const [businessProfileRejectionReasonColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'business_profiles'
+       AND COLUMN_NAME = 'rejection_reason'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (!businessProfileRejectionReasonColumn.length) {
+    await pool.query('ALTER TABLE business_profiles ADD COLUMN rejection_reason VARCHAR(500) NULL AFTER approval_status');
   }
 
   const [adsAdTypeColumn] = await pool.query(

@@ -65,6 +65,17 @@ export const userEditPanelTemplate = `
                                         <option value="BUSINESS">기업 회원</option>
                                     </select>
                                 </label>
+                                <label>기업회원 신청 상태
+                                    <select id="admin-user-business-approval-status" name="businessApprovalStatus" class="form-control">
+                                        <option value="">신청 정보 없음</option>
+                                        <option value="PENDING">검토중</option>
+                                        <option value="APPROVED">승인</option>
+                                        <option value="REJECTED">반려</option>
+                                    </select>
+                                </label>
+                                <label class="admin-user-business-rejection-reason-field">반려 사유
+                                    <textarea id="admin-user-business-rejection-reason" name="businessRejectionReason" maxlength="500" rows="3" placeholder="반려 시 사용자에게 표시할 사유를 입력하세요."></textarea>
+                                </label>
                                 <label>계정 상태
                                     <select id="admin-user-account-status" name="accountStatus" class="form-control">
                                         <option value="ACTIVE">정상</option>
