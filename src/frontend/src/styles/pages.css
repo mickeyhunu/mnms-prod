@@ -171,20 +171,19 @@
 }
 
 body[data-page="admin"] {
-    --admin-sidebar-footer-offset: 74px;
+    --admin-sidebar-footer-offset: 68px;
 }
 
 .admin-sidebar {
     position: fixed;
     z-index: 89;
     top: calc(var(--app-header-offset) + var(--community-section-header-height));
-    bottom: var(--admin-sidebar-footer-offset, 74px);
+    bottom: var(--admin-sidebar-footer-offset, 70px);
     left: 0;
     width: min(280px, calc(100vw - 28px));
     overflow: hidden auto;
     border: 1px solid #e9ecef;
     border-left: none;
-    border-radius: 0 18px 18px 0;
     background: #fff;
     box-shadow: 18px 0 42px rgba(15, 23, 42, 0.14);
     transform: translateX(0);
