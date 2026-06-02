@@ -38,6 +38,11 @@ function isMasterAdminUser(user = {}) {
   return String(user?.login_id || '').trim().toLowerCase() === 'master';
 }
 
+function isManagedUserAccount(user = {}) {
+  const role = String(user?.role || '').toUpperCase();
+  return role === 'MEMBER' || role === 'BUSINESS';
+}
+
 function revealAnonymousAuthorForAdmin(item) {
   const boardType = String(item?.boardType || item?.board_type || '').toUpperCase();
   if (boardType !== 'ANON' || isBusinessAuthor(item)) {
@@ -229,7 +234,7 @@ router.get('/users/:id', async (req, res, next) => {
     if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 회원 ID입니다.' });
 
     const user = await adminModel.getUserDetail(id);
-    if (!user || user.role !== 'MEMBER') return res.status(404).json({ message: '일반 회원을 찾을 수 없습니다.' });
+    if (!user || !isManagedUserAccount(user)) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
 
     const activity = await adminModel.getUserActivityOverview(id, { limit: 10 });
 
@@ -251,7 +256,7 @@ router.put('/users/:id', async (req, res, next) => {
     if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 회원 ID입니다.' });
 
     const target = await adminModel.findUserById(id);
-    if (!target || target.role !== 'MEMBER') return res.status(404).json({ message: '일반 회원을 찾을 수 없습니다.' });
+    if (!target || !isManagedUserAccount(target)) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
 
     const nickname = String(req.body?.nickname || '').trim();
     const password = String(req.body?.password || '').trim();
@@ -286,7 +291,7 @@ router.put('/users/:id', async (req, res, next) => {
       return res.status(400).json({ message: '연락처 형식은 010-0000-0000으로 입력해 주세요.' });
     }
 
-    if (!['MEMBER', 'ADMIN'].includes(role)) {
+    if (!['MEMBER', 'BUSINESS', 'ADMIN'].includes(role)) {
       return res.status(400).json({ message: '유효하지 않은 권한입니다.' });
     }
 
@@ -422,7 +427,7 @@ router.patch('/users/:id/member-type', async (req, res, next) => {
     if (!['MEMBER', 'BUSINESS'].includes(memberType)) return res.status(400).json({ message: '유효하지 않은 회원 구분입니다.' });
 
     const target = await adminModel.findUserById(id);
-    if (!target || target.role !== 'MEMBER') return res.status(404).json({ message: '일반 회원을 찾을 수 없습니다.' });
+    if (!target || !isManagedUserAccount(target)) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
 
     await adminModel.updateUserMemberType(id, memberType);
     res.json({ success: true });
@@ -438,7 +443,7 @@ router.delete('/users/:id', async (req, res, next) => {
     if (id === Number(req.user.id)) return res.status(400).json({ message: '현재 로그인한 계정은 삭제할 수 없습니다.' });
 
     const target = await adminModel.findUserById(id);
-    if (!target || target.role !== 'MEMBER') return res.status(404).json({ message: '일반 회원을 찾을 수 없습니다.' });
+    if (!target || !isManagedUserAccount(target)) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
 
     await adminModel.deleteUser(id);
     res.json({ success: true });

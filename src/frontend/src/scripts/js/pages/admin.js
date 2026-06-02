@@ -141,8 +141,8 @@ function updateUsersListLabels() {
         searchInput.placeholder = placeholder;
         searchInput.setAttribute('aria-label', placeholder);
     }
-    if (idHeader) idHeader.textContent = isBusinessUsersTab ? '회원번호' : 'ID';
-    if (loginIdHeader) loginIdHeader.textContent = isBusinessUsersTab ? '기업회원 아이디' : '아이디';
+    if (idHeader) idHeader.textContent = isBusinessUsersTab ? '기업회원 아이디' : 'ID';
+    if (loginIdHeader) loginIdHeader.textContent = isBusinessUsersTab ? '회원번호' : '아이디';
 }
 
 function getAdminPageState() {
@@ -449,7 +449,7 @@ function getAdminFilteredItems(prefix) {
     const matchers = {
         posts: ['id', 'title', 'authorNickname', 'user_id', 'userId'],
         comments: ['id', 'content', 'authorNickname', 'user_id', 'userId', 'postId', 'post_id'],
-        users: ['id', 'loginId', 'login_id', 'userLoginId', 'nickname', 'role', 'memberType', 'member_type', 'phone'],
+        users: ['id', 'loginId', 'login_id', 'userLoginId', 'nickname', 'role', 'memberType', 'member_type', 'phone', 'businessCompanyName', 'businessRegistrationNumber', 'businessManagerName', 'businessContactPhone'],
         'business-applications': ['userId', 'loginId', 'nickname', 'companyName', 'businessRegistrationNumber', 'managerName', 'contactPhone', 'userPhone', 'approvalStatus', 'registrationStatus', (item) => item.businessInfo?.businessAddress, (item) => item.businessInfo?.businessType],
         admins: ['id', 'loginId', 'nickname', 'role'],
         entries: ['workerName', 'entryId'],
@@ -1145,9 +1145,9 @@ function renderBusinessApplicationsTable() {
             return `
                 <tr>
                     <td>
-                        <strong>#${application.userId}</strong><br>
-                        ${sanitizeHTML(application.nickname || application.loginId || '')}<br>
-                        <span class="text-muted text-sm">${sanitizeHTML(application.loginId || '')}</span>
+                        <strong>${sanitizeHTML(application.loginId || '-')}</strong><br>
+                        <span class="text-muted text-sm">회원번호 #${sanitizeHTML(application.userId || '')}</span><br>
+                        <span class="text-muted text-sm">${sanitizeHTML(application.nickname || '-')}</span>
                     </td>
                     <td>
                         <strong>${sanitizeHTML(application.companyName || application.businessInfo?.businessName || '-')}</strong><br>
@@ -1224,6 +1224,19 @@ function getAdminUserLoginId(user = {}) {
     return String(user.loginId || user.login_id || user.userLoginId || '').trim();
 }
 
+function renderAdminBusinessUserPrimaryCell(user = {}) {
+    const loginId = getAdminUserLoginId(user);
+    const companyName = String(user.businessCompanyName || '').trim();
+    const registrationNumber = String(user.businessRegistrationNumber || '').trim();
+
+    return `
+        <strong>${sanitizeHTML(loginId || '-')}</strong><br>
+        <span class="text-muted text-sm">회원번호 #${sanitizeHTML(user.id || '')}</span>
+        ${companyName ? `<br><span class="text-muted text-sm">${sanitizeHTML(companyName)}</span>` : ''}
+        ${registrationNumber ? `<br><span class="text-muted text-sm">${sanitizeHTML(registrationNumber)}</span>` : ''}
+    `;
+}
+
 function renderUsersTable() {
     const tbody = document.getElementById('users-tbody');
     if (!tbody) return;
@@ -1242,8 +1255,8 @@ function renderUsersTable() {
             const memberTypeLabel = user.memberType === 'BUSINESS' ? '기업 회원' : '일반 회원';
             return `
             <tr>
-                <td>${isBusinessUsersTab ? `#${user.id}` : user.id}</td>
-                <td>${sanitizeHTML(loginId || '-')}</td>
+                <td>${isBusinessUsersTab ? renderAdminBusinessUserPrimaryCell(user) : user.id}</td>
+                <td>${isBusinessUsersTab ? `#${sanitizeHTML(user.id || '')}` : sanitizeHTML(loginId || '-')}</td>
                 <td>${sanitizeHTML(user.name || '')}</td>
                 <td>${sanitizeHTML(user.nickname || '')}</td>
                 <td>${sanitizeHTML(user.phone || '')}</td>
