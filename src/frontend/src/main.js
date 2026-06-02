@@ -6,6 +6,12 @@ import router from './router/index.js';
 import App from './App.js';
 
 const INTERACTION_ALLOWED_SELECTOR = 'input, textarea, select, [contenteditable], [role="textbox"], #post-content, #post-content *';
+const ADMIN_INTERACTION_ALLOWED_PATH_PREFIX = '/admin';
+
+const isAdminPage = () => {
+  const { pathname } = window.location;
+  return pathname === ADMIN_INTERACTION_ALLOWED_PATH_PREFIX || pathname.startsWith(`${ADMIN_INTERACTION_ALLOWED_PATH_PREFIX}/`);
+};
 
 const isInteractionAllowedTarget = (target) => {
   if (!(target instanceof Element)) {
@@ -30,7 +36,7 @@ const isSelectionInAllowedTarget = () => {
 };
 
 const preventDefault = (event) => {
-  if (isInteractionAllowedTarget(event.target)) {
+  if (isAdminPage() || isInteractionAllowedTarget(event.target)) {
     return;
   }
 
@@ -42,7 +48,7 @@ document.addEventListener('dragstart', preventDefault, true);
 document.addEventListener('drop', preventDefault, true);
 document.addEventListener('selectstart', preventDefault, true);
 document.addEventListener('mousedown', (event) => {
-  if (isInteractionAllowedTarget(event.target)) {
+  if (isAdminPage() || isInteractionAllowedTarget(event.target)) {
     return;
   }
 
@@ -51,7 +57,7 @@ document.addEventListener('mousedown', (event) => {
   }
 }, true);
 document.addEventListener('selectionchange', (event) => {
-  if (isInteractionAllowedTarget(document.activeElement) || isSelectionInAllowedTarget()) {
+  if (isAdminPage() || isInteractionAllowedTarget(document.activeElement) || isSelectionInAllowedTarget()) {
     return;
   }
 
