@@ -652,6 +652,11 @@
     background: #dcfce7;
 }
 
+.admin-inquiry-meta-status.is-rejected {
+    color: #991b1b;
+    background: #fee2e2;
+}
+
 .admin-inquiry-content-box {
     min-height: 180px;
     white-space: pre-wrap;
