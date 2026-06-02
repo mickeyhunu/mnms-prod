@@ -180,6 +180,10 @@
     margin: 0 auto;
 }
 
+body[data-page="admin"] .main-content > .container {
+    max-width: none;
+}
+
 div.community-section-header {
     text-align: center;
     margin-bottom: 32px;
