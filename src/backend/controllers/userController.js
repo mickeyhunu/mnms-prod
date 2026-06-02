@@ -134,6 +134,22 @@ function isBusinessProfileRegistrationStatusAllowed(value) {
   return status === 'REGISTERED' || status === 'UNREGISTERED';
 }
 
+function normalizeBusinessProfileApprovalStatus(value, fallback = 'PENDING') {
+  const status = String(value || '').trim().toUpperCase();
+  if (status === 'PENDING' || status === 'APPROVED' || status === 'REJECTED') return status;
+  return fallback;
+}
+
+function isBusinessProfilePendingReview(profile, user) {
+  if (!profile) return false;
+
+  const registrationStatus = normalizeBusinessProfileRegistrationStatus(profile.registrationStatus, 'UNREGISTERED');
+  const approvalStatus = normalizeBusinessProfileApprovalStatus(profile.approvalStatus, 'PENDING');
+  const memberType = String(user?.member_type || user?.memberType || '').trim().toUpperCase();
+
+  return memberType !== 'BUSINESS' && registrationStatus === 'REGISTERED' && approvalStatus === 'PENDING';
+}
+
 function hasSubmittedBusinessImage(businessInfo = {}, imageNameKey) {
   const imageName = String(businessInfo?.[imageNameKey] || '').trim();
   return Boolean(imageName && imageName !== BUSINESS_IMAGE_PLACEHOLDER);
@@ -753,6 +769,10 @@ async function saveMyBusinessProfile(req, res, next) {
     }
 
     const registrationStatus = normalizeBusinessProfileRegistrationStatus(req.body?.registrationStatus, 'UNREGISTERED');
+    const existingProfile = await getBusinessProfileByUserId(req.user.id);
+    if (isBusinessProfilePendingReview(existingProfile, req.user)) {
+      return res.status(409).json({ message: '이미 접수된 기업회원 신청이 검토중입니다. 검토 완료 후 다시 이용해주세요.' });
+    }
 
     if (hasBlockedBusinessImageInspection(businessInfo)) {
       return res.status(400).json({ message: '이미지 검사 통과 후 사업자정보를 저장할 수 있습니다.' });

@@ -43,6 +43,50 @@ function isBusinessApplicationMode() {
     return searchParams.get('apply') === '1' || Boolean(window.sessionStorage?.getItem(BUSINESS_APPLY_AGREEMENT_KEY));
 }
 
+function normalizeBusinessManagementRegistrationStatus(status) {
+    const value = String(status || '').trim().toLowerCase();
+    if (value === 'registered') return 'registered';
+    if (value === 'draft') return 'draft';
+    return 'unregistered';
+}
+
+function normalizeBusinessManagementApprovalStatus(status) {
+    const value = String(status || '').trim().toLowerCase();
+    if (value === 'approved') return 'approved';
+    if (value === 'rejected') return 'rejected';
+    return 'pending';
+}
+
+function isBusinessManagementPendingReview(profile, user) {
+    const registrationStatus = normalizeBusinessManagementRegistrationStatus(profile?.registrationStatus);
+    const approvalStatus = normalizeBusinessManagementApprovalStatus(profile?.approvalStatus);
+    const isBusinessMember = typeof Auth !== 'undefined'
+        && typeof Auth.isBusinessAccount === 'function'
+        && Auth.isBusinessAccount(user);
+
+    return !isBusinessMember && registrationStatus === 'registered' && approvalStatus === 'pending';
+}
+
+function notifyPendingBusinessManagementReview() {
+    const message = '이미 접수된 기업회원 신청이 검토중입니다. 검토 완료 후 다시 이용해주세요.';
+    if (typeof showNotification === 'function') {
+        showNotification(message, 'warning');
+        return;
+    }
+
+    alert(message);
+}
+
+function redirectBusinessManagementPendingReview(profile, user) {
+    if (!isBusinessApplicationMode() || !isBusinessManagementPendingReview(profile, user)) {
+        return false;
+    }
+
+    notifyPendingBusinessManagementReview();
+    window.location.replace('/my-page');
+    return true;
+}
+
 function syncBusinessManagementModeLabels() {
     const isApplyMode = isBusinessApplicationMode();
     const pageTitle = document.getElementById('business-management-page-title');
@@ -963,6 +1007,8 @@ async function initBusinessManagementPage() {
     syncBusinessManagementModeLabels();
 
     const profile = await APIClient.get('/users/me/business-profile');
+    if (redirectBusinessManagementPendingReview(profile, me)) return;
+
     applyBusinessFormData(profile?.businessInfo || {});
     bindBusinessManagementEvents();
     updateBusinessActionButtons();
