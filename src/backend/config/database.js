@@ -377,6 +377,7 @@ async function initDatabase() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       INDEX idx_business_profiles_review_queue (registration_status, approval_status, updated_at, user_id),
+      INDEX idx_business_profiles_registered_updated (registration_status, updated_at, user_id),
       CONSTRAINT fk_business_profiles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
@@ -649,6 +650,13 @@ async function initDatabase() {
     'business_profiles',
     'idx_business_profiles_review_queue',
     'CREATE INDEX idx_business_profiles_review_queue ON business_profiles (registration_status, approval_status, updated_at, user_id)'
+  );
+
+  await ensureIndex(
+    pool,
+    'business_profiles',
+    'idx_business_profiles_registered_updated',
+    'CREATE INDEX idx_business_profiles_registered_updated ON business_profiles (registration_status, updated_at, user_id)'
   );
 
   const [adsAdTypeColumn] = await pool.query(
