@@ -34,6 +34,10 @@ function hasRequiredBusinessReviewDocuments(profile = {}) {
     && hasSubmittedBusinessDocument(profile, 'permitImageName', 'permitImageDataUrl');
 }
 
+function isMasterAdminUser(user = {}) {
+  return String(user?.login_id || '').trim().toLowerCase() === 'master';
+}
+
 function revealAnonymousAuthorForAdmin(item) {
   const boardType = String(item?.boardType || item?.board_type || '').toUpperCase();
   if (boardType !== 'ANON' || isBusinessAuthor(item)) {
@@ -286,7 +290,7 @@ router.put('/users/:id', async (req, res, next) => {
       return res.status(400).json({ message: '유효하지 않은 권한입니다.' });
     }
 
-    const isMasterAdmin = String(req.user?.login_id || '').trim().toLowerCase() === 'master';
+    const isMasterAdmin = isMasterAdminUser(req.user);
     if (role === 'ADMIN' && !isMasterAdmin) {
       return res.status(403).json({ message: '마스터 관리자만 관리자 권한을 부여할 수 있습니다.' });
     }
@@ -392,12 +396,15 @@ router.patch('/users/:id/role', async (req, res, next) => {
     const role = String(req.body?.role || '').toUpperCase();
     if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 회원 ID입니다.' });
     if (!['MEMBER', 'ADMIN'].includes(role)) return res.status(400).json({ message: '유효하지 않은 권한입니다.' });
-    if (role === 'ADMIN' && String(req.user?.login_id || '').trim().toLowerCase() !== 'master') {
-      return res.status(403).json({ message: '마스터 관리자만 관리자 권한을 부여할 수 있습니다.' });
+    if (!isMasterAdminUser(req.user)) {
+      return res.status(403).json({ message: '마스터 관리자만 관리자 권한을 변경할 수 있습니다.' });
     }
 
     const target = await adminModel.findUserById(id);
     if (!target) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
+    if (String(target.login_id || '').trim().toLowerCase() === 'master' && role !== 'ADMIN') {
+      return res.status(400).json({ message: '마스터 관리자 권한은 해지할 수 없습니다.' });
+    }
 
     await adminModel.updateUserRole(id, role);
     res.json({ success: true });
