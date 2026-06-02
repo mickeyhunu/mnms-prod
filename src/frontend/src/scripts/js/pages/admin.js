@@ -23,7 +23,7 @@ let isDeleteModalActionBound = false;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
-const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'business-applications', 'admins', 'entries', 'banner-ads', 'business-ads', 'support', 'inquiries'];
+const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'business-users', 'admins', 'entries', 'banner-ads', 'business-ads', 'support', 'business-applications', 'inquiries'];
 const ADMIN_SIDEBAR_COLLAPSED_STORAGE_KEY = 'adminSidebarCollapsed';
 
 const ADMIN_PAGE_SIZE = 20;
@@ -56,7 +56,7 @@ const ADMIN_LIST_STATE = {
 const ADMIN_SEARCH_PLACEHOLDERS = {
     posts: '게시글 검색',
     comments: '댓글 검색',
-    users: '회원 검색',
+    users: '일반 회원 검색',
     'business-applications': '기업회원 신청 검색',
     admins: '관리자 검색',
     entries: '엔트리 검색',
@@ -106,6 +106,29 @@ function bindAdminSidebarToggle() {
     });
 }
 
+
+function isUserManagementTab(tabKey) {
+    return tabKey === 'users' || tabKey === 'business-users';
+}
+
+function getActiveUserManagementTab() {
+    const activeTab = getAdminPageState().activeTab;
+    return activeTab === 'business-users' ? 'business-users' : 'users';
+}
+
+function updateUsersListLabels() {
+    const isBusinessUsersTab = getActiveUserManagementTab() === 'business-users';
+    const placeholder = isBusinessUsersTab ? '기업 회원 검색' : '일반 회원 검색';
+    const loadingText = document.querySelector('#users-loading p');
+    const searchInput = document.getElementById('users-search-input');
+
+    if (loadingText) loadingText.textContent = isBusinessUsersTab ? '기업 회원 정보를 불러오는 중...' : '일반 회원 정보를 불러오는 중...';
+    if (searchInput) {
+        searchInput.placeholder = placeholder;
+        searchInput.setAttribute('aria-label', placeholder);
+    }
+}
+
 function getAdminPageState() {
     const params = new URLSearchParams(window.location.search);
     const requestedTab = params.get('tab');
@@ -144,23 +167,26 @@ async function activateAdminTab(tabKey, options = {}) {
         tab.setAttribute('aria-current', isActive ? 'page' : 'false');
     });
 
-    ADMIN_TABS.forEach((key) => {
-        const isActive = key === resolvedTabKey;
-        document.getElementById(`${key}-section`)?.classList.toggle('hidden', !isActive);
-        document.getElementById(`${key}-section`)?.classList.toggle('active', isActive);
+    document.querySelectorAll('.tab-pane').forEach((pane) => {
+        pane.classList.add('hidden');
+        pane.classList.remove('active');
     });
+    const activeSectionId = resolvedTabKey === 'business-users' ? 'users-section' : `${resolvedTabKey}-section`;
+    const activeSection = document.getElementById(activeSectionId);
+    activeSection?.classList.remove('hidden');
+    activeSection?.classList.add('active');
 
     if (updateHistory) {
         syncAdminPageState({
             activeTab: resolvedTabKey,
-            editUserId: resolvedTabKey === 'users' ? getAdminPageState().editUserId : null
+            editUserId: isUserManagementTab(resolvedTabKey) ? getAdminPageState().editUserId : null
         }, { replace: replaceHistory });
     }
 
     if (resolvedTabKey === 'stats') await loadStatsDashboard();
     else if (resolvedTabKey === 'posts') await loadPosts();
     else if (resolvedTabKey === 'comments') await loadComments();
-    else if (resolvedTabKey === 'users') await loadUsers();
+    else if (isUserManagementTab(resolvedTabKey)) await loadUsers();
     else if (resolvedTabKey === 'business-applications') await loadBusinessApplications();
     else if (resolvedTabKey === 'admins') await loadAdmins();
     else if (resolvedTabKey === 'entries') await loadEntries();
@@ -201,7 +227,7 @@ async function initAdminPage() {
         const pageState = getAdminPageState();
         await activateAdminTab(pageState.activeTab, { updateHistory: true, replaceHistory: true });
 
-        if (pageState.activeTab === 'users' && pageState.editUserId) {
+        if (isUserManagementTab(pageState.activeTab) && pageState.editUserId) {
             await openUserEditModal(pageState.editUserId, { syncHistory: false });
         }
     } catch (error) {
@@ -405,6 +431,14 @@ function getAdminFilteredItems(prefix) {
     const fields = searchConfig?.matcher || matchers[prefix] || [];
 
     const queryMatchedItems = items.filter((item) => adminListMatchesQuery(item, query, fields));
+    if (prefix === 'users') {
+        const activeUserTab = getActiveUserManagementTab();
+        return queryMatchedItems.filter((item) => {
+            const memberType = String(item?.memberType || item?.member_type || 'MEMBER').toUpperCase();
+            return activeUserTab === 'business-users' ? memberType === 'BUSINESS' : memberType !== 'BUSINESS';
+        });
+    }
+
     if (prefix !== 'ads') return queryMatchedItems;
 
     return queryMatchedItems.filter((item) => String(item?.adType || '').toUpperCase() !== 'BUSINESS');
@@ -683,6 +717,7 @@ async function loadComments() {
 }
 
 async function loadUsers() {
+    updateUsersListLabels();
     toggleLoading('users', true);
     try {
         const response = await APIClient.get('/admin/users');
@@ -1048,7 +1083,7 @@ function renderUsersTable() {
                 <td>${user.memberType === 'BUSINESS' ? '기업 회원' : '일반 회원'}</td>
                 <td>
                     <div class="admin-user-actions">
-                        <a class="btn btn-sm btn-secondary" href="/admin?tab=users&editUserId=${user.id}" data-admin-action="edit-user" data-target-id="${user.id}">정보 수정</a>
+                        <a class="btn btn-sm btn-secondary" href="/admin?tab=${getActiveUserManagementTab()}&editUserId=${user.id}" data-admin-action="edit-user" data-target-id="${user.id}">정보 수정</a>
                         <button type="button" class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="user" data-target-id="${user.id}">삭제</button>
                     </div>
                 </td>
@@ -1672,11 +1707,11 @@ async function openUserEditModal(userId, options = {}) {
         document.getElementById('user-edit-modal')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         if (syncHistory) {
-            syncAdminPageState({ activeTab: 'users', editUserId: userId }, { replace: replaceHistory });
+            syncAdminPageState({ activeTab: getActiveUserManagementTab(), editUserId: userId }, { replace: replaceHistory });
         }
     } catch (error) {
         if (syncHistory) {
-            syncAdminPageState({ activeTab: 'users', editUserId: null }, { replace: true });
+            syncAdminPageState({ activeTab: getActiveUserManagementTab(), editUserId: null }, { replace: true });
         }
         alert(error.message || '회원 정보를 불러오지 못했습니다.');
     }
@@ -1689,7 +1724,7 @@ function closeUserEditModal() {
     setAdminUserHelpMessage('');
     resetAdminUserActivity();
     hideAdminModal('user-edit-modal');
-    syncAdminPageState({ activeTab: 'users', editUserId: null }, { replace: true });
+    syncAdminPageState({ activeTab: getActiveUserManagementTab(), editUserId: null }, { replace: true });
 }
 
 async function saveUserDetail() {

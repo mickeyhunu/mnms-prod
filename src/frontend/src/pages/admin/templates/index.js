@@ -42,8 +42,8 @@ export const adminTemplate = `
                     </div>
                     <nav class="admin-tabs" id="admin-tabs" aria-label="관리자 메뉴 목록">
                         <button class="admin-tab active" data-tab="stats" title="통계 대시보드"><span class="admin-tab__label">통계 대시보드</span></button>
-                        <button class="admin-tab" data-tab="users" title="회원 관리"><span class="admin-tab__label">회원 관리</span></button>
-                        <button class="admin-tab" data-tab="business-applications" title="기업회원 신청 검토"><span class="admin-tab__label">기업회원 신청 검토</span></button>
+                        <button class="admin-tab" data-tab="users" title="일반 회원관리"><span class="admin-tab__label">일반 회원관리</span></button>
+                        <button class="admin-tab" data-tab="business-users" title="기업 회원관리"><span class="admin-tab__label">기업 회원관리</span></button>
                         <button class="admin-tab" data-tab="admins" title="관리자 관리"><span class="admin-tab__label">관리자 관리</span></button>
                         <button class="admin-tab" data-tab="posts" title="게시글 관리"><span class="admin-tab__label">게시글 관리</span></button>
                         <button class="admin-tab" data-tab="comments" title="댓글 관리"><span class="admin-tab__label">댓글 관리</span></button>
@@ -51,6 +51,7 @@ export const adminTemplate = `
                         <button class="admin-tab" data-tab="business-ads" title="업체광고관리"><span class="admin-tab__label">업체광고관리</span></button>
                         <button class="admin-tab" data-tab="entries" title="엔트리 관리"><span class="admin-tab__label">엔트리 관리</span></button>
                         <button class="admin-tab" data-tab="support" title="공지/FAQ 관리"><span class="admin-tab__label">공지/FAQ 관리</span></button>
+                        <button class="admin-tab" data-tab="business-applications" title="기업회원 신청 검토"><span class="admin-tab__label">기업회원 신청 검토</span></button>
                         <button class="admin-tab" data-tab="inquiries" title="1:1 문의 관리"><span class="admin-tab__label">1:1 문의 관리</span></button>
                     </nav>
                 </aside>
@@ -148,7 +149,7 @@ export const adminTemplate = `
                     <div class="error-banner hidden" id="users-error"><p id="users-error-message"></p><button class="btn btn-sm btn-primary" id="users-retry-btn">다시 시도</button></div>
                     <div class="admin-list-toolbar">
                         <p class="admin-list-toolbar__meta">총 <strong id="users-total">0</strong>건</p>
-                        <input type="search" id="users-search-input" class="form-control admin-list-toolbar__search" placeholder="회원 검색" aria-label="회원 검색">
+                        <input type="search" id="users-search-input" class="form-control admin-list-toolbar__search" placeholder="일반 회원 검색" aria-label="일반 회원 검색">
                     </div>
                     <div class="admin-table-container hidden" id="users-content">
                         <table class="admin-table"><thead><tr><th>ID</th><th>아이디</th><th>닉네임</th><th>계정상태</th><th>포인트</th><th>가입일</th><th>권한</th><th>회원구분</th><th>관리</th></tr></thead><tbody id="users-tbody"></tbody></table>
