@@ -3,6 +3,51 @@
  */
 const BUSINESS_APPLY_AGREEMENT_KEY = 'mnmsBusinessApplyAgreedAt';
 
+function normalizeBusinessApplyRegistrationStatus(status) {
+    const value = String(status || '').trim().toLowerCase();
+    if (value === 'registered') return 'registered';
+    if (value === 'draft') return 'draft';
+    return 'unregistered';
+}
+
+function normalizeBusinessApplyApprovalStatus(status) {
+    const value = String(status || '').trim().toLowerCase();
+    if (value === 'approved') return 'approved';
+    if (value === 'rejected') return 'rejected';
+    return 'pending';
+}
+
+function isBusinessApplyPendingReview(profile, user) {
+    const registrationStatus = normalizeBusinessApplyRegistrationStatus(profile?.registrationStatus);
+    const approvalStatus = normalizeBusinessApplyApprovalStatus(profile?.approvalStatus);
+    const isBusinessMember = typeof Auth !== 'undefined'
+        && typeof Auth.isBusinessAccount === 'function'
+        && Auth.isBusinessAccount(user);
+
+    return !isBusinessMember && registrationStatus === 'registered' && approvalStatus === 'pending';
+}
+
+function notifyPendingBusinessApplyReview() {
+    const message = '이미 접수된 기업회원 신청이 검토중입니다. 검토 완료 후 다시 이용해주세요.';
+    if (typeof showNotification === 'function') {
+        showNotification(message, 'warning');
+        return;
+    }
+
+    alert(message);
+}
+
+async function redirectIfBusinessApplyPendingReview(user) {
+    const profile = await APIClient.get('/users/me/business-profile');
+    if (!isBusinessApplyPendingReview(profile, user)) {
+        return false;
+    }
+
+    notifyPendingBusinessApplyReview();
+    window.location.replace('/my-page');
+    return true;
+}
+
 function updateBusinessApplySubmitState() {
     const consentCheckboxes = Array.from(document.querySelectorAll('[data-business-apply-consent]'));
     const submitButton = document.getElementById('business-apply-submit-btn');
@@ -37,6 +82,8 @@ async function initBusinessApplyPage() {
     }
 
     const me = await APIClient.get('/auth/me');
+    if (await redirectIfBusinessApplyPendingReview(me)) return;
+
     const nickname = Auth.resolveNicknameDisplayElement();
     if (nickname) Auth.applyNicknameDisplay(nickname, me);
 
