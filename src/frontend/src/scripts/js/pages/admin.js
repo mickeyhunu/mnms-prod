@@ -990,6 +990,52 @@ function getBusinessApplicationContact(application) {
     return application.contactPhone || application.businessInfo?.businessContact || application.userPhone || '';
 }
 
+function getBusinessApplicationDocument(application, imageNameKey, imageDataUrlKey, label) {
+    const businessInfo = application?.businessInfo || {};
+    const fileName = String(businessInfo?.[imageNameKey] || '').trim();
+    const imageDataUrl = String(businessInfo?.[imageDataUrlKey] || '').trim();
+    const hasFile = Boolean(fileName && fileName !== '등록할 이미지를 선택해주세요.' && imageDataUrl);
+
+    return {
+        label,
+        fileName,
+        imageDataUrl,
+        hasFile
+    };
+}
+
+function isSafeBusinessDocumentUrl(url) {
+    const normalized = String(url || '').trim();
+    return /^data:image\/(png|jpe?g|gif|webp);base64,/iu.test(normalized) || /^https?:\/\//iu.test(normalized);
+}
+
+function renderBusinessDocumentLink(documentInfo) {
+    if (!documentInfo?.hasFile || !isSafeBusinessDocumentUrl(documentInfo.imageDataUrl)) {
+        return `<span class="admin-business-doc is-missing">${sanitizeHTML(documentInfo?.label || '첨부 서류')} 미첨부</span>`;
+    }
+
+    const safeUrl = sanitizeHTML(documentInfo.imageDataUrl);
+    const safeLabel = sanitizeHTML(documentInfo.label);
+    const safeFileName = sanitizeHTML(documentInfo.fileName || documentInfo.label);
+    return `
+        <a class="admin-business-doc" href="${safeUrl}" target="_blank" rel="noopener" title="${safeFileName} 새 창에서 확인">
+            ${safeLabel} 확인
+        </a>
+    `;
+}
+
+function renderBusinessApplicationDocuments(application) {
+    const licenseDocument = getBusinessApplicationDocument(application, 'licenseImageName', 'licenseImageDataUrl', '사업자등록증');
+    const permitDocument = getBusinessApplicationDocument(application, 'permitImageName', 'permitImageDataUrl', '영업허가증');
+    return `
+        <div class="admin-business-docs">
+            ${renderBusinessDocumentLink(licenseDocument)}
+            ${renderBusinessDocumentLink(permitDocument)}
+        </div>
+        <span class="text-muted text-xs">승인/반려 전 두 서류를 확인하세요.</span>
+    `;
+}
+
 function renderBusinessApplicationsTable() {
     const tbody = document.getElementById('business-applications-tbody');
     if (!tbody) return;
@@ -998,7 +1044,7 @@ function renderBusinessApplicationsTable() {
     updateAdminTotal('business-applications', filteredItems.length);
 
     if (!pageItems.length) {
-        tbody.innerHTML = `<tr><td colspan="7">${filteredItems.length ? '현재 페이지에 표시할 신청서가 없습니다.' : '기업회원 신청서가 없습니다.'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8">${filteredItems.length ? '현재 페이지에 표시할 신청서가 없습니다.' : '기업회원 신청서가 없습니다.'}</td></tr>`;
     } else {
         tbody.innerHTML = pageItems.map((application) => {
             const isPending = String(application.approvalStatus || '').toUpperCase() === 'PENDING';
@@ -1016,6 +1062,7 @@ function renderBusinessApplicationsTable() {
                         <span class="text-muted text-sm">${sanitizeHTML(application.businessInfo?.businessAddress || '')}</span>
                     </td>
                     <td>${sanitizeHTML(application.managerName || application.businessInfo?.businessOwner || '-')}<br><span class="text-muted text-sm">${sanitizeHTML(contact)}</span></td>
+                    <td>${renderBusinessApplicationDocuments(application)}</td>
                     <td>${toBusinessApplicationStatusLabel(application.approvalStatus)}${application.isBusinessMember ? '<br><span class="text-muted text-sm">기업회원 전환됨</span>' : ''}</td>
                     <td>${formatDate(application.createdAt)}<br><span class="text-muted text-sm">수정 ${formatDate(application.updatedAt)}</span></td>
                     <td>${sanitizeHTML(application.rejectionReason || '-')}</td>
@@ -1053,7 +1100,11 @@ async function reviewBusinessApplication(actionElement) {
             alert('반려 사유는 500자 이하로 입력해주세요.');
             return;
         }
-    } else if (!window.confirm('이 신청을 승인하고 기업회원으로 전환하시겠습니까?')) {
+    } else if (!window.confirm('사업자등록증과 영업허가증을 모두 확인했습니다. 이 신청을 승인하고 기업회원으로 전환하시겠습니까?')) {
+        return;
+    }
+
+    if (approvalStatus === 'REJECTED' && !window.confirm('사업자등록증과 영업허가증을 모두 확인했습니다. 이 신청을 반려하시겠습니까?')) {
         return;
     }
 
@@ -1061,7 +1112,11 @@ async function reviewBusinessApplication(actionElement) {
     try {
         actionElement.disabled = true;
         actionElement.textContent = approvalStatus === 'APPROVED' ? '승인 중...' : '반려 중...';
-        await APIClient.put(`/admin/business-applications/${userId}/review`, { approvalStatus, rejectionReason });
+        await APIClient.put(`/admin/business-applications/${userId}/review`, {
+            approvalStatus,
+            rejectionReason,
+            documentReviewConfirmed: true
+        });
         await loadBusinessApplications();
         alert(approvalStatus === 'APPROVED' ? '기업회원 신청을 승인했습니다.' : '기업회원 신청을 반려했습니다.');
     } catch (error) {

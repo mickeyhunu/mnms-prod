@@ -489,6 +489,28 @@ body[data-page="admin"] {
     flex-wrap: wrap;
 }
 
+
+.admin-business-docs {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 120px;
+}
+
+.admin-business-doc {
+    color: var(--primary-color);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.admin-business-doc.is-missing {
+    color: #dc3545;
+    font-weight: 500;
+    text-decoration: none;
+}
+
 .admin-entry-toolbar {
     display: flex;
     justify-content: space-between;
