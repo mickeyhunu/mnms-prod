@@ -400,6 +400,7 @@ async function findByNicknameExceptUser(nickname, userId) {
   return rows[0] || null;
 }
 
+
 async function updateUserProfile(userId, payload) {
   const pool = getPool();
   const fields = [];
