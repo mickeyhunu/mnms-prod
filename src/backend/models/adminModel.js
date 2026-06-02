@@ -3,7 +3,7 @@
  */
 const { getPool, getChatbotPool } = require('../config/database');
 const { pickUserRow } = require('../utils/response');
-const { ensureResolvedLoginRestriction, getUserActivityStats, getUserActivityDetails, getUserLoginHistories } = require('./userModel');
+const { ensureResolvedLoginRestriction, getUserActivityStats, getUserActivityDetails, getUserLoginHistories, getBusinessProfileByUserId, updateBusinessProfileReviewByUserId } = require('./userModel');
 const { getStoreByNo, listStores } = require('./liveModel');
 
 async function listUsers() {
@@ -49,7 +49,17 @@ async function findUserById(userId) {
 
 async function getUserDetail(userId) {
   const user = await findUserById(userId);
-  return user ? pickUserRow(user) : null;
+  if (!user) return null;
+
+  const businessProfile = await getBusinessProfileByUserId(userId);
+  return {
+    ...pickUserRow(user),
+    businessProfile: businessProfile ? {
+      registrationStatus: businessProfile.registrationStatus || 'UNREGISTERED',
+      approvalStatus: businessProfile.approvalStatus || 'PENDING',
+      rejectionReason: businessProfile.rejectionReason || ''
+    } : null
+  };
 }
 
 async function getUserActivityOverview(userId, { limit = 10 } = {}) {
@@ -900,6 +910,7 @@ module.exports = {
   getUserActivityOverview,
   updateUserRole,
   updateUserMemberType,
+  updateBusinessProfileReviewByUserId,
   updateUserByAdmin,
   adjustUserPointsByAdmin,
   deleteUser,

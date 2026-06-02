@@ -197,6 +197,8 @@ router.put('/users/:id', async (req, res, next) => {
     const phone = String(req.body?.phone || '').trim();
     const role = String(req.body?.role || '').toUpperCase();
     const memberType = String(req.body?.memberType || '').toUpperCase();
+    const businessApprovalStatus = String(req.body?.businessApprovalStatus || '').toUpperCase();
+    const businessRejectionReason = String(req.body?.businessRejectionReason || '').trim();
     const pointAdjustmentType = String(req.body?.pointAdjustmentType || 'NONE').toUpperCase();
     const pointAdjustmentAmount = Number(req.body?.pointAdjustmentAmount || 0);
     const pointAdjustmentReason = String(req.body?.pointAdjustmentReason || '').trim();
@@ -234,6 +236,14 @@ router.put('/users/:id', async (req, res, next) => {
 
     if (!['MEMBER', 'BUSINESS'].includes(memberType)) {
       return res.status(400).json({ message: '유효하지 않은 회원 구분입니다.' });
+    }
+
+    if (businessApprovalStatus && !['PENDING', 'APPROVED', 'REJECTED'].includes(businessApprovalStatus)) {
+      return res.status(400).json({ message: '유효하지 않은 기업회원 신청 상태입니다.' });
+    }
+
+    if (businessApprovalStatus === 'REJECTED' && (!businessRejectionReason || businessRejectionReason.length > 500)) {
+      return res.status(400).json({ message: '기업회원 신청 반려 사유는 1자 이상 500자 이하로 입력해주세요.' });
     }
 
     if (!['NONE', 'ADD', 'DEDUCT'].includes(pointAdjustmentType)) {
@@ -289,6 +299,12 @@ router.put('/users/:id', async (req, res, next) => {
     }
 
     await adminModel.updateUserByAdmin(id, updates);
+    if (businessApprovalStatus) {
+      await adminModel.updateBusinessProfileReviewByUserId(id, {
+        approvalStatus: businessApprovalStatus,
+        rejectionReason: businessRejectionReason
+      });
+    }
     if (pointAdjustmentType !== 'NONE' && pointAdjustmentAmount > 0) {
       await adminModel.adjustUserPointsByAdmin(id, {
         amount: pointAdjustmentAmount,
