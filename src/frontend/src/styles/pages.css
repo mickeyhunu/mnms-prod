@@ -1026,6 +1026,11 @@
     background: #20c997;
 }
 
+.mypage-status-badge--pending {
+    color: #fff;
+    background: #fd7e14;
+}
+
 .mypage-status-badge--draft {
     color: #fff;
     background: #0d6efd;
