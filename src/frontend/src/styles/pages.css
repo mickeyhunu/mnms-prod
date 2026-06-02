@@ -3172,6 +3172,7 @@ body[data-page="admin"] {
     padding: 0 12px;
     font-size: 15px;
     color: #212529;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .business-verify-row {
@@ -3198,23 +3199,22 @@ body[data-page="admin"] {
     background: #212529;
 }
 
-.business-verify-status {
-    margin: 8px 0 0;
-    font-size: 13px;
-    font-weight: 700;
-    color: #868e96;
+.business-verify-row input.is-verification-checking {
+    border-color: #2b6fdb;
+    background: #eef5ff;
+    box-shadow: 0 0 0 3px rgba(43, 111, 219, 0.14);
 }
 
-.business-verify-status.is-valid {
-    color: #2b8a3e;
+.business-verify-row input.is-verification-valid {
+    border-color: #18a957;
+    background: #eafaf1;
+    box-shadow: 0 0 0 3px rgba(24, 169, 87, 0.2);
 }
 
-.business-verify-status.is-invalid {
-    color: #e03131;
-}
-
-.business-verify-status.is-checking {
-    color: #495057;
+.business-verify-row input.is-verification-invalid {
+    border-color: #e23b4a;
+    background: #fff0f1;
+    box-shadow: 0 0 0 3px rgba(226, 59, 74, 0.2);
 }
 
 .business-address-wrap {
