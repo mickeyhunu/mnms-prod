@@ -20,6 +20,7 @@ const TOP_AD_PLACEMENT_OPTIONS = [
 ];
 let isGlobalAdminClickBound = false;
 let isDeleteModalActionBound = false;
+let isBusinessDocumentModalActionBound = false;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
@@ -276,6 +277,7 @@ function bindCommonEvents() {
     document.getElementById('inquiries-retry-btn')?.addEventListener('click', loadInquiries);
 
     bindDeleteModalActions();
+    bindBusinessDocumentModalActions();
     document.getElementById('user-edit-cancel-btn')?.addEventListener('click', closeUserEditModal);
     document.getElementById('user-edit-cancel-btn-secondary')?.addEventListener('click', closeUserEditModal);
     document.getElementById('user-edit-save-btn')?.addEventListener('click', saveUserDetail);
@@ -332,6 +334,20 @@ function bindDeleteModalActions() {
             event.preventDefault();
             await confirmDelete();
         }
+    });
+}
+
+
+function bindBusinessDocumentModalActions() {
+    if (isBusinessDocumentModalActionBound) return;
+    isBusinessDocumentModalActionBound = true;
+
+    document.addEventListener('click', (event) => {
+        const closeButton = event.target.closest('#business-document-close-btn');
+        if (!closeButton) return;
+
+        event.preventDefault();
+        closeBusinessDocumentModal();
     });
 }
 
@@ -982,7 +998,7 @@ function renderCommentsTable() {
 function toBusinessApplicationStatusLabel(status) {
     const normalized = String(status || '').toUpperCase();
     if (normalized === 'APPROVED') return '<span class="admin-inquiry-meta-status is-completed">승인</span>';
-    if (normalized === 'REJECTED') return '<span class="admin-inquiry-meta-status">반려</span>';
+    if (normalized === 'REJECTED') return '<span class="admin-inquiry-meta-status is-rejected">반려</span>';
     return '<span class="admin-inquiry-meta-status">검토중</span>';
 }
 
@@ -1009,18 +1025,17 @@ function isSafeBusinessDocumentUrl(url) {
     return /^data:image\/(png|jpe?g|gif|webp);base64,/iu.test(normalized) || /^https?:\/\//iu.test(normalized);
 }
 
-function renderBusinessDocumentLink(documentInfo) {
+function renderBusinessDocumentLink(documentInfo, userId, documentType) {
     if (!documentInfo?.hasFile || !isSafeBusinessDocumentUrl(documentInfo.imageDataUrl)) {
         return `<span class="admin-business-doc is-missing">${sanitizeHTML(documentInfo?.label || '첨부 서류')} 미첨부</span>`;
     }
 
-    const safeUrl = sanitizeHTML(documentInfo.imageDataUrl);
     const safeLabel = sanitizeHTML(documentInfo.label);
     const safeFileName = sanitizeHTML(documentInfo.fileName || documentInfo.label);
     return `
-        <a class="admin-business-doc" href="${safeUrl}" target="_blank" rel="noopener" title="${safeFileName} 새 창에서 확인">
+        <button type="button" class="admin-business-doc" data-admin-action="preview-business-document" data-target-id="${Number(userId)}" data-document-type="${sanitizeHTML(documentType)}" title="${safeFileName} 페이지 내 팝업으로 확인">
             ${safeLabel} 확인
-        </a>
+        </button>
     `;
 }
 
@@ -1029,11 +1044,55 @@ function renderBusinessApplicationDocuments(application) {
     const permitDocument = getBusinessApplicationDocument(application, 'permitImageName', 'permitImageDataUrl', '영업허가증');
     return `
         <div class="admin-business-docs">
-            ${renderBusinessDocumentLink(licenseDocument)}
-            ${renderBusinessDocumentLink(permitDocument)}
+            ${renderBusinessDocumentLink(licenseDocument, application.userId, 'license')}
+            ${renderBusinessDocumentLink(permitDocument, application.userId, 'permit')}
         </div>
         <span class="text-muted text-xs">승인/반려 전 두 서류를 확인하세요.</span>
     `;
+}
+
+function findBusinessApplicationDocument(userId, documentType) {
+    const application = ADMIN_LIST_STATE['business-applications'].items.find((item) => Number(item.userId) === Number(userId));
+    if (!application) return null;
+
+    if (documentType === 'permit') {
+        return getBusinessApplicationDocument(application, 'permitImageName', 'permitImageDataUrl', '영업허가증');
+    }
+
+    return getBusinessApplicationDocument(application, 'licenseImageName', 'licenseImageDataUrl', '사업자등록증');
+}
+
+function openBusinessDocumentModal(actionElement) {
+    const userId = parseAdminTargetId(actionElement?.dataset?.targetId || '');
+    const documentType = String(actionElement?.dataset?.documentType || '').trim();
+    const documentInfo = findBusinessApplicationDocument(userId, documentType);
+
+    if (!Number.isInteger(userId) || !documentInfo?.hasFile || !isSafeBusinessDocumentUrl(documentInfo.imageDataUrl)) {
+        alert('첨부 서류를 불러올 수 없습니다. 목록을 새로고침 후 다시 시도해주세요.');
+        return;
+    }
+
+    const titleEl = document.getElementById('business-document-preview-title');
+    const fileNameEl = document.getElementById('business-document-preview-file-name');
+    const imageEl = document.getElementById('business-document-preview-image');
+
+    if (titleEl) titleEl.textContent = `${documentInfo.label} 확인`;
+    if (fileNameEl) fileNameEl.textContent = documentInfo.fileName || documentInfo.label;
+    if (imageEl) {
+        imageEl.src = documentInfo.imageDataUrl;
+        imageEl.alt = `${documentInfo.label} 첨부 이미지`;
+    }
+
+    showAdminModal('business-document-modal');
+}
+
+function closeBusinessDocumentModal() {
+    const imageEl = document.getElementById('business-document-preview-image');
+    if (imageEl) {
+        imageEl.removeAttribute('src');
+        imageEl.alt = '기업회원 신청 첨부 서류 미리보기';
+    }
+    hideAdminModal('business-document-modal');
 }
 
 function renderBusinessApplicationsTable() {
@@ -2241,6 +2300,11 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
+    if (action === 'preview-business-document') {
+        openBusinessDocumentModal(actionElement);
+        return;
+    }
+
     if (action === 'review-business-application') {
         await reviewBusinessApplication(actionElement);
         return;
@@ -2256,7 +2320,7 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
-    if (['delete', 'toggle-hide', 'edit-ad', 'edit-support', 'edit-user', 'answer-inquiry', 'review-business-application'].includes(action) && !entryId && !Number.isInteger(targetId)) {
+    if (['delete', 'toggle-hide', 'edit-ad', 'edit-support', 'edit-user', 'answer-inquiry', 'review-business-application', 'preview-business-document'].includes(action) && !entryId && !Number.isInteger(targetId)) {
         alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
     }
 }
