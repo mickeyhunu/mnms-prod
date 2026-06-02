@@ -48,19 +48,11 @@ function decorateBusinessApplication(row) {
 
 async function listBusinessApplications() {
   const pool = getPool();
-  const approvalStatuses = ['PENDING', 'REJECTED', 'APPROVED'];
-  const rows = [];
-
-  for (const approvalStatus of approvalStatuses) {
-    const [statusRows] = await pool.query(
-      `${BUSINESS_APPLICATION_SELECT}
+  const [rows] = await pool.query(
+    `${BUSINESS_APPLICATION_SELECT}
       WHERE bp.registration_status = 'REGISTERED'
-        AND bp.approval_status = ?
-      ORDER BY bp.updated_at DESC, bp.user_id DESC`,
-      [approvalStatus]
-    );
-    rows.push(...statusRows);
-  }
+      ORDER BY bp.updated_at DESC, bp.user_id DESC`
+  );
 
   const applications = rows.map(decorateBusinessApplication);
   for (const application of applications) {
