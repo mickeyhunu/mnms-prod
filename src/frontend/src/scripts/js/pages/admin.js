@@ -23,7 +23,7 @@ let isDeleteModalActionBound = false;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
-const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'admins', 'entries', 'banner-ads', 'business-ads', 'support', 'inquiries'];
+const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'business-applications', 'admins', 'entries', 'banner-ads', 'business-ads', 'support', 'inquiries'];
 
 const ADMIN_PAGE_SIZE = 20;
 const ADMIN_STATS_RANGE_DAYS = 14;
@@ -45,6 +45,7 @@ const ADMIN_LIST_STATE = {
     posts: { items: [], query: '', searchType: 'post', page: 1 },
     comments: { items: [], query: '', searchType: 'post', page: 1 },
     users: { items: [], query: '', page: 1 },
+    'business-applications': { items: [], query: '', page: 1 },
     admins: { items: [], query: '', page: 1 },
     entries: { items: [], query: '', page: 1 },
     ads: { items: [], query: '', page: 1 },
@@ -55,6 +56,7 @@ const ADMIN_SEARCH_PLACEHOLDERS = {
     posts: '게시글 검색',
     comments: '댓글 검색',
     users: '회원 검색',
+    'business-applications': '기업회원 신청 검색',
     admins: '관리자 검색',
     entries: '엔트리 검색',
     ads: '광고 검색',
@@ -129,6 +131,7 @@ async function activateAdminTab(tabKey, options = {}) {
     else if (resolvedTabKey === 'posts') await loadPosts();
     else if (resolvedTabKey === 'comments') await loadComments();
     else if (resolvedTabKey === 'users') await loadUsers();
+    else if (resolvedTabKey === 'business-applications') await loadBusinessApplications();
     else if (resolvedTabKey === 'admins') await loadAdmins();
     else if (resolvedTabKey === 'entries') await loadEntries();
     else if (resolvedTabKey === 'banner-ads') await loadAds();
@@ -196,6 +199,7 @@ function bindCommonEvents() {
     document.getElementById('posts-retry-btn')?.addEventListener('click', loadPosts);
     document.getElementById('comments-retry-btn')?.addEventListener('click', loadComments);
     document.getElementById('users-retry-btn')?.addEventListener('click', loadUsers);
+    document.getElementById('business-applications-retry-btn')?.addEventListener('click', loadBusinessApplications);
     document.getElementById('admins-retry-btn')?.addEventListener('click', loadAdmins);
     document.getElementById('entries-retry-btn')?.addEventListener('click', loadEntries);
     document.getElementById('entries-retry-btn-secondary')?.addEventListener('click', loadEntries);
@@ -358,6 +362,7 @@ function getAdminFilteredItems(prefix) {
         posts: ['id', 'title', 'authorNickname', 'user_id', 'userId'],
         comments: ['id', 'content', 'authorNickname', 'user_id', 'userId', 'postId', 'post_id'],
         users: ['id', 'loginId', 'nickname', 'role', 'memberType', 'member_type', 'phone'],
+        'business-applications': ['userId', 'loginId', 'nickname', 'companyName', 'businessRegistrationNumber', 'managerName', 'contactPhone', 'userPhone', 'approvalStatus', 'registrationStatus', (item) => item.businessInfo?.businessAddress, (item) => item.businessInfo?.businessType],
         admins: ['id', 'loginId', 'nickname', 'role'],
         entries: ['workerName', 'entryId'],
         ads: ['id', 'title', 'adType', 'storeNo', 'linkUrl', 'imageUrl', 'displayOrder'],
@@ -428,6 +433,7 @@ function renderAdminList(prefix) {
     if (prefix === 'posts') renderPostsTable();
     else if (prefix === 'comments') renderCommentsTable();
     else if (prefix === 'users') renderUsersTable();
+    else if (prefix === 'business-applications') renderBusinessApplicationsTable();
     else if (prefix === 'entries') renderEntriesTable();
     else if (prefix === 'ads') renderAdsTable();
     else if (prefix === 'support') renderSupportTable();
@@ -657,6 +663,18 @@ async function loadUsers() {
     }
 }
 
+async function loadBusinessApplications() {
+    toggleLoading('business-applications', true);
+    try {
+        const response = await APIClient.get('/admin/business-applications');
+        ADMIN_LIST_STATE['business-applications'].items = response.content || [];
+        renderBusinessApplicationsTable();
+        showContent('business-applications');
+    } catch (error) {
+        showError('business-applications', error.message || '기업회원 신청서를 불러오지 못했습니다.');
+    }
+}
+
 async function loadAdmins() {
     toggleLoading('admins', true);
     try {
@@ -881,6 +899,100 @@ function renderCommentsTable() {
     }
 
     renderAdminPagination('comments', totalPages, page);
+}
+
+
+function toBusinessApplicationStatusLabel(status) {
+    const normalized = String(status || '').toUpperCase();
+    if (normalized === 'APPROVED') return '<span class="admin-inquiry-meta-status is-completed">승인</span>';
+    if (normalized === 'REJECTED') return '<span class="admin-inquiry-meta-status">반려</span>';
+    return '<span class="admin-inquiry-meta-status">검토중</span>';
+}
+
+function getBusinessApplicationContact(application) {
+    return application.contactPhone || application.businessInfo?.businessContact || application.userPhone || '';
+}
+
+function renderBusinessApplicationsTable() {
+    const tbody = document.getElementById('business-applications-tbody');
+    if (!tbody) return;
+
+    const { filteredItems, pageItems, page, totalPages } = getAdminPagination('business-applications');
+    updateAdminTotal('business-applications', filteredItems.length);
+
+    if (!pageItems.length) {
+        tbody.innerHTML = `<tr><td colspan="7">${filteredItems.length ? '현재 페이지에 표시할 신청서가 없습니다.' : '기업회원 신청서가 없습니다.'}</td></tr>`;
+    } else {
+        tbody.innerHTML = pageItems.map((application) => {
+            const isPending = String(application.approvalStatus || '').toUpperCase() === 'PENDING';
+            const contact = getBusinessApplicationContact(application);
+            return `
+                <tr>
+                    <td>
+                        <strong>#${application.userId}</strong><br>
+                        ${sanitizeHTML(application.nickname || application.loginId || '')}<br>
+                        <span class="text-muted text-sm">${sanitizeHTML(application.loginId || '')}</span>
+                    </td>
+                    <td>
+                        <strong>${sanitizeHTML(application.companyName || application.businessInfo?.businessName || '-')}</strong><br>
+                        <span class="text-muted text-sm">${sanitizeHTML(application.businessRegistrationNumber || application.businessInfo?.businessNumber || '-')}</span><br>
+                        <span class="text-muted text-sm">${sanitizeHTML(application.businessInfo?.businessAddress || '')}</span>
+                    </td>
+                    <td>${sanitizeHTML(application.managerName || application.businessInfo?.businessOwner || '-')}<br><span class="text-muted text-sm">${sanitizeHTML(contact)}</span></td>
+                    <td>${toBusinessApplicationStatusLabel(application.approvalStatus)}${application.isBusinessMember ? '<br><span class="text-muted text-sm">기업회원 전환됨</span>' : ''}</td>
+                    <td>${formatDate(application.createdAt)}<br><span class="text-muted text-sm">수정 ${formatDate(application.updatedAt)}</span></td>
+                    <td>${sanitizeHTML(application.rejectionReason || '-')}</td>
+                    <td>
+                        <div class="admin-user-actions">
+                            <button type="button" class="btn btn-sm btn-primary" data-admin-action="review-business-application" data-review-status="APPROVED" data-target-id="${application.userId}" ${isPending ? '' : 'disabled'}>승인</button>
+                            <button type="button" class="btn btn-sm btn-danger" data-admin-action="review-business-application" data-review-status="REJECTED" data-target-id="${application.userId}" ${isPending ? '' : 'disabled'}>반려</button>
+                            <a class="btn btn-sm btn-secondary" href="/admin?tab=users&editUserId=${application.userId}" data-admin-action="edit-user" data-target-id="${application.userId}">회원 정보</a>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    renderAdminPagination('business-applications', totalPages, page);
+}
+
+async function reviewBusinessApplication(actionElement) {
+    const userId = parseAdminTargetId(actionElement?.dataset?.targetId || '');
+    const approvalStatus = String(actionElement?.dataset?.reviewStatus || '').toUpperCase();
+    if (!Number.isInteger(userId) || !['APPROVED', 'REJECTED'].includes(approvalStatus)) {
+        alert('검토 대상 정보를 확인할 수 없습니다.');
+        return;
+    }
+
+    let rejectionReason = '';
+    if (approvalStatus === 'REJECTED') {
+        rejectionReason = window.prompt('반려 사유를 입력해주세요. 사용자 마이페이지에 표시됩니다.', '')?.trim() || '';
+        if (!rejectionReason) {
+            alert('반려 사유를 입력해주세요.');
+            return;
+        }
+        if (rejectionReason.length > 500) {
+            alert('반려 사유는 500자 이하로 입력해주세요.');
+            return;
+        }
+    } else if (!window.confirm('이 신청을 승인하고 기업회원으로 전환하시겠습니까?')) {
+        return;
+    }
+
+    const originalText = actionElement.textContent;
+    try {
+        actionElement.disabled = true;
+        actionElement.textContent = approvalStatus === 'APPROVED' ? '승인 중...' : '반려 중...';
+        await APIClient.put(`/admin/business-applications/${userId}/review`, { approvalStatus, rejectionReason });
+        await loadBusinessApplications();
+        alert(approvalStatus === 'APPROVED' ? '기업회원 신청을 승인했습니다.' : '기업회원 신청을 반려했습니다.');
+    } catch (error) {
+        alert(error.message || '기업회원 신청 검토 처리에 실패했습니다.');
+    } finally {
+        actionElement.disabled = false;
+        actionElement.textContent = originalText;
+    }
 }
 
 function renderUsersTable() {
@@ -1997,6 +2109,11 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
+    if (action === 'review-business-application') {
+        await reviewBusinessApplication(actionElement);
+        return;
+    }
+
     if (action === 'answer-inquiry' && Number.isInteger(targetId)) {
         await openInquiryAnswerModal(targetId);
         return;
@@ -2007,7 +2124,7 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
-    if (['delete', 'toggle-hide', 'edit-ad', 'edit-support', 'edit-user', 'answer-inquiry'].includes(action) && !entryId && !Number.isInteger(targetId)) {
+    if (['delete', 'toggle-hide', 'edit-ad', 'edit-support', 'edit-user', 'answer-inquiry', 'review-business-application'].includes(action) && !entryId && !Number.isInteger(targetId)) {
         alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
     }
 }

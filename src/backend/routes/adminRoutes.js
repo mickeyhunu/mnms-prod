@@ -136,6 +136,42 @@ router.delete('/comments/:id', async (req, res, next) => {
   }
 });
 
+
+router.get('/business-applications', async (req, res, next) => {
+  try {
+    const rows = await adminModel.listBusinessApplications();
+    res.json({ content: rows, totalElements: rows.length });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/business-applications/:userId/review', async (req, res, next) => {
+  try {
+    const userId = Number.parseInt(req.params.userId, 10);
+    if (!Number.isInteger(userId) || userId <= 0) return res.status(400).json({ message: '유효하지 않은 회원 ID입니다.' });
+
+    const approvalStatus = String(req.body?.approvalStatus || '').toUpperCase();
+    const rejectionReason = String(req.body?.rejectionReason || '').trim();
+
+    if (!['APPROVED', 'REJECTED'].includes(approvalStatus)) {
+      return res.status(400).json({ message: '승인 또는 반려 상태를 선택해주세요.' });
+    }
+
+    if (approvalStatus === 'REJECTED' && (!rejectionReason || rejectionReason.length > 500)) {
+      return res.status(400).json({ message: '기업회원 신청 반려 사유는 1자 이상 500자 이하로 입력해주세요.' });
+    }
+
+    const profile = (await adminModel.listBusinessApplications()).find((item) => Number(item.userId) === userId);
+    if (!profile) return res.status(404).json({ message: '기업회원 신청서를 찾을 수 없습니다.' });
+
+    await adminModel.reviewBusinessApplication(userId, { approvalStatus, rejectionReason });
+    res.json({ success: true, message: approvalStatus === 'APPROVED' ? '기업회원 신청을 승인했습니다.' : '기업회원 신청을 반려했습니다.' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/users', async (req, res, next) => {
   try {
     const rows = await adminModel.listUsers();
@@ -281,12 +317,16 @@ router.put('/users/:id', async (req, res, next) => {
       return res.status(400).json({ message: '이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.' });
     }
 
+    const effectiveMemberType = businessApprovalStatus === 'APPROVED'
+      ? 'BUSINESS'
+      : (businessApprovalStatus === 'REJECTED' ? 'MEMBER' : memberType);
+
     const updates = {
       nickname,
       phone,
       sms_consent: smsConsent,
       role,
-      member_type: memberType,
+      member_type: effectiveMemberType,
       account_status: accountStatus,
       login_restricted_until: accountStatus === LOGIN_STATUS.SUSPENDED && !isLoginRestrictionPermanent
         ? new Date(Date.now() + loginRestrictionDays * 24 * 60 * 60 * 1000)
