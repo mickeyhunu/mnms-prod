@@ -114,13 +114,24 @@ async function verifyBusinessRegistrationNumberWithNts(businessNumber) {
   return resolveNtsBusinessStatus(result);
 }
 
-const REGISTRATION_STATUSES = new Set(['UNREGISTERED', 'DRAFT', 'REGISTERED']);
+const AD_REGISTRATION_STATUSES = new Set(['UNREGISTERED', 'DRAFT', 'REGISTERED']);
 const BUSINESS_IMAGE_PLACEHOLDER = '등록할 이미지를 선택해주세요.';
 const BUSINESS_IMAGE_OCR_VALID_STATUS = 'valid';
 
 function normalizeRegistrationStatus(value, fallback = 'UNREGISTERED') {
   const status = String(value || '').trim().toUpperCase();
-  return REGISTRATION_STATUSES.has(status) ? status : fallback;
+  return AD_REGISTRATION_STATUSES.has(status) ? status : fallback;
+}
+
+function normalizeBusinessProfileRegistrationStatus(value, fallback = 'UNREGISTERED') {
+  const status = String(value || '').trim().toUpperCase();
+  if (status === 'REGISTERED' || status === 'UNREGISTERED') return status;
+  return fallback;
+}
+
+function isBusinessProfileRegistrationStatusAllowed(value) {
+  const status = String(value || '').trim().toUpperCase();
+  return status === 'REGISTERED' || status === 'UNREGISTERED';
 }
 
 function hasSubmittedBusinessImage(businessInfo = {}, imageNameKey) {
@@ -721,7 +732,7 @@ async function getMyBusinessProfile(req, res, next) {
     }
 
     res.json({
-      registrationStatus: normalizeRegistrationStatus(profile.registrationStatus, 'UNREGISTERED'),
+      registrationStatus: normalizeBusinessProfileRegistrationStatus(profile.registrationStatus, 'UNREGISTERED'),
       approvalStatus: profile.approvalStatus || 'PENDING',
       businessInfo
     });
@@ -733,7 +744,13 @@ async function getMyBusinessProfile(req, res, next) {
 async function saveMyBusinessProfile(req, res, next) {
   try {
     const businessInfo = (req.body?.businessInfo && typeof req.body.businessInfo === 'object') ? req.body.businessInfo : {};
-    const registrationStatus = normalizeRegistrationStatus(req.body?.registrationStatus, 'UNREGISTERED');
+
+    if (Object.prototype.hasOwnProperty.call(req.body || {}, 'registrationStatus')
+      && !isBusinessProfileRegistrationStatusAllowed(req.body.registrationStatus)) {
+      return res.status(400).json({ message: '사업자정보 임시저장은 지원하지 않습니다.' });
+    }
+
+    const registrationStatus = normalizeBusinessProfileRegistrationStatus(req.body?.registrationStatus, 'UNREGISTERED');
 
     if (hasBlockedBusinessImageInspection(businessInfo)) {
       return res.status(400).json({ message: '이미지 검사 통과 후 사업자정보를 저장할 수 있습니다.' });
