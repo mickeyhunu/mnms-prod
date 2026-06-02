@@ -1047,7 +1047,6 @@ function renderBusinessApplicationDocuments(application) {
             ${renderBusinessDocumentLink(licenseDocument, application.userId, 'license')}
             ${renderBusinessDocumentLink(permitDocument, application.userId, 'permit')}
         </div>
-        <span class="text-muted text-xs">승인/반려 전 두 서류를 확인하세요.</span>
     `;
 }
 

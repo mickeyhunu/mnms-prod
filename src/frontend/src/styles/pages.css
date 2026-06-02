@@ -1263,13 +1263,13 @@ body[data-page="admin"] {
 
 .mypage-business-apply-status-wrap {
     display: inline-flex;
-    flex-direction: column;
     align-items: flex-end;
     gap: 6px;
     min-width: 0;
 }
 
 .mypage-rejection-reason {
+    display: contents;
     max-width: 220px;
     color: #dc3545;
     font-size: 12px;
