@@ -1002,6 +1002,27 @@ function toBusinessApplicationStatusLabel(status) {
     return '<span class="admin-inquiry-meta-status">검토중</span>';
 }
 
+function renderBusinessRejectionHistories(histories = []) {
+    if (!Array.isArray(histories) || histories.length === 0) {
+        return '<span class="text-muted text-sm">반려 이력 없음</span>';
+    }
+
+    return `
+        <ul class="admin-business-rejection-history">
+            ${histories.map((history) => {
+                const reviewer = history.reviewerNickname || history.reviewerLoginId || (history.reviewedBy ? `관리자 #${history.reviewedBy}` : '관리자');
+                return `
+                    <li>
+                        <strong>${formatDate(history.createdAt)}</strong>
+                        <span>${sanitizeHTML(history.rejectionReason || '-')}</span>
+                        <small>${sanitizeHTML(reviewer)}</small>
+                    </li>
+                `;
+            }).join('')}
+        </ul>
+    `;
+}
+
 function getBusinessApplicationContact(application) {
     return application.contactPhone || application.businessInfo?.businessContact || application.userPhone || '';
 }
@@ -1123,7 +1144,7 @@ function renderBusinessApplicationsTable() {
                     <td>${renderBusinessApplicationDocuments(application)}</td>
                     <td>${toBusinessApplicationStatusLabel(application.approvalStatus)}${application.isBusinessMember ? '<br><span class="text-muted text-sm">기업회원 전환됨</span>' : ''}</td>
                     <td>${formatDate(application.createdAt)}<br><span class="text-muted text-sm">수정 ${formatDate(application.updatedAt)}</span></td>
-                    <td>${sanitizeHTML(application.rejectionReason || '-')}</td>
+                    <td>${renderBusinessRejectionHistories(application.rejectionHistories)}</td>
                     <td>
                         <div class="admin-user-actions">
                             <button type="button" class="btn btn-sm btn-primary" data-admin-action="review-business-application" data-review-status="APPROVED" data-target-id="${application.userId}" ${isPending ? '' : 'disabled'}>승인</button>
@@ -1800,6 +1821,10 @@ function fillUserEditForm(user) {
     const businessProfile = user.businessProfile || null;
     document.getElementById('admin-user-business-approval-status').value = businessProfile?.approvalStatus || '';
     document.getElementById('admin-user-business-rejection-reason').value = businessProfile?.rejectionReason || '';
+    const rejectionHistoryEl = document.getElementById('admin-user-business-rejection-history');
+    if (rejectionHistoryEl) {
+        rejectionHistoryEl.innerHTML = renderBusinessRejectionHistories(businessProfile?.rejectionHistories || []);
+    }
     document.getElementById('admin-user-account-status').value = user.accountStatus || ACCOUNT_STATUS.ACTIVE;
     document.getElementById('admin-user-login-restriction-permanent').checked = Boolean(user.isLoginRestrictionPermanent);
     document.getElementById('admin-user-login-restriction-days').value = '';
