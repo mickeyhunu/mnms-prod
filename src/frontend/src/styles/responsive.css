@@ -104,14 +104,15 @@
         overflow-x: auto;
     }
 
-    .admin-workspace,
-    .admin-workspace.is-sidebar-collapsed {
-        grid-template-columns: 1fr;
-        gap: 14px;
+    .admin-workspace {
+        min-height: 0;
     }
 
-    .admin-sidebar {
-        position: static;
+    .admin-sidebar,
+    .admin-workspace.is-sidebar-collapsed .admin-sidebar {
+        position: relative;
+        width: 100%;
+        max-height: none;
         border-radius: 14px;
     }
 

@@ -165,26 +165,29 @@
 }
 
 .admin-workspace {
-    display: grid;
-    grid-template-columns: 260px minmax(0, 1fr);
-    gap: 24px;
-    align-items: flex-start;
-    transition: grid-template-columns 0.2s ease;
-}
-
-.admin-workspace.is-sidebar-collapsed {
-    grid-template-columns: 76px minmax(0, 1fr);
+    position: relative;
+    display: block;
+    min-height: 420px;
 }
 
 .admin-sidebar {
-    position: sticky;
-    top: 88px;
-    overflow: hidden;
+    position: absolute;
+    z-index: 20;
+    top: 0;
+    left: 0;
+    width: 260px;
+    max-height: calc(100vh - 110px);
+    overflow: hidden auto;
     border: 1px solid #e9ecef;
     border-radius: 18px;
     background: #fff;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.14);
     transition: width 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-workspace.is-sidebar-collapsed .admin-sidebar {
+    width: 58px;
+    overflow: hidden;
 }
 
 .admin-sidebar-header {
@@ -276,28 +279,13 @@
     transition: all 0.2s ease;
 }
 
-.admin-tab__abbr {
-    display: inline-flex;
-    flex: 0 0 28px;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 9px;
-    background: #f1f3f5;
-    color: #6c757d;
-    font-size: 13px;
-    font-weight: 800;
-    transition: all 0.2s ease;
-}
-
 .admin-tab__label {
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .admin-workspace.is-sidebar-collapsed .admin-sidebar-title,
-.admin-workspace.is-sidebar-collapsed .admin-tab__label {
+.admin-workspace.is-sidebar-collapsed .admin-tabs {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -312,12 +300,7 @@
 }
 
 .admin-workspace.is-sidebar-collapsed .admin-tabs {
-    padding: 10px 8px;
-}
-
-.admin-workspace.is-sidebar-collapsed .admin-tab {
-    justify-content: center;
-    padding: 10px 8px;
+    display: none;
 }
 
 .admin-workspace.is-sidebar-collapsed .admin-sidebar-toggle__icon {
@@ -341,11 +324,6 @@
     border-left-color: #007bff;
     background: #eef5ff;
     color: #007bff;
-}
-
-.admin-tab.active .admin-tab__abbr {
-    background: #007bff;
-    color: #fff;
 }
 
 .tab-pane {
