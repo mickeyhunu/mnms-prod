@@ -179,7 +179,7 @@ export const adminTemplate = `
                         <input type="search" id="admins-search-input" class="form-control admin-list-toolbar__search" placeholder="관리자 검색" aria-label="관리자 검색">
                     </div>
                     <div class="admin-table-container hidden" id="admins-content">
-                        <table class="admin-table"><thead><tr><th>ID</th><th>로그인 아이디</th><th>닉네임</th><th>권한</th><th>가입일</th></tr></thead><tbody id="admins-tbody"></tbody></table>
+                        <table class="admin-table"><thead><tr><th>ID</th><th>로그인 아이디</th><th>닉네임</th><th>권한</th><th>가입일</th><th>관리</th></tr></thead><tbody id="admins-tbody"></tbody></table>
                     </div>
                     <div class="admin-pagination hidden" id="admins-pagination"></div>
                 </div>
