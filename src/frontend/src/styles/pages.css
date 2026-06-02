@@ -525,7 +525,30 @@ body[data-page="admin"] {
 }
 
 .admin-business-document-modal-content {
+    position: relative;
     max-width: min(920px, 94vw);
+}
+
+.admin-business-document-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-subtle);
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.admin-business-document-modal-close:hover,
+.admin-business-document-modal-close:focus-visible {
+    background: #f1f5f9;
+    color: var(--text-color);
+    outline: none;
 }
 
 .admin-business-document-preview {

@@ -343,7 +343,7 @@ function bindBusinessDocumentModalActions() {
     isBusinessDocumentModalActionBound = true;
 
     document.addEventListener('click', (event) => {
-        const closeButton = event.target.closest('#business-document-close-btn');
+        const closeButton = event.target.closest('#business-document-close-btn, #business-document-x-close-btn');
         if (!closeButton) return;
 
         event.preventDefault();
