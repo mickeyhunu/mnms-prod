@@ -56,6 +56,7 @@ export const userEditPanelTemplate = `
                                 <label>권한
                                     <select id="admin-user-role" name="role" class="form-control">
                                         <option value="MEMBER">MEMBER</option>
+                                        <option value="BUSINESS">BUSINESS</option>
                                         <option value="ADMIN">ADMIN</option>
                                     </select>
                                 </label>
