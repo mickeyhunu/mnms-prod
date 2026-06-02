@@ -138,6 +138,21 @@ async function listPosts(page = 0, size = 10, options = {}) {
               COALESCE(u.nickname, '비회원') AS authorNickname,
               COALESCE(u.role, 'MEMBER') AS authorRole,
               COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
+              (
+                SELECT ba.plan_type
+                  FROM business_ads ba
+                 WHERE ba.owner_user_id = u.id
+                   AND ba.is_active = 1
+                 ORDER BY CASE WHEN ba.plan_type = 'PREMIUM' THEN 0 ELSE 1 END, ba.display_order ASC, ba.id DESC
+                 LIMIT 1
+              ) AS authorPlanType,
+              EXISTS (
+                SELECT 1
+                  FROM business_ads ba
+                 WHERE ba.owner_user_id = u.id
+                   AND ba.is_active = 1
+                 LIMIT 1
+              ) AS authorHasActiveBusinessAd,
               ${AUTHOR_LEVEL_SQL} AS authorLevel
        FROM posts p
        LEFT JOIN users u ON u.id = p.user_id
@@ -175,6 +190,8 @@ async function listPosts(page = 0, size = 10, options = {}) {
               '운영팀' AS authorNickname,
               'ADMIN' AS authorRole,
               'MEMBER' AS authorMemberType,
+              NULL AS authorPlanType,
+              0 AS authorHasActiveBusinessAd,
               NULL AS authorLevel,
               0 AS commentCount,
               0 AS likeCount,
@@ -287,6 +304,14 @@ async function findPostDetailById(id) {
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'MEMBER') AS authorRole,
             COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
+            (
+              SELECT ba.plan_type
+                FROM business_ads ba
+               WHERE ba.owner_user_id = u.id
+                 AND ba.is_active = 1
+               ORDER BY CASE WHEN ba.plan_type = 'PREMIUM' THEN 0 ELSE 1 END, ba.display_order ASC, ba.id DESC
+               LIMIT 1
+            ) AS authorPlanType,
             EXISTS (
               SELECT 1
                 FROM business_ads ba
@@ -394,6 +419,14 @@ async function listComments(postId) {
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'MEMBER') AS authorRole,
             COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
+            (
+              SELECT ba.plan_type
+                FROM business_ads ba
+               WHERE ba.owner_user_id = u.id
+                 AND ba.is_active = 1
+               ORDER BY CASE WHEN ba.plan_type = 'PREMIUM' THEN 0 ELSE 1 END, ba.display_order ASC, ba.id DESC
+               LIMIT 1
+            ) AS authorPlanType,
             EXISTS (
               SELECT 1
                 FROM business_ads ba
@@ -540,6 +573,21 @@ async function listBestPosts() {
             COALESCE(u.nickname, '비회원') AS authorNickname,
             COALESCE(u.role, 'MEMBER') AS authorRole,
             COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
+            (
+              SELECT ba.plan_type
+                FROM business_ads ba
+               WHERE ba.owner_user_id = u.id
+                 AND ba.is_active = 1
+               ORDER BY CASE WHEN ba.plan_type = 'PREMIUM' THEN 0 ELSE 1 END, ba.display_order ASC, ba.id DESC
+               LIMIT 1
+            ) AS authorPlanType,
+            EXISTS (
+              SELECT 1
+                FROM business_ads ba
+               WHERE ba.owner_user_id = u.id
+                 AND ba.is_active = 1
+               LIMIT 1
+            ) AS authorHasActiveBusinessAd,
             ${AUTHOR_LEVEL_SQL} AS authorLevel,
             COALESCE(stats.commentCount, 0) AS commentCount,
             COALESCE(stats.likeCount, 0) AS likeCount,

@@ -195,10 +195,55 @@ function resolveAuthorLevelBadgeImage(level) {
     return `/src/assets/lv-badges/lv${normalizedLevel}.png`;
 }
 
+function isBusinessAuthor(post = {}) {
+    const normalizedRole = String(post?.authorRole || post?.author_role || post?.role || '').toUpperCase();
+    const normalizedMemberType = String(
+        post?.authorMemberType
+        || post?.author_member_type
+        || post?.memberType
+        || post?.member_type
+        || post?.accountType
+        || ''
+    ).toUpperCase();
+
+    return normalizedRole === 'BUSINESS' || normalizedMemberType === 'BUSINESS' || Boolean(post?.authorIsBusiness);
+}
+
+function normalizeBusinessAdPlan(plan) {
+    const normalized = String(plan || '').trim().toLowerCase();
+    if (['basic', 'plus', 'premium', 'banner'].includes(normalized)) return normalized;
+    if (normalized === 'normal') return 'basic';
+    return '';
+}
+
+function resolveBusinessAuthorBadgeImage(post = {}) {
+    if (!isBusinessAuthor(post)) return '';
+
+    const adPlan = normalizeBusinessAdPlan(
+        post?.authorAdPlan
+        || post?.authorPlanType
+        || post?.planType
+        || post?.adPlan
+        || post?.plan
+        || post?.businessAdPlan
+        || post?.businessPlan
+    );
+    if (adPlan) return `/src/assets/ad-plan-badges/${adPlan}-badge.png`;
+
+    return Boolean(post?.authorHasActiveBusinessAd || post?.hasActiveBusinessAd)
+        ? '/src/assets/ad-plan-badges/premium-badge.png'
+        : '/src/assets/ad-plan-badges/none-badge.png';
+}
+
 function getAuthorGradeBadgeMarkup(post = {}) {
     const normalizedRole = String(post?.authorRole || post?.author_role || post?.role || '').toUpperCase();
     if (normalizedRole === 'ADMIN') {
         return ' <img class="user-level-badge" src="/src/assets/lv-badges/admin.png" alt="관리자 배지" loading="lazy">';
+    }
+
+    const businessBadgeImage = resolveBusinessAuthorBadgeImage(post);
+    if (businessBadgeImage) {
+        return ` <img class="user-business-badge" src="${businessBadgeImage}" alt="기업회원 광고 등급 배지" loading="lazy">`;
     }
 
     const badgeImage = resolveAuthorLevelBadgeImage(post?.authorLevel ?? post?.level ?? post?.authorRank ?? post?.rank ?? post?.authorGrade ?? post?.grade);

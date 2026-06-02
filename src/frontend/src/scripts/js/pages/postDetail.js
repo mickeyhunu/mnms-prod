@@ -422,6 +422,7 @@ function normalizeBusinessAdPlan(plan) {
     if (!normalized) return '';
     if (['basic', 'plus', 'premium'].includes(normalized)) return normalized;
     if (normalized === 'banner') return 'premium';
+    if (normalized === 'normal') return 'basic';
     return '';
 }
 
@@ -431,6 +432,8 @@ function resolveBusinessBadgeImage(author = {}) {
     }
 
     const rawPlan = author?.authorAdPlan
+        || author?.authorPlanType
+        || author?.planType
         || author?.adPlan
         || author?.plan
         || author?.businessAdPlan
