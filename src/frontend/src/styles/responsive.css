@@ -113,7 +113,6 @@
         position: relative;
         width: 100%;
         max-height: none;
-        border-radius: 14px;
     }
 
     .admin-tabs {
@@ -424,11 +423,10 @@
     .admin-workspace.is-sidebar-collapsed .admin-sidebar {
         position: fixed;
         top: calc(var(--app-header-offset) + var(--community-section-header-height));
-        bottom: var(--admin-sidebar-footer-offset, 74px);
+        bottom: var(--admin-sidebar-footer-offset, 70px);
         left: 0;
         width: min(280px, calc(100vw - 28px));
         max-height: none;
-        border-radius: 0 18px 18px 0;
     }
 
     .admin-workspace.is-sidebar-collapsed .admin-sidebar {
