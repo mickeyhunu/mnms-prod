@@ -3,7 +3,7 @@
  */
 const { getPool, getChatbotPool } = require('../config/database');
 const { pickUserRow } = require('../utils/response');
-const { ensureResolvedLoginRestriction, getUserActivityStats, getUserActivityDetails, getUserLoginHistories, getBusinessProfileByUserId, updateBusinessProfileReviewByUserId } = require('./userModel');
+const { ensureResolvedLoginRestriction, getUserActivityStats, getUserActivityDetails, getUserLoginHistories, getBusinessProfileByUserId, updateBusinessProfileReviewByUserId: updateBusinessProfileReviewRecordByUserId } = require('./userModel');
 const { getStoreByNo, listStores } = require('./liveModel');
 
 
@@ -62,7 +62,12 @@ async function listBusinessApplications() {
     rows.push(...statusRows);
   }
 
-  return rows.map(decorateBusinessApplication);
+  const applications = rows.map(decorateBusinessApplication);
+  for (const application of applications) {
+    application.rejectionHistories = await listBusinessProfileRejectionHistories(application.userId);
+  }
+
+  return applications;
 }
 
 async function findBusinessApplicationByUserId(userId) {
@@ -75,14 +80,72 @@ async function findBusinessApplicationByUserId(userId) {
     [userId]
   );
 
-  return rows[0] ? decorateBusinessApplication(rows[0]) : null;
+  if (!rows[0]) return null;
+  const application = decorateBusinessApplication(rows[0]);
+  application.rejectionHistories = await listBusinessProfileRejectionHistories(userId);
+  return application;
 }
 
-async function reviewBusinessApplication(userId, { approvalStatus = 'PENDING', rejectionReason = '' } = {}) {
+async function listBusinessProfileRejectionHistories(userId, { limit = 10 } = {}) {
+  const safeLimit = Math.max(1, Math.min(50, Number(limit) || 10));
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT bprh.id,
+            bprh.user_id AS userId,
+            bprh.rejection_reason AS rejectionReason,
+            bprh.reviewed_by AS reviewedBy,
+            bprh.created_at AS createdAt,
+            reviewer.login_id AS reviewerLoginId,
+            reviewer.nickname AS reviewerNickname
+       FROM business_profile_rejection_histories bprh
+       LEFT JOIN users reviewer ON reviewer.id = bprh.reviewed_by
+      WHERE bprh.user_id = ?
+      ORDER BY bprh.created_at DESC, bprh.id DESC
+      LIMIT ?`,
+    [userId, safeLimit]
+  );
+
+  return rows.map((row) => ({
+    id: Number(row.id),
+    userId: Number(row.userId),
+    rejectionReason: row.rejectionReason || '',
+    reviewedBy: row.reviewedBy ? Number(row.reviewedBy) : null,
+    reviewerLoginId: row.reviewerLoginId || '',
+    reviewerNickname: row.reviewerNickname || '',
+    createdAt: row.createdAt
+  }));
+}
+
+async function recordBusinessProfileRejectionHistory(userId, { rejectionReason = '', reviewedBy = null } = {}) {
+  const normalizedRejectionReason = String(rejectionReason || '').trim().slice(0, 500);
+  if (!normalizedRejectionReason) return;
+
+  const pool = getPool();
+  await pool.query(
+    `INSERT INTO business_profile_rejection_histories (user_id, rejection_reason, reviewed_by)
+     VALUES (?, ?, ?)`,
+    [userId, normalizedRejectionReason, reviewedBy || null]
+  );
+}
+
+async function updateBusinessProfileReviewByUserId(userId, { approvalStatus = 'PENDING', rejectionReason = '', reviewedBy = null } = {}) {
+  const normalizedApprovalStatus = String(approvalStatus || 'PENDING').trim().toUpperCase();
+  await updateBusinessProfileReviewRecordByUserId(userId, {
+    approvalStatus: normalizedApprovalStatus,
+    rejectionReason
+  });
+
+  if (normalizedApprovalStatus === 'REJECTED') {
+    await recordBusinessProfileRejectionHistory(userId, { rejectionReason, reviewedBy });
+  }
+}
+
+async function reviewBusinessApplication(userId, { approvalStatus = 'PENDING', rejectionReason = '', reviewedBy = null } = {}) {
   const normalizedApprovalStatus = String(approvalStatus || 'PENDING').trim().toUpperCase();
   await updateBusinessProfileReviewByUserId(userId, {
     approvalStatus: normalizedApprovalStatus,
-    rejectionReason
+    rejectionReason,
+    reviewedBy
   });
 
   if (normalizedApprovalStatus === 'APPROVED') {
@@ -143,7 +206,8 @@ async function getUserDetail(userId) {
     businessProfile: businessProfile ? {
       registrationStatus: businessProfile.registrationStatus || 'UNREGISTERED',
       approvalStatus: businessProfile.approvalStatus || 'PENDING',
-      rejectionReason: businessProfile.rejectionReason || ''
+      rejectionReason: businessProfile.rejectionReason || '',
+      rejectionHistories: await listBusinessProfileRejectionHistories(userId)
     } : null
   };
 }
@@ -1000,6 +1064,7 @@ module.exports = {
   updateUserRole,
   updateUserMemberType,
   updateBusinessProfileReviewByUserId,
+  listBusinessProfileRejectionHistories,
   updateUserByAdmin,
   adjustUserPointsByAdmin,
   deleteUser,
