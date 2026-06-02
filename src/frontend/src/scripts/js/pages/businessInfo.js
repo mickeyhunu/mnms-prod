@@ -394,45 +394,34 @@ function formatBusinessRegistrationNumber(value) {
     return [first, second, third].filter(Boolean).join('-');
 }
 
-function getBusinessVerifyStatusElement() {
-    const row = document.querySelector('.business-verify-row');
-    if (!row) return null;
-
-    let statusElement = document.getElementById('business-verify-status');
-    if (!statusElement) {
-        statusElement = document.createElement('p');
-        statusElement.id = 'business-verify-status';
-        statusElement.className = 'business-verify-status';
-        statusElement.setAttribute('aria-live', 'polite');
-        row.insertAdjacentElement('afterend', statusElement);
-    }
-
-    return statusElement;
-}
-
 function updateBusinessVerificationStatus(message = '', state = 'idle') {
     const businessNumberInput = document.getElementById('business-number');
-    const statusElement = getBusinessVerifyStatusElement();
+    if (!businessNumberInput) return;
 
-    if (businessNumberInput) {
-        delete businessNumberInput.dataset.verifiedBusinessNumber;
-        delete businessNumberInput.dataset.businessVerificationStatus;
-        if (state === 'valid') {
-            businessNumberInput.dataset.verifiedBusinessNumber = getBusinessNumberDigits(businessNumberInput.value);
-            businessNumberInput.dataset.businessVerificationStatus = 'valid';
-        } else if (state === 'invalid') {
-            businessNumberInput.dataset.businessVerificationStatus = 'invalid';
-        }
+    businessNumberInput.classList.remove('is-verification-checking', 'is-verification-valid', 'is-verification-invalid');
+    businessNumberInput.removeAttribute('aria-invalid');
+    delete businessNumberInput.dataset.verifiedBusinessNumber;
+    delete businessNumberInput.dataset.businessVerificationStatus;
+
+    if (state === 'valid') {
+        businessNumberInput.classList.add('is-verification-valid');
+        businessNumberInput.dataset.verifiedBusinessNumber = getBusinessNumberDigits(businessNumberInput.value);
+        businessNumberInput.dataset.businessVerificationStatus = 'valid';
+    } else if (state === 'invalid') {
+        businessNumberInput.classList.add('is-verification-invalid');
+        businessNumberInput.dataset.businessVerificationStatus = 'invalid';
+        businessNumberInput.setAttribute('aria-invalid', 'true');
+    } else if (state === 'checking') {
+        businessNumberInput.classList.add('is-verification-checking');
     }
 
-    if (!statusElement) return;
-
-    statusElement.textContent = message;
-    statusElement.classList.remove('is-valid', 'is-invalid', 'is-checking');
-    statusElement.classList.toggle('hidden', !message);
-    if (state === 'valid') statusElement.classList.add('is-valid');
-    if (state === 'invalid') statusElement.classList.add('is-invalid');
-    if (state === 'checking') statusElement.classList.add('is-checking');
+    if (message) {
+        businessNumberInput.title = message;
+        businessNumberInput.setAttribute('aria-label', message);
+    } else {
+        businessNumberInput.removeAttribute('title');
+        businessNumberInput.removeAttribute('aria-label');
+    }
 }
 
 function syncBusinessNumberVerificationControls({ resetStatus = false } = {}) {
