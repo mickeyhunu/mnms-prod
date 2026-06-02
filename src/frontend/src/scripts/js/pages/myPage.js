@@ -150,6 +150,13 @@ function normalizeRegistrationStatus(status) {
     return 'unregistered';
 }
 
+function normalizeBusinessApprovalStatus(status) {
+    const value = String(status || '').trim().toLowerCase();
+    if (value === 'approved') return 'approved';
+    if (value === 'rejected') return 'rejected';
+    return 'pending';
+}
+
 function hasCompleteAdProfile(profile) {
     if (!profile || typeof profile !== 'object') return false;
     const requiredValues = [
@@ -171,10 +178,11 @@ function applyStatusBadge(elementId, status) {
     const badge = document.getElementById(elementId);
     if (!badge) return;
 
-    badge.classList.remove('mypage-status-badge--registered', 'mypage-status-badge--draft', 'mypage-status-badge--unregistered');
+    badge.classList.remove('mypage-status-badge--registered', 'mypage-status-badge--pending', 'mypage-status-badge--draft', 'mypage-status-badge--unregistered');
 
     const statusMap = {
         registered: { label: '등록', className: 'mypage-status-badge--registered' },
+        pending: { label: '검토중', className: 'mypage-status-badge--pending' },
         draft: { label: '임시저장', className: 'mypage-status-badge--draft' },
         unregistered: { label: '미등록', className: 'mypage-status-badge--unregistered' }
     };
@@ -184,9 +192,23 @@ function applyStatusBadge(elementId, status) {
     badge.classList.add(target.className);
 }
 
+
+function renderBusinessApplyStatusBadge({ registrationStatus, approvalStatus } = {}) {
+    const badge = document.getElementById('mypage-business-apply-status');
+    if (!badge) return;
+
+    const isReviewing = !isAdAccount(currentUser)
+        && registrationStatus === 'registered'
+        && normalizeBusinessApprovalStatus(approvalStatus) === 'pending';
+
+    badge.classList.toggle('hidden', !isReviewing);
+    if (isReviewing) applyStatusBadge('mypage-business-apply-status', 'pending');
+}
+
 async function renderBusinessProfileStatuses() {
     let adStatus = 'unregistered';
     let businessStatus = 'unregistered';
+    let businessApprovalStatus = 'pending';
 
     try {
         const response = await APIClient.get('/users/me/business-ads');
@@ -200,12 +222,17 @@ async function renderBusinessProfileStatuses() {
     try {
         const profile = await APIClient.get('/users/me/business-profile');
         businessStatus = normalizeRegistrationStatus(profile?.registrationStatus);
+        businessApprovalStatus = normalizeBusinessApprovalStatus(profile?.approvalStatus);
     } catch (error) {
         businessStatus = 'unregistered';
     }
 
     applyStatusBadge('mypage-ad-profile-status', adStatus);
     applyStatusBadge('mypage-business-info-status', businessStatus);
+    renderBusinessApplyStatusBadge({
+        registrationStatus: businessStatus,
+        approvalStatus: businessApprovalStatus
+    });
 }
 
 function renderProfileForm(user) {
