@@ -133,12 +133,16 @@ function updateUsersListLabels() {
     const placeholder = isBusinessUsersTab ? '기업 회원 검색' : '일반 회원 검색';
     const loadingText = document.querySelector('#users-loading p');
     const searchInput = document.getElementById('users-search-input');
+    const idHeader = document.getElementById('users-id-header');
+    const loginIdHeader = document.getElementById('users-login-id-header');
 
     if (loadingText) loadingText.textContent = isBusinessUsersTab ? '기업 회원 정보를 불러오는 중...' : '일반 회원 정보를 불러오는 중...';
     if (searchInput) {
         searchInput.placeholder = placeholder;
         searchInput.setAttribute('aria-label', placeholder);
     }
+    if (idHeader) idHeader.textContent = isBusinessUsersTab ? '회원번호' : 'ID';
+    if (loginIdHeader) loginIdHeader.textContent = isBusinessUsersTab ? '기업회원 아이디' : '아이디';
 }
 
 function getAdminPageState() {
@@ -445,7 +449,7 @@ function getAdminFilteredItems(prefix) {
     const matchers = {
         posts: ['id', 'title', 'authorNickname', 'user_id', 'userId'],
         comments: ['id', 'content', 'authorNickname', 'user_id', 'userId', 'postId', 'post_id'],
-        users: ['id', 'loginId', 'nickname', 'role', 'memberType', 'member_type', 'phone'],
+        users: ['id', 'loginId', 'login_id', 'userLoginId', 'nickname', 'role', 'memberType', 'member_type', 'phone'],
         'business-applications': ['userId', 'loginId', 'nickname', 'companyName', 'businessRegistrationNumber', 'managerName', 'contactPhone', 'userPhone', 'approvalStatus', 'registrationStatus', (item) => item.businessInfo?.businessAddress, (item) => item.businessInfo?.businessType],
         admins: ['id', 'loginId', 'nickname', 'role'],
         entries: ['workerName', 'entryId'],
@@ -1216,20 +1220,30 @@ async function reviewBusinessApplication(actionElement) {
     }
 }
 
+function getAdminUserLoginId(user = {}) {
+    return String(user.loginId || user.login_id || user.userLoginId || '').trim();
+}
+
 function renderUsersTable() {
     const tbody = document.getElementById('users-tbody');
     if (!tbody) return;
 
+    updateUsersListLabels();
+    const activeUserTab = getActiveUserManagementTab();
+    const isBusinessUsersTab = activeUserTab === 'business-users';
     const { filteredItems, pageItems, page, totalPages } = getAdminPagination('users');
     updateAdminTotal('users', filteredItems.length);
 
     if (!pageItems.length) {
         tbody.innerHTML = `<tr><td colspan="11">${filteredItems.length ? '현재 페이지에 표시할 회원이 없습니다.' : '회원이 없습니다.'}</td></tr>`;
     } else {
-        tbody.innerHTML = pageItems.map((user) => `
+        tbody.innerHTML = pageItems.map((user) => {
+            const loginId = getAdminUserLoginId(user);
+            const memberTypeLabel = user.memberType === 'BUSINESS' ? '기업 회원' : '일반 회원';
+            return `
             <tr>
-                <td>${user.id}</td>
-                <td>${sanitizeHTML(user.loginId || '')}</td>
+                <td>${isBusinessUsersTab ? `#${user.id}` : user.id}</td>
+                <td>${sanitizeHTML(loginId || '-')}</td>
                 <td>${sanitizeHTML(user.name || '')}</td>
                 <td>${sanitizeHTML(user.nickname || '')}</td>
                 <td>${sanitizeHTML(user.phone || '')}</td>
@@ -1237,15 +1251,16 @@ function renderUsersTable() {
                 <td>${Number(user.totalPoints || 0).toLocaleString()} P</td>
                 <td>${formatDate(user.createdAt || user.created_at)}</td>
                 <td>${sanitizeHTML(user.role || 'MEMBER')}</td>
-                <td>${user.memberType === 'BUSINESS' ? '기업 회원' : '일반 회원'}</td>
+                <td>${memberTypeLabel}</td>
                 <td>
                     <div class="admin-user-actions">
-                        <a class="btn btn-sm btn-secondary" href="/admin?tab=${getActiveUserManagementTab()}&editUserId=${user.id}" data-admin-action="edit-user" data-target-id="${user.id}">정보 수정</a>
+                        <a class="btn btn-sm btn-secondary" href="/admin?tab=${activeUserTab}&editUserId=${user.id}" data-admin-action="edit-user" data-target-id="${user.id}">정보 수정</a>
                         <button type="button" class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="user" data-target-id="${user.id}">삭제</button>
                     </div>
                 </td>
             </tr>
-        `).join('');
+        `;
+        }).join('');
     }
 
     renderAdminPagination('users', totalPages, page);
