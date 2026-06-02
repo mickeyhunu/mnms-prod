@@ -18,10 +18,7 @@ function normalizeBusinessInfoValue(value) {
   }
 }
 
-async function listBusinessApplications() {
-  const pool = getPool();
-  const [rows] = await pool.query(
-    `SELECT bp.user_id AS userId,
+const BUSINESS_APPLICATION_SELECT = `SELECT bp.user_id AS userId,
             bp.company_name AS companyName,
             bp.business_registration_number AS businessRegistrationNumber,
             bp.manager_name AS managerName,
@@ -38,17 +35,47 @@ async function listBusinessApplications() {
             u.member_type AS memberType,
             u.role AS role
        FROM business_profiles bp
-       JOIN users u ON u.id = bp.user_id
-      WHERE bp.registration_status = 'REGISTERED'
-      ORDER BY FIELD(bp.approval_status, 'PENDING', 'REJECTED', 'APPROVED'), bp.updated_at DESC, bp.user_id DESC`
-  );
+       JOIN users u ON u.id = bp.user_id`;
 
-  return rows.map((row) => ({
+function decorateBusinessApplication(row) {
+  return {
     ...row,
     businessInfo: normalizeBusinessInfoValue(row.businessInfo),
     isBusinessMember: String(row.memberType || '').toUpperCase() === 'BUSINESS'
       || String(row.role || '').toUpperCase() === 'BUSINESS'
-  }));
+  };
+}
+
+async function listBusinessApplications() {
+  const pool = getPool();
+  const approvalStatuses = ['PENDING', 'REJECTED', 'APPROVED'];
+  const rows = [];
+
+  for (const approvalStatus of approvalStatuses) {
+    const [statusRows] = await pool.query(
+      `${BUSINESS_APPLICATION_SELECT}
+      WHERE bp.registration_status = 'REGISTERED'
+        AND bp.approval_status = ?
+      ORDER BY bp.updated_at DESC, bp.user_id DESC`,
+      [approvalStatus]
+    );
+    rows.push(...statusRows);
+  }
+
+  return rows.map(decorateBusinessApplication);
+}
+
+async function findBusinessApplicationByUserId(userId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `${BUSINESS_APPLICATION_SELECT}
+      WHERE bp.user_id = ?
+        AND bp.registration_status = 'REGISTERED'
+      LIMIT 1`,
+    [userId]
+  );
+
+  return rows[0] ? decorateBusinessApplication(rows[0]) : null;
 }
 
 async function reviewBusinessApplication(userId, { approvalStatus = 'PENDING', rejectionReason = '' } = {}) {
@@ -959,6 +986,7 @@ module.exports = {
   decodeEntryId,
   deleteEntry,
   listBusinessApplications,
+  findBusinessApplicationByUserId,
   reviewBusinessApplication,
   listUsers,
   listAdmins,
