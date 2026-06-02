@@ -1003,6 +1003,32 @@
     background: #f8f9fa;
 }
 
+.mypage-link-item--disabled,
+.mypage-link-item--disabled:hover {
+    color: #9ca3af;
+    background: #f8f9fa;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.mypage-business-apply-status-wrap {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    min-width: 0;
+}
+
+.mypage-rejection-reason {
+    max-width: 220px;
+    color: #dc3545;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: right;
+    word-break: keep-all;
+}
+
 .mypage-link-chevron {
     color: #b3b7bf;
     font-size: 20px;
@@ -1029,6 +1055,11 @@
 .mypage-status-badge--pending {
     color: #fff;
     background: #fd7e14;
+}
+
+.mypage-status-badge--rejected {
+    color: #fff;
+    background: #dc3545;
 }
 
 .mypage-status-badge--draft {

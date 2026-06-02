@@ -178,11 +178,12 @@ function applyStatusBadge(elementId, status) {
     const badge = document.getElementById(elementId);
     if (!badge) return;
 
-    badge.classList.remove('mypage-status-badge--registered', 'mypage-status-badge--pending', 'mypage-status-badge--draft', 'mypage-status-badge--unregistered');
+    badge.classList.remove('mypage-status-badge--registered', 'mypage-status-badge--pending', 'mypage-status-badge--draft', 'mypage-status-badge--unregistered', 'mypage-status-badge--rejected');
 
     const statusMap = {
         registered: { label: '등록', className: 'mypage-status-badge--registered' },
         pending: { label: '검토중', className: 'mypage-status-badge--pending' },
+        rejected: { label: '반려', className: 'mypage-status-badge--rejected' },
         draft: { label: '임시저장', className: 'mypage-status-badge--draft' },
         unregistered: { label: '미등록', className: 'mypage-status-badge--unregistered' }
     };
@@ -193,22 +194,50 @@ function applyStatusBadge(elementId, status) {
 }
 
 
-function renderBusinessApplyStatusBadge({ registrationStatus, approvalStatus } = {}) {
+function setBusinessApplyLinkDisabled(disabled) {
+    const link = document.getElementById('business-member-apply-link');
+    if (!link) return;
+
+    link.classList.toggle('mypage-link-item--disabled', disabled);
+    link.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+    if (disabled) {
+        if (!link.dataset.originalHref) link.dataset.originalHref = link.getAttribute('href') || '/business-apply';
+        link.removeAttribute('href');
+        link.setAttribute('tabindex', '-1');
+    } else {
+        link.setAttribute('href', link.dataset.originalHref || '/business-apply');
+        link.removeAttribute('tabindex');
+    }
+}
+
+function renderBusinessApplyStatusBadge({ registrationStatus, approvalStatus, rejectionReason } = {}) {
     const badge = document.getElementById('mypage-business-apply-status');
+    const reason = document.getElementById('mypage-business-apply-rejection-reason');
     if (!badge) return;
 
-    const isReviewing = !isAdAccount(currentUser)
-        && registrationStatus === 'registered'
-        && normalizeBusinessApprovalStatus(approvalStatus) === 'pending';
+    const normalizedApprovalStatus = normalizeBusinessApprovalStatus(approvalStatus);
+    const hasSubmittedApplication = !isAdAccount(currentUser) && registrationStatus === 'registered';
+    const isReviewing = hasSubmittedApplication && normalizedApprovalStatus === 'pending';
+    const isRejected = hasSubmittedApplication && normalizedApprovalStatus === 'rejected';
 
-    badge.classList.toggle('hidden', !isReviewing);
+    badge.classList.toggle('hidden', !isReviewing && !isRejected);
     if (isReviewing) applyStatusBadge('mypage-business-apply-status', 'pending');
+    if (isRejected) applyStatusBadge('mypage-business-apply-status', 'rejected');
+
+    if (reason) {
+        const message = String(rejectionReason || '').trim() || '반려 사유가 등록되지 않았습니다. 고객센터로 문의해주세요.';
+        reason.textContent = isRejected ? `반려 사유: ${message}` : '';
+        reason.classList.toggle('hidden', !isRejected);
+    }
+
+    setBusinessApplyLinkDisabled(isReviewing);
 }
 
 async function renderBusinessProfileStatuses() {
     let adStatus = 'unregistered';
     let businessStatus = 'unregistered';
     let businessApprovalStatus = 'pending';
+    let businessRejectionReason = '';
 
     try {
         const response = await APIClient.get('/users/me/business-ads');
@@ -223,6 +252,7 @@ async function renderBusinessProfileStatuses() {
         const profile = await APIClient.get('/users/me/business-profile');
         businessStatus = normalizeRegistrationStatus(profile?.registrationStatus);
         businessApprovalStatus = normalizeBusinessApprovalStatus(profile?.approvalStatus);
+        businessRejectionReason = profile?.rejectionReason || '';
     } catch (error) {
         businessStatus = 'unregistered';
     }
@@ -231,7 +261,8 @@ async function renderBusinessProfileStatuses() {
     applyStatusBadge('mypage-business-info-status', businessStatus);
     renderBusinessApplyStatusBadge({
         registrationStatus: businessStatus,
-        approvalStatus: businessApprovalStatus
+        approvalStatus: businessApprovalStatus,
+        rejectionReason: businessRejectionReason
     });
 }
 
