@@ -737,6 +737,8 @@ async function saveMyBusinessProfile(req, res, next) {
       return res.status(400).json({ message: '이미지 검사 통과 후 사업자정보를 저장할 수 있습니다.' });
     }
 
+    let businessRegistrationVerification = null;
+
     if (registrationStatus === 'REGISTERED') {
       const requiredValues = {
         licenseImageName: String(businessInfo.licenseImageName || '').trim(),
@@ -754,6 +756,11 @@ async function saveMyBusinessProfile(req, res, next) {
         || !hasValidBusinessImageInspection(businessInfo, 'permitImageName', 'permitImageOcrStatus')) {
         return res.status(400).json({ message: '사업자등록증과 영업허가증 이미지 검사 통과 후 기업회원 신청/사업자정보 저장이 가능합니다.' });
       }
+
+      businessRegistrationVerification = await verifyBusinessRegistrationNumberWithNts(requiredValues.businessNumber);
+      if (!businessRegistrationVerification.valid) {
+        return res.status(400).json({ message: businessRegistrationVerification.message || '국세청에 등록된 계속사업자 번호가 아닙니다.' });
+      }
     }
 
     const normalizedBusinessInfo = {
@@ -761,6 +768,12 @@ async function saveMyBusinessProfile(req, res, next) {
       businessNumber: formatBusinessRegistrationNumber(businessInfo.businessNumber)
     };
     delete normalizedBusinessInfo.billingType;
+
+    if (businessRegistrationVerification?.valid) {
+      normalizedBusinessInfo.businessNumberVerificationStatus = 'valid';
+      normalizedBusinessInfo.businessRegistrationStatusName = businessRegistrationVerification.statusName || '';
+      normalizedBusinessInfo.businessRegistrationStatusCode = businessRegistrationVerification.statusCode || '';
+    }
 
     await upsertBusinessProfileByUserId(req.user.id, {
       companyName: String(businessInfo.businessName || '').trim() || null,
