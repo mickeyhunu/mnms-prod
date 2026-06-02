@@ -186,7 +186,7 @@ router.put('/business-applications/:userId/review', async (req, res, next) => {
       return res.status(400).json({ message: '사업자등록증과 영업허가증 첨부 서류가 모두 있어야 승인할 수 있습니다.' });
     }
 
-    await adminModel.reviewBusinessApplication(userId, { approvalStatus, rejectionReason });
+    await adminModel.reviewBusinessApplication(userId, { approvalStatus, rejectionReason, reviewedBy: req.user?.id || null });
     res.json({ success: true, message: approvalStatus === 'APPROVED' ? '기업회원 신청을 승인했습니다.' : '기업회원 신청을 반려했습니다.' });
   } catch (error) {
     next(error);
@@ -363,7 +363,8 @@ router.put('/users/:id', async (req, res, next) => {
     if (businessApprovalStatus) {
       await adminModel.updateBusinessProfileReviewByUserId(id, {
         approvalStatus: businessApprovalStatus,
-        rejectionReason: businessRejectionReason
+        rejectionReason: businessRejectionReason,
+        reviewedBy: req.user?.id || null
       });
     }
     if (pointAdjustmentType !== 'NONE' && pointAdjustmentAmount > 0) {

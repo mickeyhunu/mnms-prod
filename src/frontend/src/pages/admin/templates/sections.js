@@ -76,6 +76,10 @@ export const userEditPanelTemplate = `
                                 <label class="admin-user-business-rejection-reason-field">반려 사유
                                     <textarea id="admin-user-business-rejection-reason" name="businessRejectionReason" maxlength="500" rows="3" placeholder="반려 시 사용자에게 표시할 사유를 입력하세요."></textarea>
                                 </label>
+                                <div class="admin-user-business-rejection-history-field">
+                                    <strong>반려 사유 히스토리</strong>
+                                    <div id="admin-user-business-rejection-history" class="admin-user-business-rejection-history"></div>
+                                </div>
                                 <label>계정 상태
                                     <select id="admin-user-account-status" name="accountStatus" class="form-control">
                                         <option value="ACTIVE">정상</option>
