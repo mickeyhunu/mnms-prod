@@ -1007,19 +1007,29 @@ function renderBusinessRejectionHistories(histories = []) {
         return '<span class="text-muted text-sm">반려 이력 없음</span>';
     }
 
+    const latestHistory = histories[0] || {};
+    const latestDate = formatDate(latestHistory.createdAt);
+    const historyCountText = `반려 이력 ${histories.length}건`;
+
     return `
-        <ul class="admin-business-rejection-history">
-            ${histories.map((history) => {
-                const reviewer = history.reviewerNickname || history.reviewerLoginId || (history.reviewedBy ? `관리자 #${history.reviewedBy}` : '관리자');
-                return `
-                    <li>
-                        <strong>${formatDate(history.createdAt)}</strong>
-                        <span>${sanitizeHTML(history.rejectionReason || '-')}</span>
-                        <small>${sanitizeHTML(reviewer)}</small>
-                    </li>
-                `;
-            }).join('')}
-        </ul>
+        <details class="admin-business-rejection-history-panel">
+            <summary class="admin-business-rejection-history-summary">
+                <span>${historyCountText}</span>
+                <small>최근 ${latestDate}</small>
+            </summary>
+            <ul class="admin-business-rejection-history">
+                ${histories.map((history) => {
+                    const reviewer = history.reviewerNickname || history.reviewerLoginId || (history.reviewedBy ? `관리자 #${history.reviewedBy}` : '관리자');
+                    return `
+                        <li>
+                            <strong>${formatDate(history.createdAt)}</strong>
+                            <span>${sanitizeHTML(history.rejectionReason || '-')}</span>
+                            <small>${sanitizeHTML(reviewer)}</small>
+                        </li>
+                    `;
+                }).join('')}
+            </ul>
+        </details>
     `;
 }
 
