@@ -22,6 +22,18 @@ function isBusinessAuthor(item) {
   return role === 'BUSINESS' || memberType === 'BUSINESS';
 }
 
+function hasSubmittedBusinessDocument(profile = {}, imageNameKey, imageDataUrlKey) {
+  const businessInfo = profile.businessInfo || {};
+  const imageName = String(businessInfo?.[imageNameKey] || '').trim();
+  const imageDataUrl = String(businessInfo?.[imageDataUrlKey] || '').trim();
+  return Boolean(imageName && imageName !== '등록할 이미지를 선택해주세요.' && imageDataUrl);
+}
+
+function hasRequiredBusinessReviewDocuments(profile = {}) {
+  return hasSubmittedBusinessDocument(profile, 'licenseImageName', 'licenseImageDataUrl')
+    && hasSubmittedBusinessDocument(profile, 'permitImageName', 'permitImageDataUrl');
+}
+
 function revealAnonymousAuthorForAdmin(item) {
   const boardType = String(item?.boardType || item?.board_type || '').toUpperCase();
   if (boardType !== 'ANON' || isBusinessAuthor(item)) {
@@ -153,6 +165,7 @@ router.put('/business-applications/:userId/review', async (req, res, next) => {
 
     const approvalStatus = String(req.body?.approvalStatus || '').toUpperCase();
     const rejectionReason = String(req.body?.rejectionReason || '').trim();
+    const documentReviewConfirmed = req.body?.documentReviewConfirmed === true;
 
     if (!['APPROVED', 'REJECTED'].includes(approvalStatus)) {
       return res.status(400).json({ message: '승인 또는 반려 상태를 선택해주세요.' });
@@ -164,6 +177,14 @@ router.put('/business-applications/:userId/review', async (req, res, next) => {
 
     const profile = await adminModel.findBusinessApplicationByUserId(userId);
     if (!profile) return res.status(404).json({ message: '기업회원 신청서를 찾을 수 없습니다.' });
+
+    if (!documentReviewConfirmed) {
+      return res.status(400).json({ message: '사업자등록증과 영업허가증 첨부 서류 확인 후 검토를 처리할 수 있습니다.' });
+    }
+
+    if (approvalStatus === 'APPROVED' && !hasRequiredBusinessReviewDocuments(profile)) {
+      return res.status(400).json({ message: '사업자등록증과 영업허가증 첨부 서류가 모두 있어야 승인할 수 있습니다.' });
+    }
 
     await adminModel.reviewBusinessApplication(userId, { approvalStatus, rejectionReason });
     res.json({ success: true, message: approvalStatus === 'APPROVED' ? '기업회원 신청을 승인했습니다.' : '기업회원 신청을 반려했습니다.' });
