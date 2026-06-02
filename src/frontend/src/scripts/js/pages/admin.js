@@ -24,6 +24,7 @@ let isDeleteModalActionBound = false;
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
 const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'business-applications', 'admins', 'entries', 'banner-ads', 'business-ads', 'support', 'inquiries'];
+const ADMIN_SIDEBAR_COLLAPSED_STORAGE_KEY = 'adminSidebarCollapsed';
 
 const ADMIN_PAGE_SIZE = 20;
 const ADMIN_STATS_RANGE_DAYS = 14;
@@ -78,6 +79,32 @@ function revealAdminPageShell() {
     document.getElementById('admin-page-shell')?.classList.remove('hidden');
 }
 
+function isAdminSidebarCollapsed() {
+    return window.localStorage?.getItem(ADMIN_SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true';
+}
+
+function setAdminSidebarCollapsed(isCollapsed) {
+    const workspace = document.getElementById('admin-workspace');
+    const toggleButton = document.getElementById('admin-sidebar-toggle');
+    if (!workspace || !toggleButton) return;
+
+    workspace.classList.toggle('is-sidebar-collapsed', isCollapsed);
+    toggleButton.setAttribute('aria-expanded', String(!isCollapsed));
+    toggleButton.setAttribute('aria-label', isCollapsed ? '관리 메뉴 펼치기' : '관리 메뉴 접기');
+    window.localStorage?.setItem(ADMIN_SIDEBAR_COLLAPSED_STORAGE_KEY, String(isCollapsed));
+}
+
+function bindAdminSidebarToggle() {
+    const toggleButton = document.getElementById('admin-sidebar-toggle');
+    if (!toggleButton) return;
+
+    setAdminSidebarCollapsed(isAdminSidebarCollapsed());
+    toggleButton.addEventListener('click', () => {
+        const workspace = document.getElementById('admin-workspace');
+        setAdminSidebarCollapsed(!workspace?.classList.contains('is-sidebar-collapsed'));
+    });
+}
+
 function getAdminPageState() {
     const params = new URLSearchParams(window.location.search);
     const requestedTab = params.get('tab');
@@ -111,7 +138,9 @@ async function activateAdminTab(tabKey, options = {}) {
     const resolvedTabKey = ADMIN_TABS.includes(tabKey) ? tabKey : 'stats';
     const tabs = document.querySelectorAll('.admin-tab');
     tabs.forEach((tab) => {
-        tab.classList.toggle('active', tab.dataset.tab === resolvedTabKey);
+        const isActive = tab.dataset.tab === resolvedTabKey;
+        tab.classList.toggle('active', isActive);
+        tab.setAttribute('aria-current', isActive ? 'page' : 'false');
     });
 
     ADMIN_TABS.forEach((key) => {
@@ -181,6 +210,7 @@ async function initAdminPage() {
 
 function bindCommonEvents() {
     Auth.bindLogoutButton();
+    bindAdminSidebarToggle();
 
     const tabs = document.querySelectorAll('.admin-tab');
     tabs.forEach(tab => {
