@@ -155,7 +155,7 @@
     background: #f8fbff;
 }
 
-.tab-btn, .admin-tab, .message-tab-btn {
+.tab-btn, .message-tab-btn {
     padding: 15px 20px;
     border: none;
     background: none;
@@ -164,20 +164,188 @@
     transition: all 0.2s;
 }
 
+.admin-workspace {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 24px;
+    align-items: flex-start;
+    transition: grid-template-columns 0.2s ease;
+}
+
+.admin-workspace.is-sidebar-collapsed {
+    grid-template-columns: 76px minmax(0, 1fr);
+}
+
+.admin-sidebar {
+    position: sticky;
+    top: 88px;
+    overflow: hidden;
+    border: 1px solid #e9ecef;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    transition: width 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.admin-sidebar-title {
+    min-width: 0;
+}
+
+.admin-sidebar-title__eyebrow {
+    display: block;
+    color: #868e96;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.admin-sidebar-title__text {
+    display: block;
+    margin-top: 4px;
+    color: #212529;
+    font-size: 16px;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.admin-sidebar-toggle {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    background: #f8f9fa;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.admin-sidebar-toggle:hover {
+    border-color: #cfe0ff;
+    background: #eef5ff;
+    color: #007bff;
+}
+
+.admin-sidebar-toggle__icon {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2.2;
+    transition: transform 0.2s ease;
+}
+
 .admin-tabs {
     display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px;
+}
+
+.admin-tab {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 14px;
+    border: none;
+    border-left: 3px solid transparent;
+    border-radius: 12px;
+    background: none;
+    color: #6c757d;
+    font-weight: 600;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.admin-tab__abbr {
+    display: inline-flex;
+    flex: 0 0 28px;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: #f1f3f5;
+    color: #6c757d;
+    font-size: 13px;
+    font-weight: 800;
+    transition: all 0.2s ease;
+}
+
+.admin-tab__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-workspace.is-sidebar-collapsed .admin-sidebar-title,
+.admin-workspace.is-sidebar-collapsed .admin-tab__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.admin-workspace.is-sidebar-collapsed .admin-sidebar-header {
+    justify-content: center;
+    padding: 14px 10px;
+}
+
+.admin-workspace.is-sidebar-collapsed .admin-tabs {
+    padding: 10px 8px;
+}
+
+.admin-workspace.is-sidebar-collapsed .admin-tab {
+    justify-content: center;
+    padding: 10px 8px;
+}
+
+.admin-workspace.is-sidebar-collapsed .admin-sidebar-toggle__icon {
+    transform: rotate(180deg);
 }
 
 .tab-btn:hover, .admin-tab:hover, .message-tab-btn:hover {
     color: #495057;
 }
 
-.tab-btn.active, .admin-tab.active, .message-tab-btn.active {
+.admin-tab:hover {
+    background: #f8fbff;
+}
+
+.tab-btn.active, .message-tab-btn.active {
     color: #007bff;
     border-bottom-color: #007bff;
+}
+
+.admin-tab.active {
+    border-left-color: #007bff;
+    background: #eef5ff;
+    color: #007bff;
+}
+
+.admin-tab.active .admin-tab__abbr {
+    background: #007bff;
+    color: #fff;
 }
 
 .tab-pane {
