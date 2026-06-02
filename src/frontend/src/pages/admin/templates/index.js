@@ -32,21 +32,33 @@ export const adminTemplate = `
             </header>
 
 
-            <div class="admin-tabs">
-                <button class="admin-tab active" data-tab="stats">통계 대시보드</button>
-                <button class="admin-tab" data-tab="users">회원 관리</button>
-                <button class="admin-tab" data-tab="business-applications">기업회원 신청 검토</button>
-                <button class="admin-tab" data-tab="admins">관리자 관리</button>
-                <button class="admin-tab" data-tab="posts">게시글 관리</button>
-                <button class="admin-tab" data-tab="comments">댓글 관리</button>
-                <button class="admin-tab" data-tab="banner-ads">배너광고관리</button>
-                <button class="admin-tab" data-tab="business-ads">업체광고관리</button>
-                <button class="admin-tab" data-tab="entries">엔트리 관리</button>
-                <button class="admin-tab" data-tab="support">공지/FAQ 관리</button>
-                <button class="admin-tab" data-tab="inquiries">1:1 문의 관리</button>
-            </div>
+            <div class="admin-workspace" id="admin-workspace">
+                <aside class="admin-sidebar" id="admin-sidebar" aria-label="관리자 메뉴">
+                    <div class="admin-sidebar-header">
+                        <div class="admin-sidebar-title">
+                            <span class="admin-sidebar-title__eyebrow">Admin</span>
+                            <strong class="admin-sidebar-title__text">관리 메뉴</strong>
+                        </div>
+                        <button class="admin-sidebar-toggle" id="admin-sidebar-toggle" type="button" aria-label="관리 메뉴 접기" aria-expanded="true" aria-controls="admin-tabs">
+                            <svg class="admin-sidebar-toggle__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                        </button>
+                    </div>
+                    <nav class="admin-tabs" id="admin-tabs" aria-label="관리자 메뉴 목록">
+                        <button class="admin-tab active" data-tab="stats" title="통계 대시보드"><span class="admin-tab__abbr" aria-hidden="true">통</span><span class="admin-tab__label">통계 대시보드</span></button>
+                        <button class="admin-tab" data-tab="users" title="회원 관리"><span class="admin-tab__abbr" aria-hidden="true">회</span><span class="admin-tab__label">회원 관리</span></button>
+                        <button class="admin-tab" data-tab="business-applications" title="기업회원 신청 검토"><span class="admin-tab__abbr" aria-hidden="true">신</span><span class="admin-tab__label">기업회원 신청 검토</span></button>
+                        <button class="admin-tab" data-tab="admins" title="관리자 관리"><span class="admin-tab__abbr" aria-hidden="true">관</span><span class="admin-tab__label">관리자 관리</span></button>
+                        <button class="admin-tab" data-tab="posts" title="게시글 관리"><span class="admin-tab__abbr" aria-hidden="true">글</span><span class="admin-tab__label">게시글 관리</span></button>
+                        <button class="admin-tab" data-tab="comments" title="댓글 관리"><span class="admin-tab__abbr" aria-hidden="true">댓</span><span class="admin-tab__label">댓글 관리</span></button>
+                        <button class="admin-tab" data-tab="banner-ads" title="배너광고관리"><span class="admin-tab__abbr" aria-hidden="true">배</span><span class="admin-tab__label">배너광고관리</span></button>
+                        <button class="admin-tab" data-tab="business-ads" title="업체광고관리"><span class="admin-tab__abbr" aria-hidden="true">업</span><span class="admin-tab__label">업체광고관리</span></button>
+                        <button class="admin-tab" data-tab="entries" title="엔트리 관리"><span class="admin-tab__abbr" aria-hidden="true">엔</span><span class="admin-tab__label">엔트리 관리</span></button>
+                        <button class="admin-tab" data-tab="support" title="공지/FAQ 관리"><span class="admin-tab__abbr" aria-hidden="true">공</span><span class="admin-tab__label">공지/FAQ 관리</span></button>
+                        <button class="admin-tab" data-tab="inquiries" title="1:1 문의 관리"><span class="admin-tab__abbr" aria-hidden="true">문</span><span class="admin-tab__label">1:1 문의 관리</span></button>
+                    </nav>
+                </aside>
 
-            <div class="tab-content">
+                <div class="tab-content">
                 <div id="stats-section" class="tab-pane active">
                     <div class="loading" id="stats-loading"><div class="spinner"></div><p>통계를 불러오는 중...</p></div>
                     <div class="error-banner hidden" id="stats-error"><p id="stats-error-message"></p><button class="btn btn-sm btn-primary" id="stats-retry-btn">다시 시도</button></div>
