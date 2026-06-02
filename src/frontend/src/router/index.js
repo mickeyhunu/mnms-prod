@@ -9,6 +9,13 @@ const SITE_NAME = 'Midnight Men\'s';
 const DEFAULT_TITLE = BRAND_NAME;
 const DEFAULT_DESCRIPTION = '남성 유흥 커뮤니티 미드나잇 맨즈에서 최저가 업소 추천, 리얼 후기, 지역별 업소 정보를 빠르게 확인하세요.';
 const DEFAULT_SHARE_IMAGE_PATH = '/src/assets/live-avatars/brand-logo.png';
+const AD_CENTER_PATHS = new Set([
+  '/ad-purchase',
+  '/ad-order-history',
+  '/ad-profile-management',
+  '/business-management'
+]);
+let clientConfigPromise = null;
 
 const DEFAULT_KEYWORDS = [
   '남성 유흥 커뮤니티',
@@ -58,6 +65,30 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes
+});
+
+async function loadClientConfig() {
+  if (!clientConfigPromise) {
+    clientConfigPromise = fetch('/api/client-config', {
+      headers: { 'Accept': 'application/json' },
+      credentials: 'include'
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .catch(() => null);
+  }
+
+  return clientConfigPromise;
+}
+
+async function isAdCenterEnabled() {
+  const config = await loadClientConfig();
+  return Boolean(config?.features?.adCenterEnabled);
+}
+
+router.beforeEach(async (to) => {
+  if (!AD_CENTER_PATHS.has(to.path)) return true;
+  if (await isAdCenterEnabled()) return true;
+  return '/404';
 });
 
 function upsertMetaTag(selector, attributes) {

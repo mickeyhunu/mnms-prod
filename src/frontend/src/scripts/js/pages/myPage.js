@@ -4,6 +4,7 @@
 let currentUser = null;
 let nicknameCheckState = { checked: false, available: false, value: '' };
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
+let clientFeatureConfig = { features: { adCenterEnabled: false } };
 function formatPhoneNumber(value) {
     const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
     if (digits.length <= 3) return digits;
@@ -39,11 +40,12 @@ async function initMyPage() {
 
     try {
         currentUser = await APIClient.get('/auth/me');
+        clientFeatureConfig = await loadClientFeatureConfig();
         Auth.setUser(currentUser);
         renderHeaderUser(currentUser);
-        renderAdCenterSection(currentUser);
+        const adCenterEnabled = renderAdCenterSection(currentUser);
         renderProfileForm(currentUser);
-        await renderBusinessProfileStatuses();
+        if (adCenterEnabled) await renderBusinessProfileStatuses();
 
         if (window.location.pathname === '/my-page/profile') {
             bindProfileForm();
@@ -63,6 +65,24 @@ async function initMyPage() {
 
 function bindLogoutActions() {
     Auth.bindLogoutButton();
+}
+
+function isAdCenterFeatureEnabled() {
+    return Boolean(clientFeatureConfig?.features?.adCenterEnabled);
+}
+
+async function loadClientFeatureConfig() {
+    try {
+        const response = await APIClient.get('/client-config');
+        return {
+            features: {
+                adCenterEnabled: Boolean(response?.features?.adCenterEnabled)
+            }
+        };
+    } catch (error) {
+        console.error('client config load failed:', error);
+        return { features: { adCenterEnabled: false } };
+    }
 }
 
 function renderHeaderUser(user) {
@@ -125,10 +145,12 @@ function renderAdCenterSection(user) {
     const adCenterWrapper = document.getElementById('ad-center-wrapper');
     const adCenterSection = document.getElementById('ad-center-section');
     const businessApplyLink = document.getElementById('business-member-apply-link');
-    if (!adCenterWrapper || !adCenterSection || !businessApplyLink) return;
+    if (!adCenterWrapper || !adCenterSection || !businessApplyLink) return false;
 
-    adCenterWrapper.classList.remove('hidden');
-    adCenterSection.classList.remove('hidden');
+    const adCenterEnabled = isAdCenterFeatureEnabled();
+    adCenterWrapper.classList.toggle('hidden', !adCenterEnabled);
+    adCenterSection.classList.toggle('hidden', !adCenterEnabled);
+    if (!adCenterEnabled) return false;
 
     const isBusinessMember = isAdAccount(user);
     const adCenterItems = adCenterSection.querySelectorAll('.mypage-link-item');
@@ -141,6 +163,8 @@ function renderAdCenterSection(user) {
         }
         item.classList.toggle('hidden', !isBusinessApplyItem);
     });
+
+    return true;
 }
 
 function normalizeRegistrationStatus(status) {
