@@ -703,6 +703,7 @@ async function getMyBusinessProfile(req, res, next) {
     if (!profile) {
       return res.json({
         registrationStatus: 'UNREGISTERED',
+        approvalStatus: 'PENDING',
         businessInfo: {}
       });
     }
@@ -721,6 +722,7 @@ async function getMyBusinessProfile(req, res, next) {
 
     res.json({
       registrationStatus: normalizeRegistrationStatus(profile.registrationStatus, 'UNREGISTERED'),
+      approvalStatus: profile.approvalStatus || 'PENDING',
       businessInfo
     });
   } catch (error) {
