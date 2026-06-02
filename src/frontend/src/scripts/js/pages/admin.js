@@ -104,6 +104,17 @@ function bindAdminSidebarToggle() {
         const workspace = document.getElementById('admin-workspace');
         setAdminSidebarCollapsed(!workspace?.classList.contains('is-sidebar-collapsed'));
     });
+
+    document.addEventListener('click', (event) => {
+        const workspace = document.getElementById('admin-workspace');
+        const sidebar = document.getElementById('admin-sidebar');
+        const clickedElement = event.target;
+        if (!workspace || !sidebar || !(clickedElement instanceof Node)) return;
+        if (workspace.classList.contains('is-sidebar-collapsed')) return;
+        if (sidebar.contains(clickedElement) || toggleButton.contains(clickedElement)) return;
+
+        setAdminSidebarCollapsed(true);
+    });
 }
 
 
