@@ -24,9 +24,9 @@ export const adminTemplate = `
         <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
-                    <a href="/" class="community-back-link icon-btn icon-btn-square" aria-label="홈으로 이동">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
-                    </a>
+                    <button class="admin-sidebar-toggle admin-sidebar-toggle--header icon-btn icon-btn-square" id="admin-sidebar-toggle" type="button" aria-label="관리 메뉴 펼치기" aria-expanded="false" aria-controls="admin-tabs">
+                        <svg class="admin-sidebar-toggle__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </button>
                     <span class="community-board-name">관리자 페이지</span>
                 </div>
             </header>
@@ -39,9 +39,6 @@ export const adminTemplate = `
                             <span class="admin-sidebar-title__eyebrow">Admin</span>
                             <strong class="admin-sidebar-title__text">관리 메뉴</strong>
                         </div>
-                        <button class="admin-sidebar-toggle" id="admin-sidebar-toggle" type="button" aria-label="관리 메뉴 접기" aria-expanded="true" aria-controls="admin-tabs">
-                            <svg class="admin-sidebar-toggle__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
-                        </button>
                     </div>
                     <nav class="admin-tabs" id="admin-tabs" aria-label="관리자 메뉴 목록">
                         <button class="admin-tab active" data-tab="stats" title="통계 대시보드"><span class="admin-tab__label">통계 대시보드</span></button>
