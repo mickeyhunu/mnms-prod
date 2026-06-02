@@ -1008,8 +1008,11 @@ const pageRegistry = {
                         </a>
                         <a class="mypage-link-item" href="/ad-order-history"><span>광고 구매 내역</span></a>
                         <a class="mypage-link-item hidden" id="business-member-apply-link" href="/business-apply">
-                            <span>기업회원 신청</span>
-                            <span id="mypage-business-apply-status" class="mypage-status-badge mypage-status-badge--pending hidden">검토중</span>
+                            <span class="mypage-link-main-text">기업회원 신청</span>
+                            <span class="mypage-business-apply-status-wrap">
+                                <span id="mypage-business-apply-status" class="mypage-status-badge mypage-status-badge--pending hidden">검토중</span>
+                                <span id="mypage-business-apply-rejection-reason" class="mypage-rejection-reason hidden"></span>
+                            </span>
                         </a>
                     </div>
                 </section>

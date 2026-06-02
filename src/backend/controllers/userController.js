@@ -715,6 +715,7 @@ async function getMyBusinessProfile(req, res, next) {
       return res.json({
         registrationStatus: 'UNREGISTERED',
         approvalStatus: 'PENDING',
+        rejectionReason: '',
         businessInfo: {}
       });
     }
@@ -734,6 +735,7 @@ async function getMyBusinessProfile(req, res, next) {
     res.json({
       registrationStatus: normalizeBusinessProfileRegistrationStatus(profile.registrationStatus, 'UNREGISTERED'),
       approvalStatus: profile.approvalStatus || 'PENDING',
+      rejectionReason: profile.rejectionReason || '',
       businessInfo
     });
   } catch (error) {
@@ -794,13 +796,18 @@ async function saveMyBusinessProfile(req, res, next) {
       normalizedBusinessInfo.businessRegistrationStatusCode = businessRegistrationVerification.statusCode || '';
     }
 
+    const shouldResetReviewStatus = registrationStatus === 'REGISTERED'
+      && String(req.user?.member_type || req.user?.memberType || '').toUpperCase() !== 'BUSINESS';
+
     await upsertBusinessProfileByUserId(req.user.id, {
       companyName: String(businessInfo.businessName || '').trim() || null,
       businessRegistrationNumber: normalizedBusinessInfo.businessNumber || null,
       managerName: String(businessInfo.businessOwner || '').trim() || null,
       contactPhone: String(req.user.phone || '').trim() || null,
       registrationStatus,
-      businessInfo: normalizedBusinessInfo
+      businessInfo: normalizedBusinessInfo,
+      approvalStatus: shouldResetReviewStatus ? 'PENDING' : null,
+      rejectionReason: shouldResetReviewStatus ? null : undefined
     });
 
     res.json({ success: true, registrationStatus });
