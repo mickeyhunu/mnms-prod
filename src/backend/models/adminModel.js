@@ -18,7 +18,7 @@ function normalizeBusinessInfoValue(value) {
   }
 }
 
-const BUSINESS_APPLICATION_SELECT = `SELECT bp.user_id AS userId,
+const BUSINESS_APPLICATION_SELECT_COLUMNS = `SELECT bp.user_id AS userId,
             bp.company_name AS companyName,
             bp.business_registration_number AS businessRegistrationNumber,
             bp.manager_name AS managerName,
@@ -33,7 +33,9 @@ const BUSINESS_APPLICATION_SELECT = `SELECT bp.user_id AS userId,
             u.nickname AS nickname,
             u.phone AS userPhone,
             u.member_type AS memberType,
-            u.role AS role
+            u.role AS role`;
+
+const BUSINESS_APPLICATION_SELECT = `${BUSINESS_APPLICATION_SELECT_COLUMNS}
        FROM business_profiles bp
        JOIN users u ON u.id = bp.user_id`;
 
@@ -49,7 +51,9 @@ function decorateBusinessApplication(row) {
 async function listBusinessApplications() {
   const pool = getPool();
   const [rows] = await pool.query(
-    `${BUSINESS_APPLICATION_SELECT}
+    `${BUSINESS_APPLICATION_SELECT_COLUMNS}
+       FROM business_profiles bp FORCE INDEX (idx_business_profiles_registered_updated)
+       STRAIGHT_JOIN users u ON u.id = bp.user_id
       WHERE bp.registration_status = 'REGISTERED'
       ORDER BY bp.updated_at DESC, bp.user_id DESC`
   );
