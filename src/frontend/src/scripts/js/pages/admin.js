@@ -1214,13 +1214,15 @@ function renderUsersTable() {
     updateAdminTotal('users', filteredItems.length);
 
     if (!pageItems.length) {
-        tbody.innerHTML = `<tr><td colspan="9">${filteredItems.length ? '현재 페이지에 표시할 회원이 없습니다.' : '회원이 없습니다.'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11">${filteredItems.length ? '현재 페이지에 표시할 회원이 없습니다.' : '회원이 없습니다.'}</td></tr>`;
     } else {
         tbody.innerHTML = pageItems.map((user) => `
             <tr>
                 <td>${user.id}</td>
                 <td>${sanitizeHTML(user.loginId || '')}</td>
+                <td>${sanitizeHTML(user.name || '')}</td>
                 <td>${sanitizeHTML(user.nickname || '')}</td>
+                <td>${sanitizeHTML(user.phone || '')}</td>
                 <td>${formatAdminRestrictionStatus(user)}</td>
                 <td>${Number(user.totalPoints || 0).toLocaleString()} P</td>
                 <td>${formatDate(user.createdAt || user.created_at)}</td>
