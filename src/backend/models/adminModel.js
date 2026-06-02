@@ -154,15 +154,35 @@ async function reviewBusinessApplication(userId, { approvalStatus = 'PENDING', r
 async function listUsers() {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT *
-     FROM users
-     WHERE role = 'MEMBER'
-     ORDER BY created_at DESC, id DESC`
+    `SELECT u.*,
+            u.login_id AS loginId,
+            u.login_id AS userLoginId,
+            bp.company_name AS businessCompanyName,
+            bp.business_registration_number AS businessRegistrationNumber,
+            bp.manager_name AS businessManagerName,
+            bp.contact_phone AS businessContactPhone,
+            bp.approval_status AS businessApprovalStatus,
+            bp.registration_status AS businessRegistrationStatus
+       FROM users u
+       LEFT JOIN business_profiles bp ON bp.user_id = u.id
+      WHERE u.role IN ('MEMBER', 'BUSINESS')
+      ORDER BY u.created_at DESC, u.id DESC`
   );
   const resolvedRows = [];
   for (const row of rows) {
     const resolved = await ensureResolvedLoginRestriction(row);
-    resolvedRows.push(pickUserRow(resolved || row));
+    const source = resolved || row;
+    resolvedRows.push({
+      ...pickUserRow(source),
+      loginId: source.loginId || source.login_id || source.userLoginId || '',
+      userLoginId: source.userLoginId || source.login_id || source.loginId || '',
+      businessCompanyName: source.businessCompanyName || '',
+      businessRegistrationNumber: source.businessRegistrationNumber || '',
+      businessManagerName: source.businessManagerName || '',
+      businessContactPhone: source.businessContactPhone || '',
+      businessApprovalStatus: source.businessApprovalStatus || '',
+      businessRegistrationStatus: source.businessRegistrationStatus || ''
+    });
   }
   return resolvedRows;
 }
