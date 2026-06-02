@@ -80,7 +80,7 @@ function revealAdminPageShell() {
 }
 
 function isAdminSidebarCollapsed() {
-    return window.localStorage?.getItem(ADMIN_SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true';
+    return window.localStorage?.getItem(ADMIN_SIDEBAR_COLLAPSED_STORAGE_KEY) !== 'false';
 }
 
 function setAdminSidebarCollapsed(isCollapsed) {
@@ -89,6 +89,7 @@ function setAdminSidebarCollapsed(isCollapsed) {
     if (!workspace || !toggleButton) return;
 
     workspace.classList.toggle('is-sidebar-collapsed', isCollapsed);
+    toggleButton.classList.toggle('is-sidebar-collapsed', isCollapsed);
     toggleButton.setAttribute('aria-expanded', String(!isCollapsed));
     toggleButton.setAttribute('aria-label', isCollapsed ? '관리 메뉴 펼치기' : '관리 메뉴 접기');
     window.localStorage?.setItem(ADMIN_SIDEBAR_COLLAPSED_STORAGE_KEY, String(isCollapsed));
