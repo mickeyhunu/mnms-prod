@@ -6,6 +6,65 @@ const { pickUserRow } = require('../utils/response');
 const { ensureResolvedLoginRestriction, getUserActivityStats, getUserActivityDetails, getUserLoginHistories, getBusinessProfileByUserId, updateBusinessProfileReviewByUserId } = require('./userModel');
 const { getStoreByNo, listStores } = require('./liveModel');
 
+
+function normalizeBusinessInfoValue(value) {
+  if (!value) return {};
+  if (typeof value === 'object') return value;
+
+  try {
+    return JSON.parse(value);
+  } catch (_error) {
+    return {};
+  }
+}
+
+async function listBusinessApplications() {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT bp.user_id AS userId,
+            bp.company_name AS companyName,
+            bp.business_registration_number AS businessRegistrationNumber,
+            bp.manager_name AS managerName,
+            bp.contact_phone AS contactPhone,
+            bp.approval_status AS approvalStatus,
+            bp.rejection_reason AS rejectionReason,
+            bp.registration_status AS registrationStatus,
+            bp.business_info AS businessInfo,
+            bp.created_at AS createdAt,
+            bp.updated_at AS updatedAt,
+            u.login_id AS loginId,
+            u.nickname AS nickname,
+            u.phone AS userPhone,
+            u.member_type AS memberType,
+            u.role AS role
+       FROM business_profiles bp
+       JOIN users u ON u.id = bp.user_id
+      WHERE bp.registration_status = 'REGISTERED'
+      ORDER BY FIELD(bp.approval_status, 'PENDING', 'REJECTED', 'APPROVED'), bp.updated_at DESC, bp.user_id DESC`
+  );
+
+  return rows.map((row) => ({
+    ...row,
+    businessInfo: normalizeBusinessInfoValue(row.businessInfo),
+    isBusinessMember: String(row.memberType || '').toUpperCase() === 'BUSINESS'
+      || String(row.role || '').toUpperCase() === 'BUSINESS'
+  }));
+}
+
+async function reviewBusinessApplication(userId, { approvalStatus = 'PENDING', rejectionReason = '' } = {}) {
+  const normalizedApprovalStatus = String(approvalStatus || 'PENDING').trim().toUpperCase();
+  await updateBusinessProfileReviewByUserId(userId, {
+    approvalStatus: normalizedApprovalStatus,
+    rejectionReason
+  });
+
+  if (normalizedApprovalStatus === 'APPROVED') {
+    await updateUserMemberType(userId, 'BUSINESS');
+  } else if (normalizedApprovalStatus === 'REJECTED') {
+    await updateUserMemberType(userId, 'MEMBER');
+  }
+}
+
 async function listUsers() {
   const pool = getPool();
   const [rows] = await pool.query(
@@ -899,6 +958,8 @@ module.exports = {
   encodeEntryId,
   decodeEntryId,
   deleteEntry,
+  listBusinessApplications,
+  reviewBusinessApplication,
   listUsers,
   listAdmins,
   listEntryStores,

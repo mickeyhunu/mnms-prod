@@ -35,6 +35,7 @@ export const adminTemplate = `
             <div class="admin-tabs">
                 <button class="admin-tab active" data-tab="stats">통계 대시보드</button>
                 <button class="admin-tab" data-tab="users">회원 관리</button>
+                <button class="admin-tab" data-tab="business-applications">기업회원 신청 검토</button>
                 <button class="admin-tab" data-tab="admins">관리자 관리</button>
                 <button class="admin-tab" data-tab="posts">게시글 관리</button>
                 <button class="admin-tab" data-tab="comments">댓글 관리</button>
@@ -144,6 +145,20 @@ export const adminTemplate = `
                         <table class="admin-table"><thead><tr><th>ID</th><th>아이디</th><th>닉네임</th><th>계정상태</th><th>포인트</th><th>가입일</th><th>권한</th><th>회원구분</th><th>관리</th></tr></thead><tbody id="users-tbody"></tbody></table>
                     </div>
                     <div class="admin-pagination hidden" id="users-pagination"></div>
+                </div>
+
+
+                <div id="business-applications-section" class="tab-pane hidden">
+                    <div class="loading" id="business-applications-loading"><div class="spinner"></div><p>기업회원 신청서를 불러오는 중...</p></div>
+                    <div class="error-banner hidden" id="business-applications-error"><p id="business-applications-error-message"></p><button class="btn btn-sm btn-primary" id="business-applications-retry-btn">다시 시도</button></div>
+                    <div class="admin-list-toolbar">
+                        <p class="admin-list-toolbar__meta">총 <strong id="business-applications-total">0</strong>건</p>
+                        <input type="search" id="business-applications-search-input" class="form-control admin-list-toolbar__search" placeholder="기업회원 신청 검색" aria-label="기업회원 신청 검색">
+                    </div>
+                    <div class="admin-table-container hidden" id="business-applications-content">
+                        <table class="admin-table"><thead><tr><th>회원</th><th>상호/사업자번호</th><th>담당자</th><th>신청 상태</th><th>신청/수정일</th><th>반려 사유</th><th>관리</th></tr></thead><tbody id="business-applications-tbody"></tbody></table>
+                    </div>
+                    <div class="admin-pagination hidden" id="business-applications-pagination"></div>
                 </div>
 
                 <div id="admins-section" class="tab-pane hidden">
