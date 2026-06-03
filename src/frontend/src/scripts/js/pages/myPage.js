@@ -193,6 +193,12 @@ function applyStatusBadge(elementId, status) {
     badge.classList.add(target.className);
 }
 
+function resolveBusinessInfoBadgeStatus(registrationStatus, approvalStatus) {
+    if (registrationStatus !== 'registered') return registrationStatus;
+    if (approvalStatus === 'pending') return 'pending';
+    if (approvalStatus === 'rejected') return 'rejected';
+    return 'registered';
+}
 
 function setBusinessApplyLinkDisabled(disabled) {
     const link = document.getElementById('business-member-apply-link');
@@ -258,7 +264,7 @@ async function renderBusinessProfileStatuses() {
     }
 
     applyStatusBadge('mypage-ad-profile-status', adStatus);
-    applyStatusBadge('mypage-business-info-status', businessStatus);
+    applyStatusBadge('mypage-business-info-status', resolveBusinessInfoBadgeStatus(businessStatus, businessApprovalStatus));
     renderBusinessApplyStatusBadge({
         registrationStatus: businessStatus,
         approvalStatus: businessApprovalStatus,
