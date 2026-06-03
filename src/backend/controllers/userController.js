@@ -20,6 +20,7 @@ const {
 } = require('../models/userModel');
 const { resolveMemberLevel, MEMBER_LEVELS } = require('../utils/memberLevel');
 const { POINT_RULES } = require('../models/pointModel');
+const { STAMP_TYPES, getUserStampBalance, getUserStampHistories } = require('../models/stampModel');
 const supportModel = require('../models/supportModel');
 const adminModel = require('../models/adminModel');
 const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
@@ -309,6 +310,13 @@ const POINT_ACTION_LABELS = {
   ADMIN_ADJUST_DEDUCT: '관리자 수동 차감'
 };
 
+
+function resolveUserStampType(user = {}) {
+  const role = String(user.role || '').toUpperCase();
+  const memberType = String(user.member_type || user.memberType || '').toUpperCase();
+  return role === 'BUSINESS' || memberType === 'BUSINESS' ? STAMP_TYPES.BUSINESS : STAMP_TYPES.MEMBER;
+}
+
 function formatPointRule(ruleKey, rule) {
   const limitLabel = rule.dailyLimit == null ? '제한 없음' : `일 ${rule.dailyLimit}회`;
   return {
@@ -338,10 +346,15 @@ async function myStats(req, res, next) {
       ? Math.max(0, Math.min(100, Math.floor((currentProgress / currentLevelRange) * 100)))
       : 100;
 
+    const stampType = resolveUserStampType(req.user);
+    const totalStamps = await getUserStampBalance(req.user.id, stampType);
+
     res.json({
       loginId: req.user.login_id,
       nickname: req.user.nickname,
       totalPoints,
+      totalStamps,
+      stampType,
       level: currentLevel.level,
       levelLabel: currentLevel.label,
       joinedAt: req.user.created_at,
@@ -574,6 +587,11 @@ async function myPointHistories(req, res, next) {
     const { histories, pagination } = await getUserPointHistories(req.user.id, { page, limit });
     const totalPoints = Number(req.user.total_points || 0);
     const currentLevel = resolveMemberLevel(totalPoints);
+    const stampType = resolveUserStampType(req.user);
+    const [totalStamps, stampHistories] = await Promise.all([
+      getUserStampBalance(req.user.id, stampType),
+      getUserStampHistories(req.user.id, { stampType, limit: 20 })
+    ]);
 
     const levelGuide = MEMBER_LEVELS.map((info, index) => ({
       level: info.level,
@@ -587,6 +605,8 @@ async function myPointHistories(req, res, next) {
 
     res.json({
       totalPoints,
+      totalStamps,
+      stampType,
       level: currentLevel.level,
       levelLabel: currentLevel.label,
       pointHistories: histories.map((row) => ({
@@ -599,6 +619,7 @@ async function myPointHistories(req, res, next) {
       })),
       pointRuleGuide,
       levelGuide,
+      stampHistories,
       pagination
     });
   } catch (error) {

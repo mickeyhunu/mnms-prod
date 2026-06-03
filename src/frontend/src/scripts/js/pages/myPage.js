@@ -864,6 +864,84 @@ function renderLevelBadgeLabel(rawLabel = '') {
     return `<span class="mypage-rank-with-label"><img class="mypage-level-badge" src="${parsed.image}" alt="회원 등급 배지" loading="lazy">${titleMarkup}</span>`;
 }
 
+
+function formatStampActionLabel(actionType) {
+    const labels = {
+        VISIT_VERIFICATION: '업소 방문 인증',
+        SERVICE_BOTTLE_USE: '서비스 주류 사용',
+        BUSINESS_AD_BRONZE: '브론즈 광고 사용',
+        BUSINESS_AD_SILVER: '실버 광고 사용',
+        BUSINESS_AD_GOLD: '골드 광고 사용',
+        ADMIN_ADJUST_ADD: '관리자 수동 적립',
+        ADMIN_ADJUST_DEDUCT: '관리자 수동 차감',
+        EXPIRED: '유효기간 만료'
+    };
+
+    return labels[actionType] || actionType || '스템프 적립';
+}
+
+function normalizeStampCount(value) {
+    return Math.max(0, Number(value || 0));
+}
+
+function renderStampSlots(totalStamps = 0) {
+    const filledCount = Math.max(0, Math.min(5, Math.floor(normalizeStampCount(totalStamps))));
+    return Array.from({ length: 5 }, (_, index) => {
+        const isFilled = index < filledCount;
+        return `<span class="mypage-stamp-slot${isFilled ? ' is-filled' : ''}" aria-label="${index + 1}번째 스템프 ${isFilled ? '적립됨' : '비어 있음'}">STAMP</span>`;
+    }).join('');
+}
+
+function renderStampSummary(totalStamps = 0, options = {}) {
+    const normalizedTotal = normalizeStampCount(totalStamps);
+    const remainingCount = Math.max(0, 5 - Math.min(5, Math.floor(normalizedTotal)));
+    const title = options.title || '보유 스템프';
+    const description = options.description || (remainingCount > 0
+        ? `서비스 주류까지 ${remainingCount}개 남았어요.`
+        : '서비스 주류 1병 교환 가능 상태예요.');
+
+    return `
+        <div class="mypage-stamp-summary">
+            <div class="mypage-stamp-summary-head">
+                <span>${sanitizeHTML(title)}</span>
+                <strong>${normalizedTotal.toLocaleString()}개</strong>
+            </div>
+            <div class="mypage-stamp-slots" aria-label="최대 5개 스템프 적립 현황">
+                ${renderStampSlots(normalizedTotal)}
+            </div>
+            <p class="mypage-stamp-caption">${sanitizeHTML(description)}</p>
+        </div>
+    `;
+}
+
+function renderStampHistoryList(stampHistories = []) {
+    if (!stampHistories.length) {
+        return '<div class="no-data">스템프 내역이 없습니다.</div>';
+    }
+
+    return `
+        <div class="mypage-point-history-list">
+            ${stampHistories.map((item) => {
+                const amountValue = Number(item.amount || 0);
+                const amountClass = amountValue >= 0 ? 'plus' : 'minus';
+                const amountText = `${amountValue >= 0 ? '+' : ''}${amountValue.toLocaleString()}개`;
+                const sourceText = item.sourceLabel ? `<p>${sanitizeHTML(item.sourceLabel)}</p>` : '';
+                return `
+                    <div class="mypage-point-history-row">
+                        <div>
+                            <strong>${sanitizeHTML(item.actionLabel || formatStampActionLabel(item.actionType || ''))}</strong>
+                            ${sourceText}
+                            ${item.reason ? `<p>${sanitizeHTML(item.reason)}</p>` : ''}
+                            <p>${sanitizeHTML(formatDate(item.createdAt))}</p>
+                        </div>
+                        <span class="point-change ${amountClass}">${amountText}</span>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
 async function loadPointHistories(page = 1) {
     const container = document.getElementById('my-stats');
     if (!container || !currentUser) return;
@@ -873,6 +951,8 @@ async function loadPointHistories(page = 1) {
     try {
         const response = await APIClient.get('/users/me/points', { page: currentPage, limit: 20 });
         const histories = response.pointHistories || [];
+        const stampHistories = response.stampHistories || [];
+        const totalStamps = normalizeStampCount(response.totalStamps || 0);
         const pagination = response.pagination || {};
         const pageNumber = Math.max(1, Number(pagination.page) || currentPage);
         const totalPages = Math.max(1, Number(pagination.totalPages) || 1);
@@ -886,6 +966,14 @@ async function loadPointHistories(page = 1) {
                         </div>
                         <div class="mypage-summary-row"><span>현재 등급</span><strong>${renderLevelBadgeLabel(response.levelLabel || '-')}</strong></div>
                         <div class="mypage-summary-row"><span>누적 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
+                        ${renderStampSummary(totalStamps)}
+                    </section>
+
+                    <section class="mypage-summary-section" id="stamp-history">
+                        <div class="mypage-summary-head">
+                            <h3 class="mypage-summary-title">스템프 적립/사용 내역</h3>
+                        </div>
+                        ${renderStampHistoryList(stampHistories)}
                     </section>
 
                     <section class="mypage-summary-section">
@@ -937,6 +1025,8 @@ async function loadPointHistories(page = 1) {
             </div>
         `;
 
+        scrollToRequestedHistorySection(container);
+
         const pageButtons = container.querySelectorAll('.mypage-point-page-btn[data-page]');
         pageButtons.forEach((button) => {
             if (button.disabled) return;
@@ -950,6 +1040,20 @@ async function loadPointHistories(page = 1) {
     }
 }
 
+
+function scrollToRequestedHistorySection(container) {
+    const hash = String(window.location.hash || '').trim();
+    if (!hash) return;
+
+    const targetId = hash.startsWith('#') ? hash.slice(1) : hash;
+    const target = targetId ? document.getElementById(targetId) : null;
+    if (!target || !container.contains(target)) return;
+
+    window.requestAnimationFrame(() => {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+}
+
 async function loadStats() {
     const container = document.getElementById('my-stats');
     if (!container || !currentUser) return;
@@ -961,13 +1065,30 @@ async function loadStats() {
             : '-';
         const rankLabel = resolveRankLabel(currentUser, response.levelLabel || '');
         const rankMarkup = resolveRankMarkup(currentUser, rankLabel);
+        const totalStamps = normalizeStampCount(response.totalStamps || 0);
+        const businessStampSection = isAdAccount(currentUser) ? `
+            <section class="mypage-summary-section mypage-business-stamp-section">
+                <div class="mypage-summary-head">
+                    <h3 class="mypage-summary-title">광고 스템프</h3>
+                    <a class="mypage-summary-action" href="/my-page/points#stamp-history">광고 스템프 내역 보기</a>
+                </div>
+                ${renderStampSummary(totalStamps, {
+                    title: '보유 광고 스템프',
+                    description: '브론즈 3일, 실버 2일 또는 골드 1일 광고에 사용할 수 있어요.'
+                })}
+            </section>
+        ` : '';
         const pointsSection = isAdAccount(currentUser) ? '' : `
             <section class="mypage-summary-section">
                 <div class="mypage-summary-head">
                     <h3 class="mypage-summary-title">포인트</h3>
-                    <a class="mypage-summary-action" href="/my-page/points">포인트 내역 보기</a>
+                    <span class="mypage-summary-actions">
+                        <a class="mypage-summary-action" href="/my-page/points">포인트 내역 보기</a>
+                        <a class="mypage-summary-action" href="/my-page/points#stamp-history">스템프 내역 보기</a>
+                    </span>
                 </div>
                 <div class="mypage-summary-row"><span>보유 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
+                ${renderStampSummary(totalStamps)}
                 <div class="mypage-level-progress">
                     <div class="mypage-level-progress-meta">
                         <span>${sanitizeHTML(parseLevelBadgeLabel(response.levelLabel || '').title || '')} → ${sanitizeHTML(parseLevelBadgeLabel(response.nextLevelLabel || '').title || 'MAX')}</span>
@@ -994,6 +1115,7 @@ async function loadStats() {
             </section>
 
             ${pointsSection}
+            ${businessStampSection}
 
             <section class="mypage-summary-section">
                 <div class="mypage-summary-head">
