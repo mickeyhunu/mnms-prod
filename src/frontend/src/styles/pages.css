@@ -1261,7 +1261,8 @@ body[data-page="admin"] {
     pointer-events: none;
 }
 
-.mypage-business-apply-status-wrap {
+.mypage-business-apply-status-wrap,
+.mypage-business-info-status-wrap {
     display: inline-flex;
     align-items: flex-end;
     gap: 6px;
