@@ -1008,6 +1008,22 @@ async function initDatabase() {
 
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS stamp_histories (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      user_id BIGINT NOT NULL,
+      stamp_type ENUM('MEMBER','BUSINESS') NOT NULL DEFAULT 'MEMBER',
+      action_type ENUM('VISIT_VERIFICATION','SERVICE_BOTTLE_USE','BUSINESS_AD_BRONZE','BUSINESS_AD_SILVER','BUSINESS_AD_GOLD','ADMIN_ADJUST_ADD','ADMIN_ADJUST_DEDUCT','EXPIRED') NOT NULL,
+      amount INT NOT NULL,
+      reason VARCHAR(255) NULL,
+      source_label VARCHAR(255) NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_stamp_histories_user_type_created_at (user_id, stamp_type, created_at),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS support_articles (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       category ENUM('NOTICE','FAQ') NOT NULL,
