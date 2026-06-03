@@ -166,7 +166,7 @@ export const adminTemplate = `
                         <input type="search" id="business-applications-search-input" class="form-control admin-list-toolbar__search" placeholder="기업회원 신청/변경 검색" aria-label="기업회원 신청/변경 검색">
                     </div>
                     <div class="admin-table-container hidden" id="business-applications-content">
-                        <table class="admin-table"><thead><tr><th>회원</th><th>상호/사업자번호</th><th>담당자</th><th>첨부 서류</th><th>신청/변경 상태</th><th>변경 내역</th><th>신청/수정일</th><th>반려 이력</th><th>관리</th></tr></thead><tbody id="business-applications-tbody"></tbody></table>
+                        <table class="admin-table"><thead><tr><th>회원</th><th>상호/사업자번호</th><th>담당자</th><th>첨부 서류</th><th>신청 구분</th><th>검토 상태</th><th>변경 내역</th><th>신청/수정일</th><th>반려 이력</th><th>관리</th></tr></thead><tbody id="business-applications-tbody"></tbody></table>
                     </div>
                     <div class="admin-pagination hidden" id="business-applications-pagination"></div>
                 </div>

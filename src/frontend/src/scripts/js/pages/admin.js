@@ -450,7 +450,7 @@ function getAdminFilteredItems(prefix) {
         posts: ['id', 'title', 'authorNickname', 'user_id', 'userId'],
         comments: ['id', 'content', 'authorNickname', 'user_id', 'userId', 'postId', 'post_id'],
         users: ['id', 'loginId', 'login_id', 'userLoginId', 'nickname', 'role', 'memberType', 'member_type', 'phone', 'businessCompanyName', 'businessRegistrationNumber', 'businessManagerName', 'businessContactPhone'],
-        'business-applications': ['userId', 'loginId', 'nickname', 'companyName', 'businessRegistrationNumber', 'managerName', 'contactPhone', 'userPhone', 'approvalStatus', 'registrationStatus', (item) => item.businessInfo?.businessAddress, (item) => item.businessInfo?.businessType],
+        'business-applications': ['userId', 'loginId', 'nickname', 'companyName', 'businessRegistrationNumber', 'managerName', 'contactPhone', 'userPhone', 'approvalStatus', 'registrationStatus', 'applicationType', (item) => toBusinessApplicationTypeText(item.applicationType), (item) => item.businessInfo?.businessAddress, (item) => item.businessInfo?.businessType],
         admins: ['id', 'loginId', 'nickname', 'role'],
         entries: ['workerName', 'entryId'],
         ads: ['id', 'title', 'adType', 'storeNo', 'linkUrl', 'imageUrl', 'displayOrder'],
@@ -999,6 +999,21 @@ function renderCommentsTable() {
 }
 
 
+function toBusinessApplicationTypeText(type) {
+    const normalized = String(type || '').toUpperCase();
+    if (normalized === 'MODIFICATION') return '수정 신청';
+    if (normalized === 'APPROVED') return '승인 완료';
+    return '신규 신청';
+}
+
+function renderBusinessApplicationTypeBadge(type) {
+    const normalized = String(type || '').toUpperCase();
+    const className = normalized === 'MODIFICATION'
+        ? 'is-modification'
+        : (normalized === 'APPROVED' ? 'is-approved' : 'is-new');
+    return `<span class="admin-business-application-type ${className}">${toBusinessApplicationTypeText(type)}</span>`;
+}
+
 function toBusinessApplicationStatusLabel(status) {
     const normalized = String(status || '').toUpperCase();
     if (normalized === 'APPROVED') return '<span class="admin-inquiry-meta-status is-completed">승인</span>';
@@ -1186,7 +1201,7 @@ function renderBusinessApplicationsTable() {
     updateAdminTotal('business-applications', filteredItems.length);
 
     if (!pageItems.length) {
-        tbody.innerHTML = `<tr><td colspan="9">${filteredItems.length ? '현재 페이지에 표시할 신청/변경 내역이 없습니다.' : '기업회원 신청/변경 내역이 없습니다.'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10">${filteredItems.length ? '현재 페이지에 표시할 신청/변경 내역이 없습니다.' : '기업회원 신청/변경 내역이 없습니다.'}</td></tr>`;
     } else {
         tbody.innerHTML = pageItems.map((application) => {
             const isPending = String(application.approvalStatus || '').toUpperCase() === 'PENDING';
@@ -1205,7 +1220,8 @@ function renderBusinessApplicationsTable() {
                     </td>
                     <td>${sanitizeHTML(application.managerName || application.businessInfo?.businessOwner || '-')}<br><span class="text-muted text-sm">${sanitizeHTML(contact)}</span></td>
                     <td>${renderBusinessApplicationDocuments(application)}</td>
-                    <td>${toBusinessApplicationStatusLabel(application.approvalStatus)}${application.isBusinessMember ? '<br><span class="text-muted text-sm">기업회원 정보 변경</span>' : ''}</td>
+                    <td>${renderBusinessApplicationTypeBadge(application.applicationType)}</td>
+                    <td>${toBusinessApplicationStatusLabel(application.approvalStatus)}</td>
                     <td>${renderBusinessApplicationChangeSummary(application)}</td>
                     <td>${formatDate(application.createdAt)}<br><span class="text-muted text-sm">수정 ${formatDate(application.updatedAt)}</span></td>
                     <td>${renderBusinessRejectionHistories(application.rejectionHistories)}</td>
