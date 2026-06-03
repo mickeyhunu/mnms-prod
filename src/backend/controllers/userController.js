@@ -580,6 +580,26 @@ async function markMyPostsRead(req, res, next) {
   }
 }
 
+
+async function myStampHistories(req, res, next) {
+  try {
+    const limit = Math.max(1, Math.min(50, Number(req.query.limit) || 50));
+    const stampType = resolveUserStampType(req.user);
+    const [totalStamps, stampHistories] = await Promise.all([
+      getUserStampBalance(req.user.id, stampType),
+      getUserStampHistories(req.user.id, { stampType, limit })
+    ]);
+
+    res.json({
+      totalStamps,
+      stampType,
+      stampHistories
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function myPointHistories(req, res, next) {
   try {
     const page = Math.max(1, Number(req.query.page) || 1);
@@ -587,12 +607,6 @@ async function myPointHistories(req, res, next) {
     const { histories, pagination } = await getUserPointHistories(req.user.id, { page, limit });
     const totalPoints = Number(req.user.total_points || 0);
     const currentLevel = resolveMemberLevel(totalPoints);
-    const stampType = resolveUserStampType(req.user);
-    const [totalStamps, stampHistories] = await Promise.all([
-      getUserStampBalance(req.user.id, stampType),
-      getUserStampHistories(req.user.id, { stampType, limit: 20 })
-    ]);
-
     const levelGuide = MEMBER_LEVELS.map((info, index) => ({
       level: info.level,
       label: `${info.emoji} ${info.title}`,
@@ -605,8 +619,6 @@ async function myPointHistories(req, res, next) {
 
     res.json({
       totalPoints,
-      totalStamps,
-      stampType,
       level: currentLevel.level,
       levelLabel: currentLevel.label,
       pointHistories: histories.map((row) => ({
@@ -619,7 +631,6 @@ async function myPointHistories(req, res, next) {
       })),
       pointRuleGuide,
       levelGuide,
-      stampHistories,
       pagination
     });
   } catch (error) {
@@ -942,6 +953,7 @@ async function withdrawMyAccount(req, res, next) {
 module.exports = {
   myStats,
   myPointHistories,
+  myStampHistories,
   myActivity,
   myLiveAccessStatus,
   myNotifications,
