@@ -389,17 +389,50 @@ async function findByNicknameExceptUser(nickname, userId) {
 }
 
 
+function isBusinessAccount(row) {
+  const role = String(row?.role || '').toUpperCase();
+  const memberType = String(row?.member_type || row?.memberType || '').toUpperCase();
+  return role === 'BUSINESS' || memberType === 'BUSINESS';
+}
+
+async function updateBusinessAuthorNicknameSnapshots(userId, nickname, connection = null) {
+  const db = connection || getPool();
+  const normalizedNickname = String(nickname || '').trim() || null;
+  const [postResult] = await db.query(
+    `UPDATE posts
+        SET author_nickname_snapshot = ?
+      WHERE user_id = ?
+        AND author_nickname_snapshot IS NOT NULL
+        AND COALESCE(author_role_snapshot, 'MEMBER') <> 'ADMIN'`,
+    [normalizedNickname, userId]
+  );
+  const [commentResult] = await db.query(
+    `UPDATE comments
+        SET author_nickname_snapshot = ?
+      WHERE user_id = ?
+        AND author_nickname_snapshot IS NOT NULL
+        AND COALESCE(author_role_snapshot, 'MEMBER') <> 'ADMIN'`,
+    [normalizedNickname, userId]
+  );
+
+  return {
+    posts: Number(postResult.affectedRows || 0),
+    comments: Number(commentResult.affectedRows || 0)
+  };
+}
+
 async function updateUserProfile(userId, payload) {
   const pool = getPool();
   const fields = [];
   const values = [];
+  const hasNicknameUpdate = Object.prototype.hasOwnProperty.call(payload, 'nickname');
 
   if (Object.prototype.hasOwnProperty.call(payload, 'password')) {
     fields.push('password = ?');
     values.push(payload.password);
   }
 
-  if (Object.prototype.hasOwnProperty.call(payload, 'nickname')) {
+  if (hasNicknameUpdate) {
     fields.push('nickname = ?');
     values.push(payload.nickname);
     fields.push('last_nickname_changed_at = NOW()');
@@ -417,8 +450,33 @@ async function updateUserProfile(userId, payload) {
 
   if (!fields.length) return;
 
-  values.push(userId);
-  await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+  if (!hasNicknameUpdate) {
+    values.push(userId);
+    await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+    return;
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [rows] = await connection.query(
+      'SELECT role, member_type FROM users WHERE id = ? LIMIT 1 FOR UPDATE',
+      [userId]
+    );
+    values.push(userId);
+    await connection.query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+
+    if (isBusinessAccount(rows[0])) {
+      await updateBusinessAuthorNicknameSnapshots(userId, payload.nickname, connection);
+    }
+
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 
 async function getBusinessProfileByUserId(userId) {
@@ -603,6 +661,7 @@ module.exports = {
   findByNickname,
   findByNicknameExceptUser,
   updateUserProfile,
+  updateBusinessAuthorNicknameSnapshots,
   withdrawUserById,
   getBusinessProfileByUserId,
   upsertBusinessProfileByUserId,
