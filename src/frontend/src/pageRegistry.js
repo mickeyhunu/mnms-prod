@@ -1004,7 +1004,10 @@ const pageRegistry = {
                         </a>
                         <a class="mypage-link-item" href="/business-management">
                             <span>사업자정보 관리</span>
-                            <span id="mypage-business-info-status" class="mypage-status-badge mypage-status-badge--unregistered">미등록</span>
+                            <span class="mypage-business-info-status-wrap">
+                                <span id="mypage-business-info-status" class="mypage-status-badge mypage-status-badge--unregistered">미등록</span>
+                                <span id="mypage-business-info-rejection-reason" class="mypage-rejection-reason hidden"></span>
+                            </span>
                         </a>
                         <a class="mypage-link-item" href="/ad-order-history"><span>광고 구매 내역</span></a>
                         <a class="mypage-link-item hidden" id="business-member-apply-link" href="/business-apply">

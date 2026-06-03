@@ -216,9 +216,26 @@ function setBusinessApplyLinkDisabled(disabled) {
     }
 }
 
+function renderBusinessRejectionReason(elementId, isRejected, rejectionReason) {
+    const reason = document.getElementById(elementId);
+    if (!reason) return;
+
+    const message = String(rejectionReason || '').trim() || '반려 사유가 등록되지 않았습니다. 고객센터로 문의해주세요.';
+    reason.textContent = isRejected ? `반려 사유: ${message}` : '';
+    reason.classList.toggle('hidden', !isRejected);
+}
+
+function renderBusinessInfoStatusBadge({ registrationStatus, approvalStatus, rejectionReason } = {}) {
+    const normalizedApprovalStatus = normalizeBusinessApprovalStatus(approvalStatus);
+    const resolvedStatus = resolveBusinessInfoBadgeStatus(registrationStatus, normalizedApprovalStatus);
+    const isRejected = registrationStatus === 'registered' && normalizedApprovalStatus === 'rejected';
+
+    applyStatusBadge('mypage-business-info-status', resolvedStatus);
+    renderBusinessRejectionReason('mypage-business-info-rejection-reason', isRejected, rejectionReason);
+}
+
 function renderBusinessApplyStatusBadge({ registrationStatus, approvalStatus, rejectionReason } = {}) {
     const badge = document.getElementById('mypage-business-apply-status');
-    const reason = document.getElementById('mypage-business-apply-rejection-reason');
     if (!badge) return;
 
     const normalizedApprovalStatus = normalizeBusinessApprovalStatus(approvalStatus);
@@ -229,12 +246,7 @@ function renderBusinessApplyStatusBadge({ registrationStatus, approvalStatus, re
     badge.classList.toggle('hidden', !isReviewing && !isRejected);
     if (isReviewing) applyStatusBadge('mypage-business-apply-status', 'pending');
     if (isRejected) applyStatusBadge('mypage-business-apply-status', 'rejected');
-
-    if (reason) {
-        const message = String(rejectionReason || '').trim() || '반려 사유가 등록되지 않았습니다. 고객센터로 문의해주세요.';
-        reason.textContent = isRejected ? `반려 사유: ${message}` : '';
-        reason.classList.toggle('hidden', !isRejected);
-    }
+    renderBusinessRejectionReason('mypage-business-apply-rejection-reason', isRejected, rejectionReason);
 
     setBusinessApplyLinkDisabled(isReviewing);
 }
@@ -264,7 +276,11 @@ async function renderBusinessProfileStatuses() {
     }
 
     applyStatusBadge('mypage-ad-profile-status', adStatus);
-    applyStatusBadge('mypage-business-info-status', resolveBusinessInfoBadgeStatus(businessStatus, businessApprovalStatus));
+    renderBusinessInfoStatusBadge({
+        registrationStatus: businessStatus,
+        approvalStatus: businessApprovalStatus,
+        rejectionReason: businessRejectionReason
+    });
     renderBusinessApplyStatusBadge({
         registrationStatus: businessStatus,
         approvalStatus: businessApprovalStatus,
