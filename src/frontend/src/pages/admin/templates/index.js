@@ -22,7 +22,7 @@ export const adminTemplate = `
 
     <main class="main-content">
         <div class="container">
-            <header class="community-section-header">
+            <header class="community-section-header" style="padding: 12px;">
                 <div class="community-header-left">
                     <button class="admin-sidebar-toggle admin-sidebar-toggle--header icon-btn icon-btn-square" id="admin-sidebar-toggle" type="button" aria-label="관리 메뉴 펼치기" aria-expanded="false" aria-controls="admin-tabs">
                         <svg class="admin-sidebar-toggle__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
