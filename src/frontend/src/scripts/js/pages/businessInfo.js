@@ -77,6 +77,25 @@ function notifyPendingBusinessManagementReview() {
     alert(message);
 }
 
+function renderBusinessManagementReviewNotice(profile) {
+    const notice = document.getElementById('business-management-review-notice');
+    if (!notice) return;
+
+    const approvalStatus = normalizeBusinessManagementApprovalStatus(profile?.approvalStatus);
+    const wasReverted = Boolean(profile?.revertedToLastApprovedBusinessInfo);
+    if (approvalStatus !== 'rejected' || !wasReverted) {
+        notice.textContent = '';
+        notice.classList.add('hidden');
+        return;
+    }
+
+    const rejectionReason = String(profile?.rejectionReason || '').trim();
+    notice.textContent = rejectionReason
+        ? `사업자정보 수정 요청이 반려되어 기존 승인된 사업자등록증 정보로 자동 복구되었습니다. 반려 사유: ${rejectionReason}`
+        : '사업자정보 수정 요청이 반려되어 기존 승인된 사업자등록증 정보로 자동 복구되었습니다.';
+    notice.classList.remove('hidden');
+}
+
 function redirectBusinessManagementPendingReview(profile, user) {
     if (!isBusinessApplicationMode() || !isBusinessManagementPendingReview(profile, user)) {
         return false;
@@ -1003,6 +1022,7 @@ async function initBusinessManagementPage() {
     const profile = await APIClient.get('/users/me/business-profile');
     if (redirectBusinessManagementPendingReview(profile, me)) return;
 
+    renderBusinessManagementReviewNotice(profile);
     applyBusinessFormData(profile?.businessInfo || {});
     bindBusinessManagementEvents();
     updateBusinessActionButtons();
