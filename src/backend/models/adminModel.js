@@ -41,13 +41,31 @@ const BUSINESS_APPLICATION_SELECT = `${BUSINESS_APPLICATION_SELECT_COLUMNS}
        FROM business_profiles bp
        JOIN users u ON u.id = bp.user_id`;
 
+function hasBusinessInfoSnapshot(value) {
+  return Object.keys(normalizeBusinessInfoValue(value)).length > 0;
+}
+
+function getBusinessApplicationType(row) {
+  const approvalStatus = String(row.approvalStatus || '').toUpperCase();
+  if (approvalStatus === 'APPROVED') return 'APPROVED';
+
+  const isBusinessMember = String(row.memberType || '').toUpperCase() === 'BUSINESS'
+    || String(row.role || '').toUpperCase() === 'BUSINESS';
+  return isBusinessMember || hasBusinessInfoSnapshot(row.lastApprovedBusinessInfo) ? 'MODIFICATION' : 'NEW';
+}
+
 function decorateBusinessApplication(row) {
+  const businessInfo = normalizeBusinessInfoValue(row.businessInfo);
+  const lastApprovedBusinessInfo = normalizeBusinessInfoValue(row.lastApprovedBusinessInfo);
+  const isBusinessMember = String(row.memberType || '').toUpperCase() === 'BUSINESS'
+    || String(row.role || '').toUpperCase() === 'BUSINESS';
+
   return {
     ...row,
-    businessInfo: normalizeBusinessInfoValue(row.businessInfo),
-    lastApprovedBusinessInfo: normalizeBusinessInfoValue(row.lastApprovedBusinessInfo),
-    isBusinessMember: String(row.memberType || '').toUpperCase() === 'BUSINESS'
-      || String(row.role || '').toUpperCase() === 'BUSINESS'
+    businessInfo,
+    lastApprovedBusinessInfo,
+    isBusinessMember,
+    applicationType: getBusinessApplicationType(row)
   };
 }
 
