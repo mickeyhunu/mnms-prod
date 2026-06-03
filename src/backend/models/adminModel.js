@@ -3,7 +3,7 @@
  */
 const { getPool, getChatbotPool } = require('../config/database');
 const { pickUserRow } = require('../utils/response');
-const { ensureResolvedLoginRestriction, getUserActivityStats, getUserActivityDetails, getUserLoginHistories, getBusinessProfileByUserId, updateBusinessProfileReviewByUserId: updateBusinessProfileReviewRecordByUserId } = require('./userModel');
+const { ensureResolvedLoginRestriction, getUserActivityStats, getUserActivityDetails, getUserLoginHistories, getBusinessProfileByUserId, updateBusinessProfileReviewByUserId: updateBusinessProfileReviewRecordByUserId, updateBusinessAuthorNicknameSnapshots } = require('./userModel');
 const { getStoreByNo, listStores } = require('./liveModel');
 
 
@@ -348,8 +348,9 @@ async function updateUserByAdmin(userId, payload) {
   const pool = getPool();
   const fields = [];
   const values = [];
+  const hasNicknameUpdate = Object.prototype.hasOwnProperty.call(payload, 'nickname');
 
-  if (Object.prototype.hasOwnProperty.call(payload, 'nickname')) {
+  if (hasNicknameUpdate) {
     fields.push('nickname = ?');
     values.push(payload.nickname);
   }
@@ -401,8 +402,36 @@ async function updateUserByAdmin(userId, payload) {
 
   if (!fields.length) return;
 
-  values.push(userId);
-  await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+  if (!hasNicknameUpdate) {
+    values.push(userId);
+    await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+    return;
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [rows] = await connection.query(
+      'SELECT role, member_type FROM users WHERE id = ? LIMIT 1 FOR UPDATE',
+      [userId]
+    );
+    const wasBusinessAccount = String(rows[0]?.role || '').toUpperCase() === 'BUSINESS'
+      || String(rows[0]?.member_type || '').toUpperCase() === 'BUSINESS';
+
+    values.push(userId);
+    await connection.query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+
+    if (wasBusinessAccount) {
+      await updateBusinessAuthorNicknameSnapshots(userId, payload.nickname, connection);
+    }
+
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 
 async function adjustUserPointsByAdmin(userId, { amount, reason, actionType }) {
