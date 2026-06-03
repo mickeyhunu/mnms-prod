@@ -181,14 +181,14 @@ router.put('/business-applications/:userId/review', async (req, res, next) => {
     }
 
     if (approvalStatus === 'REJECTED' && (!rejectionReason || rejectionReason.length > 500)) {
-      return res.status(400).json({ message: '기업회원 신청 반려 사유는 1자 이상 500자 이하로 입력해주세요.' });
+      return res.status(400).json({ message: '기업회원 신청/변경 반려 사유는 1자 이상 500자 이하로 입력해주세요.' });
     }
 
     const profile = await adminModel.findBusinessApplicationByUserId(userId);
-    if (!profile) return res.status(404).json({ message: '기업회원 신청서를 찾을 수 없습니다.' });
+    if (!profile) return res.status(404).json({ message: '기업회원 신청/변경 내역을 찾을 수 없습니다.' });
 
     if (!documentReviewConfirmed) {
-      return res.status(400).json({ message: '사업자등록증과 영업허가증 첨부 서류 확인 후 검토를 처리할 수 있습니다.' });
+      return res.status(400).json({ message: '사업자등록증과 영업허가증 첨부 서류 및 변경 내역 확인 후 검토를 처리할 수 있습니다.' });
     }
 
     if (approvalStatus === 'APPROVED' && !hasRequiredBusinessReviewDocuments(profile)) {
@@ -196,7 +196,7 @@ router.put('/business-applications/:userId/review', async (req, res, next) => {
     }
 
     await adminModel.reviewBusinessApplication(userId, { approvalStatus, rejectionReason, reviewedBy: req.user?.id || null });
-    res.json({ success: true, message: approvalStatus === 'APPROVED' ? '기업회원 신청을 승인했습니다.' : '기업회원 신청을 반려했습니다.' });
+    res.json({ success: true, message: approvalStatus === 'APPROVED' ? '기업회원 신청/변경을 승인했습니다.' : '기업회원 신청/변경을 반려했습니다.' });
   } catch (error) {
     next(error);
   }
@@ -309,7 +309,7 @@ router.put('/users/:id', async (req, res, next) => {
     }
 
     if (businessApprovalStatus === 'REJECTED' && (!businessRejectionReason || businessRejectionReason.length > 500)) {
-      return res.status(400).json({ message: '기업회원 신청 반려 사유는 1자 이상 500자 이하로 입력해주세요.' });
+      return res.status(400).json({ message: '기업회원 신청/변경 반려 사유는 1자 이상 500자 이하로 입력해주세요.' });
     }
 
     if (!['NONE', 'ADD', 'DEDUCT'].includes(pointAdjustmentType)) {

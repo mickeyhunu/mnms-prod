@@ -961,7 +961,7 @@ function bindBusinessManagementEvents() {
             }
 
             const isApplyMode = isBusinessApplicationMode();
-            await APIClient.put('/users/me/business-profile', {
+            const response = await APIClient.put('/users/me/business-profile', {
                 registrationStatus: 'REGISTERED',
                 businessInfo: {
                     ...formData,
@@ -971,7 +971,12 @@ function bindBusinessManagementEvents() {
             if (isApplyMode) {
                 window.sessionStorage?.removeItem(BUSINESS_APPLY_AGREEMENT_KEY);
             }
-            alert(isApplyMode ? '기업회원 신청 접수가 완료되었습니다. 관리자가 신청서를 검토한 뒤 최종 승인하면 기업회원으로 전환됩니다.' : '사업자정보가 저장되었습니다.');
+            const message = isApplyMode
+                ? '기업회원 신청 접수가 완료되었습니다. 관리자가 신청서를 검토한 뒤 최종 승인하면 기업회원으로 전환됩니다.'
+                : (response?.requiresAdminReview
+                    ? '사업자정보 변경 내역이 접수되었습니다. 관리자가 검토한 뒤 최종 반영됩니다.'
+                    : '사업자정보가 저장되었습니다.');
+            alert(message);
             window.location.href = '/my-page';
         } catch (error) {
             alert(error.message || '사업자정보 저장에 실패했습니다.');
