@@ -135,9 +135,9 @@ async function listPosts(page = 0, size = 10, options = {}) {
               p.notice_target_boards AS noticeTargetBoards,
               p.is_hidden AS isHidden,
               p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
-              COALESCE(u.nickname, '비회원') AS authorNickname,
-              COALESCE(u.role, 'MEMBER') AS authorRole,
-              COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
+              COALESCE(p.author_nickname_snapshot, u.nickname, '비회원') AS authorNickname,
+              COALESCE(p.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
+              COALESCE(p.author_member_type_snapshot, u.member_type, 'MEMBER') AS authorMemberType,
               (
                 SELECT ba.plan_type
                   FROM business_ads ba
@@ -266,7 +266,7 @@ async function findUserAttendancePostForCurrentDbDay(userId) {
   return rows[0] || null;
 }
 
-async function createPost({ userId, title, content, imageUrls = [], boardType = BOARD_TYPES.FREE, isNotice = false, noticeType = null, isPinned = false, noticeTargetBoards = [] }) {
+async function createPost({ userId, title, content, imageUrls = [], boardType = BOARD_TYPES.FREE, isNotice = false, noticeType = null, isPinned = false, noticeTargetBoards = [], authorSnapshot = null }) {
   const pool = getPool();
   const normalizedBoardType = normalizeBoardType(boardType);
   const normalizedNoticeType = isNotice ? (String(noticeType || '').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE') : null;
@@ -274,8 +274,8 @@ async function createPost({ userId, title, content, imageUrls = [], boardType = 
     ? serializeNoticeTargetBoards(noticeTargetBoards.length ? noticeTargetBoards : [normalizedBoardType])
     : null;
   const [result] = await pool.query(
-    'INSERT INTO posts (user_id, board_type, is_notice, notice_type, is_pinned, notice_target_boards, title, content, image_urls) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [userId || null, normalizedBoardType, isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, serializedNoticeTargetBoards, title, content, JSON.stringify(normalizeImageUrls(imageUrls))]
+    'INSERT INTO posts (user_id, author_nickname_snapshot, author_role_snapshot, author_member_type_snapshot, board_type, is_notice, notice_type, is_pinned, notice_target_boards, title, content, image_urls) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [userId || null, authorSnapshot?.nickname || null, authorSnapshot?.role || null, authorSnapshot?.memberType || null, normalizedBoardType, isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, serializedNoticeTargetBoards, title, content, JSON.stringify(normalizeImageUrls(imageUrls))]
   );
   return result.insertId;
 }
@@ -301,9 +301,9 @@ async function findPostDetailById(id) {
             p.notice_target_boards AS noticeTargetBoards,
             p.is_hidden AS isHidden,
             p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
-            COALESCE(u.nickname, '비회원') AS authorNickname,
-            COALESCE(u.role, 'MEMBER') AS authorRole,
-            COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
+            COALESCE(p.author_nickname_snapshot, u.nickname, '비회원') AS authorNickname,
+            COALESCE(p.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
+            COALESCE(p.author_member_type_snapshot, u.member_type, 'MEMBER') AS authorMemberType,
             (
               SELECT ba.plan_type
                 FROM business_ads ba
@@ -416,9 +416,9 @@ async function listComments(postId) {
   const pool = getPool();
   const [rows] = await pool.query(
       `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.parent_id AS parentId, c.is_secret AS isSecret, c.is_hidden AS isHidden, c.is_deleted AS isDeleted, c.content, c.created_at AS createdAt,
-            COALESCE(u.nickname, '비회원') AS authorNickname,
-            COALESCE(u.role, 'MEMBER') AS authorRole,
-            COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
+            COALESCE(c.author_nickname_snapshot, u.nickname, '비회원') AS authorNickname,
+            COALESCE(c.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
+            COALESCE(c.author_member_type_snapshot, u.member_type, 'MEMBER') AS authorMemberType,
             (
               SELECT ba.plan_type
                 FROM business_ads ba
@@ -448,9 +448,9 @@ async function listAllCommentsForAdmin() {
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.parent_id AS parentId, c.is_secret AS isSecret, c.is_hidden AS isHidden, c.is_deleted AS isDeleted, c.content, c.created_at AS createdAt,
-            COALESCE(u.nickname, '비회원') AS authorNickname,
-            COALESCE(u.role, 'MEMBER') AS authorRole,
-            COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
+            COALESCE(c.author_nickname_snapshot, u.nickname, '비회원') AS authorNickname,
+            COALESCE(c.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
+            COALESCE(c.author_member_type_snapshot, u.member_type, 'MEMBER') AS authorMemberType,
             p.board_type AS boardType
      FROM comments c
      LEFT JOIN users u ON u.id = c.user_id
@@ -466,11 +466,11 @@ async function findCommentById(id) {
   return rows[0] || null;
 }
 
-async function createComment({ postId, userId, content, parentId = null, isSecret = false }) {
+async function createComment({ postId, userId, content, parentId = null, isSecret = false, authorSnapshot = null }) {
   const pool = getPool();
   const [result] = await pool.query(
-    'INSERT INTO comments (post_id, user_id, parent_id, is_secret, content) VALUES (?, ?, ?, ?, ?)',
-    [postId, userId, parentId, isSecret ? 1 : 0, content]
+    'INSERT INTO comments (post_id, user_id, author_nickname_snapshot, author_role_snapshot, author_member_type_snapshot, parent_id, is_secret, content) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [postId, userId, authorSnapshot?.nickname || null, authorSnapshot?.role || null, authorSnapshot?.memberType || null, parentId, isSecret ? 1 : 0, content]
   );
   return result.insertId;
 }
@@ -570,9 +570,9 @@ async function listBestPosts() {
   const selectQuery = `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
             p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
             p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
-            COALESCE(u.nickname, '비회원') AS authorNickname,
-            COALESCE(u.role, 'MEMBER') AS authorRole,
-            COALESCE(u.member_type, 'MEMBER') AS authorMemberType,
+            COALESCE(p.author_nickname_snapshot, u.nickname, '비회원') AS authorNickname,
+            COALESCE(p.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
+            COALESCE(p.author_member_type_snapshot, u.member_type, 'MEMBER') AS authorMemberType,
             (
               SELECT ba.plan_type
                 FROM business_ads ba
