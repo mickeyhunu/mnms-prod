@@ -2999,7 +2999,7 @@ body[data-page="admin"] {
 }
 
 .business-management-review-notice {
-    margin: 12px 0 18px;
+    margin: 12px;
     padding: 12px 14px;
     border: 1px solid rgba(220, 53, 69, 0.22);
     border-radius: 12px;
