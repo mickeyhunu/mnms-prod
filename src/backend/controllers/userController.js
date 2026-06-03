@@ -190,6 +190,30 @@ function pickTrimmedText(body, key, fallback = '') {
   return String(body[key] || '').trim();
 }
 
+function parseBusinessInfoValue(value) {
+  if (!value) return {};
+  if (typeof value === 'object') return value;
+  try {
+    return JSON.parse(value);
+  } catch (_error) {
+    return {};
+  }
+}
+
+function stableBusinessInfoStringify(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableBusinessInfoStringify).join(',')}]`;
+  }
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableBusinessInfoStringify(value[key])}`).join(',')}}`;
+  }
+  return JSON.stringify(value ?? '');
+}
+
+function hasBusinessInfoChanged(previousInfo, nextInfo) {
+  return stableBusinessInfoStringify(parseBusinessInfoValue(previousInfo)) !== stableBusinessInfoStringify(parseBusinessInfoValue(nextInfo));
+}
+
 
 function isNicknameChangeLocked(lastChangedAt) {
   if (!lastChangedAt) return false;
@@ -816,8 +840,17 @@ async function saveMyBusinessProfile(req, res, next) {
       normalizedBusinessInfo.businessRegistrationStatusCode = businessRegistrationVerification.statusCode || '';
     }
 
+    const isBusinessMember = String(req.user?.member_type || req.user?.memberType || '').toUpperCase() === 'BUSINESS';
+    const isApprovedBusinessProfile = existingProfile
+      && normalizeBusinessProfileRegistrationStatus(existingProfile.registrationStatus, 'UNREGISTERED') === 'REGISTERED'
+      && normalizeBusinessProfileApprovalStatus(existingProfile.approvalStatus, 'PENDING') === 'APPROVED';
+    const businessInfoChanged = existingProfile ? hasBusinessInfoChanged(existingProfile.businessInfo, normalizedBusinessInfo) : true;
     const shouldResetReviewStatus = registrationStatus === 'REGISTERED'
-      && String(req.user?.member_type || req.user?.memberType || '').toUpperCase() !== 'BUSINESS';
+      && (!isBusinessMember || (isBusinessMember && businessInfoChanged));
+    const shouldCaptureInitialApprovedSnapshot = isBusinessMember
+      && isApprovedBusinessProfile
+      && !existingProfile.lastApprovedBusinessInfo
+      && businessInfoChanged;
 
     await upsertBusinessProfileByUserId(req.user.id, {
       companyName: String(businessInfo.businessName || '').trim() || null,
@@ -826,11 +859,17 @@ async function saveMyBusinessProfile(req, res, next) {
       contactPhone: String(req.user.phone || '').trim() || null,
       registrationStatus,
       businessInfo: normalizedBusinessInfo,
+      lastApprovedBusinessInfo: shouldCaptureInitialApprovedSnapshot ? parseBusinessInfoValue(existingProfile.businessInfo) : undefined,
       approvalStatus: shouldResetReviewStatus ? 'PENDING' : null,
       rejectionReason: shouldResetReviewStatus ? null : undefined
     });
 
-    res.json({ success: true, registrationStatus });
+    res.json({
+      success: true,
+      registrationStatus,
+      approvalStatus: shouldResetReviewStatus ? 'PENDING' : (existingProfile?.approvalStatus || 'PENDING'),
+      requiresAdminReview: shouldResetReviewStatus
+    });
   } catch (error) {
     next(error);
   }

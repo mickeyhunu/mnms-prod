@@ -58,7 +58,7 @@ const ADMIN_SEARCH_PLACEHOLDERS = {
     posts: '게시글 검색',
     comments: '댓글 검색',
     users: '일반 회원 검색',
-    'business-applications': '기업회원 신청 검색',
+    'business-applications': '기업회원 신청/변경 검색',
     admins: '관리자 검색',
     entries: '엔트리 검색',
     ads: '광고 검색',
@@ -1129,6 +1129,55 @@ function closeBusinessDocumentModal() {
     hideAdminModal('business-document-modal');
 }
 
+
+const BUSINESS_APPLICATION_CHANGE_FIELDS = [
+    ['businessName', '상호'],
+    ['businessNumber', '사업자번호'],
+    ['businessOwner', '대표자'],
+    ['businessAddress', '사업장 주소'],
+    ['businessType', '업종'],
+    ['businessContact', '사업장 연락처'],
+    ['licenseImageName', '사업자등록증'],
+    ['permitImageName', '영업허가증']
+];
+
+function normalizeBusinessChangeValue(value) {
+    return String(value ?? '').trim();
+}
+
+function getBusinessApplicationChanges(application = {}) {
+    const previousInfo = application.lastApprovedBusinessInfo || {};
+    const currentInfo = application.businessInfo || {};
+    if (!previousInfo || Object.keys(previousInfo).length === 0) return [];
+
+    return BUSINESS_APPLICATION_CHANGE_FIELDS
+        .map(([key, label]) => {
+            const before = normalizeBusinessChangeValue(previousInfo[key]);
+            const after = normalizeBusinessChangeValue(currentInfo[key]);
+            if (before === after) return null;
+            return { label, before: before || '-', after: after || '-' };
+        })
+        .filter(Boolean);
+}
+
+function renderBusinessApplicationChangeSummary(application = {}) {
+    const changes = getBusinessApplicationChanges(application);
+    if (!changes.length) {
+        return '<span class="text-muted text-sm">신규 신청 또는 변경 없음</span>';
+    }
+
+    return `
+        <ul class="admin-business-change-list">
+            ${changes.map((change) => `
+                <li>
+                    <strong>${sanitizeHTML(change.label)}</strong>
+                    <span><del>${sanitizeHTML(change.before)}</del> → <ins>${sanitizeHTML(change.after)}</ins></span>
+                </li>
+            `).join('')}
+        </ul>
+    `;
+}
+
 function renderBusinessApplicationsTable() {
     const tbody = document.getElementById('business-applications-tbody');
     if (!tbody) return;
@@ -1137,7 +1186,7 @@ function renderBusinessApplicationsTable() {
     updateAdminTotal('business-applications', filteredItems.length);
 
     if (!pageItems.length) {
-        tbody.innerHTML = `<tr><td colspan="8">${filteredItems.length ? '현재 페이지에 표시할 신청서가 없습니다.' : '기업회원 신청서가 없습니다.'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9">${filteredItems.length ? '현재 페이지에 표시할 신청/변경 내역이 없습니다.' : '기업회원 신청/변경 내역이 없습니다.'}</td></tr>`;
     } else {
         tbody.innerHTML = pageItems.map((application) => {
             const isPending = String(application.approvalStatus || '').toUpperCase() === 'PENDING';
@@ -1156,7 +1205,8 @@ function renderBusinessApplicationsTable() {
                     </td>
                     <td>${sanitizeHTML(application.managerName || application.businessInfo?.businessOwner || '-')}<br><span class="text-muted text-sm">${sanitizeHTML(contact)}</span></td>
                     <td>${renderBusinessApplicationDocuments(application)}</td>
-                    <td>${toBusinessApplicationStatusLabel(application.approvalStatus)}${application.isBusinessMember ? '<br><span class="text-muted text-sm">기업회원 전환됨</span>' : ''}</td>
+                    <td>${toBusinessApplicationStatusLabel(application.approvalStatus)}${application.isBusinessMember ? '<br><span class="text-muted text-sm">기업회원 정보 변경</span>' : ''}</td>
+                    <td>${renderBusinessApplicationChangeSummary(application)}</td>
                     <td>${formatDate(application.createdAt)}<br><span class="text-muted text-sm">수정 ${formatDate(application.updatedAt)}</span></td>
                     <td>${renderBusinessRejectionHistories(application.rejectionHistories)}</td>
                     <td>
@@ -1193,11 +1243,11 @@ async function reviewBusinessApplication(actionElement) {
             alert('반려 사유는 500자 이하로 입력해주세요.');
             return;
         }
-    } else if (!window.confirm('사업자등록증과 영업허가증을 모두 확인했습니다. 이 신청을 승인하고 기업회원으로 전환하시겠습니까?')) {
+    } else if (!window.confirm('사업자등록증과 영업허가증 및 변경 내역을 확인했습니다. 이 신청/변경을 승인하시겠습니까?')) {
         return;
     }
 
-    if (approvalStatus === 'REJECTED' && !window.confirm('사업자등록증과 영업허가증을 모두 확인했습니다. 이 신청을 반려하시겠습니까?')) {
+    if (approvalStatus === 'REJECTED' && !window.confirm('사업자등록증과 영업허가증 및 변경 내역을 확인했습니다. 이 신청/변경을 반려하시겠습니까?')) {
         return;
     }
 
@@ -1211,7 +1261,7 @@ async function reviewBusinessApplication(actionElement) {
             documentReviewConfirmed: true
         });
         await loadBusinessApplications();
-        alert(approvalStatus === 'APPROVED' ? '기업회원 신청을 승인했습니다.' : '기업회원 신청을 반려했습니다.');
+        alert(approvalStatus === 'APPROVED' ? '기업회원 신청/변경을 승인했습니다.' : '기업회원 신청/변경을 반려했습니다.');
     } catch (error) {
         alert(error.message || '기업회원 신청 검토 처리에 실패했습니다.');
     } finally {

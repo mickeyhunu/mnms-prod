@@ -492,6 +492,7 @@ async function getBusinessProfileByUserId(userId) {
             rejection_reason AS rejectionReason,
             registration_status AS registrationStatus,
             business_info AS businessInfo,
+            last_approved_business_info AS lastApprovedBusinessInfo,
             approved_at AS approvedAt,
             created_at AS createdAt,
             updated_at AS updatedAt
@@ -511,14 +512,15 @@ async function upsertBusinessProfileByUserId(userId, payload = {}) {
     contactPhone = null,
     registrationStatus = 'UNREGISTERED',
     businessInfo = null,
+    lastApprovedBusinessInfo = undefined,
     approvalStatus = null,
     rejectionReason = null
   } = payload;
 
   await pool.query(
     `INSERT INTO business_profiles (
-      user_id, company_name, business_registration_number, manager_name, contact_phone, registration_status, business_info, approval_status, rejection_reason
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'PENDING'), ?)
+      user_id, company_name, business_registration_number, manager_name, contact_phone, registration_status, business_info, last_approved_business_info, approval_status, rejection_reason
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'PENDING'), ?)
     ON DUPLICATE KEY UPDATE
       company_name = VALUES(company_name),
       business_registration_number = VALUES(business_registration_number),
@@ -526,9 +528,24 @@ async function upsertBusinessProfileByUserId(userId, payload = {}) {
       contact_phone = VALUES(contact_phone),
       registration_status = VALUES(registration_status),
       business_info = VALUES(business_info),
+      last_approved_business_info = IF(? IS NULL, last_approved_business_info, VALUES(last_approved_business_info)),
       approval_status = IF(? IS NULL, approval_status, VALUES(approval_status)),
       rejection_reason = IF(? IS NULL, rejection_reason, VALUES(rejection_reason))`,
-    [userId, companyName, businessRegistrationNumber, managerName, contactPhone, registrationStatus, businessInfo ? JSON.stringify(businessInfo) : null, approvalStatus, rejectionReason, approvalStatus, approvalStatus]
+    [
+      userId,
+      companyName,
+      businessRegistrationNumber,
+      managerName,
+      contactPhone,
+      registrationStatus,
+      businessInfo ? JSON.stringify(businessInfo) : null,
+      lastApprovedBusinessInfo === undefined ? null : (lastApprovedBusinessInfo ? JSON.stringify(lastApprovedBusinessInfo) : null),
+      approvalStatus,
+      rejectionReason,
+      lastApprovedBusinessInfo === undefined ? null : 'SET',
+      approvalStatus,
+      approvalStatus
+    ]
   );
 }
 
@@ -541,13 +558,44 @@ async function updateBusinessProfileReviewByUserId(userId, { approvalStatus = 'P
     `UPDATE business_profiles
         SET approval_status = ?,
             rejection_reason = ?,
+            business_info = CASE
+              WHEN ? = 'REJECTED' AND last_approved_business_info IS NOT NULL THEN last_approved_business_info
+              ELSE business_info
+            END,
+            company_name = CASE
+              WHEN ? = 'REJECTED' AND last_approved_business_info IS NOT NULL THEN JSON_UNQUOTE(JSON_EXTRACT(last_approved_business_info, '$.businessName'))
+              ELSE company_name
+            END,
+            business_registration_number = CASE
+              WHEN ? = 'REJECTED' AND last_approved_business_info IS NOT NULL THEN JSON_UNQUOTE(JSON_EXTRACT(last_approved_business_info, '$.businessNumber'))
+              ELSE business_registration_number
+            END,
+            manager_name = CASE
+              WHEN ? = 'REJECTED' AND last_approved_business_info IS NOT NULL THEN JSON_UNQUOTE(JSON_EXTRACT(last_approved_business_info, '$.businessOwner'))
+              ELSE manager_name
+            END,
+            last_approved_business_info = CASE
+              WHEN ? = 'APPROVED' THEN business_info
+              ELSE last_approved_business_info
+            END,
             approved_at = CASE
               WHEN ? = 'APPROVED' AND approved_at IS NULL THEN NOW()
               WHEN ? <> 'APPROVED' THEN NULL
               ELSE approved_at
             END
       WHERE user_id = ?`,
-    [normalizedApprovalStatus, normalizedRejectionReason, normalizedApprovalStatus, normalizedApprovalStatus, userId]
+    [
+      normalizedApprovalStatus,
+      normalizedRejectionReason,
+      normalizedApprovalStatus,
+      normalizedApprovalStatus,
+      normalizedApprovalStatus,
+      normalizedApprovalStatus,
+      normalizedApprovalStatus,
+      normalizedApprovalStatus,
+      normalizedApprovalStatus,
+      userId
+    ]
   );
 }
 
@@ -624,7 +672,8 @@ async function withdrawUserById(userId, { reason = '' } = {}) {
            approval_status = 'PENDING',
            rejection_reason = NULL,
            registration_status = 'UNREGISTERED',
-           business_info = NULL
+           business_info = NULL,
+           last_approved_business_info = NULL
        WHERE user_id = ?`,
       [userId]
     );

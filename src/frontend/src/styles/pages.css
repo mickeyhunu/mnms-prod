@@ -3901,3 +3901,33 @@ body[data-page="admin"] {
     flex-direction: column;
     gap: 8px;
 }
+
+.admin-business-change-list {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.82rem;
+}
+
+.admin-business-change-list li {
+    display: grid;
+    gap: 0.15rem;
+}
+
+.admin-business-change-list strong {
+    color: var(--text-primary, #111827);
+    font-weight: 700;
+}
+
+.admin-business-change-list del {
+    color: var(--text-muted, #6b7280);
+    text-decoration-thickness: 1px;
+}
+
+.admin-business-change-list ins {
+    color: var(--primary-color, #2563eb);
+    font-weight: 700;
+    text-decoration: none;
+}
