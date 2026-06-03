@@ -82,17 +82,14 @@ function renderBusinessManagementReviewNotice(profile) {
     if (!notice) return;
 
     const approvalStatus = normalizeBusinessManagementApprovalStatus(profile?.approvalStatus);
-    const wasReverted = Boolean(profile?.revertedToLastApprovedBusinessInfo);
-    if (approvalStatus !== 'rejected' || !wasReverted) {
+    const rejectionReason = String(profile?.rejectionReason || '').trim();
+    if (approvalStatus !== 'rejected' || !rejectionReason) {
         notice.textContent = '';
         notice.classList.add('hidden');
         return;
     }
 
-    const rejectionReason = String(profile?.rejectionReason || '').trim();
-    notice.textContent = rejectionReason
-        ? `사업자정보 수정 요청이 반려되어 기존 승인된 사업자등록증 정보로 자동 복구되었습니다. 반려 사유: ${rejectionReason}`
-        : '사업자정보 수정 요청이 반려되어 기존 승인된 사업자등록증 정보로 자동 복구되었습니다.';
+    notice.textContent = `반려 사유: ${rejectionReason}`;
     notice.classList.remove('hidden');
 }
 

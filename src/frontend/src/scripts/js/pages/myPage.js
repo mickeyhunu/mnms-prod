@@ -216,28 +216,25 @@ function setBusinessApplyLinkDisabled(disabled) {
     }
 }
 
-function renderBusinessRejectionReason(elementId, isRejected, rejectionReason, { revertedToLastApprovedBusinessInfo = false } = {}) {
+function renderBusinessRejectionReason(elementId, isRejected, rejectionReason) {
     const reason = document.getElementById(elementId);
     if (!reason) return;
 
     const message = String(rejectionReason || '').trim() || '반려 사유가 등록되지 않았습니다. 고객센터로 문의해주세요.';
-    const revertNotice = revertedToLastApprovedBusinessInfo
-        ? ' 수정 요청이 반려되어 기존 승인된 사업자등록증 정보로 자동 복구되었습니다.'
-        : '';
-    reason.textContent = isRejected ? `반려 사유: ${message}${revertNotice}` : '';
+    reason.textContent = isRejected ? `반려 사유: ${message}` : '';
     reason.classList.toggle('hidden', !isRejected);
 }
 
-function renderBusinessInfoStatusBadge({ registrationStatus, approvalStatus, rejectionReason, revertedToLastApprovedBusinessInfo = false } = {}) {
+function renderBusinessInfoStatusBadge({ registrationStatus, approvalStatus, rejectionReason } = {}) {
     const normalizedApprovalStatus = normalizeBusinessApprovalStatus(approvalStatus);
     const resolvedStatus = resolveBusinessInfoBadgeStatus(registrationStatus, normalizedApprovalStatus);
     const isRejected = registrationStatus === 'registered' && normalizedApprovalStatus === 'rejected';
 
     applyStatusBadge('mypage-business-info-status', resolvedStatus);
-    renderBusinessRejectionReason('mypage-business-info-rejection-reason', isRejected, rejectionReason, { revertedToLastApprovedBusinessInfo });
+    renderBusinessRejectionReason('mypage-business-info-rejection-reason', isRejected, rejectionReason);
 }
 
-function renderBusinessApplyStatusBadge({ registrationStatus, approvalStatus, rejectionReason, revertedToLastApprovedBusinessInfo = false } = {}) {
+function renderBusinessApplyStatusBadge({ registrationStatus, approvalStatus, rejectionReason } = {}) {
     const badge = document.getElementById('mypage-business-apply-status');
     if (!badge) return;
 
@@ -249,7 +246,7 @@ function renderBusinessApplyStatusBadge({ registrationStatus, approvalStatus, re
     badge.classList.toggle('hidden', !isReviewing && !isRejected);
     if (isReviewing) applyStatusBadge('mypage-business-apply-status', 'pending');
     if (isRejected) applyStatusBadge('mypage-business-apply-status', 'rejected');
-    renderBusinessRejectionReason('mypage-business-apply-rejection-reason', isRejected, rejectionReason, { revertedToLastApprovedBusinessInfo });
+    renderBusinessRejectionReason('mypage-business-apply-rejection-reason', isRejected, rejectionReason);
 
     setBusinessApplyLinkDisabled(isReviewing);
 }
@@ -259,7 +256,6 @@ async function renderBusinessProfileStatuses() {
     let businessStatus = 'unregistered';
     let businessApprovalStatus = 'pending';
     let businessRejectionReason = '';
-    let revertedToLastApprovedBusinessInfo = false;
 
     try {
         const response = await APIClient.get('/users/me/business-ads');
@@ -275,7 +271,6 @@ async function renderBusinessProfileStatuses() {
         businessStatus = normalizeRegistrationStatus(profile?.registrationStatus);
         businessApprovalStatus = normalizeBusinessApprovalStatus(profile?.approvalStatus);
         businessRejectionReason = profile?.rejectionReason || '';
-        revertedToLastApprovedBusinessInfo = Boolean(profile?.revertedToLastApprovedBusinessInfo);
     } catch (error) {
         businessStatus = 'unregistered';
     }
@@ -284,14 +279,12 @@ async function renderBusinessProfileStatuses() {
     renderBusinessInfoStatusBadge({
         registrationStatus: businessStatus,
         approvalStatus: businessApprovalStatus,
-        rejectionReason: businessRejectionReason,
-        revertedToLastApprovedBusinessInfo
+        rejectionReason: businessRejectionReason
     });
     renderBusinessApplyStatusBadge({
         registrationStatus: businessStatus,
         approvalStatus: businessApprovalStatus,
-        rejectionReason: businessRejectionReason,
-        revertedToLastApprovedBusinessInfo
+        rejectionReason: businessRejectionReason
     });
 }
 
