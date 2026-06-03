@@ -966,6 +966,12 @@ async function loadPointHistories(page = 1) {
                         </div>
                         <div class="mypage-summary-row"><span>현재 등급</span><strong>${renderLevelBadgeLabel(response.levelLabel || '-')}</strong></div>
                         <div class="mypage-summary-row"><span>누적 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
+                    </section>
+
+                    <section class="mypage-summary-section">
+                        <div class="mypage-summary-head">
+                            <h3 class="mypage-summary-title">스템프</h3>
+                        </div>
                         ${renderStampSummary(totalStamps)}
                     </section>
 
@@ -1066,7 +1072,7 @@ async function loadStats() {
         const rankLabel = resolveRankLabel(currentUser, response.levelLabel || '');
         const rankMarkup = resolveRankMarkup(currentUser, rankLabel);
         const totalStamps = normalizeStampCount(response.totalStamps || 0);
-        const businessStampSection = isAdAccount(currentUser) ? `
+        const stampSection = isAdAccount(currentUser) ? `
             <section class="mypage-summary-section mypage-business-stamp-section">
                 <div class="mypage-summary-head">
                     <h3 class="mypage-summary-title">광고 스템프</h3>
@@ -1077,18 +1083,24 @@ async function loadStats() {
                     description: '브론즈 3일, 실버 2일 또는 골드 1일 광고에 사용할 수 있어요.'
                 })}
             </section>
-        ` : '';
+        ` : `
+            <section class="mypage-summary-section">
+                <div class="mypage-summary-head">
+                    <h3 class="mypage-summary-title">스템프</h3>
+                    <a class="mypage-summary-action" href="/my-page/points#stamp-history">스템프 내역 보기</a>
+                </div>
+                ${renderStampSummary(totalStamps)}
+            </section>
+        `;
         const pointsSection = isAdAccount(currentUser) ? '' : `
             <section class="mypage-summary-section">
                 <div class="mypage-summary-head">
                     <h3 class="mypage-summary-title">포인트</h3>
                     <span class="mypage-summary-actions">
                         <a class="mypage-summary-action" href="/my-page/points">포인트 내역 보기</a>
-                        <a class="mypage-summary-action" href="/my-page/points#stamp-history">스템프 내역 보기</a>
                     </span>
                 </div>
                 <div class="mypage-summary-row"><span>보유 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
-                ${renderStampSummary(totalStamps)}
                 <div class="mypage-level-progress">
                     <div class="mypage-level-progress-meta">
                         <span>${sanitizeHTML(parseLevelBadgeLabel(response.levelLabel || '').title || '')} → ${sanitizeHTML(parseLevelBadgeLabel(response.nextLevelLabel || '').title || 'MAX')}</span>
@@ -1115,7 +1127,7 @@ async function loadStats() {
             </section>
 
             ${pointsSection}
-            ${businessStampSection}
+            ${stampSection}
 
             <section class="mypage-summary-section">
                 <div class="mypage-summary-head">
