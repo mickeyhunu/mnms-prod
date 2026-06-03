@@ -368,6 +368,11 @@ router.put('/users/:id', async (req, res, next) => {
       updates.password = await hashPassword(password);
     }
 
+    const wasBusinessMember = String(target.member_type || target.memberType || '').toUpperCase() === 'BUSINESS';
+    if (businessApprovalStatus === 'APPROVED' && !wasBusinessMember) {
+      await adminModel.freezeUserCommunityAuthorSnapshotsBeforeBusinessConversion(id);
+    }
+
     await adminModel.updateUserByAdmin(id, updates);
     if (businessApprovalStatus) {
       await adminModel.updateBusinessProfileReviewByUserId(id, {

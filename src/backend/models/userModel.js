@@ -226,14 +226,8 @@ async function getUserNotifications(userId, { limit = 50 } = {}) {
          c.created_at AS createdAt,
          CASE
            WHEN p.board_type = 'ANON'
-             AND NOT EXISTS (
-               SELECT 1
-                 FROM business_ads ba
-                WHERE ba.owner_user_id = u.id
-                  AND ba.is_active = 1
-                LIMIT 1
-             ) THEN '익명'
-           ELSE COALESCE(u.nickname, '익명')
+             AND COALESCE(c.author_member_type_snapshot, u.member_type, 'MEMBER') <> 'BUSINESS' THEN '익명'
+           ELSE COALESCE(c.author_nickname_snapshot, u.nickname, '익명')
          END AS actorNickname,
          CONCAT('내 게시글 "', p.title, '"에 새로운 댓글이 달렸습니다.') AS message
        FROM comments c
@@ -261,14 +255,8 @@ async function getUserNotifications(userId, { limit = 50 } = {}) {
          c.created_at AS createdAt,
          CASE
            WHEN p.board_type = 'ANON'
-             AND NOT EXISTS (
-               SELECT 1
-                 FROM business_ads ba
-                WHERE ba.owner_user_id = u.id
-                  AND ba.is_active = 1
-                LIMIT 1
-             ) THEN '익명'
-           ELSE COALESCE(u.nickname, '익명')
+             AND COALESCE(c.author_member_type_snapshot, u.member_type, 'MEMBER') <> 'BUSINESS' THEN '익명'
+           ELSE COALESCE(c.author_nickname_snapshot, u.nickname, '익명')
          END AS actorNickname,
          CONCAT('내 댓글에 새로운 대댓글이 달렸습니다.') AS message
        FROM comments c
@@ -446,6 +434,7 @@ async function getBusinessProfileByUserId(userId) {
             rejection_reason AS rejectionReason,
             registration_status AS registrationStatus,
             business_info AS businessInfo,
+            approved_at AS approvedAt,
             created_at AS createdAt,
             updated_at AS updatedAt
        FROM business_profiles
@@ -493,9 +482,14 @@ async function updateBusinessProfileReviewByUserId(userId, { approvalStatus = 'P
   await pool.query(
     `UPDATE business_profiles
         SET approval_status = ?,
-            rejection_reason = ?
+            rejection_reason = ?,
+            approved_at = CASE
+              WHEN ? = 'APPROVED' AND approved_at IS NULL THEN NOW()
+              WHEN ? <> 'APPROVED' THEN NULL
+              ELSE approved_at
+            END
       WHERE user_id = ?`,
-    [normalizedApprovalStatus, normalizedRejectionReason, userId]
+    [normalizedApprovalStatus, normalizedRejectionReason, normalizedApprovalStatus, normalizedApprovalStatus, userId]
   );
 }
 
