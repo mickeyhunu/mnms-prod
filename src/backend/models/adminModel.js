@@ -27,6 +27,7 @@ const BUSINESS_APPLICATION_SELECT_COLUMNS = `SELECT bp.user_id AS userId,
             bp.rejection_reason AS rejectionReason,
             bp.registration_status AS registrationStatus,
             bp.business_info AS businessInfo,
+            bp.approved_at AS approvedAt,
             bp.created_at AS createdAt,
             bp.updated_at AS updatedAt,
             u.login_id AS loginId,
@@ -112,6 +113,56 @@ async function listBusinessProfileRejectionHistories(userId, { limit = 10 } = {}
   }));
 }
 
+
+function normalizeSnapshotNickname(value) {
+  return String(value || '').trim() || '비회원';
+}
+
+async function freezeUserCommunityAuthorSnapshotsBeforeBusinessConversion(userId, connection = null) {
+  const db = connection || getPool();
+  const [rows] = await db.query(
+    `SELECT id, nickname, member_type AS memberType
+       FROM users
+      WHERE id = ?
+      LIMIT 1`,
+    [userId]
+  );
+  const user = rows[0];
+  if (!user) return { posts: 0, comments: 0 };
+  if (String(user.memberType || '').toUpperCase() === 'BUSINESS') {
+    return { posts: 0, comments: 0 };
+  }
+
+  const authorNickname = normalizeSnapshotNickname(user.nickname);
+  const [postResult] = await db.query(
+    `UPDATE posts
+        SET author_nickname_snapshot = ?,
+            author_role_snapshot = 'MEMBER',
+            author_member_type_snapshot = 'MEMBER'
+      WHERE user_id = ?
+        AND author_nickname_snapshot IS NULL
+        AND author_role_snapshot IS NULL
+        AND author_member_type_snapshot IS NULL`,
+    [authorNickname, userId]
+  );
+  const [commentResult] = await db.query(
+    `UPDATE comments
+        SET author_nickname_snapshot = ?,
+            author_role_snapshot = 'MEMBER',
+            author_member_type_snapshot = 'MEMBER'
+      WHERE user_id = ?
+        AND author_nickname_snapshot IS NULL
+        AND author_role_snapshot IS NULL
+        AND author_member_type_snapshot IS NULL`,
+    [authorNickname, userId]
+  );
+
+  return {
+    posts: Number(postResult.affectedRows || 0),
+    comments: Number(commentResult.affectedRows || 0)
+  };
+}
+
 async function recordBusinessProfileRejectionHistory(userId, { rejectionReason = '', reviewedBy = null } = {}) {
   const normalizedRejectionReason = String(rejectionReason || '').trim().slice(0, 500);
   if (!normalizedRejectionReason) return;
@@ -138,6 +189,10 @@ async function updateBusinessProfileReviewByUserId(userId, { approvalStatus = 'P
 
 async function reviewBusinessApplication(userId, { approvalStatus = 'PENDING', rejectionReason = '', reviewedBy = null } = {}) {
   const normalizedApprovalStatus = String(approvalStatus || 'PENDING').trim().toUpperCase();
+  if (normalizedApprovalStatus === 'APPROVED') {
+    await freezeUserCommunityAuthorSnapshotsBeforeBusinessConversion(userId);
+  }
+
   await updateBusinessProfileReviewByUserId(userId, {
     approvalStatus: normalizedApprovalStatus,
     rejectionReason,
@@ -1080,6 +1135,7 @@ module.exports = {
   updateUserRole,
   updateUserMemberType,
   updateBusinessProfileReviewByUserId,
+  freezeUserCommunityAuthorSnapshotsBeforeBusinessConversion,
   listBusinessProfileRejectionHistories,
   updateUserByAdmin,
   adjustUserPointsByAdmin,
