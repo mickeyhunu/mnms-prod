@@ -51,7 +51,7 @@ export const adminTemplate = `
                         <button class="admin-tab" data-tab="business-ads" title="업체광고관리"><span class="admin-tab__label">업체광고관리</span></button>
                         <button class="admin-tab" data-tab="entries" title="엔트리 관리"><span class="admin-tab__label">엔트리 관리</span></button>
                         <button class="admin-tab" data-tab="support" title="공지/FAQ 관리"><span class="admin-tab__label">공지/FAQ 관리</span></button>
-                        <button class="admin-tab" data-tab="business-applications" title="기업회원 신청 검토"><span class="admin-tab__label">기업회원 신청 검토</span></button>
+                        <button class="admin-tab" data-tab="business-applications" title="기업회원 신청/변경 검토"><span class="admin-tab__label">기업회원 신청/변경 검토</span></button>
                         <button class="admin-tab" data-tab="inquiries" title="1:1 문의 관리"><span class="admin-tab__label">1:1 문의 관리</span></button>
                     </nav>
                 </aside>
@@ -163,10 +163,10 @@ export const adminTemplate = `
                     <div class="error-banner hidden" id="business-applications-error"><p id="business-applications-error-message"></p><button class="btn btn-sm btn-primary" id="business-applications-retry-btn">다시 시도</button></div>
                     <div class="admin-list-toolbar">
                         <p class="admin-list-toolbar__meta">총 <strong id="business-applications-total">0</strong>건</p>
-                        <input type="search" id="business-applications-search-input" class="form-control admin-list-toolbar__search" placeholder="기업회원 신청 검색" aria-label="기업회원 신청 검색">
+                        <input type="search" id="business-applications-search-input" class="form-control admin-list-toolbar__search" placeholder="기업회원 신청/변경 검색" aria-label="기업회원 신청/변경 검색">
                     </div>
                     <div class="admin-table-container hidden" id="business-applications-content">
-                        <table class="admin-table"><thead><tr><th>회원</th><th>상호/사업자번호</th><th>담당자</th><th>첨부 서류</th><th>신청 상태</th><th>신청/수정일</th><th>반려 이력</th><th>관리</th></tr></thead><tbody id="business-applications-tbody"></tbody></table>
+                        <table class="admin-table"><thead><tr><th>회원</th><th>상호/사업자번호</th><th>담당자</th><th>첨부 서류</th><th>신청/변경 상태</th><th>변경 내역</th><th>신청/수정일</th><th>반려 이력</th><th>관리</th></tr></thead><tbody id="business-applications-tbody"></tbody></table>
                     </div>
                     <div class="admin-pagination hidden" id="business-applications-pagination"></div>
                 </div>
