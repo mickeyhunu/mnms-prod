@@ -2998,6 +2998,18 @@ body[data-page="admin"] {
     text-decoration: none;
 }
 
+.business-management-review-notice {
+    margin: 12px 0 18px;
+    padding: 12px 14px;
+    border: 1px solid rgba(220, 53, 69, 0.22);
+    border-radius: 12px;
+    background: #fff5f6;
+    color: #c82333;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
 .business-info-section {
     padding: 40px 16px 0;
 }

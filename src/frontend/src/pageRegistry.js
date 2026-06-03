@@ -329,6 +329,7 @@ const pageRegistry = {
                     <p>서비스 이용이 제한되며 법적 처벌을 받을 수 있어요.</p>
                     <a href="/support/notice/provision">자세히 보기</a>
                 </div>
+                <div id="business-management-review-notice" class="business-management-review-notice hidden" role="status" aria-live="polite"></div>
 
                 <div class="business-info-section">
                     <div class="business-license-upload-grid" aria-label="사업자 증빙 이미지 첨부">
