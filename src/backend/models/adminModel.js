@@ -27,6 +27,7 @@ const BUSINESS_APPLICATION_SELECT_COLUMNS = `SELECT bp.user_id AS userId,
             bp.rejection_reason AS rejectionReason,
             bp.registration_status AS registrationStatus,
             bp.business_info AS businessInfo,
+            bp.last_approved_business_info AS lastApprovedBusinessInfo,
             bp.approved_at AS approvedAt,
             bp.created_at AS createdAt,
             bp.updated_at AS updatedAt,
@@ -44,6 +45,7 @@ function decorateBusinessApplication(row) {
   return {
     ...row,
     businessInfo: normalizeBusinessInfoValue(row.businessInfo),
+    lastApprovedBusinessInfo: normalizeBusinessInfoValue(row.lastApprovedBusinessInfo),
     isBusinessMember: String(row.memberType || '').toUpperCase() === 'BUSINESS'
       || String(row.role || '').toUpperCase() === 'BUSINESS'
   };
@@ -189,7 +191,10 @@ async function updateBusinessProfileReviewByUserId(userId, { approvalStatus = 'P
 
 async function reviewBusinessApplication(userId, { approvalStatus = 'PENDING', rejectionReason = '', reviewedBy = null } = {}) {
   const normalizedApprovalStatus = String(approvalStatus || 'PENDING').trim().toUpperCase();
-  if (normalizedApprovalStatus === 'APPROVED') {
+  const user = await findUserById(userId);
+  const wasBusinessMember = String(user?.member_type || user?.memberType || '').toUpperCase() === 'BUSINESS';
+
+  if (normalizedApprovalStatus === 'APPROVED' && !wasBusinessMember) {
     await freezeUserCommunityAuthorSnapshotsBeforeBusinessConversion(userId);
   }
 
@@ -201,7 +206,7 @@ async function reviewBusinessApplication(userId, { approvalStatus = 'PENDING', r
 
   if (normalizedApprovalStatus === 'APPROVED') {
     await updateUserMemberType(userId, 'BUSINESS');
-  } else if (normalizedApprovalStatus === 'REJECTED') {
+  } else if (normalizedApprovalStatus === 'REJECTED' && !wasBusinessMember) {
     await updateUserMemberType(userId, 'MEMBER');
   }
 }

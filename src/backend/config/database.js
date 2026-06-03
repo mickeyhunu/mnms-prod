@@ -390,6 +390,7 @@ async function initDatabase() {
       rejection_reason VARCHAR(500) NULL,
       registration_status ENUM('UNREGISTERED','DRAFT','REGISTERED') NOT NULL DEFAULT 'UNREGISTERED',
       business_info JSON NULL,
+      last_approved_business_info JSON NULL,
       approved_at DATETIME NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -687,8 +688,15 @@ async function initDatabase() {
   await ensureColumn(
     pool,
     'business_profiles',
+    'last_approved_business_info',
+    'ALTER TABLE business_profiles ADD COLUMN last_approved_business_info JSON NULL AFTER business_info'
+  );
+
+  await ensureColumn(
+    pool,
+    'business_profiles',
     'approved_at',
-    'ALTER TABLE business_profiles ADD COLUMN approved_at DATETIME NULL AFTER business_info'
+    'ALTER TABLE business_profiles ADD COLUMN approved_at DATETIME NULL AFTER last_approved_business_info'
   );
 
   await ensureIndex(
