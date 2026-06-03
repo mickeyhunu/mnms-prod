@@ -772,11 +772,15 @@ async function getMyBusinessProfile(req, res, next) {
       }
     }
 
+    const normalizedApprovalStatus = normalizeBusinessProfileApprovalStatus(profile.approvalStatus, 'PENDING');
+    const hasLastApprovedBusinessInfo = Object.keys(parseBusinessInfoValue(profile.lastApprovedBusinessInfo)).length > 0;
+
     res.json({
       registrationStatus: normalizeBusinessProfileRegistrationStatus(profile.registrationStatus, 'UNREGISTERED'),
-      approvalStatus: profile.approvalStatus || 'PENDING',
+      approvalStatus: normalizedApprovalStatus,
       rejectionReason: profile.rejectionReason || '',
-      businessInfo
+      businessInfo,
+      revertedToLastApprovedBusinessInfo: normalizedApprovalStatus === 'REJECTED' && hasLastApprovedBusinessInfo
     });
   } catch (error) {
     next(error);
