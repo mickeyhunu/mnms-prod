@@ -49,6 +49,8 @@ async function initMyPage() {
             bindProfileForm();
         } else if (window.location.pathname === '/my-page/points') {
             await loadPointHistories();
+        } else if (window.location.pathname === '/my-page/stamps') {
+            await loadStampHistories();
         } else if (window.location.pathname === '/my-page/activity') {
             await loadActivityHistory();
         } else {
@@ -951,8 +953,6 @@ async function loadPointHistories(page = 1) {
     try {
         const response = await APIClient.get('/users/me/points', { page: currentPage, limit: 20 });
         const histories = response.pointHistories || [];
-        const stampHistories = response.stampHistories || [];
-        const totalStamps = normalizeStampCount(response.totalStamps || 0);
         const pagination = response.pagination || {};
         const pageNumber = Math.max(1, Number(pagination.page) || currentPage);
         const totalPages = Math.max(1, Number(pagination.totalPages) || 1);
@@ -966,20 +966,6 @@ async function loadPointHistories(page = 1) {
                         </div>
                         <div class="mypage-summary-row"><span>현재 등급</span><strong>${renderLevelBadgeLabel(response.levelLabel || '-')}</strong></div>
                         <div class="mypage-summary-row"><span>누적 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
-                    </section>
-
-                    <section class="mypage-summary-section">
-                        <div class="mypage-summary-head">
-                            <h3 class="mypage-summary-title">스템프</h3>
-                        </div>
-                        ${renderStampSummary(totalStamps)}
-                    </section>
-
-                    <section class="mypage-summary-section" id="stamp-history">
-                        <div class="mypage-summary-head">
-                            <h3 class="mypage-summary-title">스템프 적립/사용 내역</h3>
-                        </div>
-                        ${renderStampHistoryList(stampHistories)}
                     </section>
 
                     <section class="mypage-summary-section">
@@ -1047,6 +1033,46 @@ async function loadPointHistories(page = 1) {
 }
 
 
+
+async function loadStampHistories() {
+    const container = document.getElementById('my-stats');
+    if (!container || !currentUser) return;
+
+    try {
+        const response = await APIClient.get('/users/me/stamps', { limit: 50 });
+        const stampHistories = response.stampHistories || [];
+        const totalStamps = normalizeStampCount(response.totalStamps || 0);
+        const isBusinessStamp = String(response.stampType || '').toUpperCase() === 'BUSINESS';
+        const summaryTitle = isBusinessStamp ? '보유 광고 스템프' : '보유 스템프';
+        const summaryDescription = isBusinessStamp
+            ? '브론즈 3일, 실버 2일 또는 골드 1일 광고에 사용할 수 있어요.'
+            : undefined;
+        const historyTitle = isBusinessStamp ? '광고 스템프 적립/사용 내역' : '스템프 적립/사용 내역';
+
+        container.innerHTML = `
+            <div class="mypage-point-layout">
+                <div class="mypage-point-primary-column">
+                    <section class="mypage-summary-section">
+                        <div class="mypage-summary-head">
+                            <h3 class="mypage-summary-title">${isBusinessStamp ? '광고 스템프' : '스템프'}</h3>
+                        </div>
+                        ${renderStampSummary(totalStamps, { title: summaryTitle, description: summaryDescription })}
+                    </section>
+
+                    <section class="mypage-summary-section">
+                        <div class="mypage-summary-head">
+                            <h3 class="mypage-summary-title">${historyTitle}</h3>
+                        </div>
+                        ${renderStampHistoryList(stampHistories)}
+                    </section>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        container.innerHTML = '<div class="error-message">스템프 내역을 불러오지 못했습니다.</div>';
+    }
+}
+
 function scrollToRequestedHistorySection(container) {
     const hash = String(window.location.hash || '').trim();
     if (!hash) return;
@@ -1076,7 +1102,7 @@ async function loadStats() {
             <section class="mypage-summary-section mypage-business-stamp-section">
                 <div class="mypage-summary-head">
                     <h3 class="mypage-summary-title">광고 스템프</h3>
-                    <a class="mypage-summary-action" href="/my-page/points#stamp-history">광고 스템프 내역 보기</a>
+                    <a class="mypage-summary-action" href="/my-page/stamps">광고 스템프 내역 보기</a>
                 </div>
                 ${renderStampSummary(totalStamps, {
                     title: '보유 광고 스템프',
@@ -1087,7 +1113,7 @@ async function loadStats() {
             <section class="mypage-summary-section">
                 <div class="mypage-summary-head">
                     <h3 class="mypage-summary-title">스템프</h3>
-                    <a class="mypage-summary-action" href="/my-page/points#stamp-history">스템프 내역 보기</a>
+                    <a class="mypage-summary-action" href="/my-page/stamps">스템프 내역 보기</a>
                 </div>
                 ${renderStampSummary(totalStamps)}
             </section>
