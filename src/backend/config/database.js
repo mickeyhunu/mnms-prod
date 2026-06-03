@@ -112,6 +112,22 @@ async function ensureIndex(poolInstance, tableName, indexName, createQuery) {
   }
 }
 
+async function ensureColumn(poolInstance, tableName, columnName, addColumnQuery) {
+  const [rows] = await poolInstance.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = ?
+       AND COLUMN_NAME = ?
+     LIMIT 1`,
+    [dbConfig.database, tableName, columnName]
+  );
+
+  if (!rows.length) {
+    await poolInstance.query(addColumnQuery);
+  }
+}
+
 function getChatbotDatabaseCandidates() {
   return [...new Set([
     chatbotDbConfig.database,
@@ -374,6 +390,7 @@ async function initDatabase() {
       rejection_reason VARCHAR(500) NULL,
       registration_status ENUM('UNREGISTERED','DRAFT','REGISTERED') NOT NULL DEFAULT 'UNREGISTERED',
       business_info JSON NULL,
+      approved_at DATETIME NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       INDEX idx_business_profiles_review_queue (registration_status, approval_status, updated_at, user_id),
@@ -428,6 +445,9 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS posts (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       user_id BIGINT NULL,
+      author_nickname_snapshot VARCHAR(255) NULL,
+      author_role_snapshot ENUM('MEMBER','BUSINESS','ADMIN') NULL,
+      author_member_type_snapshot ENUM('MEMBER','BUSINESS') NULL,
       board_type ENUM('FREE','ANON','REVIEW','STORY','ATTENDANCE','QUESTION','EVENT','PROMOTION') NOT NULL DEFAULT 'FREE',
       is_notice TINYINT(1) NOT NULL DEFAULT 0,
       notice_type ENUM('NOTICE','IMPORTANT') NULL,
@@ -543,6 +563,25 @@ async function initDatabase() {
     await pool.query('ALTER TABLE posts ADD COLUMN review_bonus_point_awarded TINYINT(1) NOT NULL DEFAULT 0 AFTER create_point_awarded');
   }
 
+  await ensureColumn(
+    pool,
+    'posts',
+    'author_nickname_snapshot',
+    'ALTER TABLE posts ADD COLUMN author_nickname_snapshot VARCHAR(255) NULL AFTER user_id'
+  );
+  await ensureColumn(
+    pool,
+    'posts',
+    'author_role_snapshot',
+    "ALTER TABLE posts ADD COLUMN author_role_snapshot ENUM('MEMBER','BUSINESS','ADMIN') NULL AFTER author_nickname_snapshot"
+  );
+  await ensureColumn(
+    pool,
+    'posts',
+    'author_member_type_snapshot',
+    "ALTER TABLE posts ADD COLUMN author_member_type_snapshot ENUM('MEMBER','BUSINESS') NULL AFTER author_role_snapshot"
+  );
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS banner_ads (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -644,6 +683,13 @@ async function initDatabase() {
   if (!businessProfileRejectionReasonColumn.length) {
     await pool.query('ALTER TABLE business_profiles ADD COLUMN rejection_reason VARCHAR(500) NULL AFTER approval_status');
   }
+
+  await ensureColumn(
+    pool,
+    'business_profiles',
+    'approved_at',
+    'ALTER TABLE business_profiles ADD COLUMN approved_at DATETIME NULL AFTER business_info'
+  );
 
   await ensureIndex(
     pool,
@@ -766,6 +812,9 @@ async function initDatabase() {
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       post_id BIGINT NOT NULL,
       user_id BIGINT NOT NULL,
+      author_nickname_snapshot VARCHAR(255) NULL,
+      author_role_snapshot ENUM('MEMBER','BUSINESS','ADMIN') NULL,
+      author_member_type_snapshot ENUM('MEMBER','BUSINESS') NULL,
       parent_id BIGINT NULL,
       is_secret TINYINT(1) NOT NULL DEFAULT 0,
       is_hidden TINYINT(1) NOT NULL DEFAULT 0,
@@ -855,6 +904,25 @@ async function initDatabase() {
   if (!commentPointAwardedColumn.length) {
     await pool.query('ALTER TABLE comments ADD COLUMN point_awarded TINYINT(1) NOT NULL DEFAULT 0 AFTER is_deleted');
   }
+
+  await ensureColumn(
+    pool,
+    'comments',
+    'author_nickname_snapshot',
+    'ALTER TABLE comments ADD COLUMN author_nickname_snapshot VARCHAR(255) NULL AFTER user_id'
+  );
+  await ensureColumn(
+    pool,
+    'comments',
+    'author_role_snapshot',
+    "ALTER TABLE comments ADD COLUMN author_role_snapshot ENUM('MEMBER','BUSINESS','ADMIN') NULL AFTER author_nickname_snapshot"
+  );
+  await ensureColumn(
+    pool,
+    'comments',
+    'author_member_type_snapshot',
+    "ALTER TABLE comments ADD COLUMN author_member_type_snapshot ENUM('MEMBER','BUSINESS') NULL AFTER author_role_snapshot"
+  );
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS post_likes (

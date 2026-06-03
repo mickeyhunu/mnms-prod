@@ -54,6 +54,28 @@ function isBusinessUser(user) {
   return role === 'BUSINESS' || memberType === 'BUSINESS';
 }
 
+
+function normalizeAuthorSnapshotValue(value, fallback) {
+  const normalized = String(value || fallback || '').trim().toUpperCase();
+  return normalized || fallback;
+}
+
+function buildAuthorSnapshotForPersist(user) {
+  if (!user) return null;
+  const role = normalizeAuthorSnapshotValue(user.role, 'MEMBER');
+  const memberType = normalizeAuthorSnapshotValue(user.member_type || user.memberType, 'MEMBER');
+
+  if (role !== 'ADMIN' && memberType !== 'BUSINESS' && role !== 'BUSINESS') {
+    return null;
+  }
+
+  return {
+    nickname: String(user.nickname || '').trim() || null,
+    role: ['MEMBER', 'BUSINESS', 'ADMIN'].includes(role) ? role : 'MEMBER',
+    memberType: memberType === 'BUSINESS' ? 'BUSINESS' : 'MEMBER'
+  };
+}
+
 function isAdvertiserAuthor(author) {
   const role = String(author?.authorRole || author?.role || '').toUpperCase();
   const memberType = String(author?.authorMemberType || author?.memberType || author?.member_type || '').toUpperCase();
@@ -497,6 +519,7 @@ async function createPost(req, res, next) {
       : [];
     const postId = await postModel.createPost({
       userId: req.user.id,
+      authorSnapshot: buildAuthorSnapshotForPersist(req.user),
       title,
       content,
       boardType,
@@ -712,6 +735,7 @@ async function createComment(req, res, next) {
     const commentId = await postModel.createComment({
       postId,
       userId: req.user.id,
+      authorSnapshot: buildAuthorSnapshotForPersist(req.user),
       content,
       parentId,
       isSecret: shouldCreateSecretComment
