@@ -403,7 +403,7 @@ async function updateBusinessAuthorNicknameSnapshots(userId, nickname, connectio
         SET author_nickname_snapshot = ?
       WHERE user_id = ?
         AND author_nickname_snapshot IS NOT NULL
-        AND COALESCE(author_role_snapshot, 'MEMBER') <> 'ADMIN'`,
+        AND (author_role_snapshot = 'BUSINESS' OR author_member_type_snapshot = 'BUSINESS')`,
     [normalizedNickname, userId]
   );
   const [commentResult] = await db.query(
@@ -411,7 +411,7 @@ async function updateBusinessAuthorNicknameSnapshots(userId, nickname, connectio
         SET author_nickname_snapshot = ?
       WHERE user_id = ?
         AND author_nickname_snapshot IS NOT NULL
-        AND COALESCE(author_role_snapshot, 'MEMBER') <> 'ADMIN'`,
+        AND (author_role_snapshot = 'BUSINESS' OR author_member_type_snapshot = 'BUSINESS')`,
     [normalizedNickname, userId]
   );
 
