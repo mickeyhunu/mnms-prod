@@ -3277,8 +3277,16 @@ body[data-page="admin"] {
 
 .ad-order-history-caption {
     margin: 0 0 12px;
-    color: #6b7280;
-    font-size: 14px;
+    background: #f5f6f8;
+    text-align: center;
+    color: #6c757d;
+    font-size: 13px;
+    line-height: 1.55;
+    padding: 16px 14px;
+}
+
+.ad-order-history-caption p {
+    margin: 0;
 }
 
 .ad-order-history-empty {
