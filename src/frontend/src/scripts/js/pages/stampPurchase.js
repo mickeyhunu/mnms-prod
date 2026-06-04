@@ -21,7 +21,7 @@
             name: '🥉 스타터팩',
             composition: '스탬프 5개',
             stampCount: 5,
-            price: 50000
+            price: 100000
         },
         basic: {
             name: '🥈 베이직팩',
