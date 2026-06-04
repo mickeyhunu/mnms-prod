@@ -20,7 +20,7 @@ const {
 } = require('../models/userModel');
 const { resolveMemberLevel, MEMBER_LEVELS } = require('../utils/memberLevel');
 const { POINT_RULES } = require('../models/pointModel');
-const { STAMP_TYPES, getUserStampBalance, getUserStampHistories } = require('../models/stampModel');
+const { STAMP_TYPES, createStampPurchase, getUserStampBalance, getUserStampHistories } = require('../models/stampModel');
 const supportModel = require('../models/supportModel');
 const adminModel = require('../models/adminModel');
 const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
@@ -600,6 +600,26 @@ async function myStampHistories(req, res, next) {
   }
 }
 
+
+async function purchaseMyStamps(req, res, next) {
+  try {
+    const planCode = String(req.body?.planCode || '').trim();
+    const stampType = resolveUserStampType(req.user);
+    const purchase = await createStampPurchase(req.user.id, { planCode, stampType });
+    const totalStamps = await getUserStampBalance(req.user.id, stampType);
+
+    res.status(201).json({
+      success: true,
+      message: '스탬프 구매가 완료되었습니다.',
+      purchase,
+      totalStamps,
+      stampType
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function myPointHistories(req, res, next) {
   try {
     const page = Math.max(1, Number(req.query.page) || 1);
@@ -954,6 +974,7 @@ module.exports = {
   myStats,
   myPointHistories,
   myStampHistories,
+  purchaseMyStamps,
   myActivity,
   myLiveAccessStatus,
   myNotifications,
