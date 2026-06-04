@@ -179,14 +179,28 @@ const pageRegistry = {
                     <input id="ad-profile-title" type="text" maxlength="50" placeholder="제목을 입력해주세요." required>
                     <div class="ad-profile-editor" aria-label="광고 상세정보 에디터">
                         <div class="ad-profile-editor-toolbar" role="toolbar" aria-label="텍스트 편집 도구">
-                            <button type="button" class="ad-profile-editor-btn" data-editor-command="bold" title="굵게"><strong>B</strong></button>
-                            <button type="button" class="ad-profile-editor-btn" data-editor-command="italic" title="기울임"><em>I</em></button>
-                            <button type="button" class="ad-profile-editor-btn" data-editor-command="underline" title="밑줄"><span style="text-decoration: underline;">U</span></button>
-                            <button type="button" class="ad-profile-editor-btn" data-editor-command="insertUnorderedList" title="목록">• 목록</button>
-                            <button type="button" class="ad-profile-editor-btn" data-editor-command="justifyLeft" title="왼쪽 정렬">좌</button>
-                            <button type="button" class="ad-profile-editor-btn" data-editor-command="justifyCenter" title="가운데 정렬">중</button>
-                            <button type="button" class="ad-profile-editor-btn" data-editor-command="justifyRight" title="오른쪽 정렬">우</button>
-                            <button type="button" class="ad-profile-editor-btn" id="ad-profile-editor-image-btn" title="이미지 첨부">이미지</button>
+                            <div class="ad-profile-editor-group" aria-label="글자 스타일">
+                                <button type="button" class="ad-profile-editor-btn" data-editor-command="bold" title="굵게" aria-pressed="false"><strong>B</strong></button>
+                                <button type="button" class="ad-profile-editor-btn" data-editor-command="italic" title="기울임" aria-pressed="false"><em>I</em></button>
+                                <button type="button" class="ad-profile-editor-btn" data-editor-command="underline" title="밑줄" aria-pressed="false"><span style="text-decoration: underline;">U</span></button>
+                            </div>
+                            <div class="ad-profile-editor-group" aria-label="글씨 크기">
+                                <button type="button" class="ad-profile-editor-btn" data-editor-command="fontSize" data-editor-value="2" data-editor-control="font-size" title="작은 글씨" aria-pressed="false">소</button>
+                                <button type="button" class="ad-profile-editor-btn" data-editor-command="fontSize" data-editor-value="3" data-editor-control="font-size" title="중간 글씨" aria-pressed="false">중</button>
+                                <button type="button" class="ad-profile-editor-btn" data-editor-command="fontSize" data-editor-value="5" data-editor-control="font-size" title="큰 글씨" aria-pressed="false">대</button>
+                            </div>
+                            <div class="ad-profile-editor-group" aria-label="글씨 색상">
+                                <button type="button" class="ad-profile-editor-btn ad-profile-editor-color-btn ad-profile-editor-color-black" data-editor-command="foreColor" data-editor-value="#212529" data-editor-control="font-color" title="검정 글씨" aria-pressed="false"><span>검정</span></button>
+                                <button type="button" class="ad-profile-editor-btn ad-profile-editor-color-btn ad-profile-editor-color-red" data-editor-command="foreColor" data-editor-value="#e03131" data-editor-control="font-color" title="빨간 글씨" aria-pressed="false"><span>빨강</span></button>
+                                <button type="button" class="ad-profile-editor-btn ad-profile-editor-color-btn ad-profile-editor-color-blue" data-editor-command="foreColor" data-editor-value="#1971c2" data-editor-control="font-color" title="파란 글씨" aria-pressed="false"><span>파랑</span></button>
+                            </div>
+                            <div class="ad-profile-editor-group" aria-label="문단 정렬 및 첨부">
+                                <button type="button" class="ad-profile-editor-btn" data-editor-command="insertUnorderedList" title="목록" aria-pressed="false">• 목록</button>
+                                <button type="button" class="ad-profile-editor-btn" data-editor-command="justifyLeft" title="왼쪽 정렬" aria-pressed="false">좌</button>
+                                <button type="button" class="ad-profile-editor-btn" data-editor-command="justifyCenter" title="가운데 정렬" aria-pressed="false">중</button>
+                                <button type="button" class="ad-profile-editor-btn" data-editor-command="justifyRight" title="오른쪽 정렬" aria-pressed="false">우</button>
+                                <button type="button" class="ad-profile-editor-btn" id="ad-profile-editor-image-btn" title="이미지 첨부">이미지</button>
+                            </div>
                         </div>
                         <input id="ad-profile-editor-image-input" class="hidden" accept="image/*" type="file">
                         <div id="ad-profile-description-editor" class="ad-profile-editor-content" contenteditable="true" data-placeholder="내용을 입력해주세요."></div>
