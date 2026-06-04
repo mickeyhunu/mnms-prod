@@ -585,7 +585,10 @@ const pageRegistry = {
             </header>
 
             <section class="ad-order-history-card" aria-label="스탬프 결제 내역">
-                <p class="ad-order-history-caption">스탬프 결제완료와 결제취소 내역만 최신순으로 확인할 수 있어요. 적립/차감 내역은 마이페이지의 스탬프 내역에서 확인해주세요.</p>
+                <div class="ad-order-history-caption">
+                    <p>스탬프 결제완료와 결제취소 내역만 최신순으로 확인할 수 있어요.</p>
+                    <p>적립/차감 내역은 마이페이지의 스탬프 내역에서 확인해주세요.</p>
+                </div>
                 <div class="ad-order-history-empty hidden" id="ad-order-history-empty">아직 스탬프 결제 내역이 없습니다.</div>
                 <div class="ad-order-history-list" id="ad-order-history-list"></div>
             </section>
