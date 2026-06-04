@@ -30,6 +30,17 @@ const adProfileState = {
 };
 const DEFAULT_AD_IMAGE_URL = 'https://image.bubblealba.com/assets/advertiser/pending.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
+const EDITOR_STATE_COMMANDS = ['bold', 'italic', 'underline', 'insertUnorderedList', 'justifyLeft', 'justifyCenter', 'justifyRight'];
+
+function normalizeEditorColor(value) {
+    const color = String(value || '').trim().toLowerCase();
+    const rgbMatch = color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    if (rgbMatch) {
+        return `#${rgbMatch.slice(1).map((part) => Number(part).toString(16).padStart(2, '0')).join('')}`;
+    }
+    return color;
+}
+
 
 function createHourOptions(hourSelect) {
     if (!hourSelect) return;
@@ -131,11 +142,51 @@ function bindAdProfileInteractions() {
         if (previewDetail) previewDetail.textContent = `${region} ${district} · ${category} · ${formattedTime}`;
     };
 
+    const updateActiveEditorButtons = () => {
+        if (!editorToolbar || !descriptionEditor) return;
+        const selection = window.getSelection();
+        const selectedNode = selection?.anchorNode;
+        const isSelectionInEditor = selectedNode && descriptionEditor.contains(selectedNode.nodeType === Node.ELEMENT_NODE ? selectedNode : selectedNode.parentNode);
+        if (!isSelectionInEditor && document.activeElement !== descriptionEditor) return;
+
+        const currentFontSize = String(document.queryCommandValue('fontSize') || '');
+        const currentFontColor = normalizeEditorColor(document.queryCommandValue('foreColor'));
+
+        editorToolbar.querySelectorAll('[data-editor-command]').forEach((button) => {
+            const command = button.dataset.editorCommand;
+            let isActive = false;
+
+            if (EDITOR_STATE_COMMANDS.includes(command)) {
+                isActive = document.queryCommandState(command);
+            } else if (button.dataset.editorControl === 'font-size') {
+                isActive = currentFontSize === button.dataset.editorValue;
+            } else if (button.dataset.editorControl === 'font-color') {
+                isActive = currentFontColor === normalizeEditorColor(button.dataset.editorValue);
+            }
+
+            button.classList.toggle('is-active', isActive);
+            button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+    };
+
     if (descriptionEditor && descriptionInput) {
         descriptionEditor.innerHTML = descriptionInput.value || '';
-        descriptionEditor.addEventListener('input', syncPreview);
+        descriptionEditor.addEventListener('input', () => {
+            syncPreview();
+            updateActiveEditorButtons();
+        });
         descriptionEditor.addEventListener('blur', syncPreview);
+        descriptionEditor.addEventListener('keyup', updateActiveEditorButtons);
+        descriptionEditor.addEventListener('mouseup', updateActiveEditorButtons);
+        descriptionEditor.addEventListener('focus', updateActiveEditorButtons);
+        document.addEventListener('selectionchange', updateActiveEditorButtons);
     }
+
+    editorToolbar?.addEventListener('mousedown', (event) => {
+        if (event.target.closest('[data-editor-command]')) {
+            event.preventDefault();
+        }
+    });
 
     editorToolbar?.addEventListener('click', (event) => {
         const button = event.target.closest('[data-editor-command]');
@@ -143,8 +194,9 @@ function bindAdProfileInteractions() {
 
         event.preventDefault();
         descriptionEditor.focus();
-        document.execCommand(button.dataset.editorCommand, false, null);
+        document.execCommand(button.dataset.editorCommand, false, button.dataset.editorValue || null);
         syncPreview();
+        updateActiveEditorButtons();
     });
 
     managerContactInput?.addEventListener('input', () => {
