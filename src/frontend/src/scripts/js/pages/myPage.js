@@ -879,7 +879,7 @@ function formatStampActionLabel(actionType) {
         EXPIRED: '유효기간 만료'
     };
 
-    return labels[actionType] || actionType || '스템프 적립';
+    return labels[actionType] || actionType || '스탬프 적립';
 }
 
 function normalizeStampCount(value) {
@@ -895,7 +895,7 @@ function renderStampSlots(totalStamps = 0) {
     const filledCount = Math.max(0, Math.min(5, Math.floor(normalizeStampCount(totalStamps))));
     return Array.from({ length: 5 }, (_, index) => {
         const isFilled = index < filledCount;
-        const statusLabel = `${index + 1}번째 스템프 ${isFilled ? '적립됨' : '비어 있음'}`;
+        const statusLabel = `${index + 1}번째 스탬프 ${isFilled ? '적립됨' : '비어 있음'}`;
         const stampImage = isFilled ? STAMP_ASSET_PATHS.filled : STAMP_ASSET_PATHS.empty;
 
         return `<img class="mypage-stamp-slot${isFilled ? ' is-filled' : ''}" src="${stampImage}" alt="${statusLabel}" loading="lazy">`;
@@ -905,7 +905,7 @@ function renderStampSlots(totalStamps = 0) {
 function renderStampSummary(totalStamps = 0, options = {}) {
     const normalizedTotal = normalizeStampCount(totalStamps);
     const remainingCount = Math.max(0, 5 - Math.min(5, Math.floor(normalizedTotal)));
-    const title = options.title || '보유 스템프';
+    const title = options.title || '보유 스탬프';
     const description = options.description || (remainingCount > 0
         ? `서비스 주류까지 ${remainingCount}개 남았어요.`
         : '서비스 주류 1병 교환 가능 상태예요.');
@@ -916,7 +916,7 @@ function renderStampSummary(totalStamps = 0, options = {}) {
                 <span>${sanitizeHTML(title)}</span>
                 <strong>${normalizedTotal.toLocaleString()}개</strong>
             </div>
-            <div class="mypage-stamp-slots" aria-label="최대 5개 스템프 적립 현황">
+            <div class="mypage-stamp-slots" aria-label="최대 5개 스탬프 적립 현황">
                 ${renderStampSlots(normalizedTotal)}
             </div>
             <p class="mypage-stamp-caption">${sanitizeHTML(description)}</p>
@@ -926,7 +926,7 @@ function renderStampSummary(totalStamps = 0, options = {}) {
 
 function renderStampHistoryList(stampHistories = []) {
     if (!stampHistories.length) {
-        return '<div class="no-data">스템프 내역이 없습니다.</div>';
+        return '<div class="no-data">스탬프 내역이 없습니다.</div>';
     }
 
     return `
@@ -1051,18 +1051,18 @@ async function loadStampHistories() {
         const stampHistories = response.stampHistories || [];
         const totalStamps = normalizeStampCount(response.totalStamps || 0);
         const isBusinessStamp = String(response.stampType || '').toUpperCase() === 'BUSINESS';
-        const summaryTitle = isBusinessStamp ? '보유 광고 스템프' : '보유 스템프';
+        const summaryTitle = isBusinessStamp ? '보유 광고 스탬프' : '보유 스탬프';
         const summaryDescription = isBusinessStamp
             ? '브론즈 3일, 실버 2일 또는 골드 1일 광고에 사용할 수 있어요.'
             : undefined;
-        const historyTitle = isBusinessStamp ? '광고 스템프 적립/사용 내역' : '스템프 적립/사용 내역';
+        const historyTitle = isBusinessStamp ? '광고 스탬프 적립/사용 내역' : '스탬프 적립/사용 내역';
 
         container.innerHTML = `
             <div class="mypage-point-layout">
                 <div class="mypage-point-primary-column">
                     <section class="mypage-summary-section">
                         <div class="mypage-summary-head">
-                            <h3 class="mypage-summary-title">${isBusinessStamp ? '광고 스템프' : '스템프'}</h3>
+                            <h3 class="mypage-summary-title">${isBusinessStamp ? '광고 스탬프' : '스탬프'}</h3>
                         </div>
                         ${renderStampSummary(totalStamps, { title: summaryTitle, description: summaryDescription })}
                     </section>
@@ -1077,7 +1077,7 @@ async function loadStampHistories() {
             </div>
         `;
     } catch (error) {
-        container.innerHTML = '<div class="error-message">스템프 내역을 불러오지 못했습니다.</div>';
+        container.innerHTML = '<div class="error-message">스탬프 내역을 불러오지 못했습니다.</div>';
     }
 }
 
@@ -1109,19 +1109,19 @@ async function loadStats() {
         const stampSection = isAdAccount(currentUser) ? `
             <section class="mypage-summary-section mypage-business-stamp-section">
                 <div class="mypage-summary-head">
-                    <h3 class="mypage-summary-title">광고 스템프</h3>
-                    <a class="mypage-summary-action" href="/my-page/stamps">광고 스템프 내역 보기</a>
+                    <h3 class="mypage-summary-title">광고 스탬프</h3>
+                    <a class="mypage-summary-action" href="/my-page/stamps">광고 스탬프 내역 보기</a>
                 </div>
                 ${renderStampSummary(totalStamps, {
-                    title: '보유 광고 스템프',
+                    title: '보유 광고 스탬프',
                     description: '브론즈 3일, 실버 2일 또는 골드 1일 광고에 사용할 수 있어요.'
                 })}
             </section>
         ` : `
             <section class="mypage-summary-section">
                 <div class="mypage-summary-head">
-                    <h3 class="mypage-summary-title">스템프</h3>
-                    <a class="mypage-summary-action" href="/my-page/stamps">스템프 내역 보기</a>
+                    <h3 class="mypage-summary-title">스탬프</h3>
+                    <a class="mypage-summary-action" href="/my-page/stamps">스탬프 내역 보기</a>
                 </div>
                 ${renderStampSummary(totalStamps)}
             </section>

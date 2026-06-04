@@ -29,7 +29,7 @@ const routes = [
   { path: '/my-page/profile', component: PageView, meta: { pageKey: 'my-page-profile', title: '내 프로필', description: '닉네임, 비밀번호 등 내 프로필 정보를 관리하세요.', noindex: true } },
   { path: '/my-page/activity', component: PageView, meta: { pageKey: 'my-page-activity', title: '내 활동', description: '내가 작성한 게시글, 댓글, 활동 기록을 확인하세요.', noindex: true } },
   { path: '/my-page/points', component: PageView, meta: { pageKey: 'my-page-points', title: '포인트', description: '보유 포인트와 적립/차감 내역을 확인하세요.', noindex: true } },
-  { path: '/my-page/stamps', component: PageView, meta: { pageKey: 'my-page-stamps', title: '스템프', description: '보유 스템프와 적립/사용 내역을 확인하세요.', noindex: true } },
+  { path: '/my-page/stamps', component: PageView, meta: { pageKey: 'my-page-stamps', title: '스탬프', description: '보유 스탬프와 적립/사용 내역을 확인하세요.', noindex: true } },
   { path: '/my-page/support', component: PageView, meta: { pageKey: 'my-page-support', title: '고객센터', description: '문의, FAQ, 공지사항 등 고객지원 메뉴를 확인하세요.' } },
   { path: '/my-page/policy', component: PageView, meta: { pageKey: 'my-page-policy', title: '약관 및 정책', description: '서비스 이용약관과 개인정보 처리방침을 확인하세요.' } },
   { path: '/admin', component: PageView, meta: { pageKey: 'admin', title: '관리자 페이지', description: '관리자 전용 대시보드입니다.', noindex: true } },
