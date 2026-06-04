@@ -3,50 +3,46 @@
  */
 (() => {
     const ORDER_STORAGE_KEY = 'mnmsAdOrderHistory';
-    const tabs = Array.from(document.querySelectorAll('[data-stamp-plan]'));
-    const featureList = document.getElementById('stamp-plan-features');
-    const priceOptions = document.getElementById('stamp-price-options');
+    const planList = document.getElementById('stamp-plan-list');
     const selectedProduct = document.getElementById('stamp-selected-product');
     const productPrice = document.getElementById('stamp-product-price');
     const vatPrice = document.getElementById('stamp-vat-price');
     const totalPrice = document.getElementById('stamp-total-price');
     const purchaseButton = document.getElementById('stamp-purchase-submit');
 
-    if (!tabs.length || !featureList || !priceOptions || !selectedProduct || !productPrice || !vatPrice || !totalPrice) {
+    if (!planList || !selectedProduct || !productPrice || !vatPrice || !totalPrice) {
         return;
     }
 
     const plans = {
-        single: {
-            name: '스탬프 1개',
-            stampCount: 1,
-            features: [
-                { text: '광고 활성화 및 점프 관리에 사용할 수 있는 스탬프 1개 충전', enabled: true },
-                { text: '구매 후 스탬프 사용 내역에서 구매 기록 확인', enabled: true }
-            ],
-            price: 50000
-        },
-        three: {
-            name: '스탬프 3개',
-            stampCount: 3,
-            features: [
-                { text: '광고 활성화 및 점프 관리에 사용할 수 있는 스탬프 3개 충전', enabled: true },
-                { text: '여러 광고 운영 시 필요한 수량을 한 번에 구매', enabled: true }
-            ],
-            price: 140000
-        },
-        five: {
-            name: '스탬프 5개',
+        starter: {
+            name: '스타터팩',
+            composition: '스탬프 5개',
             stampCount: 5,
-            features: [
-                { text: '광고 활성화 및 점프 관리에 사용할 수 있는 스탬프 5개 충전', enabled: true },
-                { text: '장기 운영을 위한 대량 스탬프 패키지', enabled: true }
-            ],
-            price: 220000
+            price: 100000
+        },
+        basic: {
+            name: '베이직팩',
+            composition: '스탬프 10개 + 1개',
+            stampCount: 11,
+            price: 200000
+        },
+        premium: {
+            name: '프리미엄팩',
+            composition: '스탬프 20개 + 3개',
+            stampCount: 23,
+            price: 400000
+        },
+        vip: {
+            name: 'VIP팩',
+            composition: '스탬프 30개 + 5개',
+            stampCount: 35,
+            price: 600000
         }
     };
 
-    const state = { plan: 'single' };
+    const planCodes = Object.keys(plans);
+    const state = { plan: 'starter' };
     const formatPrice = (value) => `${value.toLocaleString('ko-KR')}원`;
 
     const readOrderHistory = () => {
@@ -80,36 +76,52 @@
         };
     };
 
-    const render = () => {
-        const currentPlan = plans[state.plan] || plans.single;
+    const renderPlanList = () => {
+        planList.innerHTML = planCodes
+            .map((code) => {
+                const plan = plans[code];
+                const isSelected = code === state.plan;
 
-        tabs.forEach((tab) => {
-            const isActive = tab.dataset.stampPlan === state.plan;
-            tab.classList.toggle('is-active', isActive);
-            tab.setAttribute('aria-selected', String(isActive));
-        });
-
-        featureList.innerHTML = currentPlan.features
-            .map((item) => `<li class="${item.enabled ? 'is-enabled' : 'is-disabled'}">${item.text}</li>`)
+                return `<tr class="stamp-plan-row${isSelected ? ' is-selected' : ''}" data-stamp-plan="${code}" aria-current="${isSelected ? 'true' : 'false'}">
+                    <th scope="row">
+                        <button type="button" class="stamp-plan-select" data-stamp-plan="${code}">
+                            <span class="stamp-plan-select-dot" aria-hidden="true"></span>
+                            <span>${plan.name}</span>
+                        </button>
+                    </th>
+                    <td>${plan.composition}</td>
+                    <td>${formatPrice(plan.price)}</td>
+                </tr>`;
+            })
             .join('');
+    };
 
-        priceOptions.innerHTML = `<button type="button" class="ad-price-option is-selected" data-stamp-plan="${state.plan}">
-            <div><strong>${currentPlan.name} / ${formatPrice(currentPlan.price)}</strong></div>
-            <span class="ad-price-check is-selected" aria-hidden="true">●</span>
-        </button>`;
-
+    const renderPaymentSummary = () => {
+        const currentPlan = plans[state.plan] || plans.starter;
         const vat = Math.round(currentPlan.price * 0.1);
+
         selectedProduct.textContent = currentPlan.name;
         productPrice.textContent = formatPrice(currentPlan.price);
         vatPrice.textContent = formatPrice(vat);
         totalPrice.textContent = formatPrice(currentPlan.price + vat);
     };
 
-    tabs.forEach((tab) => {
-        tab.addEventListener('click', () => {
-            state.plan = tab.dataset.stampPlan || 'single';
-            render();
-        });
+    const render = () => {
+        renderPlanList();
+        renderPaymentSummary();
+    };
+
+    planList.addEventListener('click', (event) => {
+        const planButton = event.target.closest('[data-stamp-plan]');
+
+        if (!planButton) return;
+
+        const selectedPlan = planButton.dataset.stampPlan;
+
+        if (!plans[selectedPlan]) return;
+
+        state.plan = selectedPlan;
+        render();
     });
 
     if (purchaseButton) {
