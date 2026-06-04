@@ -934,9 +934,12 @@ function resolveStampAssetPaths(stampType = 'MEMBER') {
 function renderStampSlots(totalStamps = 0, options = {}) {
     const filledCount = Math.max(0, Math.min(5, Math.floor(normalizeStampCount(totalStamps))));
     const assetPaths = resolveStampAssetPaths(options.stampType);
+    const stampType = String(options.stampType || '').trim().toUpperCase();
+    const isBusinessStamp = stampType === 'BUSINESS';
     const stampLabel = options.stampLabel || '스탬프';
+    const slotCount = isBusinessStamp ? filledCount : 5;
 
-    return Array.from({ length: 5 }, (_, index) => {
+    return Array.from({ length: slotCount }, (_, index) => {
         const isFilled = index < filledCount;
         const statusLabel = `${index + 1}번째 ${stampLabel} ${isFilled ? '적립됨' : '비어 있음'}`;
         const stampImage = isFilled ? assetPaths.filled : assetPaths.empty;
