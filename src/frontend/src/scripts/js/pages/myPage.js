@@ -1122,9 +1122,7 @@ async function loadStats() {
             <section class="mypage-summary-section">
                 <div class="mypage-summary-head">
                     <h3 class="mypage-summary-title">포인트</h3>
-                    <span class="mypage-summary-actions">
-                        <a class="mypage-summary-action" href="/my-page/points">포인트 내역 보기</a>
-                    </span>
+                    <a class="mypage-summary-action" href="/my-page/points">포인트 내역 보기</a>
                 </div>
                 <div class="mypage-summary-row"><span>보유 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
                 <div class="mypage-level-progress">
