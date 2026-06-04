@@ -392,6 +392,80 @@ const pageRegistry = {
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/businessInfo.js", "scripts/js/components/footerNav.js"]
   },
+  'stamp-purchase': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <a href="/my-page" class="community-back-link icon-btn icon-btn-square" aria-label="마이페이지로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
+                    <span class="community-board-name">스탬프 구매</span>
+                </div>
+            </header>
+
+            <section class="ad-purchase-layout" aria-label="스탬프 구매 상품 안내">
+                <div class="ad-plan-tabs stamp-plan-tabs" role="tablist" aria-label="스탬프 상품 선택">
+                    <button type="button" class="ad-plan-tab is-active" data-stamp-plan="single" role="tab" aria-selected="true">1개</button>
+                    <button type="button" class="ad-plan-tab" data-stamp-plan="three" role="tab" aria-selected="false">3개</button>
+                    <button type="button" class="ad-plan-tab" data-stamp-plan="five" role="tab" aria-selected="false">5개</button>
+                </div>
+
+                <article class="ad-plan-detail" id="stamp-plan-detail">
+                    <ul class="ad-package-feature-list" id="stamp-plan-features"></ul>
+                    <div class="ad-price-options" id="stamp-price-options"></div>
+                </article>
+
+                <hr class="ad-payment-divider">
+
+                <article class="ad-payment-card" aria-label="결제 정보">
+                    <h3 class="ad-payment-title">결제정보</h3>
+                    <dl class="ad-payment-list">
+                        <div class="ad-payment-row">
+                            <dt>선택한 상품</dt>
+                            <dd id="stamp-selected-product">스탬프 1개</dd>
+                        </div>
+                        <div class="ad-payment-row">
+                            <dt>상품 금액</dt>
+                            <dd id="stamp-product-price">50,000원</dd>
+                        </div>
+                        <div class="ad-payment-row">
+                            <dt>부가세 (VAT)</dt>
+                            <dd id="stamp-vat-price">5,000원</dd>
+                        </div>
+                    </dl>
+                    <div class="ad-payment-total">
+                        <strong>총 결제 금액</strong>
+                        <strong id="stamp-total-price">55,000원</strong>
+                    </div>
+                    <button type="button" class="btn btn-primary ad-purchase-submit" id="stamp-purchase-submit">스탬프 구매하기</button>
+                    <a href="/ad-order-history" class="ad-order-history-link">스탬프 사용 내역 보기</a>
+                </article>
+            </section>
+        </div>
+    </main>
+
+    <script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js", "scripts/js/pages/stampPurchase.js"]
+  },
   'ad-purchase': {
     template: `<header class="header">
         <div class="header-container">
@@ -417,7 +491,7 @@ const pageRegistry = {
                     <a href="/my-page" class="community-back-link icon-btn icon-btn-square" aria-label="마이페이지로 이동">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
                     </a>
-                    <span class="community-board-name">광고 구매</span>
+                    <span class="community-board-name">광고 활성화</span>
                 </div>
             </header>
 
@@ -464,7 +538,7 @@ const pageRegistry = {
                         <strong>총 결제 금액</strong>
                         <strong id="ad-total-price">209,000원</strong>
                     </div>
-                    <button type="button" class="btn btn-primary ad-purchase-submit" id="ad-purchase-submit">광고 주문하기</button>
+                    <button type="button" class="btn btn-primary ad-purchase-submit" id="ad-purchase-submit">광고 활성화하기</button>
                     <a href="/ad-order-history" class="ad-order-history-link">스탬프 사용 내역 보기</a>
                 </article>
             </section>
@@ -997,8 +1071,8 @@ const pageRegistry = {
                 <section class="mypage-link-section hidden" id="ad-center-wrapper">
                     <p class="mypage-link-section-title">광고센터</p>
                     <div class="mypage-link-list" id="ad-center-section">
-                        <a class="mypage-link-item" id="stamp-purchase-link" href="/ad-purchase"><span>스탬프 구매</span><strong class="mypage-link-badge" id="ad-center-stamp-count">0개</strong></a>
-                        <a class="mypage-link-item" href="/ad-purchase"><span>광고 구매</span></a>
+                        <a class="mypage-link-item" id="stamp-purchase-link" href="/stamp-purchase"><span>스탬프 구매</span><strong class="mypage-link-badge" id="ad-center-stamp-count">보유 스탬프 0개</strong></a>
+                        <a class="mypage-link-item" href="/ad-purchase"><span>광고 활성화</span></a>
                         <a class="mypage-link-item" href="/business-info"><span>점프 관리</span></a>
                         <a class="mypage-link-item" href="/ad-profile-management">
                             <span>광고프로필 관리</span>
