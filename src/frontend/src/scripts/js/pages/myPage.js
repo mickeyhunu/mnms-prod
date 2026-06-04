@@ -888,6 +888,7 @@ function renderLevelBadgeLabel(rawLabel = '') {
 
 function formatStampActionLabel(actionType) {
     const labels = {
+        STAMP_PURCHASE: '스탬프 구매',
         VISIT_VERIFICATION: '업소 방문 인증',
         SERVICE_BOTTLE_USE: '서비스 주류 사용',
         BUSINESS_AD_BRONZE: '브론즈 광고 사용',

@@ -8,7 +8,35 @@ const STAMP_TYPES = {
   BUSINESS: 'BUSINESS'
 };
 
+const STAMP_PURCHASE_PLANS = {
+  starter: {
+    name: '🥉 스타터팩',
+    composition: '스탬프 5개',
+    stampCount: 5,
+    price: 100000
+  },
+  basic: {
+    name: '🥈 베이직팩',
+    composition: '스탬프 10개 + 1개',
+    stampCount: 11,
+    price: 200000
+  },
+  premium: {
+    name: '🥇 프리미엄팩',
+    composition: '스탬프 20개 + 3개',
+    stampCount: 23,
+    price: 400000
+  },
+  vip: {
+    name: '💎 VIP팩',
+    composition: '스탬프 30개 + 5개',
+    stampCount: 35,
+    price: 600000
+  }
+};
+
 const STAMP_ACTION_LABELS = {
+  STAMP_PURCHASE: '스탬프 구매',
   VISIT_VERIFICATION: '업소 방문 인증',
   SERVICE_BOTTLE_USE: '서비스 주류 사용',
   BUSINESS_AD_BRONZE: '브론즈 광고 사용',
@@ -22,6 +50,69 @@ const STAMP_ACTION_LABELS = {
 function normalizeStampType(stampType) {
   const value = String(stampType || '').trim().toUpperCase();
   return value === STAMP_TYPES.BUSINESS ? STAMP_TYPES.BUSINESS : STAMP_TYPES.MEMBER;
+}
+
+function normalizeStampPurchasePlanCode(planCode) {
+  const value = String(planCode || '').trim().toLowerCase();
+  return Object.prototype.hasOwnProperty.call(STAMP_PURCHASE_PLANS, value) ? value : '';
+}
+
+function getStampPurchasePlan(planCode) {
+  const normalizedCode = normalizeStampPurchasePlanCode(planCode);
+  if (!normalizedCode) return null;
+
+  return {
+    code: normalizedCode,
+    ...STAMP_PURCHASE_PLANS[normalizedCode]
+  };
+}
+
+
+async function createStampPurchase(userId, { planCode, stampType = STAMP_TYPES.MEMBER } = {}) {
+  const pool = getPool();
+  const plan = getStampPurchasePlan(planCode);
+
+  if (!plan) {
+    const error = new Error('구매할 스탬프 상품을 선택해주세요.');
+    error.status = 400;
+    throw error;
+  }
+
+  const normalizedType = normalizeStampType(stampType);
+  const vat = Math.round(plan.price * 0.1);
+  const totalPrice = plan.price + vat;
+  const orderId = `STAMP-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  const reason = `${plan.name} (${plan.composition})`;
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [result] = await connection.query(
+      `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
+       VALUES (?, ?, 'STAMP_PURCHASE', ?, ?, ?)`,
+      [userId, normalizedType, plan.stampCount, reason, orderId]
+    );
+    await connection.commit();
+
+    return {
+      id: Number(result.insertId),
+      orderId,
+      planCode: plan.code,
+      planName: plan.name,
+      composition: plan.composition,
+      stampCount: plan.stampCount,
+      supplyPrice: plan.price,
+      vat,
+      totalPrice,
+      stampType: normalizedType,
+      status: '결제완료'
+    };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 
 async function getUserStampBalance(userId, stampType = STAMP_TYPES.MEMBER) {
@@ -73,7 +164,10 @@ async function getUserStampHistories(userId, options = {}) {
 
 module.exports = {
   STAMP_TYPES,
+  STAMP_PURCHASE_PLANS,
   STAMP_ACTION_LABELS,
+  getStampPurchasePlan,
+  createStampPurchase,
   getUserStampBalance,
   getUserStampHistories
 };

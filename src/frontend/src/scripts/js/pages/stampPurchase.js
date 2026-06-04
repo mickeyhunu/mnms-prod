@@ -2,7 +2,6 @@
  * 파일 역할: stamp-purchase 페이지의 스탬프 상품 선택/결제정보 UI를 담당하는 스크립트 파일.
  */
 (() => {
-    const ORDER_STORAGE_KEY = 'mnmsAdOrderHistory';
     const planList = document.getElementById('stamp-plan-list');
     const selectedProduct = document.getElementById('stamp-selected-product');
     const productPrice = document.getElementById('stamp-product-price');
@@ -44,44 +43,8 @@
     };
 
     const planCodes = Object.keys(plans);
-    const state = { plan: null };
+    const state = { plan: null, isSubmitting: false };
     const formatPrice = (value) => `${value.toLocaleString('ko-KR')}원`;
-
-    const readOrderHistory = () => {
-        try {
-            const raw = window.localStorage.getItem(ORDER_STORAGE_KEY);
-            const parsed = JSON.parse(raw || '[]');
-            return Array.isArray(parsed) ? parsed : [];
-        } catch (error) {
-            return [];
-        }
-    };
-
-    const saveOrderHistory = (orders) => {
-        window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(orders.slice(0, 100)));
-    };
-
-    const createOrder = () => {
-        const currentPlan = plans[state.plan];
-
-        if (!currentPlan) {
-            return null;
-        }
-
-        const vat = Math.round(currentPlan.price * 0.1);
-
-        return {
-            id: `STAMP-${Date.now()}`,
-            orderedAt: new Date().toISOString(),
-            planCode: state.plan,
-            planName: currentPlan.name,
-            stampCount: currentPlan.stampCount,
-            supplyPrice: currentPlan.price,
-            vat,
-            totalPrice: currentPlan.price + vat,
-            status: '결제완료'
-        };
-    };
 
     const renderPlanList = () => {
         planList.innerHTML = planCodes
@@ -146,8 +109,8 @@
         }
 
         if (purchaseButton) {
-            purchaseButton.disabled = false;
-            purchaseButton.textContent = purchaseButtonText;
+            purchaseButton.disabled = state.isSubmitting;
+            purchaseButton.textContent = state.isSubmitting ? '스탬프 지급 처리 중...' : purchaseButtonText;
             purchaseButton.setAttribute('aria-label', `${currentPlan.name} ${purchaseButtonText}`);
         }
     };
@@ -171,18 +134,36 @@
     });
 
     if (purchaseButton) {
-        purchaseButton.addEventListener('click', () => {
-            const order = createOrder();
+        purchaseButton.addEventListener('click', async () => {
+            if (state.isSubmitting) return;
 
-            if (!order) {
+            const currentPlan = plans[state.plan];
+
+            if (!currentPlan) {
                 alert('구매할 스탬프 상품을 선택해주세요.');
                 return;
             }
 
-            const existingOrders = readOrderHistory();
-            saveOrderHistory([order, ...existingOrders]);
-            alert('스탬프 구매가 완료되었습니다. 사용 내역에서 확인하실 수 있어요.');
-            window.location.href = '/ad-order-history';
+            if (typeof Auth !== 'undefined' && !Auth.isAuthenticated()) {
+                alert('로그인 후 스탬프를 구매할 수 있습니다.');
+                window.location.href = '/login';
+                return;
+            }
+
+            state.isSubmitting = true;
+            renderPaymentSummary();
+
+            try {
+                const response = await APIClient.post('/users/me/stamps/purchases', { planCode: state.plan });
+                const totalStamps = Number(response.totalStamps || 0).toLocaleString('ko-KR');
+                alert(`스탬프 구매가 완료되었습니다. 현재 보유 스탬프는 ${totalStamps}개입니다.`);
+                window.location.href = '/ad-order-history';
+            } catch (error) {
+                alert(error.message || '스탬프 구매 처리 중 오류가 발생했습니다.');
+            } finally {
+                state.isSubmitting = false;
+                renderPaymentSummary();
+            }
         });
     }
 
