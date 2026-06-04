@@ -3269,8 +3269,6 @@ body[data-page="admin"] {
 }
 
 .ad-order-history-card {
-    border: 1px solid #e5e7eb;
-    border-radius: 14px;
     background: #fff;
     padding: 18px 16px;
 }
