@@ -1,5 +1,5 @@
 /**
- * 파일 역할: ad-order-history 페이지의 스탬프 구매/사용 내역 목록 렌더링을 담당하는 스크립트 파일.
+ * 파일 역할: ad-order-history 페이지의 스탬프 결제 내역 목록 렌더링을 담당하는 스크립트 파일.
  */
 (() => {
     const ORDER_STORAGE_KEY = 'mnmsAdOrderHistory';
@@ -22,21 +22,19 @@
         }).format(date);
     };
 
-    const formatStampActionLabel = (actionType) => {
-        const labels = {
-            STAMP_PURCHASE: '스탬프 구매',
-            VISIT_VERIFICATION: '업소 방문 인증',
-            SERVICE_BOTTLE_USE: '서비스 주류 사용',
-            BUSINESS_AD_BRONZE: '브론즈 광고 사용',
-            BUSINESS_AD_SILVER: '실버 광고 사용',
-            BUSINESS_AD_GOLD: '골드 광고 사용',
-            ADMIN_ADJUST_ADD: '관리자 수동 적립',
-            ADMIN_ADJUST_DEDUCT: '관리자 수동 차감',
-            EXPIRED: '유효기간 만료'
-        };
+    const normalizePaymentStatus = (item = {}) => {
+        const rawStatus = String(item.status || '').trim();
+        const actionType = String(item.actionType || '').trim().toUpperCase();
+        const amount = Number(item.amount || item.stampCount || 0);
 
-        return labels[actionType] || actionType || '스탬프 내역';
+        if (rawStatus.includes('취소') || actionType === 'STAMP_PURCHASE_CANCEL' || amount < 0) {
+            return '결제취소';
+        }
+
+        return rawStatus || '결제완료';
     };
+
+    const getPaymentStatusClass = (status) => String(status || '').includes('취소') ? 'cancel' : 'complete';
 
     const readOrderHistory = () => {
         try {
@@ -48,37 +46,44 @@
         }
     };
 
-    const createPurchaseItems = () => readOrderHistory().map((order) => ({
-        id: order.id || `STAMP-PURCHASE-${order.orderedAt || Date.now()}`,
-        type: 'purchase',
-        title: '스탬프 구매',
-        status: order.status || '결제완료',
-        createdAt: order.orderedAt,
-        meta: [
-            ['구매상품', order.planName || '-'],
-            ['스탬프', `${Number(order.stampCount || order.durationDays || 0).toLocaleString('ko-KR')}개`],
-            ['주문번호', order.id || '-'],
-            ['주문일시', formatDateTime(order.orderedAt)],
-            ['공급가액', formatPrice(order.supplyPrice)],
-            ['부가세', formatPrice(order.vat)],
-            ['결제금액', formatPrice(order.totalPrice)]
-        ]
-    }));
+    const createStoredPaymentItems = () => readOrderHistory().map((order) => {
+        const status = normalizePaymentStatus(order);
+        const stampCount = Math.abs(Number(order.stampCount || order.durationDays || 0));
 
-    const createStampUseItems = (stampHistories = []) => stampHistories.map((item) => {
-        const amount = Number(item.amount || 0);
-        const amountText = `${amount >= 0 ? '+' : ''}${amount.toLocaleString('ko-KR')}개`;
         return {
-            id: item.id || `STAMP-${item.createdAt || Date.now()}`,
-            type: amount >= 0 ? 'earn' : 'use',
-            title: item.actionLabel || formatStampActionLabel(item.actionType),
-            status: amount >= 0 ? '적립/구매' : '사용(차감)',
+            id: order.id || `STAMP-PAYMENT-${order.orderedAt || Date.now()}`,
+            type: getPaymentStatusClass(status),
+            title: order.planName || '스탬프 구매',
+            status,
+            createdAt: order.orderedAt,
+            meta: [
+                ['구매상품', order.planName || '-'],
+                ['스탬프', `${stampCount.toLocaleString('ko-KR')}개`],
+                ['주문번호', order.id || '-'],
+                ['주문일시', formatDateTime(order.orderedAt)],
+                ['공급가액', formatPrice(order.supplyPrice)],
+                ['부가세', formatPrice(order.vat)],
+                ['결제금액', formatPrice(order.totalPrice)]
+            ]
+        };
+    });
+
+    const createPaymentItems = (paymentHistories = []) => paymentHistories.map((item) => {
+        const amount = Math.abs(Number(item.amount || 0));
+        const status = normalizePaymentStatus(item);
+        const title = item.actionLabel || (status === '결제취소' ? '스탬프 결제취소' : '스탬프 구매');
+
+        return {
+            id: item.id || `STAMP-PAYMENT-${item.createdAt || Date.now()}`,
+            type: getPaymentStatusClass(status),
+            title,
+            status,
             createdAt: item.createdAt,
             meta: [
-                ['스탬프', amountText],
-                ['일시', formatDateTime(item.createdAt)],
-                ...(item.sourceLabel ? [['출처', item.sourceLabel]] : []),
-                ...(item.reason ? [['사유', item.reason]] : [])
+                ['구매상품', item.reason || title],
+                ['스탬프', `${amount.toLocaleString('ko-KR')}개`],
+                ['주문번호', item.sourceLabel || '-'],
+                ['결제일시', formatDateTime(item.createdAt)]
             ]
         };
     });
@@ -111,23 +116,22 @@
             .join('');
     };
 
-    const loadStampHistory = async () => {
+    const loadStampPaymentHistory = async () => {
         if (typeof Auth !== 'undefined' && !Auth.isAuthenticated()) {
             window.location.href = '/login';
             return;
         }
 
         try {
-            const response = await APIClient.get('/users/me/stamps', { limit: 50 });
-            const items = [
-                ...createPurchaseItems(),
-                ...createStampUseItems(response.stampHistories || [])
-            ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            const response = await APIClient.get('/users/me/stamps/payments', { limit: 50 });
+            const items = createPaymentItems(response.stampPaymentHistories || []);
             renderItems(items);
         } catch (error) {
-            renderItems(createPurchaseItems());
+            const items = createStoredPaymentItems()
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            renderItems(items);
         }
     };
 
-    loadStampHistory();
+    loadStampPaymentHistory();
 })();
