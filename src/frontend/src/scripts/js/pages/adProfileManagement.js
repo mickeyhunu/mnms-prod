@@ -233,6 +233,13 @@ function bindAdProfileInteractions() {
         });
     };
 
+    const getEditorTextStyleButtonState = (styleCommand) => {
+        const button = editorToolbar?.querySelector(`[data-editor-command="${styleCommand}"]`);
+        return button?.getAttribute('aria-pressed') === 'true'
+            || button?.classList.contains('is-active')
+            || document.queryCommandState(styleCommand);
+    };
+
     const applyEditorCommand = (command, value = null) => {
         if (!descriptionEditor) return;
         restoreEditorSelection();
@@ -240,10 +247,10 @@ function bindAdProfileInteractions() {
 
         const isTextStyleCommand = EDITOR_TEXT_STYLE_COMMANDS.includes(command);
         const desiredTextStyleStates = isTextStyleCommand
-            ? Object.fromEntries(EDITOR_TEXT_STYLE_COMMANDS.map((styleCommand) => [
-                styleCommand,
-                styleCommand === command ? !document.queryCommandState(styleCommand) : document.queryCommandState(styleCommand)
-            ]))
+            ? Object.fromEntries(EDITOR_TEXT_STYLE_COMMANDS.map((styleCommand) => {
+                const isActive = getEditorTextStyleButtonState(styleCommand);
+                return [styleCommand, styleCommand === command ? !isActive : isActive];
+            }))
             : null;
 
         document.execCommand(command, false, value);
