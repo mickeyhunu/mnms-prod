@@ -4019,10 +4019,33 @@ body[data-page="admin"] {
 }
 
 .mypage-link-badge {
-    color: #4f46e5;
-    font-size: 18px;
-    font-weight: 800;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 7px 11px;
+    color: #1f2937;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
     white-space: nowrap;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+}
+
+.mypage-link-badge-label,
+.mypage-link-badge-unit {
+    color: #9a3412;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.mypage-link-badge-count {
+    color: #c2410c;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: -0.03em;
 }
 
 .ad-order-history-status--purchase {
