@@ -3268,14 +3268,6 @@ body[data-page="admin"] {
     margin-top: 18px;
 }
 
-.ad-order-history-link {
-    display: inline-block;
-    margin-top: 10px;
-    font-size: 14px;
-    color: #475569;
-    text-decoration: underline;
-}
-
 .ad-order-history-card {
     border: 1px solid #e5e7eb;
     border-radius: 14px;
@@ -4140,13 +4132,6 @@ body[data-page="admin"] {
     border-color: #111827;
     background: #111827;
     box-shadow: inset 0 0 0 2px #fff;
-}
-
-.stamp-vat-included-note {
-    margin: 12px 0 0;
-    color: #6b7280;
-    font-size: 14px;
-    line-height: 1.5;
 }
 
 @media (max-width: 520px) {
