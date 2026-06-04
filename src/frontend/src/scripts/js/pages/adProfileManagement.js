@@ -33,8 +33,7 @@ const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const EDITOR_TEXT_STYLE_COMMANDS = ['bold', 'italic', 'underline'];
 const EDITOR_STATE_COMMANDS = [...EDITOR_TEXT_STYLE_COMMANDS, 'insertUnorderedList'];
 const EDITOR_DEFAULT_FONT_SIZE = 15;
-const EDITOR_FONT_SIZE_MIN = 11;
-const EDITOR_FONT_SIZE_MAX = 38;
+const EDITOR_FONT_SIZE_OPTIONS = Array.from({ length: 15 }, (_, index) => 11 + (index * 2));
 const EDITOR_COLOR_PALETTE = [
     '#212529', '#495057', '#868e96', '#ced4da', '#ffffff', '#fff3bf', '#ffd8a8', '#ffc9c9',
     '#ff8787', '#ff6b6b', '#fa5252', '#f03e3e', '#e03131', '#c92a2a', '#a61e4d', '#862e9c',
@@ -61,32 +60,85 @@ function getEditorElementFromSelection(descriptionEditor) {
     return selectedElement && descriptionEditor?.contains(selectedElement) ? selectedElement : null;
 }
 
+function normalizeEditorFontSize(fontSize) {
+    const parsedFontSize = Number.parseInt(fontSize, 10);
+    const fallbackFontSize = Number.isFinite(parsedFontSize) ? parsedFontSize : EDITOR_DEFAULT_FONT_SIZE;
+    return EDITOR_FONT_SIZE_OPTIONS.reduce((closestSize, optionSize) => {
+        const currentDistance = Math.abs(optionSize - fallbackFontSize);
+        const closestDistance = Math.abs(closestSize - fallbackFontSize);
+        return currentDistance < closestDistance ? optionSize : closestSize;
+    }, EDITOR_DEFAULT_FONT_SIZE);
+}
+
 function getEditorFontSizeFromSelection(descriptionEditor) {
     let element = getEditorElementFromSelection(descriptionEditor);
     while (element && element !== descriptionEditor) {
         const inlineFontSize = element.style?.fontSize;
-        if (inlineFontSize) return parseInt(inlineFontSize, 10) || EDITOR_DEFAULT_FONT_SIZE;
+        if (inlineFontSize) return normalizeEditorFontSize(inlineFontSize);
         element = element.parentElement;
     }
     return EDITOR_DEFAULT_FONT_SIZE;
 }
 
+function runWithPreservedEditorSelection(descriptionEditor, callback) {
+    const selection = window.getSelection();
+    const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+    const container = range?.commonAncestorContainer?.nodeType === Node.ELEMENT_NODE
+        ? range.commonAncestorContainer
+        : range?.commonAncestorContainer?.parentElement;
+
+    if (!range || !container || !descriptionEditor?.contains(container)) {
+        callback();
+        return;
+    }
+
+    const markerId = `ad-editor-selection-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const startMarker = document.createElement('span');
+    const endMarker = document.createElement('span');
+    startMarker.id = `${markerId}-start`;
+    endMarker.id = `${markerId}-end`;
+    startMarker.style.display = 'none';
+    endMarker.style.display = 'none';
+
+    const workingRange = range.cloneRange();
+    workingRange.collapse(false);
+    workingRange.insertNode(endMarker);
+    workingRange.setStart(range.startContainer, range.startOffset);
+    workingRange.collapse(true);
+    workingRange.insertNode(startMarker);
+
+    callback();
+
+    const restoredStartMarker = document.getElementById(startMarker.id);
+    const restoredEndMarker = document.getElementById(endMarker.id);
+    if (!restoredStartMarker || !restoredEndMarker) return;
+
+    const restoredRange = document.createRange();
+    restoredRange.setStartAfter(restoredStartMarker);
+    restoredRange.setEndBefore(restoredEndMarker);
+    selection.removeAllRanges();
+    selection.addRange(restoredRange);
+    restoredStartMarker.remove();
+    restoredEndMarker.remove();
+}
+
 function replaceEditorFontTags(descriptionEditor, fontSize) {
     if (!descriptionEditor) return;
-    descriptionEditor.querySelectorAll('font[size="7"]').forEach((fontElement) => {
-        const span = document.createElement('span');
-        span.style.fontSize = `${fontSize}px`;
-        span.innerHTML = fontElement.innerHTML;
-        fontElement.replaceWith(span);
+    runWithPreservedEditorSelection(descriptionEditor, () => {
+        descriptionEditor.querySelectorAll('font[size="7"]').forEach((fontElement) => {
+            const span = document.createElement('span');
+            span.style.fontSize = `${fontSize}px`;
+            span.innerHTML = fontElement.innerHTML;
+            fontElement.replaceWith(span);
+        });
     });
 }
 
 function buildEditorFontSizeOptions(fontSizeSelect) {
     if (!fontSizeSelect) return;
-    fontSizeSelect.innerHTML = Array.from({ length: EDITOR_FONT_SIZE_MAX - EDITOR_FONT_SIZE_MIN + 1 }, (_, index) => {
-        const size = EDITOR_FONT_SIZE_MIN + index;
-        return `<option value="${size}"${size === EDITOR_DEFAULT_FONT_SIZE ? ' selected' : ''}>${size}</option>`;
-    }).join('');
+    fontSizeSelect.innerHTML = EDITOR_FONT_SIZE_OPTIONS.map((size) => (
+        `<option value="${size}"${size === EDITOR_DEFAULT_FONT_SIZE ? ' selected' : ''}>${size}</option>`
+    )).join('');
 }
 
 function buildEditorPalette(panel) {
@@ -161,6 +213,7 @@ function bindAdProfileInteractions() {
     const editorImageButton = document.getElementById('ad-profile-editor-image-btn');
     const editorImageInput = document.getElementById('ad-profile-editor-image-input');
     let lastEditorRange = null;
+    let pendingEditorFontSize = EDITOR_DEFAULT_FONT_SIZE;
 
     const previewTitle = document.getElementById('ad-profile-preview-title');
     const previewManager = document.getElementById('ad-profile-preview-manager');
@@ -270,15 +323,17 @@ function bindAdProfileInteractions() {
 
     const applyEditorFontSize = (fontSize) => {
         if (!descriptionEditor) return;
-        const normalizedFontSize = Math.min(EDITOR_FONT_SIZE_MAX, Math.max(EDITOR_FONT_SIZE_MIN, Number(fontSize) || EDITOR_DEFAULT_FONT_SIZE));
+        const normalizedFontSize = normalizeEditorFontSize(fontSize);
+        pendingEditorFontSize = normalizedFontSize;
         restoreEditorSelection();
         descriptionEditor.focus();
         document.execCommand('fontSize', false, '7');
         replaceEditorFontTags(descriptionEditor, normalizedFontSize);
-        if (editorFontSizeSelect) editorFontSizeSelect.value = String(normalizedFontSize);
         saveEditorSelection();
         syncPreview();
         updateActiveEditorButtons();
+        pendingEditorFontSize = normalizedFontSize;
+        if (editorFontSizeSelect) editorFontSizeSelect.value = String(normalizedFontSize);
     };
 
     const updateActiveEditorButtons = () => {
@@ -291,6 +346,7 @@ function bindAdProfileInteractions() {
         const currentFontColor = normalizeEditorColor(document.queryCommandValue('foreColor'));
         const currentBackColor = normalizeEditorColor(document.queryCommandValue('backColor') || document.queryCommandValue('hiliteColor'));
         const currentFontSize = getEditorFontSizeFromSelection(descriptionEditor);
+        pendingEditorFontSize = currentFontSize;
         if (editorFontSizeSelect) editorFontSizeSelect.value = String(currentFontSize);
 
         editorToolbar.querySelectorAll('[data-editor-command]').forEach((button) => {
@@ -312,6 +368,7 @@ function bindAdProfileInteractions() {
     if (descriptionEditor && descriptionInput) {
         descriptionEditor.innerHTML = descriptionInput.value || '';
         descriptionEditor.addEventListener('input', () => {
+            replaceEditorFontTags(descriptionEditor, pendingEditorFontSize);
             syncPreview();
             updateActiveEditorButtons();
         });
