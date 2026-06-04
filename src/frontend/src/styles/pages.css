@@ -3971,14 +3971,6 @@ body[data-page="admin"] {
     background: #dcfce7;
 }
 
-.mypage-summary-actions {
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
 .mypage-stamp-summary {
     margin-top: 12px;
     padding: 14px;
@@ -4044,11 +4036,6 @@ body[data-page="admin"] {
 }
 
 @media (max-width: 480px) {
-    .mypage-summary-actions {
-        width: 100%;
-        justify-content: flex-start;
-    }
-
     .mypage-stamp-slots {
         gap: 6px;
     }
