@@ -3489,10 +3489,13 @@ body[data-page="admin"] {
     font-size: 13px;
 }
 
-.ad-profile-editor-select {
+.ad-profile-section .ad-profile-editor-select {
     width: 58px;
     min-height: 28px;
+    margin-top: 0;
     border: 0;
+    border-radius: 0;
+    padding: 0;
     background: transparent;
     color: #212529;
     font-size: 13px;
