@@ -21,7 +21,7 @@
             name: '🥉 스타터팩',
             composition: '스탬프 5개',
             stampCount: 5,
-            price: 100000
+            price: 50000
         },
         basic: {
             name: '🥈 베이직팩',
@@ -122,12 +122,15 @@
 
             if (purchaseButton) {
                 purchaseButton.disabled = true;
+                purchaseButton.textContent = '스탬프 구매하기';
+                purchaseButton.removeAttribute('aria-label');
             }
 
             return;
         }
 
         const vat = Math.round(currentPlan.price * 0.1);
+        const purchaseButtonText = `${formatPrice(currentPlan.price)} 결제하기`;
 
         selectedProduct.textContent = currentPlan.name;
         productPrice.textContent = formatPrice(currentPlan.price);
@@ -144,6 +147,8 @@
 
         if (purchaseButton) {
             purchaseButton.disabled = false;
+            purchaseButton.textContent = purchaseButtonText;
+            purchaseButton.setAttribute('aria-label', `${currentPlan.name} ${purchaseButtonText}`);
         }
     };
 
