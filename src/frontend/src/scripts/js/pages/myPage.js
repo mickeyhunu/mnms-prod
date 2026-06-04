@@ -950,13 +950,9 @@ function renderStampSlots(totalStamps = 0, options = {}) {
 
 function renderStampSummary(totalStamps = 0, options = {}) {
     const normalizedTotal = normalizeStampCount(totalStamps);
-    const remainingCount = Math.max(0, 5 - Math.min(5, Math.floor(normalizedTotal)));
     const title = options.title || '보유 스탬프';
     const stampType = options.stampType || 'MEMBER';
     const stampLabel = options.stampLabel || '스탬프';
-    const description = options.description || (remainingCount > 0
-        ? `서비스 주류까지 ${remainingCount}개 남았어요.`
-        : '서비스 주류 1병 교환 가능 상태예요.');
 
     return `
         <div class="mypage-stamp-summary">
@@ -967,7 +963,6 @@ function renderStampSummary(totalStamps = 0, options = {}) {
             <div class="mypage-stamp-slots" aria-label="최대 5개 ${sanitizeHTML(stampLabel)} 적립 현황">
                 ${renderStampSlots(normalizedTotal, { stampType, stampLabel })}
             </div>
-            <p class="mypage-stamp-caption">${sanitizeHTML(description)}</p>
         </div>
     `;
 }
@@ -1101,9 +1096,6 @@ async function loadStampHistories() {
         const stampType = String(response.stampType || (isAdAccount(currentUser) ? 'BUSINESS' : 'MEMBER')).toUpperCase();
         const isBusinessStamp = stampType === 'BUSINESS';
         const summaryTitle = isBusinessStamp ? '보유 광고 스탬프' : '보유 스탬프';
-        const summaryDescription = isBusinessStamp
-            ? '브론즈 3일, 실버 2일 또는 골드 1일 광고에 사용할 수 있어요.'
-            : undefined;
         const historyTitle = isBusinessStamp ? '광고 스탬프 적립/사용 내역' : '스탬프 적립/사용 내역';
 
         container.innerHTML = `
@@ -1115,7 +1107,6 @@ async function loadStampHistories() {
                         </div>
                         ${renderStampSummary(totalStamps, {
                             title: summaryTitle,
-                            description: summaryDescription,
                             stampType,
                             stampLabel: isBusinessStamp ? '광고 스탬프' : '스탬프'
                         })}
@@ -1164,9 +1155,6 @@ async function loadStats() {
         const isBusinessStamp = stampType === 'BUSINESS';
         const stampSectionTitle = isBusinessStamp ? '광고 스탬프' : '스탬프';
         const stampSummaryTitle = isBusinessStamp ? '보유 광고 스탬프' : '보유 스탬프';
-        const stampSummaryDescription = isBusinessStamp
-            ? '브론즈 3일, 실버 2일 또는 골드 1일 광고에 사용할 수 있어요.'
-            : undefined;
         const stampSection = `
             <section class="mypage-summary-section">
                 <div class="mypage-summary-head">
@@ -1175,7 +1163,6 @@ async function loadStats() {
                 </div>
                 ${renderStampSummary(totalStamps, {
                     title: stampSummaryTitle,
-                    description: stampSummaryDescription,
                     stampType,
                     stampLabel: stampSectionTitle
                 })}
