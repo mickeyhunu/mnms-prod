@@ -7,6 +7,7 @@ const {
   myStats,
   myPointHistories,
   myStampHistories,
+  myStampPaymentHistories,
   purchaseMyStamps,
   myActivity,
   myLiveAccessStatus,
@@ -31,6 +32,7 @@ const router = express.Router();
 router.get('/me/stats', authMiddleware, myStats);
 router.get('/me/points', authMiddleware, myPointHistories);
 router.get('/me/stamps', authMiddleware, myStampHistories);
+router.get('/me/stamps/payments', authMiddleware, myStampPaymentHistories);
 router.post('/me/stamps/purchases', authMiddleware, purchaseMyStamps);
 router.get('/me/activity', authMiddleware, myActivity);
 router.get('/me/live-access', authMiddleware, myLiveAccessStatus);

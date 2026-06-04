@@ -580,13 +580,13 @@ const pageRegistry = {
                     <a href="/my-page" class="community-back-link icon-btn icon-btn-square" aria-label="마이페이지로 이동">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
                     </a>
-                    <span class="community-board-name">스탬프 사용 내역</span>
+                    <span class="community-board-name">스탬프 결제 내역</span>
                 </div>
             </header>
 
-            <section class="ad-order-history-card" aria-label="스탬프 사용 내역">
-                <p class="ad-order-history-caption">스탬프 구매 기록부터 광고 사용(차감) 내역까지 최신순으로 확인할 수 있어요.</p>
-                <div class="ad-order-history-empty hidden" id="ad-order-history-empty">아직 스탬프 내역이 없습니다.</div>
+            <section class="ad-order-history-card" aria-label="스탬프 결제 내역">
+                <p class="ad-order-history-caption">스탬프 결제완료와 결제취소 내역만 최신순으로 확인할 수 있어요. 적립/차감 내역은 마이페이지의 스탬프 내역에서 확인해주세요.</p>
+                <div class="ad-order-history-empty hidden" id="ad-order-history-empty">아직 스탬프 결제 내역이 없습니다.</div>
                 <div class="ad-order-history-list" id="ad-order-history-list"></div>
             </section>
         </div>
@@ -1091,7 +1091,7 @@ const pageRegistry = {
                                 <span id="mypage-business-info-rejection-reason" class="mypage-rejection-reason hidden"></span>
                             </span>
                         </a>
-                        <a class="mypage-link-item" href="/ad-order-history"><span>스탬프 사용 내역</span></a>
+                        <a class="mypage-link-item" href="/ad-order-history"><span>스탬프 결제 내역</span></a>
                         <a class="mypage-link-item hidden" id="business-member-apply-link" href="/business-apply">
                             <span class="mypage-link-main-text">기업회원 신청</span>
                             <span class="mypage-business-apply-status-wrap">

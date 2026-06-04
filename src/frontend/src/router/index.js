@@ -38,7 +38,7 @@ const routes = [
   { path: '/find-account', component: PageView, meta: { pageKey: 'find-account', title: '아이디/비밀번호 찾기', description: '아이디 또는 비밀번호를 안전하게 찾을 수 있습니다.', noindex: true } },
   { path: '/stamp-purchase', component: PageView, meta: { pageKey: 'stamp-purchase', title: '스탬프 구매', description: '스탬프 상품 구성을 확인하고 구매를 진행하세요.', noindex: true } },
   { path: '/ad-purchase', component: PageView, meta: { pageKey: 'ad-purchase', title: '광고 활성화', description: '광고 요금제와 상품 구성을 확인하고 광고 활성화를 진행하세요.', noindex: true } },
-  { path: '/ad-order-history', component: PageView, meta: { pageKey: 'ad-order-history', title: '스탬프 사용 내역', description: '스탬프 구매 기록과 사용(차감) 내역을 확인하세요.', noindex: true } },
+  { path: '/ad-order-history', component: PageView, meta: { pageKey: 'ad-order-history', title: '스탬프 결제 내역', description: '스탬프 결제완료와 결제취소 내역을 확인하세요.', noindex: true } },
   { path: '/business-info', component: PageView, meta: { pageKey: 'business-info', title: '업체정보', description: '업체정보 메뉴 준비중 안내 페이지입니다.' } },
   { path: '/business-apply', component: PageView, meta: { pageKey: 'business-apply', title: '기업회원 신청', description: '기업회원 신청 전 안내 사항을 확인하고 필수 동의 후 사업자정보를 제출하세요.', noindex: true } },
   { path: '/ad-profile-management', component: PageView, meta: { pageKey: 'ad-profile-management', title: '광고프로필 관리', description: '광고프로필 기본 정보와 상세 소개를 등록하고 미리보기를 확인하세요.', noindex: true } },
