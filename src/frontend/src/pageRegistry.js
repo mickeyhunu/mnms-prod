@@ -204,7 +204,7 @@ const pageRegistry = {
                             <div class="ad-profile-editor-group" aria-label="문단 정렬 및 첨부">
                                 <button type="button" class="ad-profile-editor-btn" data-editor-command="insertUnorderedList" title="목록" aria-pressed="false">• 목록</button>
                                 <div class="ad-profile-editor-popover-wrap">
-                                    <button type="button" class="ad-profile-editor-btn ad-profile-editor-align-toggle" data-editor-popover="align" title="문단 정렬" aria-expanded="false" aria-label="문단 정렬">
+                                    <button type="button" class="ad-profile-editor-btn ad-profile-editor-align-toggle" data-editor-popover="align" data-editor-align="justifyLeft" title="문단 정렬" aria-expanded="false" aria-label="문단 정렬">
                                         <span aria-hidden="true"></span>
                                     </button>
                                     <div class="ad-profile-editor-popover ad-profile-editor-align-menu" data-editor-popover-panel="align" role="menu" aria-label="문단 정렬 선택">
