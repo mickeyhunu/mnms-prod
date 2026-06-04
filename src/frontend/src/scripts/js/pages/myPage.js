@@ -149,18 +149,27 @@ function renderAdCenterSection(user) {
 }
 
 
+function renderAdCenterStampCount(element, countText, label = '보유', unit = '개') {
+    element.setAttribute('aria-label', `${label} 스탬프 ${countText}${unit}`);
+    element.innerHTML = `
+        <span class="mypage-link-badge-label">${label}</span>
+        <span class="mypage-link-badge-count">${countText}</span>
+        <span class="mypage-link-badge-unit">${unit}</span>
+    `;
+}
+
 async function updateAdCenterStampCount(user) {
     const stampCountElement = document.getElementById('ad-center-stamp-count');
     if (!stampCountElement || !isAdAccount(user)) return;
 
-    stampCountElement.textContent = '보유 스탬프 확인 중';
+    renderAdCenterStampCount(stampCountElement, '확인 중', '스탬프', '');
 
     try {
         const response = await APIClient.get('/users/me/stamps', { limit: 1 });
         const totalStamps = normalizeStampCount(response.totalStamps || 0);
-        stampCountElement.textContent = `보유 스탬프 ${totalStamps.toLocaleString()}개`;
+        renderAdCenterStampCount(stampCountElement, totalStamps.toLocaleString());
     } catch (error) {
-        stampCountElement.textContent = '보유 스탬프 -';
+        renderAdCenterStampCount(stampCountElement, '-');
     }
 }
 
@@ -907,16 +916,30 @@ function normalizeStampCount(value) {
 }
 
 const STAMP_ASSET_PATHS = {
-    empty: '/src/assets/stamp/stamp-empty.png',
-    filled: '/src/assets/stamp/stamp-filled.png'
+    MEMBER: {
+        empty: '/src/assets/stamp/stamp-empty.png',
+        filled: '/src/assets/stamp/stamp-filled.png'
+    },
+    BUSINESS: {
+        empty: '/src/assets/stamp/business-stamp-empty.png',
+        filled: '/src/assets/stamp/business-stamp-filled.png'
+    }
 };
 
-function renderStampSlots(totalStamps = 0) {
+function resolveStampAssetPaths(stampType = 'MEMBER') {
+    const normalizedType = String(stampType || '').trim().toUpperCase();
+    return STAMP_ASSET_PATHS[normalizedType] || STAMP_ASSET_PATHS.MEMBER;
+}
+
+function renderStampSlots(totalStamps = 0, options = {}) {
     const filledCount = Math.max(0, Math.min(5, Math.floor(normalizeStampCount(totalStamps))));
+    const assetPaths = resolveStampAssetPaths(options.stampType);
+    const stampLabel = options.stampLabel || '스탬프';
+
     return Array.from({ length: 5 }, (_, index) => {
         const isFilled = index < filledCount;
-        const statusLabel = `${index + 1}번째 스탬프 ${isFilled ? '적립됨' : '비어 있음'}`;
-        const stampImage = isFilled ? STAMP_ASSET_PATHS.filled : STAMP_ASSET_PATHS.empty;
+        const statusLabel = `${index + 1}번째 ${stampLabel} ${isFilled ? '적립됨' : '비어 있음'}`;
+        const stampImage = isFilled ? assetPaths.filled : assetPaths.empty;
 
         return `<img class="mypage-stamp-slot${isFilled ? ' is-filled' : ''}" src="${stampImage}" alt="${statusLabel}" loading="lazy">`;
     }).join('');
@@ -926,6 +949,8 @@ function renderStampSummary(totalStamps = 0, options = {}) {
     const normalizedTotal = normalizeStampCount(totalStamps);
     const remainingCount = Math.max(0, 5 - Math.min(5, Math.floor(normalizedTotal)));
     const title = options.title || '보유 스탬프';
+    const stampType = options.stampType || 'MEMBER';
+    const stampLabel = options.stampLabel || '스탬프';
     const description = options.description || (remainingCount > 0
         ? `서비스 주류까지 ${remainingCount}개 남았어요.`
         : '서비스 주류 1병 교환 가능 상태예요.');
@@ -936,8 +961,8 @@ function renderStampSummary(totalStamps = 0, options = {}) {
                 <span>${sanitizeHTML(title)}</span>
                 <strong>${normalizedTotal.toLocaleString()}개</strong>
             </div>
-            <div class="mypage-stamp-slots" aria-label="최대 5개 스탬프 적립 현황">
-                ${renderStampSlots(normalizedTotal)}
+            <div class="mypage-stamp-slots" aria-label="최대 5개 ${sanitizeHTML(stampLabel)} 적립 현황">
+                ${renderStampSlots(normalizedTotal, { stampType, stampLabel })}
             </div>
             <p class="mypage-stamp-caption">${sanitizeHTML(description)}</p>
         </div>
@@ -1070,7 +1095,8 @@ async function loadStampHistories() {
         const response = await APIClient.get('/users/me/stamps', { limit: 50 });
         const stampHistories = response.stampHistories || [];
         const totalStamps = normalizeStampCount(response.totalStamps || 0);
-        const isBusinessStamp = String(response.stampType || '').toUpperCase() === 'BUSINESS';
+        const stampType = String(response.stampType || (isAdAccount(currentUser) ? 'BUSINESS' : 'MEMBER')).toUpperCase();
+        const isBusinessStamp = stampType === 'BUSINESS';
         const summaryTitle = isBusinessStamp ? '보유 광고 스탬프' : '보유 스탬프';
         const summaryDescription = isBusinessStamp
             ? '브론즈 3일, 실버 2일 또는 골드 1일 광고에 사용할 수 있어요.'
@@ -1084,7 +1110,12 @@ async function loadStampHistories() {
                         <div class="mypage-summary-head">
                             <h3 class="mypage-summary-title">${isBusinessStamp ? '광고 스탬프' : '스탬프'}</h3>
                         </div>
-                        ${renderStampSummary(totalStamps, { title: summaryTitle, description: summaryDescription })}
+                        ${renderStampSummary(totalStamps, {
+                            title: summaryTitle,
+                            description: summaryDescription,
+                            stampType,
+                            stampLabel: isBusinessStamp ? '광고 스탬프' : '스탬프'
+                        })}
                     </section>
 
                     <section class="mypage-summary-section">
@@ -1126,13 +1157,25 @@ async function loadStats() {
         const rankLabel = resolveRankLabel(currentUser, response.levelLabel || '');
         const rankMarkup = resolveRankMarkup(currentUser, rankLabel);
         const totalStamps = normalizeStampCount(response.totalStamps || 0);
-        const stampSection = isAdAccount(currentUser) ? '' : `
+        const stampType = String(response.stampType || (isAdAccount(currentUser) ? 'BUSINESS' : 'MEMBER')).toUpperCase();
+        const isBusinessStamp = stampType === 'BUSINESS';
+        const stampSectionTitle = isBusinessStamp ? '광고 스탬프' : '스탬프';
+        const stampSummaryTitle = isBusinessStamp ? '보유 광고 스탬프' : '보유 스탬프';
+        const stampSummaryDescription = isBusinessStamp
+            ? '브론즈 3일, 실버 2일 또는 골드 1일 광고에 사용할 수 있어요.'
+            : undefined;
+        const stampSection = `
             <section class="mypage-summary-section">
                 <div class="mypage-summary-head">
-                    <h3 class="mypage-summary-title">스탬프</h3>
+                    <h3 class="mypage-summary-title">${stampSectionTitle}</h3>
                     <a class="mypage-summary-action" href="/my-page/stamps">스탬프 내역 보기</a>
                 </div>
-                ${renderStampSummary(totalStamps)}
+                ${renderStampSummary(totalStamps, {
+                    title: stampSummaryTitle,
+                    description: stampSummaryDescription,
+                    stampType,
+                    stampLabel: stampSectionTitle
+                })}
             </section>
         `;
         const pointsSection = isAdAccount(currentUser) ? '' : `
