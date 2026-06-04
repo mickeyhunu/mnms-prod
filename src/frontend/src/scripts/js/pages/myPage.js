@@ -886,11 +886,19 @@ function normalizeStampCount(value) {
     return Math.max(0, Number(value || 0));
 }
 
+const STAMP_ASSET_PATHS = {
+    empty: '/src/assets/stamp/stamp-empty.png',
+    filled: '/src/assets/stamp/stamp-filled.png'
+};
+
 function renderStampSlots(totalStamps = 0) {
     const filledCount = Math.max(0, Math.min(5, Math.floor(normalizeStampCount(totalStamps))));
     return Array.from({ length: 5 }, (_, index) => {
         const isFilled = index < filledCount;
-        return `<span class="mypage-stamp-slot${isFilled ? ' is-filled' : ''}" aria-label="${index + 1}번째 스템프 ${isFilled ? '적립됨' : '비어 있음'}">STAMP</span>`;
+        const statusLabel = `${index + 1}번째 스템프 ${isFilled ? '적립됨' : '비어 있음'}`;
+        const stampImage = isFilled ? STAMP_ASSET_PATHS.filled : STAMP_ASSET_PATHS.empty;
+
+        return `<img class="mypage-stamp-slot${isFilled ? ' is-filled' : ''}" src="${stampImage}" alt="${statusLabel}" loading="lazy">`;
     }).join('');
 }
 
