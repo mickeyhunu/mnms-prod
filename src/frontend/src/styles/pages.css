@@ -3418,6 +3418,18 @@ body[data-page="admin"] {
     background: #f8f9fa;
 }
 
+.ad-profile-editor-group {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.ad-profile-editor-group + .ad-profile-editor-group {
+    padding-left: 8px;
+    border-left: 1px solid #dee2e6;
+}
+
 .ad-profile-editor-btn {
     border: 1px solid #ced4da;
     background: #fff;
@@ -3428,6 +3440,54 @@ body[data-page="admin"] {
     padding: 0 10px;
     font-size: 13px;
     cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.ad-profile-editor-btn:hover,
+.ad-profile-editor-btn:focus-visible {
+    border-color: #ff6b9d;
+    box-shadow: 0 0 0 2px rgba(255, 107, 157, 0.18);
+    outline: none;
+}
+
+.ad-profile-editor-btn.is-active,
+.ad-profile-editor-btn[aria-pressed="true"] {
+    border-color: #ff4d8d;
+    background: #fff0f5;
+    color: #d6336c;
+    box-shadow: inset 0 0 0 1px rgba(255, 77, 141, 0.35), 0 0 0 2px rgba(255, 77, 141, 0.12);
+}
+
+.ad-profile-editor-color-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ad-profile-editor-color-btn::before {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    background: currentColor;
+}
+
+.ad-profile-editor-color-black {
+    color: #212529;
+}
+
+.ad-profile-editor-color-red {
+    color: #e03131;
+}
+
+.ad-profile-editor-color-blue {
+    color: #1971c2;
+}
+
+.ad-profile-editor-color-btn.is-active,
+.ad-profile-editor-color-btn[aria-pressed="true"] {
+    background: #f8f9fa;
 }
 
 .ad-profile-editor-content {
