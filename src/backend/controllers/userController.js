@@ -20,7 +20,7 @@ const {
 } = require('../models/userModel');
 const { resolveMemberLevel, MEMBER_LEVELS } = require('../utils/memberLevel');
 const { POINT_RULES } = require('../models/pointModel');
-const { STAMP_TYPES, createStampPurchase, getUserStampBalance, getUserStampHistories } = require('../models/stampModel');
+const { STAMP_TYPES, createStampPurchase, getUserStampBalance, getUserStampHistories, getUserStampPaymentHistories } = require('../models/stampModel');
 const supportModel = require('../models/supportModel');
 const adminModel = require('../models/adminModel');
 const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
@@ -601,6 +601,22 @@ async function myStampHistories(req, res, next) {
 }
 
 
+async function myStampPaymentHistories(req, res, next) {
+  try {
+    const limit = Math.max(1, Math.min(50, Number(req.query.limit) || 50));
+    const stampType = resolveUserStampType(req.user);
+    const stampPaymentHistories = await getUserStampPaymentHistories(req.user.id, { stampType, limit });
+
+    res.json({
+      stampType,
+      stampPaymentHistories
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+
 async function purchaseMyStamps(req, res, next) {
   try {
     const planCode = String(req.body?.planCode || '').trim();
@@ -974,6 +990,7 @@ module.exports = {
   myStats,
   myPointHistories,
   myStampHistories,
+  myStampPaymentHistories,
   purchaseMyStamps,
   myActivity,
   myLiveAccessStatus,

@@ -37,6 +37,7 @@ const STAMP_PURCHASE_PLANS = {
 
 const STAMP_ACTION_LABELS = {
   STAMP_PURCHASE: '스탬프 구매',
+  STAMP_PURCHASE_CANCEL: '스탬프 결제취소',
   VISIT_VERIFICATION: '업소 방문 인증',
   SERVICE_BOTTLE_USE: '서비스 주류 사용',
   BUSINESS_AD_BRONZE: '브론즈 광고 사용',
@@ -162,6 +163,42 @@ async function getUserStampHistories(userId, options = {}) {
   }));
 }
 
+
+async function getUserStampPaymentHistories(userId, options = {}) {
+  const pool = getPool();
+  const stampType = normalizeStampType(options.stampType);
+  const limit = Math.max(1, Math.min(50, Number(options.limit) || 20));
+  const [rows] = await pool.query(
+    `SELECT
+       id,
+       stamp_type AS stampType,
+       action_type AS actionType,
+       amount,
+       reason,
+       source_label AS sourceLabel,
+       created_at AS createdAt
+     FROM stamp_histories
+     WHERE user_id = ?
+       AND stamp_type = ?
+       AND action_type IN ('STAMP_PURCHASE', 'STAMP_PURCHASE_CANCEL')
+     ORDER BY created_at DESC, id DESC
+     LIMIT ?`,
+    [userId, stampType, limit]
+  );
+
+  return rows.map((row) => ({
+    id: Number(row.id),
+    stampType: row.stampType,
+    actionType: row.actionType,
+    actionLabel: STAMP_ACTION_LABELS[row.actionType] || row.actionType,
+    amount: Number(row.amount || 0),
+    reason: row.reason || '',
+    sourceLabel: row.sourceLabel || '',
+    createdAt: row.createdAt,
+    status: row.actionType === 'STAMP_PURCHASE_CANCEL' || Number(row.amount || 0) < 0 ? '결제취소' : '결제완료'
+  }));
+}
+
 module.exports = {
   STAMP_TYPES,
   STAMP_PURCHASE_PLANS,
@@ -169,5 +206,6 @@ module.exports = {
   getStampPurchasePlan,
   createStampPurchase,
   getUserStampBalance,
-  getUserStampHistories
+  getUserStampHistories,
+  getUserStampPaymentHistories
 };
