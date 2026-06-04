@@ -185,20 +185,34 @@ const pageRegistry = {
                                 <button type="button" class="ad-profile-editor-btn" data-editor-command="underline" title="밑줄" aria-pressed="false"><span style="text-decoration: underline;">U</span></button>
                             </div>
                             <div class="ad-profile-editor-group" aria-label="글씨 크기">
-                                <button type="button" class="ad-profile-editor-btn" data-editor-command="fontSize" data-editor-value="2" data-editor-control="font-size" title="작은 글씨" aria-pressed="false">소</button>
-                                <button type="button" class="ad-profile-editor-btn" data-editor-command="fontSize" data-editor-value="3" data-editor-control="font-size" title="중간 글씨" aria-pressed="false">중</button>
-                                <button type="button" class="ad-profile-editor-btn" data-editor-command="fontSize" data-editor-value="5" data-editor-control="font-size" title="큰 글씨" aria-pressed="false">대</button>
+                                <label class="ad-profile-editor-size-control" title="글씨 크기">
+                                    <span class="sr-only">글씨 크기</span>
+                                    <select id="ad-profile-editor-font-size" class="ad-profile-editor-select" aria-label="글씨 크기"></select>
+                                    <span aria-hidden="true">px</span>
+                                </label>
                             </div>
-                            <div class="ad-profile-editor-group" aria-label="글씨 색상">
-                                <button type="button" class="ad-profile-editor-btn ad-profile-editor-color-btn ad-profile-editor-color-black" data-editor-command="foreColor" data-editor-value="#212529" data-editor-control="font-color" title="검정 글씨" aria-pressed="false"><span>검정</span></button>
-                                <button type="button" class="ad-profile-editor-btn ad-profile-editor-color-btn ad-profile-editor-color-red" data-editor-command="foreColor" data-editor-value="#e03131" data-editor-control="font-color" title="빨간 글씨" aria-pressed="false"><span>빨강</span></button>
-                                <button type="button" class="ad-profile-editor-btn ad-profile-editor-color-btn ad-profile-editor-color-blue" data-editor-command="foreColor" data-editor-value="#1971c2" data-editor-control="font-color" title="파란 글씨" aria-pressed="false"><span>파랑</span></button>
+                            <div class="ad-profile-editor-group" aria-label="글씨 색상 및 배경색">
+                                <div class="ad-profile-editor-popover-wrap">
+                                    <button type="button" class="ad-profile-editor-btn ad-profile-editor-swatch-btn" data-editor-popover="font-color" title="글자색 변경" aria-expanded="false">T</button>
+                                    <div class="ad-profile-editor-popover ad-profile-editor-palette" data-editor-popover-panel="font-color" role="menu" aria-label="글자색 팔레트"></div>
+                                </div>
+                                <div class="ad-profile-editor-popover-wrap">
+                                    <button type="button" class="ad-profile-editor-btn ad-profile-editor-swatch-btn ad-profile-editor-bg-swatch-btn" data-editor-popover="font-bg-color" title="글자 배경색 변경" aria-expanded="false">T</button>
+                                    <div class="ad-profile-editor-popover ad-profile-editor-palette" data-editor-popover-panel="font-bg-color" role="menu" aria-label="글자 배경색 팔레트"></div>
+                                </div>
                             </div>
                             <div class="ad-profile-editor-group" aria-label="문단 정렬 및 첨부">
                                 <button type="button" class="ad-profile-editor-btn" data-editor-command="insertUnorderedList" title="목록" aria-pressed="false">• 목록</button>
-                                <button type="button" class="ad-profile-editor-btn" data-editor-command="justifyLeft" title="왼쪽 정렬" aria-pressed="false">좌</button>
-                                <button type="button" class="ad-profile-editor-btn" data-editor-command="justifyCenter" title="가운데 정렬" aria-pressed="false">중</button>
-                                <button type="button" class="ad-profile-editor-btn" data-editor-command="justifyRight" title="오른쪽 정렬" aria-pressed="false">우</button>
+                                <div class="ad-profile-editor-popover-wrap">
+                                    <button type="button" class="ad-profile-editor-btn ad-profile-editor-align-toggle" data-editor-popover="align" title="문단 정렬" aria-expanded="false" aria-label="문단 정렬">
+                                        <span aria-hidden="true"></span>
+                                    </button>
+                                    <div class="ad-profile-editor-popover ad-profile-editor-align-menu" data-editor-popover-panel="align" role="menu" aria-label="문단 정렬 선택">
+                                        <button type="button" class="ad-profile-editor-align-option" data-editor-command="justifyLeft" role="menuitemradio" aria-checked="true">좌</button>
+                                        <button type="button" class="ad-profile-editor-align-option" data-editor-command="justifyCenter" role="menuitemradio" aria-checked="false">중</button>
+                                        <button type="button" class="ad-profile-editor-align-option" data-editor-command="justifyRight" role="menuitemradio" aria-checked="false">우</button>
+                                    </div>
+                                </div>
                                 <button type="button" class="ad-profile-editor-btn" id="ad-profile-editor-image-btn" title="이미지 첨부">이미지</button>
                             </div>
                         </div>
