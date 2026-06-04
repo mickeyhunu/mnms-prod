@@ -436,7 +436,6 @@ const pageRegistry = {
                             <tbody id="stamp-plan-list"></tbody>
                         </table>
                     </div>
-                    <p class="stamp-vat-included-note">아래 결제정보에서 부가세 포함 결제금액을 확인할 수 있어요.</p>
                 </article>
 
                 <hr class="ad-payment-divider">
@@ -446,23 +445,22 @@ const pageRegistry = {
                     <dl class="ad-payment-list">
                         <div class="ad-payment-row">
                             <dt>선택한 상품</dt>
-                            <dd id="stamp-selected-product">스타터팩</dd>
+                            <dd id="stamp-selected-product">상품을 선택해주세요</dd>
                         </div>
                         <div class="ad-payment-row">
                             <dt>상품 금액</dt>
-                            <dd id="stamp-product-price">100,000원</dd>
+                            <dd id="stamp-product-price">-</dd>
                         </div>
                         <div class="ad-payment-row">
                             <dt>부가세 (VAT)</dt>
-                            <dd id="stamp-vat-price">10,000원</dd>
+                            <dd id="stamp-vat-price">-</dd>
                         </div>
                     </dl>
                     <div class="ad-payment-total">
                         <strong>부가세 포함 결제금액</strong>
-                        <strong id="stamp-total-price">110,000원</strong>
+                        <strong id="stamp-total-price">-</strong>
                     </div>
-                    <button type="button" class="btn btn-primary ad-purchase-submit" id="stamp-purchase-submit">스탬프 구매하기</button>
-                    <a href="/ad-order-history" class="ad-order-history-link">스탬프 사용 내역 보기</a>
+                    <button type="button" class="btn btn-primary ad-purchase-submit" id="stamp-purchase-submit" disabled>스탬프 구매하기</button>
                 </article>
             </section>
         </div>
@@ -545,7 +543,6 @@ const pageRegistry = {
                         <strong id="ad-total-price">209,000원</strong>
                     </div>
                     <button type="button" class="btn btn-primary ad-purchase-submit" id="ad-purchase-submit">광고 활성화하기</button>
-                    <a href="/ad-order-history" class="ad-order-history-link">스탬프 사용 내역 보기</a>
                 </article>
             </section>
         </div>

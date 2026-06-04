@@ -42,7 +42,7 @@
     };
 
     const planCodes = Object.keys(plans);
-    const state = { plan: 'starter' };
+    const state = { plan: null };
     const formatPrice = (value) => `${value.toLocaleString('ko-KR')}원`;
 
     const readOrderHistory = () => {
@@ -61,6 +61,11 @@
 
     const createOrder = () => {
         const currentPlan = plans[state.plan];
+
+        if (!currentPlan) {
+            return null;
+        }
+
         const vat = Math.round(currentPlan.price * 0.1);
 
         return {
@@ -97,13 +102,31 @@
     };
 
     const renderPaymentSummary = () => {
-        const currentPlan = plans[state.plan] || plans.starter;
+        const currentPlan = plans[state.plan];
+
+        if (!currentPlan) {
+            selectedProduct.textContent = '상품을 선택해주세요';
+            productPrice.textContent = '-';
+            vatPrice.textContent = '-';
+            totalPrice.textContent = '-';
+
+            if (purchaseButton) {
+                purchaseButton.disabled = true;
+            }
+
+            return;
+        }
+
         const vat = Math.round(currentPlan.price * 0.1);
 
         selectedProduct.textContent = currentPlan.name;
         productPrice.textContent = formatPrice(currentPlan.price);
         vatPrice.textContent = formatPrice(vat);
         totalPrice.textContent = formatPrice(currentPlan.price + vat);
+
+        if (purchaseButton) {
+            purchaseButton.disabled = false;
+        }
     };
 
     const render = () => {
@@ -127,6 +150,12 @@
     if (purchaseButton) {
         purchaseButton.addEventListener('click', () => {
             const order = createOrder();
+
+            if (!order) {
+                alert('구매할 스탬프 상품을 선택해주세요.');
+                return;
+            }
+
             const existingOrders = readOrderHistory();
             saveOrderHistory([order, ...existingOrders]);
             alert('스탬프 구매가 완료되었습니다. 사용 내역에서 확인하실 수 있어요.');
