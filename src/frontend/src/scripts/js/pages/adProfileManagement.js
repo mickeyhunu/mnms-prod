@@ -30,7 +30,8 @@ const adProfileState = {
 };
 const DEFAULT_AD_IMAGE_URL = 'https://image.bubblealba.com/assets/advertiser/pending.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
-const EDITOR_STATE_COMMANDS = ['bold', 'italic', 'underline', 'insertUnorderedList'];
+const EDITOR_TEXT_STYLE_COMMANDS = ['bold', 'italic', 'underline'];
+const EDITOR_STATE_COMMANDS = [...EDITOR_TEXT_STYLE_COMMANDS, 'insertUnorderedList'];
 const EDITOR_DEFAULT_FONT_SIZE = 15;
 const EDITOR_FONT_SIZE_MIN = 11;
 const EDITOR_FONT_SIZE_MAX = 38;
@@ -236,7 +237,25 @@ function bindAdProfileInteractions() {
         if (!descriptionEditor) return;
         restoreEditorSelection();
         descriptionEditor.focus();
+
+        const isTextStyleCommand = EDITOR_TEXT_STYLE_COMMANDS.includes(command);
+        const desiredTextStyleStates = isTextStyleCommand
+            ? Object.fromEntries(EDITOR_TEXT_STYLE_COMMANDS.map((styleCommand) => [
+                styleCommand,
+                styleCommand === command ? !document.queryCommandState(styleCommand) : document.queryCommandState(styleCommand)
+            ]))
+            : null;
+
         document.execCommand(command, false, value);
+
+        if (desiredTextStyleStates) {
+            EDITOR_TEXT_STYLE_COMMANDS.forEach((styleCommand) => {
+                if (document.queryCommandState(styleCommand) !== desiredTextStyleStates[styleCommand]) {
+                    document.execCommand(styleCommand, false, null);
+                }
+            });
+        }
+
         saveEditorSelection();
         syncPreview();
         updateActiveEditorButtons();
