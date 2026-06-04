@@ -440,12 +440,12 @@ const pageRegistry = {
 
                 <hr class="ad-payment-divider">
 
-                <article class="ad-payment-card" aria-label="결제 정보">
+                <article class="ad-payment-card stamp-payment-card hidden" id="stamp-payment-card" aria-label="결제 정보" aria-live="polite">
                     <h3 class="ad-payment-title">결제정보</h3>
                     <dl class="ad-payment-list">
                         <div class="ad-payment-row">
                             <dt>선택한 상품</dt>
-                            <dd id="stamp-selected-product">상품을 선택해주세요</dd>
+                            <dd id="stamp-selected-product">-</dd>
                         </div>
                         <div class="ad-payment-row">
                             <dt>상품 금액</dt>
@@ -457,14 +457,17 @@ const pageRegistry = {
                         </div>
                     </dl>
                     <div class="ad-payment-total">
-                        <strong>부가세 포함 결제금액</strong>
+                        <strong>총 결제 금액</strong>
                         <strong id="stamp-total-price">-</strong>
                     </div>
-                    <button type="button" class="btn btn-primary ad-purchase-submit" id="stamp-purchase-submit" disabled>스탬프 구매하기</button>
                 </article>
             </section>
         </div>
     </main>
+
+    <div class="stamp-purchase-submit-bar hidden" id="stamp-purchase-submit-bar">
+        <button type="button" class="btn btn-primary ad-purchase-submit" id="stamp-purchase-submit" disabled>스탬프 구매하기</button>
+    </div>
 
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
