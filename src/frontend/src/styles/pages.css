@@ -4042,12 +4042,14 @@ body[data-page="admin"] {
     letter-spacing: -0.03em;
 }
 
-.ad-order-history-status--purchase {
+.ad-order-history-status--purchase,
+.ad-order-history-status--complete {
     color: #1d4ed8;
     background: #dbeafe;
 }
 
-.ad-order-history-status--use {
+.ad-order-history-status--use,
+.ad-order-history-status--cancel {
     color: #b91c1c;
     background: #fee2e2;
 }
