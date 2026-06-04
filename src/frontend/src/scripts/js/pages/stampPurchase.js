@@ -8,7 +8,9 @@
     const productPrice = document.getElementById('stamp-product-price');
     const vatPrice = document.getElementById('stamp-vat-price');
     const totalPrice = document.getElementById('stamp-total-price');
+    const paymentCard = document.getElementById('stamp-payment-card');
     const purchaseButton = document.getElementById('stamp-purchase-submit');
+    const purchaseSubmitBar = document.getElementById('stamp-purchase-submit-bar');
 
     if (!planList || !selectedProduct || !productPrice || !vatPrice || !totalPrice) {
         return;
@@ -16,25 +18,25 @@
 
     const plans = {
         starter: {
-            name: '스타터팩',
+            name: '🥉 스타터팩',
             composition: '스탬프 5개',
             stampCount: 5,
             price: 100000
         },
         basic: {
-            name: '베이직팩',
+            name: '🥈 베이직팩',
             composition: '스탬프 10개 + 1개',
             stampCount: 11,
             price: 200000
         },
         premium: {
-            name: '프리미엄팩',
+            name: '🥇 프리미엄팩',
             composition: '스탬프 20개 + 3개',
             stampCount: 23,
             price: 400000
         },
         vip: {
-            name: 'VIP팩',
+            name: '💎 VIP팩',
             composition: '스탬프 30개 + 5개',
             stampCount: 35,
             price: 600000
@@ -105,10 +107,18 @@
         const currentPlan = plans[state.plan];
 
         if (!currentPlan) {
-            selectedProduct.textContent = '상품을 선택해주세요';
+            selectedProduct.textContent = '-';
             productPrice.textContent = '-';
             vatPrice.textContent = '-';
             totalPrice.textContent = '-';
+
+            if (paymentCard) {
+                paymentCard.classList.add('hidden');
+            }
+
+            if (purchaseSubmitBar) {
+                purchaseSubmitBar.classList.add('hidden');
+            }
 
             if (purchaseButton) {
                 purchaseButton.disabled = true;
@@ -123,6 +133,14 @@
         productPrice.textContent = formatPrice(currentPlan.price);
         vatPrice.textContent = formatPrice(vat);
         totalPrice.textContent = formatPrice(currentPlan.price + vat);
+
+        if (paymentCard) {
+            paymentCard.classList.remove('hidden');
+        }
+
+        if (purchaseSubmitBar) {
+            purchaseSubmitBar.classList.remove('hidden');
+        }
 
         if (purchaseButton) {
             purchaseButton.disabled = false;
