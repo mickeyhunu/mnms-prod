@@ -153,14 +153,14 @@ async function updateAdCenterStampCount(user) {
     const stampCountElement = document.getElementById('ad-center-stamp-count');
     if (!stampCountElement || !isAdAccount(user)) return;
 
-    stampCountElement.textContent = '확인 중';
+    stampCountElement.textContent = '보유 스탬프 확인 중';
 
     try {
         const response = await APIClient.get('/users/me/stamps', { limit: 1 });
         const totalStamps = normalizeStampCount(response.totalStamps || 0);
-        stampCountElement.textContent = `${totalStamps.toLocaleString()}개`;
+        stampCountElement.textContent = `보유 스탬프 ${totalStamps.toLocaleString()}개`;
     } catch (error) {
-        stampCountElement.textContent = '-';
+        stampCountElement.textContent = '보유 스탬프 -';
     }
 }
 
