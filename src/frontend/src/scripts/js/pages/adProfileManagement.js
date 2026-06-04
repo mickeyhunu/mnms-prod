@@ -134,6 +134,48 @@ function replaceEditorFontTags(descriptionEditor, fontSize) {
     });
 }
 
+
+function getEditorRangeContainer(range) {
+    if (!range) return null;
+    return range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+        ? range.commonAncestorContainer
+        : range.commonAncestorContainer.parentElement;
+}
+
+function isEditorRange(descriptionEditor, range) {
+    const container = getEditorRangeContainer(range);
+    return Boolean(container && descriptionEditor?.contains(container));
+}
+
+function applyEditorFontSizeToRange(descriptionEditor, range, fontSize) {
+    if (!descriptionEditor || !range) return false;
+
+    if (range.collapsed) {
+        document.execCommand('fontSize', false, '7');
+        replaceEditorFontTags(descriptionEditor, fontSize);
+        return true;
+    }
+
+    const fontSizeSpan = document.createElement('span');
+    fontSizeSpan.style.fontSize = `${fontSize}px`;
+    fontSizeSpan.appendChild(range.extractContents());
+    range.insertNode(fontSizeSpan);
+
+    const selection = window.getSelection();
+    const nextRange = document.createRange();
+    nextRange.selectNodeContents(fontSizeSpan);
+    selection?.removeAllRanges();
+    selection?.addRange(nextRange);
+
+    return true;
+}
+
+function resolveEditorAlignmentCommand() {
+    if (document.queryCommandState('justifyCenter')) return 'justifyCenter';
+    if (document.queryCommandState('justifyRight')) return 'justifyRight';
+    return 'justifyLeft';
+}
+
 function buildEditorFontSizeOptions(fontSizeSelect) {
     if (!fontSizeSelect) return;
     fontSizeSelect.innerHTML = EDITOR_FONT_SIZE_OPTIONS.map((size) => (
@@ -260,10 +302,7 @@ function bindAdProfileInteractions() {
         const selection = window.getSelection();
         if (!selection?.rangeCount) return;
         const range = selection.getRangeAt(0);
-        const container = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
-            ? range.commonAncestorContainer
-            : range.commonAncestorContainer.parentElement;
-        if (container && descriptionEditor.contains(container)) {
+        if (isEditorRange(descriptionEditor, range)) {
             lastEditorRange = range.cloneRange();
         }
     };
@@ -327,8 +366,14 @@ function bindAdProfileInteractions() {
         pendingEditorFontSize = normalizedFontSize;
         restoreEditorSelection();
         descriptionEditor.focus();
-        document.execCommand('fontSize', false, '7');
+
+        const selection = window.getSelection();
+        const activeRange = selection?.rangeCount ? selection.getRangeAt(0) : lastEditorRange;
+        if (isEditorRange(descriptionEditor, activeRange)) {
+            applyEditorFontSizeToRange(descriptionEditor, activeRange, normalizedFontSize);
+        }
         replaceEditorFontTags(descriptionEditor, normalizedFontSize);
+
         saveEditorSelection();
         syncPreview();
         updateActiveEditorButtons();
@@ -359,9 +404,11 @@ function bindAdProfileInteractions() {
 
         editorToolbar.querySelector('[data-editor-popover="font-color"]')?.style.setProperty('text-decoration-color', currentFontColor || '#212529');
         editorToolbar.querySelector('[data-editor-popover="font-bg-color"]')?.style.setProperty('background-color', currentBackColor || 'transparent');
+        const currentAlignmentCommand = resolveEditorAlignmentCommand();
+        editorToolbar.querySelector('[data-editor-popover="align"]')?.setAttribute('data-editor-align', currentAlignmentCommand);
         ['justifyLeft', 'justifyCenter', 'justifyRight'].forEach((command) => {
             const option = editorToolbar.querySelector(`[data-editor-command="${command}"]`);
-            option?.setAttribute('aria-checked', document.queryCommandState(command) ? 'true' : 'false');
+            option?.setAttribute('aria-checked', command === currentAlignmentCommand ? 'true' : 'false');
         });
     };
 
@@ -426,6 +473,7 @@ function bindAdProfileInteractions() {
     });
 
     editorFontSizeSelect?.addEventListener('mousedown', saveEditorSelection);
+    editorFontSizeSelect?.addEventListener('focus', saveEditorSelection);
     editorFontSizeSelect?.addEventListener('change', () => applyEditorFontSize(editorFontSizeSelect.value));
 
     document.addEventListener('click', (event) => {
