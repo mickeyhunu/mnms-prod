@@ -1077,7 +1077,7 @@ const pageRegistry = {
                 <section class="mypage-link-section hidden" id="ad-center-wrapper">
                     <p class="mypage-link-section-title">광고센터</p>
                     <div class="mypage-link-list" id="ad-center-section">
-                        <a class="mypage-link-item" id="stamp-purchase-link" href="/stamp-purchase"><span>스탬프 구매</span><strong class="mypage-link-badge" id="ad-center-stamp-count">보유 스탬프 0개</strong></a>
+                        <a class="mypage-link-item" id="stamp-purchase-link" href="/stamp-purchase"><span>스탬프 구매</span><strong class="mypage-link-badge" id="ad-center-stamp-count"><span class="mypage-link-badge-label">보유</span><span class="mypage-link-badge-count">0</span><span class="mypage-link-badge-unit">개</span></strong></a>
                         <a class="mypage-link-item" href="/ad-purchase"><span>광고 활성화</span></a>
                         <a class="mypage-link-item" href="/business-info"><span>점프 관리</span></a>
                         <a class="mypage-link-item" href="/ad-profile-management">

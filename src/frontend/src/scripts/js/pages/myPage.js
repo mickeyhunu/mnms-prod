@@ -149,18 +149,27 @@ function renderAdCenterSection(user) {
 }
 
 
+function renderAdCenterStampCount(element, countText, label = '보유', unit = '개') {
+    element.setAttribute('aria-label', `${label} 스탬프 ${countText}${unit}`);
+    element.innerHTML = `
+        <span class="mypage-link-badge-label">${label}</span>
+        <span class="mypage-link-badge-count">${countText}</span>
+        <span class="mypage-link-badge-unit">${unit}</span>
+    `;
+}
+
 async function updateAdCenterStampCount(user) {
     const stampCountElement = document.getElementById('ad-center-stamp-count');
     if (!stampCountElement || !isAdAccount(user)) return;
 
-    stampCountElement.textContent = '보유 스탬프 확인 중';
+    renderAdCenterStampCount(stampCountElement, '확인 중', '스탬프', '');
 
     try {
         const response = await APIClient.get('/users/me/stamps', { limit: 1 });
         const totalStamps = normalizeStampCount(response.totalStamps || 0);
-        stampCountElement.textContent = `보유 스탬프 ${totalStamps.toLocaleString()}개`;
+        renderAdCenterStampCount(stampCountElement, totalStamps.toLocaleString());
     } catch (error) {
-        stampCountElement.textContent = '보유 스탬프 -';
+        renderAdCenterStampCount(stampCountElement, '-');
     }
 }
 
