@@ -421,16 +421,22 @@ const pageRegistry = {
                 </div>
             </header>
 
-            <section class="ad-purchase-layout" aria-label="스탬프 구매 상품 안내">
-                <div class="ad-plan-tabs stamp-plan-tabs" role="tablist" aria-label="스탬프 상품 선택">
-                    <button type="button" class="ad-plan-tab is-active" data-stamp-plan="single" role="tab" aria-selected="true">1개</button>
-                    <button type="button" class="ad-plan-tab" data-stamp-plan="three" role="tab" aria-selected="false">3개</button>
-                    <button type="button" class="ad-plan-tab" data-stamp-plan="five" role="tab" aria-selected="false">5개</button>
-                </div>
-
-                <article class="ad-plan-detail" id="stamp-plan-detail">
-                    <ul class="ad-package-feature-list" id="stamp-plan-features"></ul>
-                    <div class="ad-price-options" id="stamp-price-options"></div>
+            <section class="ad-purchase-layout stamp-purchase-layout" aria-label="스탬프 구매 상품 안내">
+                <article class="stamp-plan-detail" id="stamp-plan-detail">
+                    <h2 class="stamp-plan-title">스탬프 상품</h2>
+                    <div class="stamp-plan-table-wrap">
+                        <table class="stamp-plan-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">상품</th>
+                                    <th scope="col">구성</th>
+                                    <th scope="col">금액</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stamp-plan-list"></tbody>
+                        </table>
+                    </div>
+                    <p class="stamp-vat-included-note">아래 결제정보에서 부가세 포함 결제금액을 확인할 수 있어요.</p>
                 </article>
 
                 <hr class="ad-payment-divider">
@@ -440,20 +446,20 @@ const pageRegistry = {
                     <dl class="ad-payment-list">
                         <div class="ad-payment-row">
                             <dt>선택한 상품</dt>
-                            <dd id="stamp-selected-product">스탬프 1개</dd>
+                            <dd id="stamp-selected-product">스타터팩</dd>
                         </div>
                         <div class="ad-payment-row">
                             <dt>상품 금액</dt>
-                            <dd id="stamp-product-price">50,000원</dd>
+                            <dd id="stamp-product-price">100,000원</dd>
                         </div>
                         <div class="ad-payment-row">
                             <dt>부가세 (VAT)</dt>
-                            <dd id="stamp-vat-price">5,000원</dd>
+                            <dd id="stamp-vat-price">10,000원</dd>
                         </div>
                     </dl>
                     <div class="ad-payment-total">
-                        <strong>총 결제 금액</strong>
-                        <strong id="stamp-total-price">55,000원</strong>
+                        <strong>부가세 포함 결제금액</strong>
+                        <strong id="stamp-total-price">110,000원</strong>
                     </div>
                     <button type="button" class="btn btn-primary ad-purchase-submit" id="stamp-purchase-submit">스탬프 구매하기</button>
                     <a href="/ad-order-history" class="ad-order-history-link">스탬프 사용 내역 보기</a>
