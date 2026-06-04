@@ -54,7 +54,8 @@
         status: order.status || '결제완료',
         createdAt: order.orderedAt,
         meta: [
-            ['구매상품', `${order.planName || '-'} ${Number(order.durationDays || 0)}일`],
+            ['구매상품', order.planName || '-'],
+            ['스탬프', `${Number(order.stampCount || order.durationDays || 0).toLocaleString('ko-KR')}개`],
             ['주문번호', order.id || '-'],
             ['주문일시', formatDateTime(order.orderedAt)],
             ['공급가액', formatPrice(order.supplyPrice)],
