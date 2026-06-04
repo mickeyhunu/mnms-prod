@@ -4044,6 +4044,39 @@ body[data-page="admin"] {
     margin-top: 0;
 }
 
+.stamp-payment-card {
+    animation: stampPaymentReveal 0.18s ease-out;
+}
+
+.stamp-purchase-submit-bar {
+    position: fixed;
+    left: 50%;
+    bottom: 74px;
+    z-index: 109;
+    width: min(100%, 520px);
+    padding: 12px 15px calc(12px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.96);
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -12px 30px rgba(17, 24, 39, 0.08);
+    transform: translateX(-50%);
+}
+
+.stamp-purchase-submit-bar .ad-purchase-submit {
+    margin-top: 0;
+}
+
+@keyframes stampPaymentReveal {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .stamp-plan-detail {
     padding: 22px 15px 20px;
 }
