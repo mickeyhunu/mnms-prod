@@ -4051,13 +4051,11 @@ body[data-page="admin"] {
 .stamp-purchase-submit-bar {
     position: fixed;
     left: 50%;
-    bottom: 74px;
+    bottom: 69px;
     z-index: 109;
     width: min(100%, 520px);
-    padding: 12px 15px calc(12px + env(safe-area-inset-bottom));
+    padding: 10px;
     background: rgba(255, 255, 255, 0.96);
-    border-top: 1px solid #e5e7eb;
-    box-shadow: 0 -12px 30px rgba(17, 24, 39, 0.08);
     transform: translateX(-50%);
 }
 
@@ -4066,7 +4064,7 @@ body[data-page="admin"] {
     width: 100%;
     min-height: 52px;
     margin-top: 0;
-    padding: 15px 18px;
+    padding: 10px;
     border-color: #000000;
     border-radius: 14px;
     background: #000000;
