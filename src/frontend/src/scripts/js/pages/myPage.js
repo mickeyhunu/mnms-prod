@@ -43,7 +43,10 @@ async function initMyPage() {
         renderHeaderUser(currentUser);
         renderAdCenterSection(currentUser);
         renderProfileForm(currentUser);
-        await renderBusinessProfileStatuses();
+        await Promise.all([
+            renderBusinessProfileStatuses(),
+            updateAdCenterStampCount(currentUser)
+        ]);
 
         if (window.location.pathname === '/my-page/profile') {
             bindProfileForm();
@@ -143,6 +146,22 @@ function renderAdCenterSection(user) {
         }
         item.classList.toggle('hidden', !isBusinessApplyItem);
     });
+}
+
+
+async function updateAdCenterStampCount(user) {
+    const stampCountElement = document.getElementById('ad-center-stamp-count');
+    if (!stampCountElement || !isAdAccount(user)) return;
+
+    stampCountElement.textContent = '확인 중';
+
+    try {
+        const response = await APIClient.get('/users/me/stamps', { limit: 1 });
+        const totalStamps = normalizeStampCount(response.totalStamps || 0);
+        stampCountElement.textContent = `${totalStamps.toLocaleString()}개`;
+    } catch (error) {
+        stampCountElement.textContent = '-';
+    }
 }
 
 function normalizeRegistrationStatus(status) {
@@ -1106,18 +1125,7 @@ async function loadStats() {
         const rankLabel = resolveRankLabel(currentUser, response.levelLabel || '');
         const rankMarkup = resolveRankMarkup(currentUser, rankLabel);
         const totalStamps = normalizeStampCount(response.totalStamps || 0);
-        const stampSection = isAdAccount(currentUser) ? `
-            <section class="mypage-summary-section mypage-business-stamp-section">
-                <div class="mypage-summary-head">
-                    <h3 class="mypage-summary-title">광고 스탬프</h3>
-                    <a class="mypage-summary-action" href="/my-page/stamps">광고 스탬프 내역 보기</a>
-                </div>
-                ${renderStampSummary(totalStamps, {
-                    title: '보유 광고 스탬프',
-                    description: '브론즈 3일, 실버 2일 또는 골드 1일 광고에 사용할 수 있어요.'
-                })}
-            </section>
-        ` : `
+        const stampSection = isAdAccount(currentUser) ? '' : `
             <section class="mypage-summary-section">
                 <div class="mypage-summary-head">
                     <h3 class="mypage-summary-title">스탬프</h3>

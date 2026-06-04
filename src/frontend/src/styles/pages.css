@@ -4025,3 +4025,25 @@ body[data-page="admin"] {
         font-size: 9px;
     }
 }
+
+.mypage-link-badge {
+    color: #4f46e5;
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.ad-order-history-status--purchase {
+    color: #1d4ed8;
+    background: #dbeafe;
+}
+
+.ad-order-history-status--use {
+    color: #b91c1c;
+    background: #fee2e2;
+}
+
+.ad-order-history-status--earn {
+    color: #166534;
+    background: #dcfce7;
+}
