@@ -30,7 +30,18 @@ const adProfileState = {
 };
 const DEFAULT_AD_IMAGE_URL = 'https://image.bubblealba.com/assets/advertiser/pending.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
-const EDITOR_STATE_COMMANDS = ['bold', 'italic', 'underline', 'insertUnorderedList', 'justifyLeft', 'justifyCenter', 'justifyRight'];
+const EDITOR_STATE_COMMANDS = ['bold', 'italic', 'underline', 'insertUnorderedList'];
+const EDITOR_DEFAULT_FONT_SIZE = 15;
+const EDITOR_FONT_SIZE_MIN = 11;
+const EDITOR_FONT_SIZE_MAX = 38;
+const EDITOR_COLOR_PALETTE = [
+    '#212529', '#495057', '#868e96', '#ced4da', '#ffffff', '#fff3bf', '#ffd8a8', '#ffc9c9',
+    '#ff8787', '#ff6b6b', '#fa5252', '#f03e3e', '#e03131', '#c92a2a', '#a61e4d', '#862e9c',
+    '#f783ac', '#e599f7', '#da77f2', '#be4bdb', '#9c36b5', '#7048e8', '#5c7cfa', '#339af0',
+    '#74c0fc', '#66d9e8', '#3bc9db', '#22b8cf', '#15aabf', '#12b886', '#40c057', '#82c91e',
+    '#c0eb75', '#8ce99a', '#63e6be', '#38d9a9', '#20c997', '#2b8a3e', '#5c940d', '#f59f00',
+    '#ffd43b', '#fab005', '#fd7e14', '#e8590c', '#d9480f', '#7f4f24', '#343a40', '#000000'
+];
 
 function normalizeEditorColor(value) {
     const color = String(value || '').trim().toLowerCase();
@@ -39,6 +50,49 @@ function normalizeEditorColor(value) {
         return `#${rgbMatch.slice(1).map((part) => Number(part).toString(16).padStart(2, '0')).join('')}`;
     }
     return color;
+}
+
+function getEditorElementFromSelection(descriptionEditor) {
+    const selection = window.getSelection();
+    const selectedNode = selection?.anchorNode;
+    if (!selectedNode) return null;
+    const selectedElement = selectedNode.nodeType === Node.ELEMENT_NODE ? selectedNode : selectedNode.parentElement;
+    return selectedElement && descriptionEditor?.contains(selectedElement) ? selectedElement : null;
+}
+
+function getEditorFontSizeFromSelection(descriptionEditor) {
+    let element = getEditorElementFromSelection(descriptionEditor);
+    while (element && element !== descriptionEditor) {
+        const inlineFontSize = element.style?.fontSize;
+        if (inlineFontSize) return parseInt(inlineFontSize, 10) || EDITOR_DEFAULT_FONT_SIZE;
+        element = element.parentElement;
+    }
+    return EDITOR_DEFAULT_FONT_SIZE;
+}
+
+function replaceEditorFontTags(descriptionEditor, fontSize) {
+    if (!descriptionEditor) return;
+    descriptionEditor.querySelectorAll('font[size="7"]').forEach((fontElement) => {
+        const span = document.createElement('span');
+        span.style.fontSize = `${fontSize}px`;
+        span.innerHTML = fontElement.innerHTML;
+        fontElement.replaceWith(span);
+    });
+}
+
+function buildEditorFontSizeOptions(fontSizeSelect) {
+    if (!fontSizeSelect) return;
+    fontSizeSelect.innerHTML = Array.from({ length: EDITOR_FONT_SIZE_MAX - EDITOR_FONT_SIZE_MIN + 1 }, (_, index) => {
+        const size = EDITOR_FONT_SIZE_MIN + index;
+        return `<option value="${size}"${size === EDITOR_DEFAULT_FONT_SIZE ? ' selected' : ''}>${size}</option>`;
+    }).join('');
+}
+
+function buildEditorPalette(panel) {
+    if (!panel) return;
+    panel.innerHTML = EDITOR_COLOR_PALETTE.map((color) => `
+        <button type="button" class="ad-profile-editor-color-option" data-editor-palette-color="${color}" style="background-color: ${color};" title="${color}" aria-label="${color}"></button>
+    `).join('');
 }
 
 
@@ -102,8 +156,10 @@ function bindAdProfileInteractions() {
     const descriptionInput = document.getElementById('ad-profile-description');
     const descriptionEditor = document.getElementById('ad-profile-description-editor');
     const editorToolbar = document.querySelector('.ad-profile-editor-toolbar');
+    const editorFontSizeSelect = document.getElementById('ad-profile-editor-font-size');
     const editorImageButton = document.getElementById('ad-profile-editor-image-btn');
     const editorImageInput = document.getElementById('ad-profile-editor-image-input');
+    let lastEditorRange = null;
 
     const previewTitle = document.getElementById('ad-profile-preview-title');
     const previewManager = document.getElementById('ad-profile-preview-manager');
@@ -119,6 +175,9 @@ function bindAdProfileInteractions() {
     createHourOptions(openHourSelect);
     createHourOptions(closeHourSelect);
     updateSelectOptions(regionSelect, Object.keys(REGION_DISTRICT_MAP));
+    buildEditorFontSizeOptions(editorFontSizeSelect);
+    editorToolbar?.querySelectorAll('[data-editor-popover-panel="font-color"], [data-editor-popover-panel="font-bg-color"]')
+        .forEach(buildEditorPalette);
 
     const syncPreview = () => {
         const storeName = businessNameInput?.value?.trim() || '업소명';
@@ -142,6 +201,60 @@ function bindAdProfileInteractions() {
         if (previewDetail) previewDetail.textContent = `${region} ${district} · ${category} · ${formattedTime}`;
     };
 
+    const saveEditorSelection = () => {
+        if (!descriptionEditor) return;
+        const selection = window.getSelection();
+        if (!selection?.rangeCount) return;
+        const range = selection.getRangeAt(0);
+        const container = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+            ? range.commonAncestorContainer
+            : range.commonAncestorContainer.parentElement;
+        if (container && descriptionEditor.contains(container)) {
+            lastEditorRange = range.cloneRange();
+        }
+    };
+
+    const restoreEditorSelection = () => {
+        if (!descriptionEditor || !lastEditorRange) return;
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(lastEditorRange);
+    };
+
+    const closeEditorPopovers = (exceptName = '') => {
+        editorToolbar?.querySelectorAll('[data-editor-popover]').forEach((button) => {
+            const isExcepted = button.dataset.editorPopover === exceptName;
+            if (!isExcepted) button.setAttribute('aria-expanded', 'false');
+        });
+        editorToolbar?.querySelectorAll('[data-editor-popover-panel]').forEach((panel) => {
+            const isExcepted = panel.dataset.editorPopoverPanel === exceptName;
+            if (!isExcepted) panel.classList.remove('is-open');
+        });
+    };
+
+    const applyEditorCommand = (command, value = null) => {
+        if (!descriptionEditor) return;
+        restoreEditorSelection();
+        descriptionEditor.focus();
+        document.execCommand(command, false, value);
+        saveEditorSelection();
+        syncPreview();
+        updateActiveEditorButtons();
+    };
+
+    const applyEditorFontSize = (fontSize) => {
+        if (!descriptionEditor) return;
+        const normalizedFontSize = Math.min(EDITOR_FONT_SIZE_MAX, Math.max(EDITOR_FONT_SIZE_MIN, Number(fontSize) || EDITOR_DEFAULT_FONT_SIZE));
+        restoreEditorSelection();
+        descriptionEditor.focus();
+        document.execCommand('fontSize', false, '7');
+        replaceEditorFontTags(descriptionEditor, normalizedFontSize);
+        if (editorFontSizeSelect) editorFontSizeSelect.value = String(normalizedFontSize);
+        saveEditorSelection();
+        syncPreview();
+        updateActiveEditorButtons();
+    };
+
     const updateActiveEditorButtons = () => {
         if (!editorToolbar || !descriptionEditor) return;
         const selection = window.getSelection();
@@ -149,23 +262,24 @@ function bindAdProfileInteractions() {
         const isSelectionInEditor = selectedNode && descriptionEditor.contains(selectedNode.nodeType === Node.ELEMENT_NODE ? selectedNode : selectedNode.parentNode);
         if (!isSelectionInEditor && document.activeElement !== descriptionEditor) return;
 
-        const currentFontSize = String(document.queryCommandValue('fontSize') || '');
         const currentFontColor = normalizeEditorColor(document.queryCommandValue('foreColor'));
+        const currentBackColor = normalizeEditorColor(document.queryCommandValue('backColor') || document.queryCommandValue('hiliteColor'));
+        const currentFontSize = getEditorFontSizeFromSelection(descriptionEditor);
+        if (editorFontSizeSelect) editorFontSizeSelect.value = String(currentFontSize);
 
         editorToolbar.querySelectorAll('[data-editor-command]').forEach((button) => {
             const command = button.dataset.editorCommand;
-            let isActive = false;
-
-            if (EDITOR_STATE_COMMANDS.includes(command)) {
-                isActive = document.queryCommandState(command);
-            } else if (button.dataset.editorControl === 'font-size') {
-                isActive = currentFontSize === button.dataset.editorValue;
-            } else if (button.dataset.editorControl === 'font-color') {
-                isActive = currentFontColor === normalizeEditorColor(button.dataset.editorValue);
-            }
+            const isActive = EDITOR_STATE_COMMANDS.includes(command) && document.queryCommandState(command);
 
             button.classList.toggle('is-active', isActive);
             button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+
+        editorToolbar.querySelector('[data-editor-popover="font-color"]')?.style.setProperty('text-decoration-color', currentFontColor || '#212529');
+        editorToolbar.querySelector('[data-editor-popover="font-bg-color"]')?.style.setProperty('background-color', currentBackColor || 'transparent');
+        ['justifyLeft', 'justifyCenter', 'justifyRight'].forEach((command) => {
+            const option = editorToolbar.querySelector(`[data-editor-command="${command}"]`);
+            option?.setAttribute('aria-checked', document.queryCommandState(command) ? 'true' : 'false');
         });
     };
 
@@ -176,27 +290,63 @@ function bindAdProfileInteractions() {
             updateActiveEditorButtons();
         });
         descriptionEditor.addEventListener('blur', syncPreview);
-        descriptionEditor.addEventListener('keyup', updateActiveEditorButtons);
-        descriptionEditor.addEventListener('mouseup', updateActiveEditorButtons);
-        descriptionEditor.addEventListener('focus', updateActiveEditorButtons);
+        descriptionEditor.addEventListener('keyup', () => {
+            saveEditorSelection();
+            updateActiveEditorButtons();
+        });
+        descriptionEditor.addEventListener('mouseup', () => {
+            saveEditorSelection();
+            updateActiveEditorButtons();
+        });
+        descriptionEditor.addEventListener('focus', () => {
+            saveEditorSelection();
+            updateActiveEditorButtons();
+        });
         document.addEventListener('selectionchange', updateActiveEditorButtons);
     }
 
     editorToolbar?.addEventListener('mousedown', (event) => {
-        if (event.target.closest('[data-editor-command]')) {
+        if (event.target.closest('[data-editor-command], [data-editor-popover], [data-editor-palette-color]')) {
             event.preventDefault();
         }
     });
 
     editorToolbar?.addEventListener('click', (event) => {
+        const popoverButton = event.target.closest('[data-editor-popover]');
+        if (popoverButton) {
+            event.preventDefault();
+            const popoverName = popoverButton.dataset.editorPopover;
+            const panel = editorToolbar.querySelector(`[data-editor-popover-panel="${popoverName}"]`);
+            const shouldOpen = !panel?.classList.contains('is-open');
+            closeEditorPopovers(shouldOpen ? popoverName : '');
+            panel?.classList.toggle('is-open', shouldOpen);
+            popoverButton.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+            return;
+        }
+
+        const colorButton = event.target.closest('[data-editor-palette-color]');
+        if (colorButton) {
+            event.preventDefault();
+            const panel = colorButton.closest('[data-editor-popover-panel]');
+            const command = panel?.dataset.editorPopoverPanel === 'font-bg-color' ? 'hiliteColor' : 'foreColor';
+            applyEditorCommand(command, colorButton.dataset.editorPaletteColor);
+            closeEditorPopovers();
+            return;
+        }
+
         const button = event.target.closest('[data-editor-command]');
         if (!button || !descriptionEditor) return;
 
         event.preventDefault();
-        descriptionEditor.focus();
-        document.execCommand(button.dataset.editorCommand, false, button.dataset.editorValue || null);
-        syncPreview();
-        updateActiveEditorButtons();
+        applyEditorCommand(button.dataset.editorCommand, button.dataset.editorValue || null);
+        if (button.closest('[data-editor-popover-panel]')) closeEditorPopovers();
+    });
+
+    editorFontSizeSelect?.addEventListener('mousedown', saveEditorSelection);
+    editorFontSizeSelect?.addEventListener('change', () => applyEditorFontSize(editorFontSizeSelect.value));
+
+    document.addEventListener('click', (event) => {
+        if (!editorToolbar?.contains(event.target)) closeEditorPopovers();
     });
 
     managerContactInput?.addEventListener('input', () => {
