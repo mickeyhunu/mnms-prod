@@ -153,26 +153,22 @@ function isEditorRange(descriptionEditor, range) {
     return Boolean(container && descriptionEditor?.contains(container));
 }
 
+function focusEditorWithSelection(descriptionEditor, range) {
+    if (!descriptionEditor) return;
+    descriptionEditor.focus({ preventScroll: true });
+    if (!range || !isEditorRange(descriptionEditor, range)) return;
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+}
+
 function applyEditorFontSizeToRange(descriptionEditor, range, fontSize) {
     if (!descriptionEditor || !range) return false;
 
-    if (range.collapsed) {
-        document.execCommand('fontSize', false, '7');
-        replaceEditorFontTags(descriptionEditor, fontSize);
-        return true;
-    }
-
-    const fontSizeSpan = document.createElement('span');
-    setEditorElementFontSize(fontSizeSpan, fontSize);
-    fontSizeSpan.appendChild(range.extractContents());
-    range.insertNode(fontSizeSpan);
-
-    const selection = window.getSelection();
-    const nextRange = document.createRange();
-    nextRange.selectNodeContents(fontSizeSpan);
-    selection?.removeAllRanges();
-    selection?.addRange(nextRange);
-
+    focusEditorWithSelection(descriptionEditor, range);
+    document.execCommand('fontSize', false, '7');
+    replaceEditorFontTags(descriptionEditor, fontSize);
     return true;
 }
 
@@ -315,9 +311,7 @@ function bindAdProfileInteractions() {
 
     const restoreEditorSelection = () => {
         if (!descriptionEditor || !lastEditorRange) return;
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(lastEditorRange);
+        focusEditorWithSelection(descriptionEditor, lastEditorRange);
     };
 
     const closeEditorPopovers = (exceptName = '') => {
@@ -341,7 +335,6 @@ function bindAdProfileInteractions() {
     const applyEditorCommand = (command, value = null) => {
         if (!descriptionEditor) return;
         restoreEditorSelection();
-        descriptionEditor.focus();
 
         const isTextStyleCommand = EDITOR_TEXT_STYLE_COMMANDS.includes(command);
         const desiredTextStyleStates = isTextStyleCommand
@@ -371,7 +364,6 @@ function bindAdProfileInteractions() {
         const normalizedFontSize = normalizeEditorFontSize(fontSize);
         pendingEditorFontSize = normalizedFontSize;
         restoreEditorSelection();
-        descriptionEditor.focus();
 
         const selection = window.getSelection();
         const activeRange = selection?.rangeCount ? selection.getRangeAt(0) : lastEditorRange;
@@ -499,7 +491,7 @@ function bindAdProfileInteractions() {
         try {
             const imageUrl = await uploadAdImage(file);
             if (!descriptionEditor) return;
-            descriptionEditor.focus();
+            focusEditorWithSelection(descriptionEditor, lastEditorRange);
             document.execCommand('insertImage', false, imageUrl);
             syncPreview();
         } catch (error) {
