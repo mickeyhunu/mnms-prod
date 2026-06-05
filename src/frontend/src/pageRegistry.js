@@ -646,7 +646,7 @@ const pageRegistry = {
     </header>
 
     <main class="main-content">
-        <div class="container" style="max-width: 800px;">
+        <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
                     <a href="/community" class="community-back-link icon-btn icon-btn-square" aria-label="커뮤니티로 이동">
@@ -736,7 +736,7 @@ const pageRegistry = {
     </header>
 
     <main class="main-content">
-        <div class="container" style="max-width: 800px;">
+        <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
                     <a href="/admin" class="community-back-link icon-btn icon-btn-square" aria-label="관리자 페이지로 이동">
