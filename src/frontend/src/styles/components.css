@@ -862,3 +862,16 @@
     border-color: var(--primary-color);
     color: var(--primary-color);
 }
+
+.text-editor-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.text-editor-meta .is-over-limit {
+    color: #dc3545 !important;
+    font-weight: 700;
+}
