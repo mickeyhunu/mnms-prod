@@ -7,6 +7,7 @@ let editingPostId = null;
 let existingImageUrls = [];
 let isBusinessUser = false;
 let businessPromotionFixedTitle = '';
+let contentEditor = null;
 
 const MAX_POST_IMAGE_COUNT = 5;
 const MAX_POST_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024;
@@ -195,6 +196,7 @@ function getModeFromQuery() {
 
 async function initCreatePost() {
     getModeFromQuery();
+    setupTextEditor();
     setupEventListeners();
     setupImageUpload();
     await setupBoardOptions();
@@ -329,6 +331,16 @@ async function setupBusinessPromotionTitle() {
 }
 
 
+function setupTextEditor() {
+    const contentInput = document.getElementById('content');
+    contentEditor = window.TextEditor?.create({
+        textarea: contentInput,
+        counter: '#content-count',
+        minLength: 6,
+        maxLength: 1000,
+        onChange: validateForm
+    }) || null;
+}
 
 function setupEventListeners() {
     const postForm = document.getElementById('post-form');
@@ -347,7 +359,7 @@ function setupEventListeners() {
         });
     }
 
-    if (contentInput) {
+    if (contentInput && !contentEditor) {
         contentInput.addEventListener('input', function() {
             updateCharCount('content', 1000);
             validateForm();
@@ -469,7 +481,7 @@ function validateForm() {
     const hasSelectedBoard = isBusinessUser || Boolean(boardTypeSelect?.value);
     const isValid = hasSelectedBoard &&
         title.value.trim().length > 0 &&
-        content.value.trim().length >= 6 &&
+        (contentEditor ? contentEditor.isValid() : content.value.trim().length >= 6) &&
         title.value.length <= 255 &&
         content.value.length <= 1000;
 
@@ -498,7 +510,8 @@ async function loadPostForEdit() {
         const contentInput = document.getElementById('content');
 
         if (titleInput) titleInput.value = post.title || '';
-        if (contentInput) contentInput.value = post.content || '';
+        if (contentEditor) contentEditor.setValue(post.content || '');
+        else if (contentInput) contentInput.value = post.content || '';
 
         const boardTypeSelect = document.getElementById('board-type');
         if (boardTypeSelect && post.boardType) {
@@ -537,7 +550,7 @@ async function handleSubmit(event) {
     const titleValue = (isBusinessUser && !isEditMode && businessPromotionFixedTitle)
         ? businessPromotionFixedTitle
         : enteredTitle;
-    const contentValue = document.getElementById('content')?.value.trim() || '';
+    const contentValue = contentEditor ? contentEditor.getTrimmedValue() : (document.getElementById('content')?.value.trim() || '');
     const submitBtn = document.getElementById('submit-btn');
     const boardTypeSelect = document.getElementById('board-type');
     const boardType = isBusinessUser
