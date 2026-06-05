@@ -26,77 +26,11 @@ const adProfileState = {
     uploadedImageUrl: '',
     me: null,
     isSaving: false,
-    syncPreview: null
+    syncPreview: null,
+    descriptionEditor: null
 };
 const DEFAULT_AD_IMAGE_URL = 'https://image.bubblealba.com/assets/advertiser/pending.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
-const EDITOR_TEXT_STYLE_COMMANDS = ['bold', 'italic', 'underline'];
-const EDITOR_STATE_COMMANDS = [...EDITOR_TEXT_STYLE_COMMANDS, 'insertUnorderedList'];
-const EDITOR_DEFAULT_FONT_SIZE = 15;
-const EDITOR_FONT_SIZE_MIN = 11;
-const EDITOR_FONT_SIZE_MAX = 38;
-const EDITOR_COLOR_PALETTE = [
-    '#212529', '#495057', '#868e96', '#ced4da', '#ffffff', '#fff3bf', '#ffd8a8', '#ffc9c9',
-    '#ff8787', '#ff6b6b', '#fa5252', '#f03e3e', '#e03131', '#c92a2a', '#a61e4d', '#862e9c',
-    '#f783ac', '#e599f7', '#da77f2', '#be4bdb', '#9c36b5', '#7048e8', '#5c7cfa', '#339af0',
-    '#74c0fc', '#66d9e8', '#3bc9db', '#22b8cf', '#15aabf', '#12b886', '#40c057', '#82c91e',
-    '#c0eb75', '#8ce99a', '#63e6be', '#38d9a9', '#20c997', '#2b8a3e', '#5c940d', '#f59f00',
-    '#ffd43b', '#fab005', '#fd7e14', '#e8590c', '#d9480f', '#7f4f24', '#343a40', '#000000'
-];
-
-function normalizeEditorColor(value) {
-    const color = String(value || '').trim().toLowerCase();
-    const rgbMatch = color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
-    if (rgbMatch) {
-        return `#${rgbMatch.slice(1).map((part) => Number(part).toString(16).padStart(2, '0')).join('')}`;
-    }
-    return color;
-}
-
-function getEditorElementFromSelection(descriptionEditor) {
-    const selection = window.getSelection();
-    const selectedNode = selection?.anchorNode;
-    if (!selectedNode) return null;
-    const selectedElement = selectedNode.nodeType === Node.ELEMENT_NODE ? selectedNode : selectedNode.parentElement;
-    return selectedElement && descriptionEditor?.contains(selectedElement) ? selectedElement : null;
-}
-
-function getEditorFontSizeFromSelection(descriptionEditor) {
-    let element = getEditorElementFromSelection(descriptionEditor);
-    while (element && element !== descriptionEditor) {
-        const inlineFontSize = element.style?.fontSize;
-        if (inlineFontSize) return parseInt(inlineFontSize, 10) || EDITOR_DEFAULT_FONT_SIZE;
-        element = element.parentElement;
-    }
-    return EDITOR_DEFAULT_FONT_SIZE;
-}
-
-function replaceEditorFontTags(descriptionEditor, fontSize) {
-    if (!descriptionEditor) return;
-    descriptionEditor.querySelectorAll('font[size="7"]').forEach((fontElement) => {
-        const span = document.createElement('span');
-        span.style.fontSize = `${fontSize}px`;
-        span.innerHTML = fontElement.innerHTML;
-        fontElement.replaceWith(span);
-    });
-}
-
-function buildEditorFontSizeOptions(fontSizeSelect) {
-    if (!fontSizeSelect) return;
-    fontSizeSelect.innerHTML = Array.from({ length: EDITOR_FONT_SIZE_MAX - EDITOR_FONT_SIZE_MIN + 1 }, (_, index) => {
-        const size = EDITOR_FONT_SIZE_MIN + index;
-        return `<option value="${size}"${size === EDITOR_DEFAULT_FONT_SIZE ? ' selected' : ''}>${size}</option>`;
-    }).join('');
-}
-
-function buildEditorPalette(panel) {
-    if (!panel) return;
-    panel.innerHTML = EDITOR_COLOR_PALETTE.map((color) => `
-        <button type="button" class="ad-profile-editor-color-option" data-editor-palette-color="${color}" style="background-color: ${color};" title="${color}" aria-label="${color}"></button>
-    `).join('');
-}
-
-
 function createHourOptions(hourSelect) {
     if (!hourSelect) return;
     const options = ['시간선택'];
@@ -144,6 +78,107 @@ async function uploadAdImage(file) {
     return uploaded.url;
 }
 
+function getQuillPlainText(quill) {
+    if (!quill) return '';
+    return String(quill.getText() || '').replace(/\s+$/g, '').trim();
+}
+
+function getQuillHtml(quill) {
+    if (!quill?.root) return '';
+    return getQuillPlainText(quill) ? quill.root.innerHTML.trim() : '';
+}
+
+function syncDescriptionInputFromEditor() {
+    const descriptionInput = document.getElementById('ad-profile-description');
+    if (!descriptionInput || !adProfileState.descriptionEditor) return '';
+
+    const html = getQuillHtml(adProfileState.descriptionEditor);
+    descriptionInput.value = html;
+    return getQuillPlainText(adProfileState.descriptionEditor);
+}
+
+function setDescriptionEditorHtml(html) {
+    const normalizedHtml = String(html || '').trim();
+    const descriptionInput = document.getElementById('ad-profile-description');
+    if (descriptionInput) descriptionInput.value = normalizedHtml;
+
+    const quill = adProfileState.descriptionEditor;
+    if (!quill?.clipboard) return;
+
+    quill.setContents([], 'silent');
+    if (normalizedHtml) {
+        quill.clipboard.dangerouslyPasteHTML(normalizedHtml, 'silent');
+    }
+    syncDescriptionInputFromEditor();
+}
+
+function bindDescriptionEditor({ syncPreview, saveDraftData: saveDraftDataCallback }) {
+    const descriptionInput = document.getElementById('ad-profile-description');
+    const descriptionEditor = document.getElementById('ad-profile-description-editor');
+    const editorImageInput = document.getElementById('ad-profile-editor-image-input');
+
+    if (!descriptionInput || !descriptionEditor) return;
+
+    const notifyEditorChanged = () => {
+        syncDescriptionInputFromEditor();
+        syncPreview();
+        saveDraftDataCallback();
+    };
+
+    if (!window.Quill) {
+        descriptionInput.classList.remove('hidden');
+        descriptionInput.addEventListener('input', () => {
+            syncPreview();
+            saveDraftDataCallback();
+        });
+        descriptionInput.addEventListener('blur', saveDraftDataCallback);
+        descriptionEditor.closest('.ad-profile-editor')?.classList.add('hidden');
+        syncPreview();
+        return;
+    }
+
+    const quill = new window.Quill(descriptionEditor, {
+        theme: 'snow',
+        placeholder: '내용을 입력해주세요.',
+        modules: {
+            toolbar: {
+                container: '#ad-profile-description-toolbar',
+                handlers: {
+                    image() {
+                        editorImageInput?.click();
+                    }
+                }
+            }
+        }
+    });
+
+    adProfileState.descriptionEditor = quill;
+    setDescriptionEditorHtml(descriptionInput.value);
+
+    quill.on('text-change', notifyEditorChanged);
+    quill.on('selection-change', (range) => {
+        if (!range) saveDraftDataCallback();
+    });
+
+    editorImageInput?.addEventListener('change', async () => {
+        const file = editorImageInput.files?.[0];
+        if (!file || !file.type.startsWith('image/')) return;
+
+        try {
+            const imageUrl = await uploadAdImage(file);
+            const selection = quill.getSelection(true);
+            const insertIndex = selection ? selection.index : quill.getLength();
+            quill.insertEmbed(insertIndex, 'image', imageUrl, 'user');
+            quill.setSelection(insertIndex + 1, 0, 'silent');
+            notifyEditorChanged();
+        } catch (error) {
+            showSaveMessage(error.message || '에디터 이미지 첨부에 실패했습니다.');
+        } finally {
+            editorImageInput.value = '';
+        }
+    });
+}
+
 function bindAdProfileInteractions() {
     const regionSelect = document.getElementById('ad-profile-region');
     const districtSelect = document.getElementById('ad-profile-district');
@@ -154,36 +189,19 @@ function bindAdProfileInteractions() {
     const businessNameInput = document.getElementById('ad-profile-name');
     const managerNameInput = document.getElementById('ad-profile-manager');
     const managerContactInput = document.getElementById('ad-profile-manager-contact');
-    const descriptionInput = document.getElementById('ad-profile-description');
-    const descriptionEditor = document.getElementById('ad-profile-description-editor');
-    const editorToolbar = document.querySelector('.ad-profile-editor-toolbar');
-    const editorFontSizeSelect = document.getElementById('ad-profile-editor-font-size');
-    const editorImageButton = document.getElementById('ad-profile-editor-image-btn');
-    const editorImageInput = document.getElementById('ad-profile-editor-image-input');
-    let lastEditorRange = null;
 
     const previewTitle = document.getElementById('ad-profile-preview-title');
     const previewManager = document.getElementById('ad-profile-preview-manager');
     const previewDetail = document.getElementById('ad-profile-preview-detail');
 
-    const syncDescriptionValue = () => {
-        if (!descriptionInput || !descriptionEditor) return '';
-        const html = descriptionEditor.innerHTML.trim();
-        descriptionInput.value = html;
-        return descriptionEditor.textContent?.trim() || '';
-    };
-
     createHourOptions(openHourSelect);
     createHourOptions(closeHourSelect);
     updateSelectOptions(regionSelect, Object.keys(REGION_DISTRICT_MAP));
-    buildEditorFontSizeOptions(editorFontSizeSelect);
-    editorToolbar?.querySelectorAll('[data-editor-popover-panel="font-color"], [data-editor-popover-panel="font-bg-color"]')
-        .forEach(buildEditorPalette);
 
     const syncPreview = () => {
         const storeName = businessNameInput?.value?.trim() || '업소명';
         const title = titleInput?.value?.trim() || '제목을 입력해주세요.';
-        syncDescriptionValue();
+        syncDescriptionInputFromEditor();
         const region = regionSelect?.value?.trim() || '선택';
         const district = districtSelect?.value?.trim() || '선택';
         const category = categorySelect?.value?.trim() || '선택';
@@ -202,193 +220,12 @@ function bindAdProfileInteractions() {
         if (previewDetail) previewDetail.textContent = `${region} ${district} · ${category} · ${formattedTime}`;
     };
 
-    const saveEditorSelection = () => {
-        if (!descriptionEditor) return;
-        const selection = window.getSelection();
-        if (!selection?.rangeCount) return;
-        const range = selection.getRangeAt(0);
-        const container = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
-            ? range.commonAncestorContainer
-            : range.commonAncestorContainer.parentElement;
-        if (container && descriptionEditor.contains(container)) {
-            lastEditorRange = range.cloneRange();
-        }
-    };
-
-    const restoreEditorSelection = () => {
-        if (!descriptionEditor || !lastEditorRange) return;
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(lastEditorRange);
-    };
-
-    const closeEditorPopovers = (exceptName = '') => {
-        editorToolbar?.querySelectorAll('[data-editor-popover]').forEach((button) => {
-            const isExcepted = button.dataset.editorPopover === exceptName;
-            if (!isExcepted) button.setAttribute('aria-expanded', 'false');
-        });
-        editorToolbar?.querySelectorAll('[data-editor-popover-panel]').forEach((panel) => {
-            const isExcepted = panel.dataset.editorPopoverPanel === exceptName;
-            if (!isExcepted) panel.classList.remove('is-open');
-        });
-    };
-
-    const applyEditorCommand = (command, value = null) => {
-        if (!descriptionEditor) return;
-        restoreEditorSelection();
-        descriptionEditor.focus();
-
-        const isTextStyleCommand = EDITOR_TEXT_STYLE_COMMANDS.includes(command);
-        const desiredTextStyleStates = isTextStyleCommand
-            ? Object.fromEntries(EDITOR_TEXT_STYLE_COMMANDS.map((styleCommand) => [
-                styleCommand,
-                styleCommand === command ? !document.queryCommandState(styleCommand) : document.queryCommandState(styleCommand)
-            ]))
-            : null;
-
-        document.execCommand(command, false, value);
-
-        if (desiredTextStyleStates) {
-            EDITOR_TEXT_STYLE_COMMANDS.forEach((styleCommand) => {
-                if (document.queryCommandState(styleCommand) !== desiredTextStyleStates[styleCommand]) {
-                    document.execCommand(styleCommand, false, null);
-                }
-            });
-        }
-
-        saveEditorSelection();
-        syncPreview();
-        updateActiveEditorButtons();
-    };
-
-    const applyEditorFontSize = (fontSize) => {
-        if (!descriptionEditor) return;
-        const normalizedFontSize = Math.min(EDITOR_FONT_SIZE_MAX, Math.max(EDITOR_FONT_SIZE_MIN, Number(fontSize) || EDITOR_DEFAULT_FONT_SIZE));
-        restoreEditorSelection();
-        descriptionEditor.focus();
-        document.execCommand('fontSize', false, '7');
-        replaceEditorFontTags(descriptionEditor, normalizedFontSize);
-        if (editorFontSizeSelect) editorFontSizeSelect.value = String(normalizedFontSize);
-        saveEditorSelection();
-        syncPreview();
-        updateActiveEditorButtons();
-    };
-
-    const updateActiveEditorButtons = () => {
-        if (!editorToolbar || !descriptionEditor) return;
-        const selection = window.getSelection();
-        const selectedNode = selection?.anchorNode;
-        const isSelectionInEditor = selectedNode && descriptionEditor.contains(selectedNode.nodeType === Node.ELEMENT_NODE ? selectedNode : selectedNode.parentNode);
-        if (!isSelectionInEditor && document.activeElement !== descriptionEditor) return;
-
-        const currentFontColor = normalizeEditorColor(document.queryCommandValue('foreColor'));
-        const currentBackColor = normalizeEditorColor(document.queryCommandValue('backColor') || document.queryCommandValue('hiliteColor'));
-        const currentFontSize = getEditorFontSizeFromSelection(descriptionEditor);
-        if (editorFontSizeSelect) editorFontSizeSelect.value = String(currentFontSize);
-
-        editorToolbar.querySelectorAll('[data-editor-command]').forEach((button) => {
-            const command = button.dataset.editorCommand;
-            const isActive = EDITOR_STATE_COMMANDS.includes(command) && document.queryCommandState(command);
-
-            button.classList.toggle('is-active', isActive);
-            button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-        });
-
-        editorToolbar.querySelector('[data-editor-popover="font-color"]')?.style.setProperty('text-decoration-color', currentFontColor || '#212529');
-        editorToolbar.querySelector('[data-editor-popover="font-bg-color"]')?.style.setProperty('background-color', currentBackColor || 'transparent');
-        ['justifyLeft', 'justifyCenter', 'justifyRight'].forEach((command) => {
-            const option = editorToolbar.querySelector(`[data-editor-command="${command}"]`);
-            option?.setAttribute('aria-checked', document.queryCommandState(command) ? 'true' : 'false');
-        });
-    };
-
-    if (descriptionEditor && descriptionInput) {
-        descriptionEditor.innerHTML = descriptionInput.value || '';
-        descriptionEditor.addEventListener('input', () => {
-            syncPreview();
-            updateActiveEditorButtons();
-        });
-        descriptionEditor.addEventListener('blur', syncPreview);
-        descriptionEditor.addEventListener('keyup', () => {
-            saveEditorSelection();
-            updateActiveEditorButtons();
-        });
-        descriptionEditor.addEventListener('mouseup', () => {
-            saveEditorSelection();
-            updateActiveEditorButtons();
-        });
-        descriptionEditor.addEventListener('focus', () => {
-            saveEditorSelection();
-            updateActiveEditorButtons();
-        });
-        document.addEventListener('selectionchange', updateActiveEditorButtons);
-    }
-
-    editorToolbar?.addEventListener('mousedown', (event) => {
-        if (event.target.closest('[data-editor-command], [data-editor-popover], [data-editor-palette-color]')) {
-            event.preventDefault();
-        }
-    });
-
-    editorToolbar?.addEventListener('click', (event) => {
-        const popoverButton = event.target.closest('[data-editor-popover]');
-        if (popoverButton) {
-            event.preventDefault();
-            const popoverName = popoverButton.dataset.editorPopover;
-            const panel = editorToolbar.querySelector(`[data-editor-popover-panel="${popoverName}"]`);
-            const shouldOpen = !panel?.classList.contains('is-open');
-            closeEditorPopovers(shouldOpen ? popoverName : '');
-            panel?.classList.toggle('is-open', shouldOpen);
-            popoverButton.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
-            return;
-        }
-
-        const colorButton = event.target.closest('[data-editor-palette-color]');
-        if (colorButton) {
-            event.preventDefault();
-            const panel = colorButton.closest('[data-editor-popover-panel]');
-            const command = panel?.dataset.editorPopoverPanel === 'font-bg-color' ? 'hiliteColor' : 'foreColor';
-            applyEditorCommand(command, colorButton.dataset.editorPaletteColor);
-            closeEditorPopovers();
-            return;
-        }
-
-        const button = event.target.closest('[data-editor-command]');
-        if (!button || !descriptionEditor) return;
-
-        event.preventDefault();
-        applyEditorCommand(button.dataset.editorCommand, button.dataset.editorValue || null);
-        if (button.closest('[data-editor-popover-panel]')) closeEditorPopovers();
-    });
-
-    editorFontSizeSelect?.addEventListener('mousedown', saveEditorSelection);
-    editorFontSizeSelect?.addEventListener('change', () => applyEditorFontSize(editorFontSizeSelect.value));
-
-    document.addEventListener('click', (event) => {
-        if (!editorToolbar?.contains(event.target)) closeEditorPopovers();
-    });
+    bindDescriptionEditor({ syncPreview, saveDraftData });
 
     managerContactInput?.addEventListener('input', () => {
         managerContactInput.value = formatPhoneNumber(managerContactInput.value);
         syncPreview();
-    });
-
-    editorImageButton?.addEventListener('click', () => editorImageInput?.click());
-    editorImageInput?.addEventListener('change', async () => {
-        const file = editorImageInput.files?.[0];
-        if (!file || !file.type.startsWith('image/')) return;
-
-        try {
-            const imageUrl = await uploadAdImage(file);
-            if (!descriptionEditor) return;
-            descriptionEditor.focus();
-            document.execCommand('insertImage', false, imageUrl);
-            syncPreview();
-        } catch (error) {
-            showSaveMessage(error.message || '에디터 이미지 첨부에 실패했습니다.');
-        } finally {
-            editorImageInput.value = '';
-        }
+        saveDraftData();
     });
 
     regionSelect?.addEventListener('change', () => {
@@ -398,16 +235,13 @@ function bindAdProfileInteractions() {
         saveDraftData();
     });
 
-    [districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput, businessNameInput, managerNameInput, managerContactInput]
+    [districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput, businessNameInput, managerNameInput]
         .forEach((element) => {
             element?.addEventListener('input', syncPreview);
             element?.addEventListener('change', syncPreview);
             element?.addEventListener('input', saveDraftData);
             element?.addEventListener('change', saveDraftData);
         });
-
-    descriptionEditor?.addEventListener('input', saveDraftData);
-    descriptionEditor?.addEventListener('blur', saveDraftData);
 
     adProfileState.syncPreview = syncPreview;
     syncPreview();
@@ -537,6 +371,7 @@ async function saveAdProfile({ forceDraft = false } = {}) {
     const businessName = storeName;
     const managerName = String(document.getElementById('ad-profile-manager')?.value || '').trim();
     const managerContact = String(document.getElementById('ad-profile-manager-contact')?.value || '').trim();
+    syncDescriptionInputFromEditor();
     const description = String(document.getElementById('ad-profile-description')?.value || '').trim();
     const saveButton = document.getElementById('ad-profile-save-btn');
     const draftButton = document.getElementById('ad-profile-draft-btn');
@@ -668,7 +503,6 @@ function applyAdProfileToForm(ad) {
     const managerNameInput = document.getElementById('ad-profile-manager');
     const managerContactInput = document.getElementById('ad-profile-manager-contact');
     const descriptionInput = document.getElementById('ad-profile-description');
-    const descriptionEditor = document.getElementById('ad-profile-description-editor');
 
     if (storeNameInput) storeNameInput.value = ad.businessName || ad.storeName || '';
     if (managerNameInput) managerNameInput.value = ad.managerName || '';
@@ -685,7 +519,7 @@ function applyAdProfileToForm(ad) {
     if (managerNameInput) managerNameInput.value = ad.managerName || '';
     if (managerContactInput) managerContactInput.value = formatPhoneNumber(ad.managerContact || '');
     if (descriptionInput) descriptionInput.value = ad.description || '';
-    if (descriptionEditor) descriptionEditor.innerHTML = ad.description || '';
+    setDescriptionEditorHtml(ad.description || '');
     adProfileState.uploadedImageUrl = ad.imageUrl || DEFAULT_AD_IMAGE_URL;
     adProfileState.syncPreview?.();
     updateAdProfileActionButtons();
