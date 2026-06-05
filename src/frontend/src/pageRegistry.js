@@ -177,47 +177,41 @@ const pageRegistry = {
                 <div class="ad-profile-section">
                     <h3>상세정보</h3>
                     <input id="ad-profile-title" type="text" maxlength="50" placeholder="제목을 입력해주세요." required>
-                    <div class="ad-profile-editor" aria-label="광고 상세정보 에디터">
-                        <div class="ad-profile-editor-toolbar" role="toolbar" aria-label="텍스트 편집 도구">
-                            <div class="ad-profile-editor-group" aria-label="글자 스타일">
-                                <button type="button" class="ad-profile-editor-btn" data-editor-command="bold" title="굵게" aria-pressed="false"><strong>B</strong></button>
-                                <button type="button" class="ad-profile-editor-btn" data-editor-command="italic" title="기울임" aria-pressed="false"><em>I</em></button>
-                                <button type="button" class="ad-profile-editor-btn" data-editor-command="underline" title="밑줄" aria-pressed="false"><span style="text-decoration: underline;">U</span></button>
-                            </div>
-                            <div class="ad-profile-editor-group" aria-label="글씨 크기">
-                                <label class="ad-profile-editor-size-control" title="글씨 크기">
-                                    <span class="sr-only">글씨 크기</span>
-                                    <select id="ad-profile-editor-font-size" class="ad-profile-editor-select" aria-label="글씨 크기"></select>
-                                    <span aria-hidden="true">px</span>
-                                </label>
-                            </div>
-                            <div class="ad-profile-editor-group" aria-label="글씨 색상 및 배경색">
-                                <div class="ad-profile-editor-popover-wrap">
-                                    <button type="button" class="ad-profile-editor-btn ad-profile-editor-swatch-btn" data-editor-popover="font-color" title="글자색 변경" aria-expanded="false">T</button>
-                                    <div class="ad-profile-editor-popover ad-profile-editor-palette" data-editor-popover-panel="font-color" role="menu" aria-label="글자색 팔레트"></div>
-                                </div>
-                                <div class="ad-profile-editor-popover-wrap">
-                                    <button type="button" class="ad-profile-editor-btn ad-profile-editor-swatch-btn ad-profile-editor-bg-swatch-btn" data-editor-popover="font-bg-color" title="글자 배경색 변경" aria-expanded="false">T</button>
-                                    <div class="ad-profile-editor-popover ad-profile-editor-palette" data-editor-popover-panel="font-bg-color" role="menu" aria-label="글자 배경색 팔레트"></div>
-                                </div>
-                            </div>
-                            <div class="ad-profile-editor-group" aria-label="문단 정렬 및 첨부">
-                                <button type="button" class="ad-profile-editor-btn" data-editor-command="insertUnorderedList" title="목록" aria-pressed="false">• 목록</button>
-                                <div class="ad-profile-editor-popover-wrap">
-                                    <button type="button" class="ad-profile-editor-btn ad-profile-editor-align-toggle" data-editor-popover="align" title="문단 정렬" aria-expanded="false" aria-label="문단 정렬">
-                                        <span aria-hidden="true"></span>
-                                    </button>
-                                    <div class="ad-profile-editor-popover ad-profile-editor-align-menu" data-editor-popover-panel="align" role="menu" aria-label="문단 정렬 선택">
-                                        <button type="button" class="ad-profile-editor-align-option" data-editor-command="justifyLeft" role="menuitemradio" aria-checked="true">좌</button>
-                                        <button type="button" class="ad-profile-editor-align-option" data-editor-command="justifyCenter" role="menuitemradio" aria-checked="false">중</button>
-                                        <button type="button" class="ad-profile-editor-align-option" data-editor-command="justifyRight" role="menuitemradio" aria-checked="false">우</button>
-                                    </div>
-                                </div>
-                                <button type="button" class="ad-profile-editor-btn" id="ad-profile-editor-image-btn" title="이미지 첨부">이미지</button>
-                            </div>
+                    <div class="ad-profile-editor ad-profile-editor--quill" aria-label="광고 상세정보 웹 에디터">
+                        <div id="ad-profile-description-toolbar" class="ad-profile-quill-toolbar" aria-label="텍스트 편집 도구">
+                            <span class="ql-formats">
+                                <select class="ql-header" aria-label="문단 스타일">
+                                    <option selected></option>
+                                    <option value="2">제목</option>
+                                    <option value="3">소제목</option>
+                                </select>
+                                <select class="ql-size" aria-label="글씨 크기">
+                                    <option value="small">작게</option>
+                                    <option selected>기본</option>
+                                    <option value="large">크게</option>
+                                    <option value="huge">아주 크게</option>
+                                </select>
+                            </span>
+                            <span class="ql-formats">
+                                <button type="button" class="ql-bold" aria-label="굵게"></button>
+                                <button type="button" class="ql-italic" aria-label="기울임"></button>
+                                <button type="button" class="ql-underline" aria-label="밑줄"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <select class="ql-color" aria-label="글자색"></select>
+                                <select class="ql-background" aria-label="배경색"></select>
+                            </span>
+                            <span class="ql-formats">
+                                <button type="button" class="ql-list" value="bullet" aria-label="목록"></button>
+                                <select class="ql-align" aria-label="문단 정렬"></select>
+                            </span>
+                            <span class="ql-formats">
+                                <button type="button" class="ql-link" aria-label="링크"></button>
+                                <button type="button" class="ql-image" aria-label="이미지 첨부"></button>
+                            </span>
                         </div>
                         <input id="ad-profile-editor-image-input" class="hidden" accept="image/*" type="file">
-                        <div id="ad-profile-description-editor" class="ad-profile-editor-content" contenteditable="true" data-placeholder="내용을 입력해주세요."></div>
+                        <div id="ad-profile-description-editor" class="ad-profile-editor-content"></div>
                     </div>
                     <textarea id="ad-profile-description" class="hidden" maxlength="1000" placeholder="내용을 입력해주세요." required></textarea>
                 </div>
@@ -249,8 +243,8 @@ const pageRegistry = {
             </section>
         </div>
     </main>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/adProfileManagement.js", "scripts/js/components/footerNav.js"]
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js", "scripts/js/pages/adProfileManagement.js", "scripts/js/components/footerNav.js"]
   },
   'business-apply': {
     template: `<header class="header">
