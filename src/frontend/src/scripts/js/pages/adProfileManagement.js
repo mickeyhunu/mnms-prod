@@ -31,6 +31,7 @@ const adProfileState = {
 const DEFAULT_AD_IMAGE_URL = 'https://image.bubblealba.com/assets/advertiser/pending.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const EDITOR_TEXT_STYLE_COMMANDS = ['bold', 'italic', 'underline', 'strikeThrough'];
+const EDITOR_ALIGNMENT_COMMANDS = ['justifyLeft', 'justifyCenter', 'justifyRight'];
 const EDITOR_STATE_COMMANDS = [...EDITOR_TEXT_STYLE_COMMANDS];
 const EDITOR_DEFAULT_FONT_SIZE = 15;
 const EDITOR_FONT_SIZE_STYLE_PROPERTY = 'font-size';
@@ -154,14 +155,28 @@ function isEditorRange(descriptionEditor, range) {
     return Boolean(container && descriptionEditor?.contains(container));
 }
 
-function focusEditorWithSelection(descriptionEditor, range) {
-    if (!descriptionEditor) return;
-    descriptionEditor.focus({ preventScroll: true });
-    if (!range || !isEditorRange(descriptionEditor, range)) return;
+function createEditorEndRange(descriptionEditor) {
+    if (!descriptionEditor) return null;
 
+    const range = document.createRange();
+    range.selectNodeContents(descriptionEditor);
+    range.collapse(false);
+    return range;
+}
+
+function focusEditorWithSelection(descriptionEditor, range) {
+    if (!descriptionEditor) return false;
+
+    const rangeToApply = range && isEditorRange(descriptionEditor, range)
+        ? range
+        : createEditorEndRange(descriptionEditor);
+    if (!rangeToApply) return false;
+
+    descriptionEditor.focus({ preventScroll: true });
     const selection = window.getSelection();
     selection?.removeAllRanges();
-    selection?.addRange(range);
+    selection?.addRange(rangeToApply);
+    return true;
 }
 
 function applyEditorFontSizeToRange(descriptionEditor, range, fontSize) {
@@ -176,6 +191,42 @@ function applyEditorFontSizeToRange(descriptionEditor, range, fontSize) {
     }
 
     return { applied: true, isCollapsed };
+}
+
+function createEditorTextStyleElement(command) {
+    if (command === 'bold') return document.createElement('strong');
+    if (command === 'italic') return document.createElement('em');
+    if (command === 'underline') {
+        const element = document.createElement('span');
+        element.style.textDecoration = 'underline';
+        return element;
+    }
+    if (command === 'strikeThrough') {
+        const element = document.createElement('span');
+        element.style.textDecoration = 'line-through';
+        return element;
+    }
+    return null;
+}
+
+function applyEditorTextStyleFallback(descriptionEditor, command, range) {
+    const styleElement = createEditorTextStyleElement(command);
+    if (!descriptionEditor || !styleElement || !range || range.collapsed || !isEditorRange(descriptionEditor, range)) {
+        return false;
+    }
+
+    const selectedContent = range.extractContents();
+    if (!selectedContent.textContent?.trim()) return false;
+
+    styleElement.appendChild(selectedContent);
+    range.insertNode(styleElement);
+
+    const selection = window.getSelection();
+    const styledRange = document.createRange();
+    styledRange.selectNodeContents(styleElement);
+    selection?.removeAllRanges();
+    selection?.addRange(styledRange);
+    return true;
 }
 
 function resolveEditorAlignmentCommand() {
@@ -316,8 +367,10 @@ function bindAdProfileInteractions() {
     };
 
     const restoreEditorSelection = () => {
-        if (!descriptionEditor || !lastEditorRange) return;
-        focusEditorWithSelection(descriptionEditor, lastEditorRange);
+        if (!descriptionEditor) return false;
+        const restoredSelection = focusEditorWithSelection(descriptionEditor, lastEditorRange);
+        if (restoredSelection) saveEditorSelection();
+        return restoredSelection;
     };
 
     const closeEditorPopovers = (exceptName = '') => {
@@ -333,8 +386,22 @@ function bindAdProfileInteractions() {
 
     const applyEditorCommand = (command, value = null) => {
         if (!descriptionEditor) return;
-        restoreEditorSelection();
-        document.execCommand(command, false, value);
+        if (!restoreEditorSelection()) return;
+
+        const selection = window.getSelection();
+        const activeRange = selection?.rangeCount ? selection.getRangeAt(0) : null;
+        const fallbackRange = activeRange?.cloneRange();
+        const shouldFallbackToManualStyle = EDITOR_TEXT_STYLE_COMMANDS.includes(command)
+            && fallbackRange
+            && !fallbackRange.collapsed
+            && !document.queryCommandState(command);
+        const htmlBeforeCommand = shouldFallbackToManualStyle ? descriptionEditor.innerHTML : '';
+        const didApplyCommand = document.execCommand(command, false, value);
+
+        if (shouldFallbackToManualStyle && (!didApplyCommand || descriptionEditor.innerHTML === htmlBeforeCommand)) {
+            applyEditorTextStyleFallback(descriptionEditor, command, fallbackRange);
+        }
+
         saveEditorSelection();
         syncPreview();
         updateActiveEditorButtons();
@@ -355,7 +422,7 @@ function bindAdProfileInteractions() {
         if (!fontSizeApplyResult.isCollapsed) {
             replaceEditorFontTags(descriptionEditor, normalizedFontSize);
         }
-        if (!fontSizeApplyResult.applied || fontSizeApplyResult.isCollapsed) {
+        if (!fontSizeApplyResult.applied && !descriptionEditor.textContent?.trim()) {
             setEditorElementFontSize(descriptionEditor, normalizedFontSize);
         }
 
@@ -393,7 +460,7 @@ function bindAdProfileInteractions() {
         editorToolbar.querySelector('[data-editor-popover="font-bg-color"]')?.style.setProperty('--editor-bg-swatch-color', currentBackColor || 'rgba(255, 235, 59, 0.65)');
         const currentAlignmentCommand = resolveEditorAlignmentCommand();
         editorToolbar.querySelector('[data-editor-popover="align"]')?.setAttribute('data-editor-align', currentAlignmentCommand);
-        ['justifyLeft', 'justifyCenter', 'justifyRight'].forEach((command) => {
+        EDITOR_ALIGNMENT_COMMANDS.forEach((command) => {
             const option = editorToolbar.querySelector(`[data-editor-command="${command}"]`);
             option?.setAttribute('aria-checked', command === currentAlignmentCommand ? 'true' : 'false');
         });
@@ -455,7 +522,13 @@ function bindAdProfileInteractions() {
         if (!button || !descriptionEditor) return;
 
         event.preventDefault();
-        applyEditorCommand(button.dataset.editorCommand, button.dataset.editorValue || null);
+        const command = button.dataset.editorCommand;
+        applyEditorCommand(command, button.dataset.editorValue || null);
+        if (EDITOR_TEXT_STYLE_COMMANDS.includes(command)) {
+            const isPressed = document.queryCommandState(command);
+            button.classList.toggle('is-active', isPressed);
+            button.setAttribute('aria-pressed', isPressed ? 'true' : 'false');
+        }
         if (button.closest('[data-editor-popover-panel]')) closeEditorPopovers();
     });
 
