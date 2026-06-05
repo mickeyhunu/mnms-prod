@@ -106,6 +106,6 @@ const communityTemplate = `
 
 export const communityPageConfig = createPageConfig({
   template: communityTemplate,
-  styles: ['styles/common.css', 'styles/layout.css', 'styles/components.css', 'styles/community-board.css'],
+  styles: ['styles/common.css', 'styles/layout.css', 'styles/components.css', 'styles/section-header.css', 'styles/community-board.css'],
   scripts: ['scripts/js/utils/constants.js', 'scripts/js/utils/helpers.js', 'scripts/js/utils/auth.js', 'scripts/js/utils/notifications.js', 'scripts/js/api/apiClient.js', 'scripts/js/api/authAPI.js', 'scripts/js/api/postAPI.js', 'scripts/js/components/postCard.js', 'scripts/js/components/topAds.js', 'scripts/js/components/header.js', 'scripts/js/pages/index.js', 'scripts/js/components/footerNav.js']
 });
