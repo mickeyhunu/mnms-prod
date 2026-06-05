@@ -83,7 +83,7 @@ function getEditorFontSizeFromSelection(descriptionEditor) {
         if (inlineFontSize) return normalizeEditorFontSize(inlineFontSize);
         element = element.parentElement;
     }
-    return EDITOR_DEFAULT_FONT_SIZE;
+    return null;
 }
 
 function runWithPreservedEditorSelection(descriptionEditor, callback) {
@@ -153,27 +153,28 @@ function isEditorRange(descriptionEditor, range) {
     return Boolean(container && descriptionEditor?.contains(container));
 }
 
-function applyEditorFontSizeToRange(descriptionEditor, range, fontSize) {
-    if (!descriptionEditor || !range) return false;
-
-    if (range.collapsed) {
-        document.execCommand('fontSize', false, '7');
-        replaceEditorFontTags(descriptionEditor, fontSize);
-        return true;
-    }
-
-    const fontSizeSpan = document.createElement('span');
-    setEditorElementFontSize(fontSizeSpan, fontSize);
-    fontSizeSpan.appendChild(range.extractContents());
-    range.insertNode(fontSizeSpan);
+function focusEditorWithSelection(descriptionEditor, range) {
+    if (!descriptionEditor) return;
+    descriptionEditor.focus({ preventScroll: true });
+    if (!range || !isEditorRange(descriptionEditor, range)) return;
 
     const selection = window.getSelection();
-    const nextRange = document.createRange();
-    nextRange.selectNodeContents(fontSizeSpan);
     selection?.removeAllRanges();
-    selection?.addRange(nextRange);
+    selection?.addRange(range);
+}
 
-    return true;
+function applyEditorFontSizeToRange(descriptionEditor, range, fontSize) {
+    if (!descriptionEditor || !range) return { applied: false, isCollapsed: false };
+
+    const isCollapsed = range.collapsed;
+    focusEditorWithSelection(descriptionEditor, range);
+    document.execCommand('fontSize', false, '7');
+
+    if (!isCollapsed) {
+        replaceEditorFontTags(descriptionEditor, fontSize);
+    }
+
+    return { applied: true, isCollapsed };
 }
 
 function resolveEditorAlignmentCommand() {
@@ -315,9 +316,7 @@ function bindAdProfileInteractions() {
 
     const restoreEditorSelection = () => {
         if (!descriptionEditor || !lastEditorRange) return;
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(lastEditorRange);
+        focusEditorWithSelection(descriptionEditor, lastEditorRange);
     };
 
     const closeEditorPopovers = (exceptName = '') => {
@@ -341,7 +340,6 @@ function bindAdProfileInteractions() {
     const applyEditorCommand = (command, value = null) => {
         if (!descriptionEditor) return;
         restoreEditorSelection();
-        descriptionEditor.focus();
 
         const isTextStyleCommand = EDITOR_TEXT_STYLE_COMMANDS.includes(command);
         const desiredTextStyleStates = isTextStyleCommand
@@ -371,14 +369,16 @@ function bindAdProfileInteractions() {
         const normalizedFontSize = normalizeEditorFontSize(fontSize);
         pendingEditorFontSize = normalizedFontSize;
         restoreEditorSelection();
-        descriptionEditor.focus();
 
         const selection = window.getSelection();
         const activeRange = selection?.rangeCount ? selection.getRangeAt(0) : lastEditorRange;
+        let fontSizeApplyResult = { applied: false, isCollapsed: false };
         if (isEditorRange(descriptionEditor, activeRange)) {
-            applyEditorFontSizeToRange(descriptionEditor, activeRange, normalizedFontSize);
+            fontSizeApplyResult = applyEditorFontSizeToRange(descriptionEditor, activeRange, normalizedFontSize);
         }
-        replaceEditorFontTags(descriptionEditor, normalizedFontSize);
+        if (!fontSizeApplyResult.isCollapsed) {
+            replaceEditorFontTags(descriptionEditor, normalizedFontSize);
+        }
 
         saveEditorSelection();
         syncPreview();
@@ -396,7 +396,9 @@ function bindAdProfileInteractions() {
 
         const currentFontColor = normalizeEditorColor(document.queryCommandValue('foreColor'));
         const currentBackColor = normalizeEditorColor(document.queryCommandValue('backColor') || document.queryCommandValue('hiliteColor'));
-        const currentFontSize = getEditorFontSizeFromSelection(descriptionEditor);
+        const selectedFontSize = getEditorFontSizeFromSelection(descriptionEditor);
+        const isNativeFontSizeStateActive = String(document.queryCommandValue('fontSize')) === '7';
+        const currentFontSize = selectedFontSize || (isNativeFontSizeStateActive ? pendingEditorFontSize : EDITOR_DEFAULT_FONT_SIZE);
         pendingEditorFontSize = currentFontSize;
         if (editorFontSizeSelect) editorFontSizeSelect.value = String(currentFontSize);
 
@@ -499,7 +501,7 @@ function bindAdProfileInteractions() {
         try {
             const imageUrl = await uploadAdImage(file);
             if (!descriptionEditor) return;
-            descriptionEditor.focus();
+            focusEditorWithSelection(descriptionEditor, lastEditorRange);
             document.execCommand('insertImage', false, imageUrl);
             syncPreview();
         } catch (error) {
