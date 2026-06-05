@@ -216,6 +216,14 @@ function focusEditorWithSelection(descriptionEditor, range) {
     return true;
 }
 
+function getCurrentEditorRange(descriptionEditor) {
+    const selection = window.getSelection();
+    if (!selection?.rangeCount) return null;
+
+    const range = selection.getRangeAt(0);
+    return isEditorRange(descriptionEditor, range) ? range.cloneRange() : null;
+}
+
 function applyEditorFontSizeToRange(descriptionEditor, range, fontSize) {
     if (!descriptionEditor || !range || !isEditorRange(descriptionEditor, range)) {
         return { applied: false, isCollapsed: false };
@@ -443,17 +451,14 @@ function bindAdProfileInteractions() {
     if (!sharedDescriptionEditor) {
         const saveEditorSelection = () => {
             if (!descriptionEditor) return;
-            const selection = window.getSelection();
-            if (!selection?.rangeCount) return;
-            const range = selection.getRangeAt(0);
-            if (isEditorRange(descriptionEditor, range)) {
-                lastEditorRange = range.cloneRange();
-            }
+            const currentRange = getCurrentEditorRange(descriptionEditor);
+            if (currentRange) lastEditorRange = currentRange;
         };
 
     const restoreEditorSelection = () => {
         if (!descriptionEditor) return false;
-        const restoredSelection = focusEditorWithSelection(descriptionEditor, lastEditorRange);
+        const currentRange = getCurrentEditorRange(descriptionEditor);
+        const restoredSelection = focusEditorWithSelection(descriptionEditor, currentRange || lastEditorRange);
         if (restoredSelection) saveEditorSelection();
         return restoredSelection;
     };
