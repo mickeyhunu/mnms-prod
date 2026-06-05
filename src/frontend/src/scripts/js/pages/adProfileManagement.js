@@ -77,6 +77,16 @@ function setEditorElementFontSize(element, fontSize) {
     element.style.setProperty(EDITOR_FONT_SIZE_STYLE_PROPERTY, `${fontSize}px`, 'important');
 }
 
+function setEditorFontSizeDeep(element, fontSize) {
+    if (!element) return;
+    setEditorElementFontSize(element, fontSize);
+    element.querySelectorAll?.('*').forEach((child) => {
+        if (child.style?.fontSize || child.tagName?.toLowerCase() === 'font') {
+            setEditorElementFontSize(child, fontSize);
+        }
+    });
+}
+
 function getEditorFontSizeFromSelection(descriptionEditor) {
     let element = getEditorElementFromSelection(descriptionEditor);
     while (element) {
@@ -87,6 +97,28 @@ function getEditorFontSizeFromSelection(descriptionEditor) {
     }
     return descriptionEditor ? normalizeEditorFontSize(window.getComputedStyle(descriptionEditor).fontSize) : null;
 }
+function getEditorTextStyleStateFromSelection(descriptionEditor, command) {
+    const selectedElement = getEditorElementFromSelection(descriptionEditor);
+    let element = selectedElement;
+
+    while (element && element !== descriptionEditor) {
+        const tagName = element.tagName?.toLowerCase();
+        const inlineStyle = element.style || {};
+        const computedStyle = window.getComputedStyle(element);
+        const fontWeight = Number.parseInt(computedStyle.fontWeight, 10);
+        const textDecoration = `${inlineStyle.textDecoration || ''} ${computedStyle.textDecorationLine || ''}`.toLowerCase();
+
+        if (command === 'bold' && (tagName === 'strong' || tagName === 'b' || fontWeight >= 600)) return true;
+        if (command === 'italic' && (tagName === 'em' || tagName === 'i' || computedStyle.fontStyle === 'italic')) return true;
+        if (command === 'underline' && (tagName === 'u' || textDecoration.includes('underline'))) return true;
+        if (command === 'strikeThrough' && (tagName === 's' || tagName === 'strike' || textDecoration.includes('line-through'))) return true;
+
+        element = element.parentElement;
+    }
+
+    return false;
+}
+
 
 function runWithPreservedEditorSelection(descriptionEditor, callback) {
     const selection = window.getSelection();
@@ -135,8 +167,8 @@ function replaceEditorFontTags(descriptionEditor, fontSize) {
     runWithPreservedEditorSelection(descriptionEditor, () => {
         descriptionEditor.querySelectorAll('font[size="7"]').forEach((fontElement) => {
             const span = document.createElement('span');
-            setEditorElementFontSize(span, fontSize);
             span.innerHTML = fontElement.innerHTML;
+            setEditorFontSizeDeep(span, fontSize);
             fontElement.replaceWith(span);
         });
     });
@@ -180,16 +212,40 @@ function focusEditorWithSelection(descriptionEditor, range) {
 }
 
 function applyEditorFontSizeToRange(descriptionEditor, range, fontSize) {
-    if (!descriptionEditor || !range) return { applied: false, isCollapsed: false };
+    if (!descriptionEditor || !range || !isEditorRange(descriptionEditor, range)) {
+        return { applied: false, isCollapsed: false };
+    }
 
     const isCollapsed = range.collapsed;
     focusEditorWithSelection(descriptionEditor, range);
-    document.execCommand('fontSize', false, '7');
 
-    if (!isCollapsed) {
+    if (isCollapsed) {
+        if (!descriptionEditor.textContent?.trim()) {
+            setEditorElementFontSize(descriptionEditor, fontSize);
+            return { applied: true, isCollapsed };
+        }
+
+        document.execCommand('fontSize', false, '7');
         replaceEditorFontTags(descriptionEditor, fontSize);
+        return { applied: true, isCollapsed };
     }
 
+    const selectedContent = range.extractContents();
+    if (!selectedContent.textContent?.trim()) {
+        range.insertNode(selectedContent);
+        return { applied: false, isCollapsed };
+    }
+
+    const span = document.createElement('span');
+    span.appendChild(selectedContent);
+    setEditorFontSizeDeep(span, fontSize);
+    range.insertNode(span);
+
+    const selection = window.getSelection();
+    const styledRange = document.createRange();
+    styledRange.selectNodeContents(span);
+    selection?.removeAllRanges();
+    selection?.addRange(styledRange);
     return { applied: true, isCollapsed };
 }
 
@@ -216,7 +272,10 @@ function applyEditorTextStyleFallback(descriptionEditor, command, range) {
     }
 
     const selectedContent = range.extractContents();
-    if (!selectedContent.textContent?.trim()) return false;
+    if (!selectedContent.textContent?.trim()) {
+        range.insertNode(selectedContent);
+        return false;
+    }
 
     styleElement.appendChild(selectedContent);
     range.insertNode(styleElement);
@@ -391,15 +450,26 @@ function bindAdProfileInteractions() {
         const selection = window.getSelection();
         const activeRange = selection?.rangeCount ? selection.getRangeAt(0) : null;
         const fallbackRange = activeRange?.cloneRange();
-        const shouldFallbackToManualStyle = EDITOR_TEXT_STYLE_COMMANDS.includes(command)
+        const isTextStyleCommand = EDITOR_TEXT_STYLE_COMMANDS.includes(command);
+        const isManualTextStyleApply = isTextStyleCommand
             && fallbackRange
             && !fallbackRange.collapsed
-            && !document.queryCommandState(command);
-        const htmlBeforeCommand = shouldFallbackToManualStyle ? descriptionEditor.innerHTML : '';
-        const didApplyCommand = document.execCommand(command, false, value);
+            && !document.queryCommandState(command)
+            && !getEditorTextStyleStateFromSelection(descriptionEditor, command);
 
-        if (shouldFallbackToManualStyle && (!didApplyCommand || descriptionEditor.innerHTML === htmlBeforeCommand)) {
+        if (isManualTextStyleApply) {
             applyEditorTextStyleFallback(descriptionEditor, command, fallbackRange);
+        } else {
+            const htmlBeforeCommand = isTextStyleCommand && fallbackRange && !fallbackRange.collapsed ? descriptionEditor.innerHTML : '';
+            const didApplyCommand = document.execCommand(command, false, value);
+
+            if (isTextStyleCommand
+                && fallbackRange
+                && !fallbackRange.collapsed
+                && (!didApplyCommand || descriptionEditor.innerHTML === htmlBeforeCommand)
+            ) {
+                applyEditorTextStyleFallback(descriptionEditor, command, fallbackRange);
+            }
         }
 
         saveEditorSelection();
@@ -450,7 +520,8 @@ function bindAdProfileInteractions() {
 
         EDITOR_STATE_COMMANDS.forEach((command) => {
             const button = editorToolbar.querySelector(`[data-editor-command="${command}"]`);
-            const isActive = document.queryCommandState(command);
+            const isActive = document.queryCommandState(command)
+                || getEditorTextStyleStateFromSelection(descriptionEditor, command);
 
             button?.classList.toggle('is-active', isActive);
             button?.setAttribute('aria-pressed', isActive ? 'true' : 'false');
@@ -525,7 +596,8 @@ function bindAdProfileInteractions() {
         const command = button.dataset.editorCommand;
         applyEditorCommand(command, button.dataset.editorValue || null);
         if (EDITOR_TEXT_STYLE_COMMANDS.includes(command)) {
-            const isPressed = document.queryCommandState(command);
+            const isPressed = document.queryCommandState(command)
+                || getEditorTextStyleStateFromSelection(descriptionEditor, command);
             button.classList.toggle('is-active', isPressed);
             button.setAttribute('aria-pressed', isPressed ? 'true' : 'false');
         }
