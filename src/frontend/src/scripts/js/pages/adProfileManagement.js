@@ -33,6 +33,7 @@ const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const EDITOR_TEXT_STYLE_COMMANDS = ['bold', 'italic', 'underline'];
 const EDITOR_STATE_COMMANDS = [...EDITOR_TEXT_STYLE_COMMANDS, 'insertUnorderedList'];
 const EDITOR_DEFAULT_FONT_SIZE = 15;
+const EDITOR_FONT_SIZE_STYLE_PROPERTY = 'font-size';
 const EDITOR_FONT_SIZE_OPTIONS = Array.from({ length: 15 }, (_, index) => 11 + (index * 2));
 const EDITOR_COLOR_PALETTE = [
     '#212529', '#495057', '#868e96', '#ced4da', '#ffffff', '#fff3bf', '#ffd8a8', '#ffc9c9',
@@ -68,6 +69,11 @@ function normalizeEditorFontSize(fontSize) {
         const closestDistance = Math.abs(closestSize - fallbackFontSize);
         return currentDistance < closestDistance ? optionSize : closestSize;
     }, EDITOR_DEFAULT_FONT_SIZE);
+}
+
+function setEditorElementFontSize(element, fontSize) {
+    if (!element?.style) return;
+    element.style.setProperty(EDITOR_FONT_SIZE_STYLE_PROPERTY, `${fontSize}px`, 'important');
 }
 
 function getEditorFontSizeFromSelection(descriptionEditor) {
@@ -127,7 +133,7 @@ function replaceEditorFontTags(descriptionEditor, fontSize) {
     runWithPreservedEditorSelection(descriptionEditor, () => {
         descriptionEditor.querySelectorAll('font[size="7"]').forEach((fontElement) => {
             const span = document.createElement('span');
-            span.style.fontSize = `${fontSize}px`;
+            setEditorElementFontSize(span, fontSize);
             span.innerHTML = fontElement.innerHTML;
             fontElement.replaceWith(span);
         });
@@ -157,7 +163,7 @@ function applyEditorFontSizeToRange(descriptionEditor, range, fontSize) {
     }
 
     const fontSizeSpan = document.createElement('span');
-    fontSizeSpan.style.fontSize = `${fontSize}px`;
+    setEditorElementFontSize(fontSizeSpan, fontSize);
     fontSizeSpan.appendChild(range.extractContents());
     range.insertNode(fontSizeSpan);
 
