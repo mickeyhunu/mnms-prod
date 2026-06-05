@@ -197,7 +197,7 @@ const pageRegistry = {
                                     <div class="ad-profile-editor-popover ad-profile-editor-palette" data-editor-popover-panel="font-color" role="menu" aria-label="글자색 팔레트"></div>
                                 </div>
                                 <div class="ad-profile-editor-popover-wrap">
-                                    <button type="button" class="ad-profile-editor-btn ad-profile-editor-swatch-btn ad-profile-editor-bg-swatch-btn" data-editor-popover="font-bg-color" title="글자 배경색 변경" aria-expanded="false">T</button>
+                                    <button type="button" class="ad-profile-editor-btn ad-profile-editor-swatch-btn ad-profile-editor-bg-swatch-btn" data-editor-popover="font-bg-color" title="글자 배경색 변경" aria-expanded="false"><span class="ad-profile-editor-bg-swatch-letter">T</span></button>
                                     <div class="ad-profile-editor-popover ad-profile-editor-palette" data-editor-popover-panel="font-bg-color" role="menu" aria-label="글자 배경색 팔레트"></div>
                                 </div>
                             </div>

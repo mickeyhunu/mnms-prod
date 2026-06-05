@@ -3559,7 +3559,20 @@ body[data-page="admin"] {
 }
 
 .ad-profile-editor-bg-swatch-btn {
-    background-image: linear-gradient(to top, rgba(255, 235, 59, 0.55) 42%, transparent 42%);
+    text-decoration: none;
+}
+
+.ad-profile-editor-bg-swatch-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    min-height: 18px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    background-color: var(--editor-bg-swatch-color, rgba(255, 235, 59, 0.65));
+    box-shadow: inset 0 0 0 1px rgba(33, 37, 41, 0.08);
+    line-height: 1;
 }
 
 .ad-profile-editor-align-toggle span,
