@@ -687,9 +687,12 @@ const pageRegistry = {
 
                     <div class="form-group">
                         <label for="content" class="form-label">내용</label>
-                        <textarea id="content" name="content" class="form-control" placeholder="내용을 입력하세요" rows="15" required></textarea>
+                        <textarea id="content" name="content" class="form-control" placeholder="내용을 입력하세요" rows="15" maxlength="1000" required></textarea>
+                        <div class="text-editor-meta">
+                            <small class="text-muted">내용은 6자 이상 1000자 이하로 입력해주세요</small>
+                            <small class="text-muted" id="content-count" aria-live="polite">0/1000</small>
+                        </div>
                         <div class="error-message hidden" id="content-error"></div>
-                        <small class="text-muted">내용은 6자 이상 1000자 이하로 입력해주세요</small>
                     </div>
 
 
@@ -701,7 +704,7 @@ const pageRegistry = {
                         <div id="image-preview" class="image-preview mt-2"></div>
                     </div>
 
-                    <div class="form-actions form-actions-inline" style="display: flex; style="justify-content: flex-end; gap: 8px;">
+                    <div class="form-actions form-actions-inline" style="display: flex; justify-content: flex-end; gap: 8px;">
                         <button type="submit" class="btn btn-primary" id="submit-btn">등록</button>
                         <a href="index.html" class="btn btn-secondary">취소</a>
                     </div>
@@ -714,10 +717,11 @@ const pageRegistry = {
     <script src="scripts/js/utils/helpers.js"></script>
     <script src="scripts/js/utils/auth.js"></script>
     <script src="scripts/js/api/apiClient.js"></script>
+    <script src="scripts/js/components/textEditor.js"></script>
     <script src="scripts/js/pages/createPost.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/libs/koProfanityFilter.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/createPost.js", "scripts/js/components/footerNav.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/libs/koProfanityFilter.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/components/textEditor.js", "scripts/js/pages/createPost.js", "scripts/js/components/footerNav.js"]
   },
   'support-create': {
     template: `<header class="header">
