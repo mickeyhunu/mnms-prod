@@ -30,8 +30,8 @@ const adProfileState = {
 };
 const DEFAULT_AD_IMAGE_URL = 'https://image.bubblealba.com/assets/advertiser/pending.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
-const EDITOR_TEXT_STYLE_COMMANDS = ['bold', 'italic', 'underline'];
-const EDITOR_STATE_COMMANDS = [...EDITOR_TEXT_STYLE_COMMANDS, 'insertUnorderedList'];
+const EDITOR_TEXT_STYLE_COMMANDS = ['bold', 'italic', 'underline', 'strikeThrough'];
+const EDITOR_STATE_COMMANDS = [...EDITOR_TEXT_STYLE_COMMANDS];
 const EDITOR_DEFAULT_FONT_SIZE = 15;
 const EDITOR_FONT_SIZE_STYLE_PROPERTY = 'font-size';
 const EDITOR_FONT_SIZE_OPTIONS = Array.from({ length: 15 }, (_, index) => 11 + (index * 2));
