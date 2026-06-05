@@ -331,35 +331,10 @@ function bindAdProfileInteractions() {
         });
     };
 
-    const getEditorTextStyleButtonState = (styleCommand) => {
-        const button = editorToolbar?.querySelector(`[data-editor-command="${styleCommand}"]`);
-        return button?.getAttribute('aria-pressed') === 'true'
-            || button?.classList.contains('is-active')
-            || document.queryCommandState(styleCommand);
-    };
-
     const applyEditorCommand = (command, value = null) => {
         if (!descriptionEditor) return;
         restoreEditorSelection();
-
-        const isTextStyleCommand = EDITOR_TEXT_STYLE_COMMANDS.includes(command);
-        const desiredTextStyleStates = isTextStyleCommand
-            ? Object.fromEntries(EDITOR_TEXT_STYLE_COMMANDS.map((styleCommand) => {
-                const isActive = getEditorTextStyleButtonState(styleCommand);
-                return [styleCommand, styleCommand === command ? !isActive : isActive];
-            }))
-            : null;
-
         document.execCommand(command, false, value);
-
-        if (desiredTextStyleStates) {
-            EDITOR_TEXT_STYLE_COMMANDS.forEach((styleCommand) => {
-                if (document.queryCommandState(styleCommand) !== desiredTextStyleStates[styleCommand]) {
-                    document.execCommand(styleCommand, false, null);
-                }
-            });
-        }
-
         saveEditorSelection();
         syncPreview();
         updateActiveEditorButtons();
@@ -406,12 +381,12 @@ function bindAdProfileInteractions() {
         pendingEditorFontSize = currentFontSize;
         if (editorFontSizeSelect) editorFontSizeSelect.value = String(currentFontSize);
 
-        editorToolbar.querySelectorAll('[data-editor-command]').forEach((button) => {
-            const command = button.dataset.editorCommand;
-            const isActive = EDITOR_STATE_COMMANDS.includes(command) && document.queryCommandState(command);
+        EDITOR_STATE_COMMANDS.forEach((command) => {
+            const button = editorToolbar.querySelector(`[data-editor-command="${command}"]`);
+            const isActive = document.queryCommandState(command);
 
-            button.classList.toggle('is-active', isActive);
-            button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            button?.classList.toggle('is-active', isActive);
+            button?.setAttribute('aria-pressed', isActive ? 'true' : 'false');
         });
 
         editorToolbar.querySelector('[data-editor-popover="font-color"]')?.style.setProperty('text-decoration-color', currentFontColor || '#212529');
