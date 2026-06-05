@@ -381,10 +381,11 @@ function bindAdProfileInteractions() {
     const managerContactInput = document.getElementById('ad-profile-manager-contact');
     const descriptionInput = document.getElementById('ad-profile-description');
     const descriptionEditor = document.getElementById('ad-profile-description-editor');
-    const editorToolbar = document.querySelector('.ad-profile-editor-toolbar');
-    const editorFontSizeSelect = document.getElementById('ad-profile-editor-font-size');
-    const editorImageButton = document.getElementById('ad-profile-editor-image-btn');
-    const editorImageInput = document.getElementById('ad-profile-editor-image-input');
+    const editorRoot = descriptionEditor?.closest('.ad-profile-editor');
+    const editorToolbar = editorRoot?.querySelector(':scope > .ad-profile-editor-toolbar') || document.querySelector('.ad-profile-editor-toolbar');
+    const editorFontSizeSelect = editorRoot?.querySelector('#ad-profile-editor-font-size') || document.getElementById('ad-profile-editor-font-size');
+    const editorImageButton = editorRoot?.querySelector('#ad-profile-editor-image-btn') || document.getElementById('ad-profile-editor-image-btn');
+    const editorImageInput = editorRoot?.querySelector('#ad-profile-editor-image-input') || document.getElementById('ad-profile-editor-image-input');
     let lastEditorRange = null;
     let pendingEditorFontSize = EDITOR_DEFAULT_FONT_SIZE;
 
@@ -703,6 +704,59 @@ function showSaveMessage(message) {
     alert(message);
 }
 
+function parseAdProfileDescriptionHtml(descriptionHtml = '') {
+    const parser = new DOMParser();
+    const documentFragment = parser.parseFromString(String(descriptionHtml || ''), 'text/html');
+    documentFragment.body?.querySelectorAll([
+        '.ad-profile-editor-toolbar',
+        '.ad-profile-editor-popover',
+        '[data-editor-command]',
+        '[data-editor-popover]',
+        '[data-editor-popover-panel]',
+        '[data-editor-palette-color]',
+        '#ad-profile-editor-font-size',
+        '#ad-profile-editor-image-btn',
+        '#ad-profile-editor-image-input'
+    ].join(',')).forEach((element) => element.remove());
+    return documentFragment;
+}
+
+function sanitizeAdProfileDescriptionHtml(descriptionHtml = '') {
+    return parseAdProfileDescriptionHtml(descriptionHtml).body?.innerHTML?.trim() || '';
+}
+
+function getAdProfileDescriptionHtml() {
+    const editor = adProfileState.descriptionEditor;
+    const descriptionInput = document.getElementById('ad-profile-description');
+    if (editor && typeof editor.sanitize === 'function') editor.sanitize();
+    if (editor && typeof editor.getHTML === 'function') {
+        const html = sanitizeAdProfileDescriptionHtml(editor.getHTML());
+        if (descriptionInput) descriptionInput.value = html;
+        return html;
+    }
+
+    const descriptionEditor = document.getElementById('ad-profile-description-editor');
+    const html = sanitizeAdProfileDescriptionHtml(descriptionEditor?.innerHTML || descriptionInput?.value || '');
+    if (descriptionEditor && descriptionEditor.innerHTML.trim() !== html) descriptionEditor.innerHTML = html;
+    if (descriptionInput) descriptionInput.value = html;
+    return html;
+}
+
+function getAdProfileDescriptionText(descriptionHtml = getAdProfileDescriptionHtml()) {
+    const documentFragment = parseAdProfileDescriptionHtml(descriptionHtml);
+    return String(documentFragment.body?.textContent || '')
+        .replace(/\u00a0/g, ' ')
+        .trim();
+}
+
+function hasMeaningfulAdProfileDescription(descriptionHtml = getAdProfileDescriptionHtml()) {
+    const documentFragment = parseAdProfileDescriptionHtml(descriptionHtml);
+    const plainTextDescription = String(documentFragment.body?.textContent || '')
+        .replace(/\u00a0/g, ' ')
+        .trim();
+    return Boolean(plainTextDescription || documentFragment.body?.querySelector('img'));
+}
+
 function collectDraftData() {
     return {
         businessName: String(document.getElementById('ad-profile-name')?.value || '').trim(),
@@ -714,7 +768,7 @@ function collectDraftData() {
         category: String(document.getElementById('ad-profile-category')?.value || '').trim(),
         openHour: String(document.getElementById('ad-profile-open-hour')?.value || '').trim(),
         closeHour: String(document.getElementById('ad-profile-close-hour')?.value || '').trim(),
-        description: String(document.getElementById('ad-profile-description')?.value || '').trim()
+        description: getAdProfileDescriptionHtml()
     };
 }
 
@@ -747,10 +801,8 @@ function stripEmptyValues(payload) {
 function hasAnyAdProfileValue(data) {
     if (!data || typeof data !== 'object') return false;
 
-    const plainTextDescription = String(data.description || '')
-        .replace(/<[^>]*>/g, ' ')
-        .replace(/&nbsp;/gi, ' ')
-        .trim();
+    const plainTextDescription = getAdProfileDescriptionText(data.description || '');
+    const hasDescriptionImage = hasMeaningfulAdProfileDescription(data.description || '') && !plainTextDescription;
 
     const valuesToCheck = [
         data.businessName,
@@ -761,7 +813,8 @@ function hasAnyAdProfileValue(data) {
         data.category,
         data.openHour,
         data.closeHour,
-        plainTextDescription
+        plainTextDescription,
+        hasDescriptionImage ? 'image' : ''
     ];
 
     return valuesToCheck.some((value) => String(value || '').trim());
@@ -792,7 +845,7 @@ function getRequiredFieldError({ storeName, managerName, managerContact, region,
     if (!openHour) return '영업 시작 시간을 선택해주세요.';
     if (!closeHour) return '영업 종료 시간을 선택해주세요.';
     if (!title) return '제목을 입력해주세요.';
-    if (!description) return '상세정보 내용을 입력해주세요.';
+    if (!hasMeaningfulAdProfileDescription(description)) return '상세정보 내용을 입력해주세요.';
     return '';
 }
 
@@ -816,7 +869,7 @@ async function saveAdProfile({ forceDraft = false } = {}) {
     const businessName = storeName;
     const managerName = String(document.getElementById('ad-profile-manager')?.value || '').trim();
     const managerContact = String(document.getElementById('ad-profile-manager-contact')?.value || '').trim();
-    const description = String(document.getElementById('ad-profile-description')?.value || '').trim();
+    const description = getAdProfileDescriptionHtml();
     const saveButton = document.getElementById('ad-profile-save-btn');
     const draftButton = document.getElementById('ad-profile-draft-btn');
     const registrationStatus = forceDraft ? 'DRAFT' : 'REGISTERED';
@@ -963,11 +1016,12 @@ function applyAdProfileToForm(ad) {
     if (businessNameInput) businessNameInput.value = ad.businessName || '';
     if (managerNameInput) managerNameInput.value = ad.managerName || '';
     if (managerContactInput) managerContactInput.value = formatPhoneNumber(ad.managerContact || '');
+    const sanitizedDescription = sanitizeAdProfileDescriptionHtml(ad.description || '');
     if (adProfileState.descriptionEditor) {
-        adProfileState.descriptionEditor.setValue(ad.description || '');
+        adProfileState.descriptionEditor.setValue(sanitizedDescription);
     } else {
-        if (descriptionInput) descriptionInput.value = ad.description || '';
-        if (descriptionEditor) descriptionEditor.innerHTML = ad.description || '';
+        if (descriptionInput) descriptionInput.value = sanitizedDescription;
+        if (descriptionEditor) descriptionEditor.innerHTML = sanitizedDescription;
     }
     adProfileState.uploadedImageUrl = ad.imageUrl || DEFAULT_AD_IMAGE_URL;
     adProfileState.syncPreview?.();
