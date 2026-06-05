@@ -83,7 +83,7 @@ function getEditorFontSizeFromSelection(descriptionEditor) {
         if (inlineFontSize) return normalizeEditorFontSize(inlineFontSize);
         element = element.parentElement;
     }
-    return EDITOR_DEFAULT_FONT_SIZE;
+    return null;
 }
 
 function runWithPreservedEditorSelection(descriptionEditor, callback) {
@@ -164,12 +164,17 @@ function focusEditorWithSelection(descriptionEditor, range) {
 }
 
 function applyEditorFontSizeToRange(descriptionEditor, range, fontSize) {
-    if (!descriptionEditor || !range) return false;
+    if (!descriptionEditor || !range) return { applied: false, isCollapsed: false };
 
+    const isCollapsed = range.collapsed;
     focusEditorWithSelection(descriptionEditor, range);
     document.execCommand('fontSize', false, '7');
-    replaceEditorFontTags(descriptionEditor, fontSize);
-    return true;
+
+    if (!isCollapsed) {
+        replaceEditorFontTags(descriptionEditor, fontSize);
+    }
+
+    return { applied: true, isCollapsed };
 }
 
 function resolveEditorAlignmentCommand() {
@@ -367,10 +372,13 @@ function bindAdProfileInteractions() {
 
         const selection = window.getSelection();
         const activeRange = selection?.rangeCount ? selection.getRangeAt(0) : lastEditorRange;
+        let fontSizeApplyResult = { applied: false, isCollapsed: false };
         if (isEditorRange(descriptionEditor, activeRange)) {
-            applyEditorFontSizeToRange(descriptionEditor, activeRange, normalizedFontSize);
+            fontSizeApplyResult = applyEditorFontSizeToRange(descriptionEditor, activeRange, normalizedFontSize);
         }
-        replaceEditorFontTags(descriptionEditor, normalizedFontSize);
+        if (!fontSizeApplyResult.isCollapsed) {
+            replaceEditorFontTags(descriptionEditor, normalizedFontSize);
+        }
 
         saveEditorSelection();
         syncPreview();
@@ -388,7 +396,9 @@ function bindAdProfileInteractions() {
 
         const currentFontColor = normalizeEditorColor(document.queryCommandValue('foreColor'));
         const currentBackColor = normalizeEditorColor(document.queryCommandValue('backColor') || document.queryCommandValue('hiliteColor'));
-        const currentFontSize = getEditorFontSizeFromSelection(descriptionEditor);
+        const selectedFontSize = getEditorFontSizeFromSelection(descriptionEditor);
+        const isNativeFontSizeStateActive = String(document.queryCommandValue('fontSize')) === '7';
+        const currentFontSize = selectedFontSize || (isNativeFontSizeStateActive ? pendingEditorFontSize : EDITOR_DEFAULT_FONT_SIZE);
         pendingEditorFontSize = currentFontSize;
         if (editorFontSizeSelect) editorFontSizeSelect.value = String(currentFontSize);
 
