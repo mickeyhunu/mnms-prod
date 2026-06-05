@@ -209,6 +209,13 @@ function sanitizeHTML(str) {
    return temp.innerHTML;
 }
 
+
+function stripHTMLToText(value) {
+   const temp = document.createElement('div');
+   temp.innerHTML = String(value || '');
+   return temp.textContent || temp.innerText || '';
+}
+
 function splitTrailingUrlPunctuation(rawUrl) {
    let url = String(rawUrl || '');
    let trailingText = '';
