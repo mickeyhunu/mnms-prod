@@ -31,6 +31,7 @@ const adProfileState = {
 const DEFAULT_AD_IMAGE_URL = 'https://image.bubblealba.com/assets/advertiser/pending.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const EDITOR_TEXT_STYLE_COMMANDS = ['bold', 'italic', 'underline', 'strikeThrough'];
+const EDITOR_ALIGNMENT_COMMANDS = ['justifyLeft', 'justifyCenter', 'justifyRight'];
 const EDITOR_STATE_COMMANDS = [...EDITOR_TEXT_STYLE_COMMANDS];
 const EDITOR_DEFAULT_FONT_SIZE = 15;
 const EDITOR_FONT_SIZE_STYLE_PROPERTY = 'font-size';
@@ -355,7 +356,7 @@ function bindAdProfileInteractions() {
         if (!fontSizeApplyResult.isCollapsed) {
             replaceEditorFontTags(descriptionEditor, normalizedFontSize);
         }
-        if (!fontSizeApplyResult.applied || fontSizeApplyResult.isCollapsed) {
+        if (!fontSizeApplyResult.applied && !descriptionEditor.textContent?.trim()) {
             setEditorElementFontSize(descriptionEditor, normalizedFontSize);
         }
 
@@ -393,7 +394,7 @@ function bindAdProfileInteractions() {
         editorToolbar.querySelector('[data-editor-popover="font-bg-color"]')?.style.setProperty('--editor-bg-swatch-color', currentBackColor || 'rgba(255, 235, 59, 0.65)');
         const currentAlignmentCommand = resolveEditorAlignmentCommand();
         editorToolbar.querySelector('[data-editor-popover="align"]')?.setAttribute('data-editor-align', currentAlignmentCommand);
-        ['justifyLeft', 'justifyCenter', 'justifyRight'].forEach((command) => {
+        EDITOR_ALIGNMENT_COMMANDS.forEach((command) => {
             const option = editorToolbar.querySelector(`[data-editor-command="${command}"]`);
             option?.setAttribute('aria-checked', command === currentAlignmentCommand ? 'true' : 'false');
         });
@@ -455,7 +456,13 @@ function bindAdProfileInteractions() {
         if (!button || !descriptionEditor) return;
 
         event.preventDefault();
-        applyEditorCommand(button.dataset.editorCommand, button.dataset.editorValue || null);
+        const command = button.dataset.editorCommand;
+        applyEditorCommand(command, button.dataset.editorValue || null);
+        if (EDITOR_TEXT_STYLE_COMMANDS.includes(command)) {
+            const isPressed = document.queryCommandState(command);
+            button.classList.toggle('is-active', isPressed);
+            button.setAttribute('aria-pressed', isPressed ? 'true' : 'false');
+        }
         if (button.closest('[data-editor-popover-panel]')) closeEditorPopovers();
     });
 
