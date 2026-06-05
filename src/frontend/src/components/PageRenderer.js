@@ -23,7 +23,8 @@ const LINK_MAP = {
 const GLOBAL_STYLES = [
   'styles/common.css',
   'styles/layout.css',
-  'styles/components.css'
+  'styles/components.css',
+  'styles/responsive.css'
 ];
 
 const GLOBAL_SCRIPTS = [
