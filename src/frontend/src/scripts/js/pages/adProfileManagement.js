@@ -26,7 +26,8 @@ const adProfileState = {
     uploadedImageUrl: '',
     me: null,
     isSaving: false,
-    syncPreview: null
+    syncPreview: null,
+    descriptionEditor: null
 };
 const DEFAULT_AD_IMAGE_URL = 'https://image.bubblealba.com/assets/advertiser/pending.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
@@ -389,9 +390,29 @@ function bindAdProfileInteractions() {
     createHourOptions(openHourSelect);
     createHourOptions(closeHourSelect);
     updateSelectOptions(regionSelect, Object.keys(REGION_DISTRICT_MAP));
-    buildEditorFontSizeOptions(editorFontSizeSelect);
-    editorToolbar?.querySelectorAll('[data-editor-popover-panel="font-color"], [data-editor-popover-panel="font-bg-color"]')
-        .forEach(buildEditorPalette);
+    const sharedDescriptionEditor = window.TextEditor?.create({
+        editor: descriptionEditor,
+        input: descriptionInput,
+        toolbar: editorToolbar,
+        fontSizeSelect: editorFontSizeSelect,
+        imageButton: editorImageButton,
+        imageInput: editorImageInput,
+        maxLength: 1000,
+        uploadImage: uploadAdImage,
+        onChange: () => {
+            if (!adProfileState.syncPreview) return;
+            adProfileState.syncPreview();
+            saveDraftData();
+        },
+        onError: (error) => showSaveMessage(error.message || '에디터 이미지 첨부에 실패했습니다.')
+    });
+    adProfileState.descriptionEditor = sharedDescriptionEditor;
+
+    if (!sharedDescriptionEditor) {
+        buildEditorFontSizeOptions(editorFontSizeSelect);
+        editorToolbar?.querySelectorAll('[data-editor-popover-panel="font-color"], [data-editor-popover-panel="font-bg-color"]')
+            .forEach(buildEditorPalette);
+    }
 
     const syncPreview = () => {
         const storeName = businessNameInput?.value?.trim() || '업소명';
@@ -415,15 +436,16 @@ function bindAdProfileInteractions() {
         if (previewDetail) previewDetail.textContent = `${region} ${district} · ${category} · ${formattedTime}`;
     };
 
-    const saveEditorSelection = () => {
-        if (!descriptionEditor) return;
-        const selection = window.getSelection();
-        if (!selection?.rangeCount) return;
-        const range = selection.getRangeAt(0);
-        if (isEditorRange(descriptionEditor, range)) {
-            lastEditorRange = range.cloneRange();
-        }
-    };
+    if (!sharedDescriptionEditor) {
+        const saveEditorSelection = () => {
+            if (!descriptionEditor) return;
+            const selection = window.getSelection();
+            if (!selection?.rangeCount) return;
+            const range = selection.getRangeAt(0);
+            if (isEditorRange(descriptionEditor, range)) {
+                lastEditorRange = range.cloneRange();
+            }
+        };
 
     const restoreEditorSelection = () => {
         if (!descriptionEditor) return false;
@@ -608,31 +630,32 @@ function bindAdProfileInteractions() {
     editorFontSizeSelect?.addEventListener('focus', saveEditorSelection);
     editorFontSizeSelect?.addEventListener('change', () => applyEditorFontSize(editorFontSizeSelect.value));
 
-    document.addEventListener('click', (event) => {
-        if (!editorToolbar?.contains(event.target)) closeEditorPopovers();
-    });
+        document.addEventListener('click', (event) => {
+            if (!editorToolbar?.contains(event.target)) closeEditorPopovers();
+        });
+
+        editorImageButton?.addEventListener('click', () => editorImageInput?.click());
+        editorImageInput?.addEventListener('change', async () => {
+            const file = editorImageInput.files?.[0];
+            if (!file || !file.type.startsWith('image/')) return;
+
+            try {
+                const imageUrl = await uploadAdImage(file);
+                if (!descriptionEditor) return;
+                focusEditorWithSelection(descriptionEditor, lastEditorRange);
+                document.execCommand('insertImage', false, imageUrl);
+                syncPreview();
+            } catch (error) {
+                showSaveMessage(error.message || '에디터 이미지 첨부에 실패했습니다.');
+            } finally {
+                editorImageInput.value = '';
+            }
+        });
+    }
 
     managerContactInput?.addEventListener('input', () => {
         managerContactInput.value = formatPhoneNumber(managerContactInput.value);
         syncPreview();
-    });
-
-    editorImageButton?.addEventListener('click', () => editorImageInput?.click());
-    editorImageInput?.addEventListener('change', async () => {
-        const file = editorImageInput.files?.[0];
-        if (!file || !file.type.startsWith('image/')) return;
-
-        try {
-            const imageUrl = await uploadAdImage(file);
-            if (!descriptionEditor) return;
-            focusEditorWithSelection(descriptionEditor, lastEditorRange);
-            document.execCommand('insertImage', false, imageUrl);
-            syncPreview();
-        } catch (error) {
-            showSaveMessage(error.message || '에디터 이미지 첨부에 실패했습니다.');
-        } finally {
-            editorImageInput.value = '';
-        }
     });
 
     regionSelect?.addEventListener('change', () => {
@@ -650,8 +673,10 @@ function bindAdProfileInteractions() {
             element?.addEventListener('change', saveDraftData);
         });
 
-    descriptionEditor?.addEventListener('input', saveDraftData);
-    descriptionEditor?.addEventListener('blur', saveDraftData);
+    if (!sharedDescriptionEditor) {
+        descriptionEditor?.addEventListener('input', saveDraftData);
+        descriptionEditor?.addEventListener('blur', saveDraftData);
+    }
 
     adProfileState.syncPreview = syncPreview;
     syncPreview();
@@ -928,8 +953,12 @@ function applyAdProfileToForm(ad) {
     if (businessNameInput) businessNameInput.value = ad.businessName || '';
     if (managerNameInput) managerNameInput.value = ad.managerName || '';
     if (managerContactInput) managerContactInput.value = formatPhoneNumber(ad.managerContact || '');
-    if (descriptionInput) descriptionInput.value = ad.description || '';
-    if (descriptionEditor) descriptionEditor.innerHTML = ad.description || '';
+    if (adProfileState.descriptionEditor) {
+        adProfileState.descriptionEditor.setValue(ad.description || '');
+    } else {
+        if (descriptionInput) descriptionInput.value = ad.description || '';
+        if (descriptionEditor) descriptionEditor.innerHTML = ad.description || '';
+    }
     adProfileState.uploadedImageUrl = ad.imageUrl || DEFAULT_AD_IMAGE_URL;
     adProfileState.syncPreview?.();
     updateAdProfileActionButtons();

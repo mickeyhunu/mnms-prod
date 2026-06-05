@@ -250,7 +250,7 @@ const pageRegistry = {
         </div>
     </main>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/adProfileManagement.js", "scripts/js/components/footerNav.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/textEditor.js", "scripts/js/pages/adProfileManagement.js", "scripts/js/components/footerNav.js"]
   },
   'business-apply': {
     template: `<header class="header">
