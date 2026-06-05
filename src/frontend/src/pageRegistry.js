@@ -183,6 +183,7 @@ const pageRegistry = {
                                 <button type="button" class="ad-profile-editor-btn" data-editor-command="bold" title="굵게" aria-pressed="false"><strong>B</strong></button>
                                 <button type="button" class="ad-profile-editor-btn" data-editor-command="italic" title="기울임" aria-pressed="false"><em>I</em></button>
                                 <button type="button" class="ad-profile-editor-btn" data-editor-command="underline" title="밑줄" aria-pressed="false"><span style="text-decoration: underline;">U</span></button>
+                                <button type="button" class="ad-profile-editor-btn" data-editor-command="strikeThrough" title="취소선" aria-pressed="false"><span style="text-decoration: line-through;">S</span></button>
                             </div>
                             <div class="ad-profile-editor-group" aria-label="글씨 크기">
                                 <label class="ad-profile-editor-size-control" title="글씨 크기">
@@ -202,7 +203,6 @@ const pageRegistry = {
                                 </div>
                             </div>
                             <div class="ad-profile-editor-group" aria-label="문단 정렬 및 첨부">
-                                <button type="button" class="ad-profile-editor-btn" data-editor-command="insertUnorderedList" title="목록" aria-pressed="false">• 목록</button>
                                 <div class="ad-profile-editor-popover-wrap">
                                     <button type="button" class="ad-profile-editor-btn ad-profile-editor-align-toggle" data-editor-popover="align" data-editor-align="justifyLeft" title="문단 정렬" aria-expanded="false" aria-label="문단 정렬">
                                         <span aria-hidden="true"></span>
