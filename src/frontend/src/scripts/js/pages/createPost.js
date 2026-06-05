@@ -332,9 +332,11 @@ async function setupBusinessPromotionTitle() {
 
 
 function setupTextEditor() {
-    const contentInput = document.getElementById('content');
     contentEditor = window.TextEditor?.create({
-        textarea: contentInput,
+        editor: '#post-content-editor',
+        input: '#content',
+        toolbar: '#post-content-editor-toolbar',
+        fontSizeSelect: '#post-content-editor-font-size',
         counter: '#content-count',
         minLength: 6,
         maxLength: 1000,
@@ -483,7 +485,7 @@ function validateForm() {
         title.value.trim().length > 0 &&
         (contentEditor ? contentEditor.isValid() : content.value.trim().length >= 6) &&
         title.value.length <= 255 &&
-        content.value.length <= 1000;
+        (contentEditor ? true : content.value.length <= 1000);
 
     submitBtn.disabled = !isValid || isSubmitting;
 }
@@ -550,7 +552,8 @@ async function handleSubmit(event) {
     const titleValue = (isBusinessUser && !isEditMode && businessPromotionFixedTitle)
         ? businessPromotionFixedTitle
         : enteredTitle;
-    const contentValue = contentEditor ? contentEditor.getTrimmedValue() : (document.getElementById('content')?.value.trim() || '');
+    const contentValue = contentEditor ? contentEditor.getValue() : (document.getElementById('content')?.value.trim() || '');
+    const contentTextValue = contentEditor ? contentEditor.getTrimmedText() : contentValue;
     const submitBtn = document.getElementById('submit-btn');
     const boardTypeSelect = document.getElementById('board-type');
     const boardType = isBusinessUser
@@ -565,12 +568,12 @@ async function handleSubmit(event) {
         return;
     }
 
-    if (!titleValue || !contentValue) {
+    if (!titleValue || !contentTextValue) {
         alert('제목과 내용을 모두 입력해주세요.');
         return;
     }
 
-    if (contentValue.length < 6) {
+    if (contentTextValue.length < 6) {
         alert('내용은 최소 6자 이상 입력해주세요.');
         return;
     }
@@ -579,7 +582,7 @@ async function handleSubmit(event) {
         return;
     }
 
-    if (!validateNoBlockedExpression(contentValue, '게시글 내용')) {
+    if (!validateNoBlockedExpression(contentTextValue, '게시글 내용')) {
         return;
     }
 
