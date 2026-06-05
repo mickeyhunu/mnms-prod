@@ -1,9 +1,5 @@
 /* 파일 역할: responsive 화면 스타일(레이아웃/컴포넌트/반응형 등)을 정의하는 스타일시트 파일. */
 @media (max-width: 768px) {
-    :root {
-        --app-header-offset: 57px;
-    }
-
     .header-container {
         padding: 8px 12px;
         flex-direction: row;
