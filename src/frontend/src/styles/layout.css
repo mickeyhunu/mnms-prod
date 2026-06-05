@@ -180,7 +180,6 @@
     margin: 0 auto;
 }
 
-body[data-page="admin"] .header-container,
 body[data-page="admin"] .main-content > .container:not(.auth-container):not(.age-notice-banner) {
     max-width: none;
 }

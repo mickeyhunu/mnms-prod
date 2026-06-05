@@ -6,20 +6,6 @@ import { adminModalTemplates } from './modals.js';
 
 export const adminTemplate = `
 <div id="admin-page-shell" class="hidden">
-<header class="header">
-        <div class="header-container">
-            <a href="index.html" class="logo">
-                <h1>미드나잇 맨즈</h1>
-            </a>
-            <nav class="nav" id="navigation">
-                <div class="nav-user">
-                    <span class="user-nickname" id="user-nickname">관리자</span>
-                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
-                </div>
-            </nav>
-        </div>
-    </header>
-
     <main class="main-content">
         <div class="container">
             <header class="community-section-header" style="padding: 12px;">
