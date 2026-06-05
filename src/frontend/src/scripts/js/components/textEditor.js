@@ -445,10 +445,6 @@
                 replaceFontTags(editor, fontSize);
             }
 
-            if (result.isCollapsed) {
-                setElementFontSize(editor, fontSize);
-            }
-
             saveSelection();
             emitChange();
             updateActiveButtons();
@@ -536,7 +532,9 @@
                 if (!imageUrl) return;
                 focusWithSelection(editor, lastRange);
                 document.execCommand('insertImage', false, imageUrl);
+                saveSelection();
                 emitChange();
+                updateActiveButtons();
             } catch (error) {
                 if (onError) onError(error);
             } finally {
