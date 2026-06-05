@@ -35,6 +35,7 @@ const EDITOR_TEXT_STYLE_COMMANDS = ['bold', 'italic', 'underline', 'strikeThroug
 const EDITOR_ALIGNMENT_COMMANDS = ['justifyLeft', 'justifyCenter', 'justifyRight'];
 const EDITOR_STATE_COMMANDS = [...EDITOR_TEXT_STYLE_COMMANDS];
 const EDITOR_DEFAULT_FONT_SIZE = 15;
+const EDITOR_DEFAULT_BACKGROUND_COLOR = '#ffffff';
 const EDITOR_FONT_SIZE_STYLE_PROPERTY = 'font-size';
 const EDITOR_FONT_SIZE_OPTIONS = Array.from({ length: 15 }, (_, index) => 11 + (index * 2));
 const EDITOR_COLOR_PALETTE = [
@@ -48,10 +49,13 @@ const EDITOR_COLOR_PALETTE = [
 
 function normalizeEditorColor(value) {
     const color = String(value || '').trim().toLowerCase();
-    const rgbMatch = color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    const rgbMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/);
     if (rgbMatch) {
-        return `#${rgbMatch.slice(1).map((part) => Number(part).toString(16).padStart(2, '0')).join('')}`;
+        const alpha = rgbMatch[4] === undefined ? 1 : Number.parseFloat(rgbMatch[4]);
+        if (alpha === 0) return '';
+        return `#${rgbMatch.slice(1, 4).map((part) => Number(part).toString(16).padStart(2, '0')).join('')}`;
     }
+    if (color === 'transparent') return '';
     return color;
 }
 
@@ -90,13 +94,13 @@ function setEditorFontSizeDeep(element, fontSize) {
 
 function getEditorFontSizeFromSelection(descriptionEditor) {
     let element = getEditorElementFromSelection(descriptionEditor);
-    while (element) {
+    while (element && element !== descriptionEditor) {
         const inlineFontSize = element.style?.fontSize;
         if (inlineFontSize) return normalizeEditorFontSize(inlineFontSize);
-        if (element === descriptionEditor) break;
         element = element.parentElement;
     }
-    return descriptionEditor ? normalizeEditorFontSize(window.getComputedStyle(descriptionEditor).fontSize) : null;
+
+    return descriptionEditor?.style?.fontSize ? normalizeEditorFontSize(descriptionEditor.style.fontSize) : null;
 }
 function getEditorTextStyleStateFromSelection(descriptionEditor, command) {
     const selectedElement = getEditorElementFromSelection(descriptionEditor);
@@ -536,7 +540,7 @@ function bindAdProfileInteractions() {
         const currentBackColor = normalizeEditorColor(document.queryCommandValue('backColor') || document.queryCommandValue('hiliteColor'));
         const selectedFontSize = getEditorFontSizeFromSelection(descriptionEditor);
         const isNativeFontSizeStateActive = String(document.queryCommandValue('fontSize')) === '7';
-        const currentFontSize = selectedFontSize || (isNativeFontSizeStateActive ? pendingEditorFontSize : EDITOR_DEFAULT_FONT_SIZE);
+        const currentFontSize = selectedFontSize || (isNativeFontSizeStateActive ? pendingEditorFontSize : pendingEditorFontSize || EDITOR_DEFAULT_FONT_SIZE);
         pendingEditorFontSize = currentFontSize;
         if (editorFontSizeSelect) editorFontSizeSelect.value = String(currentFontSize);
 
@@ -550,7 +554,7 @@ function bindAdProfileInteractions() {
         });
 
         editorToolbar.querySelector('[data-editor-popover="font-color"]')?.style.setProperty('text-decoration-color', currentFontColor || '#212529');
-        editorToolbar.querySelector('[data-editor-popover="font-bg-color"]')?.style.setProperty('--editor-bg-swatch-color', currentBackColor || 'rgba(255, 235, 59, 0.65)');
+        editorToolbar.querySelector('[data-editor-popover="font-bg-color"]')?.style.setProperty('--editor-bg-swatch-color', currentBackColor || EDITOR_DEFAULT_BACKGROUND_COLOR);
         const currentAlignmentCommand = resolveEditorAlignmentCommand();
         editorToolbar.querySelector('[data-editor-popover="align"]')?.setAttribute('data-editor-align', currentAlignmentCommand);
         EDITOR_ALIGNMENT_COMMANDS.forEach((command) => {
@@ -583,7 +587,8 @@ function bindAdProfileInteractions() {
     }
 
     editorToolbar?.addEventListener('mousedown', (event) => {
-        if (event.target.closest('[data-editor-command], [data-editor-popover], [data-editor-palette-color]')) {
+        if (event.target.closest('[data-editor-command], [data-editor-popover], [data-editor-palette-color], #ad-profile-editor-image-btn')) {
+            saveEditorSelection();
             event.preventDefault();
         }
     });
@@ -969,6 +974,10 @@ async function initAdProfileManagementPage() {
         window.location.href = '/login';
         return;
     }
+
+    const pageRoot = document.querySelector('.ad-profile-page');
+    if (pageRoot?.dataset.adProfileInitialized === 'true') return;
+    if (pageRoot) pageRoot.dataset.adProfileInitialized = 'true';
 
     try {
         const me = await APIClient.get('/auth/me');

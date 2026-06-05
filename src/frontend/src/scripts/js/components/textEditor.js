@@ -5,6 +5,7 @@
     const TEXT_STYLE_COMMANDS = ['bold', 'italic', 'underline', 'strikeThrough'];
     const ALIGNMENT_COMMANDS = ['justifyLeft', 'justifyCenter', 'justifyRight'];
     const DEFAULT_FONT_SIZE = 15;
+    const DEFAULT_BACKGROUND_COLOR = '#ffffff';
     const FONT_SIZE_STYLE_PROPERTY = 'font-size';
     const FONT_SIZE_OPTIONS = Array.from({ length: 15 }, (_, index) => 11 + (index * 2));
     const COLOR_PALETTE = [
@@ -23,10 +24,13 @@
 
     function normalizeColor(value) {
         const color = String(value || '').trim().toLowerCase();
-        const rgbMatch = color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+        const rgbMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/);
         if (rgbMatch) {
-            return `#${rgbMatch.slice(1).map((part) => Number(part).toString(16).padStart(2, '0')).join('')}`;
+            const alpha = rgbMatch[4] === undefined ? 1 : Number.parseFloat(rgbMatch[4]);
+            if (alpha === 0) return '';
+            return `#${rgbMatch.slice(1, 4).map((part) => Number(part).toString(16).padStart(2, '0')).join('')}`;
         }
+        if (color === 'transparent') return '';
         return color;
     }
 
@@ -65,13 +69,13 @@
 
     function getFontSizeFromSelection(editor) {
         let element = getElementFromSelection(editor);
-        while (element) {
+        while (element && element !== editor) {
             const inlineFontSize = element.style?.fontSize;
             if (inlineFontSize) return normalizeFontSize(inlineFontSize);
-            if (element === editor) break;
             element = element.parentElement;
         }
-        return editor ? normalizeFontSize(window.getComputedStyle(editor).fontSize) : null;
+
+        return editor?.style?.fontSize ? normalizeFontSize(editor.style.fontSize) : null;
     }
 
     function getTextStyleStateFromSelection(editor, command) {
@@ -296,6 +300,7 @@
         let pendingFontSize = DEFAULT_FONT_SIZE;
 
         if (!editor) return null;
+        if (editor.__textEditorInstance) return editor.__textEditorInstance;
         if (input) editor.innerHTML = input.value || '';
         if (maxLength > 0 && input && (!input.maxLength || input.maxLength < 0)) input.maxLength = maxLength;
 
@@ -375,8 +380,8 @@
             if (document.activeElement !== editor && !getElementFromSelection(editor)) return;
 
             const selectedFontSize = getFontSizeFromSelection(editor);
-            const isNativeFontSizeStateActive = document.queryCommandState('fontSize');
-            const currentFontSize = selectedFontSize || (isNativeFontSizeStateActive ? pendingFontSize : DEFAULT_FONT_SIZE);
+            const isNativeFontSizeStateActive = String(document.queryCommandValue('fontSize')) === '7';
+            const currentFontSize = selectedFontSize || (isNativeFontSizeStateActive ? pendingFontSize : pendingFontSize || DEFAULT_FONT_SIZE);
             pendingFontSize = currentFontSize;
             if (fontSizeSelect) fontSizeSelect.value = String(currentFontSize);
 
@@ -391,7 +396,7 @@
             const currentFontColor = normalizeColor(document.queryCommandValue('foreColor'));
             const currentBackColor = normalizeColor(document.queryCommandValue('hiliteColor') || document.queryCommandValue('backColor'));
             toolbar.querySelector('[data-editor-popover="font-color"]')?.style.setProperty('text-decoration-color', currentFontColor || '#212529');
-            toolbar.querySelector('[data-editor-popover="font-bg-color"]')?.style.setProperty('--editor-bg-swatch-color', currentBackColor || 'rgba(255, 235, 59, 0.65)');
+            toolbar.querySelector('[data-editor-popover="font-bg-color"]')?.style.setProperty('--editor-bg-swatch-color', currentBackColor || DEFAULT_BACKGROUND_COLOR);
             const currentAlignmentCommand = resolveAlignmentCommand();
             toolbar.querySelector('[data-editor-popover="align"]')?.setAttribute('data-editor-align', currentAlignmentCommand);
             ALIGNMENT_COMMANDS.forEach((command) => {
@@ -478,7 +483,8 @@
         document.addEventListener('selectionchange', updateActiveButtons);
 
         toolbar?.addEventListener('mousedown', (event) => {
-            if (event.target.closest('[data-editor-command], [data-editor-popover], [data-editor-palette-color]')) {
+            if (event.target.closest('[data-editor-command], [data-editor-popover], [data-editor-palette-color], #ad-profile-editor-image-btn')) {
+                saveSelection();
                 event.preventDefault();
             }
         });
@@ -545,7 +551,7 @@
         emitChange();
         updateActiveButtons();
 
-        return {
+        const instance = {
             element: editor,
             input,
             getHTML,
@@ -563,6 +569,9 @@
             saveSelection,
             focus: () => focusWithSelection(editor, lastRange)
         };
+
+        editor.__textEditorInstance = instance;
+        return instance;
     }
 
     global.TextEditor = {
