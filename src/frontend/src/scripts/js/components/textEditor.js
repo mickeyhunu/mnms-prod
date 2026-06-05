@@ -186,6 +186,14 @@
         return true;
     }
 
+    function getCurrentEditorRange(editor) {
+        const selection = window.getSelection();
+        if (!selection?.rangeCount) return null;
+
+        const range = selection.getRangeAt(0);
+        return isEditorRange(editor, range) ? range.cloneRange() : null;
+    }
+
     function applyFontSizeToRange(editor, range, fontSize) {
         if (!editor || !range || !isEditorRange(editor, range)) {
             return { applied: false, isCollapsed: false };
@@ -352,14 +360,13 @@
         }
 
         function saveSelection() {
-            const selection = window.getSelection();
-            if (!selection?.rangeCount) return;
-            const range = selection.getRangeAt(0);
-            if (isEditorRange(editor, range)) lastRange = range.cloneRange();
+            const currentRange = getCurrentEditorRange(editor);
+            if (currentRange) lastRange = currentRange;
         }
 
         function restoreSelection() {
-            const restoredSelection = focusWithSelection(editor, lastRange);
+            const currentRange = getCurrentEditorRange(editor);
+            const restoredSelection = focusWithSelection(editor, currentRange || lastRange);
             if (restoredSelection) saveSelection();
             return restoredSelection;
         }
