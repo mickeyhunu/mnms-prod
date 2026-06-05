@@ -7,7 +7,6 @@ let editingPostId = null;
 let existingImageUrls = [];
 let isBusinessUser = false;
 let businessPromotionFixedTitle = '';
-let contentEditor = null;
 
 const MAX_POST_IMAGE_COUNT = 5;
 const MAX_POST_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024;
@@ -196,7 +195,6 @@ function getModeFromQuery() {
 
 async function initCreatePost() {
     getModeFromQuery();
-    setupTextEditor();
     setupEventListeners();
     setupImageUpload();
     await setupBoardOptions();
@@ -331,19 +329,6 @@ async function setupBusinessPromotionTitle() {
 }
 
 
-function setupTextEditor() {
-    contentEditor = window.TextEditor?.create({
-        editor: '#post-content-editor',
-        input: '#content',
-        toolbar: '#post-content-editor-toolbar',
-        fontSizeSelect: '#post-content-editor-font-size',
-        counter: '#content-count',
-        minLength: 6,
-        maxLength: 1000,
-        onChange: validateForm
-    }) || null;
-}
-
 function setupEventListeners() {
     const postForm = document.getElementById('post-form');
     const titleInput = document.getElementById('title');
@@ -361,7 +346,7 @@ function setupEventListeners() {
         });
     }
 
-    if (contentInput && !contentEditor) {
+    if (contentInput) {
         contentInput.addEventListener('input', function() {
             updateCharCount('content', 1000);
             validateForm();
@@ -483,9 +468,9 @@ function validateForm() {
     const hasSelectedBoard = isBusinessUser || Boolean(boardTypeSelect?.value);
     const isValid = hasSelectedBoard &&
         title.value.trim().length > 0 &&
-        (contentEditor ? contentEditor.isValid() : content.value.trim().length >= 6) &&
+        content.value.trim().length >= 6 &&
         title.value.length <= 255 &&
-        (contentEditor ? true : content.value.length <= 1000);
+        content.value.length <= 1000;
 
     submitBtn.disabled = !isValid || isSubmitting;
 }
@@ -512,8 +497,7 @@ async function loadPostForEdit() {
         const contentInput = document.getElementById('content');
 
         if (titleInput) titleInput.value = post.title || '';
-        if (contentEditor) contentEditor.setValue(post.content || '');
-        else if (contentInput) contentInput.value = post.content || '';
+        if (contentInput) contentInput.value = post.content || '';
 
         const boardTypeSelect = document.getElementById('board-type');
         if (boardTypeSelect && post.boardType) {
@@ -552,8 +536,7 @@ async function handleSubmit(event) {
     const titleValue = (isBusinessUser && !isEditMode && businessPromotionFixedTitle)
         ? businessPromotionFixedTitle
         : enteredTitle;
-    const contentValue = contentEditor ? contentEditor.getValue() : (document.getElementById('content')?.value.trim() || '');
-    const contentTextValue = contentEditor ? contentEditor.getTrimmedText() : contentValue;
+    const contentValue = document.getElementById('content')?.value.trim() || '';
     const submitBtn = document.getElementById('submit-btn');
     const boardTypeSelect = document.getElementById('board-type');
     const boardType = isBusinessUser
@@ -568,12 +551,12 @@ async function handleSubmit(event) {
         return;
     }
 
-    if (!titleValue || !contentTextValue) {
+    if (!titleValue || !contentValue) {
         alert('제목과 내용을 모두 입력해주세요.');
         return;
     }
 
-    if (contentTextValue.length < 6) {
+    if (contentValue.length < 6) {
         alert('내용은 최소 6자 이상 입력해주세요.');
         return;
     }
@@ -582,7 +565,7 @@ async function handleSubmit(event) {
         return;
     }
 
-    if (!validateNoBlockedExpression(contentTextValue, '게시글 내용')) {
+    if (!validateNoBlockedExpression(contentValue, '게시글 내용')) {
         return;
     }
 
