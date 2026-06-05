@@ -78,12 +78,13 @@ function setEditorElementFontSize(element, fontSize) {
 
 function getEditorFontSizeFromSelection(descriptionEditor) {
     let element = getEditorElementFromSelection(descriptionEditor);
-    while (element && element !== descriptionEditor) {
+    while (element) {
         const inlineFontSize = element.style?.fontSize;
         if (inlineFontSize) return normalizeEditorFontSize(inlineFontSize);
+        if (element === descriptionEditor) break;
         element = element.parentElement;
     }
-    return null;
+    return descriptionEditor ? normalizeEditorFontSize(window.getComputedStyle(descriptionEditor).fontSize) : null;
 }
 
 function runWithPreservedEditorSelection(descriptionEditor, callback) {
@@ -379,6 +380,9 @@ function bindAdProfileInteractions() {
         if (!fontSizeApplyResult.isCollapsed) {
             replaceEditorFontTags(descriptionEditor, normalizedFontSize);
         }
+        if (!fontSizeApplyResult.applied || fontSizeApplyResult.isCollapsed) {
+            setEditorElementFontSize(descriptionEditor, normalizedFontSize);
+        }
 
         saveEditorSelection();
         syncPreview();
@@ -388,7 +392,7 @@ function bindAdProfileInteractions() {
     };
 
     const updateActiveEditorButtons = () => {
-        if (!editorToolbar || !descriptionEditor) return;
+        if (!editorToolbar || !descriptionEditor || document.activeElement === editorFontSizeSelect) return;
         const selection = window.getSelection();
         const selectedNode = selection?.anchorNode;
         const isSelectionInEditor = selectedNode && descriptionEditor.contains(selectedNode.nodeType === Node.ELEMENT_NODE ? selectedNode : selectedNode.parentNode);
