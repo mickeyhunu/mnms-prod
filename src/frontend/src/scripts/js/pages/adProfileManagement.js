@@ -409,7 +409,7 @@ function bindAdProfileInteractions() {
         });
 
         editorToolbar.querySelector('[data-editor-popover="font-color"]')?.style.setProperty('text-decoration-color', currentFontColor || '#212529');
-        editorToolbar.querySelector('[data-editor-popover="font-bg-color"]')?.style.setProperty('background-color', currentBackColor || 'transparent');
+        editorToolbar.querySelector('[data-editor-popover="font-bg-color"]')?.style.setProperty('--editor-bg-swatch-color', currentBackColor || 'rgba(255, 235, 59, 0.65)');
         const currentAlignmentCommand = resolveEditorAlignmentCommand();
         editorToolbar.querySelector('[data-editor-popover="align"]')?.setAttribute('data-editor-align', currentAlignmentCommand);
         ['justifyLeft', 'justifyCenter', 'justifyRight'].forEach((command) => {
