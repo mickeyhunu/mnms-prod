@@ -117,7 +117,7 @@ function createPostCard(post) {
                 </div>
             </div>
             <div class="post-content">
-                ${renderLinkedText(truncateText(post.content, 150))}
+                ${renderLinkedText(truncateText(stripHTMLToText(post.content), 150))}
             </div>
             ${post.imageUrls && post.imageUrls.length > 0 ? createImagePreview(post.imageUrls) : ''}
             <div class="post-actions">

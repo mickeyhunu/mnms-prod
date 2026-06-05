@@ -1392,8 +1392,43 @@ function showNotification(message, type = 'info') {
 }
 
 
+function hasRichTextMarkup(content) {
+    return /<\/?(?:strong|b|em|i|u|s|strike|span|div|p|br)\b/i.test(String(content || ''));
+}
+
+function sanitizeRichTextContent(content) {
+    const template = document.createElement('template');
+    template.innerHTML = String(content || '');
+    const allowedTags = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S', 'STRIKE', 'SPAN', 'DIV', 'P', 'BR']);
+    const allowedStyles = new Set(['color', 'background-color', 'font-size', 'text-align', 'text-decoration', 'font-weight', 'font-style']);
+
+    template.content.querySelectorAll('*').forEach((element) => {
+        if (!allowedTags.has(element.tagName)) {
+            element.replaceWith(...Array.from(element.childNodes));
+            return;
+        }
+
+        Array.from(element.attributes).forEach((attribute) => {
+            if (attribute.name !== 'style') element.removeAttribute(attribute.name);
+        });
+
+        Array.from(element.style || []).forEach((styleName) => {
+            const styleValue = element.style.getPropertyValue(styleName);
+            if (!allowedStyles.has(styleName) || /url\s*\(|expression\s*\(/i.test(styleValue)) {
+                element.style.removeProperty(styleName);
+            }
+        });
+    });
+
+    return template.innerHTML;
+}
+
 function renderPostContent(content) {
-    return renderLinkedText(content || '');
+    const rawContent = String(content || '');
+    if (hasRichTextMarkup(rawContent)) {
+        return sanitizeRichTextContent(rawContent);
+    }
+    return renderLinkedText(rawContent);
 }
 
 function sanitizeHTML(str) {

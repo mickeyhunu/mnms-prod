@@ -494,7 +494,7 @@ function isWithin12Hours(dateValue) {
 }
 
 function getPreviewText(post) {
-    const source = post.preview || post.content || post.body || '';
+    const source = stripHTMLToText(post.preview || post.content || post.body || '');
     const firstLine = String(source)
         .split(/\r?\n/)
         .map((line) => line.replace(/\s+/g, ' ').trim())
