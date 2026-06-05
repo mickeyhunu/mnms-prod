@@ -4400,3 +4400,47 @@ body[data-page="admin"] {
         gap: 6px;
     }
 }
+
+.ad-profile-editor--quill .ql-toolbar.ql-snow {
+    border: 0;
+    border-bottom: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.ad-profile-editor--quill .ql-container.ql-snow {
+    border: 0;
+    font-family: inherit;
+}
+
+.ad-profile-editor--quill .ad-profile-editor-content {
+    min-height: 220px;
+    padding: 0;
+}
+
+.ad-profile-editor--quill .ql-editor {
+    min-height: 220px;
+    padding: 12px;
+    color: #212529;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.ad-profile-editor--quill .ql-editor.ql-blank::before {
+    color: #9ca3af;
+    font-style: normal;
+    left: 12px;
+    right: 12px;
+}
+
+.ad-profile-editor--quill .ql-picker-label,
+.ad-profile-editor--quill .ql-picker-item,
+.ad-profile-editor--quill .ql-stroke,
+.ad-profile-editor--quill .ql-fill {
+    color: #343a40;
+}
+
+.ad-profile-editor--quill .ql-toolbar button:hover,
+.ad-profile-editor--quill .ql-toolbar button:focus,
+.ad-profile-editor--quill .ql-toolbar .ql-picker-label:hover {
+    color: #212529;
+}
