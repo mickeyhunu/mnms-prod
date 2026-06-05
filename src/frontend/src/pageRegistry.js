@@ -686,53 +686,10 @@ const pageRegistry = {
                     
 
                     <div class="form-group">
-                        <label for="post-content-editor" class="form-label">내용</label>
-                        <div class="ad-profile-editor post-write-editor" aria-label="게시글 내용 에디터">
-                            <div class="ad-profile-editor-toolbar" id="post-content-editor-toolbar" role="toolbar" aria-label="텍스트 편집 도구">
-                                <div class="ad-profile-editor-group" aria-label="글자 스타일">
-                                    <button type="button" class="ad-profile-editor-btn" data-editor-command="bold" title="굵게" aria-pressed="false"><strong>B</strong></button>
-                                    <button type="button" class="ad-profile-editor-btn" data-editor-command="italic" title="기울임" aria-pressed="false"><em>I</em></button>
-                                    <button type="button" class="ad-profile-editor-btn" data-editor-command="underline" title="밑줄" aria-pressed="false"><span style="text-decoration: underline;">U</span></button>
-                                    <button type="button" class="ad-profile-editor-btn" data-editor-command="strikeThrough" title="취소선" aria-pressed="false"><span style="text-decoration: line-through;">S</span></button>
-                                </div>
-                                <div class="ad-profile-editor-group" aria-label="글씨 크기">
-                                    <label class="ad-profile-editor-size-control" title="글씨 크기">
-                                        <span class="sr-only">글씨 크기</span>
-                                        <select id="post-content-editor-font-size" class="ad-profile-editor-select" aria-label="글씨 크기"></select>
-                                        <span aria-hidden="true">px</span>
-                                    </label>
-                                </div>
-                                <div class="ad-profile-editor-group" aria-label="글씨 색상 및 배경색">
-                                    <div class="ad-profile-editor-popover-wrap">
-                                        <button type="button" class="ad-profile-editor-btn ad-profile-editor-swatch-btn" data-editor-popover="font-color" title="글자색 변경" aria-expanded="false">T</button>
-                                        <div class="ad-profile-editor-popover ad-profile-editor-palette" data-editor-popover-panel="font-color" role="menu" aria-label="글자색 팔레트"></div>
-                                    </div>
-                                    <div class="ad-profile-editor-popover-wrap">
-                                        <button type="button" class="ad-profile-editor-btn ad-profile-editor-swatch-btn ad-profile-editor-bg-swatch-btn" data-editor-popover="font-bg-color" title="글자 배경색 변경" aria-expanded="false"><span class="ad-profile-editor-bg-swatch-letter">T</span></button>
-                                        <div class="ad-profile-editor-popover ad-profile-editor-palette" data-editor-popover-panel="font-bg-color" role="menu" aria-label="글자 배경색 팔레트"></div>
-                                    </div>
-                                </div>
-                                <div class="ad-profile-editor-group" aria-label="문단 정렬">
-                                    <div class="ad-profile-editor-popover-wrap">
-                                        <button type="button" class="ad-profile-editor-btn ad-profile-editor-align-toggle" data-editor-popover="align" data-editor-align="justifyLeft" title="문단 정렬" aria-expanded="false" aria-label="문단 정렬">
-                                            <span aria-hidden="true"></span>
-                                        </button>
-                                        <div class="ad-profile-editor-popover ad-profile-editor-align-menu" data-editor-popover-panel="align" role="menu" aria-label="문단 정렬 선택">
-                                            <button type="button" class="ad-profile-editor-align-option" data-editor-command="justifyLeft" role="menuitemradio" aria-checked="true">좌</button>
-                                            <button type="button" class="ad-profile-editor-align-option" data-editor-command="justifyCenter" role="menuitemradio" aria-checked="false">중</button>
-                                            <button type="button" class="ad-profile-editor-align-option" data-editor-command="justifyRight" role="menuitemradio" aria-checked="false">우</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="post-content-editor" class="ad-profile-editor-content" contenteditable="true" data-placeholder="내용을 입력하세요"></div>
-                        </div>
-                        <textarea id="content" name="content" class="hidden" maxlength="1000" required></textarea>
-                        <div class="text-editor-meta">
-                            <small class="text-muted">내용은 6자 이상 1000자 이하로 입력해주세요</small>
-                            <small class="text-muted" id="content-count" aria-live="polite">0/1000</small>
-                        </div>
+                        <label for="content" class="form-label">내용</label>
+                        <textarea id="content" name="content" class="form-control" placeholder="내용을 입력하세요" rows="15" required></textarea>
                         <div class="error-message hidden" id="content-error"></div>
+                        <small class="text-muted">내용은 6자 이상 1000자 이하로 입력해주세요</small>
                     </div>
 
 
@@ -757,11 +714,10 @@ const pageRegistry = {
     <script src="scripts/js/utils/helpers.js"></script>
     <script src="scripts/js/utils/auth.js"></script>
     <script src="scripts/js/api/apiClient.js"></script>
-    <script src="scripts/js/components/textEditor.js"></script>
     <script src="scripts/js/pages/createPost.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/libs/koProfanityFilter.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/components/textEditor.js", "scripts/js/pages/createPost.js", "scripts/js/components/footerNav.js"]
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/libs/koProfanityFilter.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/createPost.js", "scripts/js/components/footerNav.js"]
   },
   'support-create': {
     template: `<header class="header">
