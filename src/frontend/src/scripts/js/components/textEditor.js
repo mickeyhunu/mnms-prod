@@ -291,6 +291,27 @@
         `).join('');
     }
 
+    function removeEditorControls(root) {
+        root?.querySelectorAll?.([
+            '.ad-profile-editor-toolbar',
+            '.ad-profile-editor-popover',
+            '[data-editor-command]',
+            '[data-editor-popover]',
+            '[data-editor-popover-panel]',
+            '[data-editor-palette-color]',
+            '#ad-profile-editor-font-size',
+            '#ad-profile-editor-image-btn',
+            '#ad-profile-editor-image-input'
+        ].join(',')).forEach((element) => element.remove());
+    }
+
+    function sanitizeEditorHTML(value) {
+        const template = document.createElement('template');
+        template.innerHTML = String(value || '');
+        removeEditorControls(template.content);
+        return template.innerHTML.trim();
+    }
+
     function create(options = {}) {
         const editor = resolveElement(options.editor);
         const input = resolveElement(options.input);
@@ -309,7 +330,8 @@
 
         if (!editor) return null;
         if (editor.__textEditorInstance) return editor.__textEditorInstance;
-        if (input) editor.innerHTML = input.value || '';
+        if (input) editor.innerHTML = sanitizeEditorHTML(input.value || '');
+        removeEditorControls(editor);
         if (maxLength > 0 && input && (!input.maxLength || input.maxLength < 0)) input.maxLength = maxLength;
 
         buildFontSizeOptions(fontSizeSelect);
@@ -317,7 +339,7 @@
             .forEach(buildPalette);
 
         function getHTML() {
-            return editor.innerHTML.trim();
+            return sanitizeEditorHTML(editor.innerHTML);
         }
 
         function getPlainText() {
@@ -329,6 +351,7 @@
         }
 
         function syncInput() {
+            removeEditorControls(editor);
             const html = getHTML();
             if (input) input.value = html;
             return html;
@@ -463,16 +486,24 @@
         }
 
         function setHTML(value) {
-            editor.innerHTML = String(value || '');
+            editor.innerHTML = sanitizeEditorHTML(value);
             replaceFontTags(editor, pendingFontSize);
             emitChange();
             updateActiveButtons();
         }
 
         editor.addEventListener('input', () => {
+            removeEditorControls(editor);
             replaceFontTags(editor, pendingFontSize);
             emitChange();
             updateActiveButtons();
+        });
+        editor.addEventListener('paste', () => {
+            window.setTimeout(() => {
+                removeEditorControls(editor);
+                emitChange();
+                updateActiveButtons();
+            }, 0);
         });
         editor.addEventListener('blur', emitChange);
         editor.addEventListener('keyup', () => {
@@ -573,6 +604,11 @@
             sync: emitChange,
             applyCommand,
             applyFontSize,
+            sanitize: () => {
+                removeEditorControls(editor);
+                syncInput();
+                updateCounter();
+            },
             saveSelection,
             focus: () => focusWithSelection(editor, lastRange)
         };
