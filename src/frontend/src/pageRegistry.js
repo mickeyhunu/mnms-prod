@@ -237,14 +237,14 @@ const pageRegistry = {
                         </li>
                     </ul>
                 </div>
-
-                <div class="ad-profile-notice ad-profile-notice--bottom">
-                    <p>미드나잇맨즈 광고관리 규정에 위배되는 내용을 입력할 경우,</p>
-                    <p>별도 안내 없이 수정되거나 반려될 수 있어요.</p>
-                </div>
+                
                 <div class="ad-profile-submit-wrap">
                     <button id="ad-profile-draft-btn" class="btn btn-secondary hidden" type="button">임시저장</button>
                     <button id="ad-profile-save-btn" class="btn btn-primary" type="button">광고프로필 저장</button>
+                </div>
+                <div class="ad-profile-notice ad-profile-notice--bottom">
+                    <p>미드나잇맨즈 광고관리 규정에 위배되는 내용을 입력할 경우,</p>
+                    <p>별도 안내 없이 수정되거나 반려될 수 있어요.</p>
                 </div>
             </section>
         </div>
@@ -646,7 +646,7 @@ const pageRegistry = {
     </header>
 
     <main class="main-content">
-        <div class="container" style="max-width: 800px;">
+        <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
                     <a href="/community" class="community-back-link icon-btn icon-btn-square" aria-label="커뮤니티로 이동">
@@ -655,9 +655,9 @@ const pageRegistry = {
                     <span class="community-board-name">새 글 작성</span>
                 </div>
             </header>
-            <p class="text-muted" style="margin: 12px 0 24px;">미드나잇 맨즈에 새로운 이야기를 공유해보세요</p>
-
+            
             <div class="card">
+                <p class="text-muted" style="margin: 12px 0 24px;">미드나잇 맨즈에 새로운 이야기를 공유해보세요</p>
                 <form id="post-form" enctype="multipart/form-data">
                     <div class="error-banner hidden" id="error-banner">
                         <p id="error-message"></p>
@@ -736,7 +736,7 @@ const pageRegistry = {
     </header>
 
     <main class="main-content">
-        <div class="container" style="max-width: 800px;">
+        <div class="container">
             <header class="community-section-header">
                 <div class="community-header-left">
                     <a href="/admin" class="community-back-link icon-btn icon-btn-square" aria-label="관리자 페이지로 이동">
@@ -745,9 +745,9 @@ const pageRegistry = {
                     <span class="community-board-name">공지사항 새 글 작성</span>
                 </div>
             </header>
-            <p class="text-muted support-create-description" style="margin: 12px 0 24px;">커뮤니티 글쓰기 화면과 동일한 방식으로 공지사항 글을 등록할 수 있습니다.</p>
-
+            
             <div class="card">
+                <p class="text-muted support-create-description" style="margin: 12px 0 24px;">커뮤니티 글쓰기 화면과 동일한 방식으로 공지사항 글을 등록할 수 있습니다.</p>
                 <form id="support-post-form">
                     <div class="form-group">
                         <label for="support-form-category" class="form-label">구분</label>
