@@ -206,12 +206,14 @@ function renderBusinessAds(ads) {
         const baseTitle = sanitizeHTML(ad.title || '업체정보');
         const title = `[${regionLabel}-${businessName}] ${baseTitle}`;
         const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
+        const imageUrl = sanitizeHTML(ad.imageUrl || '/assets/image/ad-profile-default.webp');
         const formattedTime = (openHour !== '시간선택' && closeHour !== '시간선택')
             ? `${openHour} ~ ${closeHour}`
             : '시간선택 ~ 시간선택';
         const detail = `${regionLabel} ${district} · ${category} · ${formattedTime}`;
         return `
             <li class="business-directory-item">
+                <img class="business-directory-thumbnail" src="${imageUrl}" alt="${title} 대표이미지" loading="lazy">
                 <div class="business-directory-main">
                     <h4>${title}</h4>
                     <p class="business-directory-region-detail">${detail}</p>
