@@ -137,7 +137,7 @@ const pageRegistry = {
                     <div class="ad-profile-image-upload">
                         <div class="ad-profile-image-upload-control">
                             <button id="ad-profile-image-upload-btn" class="ad-profile-image-preview-wrap active-bg mt-16px h-70px w-70px rounded-14px border-1px border-line-gray-50" type="button" aria-label="대표이미지 업로드" aria-describedby="ad-profile-image-help">
-                                <img id="ad-profile-image-preview" class="ad-profile-image-preview hidden" src="/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
+                                <img id="ad-profile-image-preview" class="ad-profile-image-preview hidden" src="/src/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
                                 <svg class="ad-profile-image-add-icon stroke-font-gray" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-width="1.5" d="M9.754.75v18M18.75 9.753h-18"></path>
                                 </svg>
@@ -235,7 +235,7 @@ const pageRegistry = {
                     <h3>미리보기</h3>
                     <ul class="business-directory-list ad-profile-preview-list">
                         <li class="business-directory-item ad-profile-preview-item">
-                            <img id="ad-profile-preview-image" class="business-directory-thumbnail" src="/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
+                            <img id="ad-profile-preview-image" class="business-directory-thumbnail" src="/src/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
                             <div class="business-directory-main">
                                 <h4 id="ad-profile-preview-title">[선택-업소명] 제목을 입력해주세요.</h4>
                                 <p class="business-directory-region-detail" id="ad-profile-preview-detail">선택 선택 · 선택 · 시간선택 ~ 시간선택</p>
