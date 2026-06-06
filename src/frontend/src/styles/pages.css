@@ -4439,6 +4439,11 @@ body[data-page="admin"] {
     color: #343a40;
 }
 
+.ad-profile-editor--quill .ql-picker-label svg polygon[points="7 11 9 13 11 11 7 11"],
+.ad-profile-editor--quill .ql-picker-label svg polygon[points="7 7 9 5 11 7 7 7"] {
+    display: none;
+}
+
 .ad-profile-editor--quill .ql-toolbar button:hover,
 .ad-profile-editor--quill .ql-toolbar button:focus,
 .ad-profile-editor--quill .ql-toolbar .ql-picker-label:hover {
