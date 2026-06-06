@@ -89,7 +89,10 @@ function updateAdProfileImagePreviews(imageUrl = '') {
 
     [uploadPreview, directoryPreview].forEach((image) => {
         if (!image) return;
-        image.src = resolvedImageUrl;
+        image.src = DEFAULT_AD_IMAGE_URL;
+        if (resolvedImageUrl !== DEFAULT_AD_IMAGE_URL) {
+            image.src = resolvedImageUrl;
+        }
         image.alt = '대표이미지 미리보기';
     });
 }
