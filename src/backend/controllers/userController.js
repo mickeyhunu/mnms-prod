@@ -118,6 +118,11 @@ async function verifyBusinessRegistrationNumberWithNts(businessNumber) {
 const AD_REGISTRATION_STATUSES = new Set(['UNREGISTERED', 'DRAFT', 'REGISTERED']);
 const BUSINESS_IMAGE_PLACEHOLDER = '등록할 이미지를 선택해주세요.';
 const BUSINESS_IMAGE_OCR_VALID_STATUS = 'valid';
+const BUSINESS_AD_DEFAULT_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
+
+function isBusinessAdDefaultImageUrl(imageUrl = '') {
+  return String(imageUrl || '').trim() === BUSINESS_AD_DEFAULT_IMAGE_URL;
+}
 
 function normalizeRegistrationStatus(value, fallback = 'UNREGISTERED') {
   const status = String(value || '').trim().toUpperCase();
@@ -715,7 +720,7 @@ async function createMyBusinessAd(req, res, next) {
       managerName,
       managerContact,
       title,
-      imageUrl: imageUrl || 'https://image.bubblealba.com/assets/advertiser/pending.webp',
+      imageUrl: imageUrl || BUSINESS_AD_DEFAULT_IMAGE_URL,
       linkUrl,
       region,
       district,
@@ -748,7 +753,8 @@ async function updateMyBusinessAd(req, res, next) {
     const managerName = pickTrimmedText(req.body, 'managerName', target.managerName || '');
     const managerContact = pickTrimmedText(req.body, 'managerContact', target.managerContact || '');
     const title = pickTrimmedText(req.body, 'title', target.title || '');
-    const imageUrl = pickTrimmedText(req.body, 'imageUrl', target.imageUrl || '');
+    const hasImageUrlPayload = Object.prototype.hasOwnProperty.call(req.body || {}, 'imageUrl');
+    const imageUrl = hasImageUrlPayload ? pickTrimmedText(req.body, 'imageUrl', '') : String(target.imageUrl || '').trim();
     const linkUrl = pickTrimmedText(req.body, 'linkUrl', target.linkUrl || '#') || '#';
     const region = pickTrimmedText(req.body, 'region', target.region || '');
     const district = pickTrimmedText(req.body, 'district', target.district || '');
@@ -774,7 +780,7 @@ async function updateMyBusinessAd(req, res, next) {
       managerName,
       managerContact,
       title,
-      imageUrl: imageUrl || target.imageUrl || 'https://image.bubblealba.com/assets/advertiser/pending.webp',
+      imageUrl: imageUrl || BUSINESS_AD_DEFAULT_IMAGE_URL,
       linkUrl,
       region,
       district,
@@ -787,7 +793,7 @@ async function updateMyBusinessAd(req, res, next) {
       isActive,
       registrationStatus: requestedStatus
     });
-    if (target.imageUrl && target.imageUrl !== imageUrl) {
+    if (target.imageUrl && target.imageUrl !== imageUrl && !isBusinessAdDefaultImageUrl(target.imageUrl)) {
       await deleteS3ObjectByUrl(target.imageUrl);
     }
     res.json({ success: true });
@@ -807,7 +813,7 @@ async function deleteMyBusinessAd(req, res, next) {
     }
 
     await adminModel.deleteBusinessAd(id);
-    if (target.imageUrl) {
+    if (target.imageUrl && !isBusinessAdDefaultImageUrl(target.imageUrl)) {
       await deleteS3ObjectByUrl(target.imageUrl);
     }
     res.json({ success: true });
