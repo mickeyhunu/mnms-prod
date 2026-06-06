@@ -206,14 +206,18 @@ function renderBusinessAds(ads) {
         const baseTitle = sanitizeHTML(ad.title || '업체정보');
         const title = `[${regionLabel}-${businessName}] ${baseTitle}`;
         const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
-        const imageUrl = sanitizeHTML(ad.imageUrl || '/assets/image/ad-profile-default.webp');
+        const defaultImageUrl = '/assets/image/ad-profile-default.webp';
+        const uploadedImageUrl = sanitizeHTML(ad.imageUrl || '');
         const formattedTime = (openHour !== '시간선택' && closeHour !== '시간선택')
             ? `${openHour} ~ ${closeHour}`
             : '시간선택 ~ 시간선택';
         const detail = `${regionLabel} ${district} · ${category} · ${formattedTime}`;
+        const uploadedImageAttribute = uploadedImageUrl
+            ? ` data-business-image-url="${uploadedImageUrl}"`
+            : '';
         return `
             <li class="business-directory-item">
-                <img class="business-directory-thumbnail" src="${imageUrl}" alt="${title} 대표이미지" loading="lazy">
+                <img class="business-directory-thumbnail" src="${defaultImageUrl}"${uploadedImageAttribute} alt="${title} 대표이미지" loading="lazy">
                 <div class="business-directory-main">
                     <h4>${title}</h4>
                     <p class="business-directory-region-detail">${detail}</p>
@@ -225,6 +229,13 @@ function renderBusinessAds(ads) {
             </li>
         `;
     }).join('');
+
+    list.querySelectorAll('.business-directory-thumbnail[data-business-image-url]').forEach((image) => {
+        const uploadedImageUrl = image.dataset.businessImageUrl;
+        if (uploadedImageUrl) {
+            image.src = uploadedImageUrl;
+        }
+    });
 }
 
 function readBusinessFilters() {
