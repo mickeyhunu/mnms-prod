@@ -180,11 +180,6 @@ const pageRegistry = {
                     <div class="ad-profile-editor ad-profile-editor--quill" aria-label="광고 상세정보 웹 에디터">
                         <div id="ad-profile-description-toolbar" class="ad-profile-quill-toolbar" aria-label="텍스트 편집 도구">
                             <span class="ql-formats">
-                                <select class="ql-header" aria-label="문단 스타일">
-                                    <option selected></option>
-                                    <option value="2">제목</option>
-                                    <option value="3">소제목</option>
-                                </select>
                                 <select class="ql-size" aria-label="글씨 크기">
                                     <option value="small">작게</option>
                                     <option selected>기본</option>
