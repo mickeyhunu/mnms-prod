@@ -3253,10 +3253,36 @@ body[data-page="admin"] {
 
 .business-info-page .ad-profile-actions .btn {
     flex: 1 1 0;
-    min-height: 48px;
+}
+
+.business-info-page .ad-profile-actions .btn.btn-primary,
+.ad-profile-submit-wrap .btn.btn-primary {
+    display: block;
+    width: 100%;
+    min-height: 52px;
+    padding: 10px;
+    border-color: #000000;
     border-radius: 14px;
-    font-size: 15px;
-    font-weight: 700;
+    background: #000000;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.business-info-page .ad-profile-actions .btn.btn-primary:hover:not(:disabled),
+.business-info-page .ad-profile-actions .btn.btn-primary:focus-visible:not(:disabled),
+.ad-profile-submit-wrap .btn.btn-primary:hover:not(:disabled),
+.ad-profile-submit-wrap .btn.btn-primary:focus-visible:not(:disabled) {
+    border-color: #111111;
+    background: #111111;
+}
+
+.business-info-page .ad-profile-actions .btn.btn-primary:disabled,
+.ad-profile-submit-wrap .btn.btn-primary:disabled {
+    border-color: #9ca3af;
+    background: #9ca3af;
+    opacity: 1;
+    cursor: not-allowed;
 }
 
 .business-info-notice--bottom {
@@ -3664,6 +3690,26 @@ body[data-page="admin"] {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+.ad-profile-submit-wrap .btn.btn-secondary {
+    display: block;
+    width: 100%;
+    min-height: 52px;
+    padding: 10px;
+    border-color: #d1d5db;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #111827;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.ad-profile-submit-wrap .btn.btn-secondary:hover:not(:disabled),
+.ad-profile-submit-wrap .btn.btn-secondary:focus-visible:not(:disabled) {
+    border-color: #111111;
+    background: #f9fafb;
+    color: #111111;
 }
 
 .business-directory-card {
