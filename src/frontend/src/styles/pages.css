@@ -3852,13 +3852,14 @@ body[data-page="admin"] {
     list-style: none;
     margin: 0;
     padding: 0;
-    border-top: 1px solid #e5e7eb;
 }
 
 .business-directory-item {
     display: block;
     padding: 10px 5px;
     border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    margin-bottom: 6px;
 }
 
 .business-directory-main {
