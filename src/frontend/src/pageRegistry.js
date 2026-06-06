@@ -135,14 +135,23 @@ const pageRegistry = {
                     <input id="ad-profile-manager-contact" type="text" maxlength="13" placeholder="담당자 연락처를 입력해주세요." required>
 
                     <div class="ad-profile-image-upload">
-                        <div class="ad-profile-image-preview-wrap">
-                            <img id="ad-profile-image-preview" class="ad-profile-image-preview" src="/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
+                        <div class="ad-profile-image-upload-control">
+                            <button id="ad-profile-image-upload-btn" class="ad-profile-image-preview-wrap active-bg mt-16px h-70px w-70px rounded-14px border-1px border-line-gray-50" type="button" aria-label="대표이미지 업로드" aria-describedby="ad-profile-image-help">
+                                <img id="ad-profile-image-preview" class="ad-profile-image-preview hidden" src="/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
+                                <svg class="ad-profile-image-add-icon stroke-font-gray" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-width="1.5" d="M9.754.75v18M18.75 9.753h-18"></path>
+                                </svg>
+                            </button>
+                            <button id="ad-profile-image-clear-btn" type="button" class="business-license-clear-btn ad-profile-image-clear-btn hidden" aria-label="대표이미지 첨부 이미지 삭제"><span aria-hidden="true">×</span></button>
                         </div>
                         <div class="ad-profile-image-upload-main">
                             <label class="ad-profile-image-label" for="ad-profile-image-input">대표이미지</label>
-                            <p class="ad-profile-image-help" id="ad-profile-image-help">정사각형에 맞춰 보일 이미지를 선택해주세요.</p>
+                            <p class="ad-profile-image-help" id="ad-profile-image-help">
+                                이미지 권장 사이즈: 가로 600px, 세로 600px (1:1 비율)<br>
+                                대표 이미지가 없다면, 광고 활성화 후 1~3일 내에 자동으로 제작됩니다.<br>
+                                움직이는 이미지는 등록할 수 없습니다
+                            </p>
                             <input id="ad-profile-image-input" class="hidden" type="file" accept="image/*">
-                            <button id="ad-profile-image-upload-btn" class="btn btn-outline btn-sm" type="button">대표이미지 업로드</button>
                         </div>
                     </div>
 
