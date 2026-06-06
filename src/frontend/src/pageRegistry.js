@@ -196,17 +196,16 @@ const pageRegistry = {
                                 <button type="button" class="ql-bold" aria-label="굵게"></button>
                                 <button type="button" class="ql-italic" aria-label="기울임"></button>
                                 <button type="button" class="ql-underline" aria-label="밑줄"></button>
+                                <button type="button" class="ql-strike" aria-label="취소선"></button>
                             </span>
                             <span class="ql-formats">
                                 <select class="ql-color" aria-label="글자색"></select>
                                 <select class="ql-background" aria-label="배경색"></select>
                             </span>
                             <span class="ql-formats">
-                                <button type="button" class="ql-list" value="bullet" aria-label="목록"></button>
                                 <select class="ql-align" aria-label="문단 정렬"></select>
                             </span>
                             <span class="ql-formats">
-                                <button type="button" class="ql-link" aria-label="링크"></button>
                                 <button type="button" class="ql-image" aria-label="이미지 첨부"></button>
                             </span>
                         </div>
