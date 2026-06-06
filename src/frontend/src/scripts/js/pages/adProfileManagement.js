@@ -83,18 +83,30 @@ function resolveAdProfileImageUrl(imageUrl = '') {
 }
 
 function updateAdProfileImagePreviews(imageUrl = '') {
-    const resolvedImageUrl = resolveAdProfileImageUrl(imageUrl);
+    const normalizedImageUrl = String(imageUrl || '').trim();
+    const resolvedImageUrl = resolveAdProfileImageUrl(normalizedImageUrl);
+    const hasUploadedImage = Boolean(normalizedImageUrl) && resolvedImageUrl !== DEFAULT_AD_IMAGE_URL;
     const uploadPreview = document.getElementById('ad-profile-image-preview');
+    const uploadButton = document.getElementById('ad-profile-image-upload-btn');
+    const addIcon = uploadButton?.querySelector('.ad-profile-image-add-icon');
+    const clearButton = document.getElementById('ad-profile-image-clear-btn');
     const directoryPreview = document.getElementById('ad-profile-preview-image');
 
-    [uploadPreview, directoryPreview].forEach((image) => {
-        if (!image) return;
-        image.src = DEFAULT_AD_IMAGE_URL;
-        if (resolvedImageUrl !== DEFAULT_AD_IMAGE_URL) {
-            image.src = resolvedImageUrl;
-        }
-        image.alt = '대표이미지 미리보기';
-    });
+    if (uploadPreview) {
+        uploadPreview.src = hasUploadedImage ? resolvedImageUrl : DEFAULT_AD_IMAGE_URL;
+        uploadPreview.alt = '대표이미지 미리보기';
+        uploadPreview.classList.toggle('hidden', !hasUploadedImage);
+    }
+
+    uploadButton?.classList.toggle('has-image', hasUploadedImage);
+    uploadButton?.setAttribute('aria-label', hasUploadedImage ? '대표이미지 변경' : '대표이미지 업로드');
+    addIcon?.classList.toggle('hidden', hasUploadedImage);
+    clearButton?.classList.toggle('hidden', !hasUploadedImage);
+
+    if (directoryPreview) {
+        directoryPreview.src = hasUploadedImage ? resolvedImageUrl : DEFAULT_AD_IMAGE_URL;
+        directoryPreview.alt = '대표이미지 미리보기';
+    }
 }
 
 function setAdProfileImageUrl(imageUrl = '') {
@@ -103,20 +115,40 @@ function setAdProfileImageUrl(imageUrl = '') {
     updateAdProfileActionButtons();
 }
 
+function isAnimatedRepresentativeImage(file) {
+    const fileType = String(file?.type || '').toLowerCase();
+    const fileName = String(file?.name || '').toLowerCase();
+    return fileType === 'image/gif'
+        || fileType === 'image/apng'
+        || /\.(gif|apng)$/u.test(fileName);
+}
+
+function clearRepresentativeImage() {
+    const imageInput = document.getElementById('ad-profile-image-input');
+    if (imageInput) imageInput.value = '';
+    setAdProfileImageUrl('');
+    saveDraftData();
+}
+
 async function handleRepresentativeImageSelection(file) {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
         showSaveMessage('이미지 파일만 업로드할 수 있습니다.');
         return;
     }
+    if (isAnimatedRepresentativeImage(file)) {
+        showSaveMessage('움직이는 이미지는 등록할 수 없습니다.');
+        return;
+    }
 
     const uploadButton = document.getElementById('ad-profile-image-upload-btn');
-    const defaultButtonText = uploadButton?.textContent || '대표이미지 업로드';
 
     try {
         if (uploadButton) {
             uploadButton.disabled = true;
-            uploadButton.textContent = '업로드 중...';
+            uploadButton.classList.add('is-uploading');
+            uploadButton.setAttribute('aria-busy', 'true');
+            uploadButton.setAttribute('aria-label', '대표이미지 업로드 중');
         }
         const imageUrl = await uploadAdImage(file);
         setAdProfileImageUrl(imageUrl);
@@ -125,7 +157,9 @@ async function handleRepresentativeImageSelection(file) {
     } finally {
         if (uploadButton) {
             uploadButton.disabled = false;
-            uploadButton.textContent = defaultButtonText;
+            uploadButton.classList.remove('is-uploading');
+            uploadButton.removeAttribute('aria-busy');
+            uploadButton.setAttribute('aria-label', adProfileState.uploadedImageUrl ? '대표이미지 변경' : '대표이미지 업로드');
         }
     }
 }
@@ -243,6 +277,7 @@ function bindAdProfileInteractions() {
     const managerContactInput = document.getElementById('ad-profile-manager-contact');
     const imageInput = document.getElementById('ad-profile-image-input');
     const imageUploadButton = document.getElementById('ad-profile-image-upload-btn');
+    const imageClearButton = document.getElementById('ad-profile-image-clear-btn');
 
     const previewTitle = document.getElementById('ad-profile-preview-title');
     const previewManager = document.getElementById('ad-profile-preview-manager');
@@ -277,6 +312,11 @@ function bindAdProfileInteractions() {
     bindDescriptionEditor({ syncPreview, saveDraftData });
 
     imageUploadButton?.addEventListener('click', () => imageInput?.click());
+    imageClearButton?.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        clearRepresentativeImage();
+    });
     imageInput?.addEventListener('change', async () => {
         await handleRepresentativeImageSelection(imageInput.files?.[0]);
         imageInput.value = '';
