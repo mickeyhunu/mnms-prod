@@ -134,6 +134,18 @@ const pageRegistry = {
                     <input id="ad-profile-manager" type="text" maxlength="24" placeholder="담당자명을 입력해주세요." required>
                     <input id="ad-profile-manager-contact" type="text" maxlength="13" placeholder="담당자 연락처를 입력해주세요." required>
 
+                    <div class="ad-profile-image-upload">
+                        <div class="ad-profile-image-preview-wrap">
+                            <img id="ad-profile-image-preview" class="ad-profile-image-preview" src="/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
+                        </div>
+                        <div class="ad-profile-image-upload-main">
+                            <label class="ad-profile-image-label" for="ad-profile-image-input">대표이미지</label>
+                            <p class="ad-profile-image-help" id="ad-profile-image-help">정사각형에 맞춰 보일 이미지를 선택해주세요.</p>
+                            <input id="ad-profile-image-input" class="hidden" type="file" accept="image/*">
+                            <button id="ad-profile-image-upload-btn" class="btn btn-outline btn-sm" type="button">대표이미지 업로드</button>
+                        </div>
+                    </div>
+
                     <div class="ad-profile-grid ad-profile-grid--region">
                         <label>
                             <span>지역</span>
@@ -213,7 +225,8 @@ const pageRegistry = {
                 <div class="ad-profile-preview">
                     <h3>미리보기</h3>
                     <ul class="business-directory-list ad-profile-preview-list">
-                        <li class="business-directory-item">
+                        <li class="business-directory-item ad-profile-preview-item">
+                            <img id="ad-profile-preview-image" class="business-directory-thumbnail" src="/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
                             <div class="business-directory-main">
                                 <h4 id="ad-profile-preview-title">[선택-업소명] 제목을 입력해주세요.</h4>
                                 <p class="business-directory-region-detail" id="ad-profile-preview-detail">선택 선택 · 선택 · 시간선택 ~ 시간선택</p>

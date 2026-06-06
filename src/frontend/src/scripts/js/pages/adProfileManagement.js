@@ -29,7 +29,7 @@ const adProfileState = {
     syncPreview: null,
     descriptionEditor: null
 };
-const DEFAULT_AD_IMAGE_URL = 'https://image.bubblealba.com/assets/advertiser/pending.webp';
+const DEFAULT_AD_IMAGE_URL = '/assets/image/ad-profile-default.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 function createHourOptions(hourSelect) {
     if (!hourSelect) return;
@@ -76,6 +76,55 @@ async function uploadAdImage(file) {
     }
 
     return uploaded.url;
+}
+
+function resolveAdProfileImageUrl(imageUrl = '') {
+    return String(imageUrl || '').trim() || DEFAULT_AD_IMAGE_URL;
+}
+
+function updateAdProfileImagePreviews(imageUrl = '') {
+    const resolvedImageUrl = resolveAdProfileImageUrl(imageUrl);
+    const uploadPreview = document.getElementById('ad-profile-image-preview');
+    const directoryPreview = document.getElementById('ad-profile-preview-image');
+
+    [uploadPreview, directoryPreview].forEach((image) => {
+        if (!image) return;
+        image.src = resolvedImageUrl;
+        image.alt = '대표이미지 미리보기';
+    });
+}
+
+function setAdProfileImageUrl(imageUrl = '') {
+    adProfileState.uploadedImageUrl = String(imageUrl || '').trim();
+    updateAdProfileImagePreviews(adProfileState.uploadedImageUrl);
+    updateAdProfileActionButtons();
+}
+
+async function handleRepresentativeImageSelection(file) {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+        showSaveMessage('이미지 파일만 업로드할 수 있습니다.');
+        return;
+    }
+
+    const uploadButton = document.getElementById('ad-profile-image-upload-btn');
+    const defaultButtonText = uploadButton?.textContent || '대표이미지 업로드';
+
+    try {
+        if (uploadButton) {
+            uploadButton.disabled = true;
+            uploadButton.textContent = '업로드 중...';
+        }
+        const imageUrl = await uploadAdImage(file);
+        setAdProfileImageUrl(imageUrl);
+    } catch (error) {
+        showSaveMessage(error.message || '대표이미지 업로드에 실패했습니다.');
+    } finally {
+        if (uploadButton) {
+            uploadButton.disabled = false;
+            uploadButton.textContent = defaultButtonText;
+        }
+    }
 }
 
 function getQuillPlainText(quill) {
@@ -189,6 +238,8 @@ function bindAdProfileInteractions() {
     const businessNameInput = document.getElementById('ad-profile-name');
     const managerNameInput = document.getElementById('ad-profile-manager');
     const managerContactInput = document.getElementById('ad-profile-manager-contact');
+    const imageInput = document.getElementById('ad-profile-image-input');
+    const imageUploadButton = document.getElementById('ad-profile-image-upload-btn');
 
     const previewTitle = document.getElementById('ad-profile-preview-title');
     const previewManager = document.getElementById('ad-profile-preview-manager');
@@ -221,6 +272,13 @@ function bindAdProfileInteractions() {
     };
 
     bindDescriptionEditor({ syncPreview, saveDraftData });
+
+    imageUploadButton?.addEventListener('click', () => imageInput?.click());
+    imageInput?.addEventListener('change', async () => {
+        await handleRepresentativeImageSelection(imageInput.files?.[0]);
+        imageInput.value = '';
+        saveDraftData();
+    });
 
     managerContactInput?.addEventListener('input', () => {
         managerContactInput.value = formatPhoneNumber(managerContactInput.value);
@@ -269,7 +327,8 @@ function collectDraftData() {
         category: String(document.getElementById('ad-profile-category')?.value || '').trim(),
         openHour: String(document.getElementById('ad-profile-open-hour')?.value || '').trim(),
         closeHour: String(document.getElementById('ad-profile-close-hour')?.value || '').trim(),
-        description: String(document.getElementById('ad-profile-description')?.value || '').trim()
+        description: String(document.getElementById('ad-profile-description')?.value || '').trim(),
+        imageUrl: adProfileState.uploadedImageUrl
     };
 }
 
@@ -309,7 +368,9 @@ function hasAnyAdProfileValue(data) {
 
     const valuesToCheck = [
         data.businessName,
+        data.managerName,
         data.managerContact,
+        data.imageUrl,
         data.title,
         data.region,
         data.district,
@@ -378,7 +439,9 @@ async function saveAdProfile({ forceDraft = false } = {}) {
     const registrationStatus = forceDraft ? 'DRAFT' : 'REGISTERED';
     const hasAnyValue = hasAnyAdProfileValue({
         businessName,
+        managerName,
         managerContact,
+        imageUrl: adProfileState.uploadedImageUrl,
         title,
         region,
         district,
@@ -520,7 +583,7 @@ function applyAdProfileToForm(ad) {
     if (managerContactInput) managerContactInput.value = formatPhoneNumber(ad.managerContact || '');
     if (descriptionInput) descriptionInput.value = ad.description || '';
     setDescriptionEditorHtml(ad.description || '');
-    adProfileState.uploadedImageUrl = ad.imageUrl || DEFAULT_AD_IMAGE_URL;
+    setAdProfileImageUrl(ad.imageUrl || '');
     adProfileState.syncPreview?.();
     updateAdProfileActionButtons();
 }
@@ -545,6 +608,7 @@ async function initAdProfileManagementPage() {
         if (typeof initHeader === 'function') initHeader();
         Auth.bindLogoutButton();
         bindAdProfileInteractions();
+        updateAdProfileImagePreviews(adProfileState.uploadedImageUrl);
         adProfileState.syncPreview?.();
 
         const saveButton = document.getElementById('ad-profile-save-btn');
