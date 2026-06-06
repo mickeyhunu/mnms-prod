@@ -206,7 +206,7 @@ function renderBusinessAds(ads) {
         const baseTitle = sanitizeHTML(ad.title || '업체정보');
         const title = `[${regionLabel}-${businessName}] ${baseTitle}`;
         const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
-        const defaultImageUrl = '/assets/image/ad-profile-default.webp';
+        const defaultImageUrl = '/src/assets/image/ad-profile-default.webp';
         const uploadedImageUrl = sanitizeHTML(ad.imageUrl || '');
         const formattedTime = (openHour !== '시간선택' && closeHour !== '시간선택')
             ? `${openHour} ~ ${closeHour}`
