@@ -3436,7 +3436,7 @@ body[data-page="admin"] {
 .ad-profile-image-upload {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     margin-top: 12px;
     padding: 12px;
     border: 1px solid #e5e7eb;
@@ -3491,7 +3491,11 @@ body[data-page="admin"] {
 }
 
 .ad-profile-image-clear-btn {
-    top: 7px;
+    top: -6px;
+    right: -9px;
+    font-size: 19px;
+    width: 19px;
+    height: 19px;
 }
 
 .active-bg {
