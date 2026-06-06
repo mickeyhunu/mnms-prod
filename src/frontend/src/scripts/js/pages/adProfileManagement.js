@@ -29,7 +29,7 @@ const adProfileState = {
     syncPreview: null,
     descriptionEditor: null
 };
-const DEFAULT_AD_IMAGE_URL = '/assets/image/ad-profile-default.webp';
+const DEFAULT_AD_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 function createHourOptions(hourSelect) {
     if (!hourSelect) return;
@@ -558,6 +558,7 @@ async function saveAdProfile({ forceDraft = false } = {}) {
         if (forceDraft) {
             payload = {
                 ...stripEmptyValues(payload),
+                imageUrl,
                 registrationStatus: 'DRAFT',
                 isActive: false
             };
