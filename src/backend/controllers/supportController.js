@@ -10,6 +10,8 @@ const EXTENSION_BY_MIME = {
   'image/png': 'png',
   'image/gif': 'gif',
   'image/webp': 'webp',
+  'image/heic': 'heic',
+  'image/heif': 'heif',
   'application/pdf': 'pdf'
 };
 
@@ -93,7 +95,7 @@ async function resolveAttachmentUrls(payload) {
       dataUrl,
       fileName: `support-attachment-${index + 1}.${extension}`,
       folder: 'support',
-      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'],
+      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif', 'application/pdf'],
       maxBytes: 12 * 1024 * 1024
     });
     uploadedUrls.push(uploadResult.url);
