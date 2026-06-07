@@ -231,11 +231,7 @@ function canBusinessUserCommentOnPost(post, user) {
     return true;
   }
 
-  if (!isPromotionBoardPost(post)) {
-    return true;
-  }
-
-  return isPromotionPostOwner(post, user);
+  return isPromotionBoardPost(post) && isPromotionPostOwner(post, user);
 }
 
 function canReplyToComment(comment, post, currentUser) {
