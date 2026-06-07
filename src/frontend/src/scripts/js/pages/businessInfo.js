@@ -24,6 +24,11 @@ const REGION_DISTRICT_MAP = {
 };
 
 const BUSINESS_CATEGORIES = ['룸', '바', '클럽', '기타'];
+const BUSINESS_AD_AREA_FALLBACK = {
+    regions: Object.keys(REGION_DISTRICT_MAP),
+    districtsByRegion: { ...REGION_DISTRICT_MAP }
+};
+let businessAdAreaAvailability = BUSINESS_AD_AREA_FALLBACK;
 const KAKAO_POSTCODE_SCRIPT_URL = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
 const BUSINESS_APPLY_AGREEMENT_KEY = 'mnmsBusinessApplyAgreedAt';
 const BUSINESS_OCR_SCRIPT_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
@@ -247,6 +252,46 @@ function readBusinessFilters() {
     };
 }
 
+function sortBusinessAreasByDefinedOrder(values, definedOrder = []) {
+    const order = new Map(definedOrder.map((value, index) => [value, index]));
+
+    return [...new Set(values.map((value) => String(value || '').trim()).filter(Boolean))]
+        .sort((left, right) => {
+            const leftOrder = order.has(left) ? order.get(left) : Number.MAX_SAFE_INTEGER;
+            const rightOrder = order.has(right) ? order.get(right) : Number.MAX_SAFE_INTEGER;
+            if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+            return left.localeCompare(right, 'ko-KR');
+        });
+}
+
+function normalizeBusinessAdAreaAvailability(response) {
+    const content = Array.isArray(response?.content) ? response.content : [];
+    const districtsByRegion = {};
+
+    content.forEach((item) => {
+        const region = String(item?.region || '').trim();
+        if (!region) return;
+
+        const knownDistricts = REGION_DISTRICT_MAP[region] || [];
+        const districts = Array.isArray(item?.districts)
+            ? item.districts.map((district) => String(district || '').trim()).filter(Boolean)
+            : [];
+        districtsByRegion[region] = sortBusinessAreasByDefinedOrder(districts, knownDistricts);
+    });
+
+    const regions = sortBusinessAreasByDefinedOrder(Object.keys(districtsByRegion), Object.keys(REGION_DISTRICT_MAP));
+    return { regions, districtsByRegion };
+}
+
+async function loadBusinessAdAreaAvailability() {
+    try {
+        const response = await APIClient.get('/live/business-ads/areas');
+        businessAdAreaAvailability = normalizeBusinessAdAreaAvailability(response);
+    } catch (error) {
+        businessAdAreaAvailability = BUSINESS_AD_AREA_FALLBACK;
+    }
+}
+
 function syncBadgeLabels() {
     const { region, district, category } = readBusinessFilters();
     const regionBadge = document.getElementById('business-region-badge-label');
@@ -296,7 +341,7 @@ function renderFilterButtonList(container, options, selectedValue, onSelect, all
     });
 }
 
-function bindBusinessFilterEvents() {
+async function bindBusinessFilterEvents() {
     const regionSelect = document.getElementById('business-region-filter');
     const districtSelect = document.getElementById('business-district-filter');
     const categorySelect = document.getElementById('business-category-filter');
@@ -310,6 +355,8 @@ function bindBusinessFilterEvents() {
 
     let keywordDebounceTimer = null;
 
+    await loadBusinessAdAreaAvailability();
+
     const requestBusinessAds = () => {
         if (keywordDebounceTimer) {
             window.clearTimeout(keywordDebounceTimer);
@@ -322,7 +369,7 @@ function bindBusinessFilterEvents() {
     const rerenderRegionMenu = () => {
         renderFilterButtonList(
             regionMenu,
-            Object.keys(REGION_DISTRICT_MAP).map((region) => ({ value: region, label: normalizeAreaLabel(region) })),
+            businessAdAreaAvailability.regions.map((region) => ({ value: region, label: normalizeAreaLabel(region) })),
             regionSelect?.value || '',
             (selected) => {
                 if (!regionSelect) return;
@@ -336,7 +383,7 @@ function bindBusinessFilterEvents() {
     };
 
     const rerenderDistrictMenu = () => {
-        const districts = REGION_DISTRICT_MAP[regionSelect?.value || ''] || [];
+        const districts = businessAdAreaAvailability.districtsByRegion[regionSelect?.value || ''] || [];
         renderFilterButtonList(
             districtMenu,
             districts.map((district) => ({ value: district, label: normalizeAreaLabel(district) })),
@@ -1046,7 +1093,7 @@ async function initBusinessInfoPage() {
 
     if (typeof initHeader === 'function') initHeader();
     Auth.bindLogoutButton();
-    bindBusinessFilterEvents();
+    await bindBusinessFilterEvents();
     await loadBusinessAds();
 }
 
