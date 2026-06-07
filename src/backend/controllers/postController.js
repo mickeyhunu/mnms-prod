@@ -217,8 +217,29 @@ function canViewSecretComment(comment, post, currentUser) {
   return canParticipateInSecretComment(comment, post, currentUser) || isAdminViewer(currentUser);
 }
 
+function isPromotionBoardPost(post) {
+  const boardType = parseBoardType(post?.boardType || post?.board_type);
+  return boardType === BOARD_TYPES.PROMOTION;
+}
+
+function isPromotionPostOwner(post, user) {
+  return isSameUserId(user?.id, getPostAuthorId(post));
+}
+
+function canBusinessUserCommentOnPost(post, user) {
+  if (!isBusinessUser(user)) {
+    return true;
+  }
+
+  return isPromotionBoardPost(post) && isPromotionPostOwner(post, user);
+}
+
 function canReplyToComment(comment, post, currentUser) {
   if (!currentUser || comment.isDeleted) {
+    return false;
+  }
+
+  if (!canBusinessUserCommentOnPost(post, currentUser)) {
     return false;
   }
 
@@ -695,6 +716,9 @@ async function createComment(req, res, next) {
     const post = await postModel.findPostById(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
     if (post.is_hidden) return res.status(403).json({ message: '관리자에 의해 제한된 게시글에는 댓글을 작성할 수 없습니다.' });
+    if (!canBusinessUserCommentOnPost(post, req.user)) {
+      return res.status(403).json({ message: '광고자 계정은 홍보게시판의 본인 게시글에만 댓글을 작성할 수 있습니다.' });
+    }
 
     const { content, parentId: rawParentId, isSecret } = req.body;
     if (!content) return res.status(400).json({ message: '댓글 내용을 입력해주세요.' });

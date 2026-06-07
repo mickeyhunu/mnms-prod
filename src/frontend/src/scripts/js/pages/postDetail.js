@@ -5,6 +5,7 @@ let postId = null;
 let currentCommentsPage = 1;
 let currentPostAuthor = null;
 let currentPostBoardType = '';
+let currentPostDetail = null;
 let selectedMessageRecipient = null;
 let replyingTo = null;
 let activeCommentActionId = null;
@@ -348,10 +349,7 @@ async function loadPost() {
         if (postDetail) postDetail.classList.remove('hidden');
         if (commentsSection) commentsSection.classList.remove('hidden');
 
-        const commentForm = document.getElementById('comment-form');
-        if (commentForm) {
-            commentForm.classList.toggle('hidden', Boolean(normalizedPost.isHidden));
-        }
+        updateCommentFormAvailability(normalizedPost);
 
         loadComments();
 
@@ -478,7 +476,47 @@ function isCurrentUserPostAuthor(post) {
 }
 
 
+function isAdvertiserCommentRestrictedForPost(post = currentPostDetail) {
+    if (!post) return false;
+    return isBusinessUser(Auth.getUser())
+        && !(String(post.boardType || '').toUpperCase() === 'PROMOTION' && isCurrentUserPostAuthor(post));
+}
+
+function ensurePromotionCommentRestrictionNotice() {
+    const commentForm = document.getElementById('comment-form');
+    if (!commentForm) return null;
+
+    let notice = document.getElementById('promotion-comment-restriction-notice');
+    if (!notice) {
+        notice = document.createElement('p');
+        notice.id = 'promotion-comment-restriction-notice';
+        notice.className = 'comment-restriction-notice hidden';
+        notice.textContent = '광고자 계정은 홍보게시판의 본인 게시글에만 댓글을 작성할 수 있습니다.';
+        commentForm.parentNode?.insertBefore(notice, commentForm);
+    }
+
+    return notice;
+}
+
+function updateCommentFormAvailability(post) {
+    const commentForm = document.getElementById('comment-form');
+    const notice = ensurePromotionCommentRestrictionNotice();
+    const isHiddenPost = Boolean(post?.isHidden);
+    const isRestricted = isAdvertiserCommentRestrictedForPost(post);
+
+    if (commentForm) {
+        commentForm.classList.toggle('hidden', isHiddenPost || isRestricted);
+    }
+
+    if (notice) {
+        notice.classList.toggle('hidden', isHiddenPost || !isRestricted);
+    }
+}
+
+
 function renderPostDetail(post) {
+    currentPostDetail = post;
+
     const titleElement = document.getElementById('post-title');
     const contentElement = document.getElementById('post-content');
     const authorElement = document.getElementById('post-author');
@@ -934,7 +972,12 @@ function createCommentItem(comment, depth = 0) {
         authorLevel: commentAuthorLevel
     });
     const canReplyByServer = comment.canReply !== false;
-    const canReply = Auth.isAuthenticated() && depth < 3 && !isDeletedComment && !isHiddenComment && canReplyByServer;
+    const canReply = Auth.isAuthenticated()
+        && depth < 3
+        && !isDeletedComment
+        && !isHiddenComment
+        && canReplyByServer
+        && !isAdvertiserCommentRestrictedForPost();
     const canGuestEdit = !Auth.isAuthenticated() && !comment.userId;
     const isOtherUser = Auth.isAuthenticated() && currentUser && !isAuthor;
     const canReportCommentByServer = comment.canReport !== false;
@@ -1144,6 +1187,10 @@ async function handleReplySubmit(e, parentId) {
     e.preventDefault();
     
     if (!Auth.requireAuth()) return;
+    if (isAdvertiserCommentRestrictedForPost()) {
+        showNotification('광고자 계정은 홍보게시판의 본인 게시글에만 댓글을 작성할 수 있습니다.', 'error');
+        return;
+    }
     
     const textarea = document.getElementById(`reply-content-${parentId}`);
     const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -1230,6 +1277,11 @@ async function handleCreateComment(e) {
     const submitBtn = document.getElementById('comment-submit-btn');
     const contentTextarea = document.getElementById('comment-content');
     
+    if (isAdvertiserCommentRestrictedForPost()) {
+        showNotification('광고자 계정은 홍보게시판의 본인 게시글에만 댓글을 작성할 수 있습니다.', 'error');
+        return;
+    }
+
     const content = contentTextarea.value.trim();
     const secretCheckbox = document.getElementById('comment-secret');
     const blockSecretForBusiness = isBusinessUser(Auth.getUser());
