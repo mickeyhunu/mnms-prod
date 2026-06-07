@@ -9,6 +9,7 @@ let currentPostDetail = null;
 let selectedMessageRecipient = null;
 let replyingTo = null;
 let activeCommentActionId = null;
+let currentCommentById = new Map();
 let shareSheetOpen = false;
 const POST_DETAIL_DEFAULT_DESCRIPTION = '미드나잇 맨즈 커뮤니티 게시글 상세 페이지입니다.';
 
@@ -475,6 +476,61 @@ function isCurrentUserPostAuthor(post) {
     return String(currentUser.id) === String(postAuthorId);
 }
 
+function isCurrentUserCommentAuthor(comment) {
+    const currentUser = Auth.getUser();
+    if (!currentUser) {
+        return false;
+    }
+
+    const commentAuthorId = comment?.authorId ?? comment?.userId;
+    if (!commentAuthorId) {
+        return false;
+    }
+
+    return String(currentUser.id) === String(commentAuthorId);
+}
+
+function hasAuthorSnapshot(content) {
+    return Object.prototype.hasOwnProperty.call(content || {}, 'authorRoleSnapshot')
+        || Object.prototype.hasOwnProperty.call(content || {}, 'authorMemberTypeSnapshot')
+        || Object.prototype.hasOwnProperty.call(content || {}, 'author_role_snapshot')
+        || Object.prototype.hasOwnProperty.call(content || {}, 'author_member_type_snapshot');
+}
+
+function isBusinessAuthorSnapshot(content = {}) {
+    const role = String(content.authorRoleSnapshot || content.author_role_snapshot || '').toUpperCase();
+    const memberType = String(content.authorMemberTypeSnapshot || content.author_member_type_snapshot || '').toUpperCase();
+    return role === 'BUSINESS' || memberType === 'BUSINESS';
+}
+
+function isPreBusinessEditRestrictedContent(content, contentType) {
+    if (content?.isPreBusinessEditRestricted) {
+        return true;
+    }
+
+    const isAuthor = contentType === '댓글'
+        ? isCurrentUserCommentAuthor(content)
+        : isCurrentUserPostAuthor(content);
+
+    return isBusinessUser(Auth.getUser())
+        && isAuthor
+        && hasAuthorSnapshot(content)
+        && !isBusinessAuthorSnapshot(content);
+}
+
+function getPreBusinessEditRestrictionMessage(content, contentType) {
+    return content?.preBusinessEditRestrictionMessage
+        || `광고자 계정은 일반회원으로 작성한 ${contentType}을 수정할 수 없습니다.`;
+}
+
+function alertPreBusinessEditRestrictionIfNeeded(content, contentType) {
+    if (!isPreBusinessEditRestrictedContent(content, contentType)) {
+        return false;
+    }
+
+    alert(getPreBusinessEditRestrictionMessage(content, contentType));
+    return true;
+}
 
 function isAdvertiserCommentRestrictedForPost(post = currentPostDetail) {
     if (!post) return false;
@@ -907,6 +963,8 @@ async function loadComments() {
 function renderComments(comments) {
     const commentsList = document.getElementById('comments-list');
     if (!commentsList) return;
+
+    currentCommentById = new Map();
     
     commentsList.innerHTML = '';
     
@@ -943,6 +1001,8 @@ function buildCommentsTree(comments) {
 }
 
 function createCommentItem(comment, depth = 0) {
+    currentCommentById.set(String(comment.id), comment);
+
     const div = document.createElement('div');
     div.className = `comment-item ${depth > 0 ? 'reply' : ''}`;
     div.setAttribute('data-depth', depth);
@@ -1048,6 +1108,12 @@ function createCommentItem(comment, depth = 0) {
 
 
 function showCommentEditForm(commentId) {
+    const comment = currentCommentById.get(String(commentId));
+    if (alertPreBusinessEditRestrictionIfNeeded(comment, '댓글')) {
+        hideActiveCommentActionMenu();
+        return;
+    }
+
     hideAllReplyForms();
 
     const container = document.getElementById(`reply-form-${commentId}`);
@@ -1328,6 +1394,15 @@ async function handleCreateComment(e) {
 
 async function handleEditPost(e) {
     e.preventDefault();
+
+    if (alertPreBusinessEditRestrictionIfNeeded(currentPostDetail, '게시글')) {
+        const menu = document.getElementById('post-more-menu');
+        if (menu) {
+            menu.classList.add('hidden');
+        }
+        return;
+    }
+
     window.location.href = `/create?mode=edit&postId=${postId}`;
 }
 
