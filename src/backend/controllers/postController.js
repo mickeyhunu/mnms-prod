@@ -64,8 +64,30 @@ function isBusinessUserManagingPreBusinessContent(user, content) {
   return isBusinessUser(user) && !isAdminViewer(user) && !isBusinessAuthorSnapshot(content);
 }
 
+function hasAuthorSnapshotMetadata(content) {
+  return Object.prototype.hasOwnProperty.call(content || {}, 'author_role_snapshot')
+    || Object.prototype.hasOwnProperty.call(content || {}, 'authorRoleSnapshot')
+    || Object.prototype.hasOwnProperty.call(content || {}, 'author_member_type_snapshot')
+    || Object.prototype.hasOwnProperty.call(content || {}, 'authorMemberTypeSnapshot');
+}
+
 function getPreBusinessContentRestrictionMessage(contentType, action) {
   return `광고자 계정은 일반회원으로 작성한 ${contentType}을 ${action}할 수 없습니다.`;
+}
+
+function resolvePreBusinessEditRestriction(currentUser, content, contentType) {
+  const getAuthorId = contentType === '댓글' ? getCommentAuthorId : getPostAuthorId;
+  const isRestricted = Boolean(
+    currentUser
+    && isSameUserId(getAuthorId(content), currentUser.id)
+    && hasAuthorSnapshotMetadata(content)
+    && isBusinessUserManagingPreBusinessContent(currentUser, content)
+  );
+
+  return {
+    isRestricted,
+    message: isRestricted ? getPreBusinessContentRestrictionMessage(contentType, '수정') : ''
+  };
 }
 
 function normalizeAuthorSnapshotValue(value, fallback) {
@@ -355,6 +377,10 @@ function sanitizePostForViewer(post, currentUser = null) {
     normalized.authorIsBusiness = isAdvertiserAuthor(normalized);
   }
 
+  const editRestriction = resolvePreBusinessEditRestriction(currentUser, normalized, '게시글');
+  normalized.isPreBusinessEditRestricted = editRestriction.isRestricted;
+  normalized.preBusinessEditRestrictionMessage = editRestriction.message;
+
   return normalized;
 }
 
@@ -381,6 +407,10 @@ function sanitizeCommentForViewer(comment, post, currentUser) {
 
   normalized.canReply = canReplyToComment(normalized, post, currentUser);
   normalized.canReport = canReportComment(normalized, post, currentUser);
+
+  const editRestriction = resolvePreBusinessEditRestriction(currentUser, normalized, '댓글');
+  normalized.isPreBusinessEditRestricted = editRestriction.isRestricted;
+  normalized.preBusinessEditRestrictionMessage = editRestriction.message;
 
   const isAdminUser = isAdminViewer(currentUser);
 
