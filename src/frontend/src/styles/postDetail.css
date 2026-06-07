@@ -397,6 +397,16 @@
     margin-top: 4px;
 }
 
+.comment-restriction-notice {
+    border: 1px solid #ffd6a8;
+    border-radius: 10px;
+    margin: 0 0 12px;
+    padding: 12px;
+    background: #fff8ef;
+    color: #9a5a00;
+    font-size: 14px;
+}
+
 .comment-item {
     border-bottom: 1px solid #eff2f5;
     padding: 14px 0;
