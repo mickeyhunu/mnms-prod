@@ -476,11 +476,10 @@ function isCurrentUserPostAuthor(post) {
 }
 
 
-function isPromotionBoardRestrictedForBusinessViewer(post = currentPostDetail) {
+function isAdvertiserCommentRestrictedForPost(post = currentPostDetail) {
     if (!post) return false;
     return isBusinessUser(Auth.getUser())
-        && String(post.boardType || '').toUpperCase() === 'PROMOTION'
-        && !isCurrentUserPostAuthor(post);
+        && !(String(post.boardType || '').toUpperCase() === 'PROMOTION' && isCurrentUserPostAuthor(post));
 }
 
 function ensurePromotionCommentRestrictionNotice() {
@@ -503,7 +502,7 @@ function updateCommentFormAvailability(post) {
     const commentForm = document.getElementById('comment-form');
     const notice = ensurePromotionCommentRestrictionNotice();
     const isHiddenPost = Boolean(post?.isHidden);
-    const isRestricted = isPromotionBoardRestrictedForBusinessViewer(post);
+    const isRestricted = isAdvertiserCommentRestrictedForPost(post);
 
     if (commentForm) {
         commentForm.classList.toggle('hidden', isHiddenPost || isRestricted);
@@ -978,7 +977,7 @@ function createCommentItem(comment, depth = 0) {
         && !isDeletedComment
         && !isHiddenComment
         && canReplyByServer
-        && !isPromotionBoardRestrictedForBusinessViewer();
+        && !isAdvertiserCommentRestrictedForPost();
     const canGuestEdit = !Auth.isAuthenticated() && !comment.userId;
     const isOtherUser = Auth.isAuthenticated() && currentUser && !isAuthor;
     const canReportCommentByServer = comment.canReport !== false;
@@ -1188,7 +1187,7 @@ async function handleReplySubmit(e, parentId) {
     e.preventDefault();
     
     if (!Auth.requireAuth()) return;
-    if (isPromotionBoardRestrictedForBusinessViewer()) {
+    if (isAdvertiserCommentRestrictedForPost()) {
         showNotification('광고자 계정은 홍보게시판의 본인 게시글에만 댓글을 작성할 수 있습니다.', 'error');
         return;
     }
@@ -1278,7 +1277,7 @@ async function handleCreateComment(e) {
     const submitBtn = document.getElementById('comment-submit-btn');
     const contentTextarea = document.getElementById('comment-content');
     
-    if (isPromotionBoardRestrictedForBusinessViewer()) {
+    if (isAdvertiserCommentRestrictedForPost()) {
         showNotification('광고자 계정은 홍보게시판의 본인 게시글에만 댓글을 작성할 수 있습니다.', 'error');
         return;
     }
