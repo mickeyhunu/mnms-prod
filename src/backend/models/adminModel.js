@@ -594,6 +594,21 @@ async function listBusinessAdsByOwner(ownerUserId) {
   return rows;
 }
 
+async function listPublicBusinessAdAreas() {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT TRIM(ba.region) AS region, TRIM(COALESCE(ba.district, '')) AS district, COUNT(*) AS adCount
+       FROM business_ads ba
+      WHERE ba.is_active = 1
+        AND ba.registration_status = 'REGISTERED'
+        AND TRIM(COALESCE(ba.region, '')) <> ''
+      GROUP BY TRIM(ba.region), TRIM(COALESCE(ba.district, ''))
+      ORDER BY MIN(ba.display_order) ASC, TRIM(ba.region) ASC, TRIM(COALESCE(ba.district, '')) ASC`
+  );
+
+  return rows;
+}
+
 async function listPublicBusinessAds({ region = '', district = '', category = '', keyword = '' } = {}) {
   const pool = getPool();
   const whereConditions = ['ba.is_active = 1', "ba.registration_status = 'REGISTERED'"];
@@ -1201,6 +1216,7 @@ module.exports = {
   updateAd,
   deleteAd,
   listBusinessAdsByOwner,
+  listPublicBusinessAdAreas,
   listPublicBusinessAds,
   increaseBusinessAdViewCounts,
   createBusinessAd,
