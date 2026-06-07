@@ -2,6 +2,7 @@
  * 파일 역할: business-info 페이지의 업체 광고 프로필 목록/지역 필터 렌더링을 담당하는 스크립트 파일.
  */
 const BUSINESS_IMAGE_PLACEHOLDER = '등록할 이미지를 선택해주세요.';
+const BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
 
 const REGION_DISTRICT_MAP = {
     서울: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
@@ -211,18 +212,15 @@ function renderBusinessAds(ads) {
         const baseTitle = sanitizeHTML(ad.title || '업체정보');
         const title = `[${regionLabel}-${businessName}] ${baseTitle}`;
         const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
-        const defaultImageUrl = '/src/assets/image/ad-profile-default.webp';
         const uploadedImageUrl = sanitizeHTML(ad.imageUrl || '');
+        const thumbnailImageUrl = uploadedImageUrl || BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL;
         const formattedTime = (openHour !== '시간선택' && closeHour !== '시간선택')
             ? `${openHour} ~ ${closeHour}`
             : '시간선택 ~ 시간선택';
         const detail = `${regionLabel} ${district} · ${category} · ${formattedTime}`;
-        const uploadedImageAttribute = uploadedImageUrl
-            ? ` data-business-image-url="${uploadedImageUrl}"`
-            : '';
         return `
             <li class="business-directory-item">
-                <img class="business-directory-thumbnail" src="${defaultImageUrl}"${uploadedImageAttribute} alt="${title} 대표이미지" loading="lazy">
+                <img class="business-directory-thumbnail" src="${thumbnailImageUrl}" alt="${title} 대표이미지" loading="lazy" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
                 <div class="business-directory-main">
                     <h4>${title}</h4>
                     <p class="business-directory-region-detail">${detail}</p>
@@ -234,13 +232,6 @@ function renderBusinessAds(ads) {
             </li>
         `;
     }).join('');
-
-    list.querySelectorAll('.business-directory-thumbnail[data-business-image-url]').forEach((image) => {
-        const uploadedImageUrl = image.dataset.businessImageUrl;
-        if (uploadedImageUrl) {
-            image.src = uploadedImageUrl;
-        }
-    });
 }
 
 function readBusinessFilters() {
