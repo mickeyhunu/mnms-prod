@@ -304,6 +304,8 @@ async function findPostDetailById(id) {
             COALESCE(p.author_nickname_snapshot, u.nickname, '비회원') AS authorNickname,
             COALESCE(p.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
             COALESCE(p.author_member_type_snapshot, u.member_type, 'MEMBER') AS authorMemberType,
+            p.author_role_snapshot AS authorRoleSnapshot,
+            p.author_member_type_snapshot AS authorMemberTypeSnapshot,
             (
               SELECT ba.plan_type
                 FROM business_ads ba
@@ -419,6 +421,8 @@ async function listComments(postId) {
             COALESCE(c.author_nickname_snapshot, u.nickname, '비회원') AS authorNickname,
             COALESCE(c.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
             COALESCE(c.author_member_type_snapshot, u.member_type, 'MEMBER') AS authorMemberType,
+            c.author_role_snapshot AS authorRoleSnapshot,
+            c.author_member_type_snapshot AS authorMemberTypeSnapshot,
             (
               SELECT ba.plan_type
                 FROM business_ads ba
