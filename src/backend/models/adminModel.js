@@ -364,7 +364,25 @@ async function updateUserRole(userId, role) {
 
 async function updateUserMemberType(userId, memberType) {
   const pool = getPool();
-  await pool.query('UPDATE users SET member_type = ? WHERE id = ?', [memberType, userId]);
+  const normalizedMemberType = String(memberType || '').trim().toUpperCase();
+
+  if (normalizedMemberType !== 'BUSINESS') {
+    await pool.query('UPDATE users SET member_type = ? WHERE id = ?', [memberType, userId]);
+    return;
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    await freezeUserCommunityAuthorSnapshotsBeforeBusinessConversion(userId, connection);
+    await connection.query('UPDATE users SET member_type = ? WHERE id = ?', [normalizedMemberType, userId]);
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 
 async function updateUserByAdmin(userId, payload) {
@@ -425,12 +443,6 @@ async function updateUserByAdmin(userId, payload) {
 
   if (!fields.length) return;
 
-  if (!hasNicknameUpdate) {
-    values.push(userId);
-    await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
-    return;
-  }
-
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
@@ -441,10 +453,17 @@ async function updateUserByAdmin(userId, payload) {
     const wasBusinessAccount = String(rows[0]?.role || '').toUpperCase() === 'BUSINESS'
       || String(rows[0]?.member_type || '').toUpperCase() === 'BUSINESS';
 
+    const willBecomeBusinessAccount = String(payload.role || '').toUpperCase() === 'BUSINESS'
+      || String(payload.member_type || payload.memberType || '').toUpperCase() === 'BUSINESS';
+
+    if (!wasBusinessAccount && willBecomeBusinessAccount) {
+      await freezeUserCommunityAuthorSnapshotsBeforeBusinessConversion(userId, connection);
+    }
+
     values.push(userId);
     await connection.query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
 
-    if (wasBusinessAccount) {
+    if (wasBusinessAccount && hasNicknameUpdate) {
       await updateBusinessAuthorNicknameSnapshots(userId, payload.nickname, connection);
     }
 
