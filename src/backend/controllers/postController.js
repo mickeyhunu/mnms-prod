@@ -54,6 +54,19 @@ function isBusinessUser(user) {
   return role === 'BUSINESS' || memberType === 'BUSINESS';
 }
 
+function isBusinessAuthorSnapshot(record) {
+  const role = String(record?.author_role_snapshot || record?.authorRoleSnapshot || '').toUpperCase();
+  const memberType = String(record?.author_member_type_snapshot || record?.authorMemberTypeSnapshot || '').toUpperCase();
+  return role === 'BUSINESS' || memberType === 'BUSINESS';
+}
+
+function isBusinessUserManagingPreBusinessContent(user, content) {
+  return isBusinessUser(user) && !isAdminViewer(user) && !isBusinessAuthorSnapshot(content);
+}
+
+function getPreBusinessContentRestrictionMessage(contentType, action) {
+  return `광고자 계정은 일반회원으로 작성한 ${contentType}을 ${action}할 수 없습니다.`;
+}
 
 function normalizeAuthorSnapshotValue(value, fallback) {
   const normalized = String(value || fallback || '').trim().toUpperCase();
@@ -577,8 +590,11 @@ async function updatePost(req, res, next) {
 
     const post = await postModel.findPostById(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
-    if (!req.user || (post.user_id !== req.user.id && req.user.role !== 'ADMIN')) {
+    if (!req.user || (!isSameUserId(post.user_id, req.user.id) && !isAdminViewer(req.user))) {
       return res.status(403).json({ message: '수정 권한이 없습니다.' });
+    }
+    if (isSameUserId(post.user_id, req.user.id) && isBusinessUserManagingPreBusinessContent(req.user, post)) {
+      return res.status(403).json({ message: getPreBusinessContentRestrictionMessage('게시글', '수정') });
     }
     if (Boolean(post.is_notice)) {
       return res.status(403).json({ message: '공지글/필독글은 관리자 페이지에서만 수정할 수 있습니다.' });
@@ -647,8 +663,11 @@ async function deletePost(req, res, next) {
     if (Boolean(post.is_notice)) {
       return res.status(403).json({ message: '공지글/필독글은 관리자 페이지에서만 삭제할 수 있습니다.' });
     }
-    if (!req.user || (post.user_id !== req.user.id && req.user.role !== 'ADMIN')) {
+    if (!req.user || (!isSameUserId(post.user_id, req.user.id) && !isAdminViewer(req.user))) {
       return res.status(403).json({ message: '삭제 권한이 없습니다.' });
+    }
+    if (isSameUserId(post.user_id, req.user.id) && isBusinessUserManagingPreBusinessContent(req.user, post)) {
+      return res.status(403).json({ message: getPreBusinessContentRestrictionMessage('게시글', '삭제') });
     }
 
     const likes = await postModel.listPointAwardedLikesByPostId(postId);
@@ -786,8 +805,12 @@ async function updateComment(req, res, next) {
     const comment = await postModel.findCommentById(commentId);
     if (!comment) return res.status(404).json({ message: '댓글을 찾을 수 없습니다.' });
 
-    if (comment.user_id !== req.user.id && req.user.role !== 'ADMIN') {
+    if (!isSameUserId(comment.user_id, req.user.id) && !isAdminViewer(req.user)) {
       return res.status(403).json({ message: '수정 권한이 없습니다.' });
+    }
+
+    if (isSameUserId(comment.user_id, req.user.id) && isBusinessUserManagingPreBusinessContent(req.user, comment)) {
+      return res.status(403).json({ message: getPreBusinessContentRestrictionMessage('댓글', '수정') });
     }
 
     if (comment.is_deleted) {
@@ -831,8 +854,12 @@ async function deleteComment(req, res, next) {
     const comment = await postModel.findCommentById(commentId);
     if (!comment) return res.status(404).json({ message: '댓글을 찾을 수 없습니다.' });
 
-    if (comment.user_id !== req.user.id && req.user.role !== 'ADMIN') {
+    if (!isSameUserId(comment.user_id, req.user.id) && !isAdminViewer(req.user)) {
       return res.status(403).json({ message: '삭제 권한이 없습니다.' });
+    }
+
+    if (isSameUserId(comment.user_id, req.user.id) && isBusinessUserManagingPreBusinessContent(req.user, comment)) {
+      return res.status(403).json({ message: getPreBusinessContentRestrictionMessage('댓글', '삭제') });
     }
 
     if (comment.is_deleted) {
