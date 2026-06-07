@@ -9,7 +9,8 @@ const supportController = require('../controllers/supportController');
 const { findByNicknameExceptUser } = require('../models/userModel');
 const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddleware');
 const { LOGIN_STATUS } = require('../utils/loginRestriction');
-const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
+const { deleteS3ObjectByUrl, deleteS3ObjectsByUrls } = require('../utils/fileUpload');
+const { collectBusinessInfoImageUrls, deleteUnreferencedBusinessInfoImages } = require('../utils/businessProfileImages');
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validatePassword } = require('../utils/authPolicy');
 const { hashPassword } = require('../utils/passwordHasher');
@@ -196,6 +197,11 @@ router.put('/business-applications/:userId/review', async (req, res, next) => {
     }
 
     await adminModel.reviewBusinessApplication(userId, { approvalStatus, rejectionReason, reviewedBy: req.user?.id || null });
+    if (approvalStatus === 'APPROVED') {
+      await deleteUnreferencedBusinessInfoImages(profile.lastApprovedBusinessInfo, [profile.businessInfo]);
+    } else if (profile.lastApprovedBusinessInfo) {
+      await deleteUnreferencedBusinessInfoImages(profile.businessInfo, [profile.lastApprovedBusinessInfo]);
+    }
     res.json({ success: true, message: approvalStatus === 'APPROVED' ? '기업회원 신청/변경을 승인했습니다.' : '기업회원 신청/변경을 반려했습니다.' });
   } catch (error) {
     next(error);
@@ -375,11 +381,19 @@ router.put('/users/:id', async (req, res, next) => {
 
     await adminModel.updateUserByAdmin(id, updates);
     if (businessApprovalStatus) {
+      const previousBusinessProfile = await adminModel.findBusinessApplicationByUserId(id);
       await adminModel.updateBusinessProfileReviewByUserId(id, {
         approvalStatus: businessApprovalStatus,
         rejectionReason: businessRejectionReason,
         reviewedBy: req.user?.id || null
       });
+      if (previousBusinessProfile) {
+        if (businessApprovalStatus === 'APPROVED') {
+          await deleteUnreferencedBusinessInfoImages(previousBusinessProfile.lastApprovedBusinessInfo, [previousBusinessProfile.businessInfo]);
+        } else if (previousBusinessProfile.lastApprovedBusinessInfo) {
+          await deleteUnreferencedBusinessInfoImages(previousBusinessProfile.businessInfo, [previousBusinessProfile.lastApprovedBusinessInfo]);
+        }
+      }
     }
     if (pointAdjustmentType !== 'NONE' && pointAdjustmentAmount > 0) {
       await adminModel.adjustUserPointsByAdmin(id, {
@@ -450,7 +464,16 @@ router.delete('/users/:id', async (req, res, next) => {
     const target = await adminModel.findUserById(id);
     if (!target || !isManagedUserAccount(target)) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
 
+    const [businessProfile, businessAds] = await Promise.all([
+      adminModel.findBusinessApplicationByUserId(id),
+      adminModel.listBusinessAdsByOwner(id)
+    ]);
+
     await adminModel.deleteUser(id);
+    await deleteS3ObjectsByUrls([
+      ...collectBusinessInfoImageUrls(businessProfile?.businessInfo, businessProfile?.lastApprovedBusinessInfo),
+      ...businessAds.map((ad) => ad.imageUrl).filter(Boolean)
+    ]);
     res.json({ success: true });
   } catch (error) {
     next(error);

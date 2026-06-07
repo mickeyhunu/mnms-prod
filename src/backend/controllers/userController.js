@@ -23,7 +23,14 @@ const { POINT_RULES } = require('../models/pointModel');
 const { STAMP_TYPES, createStampPurchase, getUserStampBalance, getUserStampHistories, getUserStampPaymentHistories } = require('../models/stampModel');
 const supportModel = require('../models/supportModel');
 const adminModel = require('../models/adminModel');
-const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
+const { deleteS3ObjectByUrl, deleteS3ObjectsByUrls } = require('../utils/fileUpload');
+const {
+  collectBusinessInfoImageUrls,
+  deleteUnreferencedBusinessInfoImages,
+  deleteUploadedBusinessInfoImagesOnFailure,
+  parseBusinessInfoValue,
+  uploadBusinessInfoDataUrlImages
+} = require('../utils/businessProfileImages');
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validatePassword } = require('../utils/authPolicy');
 const { hashPassword } = require('../utils/passwordHasher');
@@ -194,16 +201,6 @@ function isCompleteBusinessAdPayload(payload = {}) {
 function pickTrimmedText(body, key, fallback = '') {
   if (!body || !Object.prototype.hasOwnProperty.call(body, key)) return fallback;
   return String(body[key] || '').trim();
-}
-
-function parseBusinessInfoValue(value) {
-  if (!value) return {};
-  if (typeof value === 'object') return value;
-  try {
-    return JSON.parse(value);
-  } catch (_error) {
-    return {};
-  }
 }
 
 function stableBusinessInfoStringify(value) {
@@ -906,41 +903,59 @@ async function saveMyBusinessProfile(req, res, next) {
       }
     }
 
-    const normalizedBusinessInfo = {
-      ...businessInfo,
-      businessNumber: formatBusinessRegistrationNumber(businessInfo.businessNumber)
-    };
-    delete normalizedBusinessInfo.billingType;
+    const uploadedBusinessInfoImageUrls = [];
+    let normalizedBusinessInfo;
+    let shouldResetReviewStatus = false;
+    let shouldCaptureInitialApprovedSnapshot = false;
 
-    if (businessRegistrationVerification?.valid) {
-      normalizedBusinessInfo.businessNumberVerificationStatus = 'valid';
-      normalizedBusinessInfo.businessRegistrationStatusName = businessRegistrationVerification.statusName || '';
-      normalizedBusinessInfo.businessRegistrationStatusCode = businessRegistrationVerification.statusCode || '';
+    try {
+      normalizedBusinessInfo = await uploadBusinessInfoDataUrlImages({
+        ...businessInfo,
+        businessNumber: formatBusinessRegistrationNumber(businessInfo.businessNumber)
+      }, uploadedBusinessInfoImageUrls);
+      delete normalizedBusinessInfo.billingType;
+
+      if (businessRegistrationVerification?.valid) {
+        normalizedBusinessInfo.businessNumberVerificationStatus = 'valid';
+        normalizedBusinessInfo.businessRegistrationStatusName = businessRegistrationVerification.statusName || '';
+        normalizedBusinessInfo.businessRegistrationStatusCode = businessRegistrationVerification.statusCode || '';
+      }
+
+      const isBusinessMember = String(req.user?.member_type || req.user?.memberType || '').toUpperCase() === 'BUSINESS';
+      const isApprovedBusinessProfile = existingProfile
+        && normalizeBusinessProfileRegistrationStatus(existingProfile.registrationStatus, 'UNREGISTERED') === 'REGISTERED'
+        && normalizeBusinessProfileApprovalStatus(existingProfile.approvalStatus, 'PENDING') === 'APPROVED';
+      const businessInfoChanged = existingProfile ? hasBusinessInfoChanged(existingProfile.businessInfo, normalizedBusinessInfo) : true;
+      shouldResetReviewStatus = registrationStatus === 'REGISTERED'
+        && (!isBusinessMember || (isBusinessMember && businessInfoChanged));
+      shouldCaptureInitialApprovedSnapshot = isBusinessMember
+        && isApprovedBusinessProfile
+        && !existingProfile.lastApprovedBusinessInfo
+        && businessInfoChanged;
+
+      await upsertBusinessProfileByUserId(req.user.id, {
+        companyName: String(businessInfo.businessName || '').trim() || null,
+        businessRegistrationNumber: normalizedBusinessInfo.businessNumber || null,
+        managerName: String(businessInfo.businessOwner || '').trim() || null,
+        contactPhone: String(req.user.phone || '').trim() || null,
+        registrationStatus,
+        businessInfo: normalizedBusinessInfo,
+        lastApprovedBusinessInfo: shouldCaptureInitialApprovedSnapshot ? parseBusinessInfoValue(existingProfile.businessInfo) : undefined,
+        approvalStatus: shouldResetReviewStatus ? 'PENDING' : null,
+        rejectionReason: shouldResetReviewStatus ? null : undefined
+      });
+    } catch (error) {
+      await deleteUploadedBusinessInfoImagesOnFailure(uploadedBusinessInfoImageUrls);
+      throw error;
     }
 
-    const isBusinessMember = String(req.user?.member_type || req.user?.memberType || '').toUpperCase() === 'BUSINESS';
-    const isApprovedBusinessProfile = existingProfile
-      && normalizeBusinessProfileRegistrationStatus(existingProfile.registrationStatus, 'UNREGISTERED') === 'REGISTERED'
-      && normalizeBusinessProfileApprovalStatus(existingProfile.approvalStatus, 'PENDING') === 'APPROVED';
-    const businessInfoChanged = existingProfile ? hasBusinessInfoChanged(existingProfile.businessInfo, normalizedBusinessInfo) : true;
-    const shouldResetReviewStatus = registrationStatus === 'REGISTERED'
-      && (!isBusinessMember || (isBusinessMember && businessInfoChanged));
-    const shouldCaptureInitialApprovedSnapshot = isBusinessMember
-      && isApprovedBusinessProfile
-      && !existingProfile.lastApprovedBusinessInfo
-      && businessInfoChanged;
-
-    await upsertBusinessProfileByUserId(req.user.id, {
-      companyName: String(businessInfo.businessName || '').trim() || null,
-      businessRegistrationNumber: normalizedBusinessInfo.businessNumber || null,
-      managerName: String(businessInfo.businessOwner || '').trim() || null,
-      contactPhone: String(req.user.phone || '').trim() || null,
-      registrationStatus,
-      businessInfo: normalizedBusinessInfo,
-      lastApprovedBusinessInfo: shouldCaptureInitialApprovedSnapshot ? parseBusinessInfoValue(existingProfile.businessInfo) : undefined,
-      approvalStatus: shouldResetReviewStatus ? 'PENDING' : null,
-      rejectionReason: shouldResetReviewStatus ? null : undefined
-    });
+    if (existingProfile) {
+      await deleteUnreferencedBusinessInfoImages(existingProfile.businessInfo, [
+        normalizedBusinessInfo,
+        existingProfile.lastApprovedBusinessInfo,
+        shouldCaptureInitialApprovedSnapshot ? existingProfile.businessInfo : null
+      ]);
+    }
 
     res.json({
       success: true,
@@ -985,7 +1000,18 @@ async function withdrawMyAccount(req, res, next) {
       return res.status(400).json({ message: '본인인증 확인 정보가 필요합니다.' });
     }
 
+    const [businessProfile, businessAds] = await Promise.all([
+      getBusinessProfileByUserId(req.user.id),
+      adminModel.listBusinessAdsByOwner(req.user.id)
+    ]);
+
     await withdrawUserById(req.user.id, { reason });
+    await deleteS3ObjectsByUrls([
+      ...collectBusinessInfoImageUrls(businessProfile?.businessInfo, businessProfile?.lastApprovedBusinessInfo),
+      ...businessAds
+        .map((ad) => ad.imageUrl)
+        .filter((imageUrl) => imageUrl && !isBusinessAdDefaultImageUrl(imageUrl))
+    ]);
     res.json({ success: true, message: '회원 탈퇴가 완료되었습니다.' });
   } catch (error) {
     next(error);
