@@ -3437,7 +3437,7 @@ body[data-page="admin"] {
     display: flex;
     align-items: center;
     gap: 16px;
-    margin-top: 12px;
+    margin-top: 15px;
     padding: 12px;
     border: 1px solid #e5e7eb;
     border-radius: 14px;
@@ -3957,6 +3957,7 @@ body[data-page="admin"] {
     color: #1f2937;
     font-size: 13px;
     line-height: 1;
+    border-radius: 6px;
 }
 
 .business-filter-option.is-active {
