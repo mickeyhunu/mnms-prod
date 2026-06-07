@@ -20,6 +20,24 @@ function getExtensionFromMime(mimeType) {
   return EXTENSION_BY_MIME[mimeType] || 'bin';
 }
 
+function isImageMimeType(mimeType) {
+  return String(mimeType || '').toLowerCase().startsWith('image/');
+}
+
+function replaceFileExtension(fileName, extension) {
+  const parsed = path.parse(String(fileName || '').trim());
+  const baseName = parsed.name || parsed.base || 'file';
+  return `${baseName}.${extension}`;
+}
+
+async function convertImageBufferToWebp(buffer) {
+  const sharp = require('sharp');
+  return sharp(buffer, { animated: true })
+    .rotate()
+    .webp({ quality: 82, effort: 4 })
+    .toBuffer();
+}
+
 function parseDataUrl(dataUrl) {
   const matched = String(dataUrl || '').match(/^data:([^;]+);base64,(.+)$/);
   if (!matched) return null;
@@ -97,12 +115,28 @@ async function uploadDataUrlToS3({ dataUrl, folder = 'uploads', fileName = '', a
     throw new Error(`허용되지 않은 MIME 타입입니다: ${parsed.mimeType}`);
   }
 
-  const bodyBuffer = Buffer.from(parsed.base64Body, 'base64');
-  if (!bodyBuffer.length) throw new Error('빈 파일은 업로드할 수 없습니다.');
-  if (bodyBuffer.length > maxBytes) throw new Error(`파일 크기 제한(${maxBytes} bytes)을 초과했습니다.`);
+  const originalBuffer = Buffer.from(parsed.base64Body, 'base64');
+  if (!originalBuffer.length) throw new Error('빈 파일은 업로드할 수 없습니다.');
+  if (originalBuffer.length > maxBytes) throw new Error(`파일 크기 제한(${maxBytes} bytes)을 초과했습니다.`);
 
-  const extension = getExtensionFromMime(parsed.mimeType);
-  const safeName = sanitizeFileName(fileName || `file.${extension}`, 'file');
+  const isImageUpload = isImageMimeType(parsed.mimeType);
+  let bodyBuffer = originalBuffer;
+  let storedMimeType = parsed.mimeType;
+  let extension = getExtensionFromMime(parsed.mimeType);
+
+  if (isImageUpload) {
+    try {
+      bodyBuffer = await convertImageBufferToWebp(originalBuffer);
+      storedMimeType = 'image/webp';
+      extension = 'webp';
+    } catch (error) {
+      throw new Error(`이미지를 WebP로 변환하지 못했습니다: ${error.message}`);
+    }
+  }
+
+  const requestedFileName = fileName || `file.${extension}`;
+  const storageFileName = isImageUpload ? replaceFileExtension(requestedFileName, 'webp') : requestedFileName;
+  const safeName = sanitizeFileName(storageFileName, 'file');
   const key = `${folder.replace(/^\/+|\/+$/g, '')}/${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}-${safeName}`;
 
   const client = getS3Client();
@@ -112,7 +146,7 @@ async function uploadDataUrlToS3({ dataUrl, folder = 'uploads', fileName = '', a
       Bucket: s3BucketName,
       Key: key,
       Body: bodyBuffer,
-      ContentType: parsed.mimeType
+      ContentType: storedMimeType
     }));
   } catch (error) {
     const statusCode = Number(error?.$metadata?.httpStatusCode || 0);
@@ -137,7 +171,8 @@ async function uploadDataUrlToS3({ dataUrl, folder = 'uploads', fileName = '', a
     key,
     url: buildS3ObjectUrl(key),
     fileName: safeName,
-    mimeType: parsed.mimeType,
+    mimeType: storedMimeType,
+    originalMimeType: parsed.mimeType,
     size: bodyBuffer.length
   };
 }
