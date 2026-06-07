@@ -54,6 +54,16 @@ function isBusinessUser(user) {
   return role === 'BUSINESS' || memberType === 'BUSINESS';
 }
 
+function isBusinessAuthorSnapshot(record) {
+  const role = String(record?.author_role_snapshot || record?.authorRoleSnapshot || '').toUpperCase();
+  const memberType = String(record?.author_member_type_snapshot || record?.authorMemberTypeSnapshot || '').toUpperCase();
+  return role === 'BUSINESS' || memberType === 'BUSINESS';
+}
+
+function isBusinessUserEditingPreBusinessContent(user, content) {
+  return isBusinessUser(user) && !isAdminViewer(user) && !isBusinessAuthorSnapshot(content);
+}
+
 
 function normalizeAuthorSnapshotValue(value, fallback) {
   const normalized = String(value || fallback || '').trim().toUpperCase();
@@ -580,6 +590,9 @@ async function updatePost(req, res, next) {
     if (!req.user || (post.user_id !== req.user.id && req.user.role !== 'ADMIN')) {
       return res.status(403).json({ message: '수정 권한이 없습니다.' });
     }
+    if (isSameUserId(post.user_id, req.user.id) && isBusinessUserEditingPreBusinessContent(req.user, post)) {
+      return res.status(403).json({ message: '광고자 계정은 일반회원으로 작성한 게시글을 수정할 수 없습니다.' });
+    }
     if (Boolean(post.is_notice)) {
       return res.status(403).json({ message: '공지글/필독글은 관리자 페이지에서만 수정할 수 있습니다.' });
     }
@@ -788,6 +801,10 @@ async function updateComment(req, res, next) {
 
     if (comment.user_id !== req.user.id && req.user.role !== 'ADMIN') {
       return res.status(403).json({ message: '수정 권한이 없습니다.' });
+    }
+
+    if (isSameUserId(comment.user_id, req.user.id) && isBusinessUserEditingPreBusinessContent(req.user, comment)) {
+      return res.status(403).json({ message: '광고자 계정은 일반회원으로 작성한 댓글을 수정할 수 없습니다.' });
     }
 
     if (comment.is_deleted) {
