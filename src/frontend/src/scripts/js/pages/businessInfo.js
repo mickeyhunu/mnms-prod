@@ -217,13 +217,15 @@ function renderBusinessAds(ads) {
         const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
         const uploadedImageUrl = sanitizeHTML(ad.imageUrl || '');
         const thumbnailImageUrl = uploadedImageUrl || BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL;
+        const thumbnailLoading = uploadedImageUrl || index < 6 ? 'eager' : 'lazy';
+        const thumbnailFetchPriority = uploadedImageUrl && index < 6 ? 'high' : 'auto';
         const formattedTime = (openHour !== '시간선택' && closeHour !== '시간선택')
             ? `${openHour} ~ ${closeHour}`
             : '시간선택 ~ 시간선택';
         const detail = `${regionLabel} ${district} · ${category} · ${formattedTime}`;
         return `
             <li class="business-directory-item business-directory-item--clickable" data-business-ad-id="${sanitizeHTML(ad.id || '')}" data-business-ad-view-count="${Number(ad.viewCount || 0)}" role="link" tabindex="0" aria-label="${title} 상세 페이지 보기">
-                <img class="business-directory-thumbnail" src="${thumbnailImageUrl}" alt="${title} 대표이미지" loading="lazy" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
+                <img class="business-directory-thumbnail" src="${thumbnailImageUrl}" alt="${title} 대표이미지" loading="${thumbnailLoading}" fetchpriority="${thumbnailFetchPriority}" decoding="async" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
                 <div class="business-directory-main">
                     <h4>${title}</h4>
                     <p class="business-directory-region-detail">${detail}</p>
