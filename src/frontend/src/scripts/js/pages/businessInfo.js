@@ -4,10 +4,6 @@
 const BUSINESS_IMAGE_PLACEHOLDER = '등록할 이미지를 선택해주세요.';
 const BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
 let businessDirectoryAds = [];
-const viewedBusinessAdIds = new Set();
-let businessAdViewObserver = null;
-
-
 const REGION_DISTRICT_MAP = {
     서울: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
     경기: ['가평군', '고양시', '과천시', '광명시', '광주시', '구리시', '군포시', '김포시', '남양주시', '동두천시', '부천시', '성남시', '수원시', '시흥시', '안산시', '안성시', '안양시', '양주시', '양평군', '여주시', '연천군', '오산시', '용인시', '의왕시', '의정부시', '이천시', '파주시', '평택시', '포천시', '하남시', '화성시'],
@@ -192,60 +188,12 @@ async function openBusinessAddressSearch() {
     }).open();
 }
 
-
-function disconnectBusinessAdViewObserver() {
-    if (!businessAdViewObserver) return;
-    businessAdViewObserver.disconnect();
-    businessAdViewObserver = null;
-}
-
-function recordBusinessAdView(item) {
-    const adId = String(item?.dataset?.businessAdId || '').trim();
-    if (!adId || viewedBusinessAdIds.has(adId)) return;
-
-    viewedBusinessAdIds.add(adId);
-    APIClient.post(`/live/business-ads/${encodeURIComponent(adId)}/view`).then(() => {
-        const viewElement = item.querySelector('[data-business-ad-view-count]');
-        const currentViewCount = Number.parseInt(item.dataset.businessAdViewCount || '0', 10) || 0;
-        const nextViewCount = currentViewCount + 1;
-        item.dataset.businessAdViewCount = String(nextViewCount);
-        if (viewElement) {
-            viewElement.textContent = `조회수 ${nextViewCount.toLocaleString('ko-KR')}`;
-        }
-    }).catch((error) => {
-        viewedBusinessAdIds.delete(adId);
-        console.warn('Business ad view tracking failed:', error);
-    });
-}
-
-function observeBusinessAdViews(list) {
-    disconnectBusinessAdViewObserver();
-    const items = Array.from(list.querySelectorAll('[data-business-ad-id]'));
-    if (!items.length) return;
-
-    if (typeof IntersectionObserver !== 'function') {
-        items.forEach(recordBusinessAdView);
-        return;
-    }
-
-    businessAdViewObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            if (!entry.isIntersecting || entry.intersectionRatio < 0.5) return;
-            recordBusinessAdView(entry.target);
-            businessAdViewObserver?.unobserve(entry.target);
-        });
-    }, { threshold: 0.5 });
-
-    items.forEach((item) => businessAdViewObserver.observe(item));
-}
-
 function renderBusinessAds(ads) {
     const list = document.getElementById('business-directory-list');
     const empty = document.getElementById('business-directory-empty');
     if (!list || !empty) return;
 
     businessDirectoryAds = Array.isArray(ads) ? ads : [];
-    disconnectBusinessAdViewObserver();
     closeBusinessProfileModal();
 
     if (!businessDirectoryAds.length) {
@@ -287,7 +235,6 @@ function renderBusinessAds(ads) {
             </li>
         `;
     }).join('');
-    observeBusinessAdViews(list);
 }
 
 function normalizeBusinessProfileLinkUrl(value) {
