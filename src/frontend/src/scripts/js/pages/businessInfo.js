@@ -384,6 +384,7 @@ function openBusinessProfileModal(ad) {
 
 async function initBusinessProfileDetailPage() {
     const detail = document.getElementById('business-profile-detail');
+    const callFooter = document.getElementById('business-profile-call-footer');
     const callBar = document.getElementById('business-profile-call-bar');
     const visitButton = document.getElementById('business-profile-visit-button');
     const callButton = document.getElementById('business-profile-call-button');
@@ -418,12 +419,15 @@ async function initBusinessProfileDetailPage() {
             callButton.textContent = '전화하기';
             callButton.setAttribute('aria-label', `${getBusinessProfileTitle(ad)} 전화하기`);
             callBar.classList.remove('hidden');
+            callFooter?.classList.remove('hidden');
         } else if (callBar) {
             callBar.classList.add('hidden');
+            callFooter?.classList.add('hidden');
         }
     } catch (error) {
         detail.innerHTML = `<p class="text-muted">${sanitizeHTML(error.message || '업체정보를 불러오지 못했습니다.')}</p>`;
         callBar?.classList.add('hidden');
+        callFooter?.classList.add('hidden');
     }
 }
 
