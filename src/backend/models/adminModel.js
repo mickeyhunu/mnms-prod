@@ -701,6 +701,27 @@ async function createBusinessAd({
   return result.insertId;
 }
 
+async function findPublicBusinessAdById(adId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT ba.id, ba.owner_user_id AS ownerUserId, ba.business_name AS businessName, ba.manager_name AS managerName, ba.manager_contact AS managerContact,
+            ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl,
+            ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
+            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
+            ba.view_count AS viewCount, ba.registration_status AS registrationStatus, COALESCE(u.nickname, '업체') AS ownerNickname,
+            COALESCE(bp.company_name, '') AS companyName, COALESCE(bp.manager_name, '') AS profileManagerName
+       FROM business_ads ba
+       LEFT JOIN users u ON u.id = ba.owner_user_id
+       LEFT JOIN business_profiles bp ON bp.user_id = ba.owner_user_id
+      WHERE ba.id = ?
+        AND ba.is_active = 1
+        AND ba.registration_status = 'REGISTERED'
+      LIMIT 1`,
+    [adId]
+  );
+  return rows[0] || null;
+}
+
 async function findBusinessAdById(adId) {
   const pool = getPool();
   const [rows] = await pool.query(
@@ -1237,6 +1258,7 @@ module.exports = {
   listBusinessAdsByOwner,
   listPublicBusinessAdAreas,
   listPublicBusinessAds,
+  findPublicBusinessAdById,
   increaseBusinessAdViewCounts,
   createBusinessAd,
   findBusinessAdById,

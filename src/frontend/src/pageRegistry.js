@@ -79,13 +79,6 @@ const pageRegistry = {
                 <p class="text-muted hidden" id="business-directory-empty" style="padding: 15px">등록된 업체정보가 없습니다.</p>
             </section>
 
-            <div class="business-profile-modal hidden" id="business-profile-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-label="업체프로필">
-                <div class="business-profile-modal-backdrop" data-business-profile-close></div>
-                <div class="business-profile-modal-panel">
-                    <button type="button" class="business-profile-modal-close" data-business-profile-close aria-label="업체프로필 닫기">×</button>
-                    <div id="business-profile-modal-body"></div>
-                </div>
-            </div>
         </div>
     </main>
 
@@ -99,6 +92,55 @@ const pageRegistry = {
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/businessInfo.js", "scripts/js/components/footerNav.js"]
+  },
+  'business-info-detail': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content business-profile-page">
+        <div class="container">
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <a href="/business-info" class="community-back-link icon-btn icon-btn-square" aria-label="업체정보 목록으로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
+                    <span class="community-board-name">업체정보</span>
+                </div>
+            </header>
+
+            <section class="business-profile-detail" id="business-profile-detail" aria-live="polite">
+                <p class="text-muted">업체정보를 불러오는 중입니다.</p>
+            </section>
+        </div>
+        <div class="business-profile-call-bar hidden" id="business-profile-call-bar">
+            <a class="btn btn-primary business-profile-call-button" id="business-profile-call-button" href="#">전화하기</a>
+        </div>
+    </main>
+
+    <script src="scripts/js/utils/constants.js"></script>
+    <script src="scripts/js/utils/helpers.js"></script>
+    <script src="scripts/js/utils/auth.js"></script>
+    <script src="scripts/js/api/apiClient.js"></script>
+    <script src="scripts/js/api/authAPI.js"></script>
+    <script src="scripts/js/components/header.js"></script>
+    <script src="scripts/js/pages/businessInfo.js"></script>
+`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/businessInfo.js"]
   },
   'ad-profile-management': {
     template: `<header class="header">
