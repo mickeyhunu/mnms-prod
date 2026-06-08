@@ -4861,11 +4861,24 @@ body.business-profile-modal-open {
 
 .business-profile-standalone .business-profile-hero {
     grid-template-columns: 1fr;
+    gap: 16px;
     padding-right: 0;
 }
 
 .business-profile-standalone .business-profile-image-frame {
     max-height: none;
+}
+
+.business-profile-standalone .business-profile-summary,
+.business-profile-standalone .business-profile-info,
+.business-profile-standalone .business-profile-description,
+.business-profile-standalone .business-profile-link {
+    margin-left: 16px;
+    margin-right: 16px;
+}
+
+.business-profile-standalone .business-profile-link {
+    width: calc(100% - 32px);
 }
 
 .business-profile-call-bar {
