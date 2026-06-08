@@ -741,6 +741,20 @@ async function initDatabase() {
     await pool.query('ALTER TABLE banner_ads ADD COLUMN store_no INT NULL AFTER ad_type');
   }
 
+  const [bannerAdsViewCountColumn] = await pool.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = 'banner_ads'
+       AND COLUMN_NAME = 'view_count'
+     LIMIT 1`,
+    [dbConfig.database]
+  );
+
+  if (bannerAdsViewCountColumn.length) {
+    await pool.query('ALTER TABLE banner_ads DROP COLUMN view_count');
+  }
+
   const [boardTypeColumn] = await pool.query(
     `SELECT 1
      FROM INFORMATION_SCHEMA.COLUMNS
