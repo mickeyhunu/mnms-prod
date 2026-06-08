@@ -348,7 +348,10 @@ function buildBusinessProfileDetailMarkup(ad) {
     return `
         <article class="business-profile-standalone">
             <div class="business-profile-hero">
-                <img class="business-profile-image" src="${imageUrl}" alt="${profileTitle} 대표이미지" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
+                <div class="business-profile-image-frame">
+                    <img class="business-profile-image-blur" src="${imageUrl}" alt="" aria-hidden="true" loading="eager" decoding="async" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
+                    <img class="business-profile-image" src="${imageUrl}" alt="${profileTitle} 대표이미지" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
+                </div>
                 <div class="business-profile-summary">
                     <p class="business-profile-eyebrow">${regionLabel} ${district} · ${category}</p>
                     <h2>${profileTitle}</h2>
