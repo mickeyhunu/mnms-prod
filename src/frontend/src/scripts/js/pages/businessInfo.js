@@ -3,6 +3,8 @@
  */
 const BUSINESS_IMAGE_PLACEHOLDER = '등록할 이미지를 선택해주세요.';
 const BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
+let businessDirectoryAds = [];
+
 
 const REGION_DISTRICT_MAP = {
     서울: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
@@ -193,14 +195,17 @@ function renderBusinessAds(ads) {
     const empty = document.getElementById('business-directory-empty');
     if (!list || !empty) return;
 
-    if (!Array.isArray(ads) || !ads.length) {
+    businessDirectoryAds = Array.isArray(ads) ? ads : [];
+    closeBusinessProfileModal();
+
+    if (!businessDirectoryAds.length) {
         list.innerHTML = '';
         empty.classList.remove('hidden');
         return;
     }
 
     empty.classList.add('hidden');
-    list.innerHTML = ads.map((ad) => {
+    list.innerHTML = businessDirectoryAds.map((ad, index) => {
         const regionLabel = sanitizeHTML(ad.region || '지역미지정');
         const businessName = sanitizeHTML(ad.businessName || ad.companyName || ad.ownerNickname || '업소');
         const managerName = sanitizeHTML(ad.managerName || ad.profileManagerName || ad.ownerNickname || '담당자');
@@ -219,7 +224,7 @@ function renderBusinessAds(ads) {
             : '시간선택 ~ 시간선택';
         const detail = `${regionLabel} ${district} · ${category} · ${formattedTime}`;
         return `
-            <li class="business-directory-item">
+            <li class="business-directory-item business-directory-item--clickable" data-business-ad-index="${index}" role="button" tabindex="0" aria-label="${title} 업체프로필 보기">
                 <img class="business-directory-thumbnail" src="${thumbnailImageUrl}" alt="${title} 대표이미지" loading="lazy" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
                 <div class="business-directory-main">
                     <h4>${title}</h4>
@@ -232,6 +237,172 @@ function renderBusinessAds(ads) {
             </li>
         `;
     }).join('');
+}
+
+function normalizeBusinessProfileLinkUrl(value) {
+    const rawValue = String(value || '').trim();
+    if (!rawValue || rawValue === '#') return '';
+
+    try {
+        const url = new URL(rawValue, window.location.origin);
+        if (!['http:', 'https:'].includes(url.protocol)) return '';
+        return url.href;
+    } catch (error) {
+        return '';
+    }
+}
+
+function sanitizeBusinessRichText(value) {
+    const rawValue = String(value || '').trim();
+    if (!rawValue) return '';
+
+    if (!/<[a-z][\s\S]*>/i.test(rawValue)) {
+        return sanitizeHTML(rawValue).replace(/\n/g, '<br>');
+    }
+
+    const template = document.createElement('template');
+    template.innerHTML = rawValue;
+    const allowedTags = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'S', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'SPAN', 'A', 'IMG']);
+
+    const sanitizeNode = (node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+            return document.createTextNode(node.textContent || '');
+        }
+
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+            return document.createDocumentFragment();
+        }
+
+        const tagName = node.tagName.toUpperCase();
+        if (!allowedTags.has(tagName)) {
+            const fragment = document.createDocumentFragment();
+            node.childNodes.forEach((child) => fragment.appendChild(sanitizeNode(child)));
+            return fragment;
+        }
+
+        const element = document.createElement(tagName.toLowerCase());
+        if (tagName === 'A') {
+            const href = normalizeBusinessProfileLinkUrl(node.getAttribute('href') || '');
+            if (href) {
+                element.setAttribute('href', href);
+                element.setAttribute('target', '_blank');
+                element.setAttribute('rel', 'noopener noreferrer');
+            }
+        }
+        if (tagName === 'IMG') {
+            const src = String(node.getAttribute('src') || '').trim();
+            const isSafeImage = /^https?:\/\//i.test(src) || /^data:image\//i.test(src) || src.startsWith('/');
+            if (!isSafeImage) return document.createDocumentFragment();
+            element.setAttribute('src', src);
+            element.setAttribute('alt', node.getAttribute('alt') || '업체프로필 상세 이미지');
+            element.setAttribute('loading', 'lazy');
+        }
+
+        node.childNodes.forEach((child) => element.appendChild(sanitizeNode(child)));
+        return element;
+    };
+
+    const fragment = document.createDocumentFragment();
+    template.content.childNodes.forEach((child) => fragment.appendChild(sanitizeNode(child)));
+
+    const container = document.createElement('div');
+    container.appendChild(fragment);
+    const sanitized = container.innerHTML.trim();
+    if (sanitized) return sanitized;
+
+    return sanitizeHTML(rawValue).replace(/\n/g, '<br>');
+}
+
+function closeBusinessProfileModal() {
+    const modal = document.getElementById('business-profile-modal');
+    if (!modal) return;
+
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('business-profile-modal-open');
+}
+
+function openBusinessProfileModal(ad) {
+    const modal = document.getElementById('business-profile-modal');
+    const body = document.getElementById('business-profile-modal-body');
+    if (!modal || !body || !ad) return;
+
+    const regionLabel = sanitizeHTML(ad.region || '지역미지정');
+    const district = sanitizeHTML(ad.district || '선택');
+    const category = sanitizeHTML(ad.category || '선택');
+    const businessName = sanitizeHTML(ad.businessName || ad.companyName || ad.ownerNickname || '업소');
+    const managerName = sanitizeHTML(ad.managerName || ad.profileManagerName || ad.ownerNickname || '담당자');
+    const managerContact = sanitizeHTML(ad.managerContact || '연락처');
+    const openHour = sanitizeHTML(ad.openHour || '시간선택');
+    const closeHour = sanitizeHTML(ad.closeHour || '시간선택');
+    const title = sanitizeHTML(ad.title || '업체정보');
+    const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
+    const imageUrl = sanitizeHTML(ad.imageUrl || BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL);
+    const description = sanitizeBusinessRichText(ad.description || '');
+    const externalUrl = normalizeBusinessProfileLinkUrl(ad.linkUrl || '');
+    const profileTitle = `[${regionLabel}-${businessName}] ${title}`;
+
+    body.innerHTML = `
+        <div class="business-profile-hero">
+            <img class="business-profile-image" src="${imageUrl}" alt="${profileTitle} 대표이미지" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
+            <div class="business-profile-summary">
+                <p class="business-profile-eyebrow">${regionLabel} ${district} · ${category}</p>
+                <h2>${profileTitle}</h2>
+                <div class="business-profile-stats">
+                    <span>영업시간 ${openHour} ~ ${closeHour}</span>
+                    <span>조회수 ${viewCount}</span>
+                </div>
+            </div>
+        </div>
+        <dl class="business-profile-info">
+            <div><dt>업체명</dt><dd>${businessName}</dd></div>
+            <div><dt>담당자</dt><dd>${managerName}</dd></div>
+            <div><dt>연락처</dt><dd>${managerContact}</dd></div>
+            <div><dt>지역</dt><dd>${regionLabel} ${district}</dd></div>
+            <div><dt>업종</dt><dd>${category}</dd></div>
+        </dl>
+        <section class="business-profile-description" aria-label="업체 상세정보">
+            <h3>상세정보</h3>
+            <div class="business-profile-description-content">${description || '<p>등록된 상세정보가 없습니다.</p>'}</div>
+        </section>
+        ${externalUrl ? `<a class="business-profile-link btn btn-primary" href="${sanitizeHTML(externalUrl)}" target="_blank" rel="noopener noreferrer">업체 링크 열기</a>` : ''}
+    `;
+
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('business-profile-modal-open');
+    modal.querySelector('.business-profile-modal-close')?.focus();
+}
+
+function bindBusinessProfileModalEvents() {
+    const list = document.getElementById('business-directory-list');
+    const modal = document.getElementById('business-profile-modal');
+
+    list?.addEventListener('click', (event) => {
+        const item = event.target.closest('[data-business-ad-index]');
+        if (!item) return;
+        openBusinessProfileModal(businessDirectoryAds[Number(item.dataset.businessAdIndex)]);
+    });
+
+    list?.addEventListener('keydown', (event) => {
+        if (!['Enter', ' '].includes(event.key)) return;
+        const item = event.target.closest('[data-business-ad-index]');
+        if (!item) return;
+        event.preventDefault();
+        openBusinessProfileModal(businessDirectoryAds[Number(item.dataset.businessAdIndex)]);
+    });
+
+    modal?.addEventListener('click', (event) => {
+        if (event.target.closest('[data-business-profile-close]')) {
+            closeBusinessProfileModal();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !modal?.classList.contains('hidden')) {
+            closeBusinessProfileModal();
+        }
+    });
 }
 
 function readBusinessFilters() {
@@ -1084,6 +1255,7 @@ async function initBusinessInfoPage() {
 
     if (typeof initHeader === 'function') initHeader();
     Auth.bindLogoutButton();
+    bindBusinessProfileModalEvents();
     await bindBusinessFilterEvents();
     await loadBusinessAds();
 }
