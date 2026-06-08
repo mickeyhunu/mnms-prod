@@ -4860,7 +4860,12 @@ body.business-profile-modal-open {
 }
 
 .business-profile-standalone .business-profile-hero {
+    grid-template-columns: 1fr;
     padding-right: 0;
+}
+
+.business-profile-standalone .business-profile-image-frame {
+    max-height: none;
 }
 
 .business-profile-call-bar {
