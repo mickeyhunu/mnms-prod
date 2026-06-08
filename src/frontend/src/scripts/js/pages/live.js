@@ -65,6 +65,7 @@ const liveState = {
     ads: [],
     adsRequestId: 0,
     adsLoadedStoreNo: null,
+    viewedAdIds: new Set(),
     adAutoPlayTimerId: null,
     canDeleteChojoong: false,
     accessRules: {
@@ -490,8 +491,9 @@ function renderLiveAds(ads = []) {
         const title = sanitizeHTML(ad.title || 'LIVE 광고');
         const linkUrl = sanitizeHTML(normalizeExternalUrl(ad.linkUrl));
         const fetchPriority = index === 0 ? 'high' : 'low';
+        const adId = sanitizeHTML(ad.id || '');
         return `
-            <a class="live-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer" draggable="false" role="group" aria-roledescription="slide" aria-label="${index + 1} / ${ads.length}: ${title}">
+            <a class="live-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer" draggable="false" role="group" aria-roledescription="slide" aria-label="${index + 1} / ${ads.length}: ${title}" data-ad-id="${adId}">
                 <img class="live-ad-banner__image" src="${imageUrl}" alt="${title}" loading="${index === 0 ? 'eager' : 'lazy'}" fetchpriority="${fetchPriority}" decoding="async" draggable="false">
             </a>
         `;
@@ -552,6 +554,18 @@ function clearLiveAdsAutoPlay() {
     liveState.adAutoPlayTimerId = null;
 }
 
+function recordLiveAdView(container, activeIndex) {
+    const banner = container.querySelectorAll('.live-ad-banner')[activeIndex];
+    const adId = String(banner?.dataset?.adId || '').trim();
+    if (!adId || liveState.viewedAdIds.has(adId)) return;
+
+    liveState.viewedAdIds.add(adId);
+    APIClient.post(`/live/ads/${encodeURIComponent(adId)}/view`).catch((error) => {
+        liveState.viewedAdIds.delete(adId);
+        console.warn('LIVE ad view tracking failed:', error);
+    });
+}
+
 function bindLiveAdsCarousel(container, totalCount) {
     const viewport = container.querySelector('.live-ads__viewport');
     const indicator = container.querySelector('.live-ads__indicator');
@@ -578,6 +592,7 @@ function bindLiveAdsCarousel(container, totalCount) {
         const activeIndex = getCurrentIndex();
         indicator.textContent = `${activeIndex + 1}/${totalCount}`;
         indicator.classList.remove('hidden');
+        recordLiveAdView(container, activeIndex);
     };
 
     const moveToIndex = (nextIndex) => {

@@ -1473,7 +1473,7 @@ function renderAdsTable() {
     updateAdminTotal('ads', filteredItems.length);
 
     if (!pageItems.length) {
-        tbody.innerHTML = `<tr><td colspan="10">${filteredItems.length ? '현재 페이지에 표시할 광고가 없습니다.' : '등록된 광고가 없습니다.'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11">${filteredItems.length ? '현재 페이지에 표시할 광고가 없습니다.' : '등록된 광고가 없습니다.'}</td></tr>`;
     } else {
         tbody.innerHTML = pageItems.map((ad) => `
             <tr>
@@ -1482,6 +1482,7 @@ function renderAdsTable() {
                 <td>${Number.isInteger(Number(ad.storeNo)) ? Number(ad.storeNo) : '-'}</td>
                 <td>${sanitizeHTML(ad.title || '')}</td>
                 <td><a href="${sanitizeHTML(normalizeExternalUrl(ad.linkUrl))}" target="_blank" rel="noopener noreferrer">링크 열기</a></td>
+                <td>${Number(ad.viewCount || 0).toLocaleString('ko-KR')}</td>
                 <td>${Number(ad.displayOrder || 0)}</td>
                 <td>${ad.isActive ? '노출' : '숨김'}</td>
                 <td>${formatDate(ad.createdAt || ad.created_at)}</td>
