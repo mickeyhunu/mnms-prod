@@ -76,8 +76,16 @@ const pageRegistry = {
                     </div>
                 </div>
                 <ul class="business-directory-list" id="business-directory-list"></ul>
-                <p class="text-muted hidden" id="business-directory-empty" style="padding: 15px">업체정보 기능은 준비중 입니다.</p>
+                <p class="text-muted hidden" id="business-directory-empty" style="padding: 15px">등록된 업체정보가 없습니다.</p>
             </section>
+
+            <div class="business-profile-modal hidden" id="business-profile-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-label="업체프로필">
+                <div class="business-profile-modal-backdrop" data-business-profile-close></div>
+                <div class="business-profile-modal-panel">
+                    <button type="button" class="business-profile-modal-close" data-business-profile-close aria-label="업체프로필 닫기">×</button>
+                    <div id="business-profile-modal-body"></div>
+                </div>
+            </div>
         </div>
     </main>
 
