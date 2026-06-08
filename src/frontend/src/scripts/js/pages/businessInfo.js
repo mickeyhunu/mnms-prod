@@ -224,7 +224,7 @@ function renderBusinessAds(ads) {
             : '시간선택 ~ 시간선택';
         const detail = `${regionLabel} ${district} · ${category} · ${formattedTime}`;
         return `
-            <li class="business-directory-item business-directory-item--clickable" data-business-ad-index="${index}" role="button" tabindex="0" aria-label="${title} 업체프로필 보기">
+            <li class="business-directory-item business-directory-item--clickable" data-business-ad-id="${sanitizeHTML(ad.id || '')}" role="link" tabindex="0" aria-label="${title} 상세 페이지 보기">
                 <img class="business-directory-thumbnail" src="${thumbnailImageUrl}" alt="${title} 대표이미지" loading="lazy" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
                 <div class="business-directory-main">
                     <h4>${title}</h4>
@@ -313,20 +313,24 @@ function sanitizeBusinessRichText(value) {
     return sanitizeHTML(rawValue).replace(/\n/g, '<br>');
 }
 
-function closeBusinessProfileModal() {
-    const modal = document.getElementById('business-profile-modal');
-    if (!modal) return;
+function getBusinessProfileTitle(ad) {
+    const regionLabel = sanitizeHTML(ad?.region || '지역미지정');
+    const businessName = sanitizeHTML(ad?.businessName || ad?.companyName || ad?.ownerNickname || '업소');
+    const title = sanitizeHTML(ad?.title || '업체정보');
+    return `[${regionLabel}-${businessName}] ${title}`;
+}
 
-    modal.classList.add('hidden');
-    modal.setAttribute('aria-hidden', 'true');
+function getBusinessProfileTelHref(contact) {
+    const digits = String(contact || '').replace(/[^0-9+]/g, '');
+    if (!digits || digits.length < 8) return '';
+    return `tel:${digits}`;
+}
+
+function closeBusinessProfileModal() {
     document.body.classList.remove('business-profile-modal-open');
 }
 
-function openBusinessProfileModal(ad) {
-    const modal = document.getElementById('business-profile-modal');
-    const body = document.getElementById('business-profile-modal-body');
-    if (!modal || !body || !ad) return;
-
+function buildBusinessProfileDetailMarkup(ad) {
     const regionLabel = sanitizeHTML(ad.region || '지역미지정');
     const district = sanitizeHTML(ad.district || '선택');
     const category = sanitizeHTML(ad.category || '선택');
@@ -335,43 +339,77 @@ function openBusinessProfileModal(ad) {
     const managerContact = sanitizeHTML(ad.managerContact || '연락처');
     const openHour = sanitizeHTML(ad.openHour || '시간선택');
     const closeHour = sanitizeHTML(ad.closeHour || '시간선택');
-    const title = sanitizeHTML(ad.title || '업체정보');
     const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
     const imageUrl = sanitizeHTML(ad.imageUrl || BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL);
     const description = sanitizeBusinessRichText(ad.description || '');
     const externalUrl = normalizeBusinessProfileLinkUrl(ad.linkUrl || '');
-    const profileTitle = `[${regionLabel}-${businessName}] ${title}`;
+    const profileTitle = getBusinessProfileTitle(ad);
 
-    body.innerHTML = `
-        <div class="business-profile-hero">
-            <img class="business-profile-image" src="${imageUrl}" alt="${profileTitle} 대표이미지" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
-            <div class="business-profile-summary">
-                <p class="business-profile-eyebrow">${regionLabel} ${district} · ${category}</p>
-                <h2>${profileTitle}</h2>
-                <div class="business-profile-stats">
-                    <span>영업시간 ${openHour} ~ ${closeHour}</span>
-                    <span>조회수 ${viewCount}</span>
+    return `
+        <article class="business-profile-standalone">
+            <div class="business-profile-hero">
+                <img class="business-profile-image" src="${imageUrl}" alt="${profileTitle} 대표이미지" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
+                <div class="business-profile-summary">
+                    <p class="business-profile-eyebrow">${regionLabel} ${district} · ${category}</p>
+                    <h2>${profileTitle}</h2>
+                    <div class="business-profile-stats">
+                        <span>영업시간 ${openHour} ~ ${closeHour}</span>
+                        <span>조회수 ${viewCount}</span>
+                    </div>
                 </div>
             </div>
-        </div>
-        <dl class="business-profile-info">
-            <div><dt>업체명</dt><dd>${businessName}</dd></div>
-            <div><dt>담당자</dt><dd>${managerName}</dd></div>
-            <div><dt>연락처</dt><dd>${managerContact}</dd></div>
-            <div><dt>지역</dt><dd>${regionLabel} ${district}</dd></div>
-            <div><dt>업종</dt><dd>${category}</dd></div>
-        </dl>
-        <section class="business-profile-description" aria-label="업체 상세정보">
-            <h3>상세정보</h3>
-            <div class="business-profile-description-content">${description || '<p>등록된 상세정보가 없습니다.</p>'}</div>
-        </section>
-        ${externalUrl ? `<a class="business-profile-link btn btn-primary" href="${sanitizeHTML(externalUrl)}" target="_blank" rel="noopener noreferrer">업체 링크 열기</a>` : ''}
+            <dl class="business-profile-info">
+                <div><dt>업체명</dt><dd>${businessName}</dd></div>
+                <div><dt>담당자</dt><dd>${managerName}</dd></div>
+                <div><dt>연락처</dt><dd>${managerContact}</dd></div>
+                <div><dt>지역</dt><dd>${regionLabel} ${district}</dd></div>
+                <div><dt>업종</dt><dd>${category}</dd></div>
+            </dl>
+            <section class="business-profile-description" aria-label="업체 상세정보">
+                <h3>상세정보</h3>
+                <div class="business-profile-description-content">${description || '<p>등록된 상세정보가 없습니다.</p>'}</div>
+            </section>
+            ${externalUrl ? `<a class="business-profile-link btn btn-primary" href="${sanitizeHTML(externalUrl)}" target="_blank" rel="noopener noreferrer">업체 링크 열기</a>` : ''}
+        </article>
     `;
+}
 
-    modal.classList.remove('hidden');
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('business-profile-modal-open');
-    modal.querySelector('.business-profile-modal-close')?.focus();
+function openBusinessProfileModal(ad) {
+    if (!ad?.id) return;
+    window.location.href = `/business-info/${encodeURIComponent(ad.id)}`;
+}
+
+async function initBusinessProfileDetailPage() {
+    const detail = document.getElementById('business-profile-detail');
+    const callBar = document.getElementById('business-profile-call-bar');
+    const callButton = document.getElementById('business-profile-call-button');
+    if (!detail) return;
+
+    const adId = window.location.pathname.split('/').filter(Boolean).pop();
+    if (!adId || adId === 'business-info') {
+        detail.innerHTML = '<p class="text-muted">유효하지 않은 업체정보입니다.</p>';
+        return;
+    }
+
+    try {
+        const response = await APIClient.get(`/live/business-ads/${encodeURIComponent(adId)}`);
+        const ad = response?.content;
+        if (!ad) throw new Error('업체정보를 찾을 수 없습니다.');
+
+        detail.innerHTML = buildBusinessProfileDetailMarkup(ad);
+        const telHref = getBusinessProfileTelHref(ad.managerContact);
+        if (telHref && callButton && callBar) {
+            callButton.setAttribute('href', telHref);
+            callButton.textContent = '전화하기';
+            callButton.setAttribute('aria-label', `${getBusinessProfileTitle(ad)} 전화하기`);
+            callBar.classList.remove('hidden');
+        } else if (callBar) {
+            callBar.classList.add('hidden');
+        }
+    } catch (error) {
+        detail.innerHTML = `<p class="text-muted">${sanitizeHTML(error.message || '업체정보를 불러오지 못했습니다.')}</p>`;
+        callBar?.classList.add('hidden');
+    }
 }
 
 function bindBusinessProfileModalEvents() {
@@ -379,17 +417,17 @@ function bindBusinessProfileModalEvents() {
     const modal = document.getElementById('business-profile-modal');
 
     list?.addEventListener('click', (event) => {
-        const item = event.target.closest('[data-business-ad-index]');
+        const item = event.target.closest('[data-business-ad-id]');
         if (!item) return;
-        openBusinessProfileModal(businessDirectoryAds[Number(item.dataset.businessAdIndex)]);
+        window.location.href = `/business-info/${encodeURIComponent(item.dataset.businessAdId)}`;
     });
 
     list?.addEventListener('keydown', (event) => {
         if (!['Enter', ' '].includes(event.key)) return;
-        const item = event.target.closest('[data-business-ad-index]');
+        const item = event.target.closest('[data-business-ad-id]');
         if (!item) return;
         event.preventDefault();
-        openBusinessProfileModal(businessDirectoryAds[Number(item.dataset.businessAdIndex)]);
+        window.location.href = `/business-info/${encodeURIComponent(item.dataset.businessAdId)}`;
     });
 
     modal?.addEventListener('click', (event) => {
@@ -1255,6 +1293,12 @@ async function initBusinessInfoPage() {
 
     if (typeof initHeader === 'function') initHeader();
     Auth.bindLogoutButton();
+
+    if (document.getElementById('business-profile-detail')) {
+        await initBusinessProfileDetailPage();
+        return;
+    }
+
     bindBusinessProfileModalEvents();
     await bindBusinessFilterEvents();
     await loadBusinessAds();
