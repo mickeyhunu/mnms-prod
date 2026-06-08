@@ -4053,8 +4053,10 @@ body[data-page="admin"] {
 
 .business-profile-image-frame {
     position: relative;
-    width: 160px;
-    height: 120px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    max-height: 180px;
     overflow: hidden;
     border: 1px solid #e5e7eb;
     border-radius: 0;
@@ -4192,13 +4194,6 @@ body.business-profile-modal-open {
     .business-profile-hero {
         grid-template-columns: 1fr;
         padding-right: 0;
-    }
-
-    .business-profile-image-frame {
-        width: 100%;
-        height: auto;
-        aspect-ratio: 4 / 3;
-        max-height: 180px;
     }
 
     .business-profile-info {
