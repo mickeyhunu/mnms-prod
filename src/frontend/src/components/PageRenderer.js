@@ -36,7 +36,7 @@ const GLOBAL_SCRIPTS = [
 ];
 
 const PAGES_WITHOUT_GLOBAL_HEADER = new Set(['live']);
-const PAGES_WITHOUT_BOTTOM_NAV = new Set(['live']);
+const PAGES_WITHOUT_BOTTOM_NAV = new Set(['live', 'business-info-detail']);
 
 const persistentStyleNodes = new Map();
 const persistentScriptNodes = new Map();

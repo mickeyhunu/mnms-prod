@@ -11,6 +11,7 @@ router.get('/entries', liveController.getLiveEntries);
 router.get('/ads', liveController.getLiveAds);
 router.get('/top-ads', liveController.getTopAds);
 router.get('/business-ads/areas', liveController.getBusinessAdAreas);
+router.get('/business-ads/:id', liveController.getBusinessAd);
 router.get('/business-ads', liveController.getBusinessAds);
 
 module.exports = router;
