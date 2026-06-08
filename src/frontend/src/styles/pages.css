@@ -4191,11 +4191,7 @@ body.business-profile-modal-open {
     object-fit: cover;
     border: 1px solid #d1d5db;
     border-radius: 12px;
-    background-color: transparent;
-    background-image: url('/src/assets/image/ad-profile-default.webp');
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
+    background-color: #f3f4f6;
 }
 
 .business-directory-main {
