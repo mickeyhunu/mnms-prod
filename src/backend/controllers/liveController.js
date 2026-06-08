@@ -91,24 +91,6 @@ async function getLiveAds(req, res, next) {
   }
 }
 
-async function recordBannerAdView(req, res, next) {
-  try {
-    const adId = parsePositiveInt(req.params.id);
-    if (!adId) {
-      return res.status(400).json({ message: '유효한 광고 번호가 필요합니다.' });
-    }
-
-    const updated = await adminModel.increaseBannerAdViewCount(adId);
-    if (!updated) {
-      return res.status(404).json({ message: '노출 가능한 광고를 찾을 수 없습니다.' });
-    }
-
-    return res.json({ success: true });
-  } catch (error) {
-    return handleLiveError(error, next, res);
-  }
-}
-
 async function getTopAds(req, res, next) {
   try {
     const placement = String(req.query.placement || 'HOME').trim().toUpperCase();
@@ -171,13 +153,31 @@ async function getBusinessAd(req, res, next) {
       return res.status(404).json({ message: '업체정보를 찾을 수 없습니다.' });
     }
 
-    await adminModel.increaseBusinessAdViewCounts([adId]);
+    await adminModel.increaseBusinessAdViewCount(adId);
     return res.json({
       content: {
         ...ad,
         viewCount: Number(ad.viewCount || 0) + 1
       }
     });
+  } catch (error) {
+    return handleLiveError(error, next, res);
+  }
+}
+
+async function recordBusinessAdView(req, res, next) {
+  try {
+    const adId = parsePositiveInt(req.params.id);
+    if (!adId) {
+      return res.status(400).json({ message: '유효한 업체정보 번호가 필요합니다.' });
+    }
+
+    const updated = await adminModel.increaseBusinessAdViewCount(adId);
+    if (!updated) {
+      return res.status(404).json({ message: '노출 가능한 업체정보를 찾을 수 없습니다.' });
+    }
+
+    return res.json({ success: true });
   } catch (error) {
     return handleLiveError(error, next, res);
   }
@@ -207,9 +207,9 @@ module.exports = {
   getLiveFilters,
   getLiveEntries,
   getLiveAds,
-  recordBannerAdView,
   getTopAds,
   getBusinessAdAreas,
+  recordBusinessAdView,
   getBusinessAd,
   getBusinessAds
 };
