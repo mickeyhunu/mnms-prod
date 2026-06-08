@@ -591,7 +591,6 @@ async function initDatabase() {
       link_url VARCHAR(1000) NOT NULL,
       ad_type VARCHAR(30) NOT NULL DEFAULT 'LIVE',
       store_no INT NULL,
-      view_count BIGINT NOT NULL DEFAULT 0,
       display_order INT NOT NULL DEFAULT 0,
       is_active TINYINT(1) NOT NULL DEFAULT 1,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -742,7 +741,7 @@ async function initDatabase() {
     await pool.query('ALTER TABLE banner_ads ADD COLUMN store_no INT NULL AFTER ad_type');
   }
 
-  const [adsViewCountColumn] = await pool.query(
+  const [bannerAdsViewCountColumn] = await pool.query(
     `SELECT 1
      FROM INFORMATION_SCHEMA.COLUMNS
      WHERE TABLE_SCHEMA = ?
@@ -752,8 +751,8 @@ async function initDatabase() {
     [dbConfig.database]
   );
 
-  if (!adsViewCountColumn.length) {
-    await pool.query('ALTER TABLE banner_ads ADD COLUMN view_count BIGINT NOT NULL DEFAULT 0 AFTER store_no');
+  if (bannerAdsViewCountColumn.length) {
+    await pool.query('ALTER TABLE banner_ads DROP COLUMN view_count');
   }
 
   const [boardTypeColumn] = await pool.query(

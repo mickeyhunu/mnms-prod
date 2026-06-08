@@ -4,6 +4,8 @@
 const BUSINESS_IMAGE_PLACEHOLDER = '등록할 이미지를 선택해주세요.';
 const BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
 let businessDirectoryAds = [];
+const viewedBusinessAdIds = new Set();
+let businessAdViewObserver = null;
 
 
 const REGION_DISTRICT_MAP = {
@@ -190,12 +192,60 @@ async function openBusinessAddressSearch() {
     }).open();
 }
 
+
+function disconnectBusinessAdViewObserver() {
+    if (!businessAdViewObserver) return;
+    businessAdViewObserver.disconnect();
+    businessAdViewObserver = null;
+}
+
+function recordBusinessAdView(item) {
+    const adId = String(item?.dataset?.businessAdId || '').trim();
+    if (!adId || viewedBusinessAdIds.has(adId)) return;
+
+    viewedBusinessAdIds.add(adId);
+    APIClient.post(`/live/business-ads/${encodeURIComponent(adId)}/view`).then(() => {
+        const viewElement = item.querySelector('[data-business-ad-view-count]');
+        const currentViewCount = Number.parseInt(item.dataset.businessAdViewCount || '0', 10) || 0;
+        const nextViewCount = currentViewCount + 1;
+        item.dataset.businessAdViewCount = String(nextViewCount);
+        if (viewElement) {
+            viewElement.textContent = `조회수 ${nextViewCount.toLocaleString('ko-KR')}`;
+        }
+    }).catch((error) => {
+        viewedBusinessAdIds.delete(adId);
+        console.warn('Business ad view tracking failed:', error);
+    });
+}
+
+function observeBusinessAdViews(list) {
+    disconnectBusinessAdViewObserver();
+    const items = Array.from(list.querySelectorAll('[data-business-ad-id]'));
+    if (!items.length) return;
+
+    if (typeof IntersectionObserver !== 'function') {
+        items.forEach(recordBusinessAdView);
+        return;
+    }
+
+    businessAdViewObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting || entry.intersectionRatio < 0.5) return;
+            recordBusinessAdView(entry.target);
+            businessAdViewObserver?.unobserve(entry.target);
+        });
+    }, { threshold: 0.5 });
+
+    items.forEach((item) => businessAdViewObserver.observe(item));
+}
+
 function renderBusinessAds(ads) {
     const list = document.getElementById('business-directory-list');
     const empty = document.getElementById('business-directory-empty');
     if (!list || !empty) return;
 
     businessDirectoryAds = Array.isArray(ads) ? ads : [];
+    disconnectBusinessAdViewObserver();
     closeBusinessProfileModal();
 
     if (!businessDirectoryAds.length) {
@@ -224,19 +274,20 @@ function renderBusinessAds(ads) {
             : '시간선택 ~ 시간선택';
         const detail = `${regionLabel} ${district} · ${category} · ${formattedTime}`;
         return `
-            <li class="business-directory-item business-directory-item--clickable" data-business-ad-id="${sanitizeHTML(ad.id || '')}" role="link" tabindex="0" aria-label="${title} 상세 페이지 보기">
+            <li class="business-directory-item business-directory-item--clickable" data-business-ad-id="${sanitizeHTML(ad.id || '')}" data-business-ad-view-count="${Number(ad.viewCount || 0)}" role="link" tabindex="0" aria-label="${title} 상세 페이지 보기">
                 <img class="business-directory-thumbnail" src="${thumbnailImageUrl}" alt="${title} 대표이미지" loading="lazy" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
                 <div class="business-directory-main">
                     <h4>${title}</h4>
                     <p class="business-directory-region-detail">${detail}</p>
                     <div class="business-directory-meta">
                         <span class="business-directory-manager">${managerName} · ${managerContact}</span>
-                        <span class="business-directory-views">조회수 ${viewCount}</span>
+                        <span class="business-directory-views" data-business-ad-view-count>조회수 ${viewCount}</span>
                     </div>
                 </div>
             </li>
         `;
     }).join('');
+    observeBusinessAdViews(list);
 }
 
 function normalizeBusinessProfileLinkUrl(value) {

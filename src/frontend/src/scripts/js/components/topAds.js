@@ -3,8 +3,7 @@
  */
 const TOP_AD_AUTOPLAY_INTERVAL_MS = 5000;
 const topAdsState = {
-    autoPlayTimerId: null,
-    viewedAdIds: new Set()
+    autoPlayTimerId: null
 };
 
 function initTopAds(options = {}) {
@@ -38,9 +37,8 @@ function renderTopAds(container, ads = []) {
         const imageUrl = sanitizeHTML(ad.imageUrl || '');
         const title = sanitizeHTML(ad.title || '상단 광고');
         const linkUrl = sanitizeHTML(normalizeTopAdExternalUrl(ad.linkUrl));
-        const adId = sanitizeHTML(ad.id || '');
         return `
-            <a class="top-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer" draggable="false" role="group" aria-roledescription="slide" aria-label="${index + 1} / ${ads.length}: ${title}" data-ad-id="${adId}">
+            <a class="top-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer" draggable="false" role="group" aria-roledescription="slide" aria-label="${index + 1} / ${ads.length}: ${title}">
                 <img class="top-ad-banner__image" src="${imageUrl}" alt="${title}" loading="${index === 0 ? 'eager' : 'lazy'}" draggable="false">
             </a>
         `;
@@ -62,18 +60,6 @@ function clearTopAdsAutoPlay() {
     if (!topAdsState.autoPlayTimerId) return;
     window.clearInterval(topAdsState.autoPlayTimerId);
     topAdsState.autoPlayTimerId = null;
-}
-
-function recordTopAdView(container, activeIndex) {
-    const banner = container.querySelectorAll('.top-ad-banner')[activeIndex];
-    const adId = String(banner?.dataset?.adId || '').trim();
-    if (!adId || topAdsState.viewedAdIds.has(adId)) return;
-
-    topAdsState.viewedAdIds.add(adId);
-    APIClient.post(`/live/ads/${encodeURIComponent(adId)}/view`).catch((error) => {
-        topAdsState.viewedAdIds.delete(adId);
-        console.warn('TOP ad view tracking failed:', error);
-    });
 }
 
 function bindTopAdsCarousel(container, totalCount) {
@@ -101,7 +87,6 @@ function bindTopAdsCarousel(container, totalCount) {
     const updateIndicator = () => {
         const activeIndex = getCurrentIndex();
         indicator.textContent = `${activeIndex + 1}/${totalCount}`;
-        recordTopAdView(container, activeIndex);
     };
 
     const moveToIndex = (nextIndex) => {
