@@ -385,6 +385,7 @@ function openBusinessProfileModal(ad) {
 async function initBusinessProfileDetailPage() {
     const detail = document.getElementById('business-profile-detail');
     const callBar = document.getElementById('business-profile-call-bar');
+    const visitButton = document.getElementById('business-profile-visit-button');
     const callButton = document.getElementById('business-profile-call-button');
     if (!detail) return;
 
@@ -401,7 +402,18 @@ async function initBusinessProfileDetailPage() {
 
         detail.innerHTML = buildBusinessProfileDetailMarkup(ad);
         const telHref = getBusinessProfileTelHref(ad.managerContact);
-        if (telHref && callButton && callBar) {
+        const visitHref = normalizeBusinessProfileLinkUrl(ad.linkUrl || '') || telHref;
+        if (telHref && callButton && visitButton && callBar) {
+            visitButton.setAttribute('href', visitHref);
+            visitButton.textContent = '방문신청';
+            visitButton.setAttribute('aria-label', `${getBusinessProfileTitle(ad)} 방문신청`);
+            if (visitHref !== telHref) {
+                visitButton.setAttribute('target', '_blank');
+                visitButton.setAttribute('rel', 'noopener noreferrer');
+            } else {
+                visitButton.removeAttribute('target');
+                visitButton.removeAttribute('rel');
+            }
             callButton.setAttribute('href', telHref);
             callButton.textContent = '전화하기';
             callButton.setAttribute('aria-label', `${getBusinessProfileTitle(ad)} 전화하기`);
