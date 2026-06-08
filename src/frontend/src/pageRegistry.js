@@ -127,6 +127,7 @@ const pageRegistry = {
             </section>
         </div>
         <div class="business-profile-call-bar hidden" id="business-profile-call-bar">
+            <a class="btn btn-primary business-profile-visit-button" id="business-profile-visit-button" href="#">방문신청</a>
             <a class="btn btn-primary business-profile-call-button" id="business-profile-call-button" href="#">전화하기</a>
         </div>
     </main>
