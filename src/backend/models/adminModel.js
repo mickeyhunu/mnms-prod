@@ -509,8 +509,8 @@ async function listAds() {
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl,
-            ad_type AS adType, store_no AS storeNo, display_order AS displayOrder,
-            is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
+            ad_type AS adType, store_no AS storeNo, view_count AS viewCount,
+            display_order AS displayOrder, is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
      FROM banner_ads
      ORDER BY store_no IS NULL ASC, store_no ASC, display_order ASC, id DESC`
   );
@@ -530,7 +530,7 @@ async function createAd({ title, imageUrl, linkUrl, adType = 'LIVE', storeNo = n
 async function findAdById(adId) {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl, ad_type AS adType, store_no AS storeNo
+    `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl, ad_type AS adType, store_no AS storeNo, view_count AS viewCount
        FROM banner_ads
       WHERE id = ?`,
     [adId]
@@ -555,7 +555,7 @@ async function listLiveAdsByStore(storeNo) {
 
   const [rows] = await pool.query(
     `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl,
-            ad_type AS adType, store_no AS storeNo, display_order AS displayOrder
+            ad_type AS adType, store_no AS storeNo, view_count AS viewCount, display_order AS displayOrder
        FROM banner_ads
       WHERE is_active = 1
         AND ad_type = 'LIVE'
@@ -580,7 +580,7 @@ async function listTopAdsByPlacement(placement = 'HOME') {
 
   const [rows] = await pool.query(
     `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl,
-            ad_type AS adType, store_no AS storeNo, display_order AS displayOrder
+            ad_type AS adType, store_no AS storeNo, view_count AS viewCount, display_order AS displayOrder
        FROM banner_ads
       WHERE is_active = 1
         AND ad_type = 'TOP'
@@ -590,6 +590,22 @@ async function listTopAdsByPlacement(placement = 'HOME') {
   );
 
   return rows;
+}
+
+
+async function increaseBannerAdViewCount(adId) {
+  const normalizedAdId = Number.parseInt(adId, 10);
+  if (!Number.isInteger(normalizedAdId) || normalizedAdId <= 0) return false;
+
+  const pool = getPool();
+  const [result] = await pool.query(
+    `UPDATE banner_ads
+        SET view_count = view_count + 1
+      WHERE id = ?
+        AND is_active = 1`,
+    [normalizedAdId]
+  );
+  return result.affectedRows > 0;
 }
 
 async function deleteAd(adId) {
@@ -1250,6 +1266,7 @@ module.exports = {
   listAds,
   listLiveAdsByStore,
   listTopAdsByPlacement,
+  increaseBannerAdViewCount,
   createAd,
   findAdById,
   getStoreByNo,
