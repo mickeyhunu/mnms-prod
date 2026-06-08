@@ -765,19 +765,20 @@ async function updateBusinessAd(adId, {
   );
 }
 
-async function increaseBusinessAdViewCounts(adIds = []) {
-  if (!Array.isArray(adIds) || !adIds.length) return;
-  const normalizedIds = [...new Set(adIds.map((id) => Number.parseInt(id, 10)).filter((id) => Number.isInteger(id) && id > 0))];
-  if (!normalizedIds.length) return;
+async function increaseBusinessAdViewCount(adId) {
+  const normalizedAdId = Number.parseInt(adId, 10);
+  if (!Number.isInteger(normalizedAdId) || normalizedAdId <= 0) return false;
 
   const pool = getPool();
-  const placeholders = normalizedIds.map(() => '?').join(', ');
-  await pool.query(
+  const [result] = await pool.query(
     `UPDATE business_ads
         SET view_count = view_count + 1
-      WHERE id IN (${placeholders})`,
-    normalizedIds
+      WHERE id = ?
+        AND is_active = 1
+        AND registration_status = 'REGISTERED'`,
+    [normalizedAdId]
   );
+  return result.affectedRows > 0;
 }
 
 async function deleteBusinessAd(adId) {
@@ -1259,7 +1260,7 @@ module.exports = {
   listPublicBusinessAdAreas,
   listPublicBusinessAds,
   findPublicBusinessAdById,
-  increaseBusinessAdViewCounts,
+  increaseBusinessAdViewCount,
   createBusinessAd,
   findBusinessAdById,
   updateBusinessAd,

@@ -153,13 +153,31 @@ async function getBusinessAd(req, res, next) {
       return res.status(404).json({ message: '업체정보를 찾을 수 없습니다.' });
     }
 
-    await adminModel.increaseBusinessAdViewCounts([adId]);
+    await adminModel.increaseBusinessAdViewCount(adId);
     return res.json({
       content: {
         ...ad,
         viewCount: Number(ad.viewCount || 0) + 1
       }
     });
+  } catch (error) {
+    return handleLiveError(error, next, res);
+  }
+}
+
+async function recordBusinessAdView(req, res, next) {
+  try {
+    const adId = parsePositiveInt(req.params.id);
+    if (!adId) {
+      return res.status(400).json({ message: '유효한 업체정보 번호가 필요합니다.' });
+    }
+
+    const updated = await adminModel.increaseBusinessAdViewCount(adId);
+    if (!updated) {
+      return res.status(404).json({ message: '노출 가능한 업체정보를 찾을 수 없습니다.' });
+    }
+
+    return res.json({ success: true });
   } catch (error) {
     return handleLiveError(error, next, res);
   }
@@ -172,19 +190,13 @@ async function getBusinessAds(req, res, next) {
     const category = String(req.query.category || '').trim();
     const keyword = String(req.query.keyword || '').trim();
     const ads = await adminModel.listPublicBusinessAds({ region, district, category, keyword });
-    const adIds = ads.map((ad) => Number.parseInt(ad.id, 10)).filter((id) => Number.isInteger(id) && id > 0);
-    await adminModel.increaseBusinessAdViewCounts(adIds);
-    const content = ads.map((ad) => ({
-      ...ad,
-      viewCount: Number(ad.viewCount || 0) + 1
-    }));
     return res.json({
       region: region || null,
       district: district || null,
       category: category || null,
       keyword: keyword || null,
-      content,
-      totalElements: content.length
+      content: ads,
+      totalElements: ads.length
     });
   } catch (error) {
     return handleLiveError(error, next, res);
@@ -197,6 +209,7 @@ module.exports = {
   getLiveAds,
   getTopAds,
   getBusinessAdAreas,
+  recordBusinessAdView,
   getBusinessAd,
   getBusinessAds
 };
