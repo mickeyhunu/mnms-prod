@@ -295,7 +295,7 @@ const pageRegistry = {
                                 <p class="business-directory-region-detail" id="ad-profile-preview-detail">선택 선택 · 선택 · 시간선택 ~ 시간선택</p>
                                 <div class="business-directory-meta">
                                     <span class="business-directory-manager" id="ad-profile-preview-manager">담당자 · 연락처</span>
-                                    <span class="business-directory-views">조회수 43</span>
+                                    <span class="business-directory-views">조회수 0</span>
                                 </div>
                             </div>
                         </li>

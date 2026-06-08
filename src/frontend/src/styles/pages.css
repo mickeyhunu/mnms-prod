@@ -4055,7 +4055,7 @@ body[data-page="admin"] {
     position: relative;
     width: 100%;
     height: auto;
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 4 / 2;
     max-height: 180px;
     overflow: hidden;
     border: 1px solid #e5e7eb;
