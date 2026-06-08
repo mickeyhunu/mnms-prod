@@ -186,10 +186,9 @@ export default {
         return;
       }
 
-      const existingFooter = document.querySelector('.bottom-nav-footer');
-      if (existingFooter) {
-        existingFooter.remove();
-      }
+      document.querySelectorAll('body > .bottom-nav-footer').forEach((footer) => {
+        footer.remove();
+      });
 
       document.body.classList.remove('has-bottom-nav');
     };
