@@ -247,6 +247,36 @@ const pageRegistry = {
                             <input id="ad-profile-image-input" class="hidden" type="file" accept="image/*">
                         </div>
                     </div>
+
+                    <div class="ad-profile-additional-info" aria-labelledby="ad-profile-additional-info-title">
+                        <div class="ad-profile-additional-info-heading">
+                            <h3 id="ad-profile-additional-info-title">부가 정보<span>(선택)</span></h3>
+                            <p>광고 상세 페이지에 노출할 연락 채널과 지도 정보를 입력해주세요.</p>
+                        </div>
+                        <input id="ad-profile-kakao-talk-id" type="text" maxlength="50" placeholder="카카오톡 아이디를 입력해주세요." autocomplete="off">
+                        <input id="ad-profile-telegram-id" type="text" maxlength="50" placeholder="텔레그램 아이디를 입력해주세요." autocomplete="off">
+                        <label class="ad-profile-map-toggle" for="ad-profile-show-business-address-map">
+                            <input id="ad-profile-show-business-address-map" type="checkbox">
+                            <span>사업자등록기준 주소지 미니맵 노출</span>
+                        </label>
+                        <p class="ad-profile-map-toggle-help">체크하면 사업자정보 관리에 저장된 사업장 주소를 기준으로 업체정보 상세 페이지에 미니맵이 표시됩니다.</p>
+                        <label class="ad-profile-map-toggle" for="ad-profile-use-visit-verification">
+                            <input id="ad-profile-use-visit-verification" type="checkbox">
+                            <span>방문 인증 사용 업소</span>
+                        </label>
+                        <p class="ad-profile-map-toggle-help">방문인증시 스탬프 1개가 차감됩니다.</p>
+                        <div class="ad-profile-stamp-event-row">
+                            <label class="ad-profile-map-toggle" for="ad-profile-use-stamp-event">
+                                <input id="ad-profile-use-stamp-event" type="checkbox">
+                                <span>스탬프 이벤트 사용 업소</span>
+                            </label>
+                            <label class="ad-profile-stamp-event-count" for="ad-profile-stamp-event-count">
+                                <input id="ad-profile-stamp-event-count" type="number" min="1" max="999" inputmode="numeric" placeholder="0" disabled>
+                                <span>개</span>
+                            </label>
+                        </div>
+                        <p class="ad-profile-map-toggle-help">스탬프 이벤트 사용시 사용되는 스탬프 갯수를 필수로 입력해주세요.</p>
+                    </div>
                 </div>
 
                 <div class="ad-profile-section">
