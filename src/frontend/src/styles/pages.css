@@ -3638,7 +3638,8 @@ body[data-page="admin"] {
     color: #111827;
 }
 
-.business-profile-info--extra {
+.business-profile-info--extra,
+.business-profile-info--map {
     margin-top: 0;
 }
 

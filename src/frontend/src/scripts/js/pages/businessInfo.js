@@ -332,9 +332,45 @@ function normalizeBooleanFlag(value) {
     return ['1', 'true', 'y', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
 }
 
-function buildBusinessProfileAdditionalInfoMarkup(ad) {
+function buildBusinessProfileContactInfoRows(ad) {
+    const contactRows = [];
     const kakaoTalkId = String(ad?.kakaoTalkId || '').trim();
     const telegramId = String(ad?.telegramId || '').trim();
+
+    if (kakaoTalkId) {
+        contactRows.push(`<div><dt>카카오톡 아이디</dt><dd>${sanitizeHTML(kakaoTalkId)}</dd></div>`);
+    }
+    if (telegramId) {
+        contactRows.push(`<div><dt>텔레그램 아이디</dt><dd>${sanitizeHTML(telegramId)}</dd></div>`);
+    }
+
+    return contactRows.join('');
+}
+
+function buildBusinessProfileMapMarkup(ad) {
+    const businessAddress = String(ad?.businessAddress || '').trim();
+    const businessAddressDetail = String(ad?.businessAddressDetail || '').trim();
+    const shouldShowMap = normalizeBooleanFlag(ad?.showBusinessAddressMap) && businessAddress;
+
+    if (!shouldShowMap) return '';
+
+    const fullAddress = [businessAddress, businessAddressDetail].filter(Boolean).join(' ');
+    const encodedAddress = encodeURIComponent(fullAddress);
+
+    return `
+        <dl class="business-profile-info business-profile-info--map" aria-label="업체 미니맵">
+            <div class="business-profile-map-row">
+                <dt>미니맵</dt>
+                <dd>
+                    <iframe class="business-profile-mini-map" title="${sanitizeHTML(fullAddress)} 미니맵" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=${encodedAddress}&output=embed"></iframe>
+                    <a class="business-profile-map-link" href="https://maps.google.com/?q=${encodedAddress}" target="_blank" rel="noopener noreferrer">큰 지도에서 보기</a>
+                </dd>
+            </div>
+        </dl>
+    `;
+}
+
+function buildBusinessProfileAdditionalInfoMarkup(ad) {
     const businessAddress = String(ad?.businessAddress || '').trim();
     const businessAddressDetail = String(ad?.businessAddressDetail || '').trim();
     const shouldShowMap = normalizeBooleanFlag(ad?.showBusinessAddressMap) && businessAddress;
@@ -343,12 +379,6 @@ function buildBusinessProfileAdditionalInfoMarkup(ad) {
     const stampEventCount = Number(ad?.stampEventCount || 0);
     const infoRows = [];
 
-    if (kakaoTalkId) {
-        infoRows.push(`<div><dt>카카오톡 아이디</dt><dd>${sanitizeHTML(kakaoTalkId)}</dd></div>`);
-    }
-    if (telegramId) {
-        infoRows.push(`<div><dt>텔레그램 아이디</dt><dd>${sanitizeHTML(telegramId)}</dd></div>`);
-    }
     if (useVisitVerification) {
         infoRows.push('<div><dt>방문 인증</dt><dd>사용 업소 · 방문인증시 스탬프 1개 차감</dd></div>');
     }
@@ -357,17 +387,7 @@ function buildBusinessProfileAdditionalInfoMarkup(ad) {
     }
     if (shouldShowMap) {
         const fullAddress = [businessAddress, businessAddressDetail].filter(Boolean).join(' ');
-        const encodedAddress = encodeURIComponent(fullAddress);
         infoRows.push(`<div><dt>사업자등록기준 주소지</dt><dd>${sanitizeHTML(fullAddress)}</dd></div>`);
-        infoRows.push(`
-            <div class="business-profile-map-row">
-                <dt>미니맵</dt>
-                <dd>
-                    <iframe class="business-profile-mini-map" title="${sanitizeHTML(fullAddress)} 미니맵" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=${encodedAddress}&output=embed"></iframe>
-                    <a class="business-profile-map-link" href="https://maps.google.com/?q=${encodedAddress}" target="_blank" rel="noopener noreferrer">큰 지도에서 보기</a>
-                </dd>
-            </div>
-        `);
     }
 
     if (!infoRows.length) return '';
@@ -396,6 +416,8 @@ function buildBusinessProfileDetailMarkup(ad) {
     const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
     const imageUrl = sanitizeHTML(ad.imageUrl || BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL);
     const description = sanitizeBusinessRichText(ad.description || '');
+    const contactInfoRows = buildBusinessProfileContactInfoRows(ad);
+    const mapMarkup = buildBusinessProfileMapMarkup(ad);
     const additionalInfoMarkup = buildBusinessProfileAdditionalInfoMarkup(ad);
     const externalUrl = normalizeBusinessProfileLinkUrl(ad.linkUrl || '');
     const profileTitle = getBusinessProfileTitle(ad);
@@ -420,6 +442,7 @@ function buildBusinessProfileDetailMarkup(ad) {
                 <div><dt>업체명</dt><dd>${businessName}</dd></div>
                 <div><dt>담당자</dt><dd>${managerName}</dd></div>
                 <div><dt>연락처</dt><dd>${managerContact}</dd></div>
+                ${contactInfoRows}
                 <div><dt>지역</dt><dd>${regionLabel} ${district}</dd></div>
                 <div><dt>업종</dt><dd>${category}</dd></div>
             </dl>
@@ -427,6 +450,7 @@ function buildBusinessProfileDetailMarkup(ad) {
                 <h3>상세정보</h3>
                 <div class="business-profile-description-content">${description || '<p>등록된 상세정보가 없습니다.</p>'}</div>
             </section>
+            ${mapMarkup}
             ${additionalInfoMarkup}
             ${externalUrl ? `<a class="business-profile-link btn btn-primary" href="${sanitizeHTML(externalUrl)}" target="_blank" rel="noopener noreferrer">업체 링크 열기</a>` : ''}
         </article>
