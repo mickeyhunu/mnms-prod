@@ -203,6 +203,28 @@ function pickTrimmedText(body, key, fallback = '') {
   return String(body[key] || '').trim();
 }
 
+function normalizeBooleanPayload(value, fallback = false) {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  const normalized = String(value || '').trim().toLowerCase();
+  if (['1', 'true', 'y', 'yes', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'n', 'no', 'off'].includes(normalized)) return false;
+  return fallback;
+}
+
+function normalizePositiveIntPayload(value, fallback = 0) {
+  const normalized = Number.parseInt(String(value || '').replace(/\D/g, ''), 10);
+  return Number.isInteger(normalized) && normalized > 0 ? normalized : fallback;
+}
+
+function getBusinessAdStampEventError({ useStampEvent, stampEventCount }) {
+  if (useStampEvent && (!Number.isInteger(Number(stampEventCount)) || Number(stampEventCount) <= 0)) {
+    return '스탬프 이벤트 사용시 사용되는 스탬프 갯수를 입력해주세요.';
+  }
+  return '';
+}
+
 function stableBusinessInfoStringify(value) {
   if (Array.isArray(value)) {
     return `[${value.map(stableBusinessInfoStringify).join(',')}]`;
@@ -699,6 +721,12 @@ async function createMyBusinessAd(req, res, next) {
     const openHour = String(req.body?.openHour || '').trim();
     const closeHour = String(req.body?.closeHour || '').trim();
     const description = String(req.body?.description || '').trim();
+    const kakaoTalkId = String(req.body?.kakaoTalkId || '').trim();
+    const telegramId = String(req.body?.telegramId || '').trim();
+    const showBusinessAddressMap = normalizeBooleanPayload(req.body?.showBusinessAddressMap, false);
+    const useVisitVerification = normalizeBooleanPayload(req.body?.useVisitVerification, false);
+    const useStampEvent = normalizeBooleanPayload(req.body?.useStampEvent, false);
+    const stampEventCount = useStampEvent ? normalizePositiveIntPayload(req.body?.stampEventCount, 0) : 0;
     const planType = String(req.body?.planType || 'NORMAL').trim().toUpperCase() === 'PREMIUM' ? 'PREMIUM' : 'NORMAL';
     const displayOrder = Number(req.body?.displayOrder) || 0;
     const requestedStatus = normalizeRegistrationStatus(req.body?.registrationStatus, 'UNREGISTERED');
@@ -709,6 +737,11 @@ async function createMyBusinessAd(req, res, next) {
       businessName, managerName, managerContact, title, region, district, category, openHour, closeHour, description
     })) {
       return res.status(400).json({ message: '광고프로필 필수 항목을 모두 입력해주세요.' });
+    }
+
+    const stampEventError = getBusinessAdStampEventError({ useStampEvent, stampEventCount });
+    if (stampEventError) {
+      return res.status(400).json({ message: stampEventError });
     }
 
     const insertId = await adminModel.createBusinessAd({
@@ -725,6 +758,12 @@ async function createMyBusinessAd(req, res, next) {
       openHour,
       closeHour,
       description,
+      kakaoTalkId,
+      telegramId,
+      showBusinessAddressMap,
+      useVisitVerification,
+      useStampEvent,
+      stampEventCount,
       planType,
       displayOrder,
       isActive,
@@ -759,6 +798,23 @@ async function updateMyBusinessAd(req, res, next) {
     const openHour = pickTrimmedText(req.body, 'openHour', target.openHour || '');
     const closeHour = pickTrimmedText(req.body, 'closeHour', target.closeHour || '');
     const description = pickTrimmedText(req.body, 'description', target.description || '');
+    const kakaoTalkId = pickTrimmedText(req.body, 'kakaoTalkId', target.kakaoTalkId || '');
+    const telegramId = pickTrimmedText(req.body, 'telegramId', target.telegramId || '');
+    const showBusinessAddressMap = Object.prototype.hasOwnProperty.call(req.body || {}, 'showBusinessAddressMap')
+      ? normalizeBooleanPayload(req.body?.showBusinessAddressMap, false)
+      : normalizeBooleanPayload(target.showBusinessAddressMap, false);
+    const useVisitVerification = Object.prototype.hasOwnProperty.call(req.body || {}, 'useVisitVerification')
+      ? normalizeBooleanPayload(req.body?.useVisitVerification, false)
+      : normalizeBooleanPayload(target.useVisitVerification, false);
+    const useStampEvent = Object.prototype.hasOwnProperty.call(req.body || {}, 'useStampEvent')
+      ? normalizeBooleanPayload(req.body?.useStampEvent, false)
+      : normalizeBooleanPayload(target.useStampEvent, false);
+    const stampEventCount = useStampEvent
+      ? normalizePositiveIntPayload(
+        Object.prototype.hasOwnProperty.call(req.body || {}, 'stampEventCount') ? req.body?.stampEventCount : target.stampEventCount,
+        0
+      )
+      : 0;
     const planTypeRaw = pickTrimmedText(req.body, 'planType', target.planType || 'NORMAL').toUpperCase();
     const planType = planTypeRaw === 'PREMIUM' ? 'PREMIUM' : 'NORMAL';
     const displayOrder = Object.prototype.hasOwnProperty.call(req.body || {}, 'displayOrder') ? (Number(req.body?.displayOrder) || 0) : (Number(target.displayOrder) || 0);
@@ -770,6 +826,11 @@ async function updateMyBusinessAd(req, res, next) {
       businessName, managerName, managerContact, title, region, district, category, openHour, closeHour, description
     })) {
       return res.status(400).json({ message: '광고프로필 필수 항목을 모두 입력해주세요.' });
+    }
+
+    const stampEventError = getBusinessAdStampEventError({ useStampEvent, stampEventCount });
+    if (stampEventError) {
+      return res.status(400).json({ message: stampEventError });
     }
 
     await adminModel.updateBusinessAd(id, {
@@ -785,6 +846,12 @@ async function updateMyBusinessAd(req, res, next) {
       openHour,
       closeHour,
       description,
+      kakaoTalkId,
+      telegramId,
+      showBusinessAddressMap,
+      useVisitVerification,
+      useStampEvent,
+      stampEventCount,
       planType,
       displayOrder,
       isActive,
