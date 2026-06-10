@@ -17,7 +17,7 @@ const LINK_MAP = {
   'admin.html': '/admin',
   'find-account.html': '/find-account',
   'business-info.html': '/business-info',
-  'live.html': '/live'
+  'live.html': '/play/live'
 };
 
 const GLOBAL_STYLES = [

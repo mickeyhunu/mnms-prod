@@ -2,6 +2,7 @@
  * 파일 역할: Node/Express 서버를 초기화하고 백엔드 라우트를 연결하는 진입점 파일.
  */
 const crypto = require('crypto');
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -21,12 +22,15 @@ const liveRoutes = require('./src/backend/routes/liveRoutes');
 const uploadRoutes = require('./src/backend/routes/uploadRoutes');
 const rbtiRoutes = require('./src/backend/routes/rbtiRoutes');
 const adminModel = require('./src/backend/models/adminModel');
+const postModel = require('./src/backend/models/postModel');
 const { startLiveHistoryScheduler } = require('./src/backend/utils/liveHistoryScheduler');
 const { ensureS3BucketExists, isS3UploadEnabled, s3BucketName } = require('./src/backend/config/s3');
 
 const app = express();
 const PORT = Number(process.env.PORT || 8080);
 const FRONTEND_DIR = path.join(__dirname, 'src/frontend');
+const INDEX_HTML_PATH = path.join(FRONTEND_DIR, 'index.html');
+const SITE_ORIGIN = String(process.env.SITE_ORIGIN || process.env.PUBLIC_SITE_URL || 'https://nightmens.com').replace(/\/$/, '');
 let isDatabaseReady = false;
 const trustProxyValue = String(process.env.TRUST_PROXY || '1').trim();
 
@@ -37,6 +41,238 @@ app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 app.all('/kcp/callback', authController.handleKcpCallback);
+
+
+const SEO_PAGE_CONFIG = {
+  '/': {
+    title: '남성 유흥 커뮤니티 홈 | 미드나잇 맨즈',
+    description: '최저가 업소 추천, 실시간 인기 후기, 지역별 업소 정보를 한 번에 확인하세요.',
+    keywords: ['남성 유흥 커뮤니티', '최저가 업소 추천', '업소 후기', '업소 정보', '실시간 인기글']
+  },
+  '/community': {
+    title: '업소 추천 커뮤니티 | 미드나잇 맨즈',
+    description: '자유·익명·후기 게시판에서 최저가 업소 추천과 리얼 리뷰 후기를 탐색해보세요.',
+    keywords: ['업소 추천 커뮤니티', '리뷰 후기', '최저가 업소', '익명 게시판', '남성 커뮤니티']
+  },
+  '/business-info': {
+    title: '업체정보 | 미드나잇 맨즈',
+    description: '등록된 업체 정보를 지역과 업종별로 확인하세요.',
+    keywords: ['업체정보', '지역별 업체', '업종별 업체', '미드나잇 맨즈']
+  },
+  '/play': {
+    title: 'PLAY | 미드나잇 맨즈',
+    description: 'LIVE와 RBTI를 한 번에 이동할 수 있는 PLAY 메뉴입니다.',
+    keywords: ['PLAY', 'LIVE', 'RBTI', '미드나잇 맨즈']
+  },
+  '/play/live': {
+    title: '실시간 출근부 웨이팅 초톡 | 미드나잇 맨즈',
+    description: '실시간 업소 출근부 웨이팅 초이스, 엔트리 현황, 오늘의 추천 정보를 빠르게 확인하세요.',
+    keywords: ['실시간 업소', '라이브 정보', '오늘의 추천 업소', '엔트리 현황', '지역 업소']
+  },
+  '/play/rbti': {
+    title: 'RBTI 테스트 | 미드나잇 맨즈',
+    description: '유흥 MBTI 성향 테스트 RBTI 검사.',
+    keywords: ['RBTI', '유흥 MBTI', '성향 테스트', '미드나잇 맨즈']
+  },
+  '/play/alcohol': {
+    title: '음주 측정기 | 미드나잇 맨즈',
+    description: '간단한 음주 상태 자가 점검을 위한 음주측정 페이지입니다.',
+    keywords: ['음주 측정기', '음주 자가 점검', '미드나잇 맨즈']
+  },
+  '/support': {
+    title: '공지 및 고객지원 | 미드나잇 맨즈',
+    description: '커뮤니티 운영 공지, 이용 가이드, 자주 묻는 질문으로 서비스를 안전하게 이용하세요.',
+    keywords: ['커뮤니티 공지', '고객지원', 'FAQ', '이용 가이드', '운영 정책']
+  },
+  '/support/faq': {
+    title: 'FAQ | 미드나잇 맨즈',
+    description: '자주 묻는 질문과 답변을 모아볼 수 있습니다.',
+    keywords: ['FAQ', '자주 묻는 질문', '고객지원', '미드나잇 맨즈']
+  },
+  '/board/terms': {
+    title: '약관 및 정책 | 미드나잇 맨즈',
+    description: '이용약관과 운영정책, 개인정보 정책을 확인하세요.',
+    keywords: ['이용약관', '운영정책', '개인정보 처리방침', '미드나잇 맨즈']
+  }
+};
+
+const NOINDEX_PATHS = new Set([
+  '/login',
+  '/register',
+  '/create',
+  '/my-page',
+  '/my-page/profile',
+  '/my-page/activity',
+  '/my-page/points',
+  '/my-page/stamps',
+  '/admin',
+  '/admin/support/create',
+  '/find-account',
+  '/stamp-purchase',
+  '/ad-purchase',
+  '/ad-order-history',
+  '/business-apply',
+  '/ad-profile-management',
+  '/business-management',
+  '/customer-service',
+  '/my-inquiries',
+  '/404'
+]);
+
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function escapeJsonForHtml(payload) {
+  return JSON.stringify(payload)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
+
+function stripHtml(value = '') {
+  return String(value).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function truncateText(value = '', maxLength = 150) {
+  const text = stripHtml(value);
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength - 1).trim()}…`;
+}
+
+function parsePostImageUrls(post) {
+  if (Array.isArray(post?.imageUrls)) return post.imageUrls;
+  const raw = post?.imageUrls || post?.image_urls;
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function absoluteUrl(pathOrUrl = '/') {
+  if (/^https?:\/\//i.test(String(pathOrUrl))) return String(pathOrUrl);
+  return new URL(String(pathOrUrl || '/'), SITE_ORIGIN).toString();
+}
+
+function createDefaultSeo(pathname, query = {}) {
+  const basePath = pathname === '/live' ? '/play/live' : pathname;
+  const routeConfig = SEO_PAGE_CONFIG[basePath] || {};
+  const noindex = NOINDEX_PATHS.has(basePath)
+    || basePath.startsWith('/admin/')
+    || basePath.startsWith('/my-inquiries/');
+  const canonicalPath = basePath === '/post-detail' && query.id ? `${basePath}?id=${encodeURIComponent(query.id)}` : basePath;
+  const title = routeConfig.title || '미드나잇 맨즈';
+  const description = routeConfig.description || '남성 유흥 커뮤니티 미드나잇 맨즈에서 최저가 업소 추천, 리얼 후기, 지역별 업소 정보를 빠르게 확인하세요.';
+  const keywords = routeConfig.keywords || ['남성 유흥 커뮤니티', '최저가 업소 추천', '업소 리뷰 후기', '지역별 업소 정보', '미드나잇 맨즈'];
+
+  return {
+    title,
+    description,
+    keywords,
+    canonicalUrl: absoluteUrl(canonicalPath),
+    robots: noindex ? 'noindex, nofollow' : 'index, follow',
+    ogType: 'website',
+    imageUrl: absoluteUrl('/src/assets/live-avatars/brand-logo.png')
+  };
+}
+
+async function createPostSeo(req) {
+  const postId = Number(req.query.id || req.params.id || 0);
+  if (!postId || !isDatabaseReady) return null;
+
+  try {
+    const post = await postModel.findPostDetailById(postId);
+    if (!post || Number(post.isHidden || post.is_hidden || 0) === 1) return null;
+
+    const titleText = stripHtml(post.title || '게시글 상세');
+    const description = truncateText(post.content, 150) || '미드나잇 맨즈 커뮤니티 게시글 상세 내용을 확인하세요.';
+    const imageUrl = parsePostImageUrls(post).find(Boolean);
+    const canonicalUrl = absoluteUrl(`/post-detail?id=${encodeURIComponent(postId)}`);
+
+    return {
+      title: `${titleText} | 미드나잇 맨즈`,
+      description,
+      keywords: ['업소 리뷰', '방문 후기', '업소 가격 정보', '추천 업소', '커뮤니티 후기'],
+      canonicalUrl,
+      robots: 'index, follow',
+      ogType: 'article',
+      imageUrl: imageUrl || absoluteUrl('/src/assets/live-avatars/brand-logo.png'),
+      publishedTime: post.createdAt,
+      modifiedTime: post.updatedAt,
+      structuredDataType: 'Article'
+    };
+  } catch (error) {
+    console.error('post SEO metadata failed:', error.message);
+    return null;
+  }
+}
+
+function renderSeoHtml(indexHtml, seo) {
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': seo.structuredDataType || (seo.ogType === 'article' ? 'Article' : 'WebPage'),
+    name: seo.title,
+    headline: seo.title,
+    description: seo.description,
+    keywords: seo.keywords,
+    url: seo.canonicalUrl,
+    image: seo.imageUrl,
+    inLanguage: 'ko-KR',
+    isPartOf: {
+      '@type': 'WebSite',
+      name: "Midnight Men's",
+      url: SITE_ORIGIN
+    }
+  };
+
+  if (seo.publishedTime) structuredData.datePublished = seo.publishedTime;
+  if (seo.modifiedTime) structuredData.dateModified = seo.modifiedTime;
+
+  const seoTags = [
+    `<title>${escapeHtml(seo.title)}</title>`,
+    `<meta name="description" content="${escapeHtml(seo.description)}" />`,
+    `<meta name="keywords" content="${escapeHtml((seo.keywords || []).join(', '))}" />`,
+    `<meta name="robots" content="${escapeHtml(seo.robots)}" />`,
+    `<link rel="canonical" href="${escapeHtml(seo.canonicalUrl)}" />`,
+    `<meta property="og:type" content="${escapeHtml(seo.ogType || 'website')}" />`,
+    `<meta property="og:site_name" content="Midnight Men's" />`,
+    `<meta property="og:locale" content="ko_KR" />`,
+    `<meta property="og:title" content="${escapeHtml(seo.title)}" />`,
+    `<meta property="og:description" content="${escapeHtml(seo.description)}" />`,
+    `<meta property="og:url" content="${escapeHtml(seo.canonicalUrl)}" />`,
+    `<meta property="og:image" content="${escapeHtml(seo.imageUrl)}" />`,
+    `<meta property="og:image:secure_url" content="${escapeHtml(seo.imageUrl)}" />`,
+    `<meta name="twitter:card" content="summary_large_image" />`,
+    `<meta name="twitter:title" content="${escapeHtml(seo.title)}" />`,
+    `<meta name="twitter:description" content="${escapeHtml(seo.description)}" />`,
+    `<meta name="twitter:image" content="${escapeHtml(seo.imageUrl)}" />`,
+    `<script type="application/ld+json" data-seo-jsonld="server">${escapeJsonForHtml(structuredData)}</script>`
+  ].join('\n  ');
+
+  return indexHtml
+    .replace(/<title>[\s\S]*?<\/title>/i, '')
+    .replace(/\s*<meta\s+(?:name|property)="(?:description|keywords|robots|og:[^"]+|twitter:[^"]+)"[^>]*>\s*/gi, '\n')
+    .replace(/\s*<link\s+rel="canonical"[^>]*>\s*/gi, '\n')
+    .replace(/\s*<script\s+type="application\/ld\+json"\s+data-seo-jsonld="server">[\s\S]*?<\/script>\s*/gi, '\n')
+    .replace('</head>', `  ${seoTags}\n</head>`);
+}
+
+async function sendSeoIndex(req, res, statusCode = 200) {
+  const indexHtml = await fs.promises.readFile(INDEX_HTML_PATH, 'utf8');
+  const defaultSeo = createDefaultSeo(req.path, req.query);
+  const dynamicSeo = req.path === '/post-detail' ? await createPostSeo(req) : null;
+  res.status(statusCode).type('html').send(renderSeoHtml(indexHtml, dynamicSeo || defaultSeo));
+}
 
 function parseCookies(cookieHeader = '') {
   return String(cookieHeader || '')
@@ -93,6 +329,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(FRONTEND_DIR, {
+  index: false,
   etag: true,
   lastModified: true,
   maxAge: '1h',
@@ -130,9 +367,13 @@ app.use('/api/live', liveRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/rbti', rbtiRoutes);
 
-app.get('*', (req, res) => {
+app.get('/live', (req, res) => {
+  res.redirect(301, '/play/live');
+});
+
+app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ message: 'Not Found' });
-  res.sendFile(path.join(FRONTEND_DIR, 'index.html'));
+  sendSeoIndex(req, res).catch(next);
 });
 
 app.use((err, req, res, next) => {
