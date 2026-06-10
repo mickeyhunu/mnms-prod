@@ -332,16 +332,20 @@ function normalizeBooleanFlag(value) {
     return ['1', 'true', 'y', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
 }
 
+function buildBusinessProfileInfoRow(label, value, icon) {
+    return `<div><dt><span aria-hidden="true">${icon}</span>${label}</dt><dd>${value}</dd></div>`;
+}
+
 function buildBusinessProfileContactInfoRows(ad) {
     const contactRows = [];
     const kakaoTalkId = String(ad?.kakaoTalkId || '').trim();
     const telegramId = String(ad?.telegramId || '').trim();
 
     if (kakaoTalkId) {
-        contactRows.push(`<div><dt>카카오톡 아이디</dt><dd>${sanitizeHTML(kakaoTalkId)}</dd></div>`);
+        contactRows.push(buildBusinessProfileInfoRow('카카오톡', sanitizeHTML(kakaoTalkId), '💬'));
     }
     if (telegramId) {
-        contactRows.push(`<div><dt>텔레그램 아이디</dt><dd>${sanitizeHTML(telegramId)}</dd></div>`);
+        contactRows.push(buildBusinessProfileInfoRow('텔레그램', sanitizeHTML(telegramId), '✈️'));
     }
 
     return contactRows.join('');
@@ -360,7 +364,7 @@ function buildBusinessProfileMapMarkup(ad) {
     return `
         <dl class="business-profile-info business-profile-info--map" aria-label="업체 미니맵">
             <div class="business-profile-map-row">
-                <dt>미니맵</dt>
+                <dt><span aria-hidden="true">🗺️</span>미니맵</dt>
                 <dd>
                     <iframe class="business-profile-mini-map" title="${sanitizeHTML(fullAddress)} 미니맵" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=${encodedAddress}&output=embed"></iframe>
                     <a class="business-profile-map-link" href="https://maps.google.com/?q=${encodedAddress}" target="_blank" rel="noopener noreferrer">큰 지도에서 보기</a>
@@ -380,14 +384,14 @@ function buildBusinessProfileAdditionalInfoMarkup(ad) {
     const infoRows = [];
 
     if (useVisitVerification) {
-        infoRows.push('<div><dt>방문 인증</dt><dd>사용 업소 · 방문인증시 스탬프 1개 차감</dd></div>');
+        infoRows.push(buildBusinessProfileInfoRow('방문 인증', '사용 업소 · 방문인증시 스탬프 1개 차감', '✅'));
     }
     if (useStampEvent && stampEventCount > 0) {
-        infoRows.push(`<div><dt>스탬프 이벤트</dt><dd>사용 업소 · ${stampEventCount.toLocaleString('ko-KR')}개</dd></div>`);
+        infoRows.push(buildBusinessProfileInfoRow('스탬프 이벤트', `사용 업소 · ${stampEventCount.toLocaleString('ko-KR')}개`, '🎟️'));
     }
     if (shouldShowMap) {
         const fullAddress = [businessAddress, businessAddressDetail].filter(Boolean).join(' ');
-        infoRows.push(`<div><dt>사업자등록기준 주소지</dt><dd>${sanitizeHTML(fullAddress)}</dd></div>`);
+        infoRows.push(buildBusinessProfileInfoRow('사업자등록기준 주소지', sanitizeHTML(fullAddress), '📍'));
     }
 
     if (!infoRows.length) return '';
@@ -439,12 +443,12 @@ function buildBusinessProfileDetailMarkup(ad) {
                 </div>
             </div>
             <dl class="business-profile-info">
-                <div><dt>업체명</dt><dd>${businessName}</dd></div>
-                <div><dt>담당자</dt><dd>${managerName}</dd></div>
-                <div><dt>연락처</dt><dd>${managerContact}</dd></div>
+                ${buildBusinessProfileInfoRow('업체명', businessName, '🏢')}
+                ${buildBusinessProfileInfoRow('담당자', managerName, '👤')}
+                ${buildBusinessProfileInfoRow('연락처', managerContact, '📞')}
                 ${contactInfoRows}
-                <div><dt>지역</dt><dd>${regionLabel} ${district}</dd></div>
-                <div><dt>업종</dt><dd>${category}</dd></div>
+                ${buildBusinessProfileInfoRow('지역', `${regionLabel} ${district}`, '📍')}
+                ${buildBusinessProfileInfoRow('업종', category, '🏷️')}
             </dl>
             <section class="business-profile-description" aria-label="업체 상세정보">
                 <h3>상세정보</h3>

@@ -4236,22 +4236,32 @@ body[data-page="admin"] {
 }
 
 .business-profile-info div {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: center;
+    column-gap: 12px;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
     padding: 12px;
 }
 
 .business-profile-info dt {
-    margin-bottom: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 0;
     color: #6b7280;
     font-size: 12px;
     font-weight: 700;
+    white-space: nowrap;
 }
 
 .business-profile-info dd {
+    min-width: 0;
     margin: 0;
     color: #111827;
     font-size: 14px;
+    text-align: right;
     word-break: break-word;
 }
 
@@ -4313,6 +4323,10 @@ body.business-profile-modal-open {
 
     .business-profile-info {
         grid-template-columns: 1fr;
+    }
+
+    .business-profile-info div {
+        grid-template-columns: minmax(84px, max-content) minmax(0, 1fr);
     }
 }
 
