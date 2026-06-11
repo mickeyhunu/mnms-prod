@@ -502,8 +502,10 @@ function buildBusinessProfileMapMarkup(ad) {
     return `
         <section class="business-profile-extra" aria-label="위치정보">
             <h3>위치정보</h3>
-            <div class="business-profile-mini-map" title="${sanitizeHTML(fullAddress)} 카카오맵 미니맵" data-kakao-map-address="${sanitizeHTML(fullAddress)}">${buildKakaoMapFallbackMarkup(fullAddress, '카카오맵 미니맵을 불러오는 중입니다.')}</div>
-            <p class="business-profile-map-address">${sanitizeHTML(fullAddress)}</p>
+            <div class="business-profile-location">
+                <div class="business-profile-mini-map" title="${sanitizeHTML(fullAddress)} 카카오맵 미니맵" data-kakao-map-address="${sanitizeHTML(fullAddress)}">${buildKakaoMapFallbackMarkup(fullAddress, '카카오맵 미니맵을 불러오는 중입니다.')}</div>
+                <p class="business-profile-map-address">${sanitizeHTML(fullAddress)}</p>
+            </div>
         </section>
     `;
 }
