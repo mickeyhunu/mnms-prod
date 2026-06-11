@@ -221,7 +221,7 @@ function loadKakaoMapScript() {
     return kakaoMapLoader;
 }
 
-function renderKakaoMap(container, maps, address, title) {
+function renderKakaoMap(container, maps, address) {
     const geocoder = new maps.services.Geocoder();
     geocoder.addressSearch(address, (result, status) => {
         if (status !== maps.services.Status.OK || !result?.[0]) {
@@ -234,15 +234,10 @@ function renderKakaoMap(container, maps, address, title) {
             center: coords,
             level: 3
         });
-        const marker = new maps.Marker({
+        new maps.Marker({
             map,
             position: coords
         });
-        const infowindow = new maps.InfoWindow({
-            content: `<div class="business-profile-kakao-map-label">${sanitizeHTML(title || address)}</div>`
-        });
-
-        infowindow.open(map, marker);
         setTimeout(() => map.relayout(), 0);
     });
 }
@@ -254,7 +249,6 @@ async function initializeBusinessProfileKakaoMaps(root = document) {
     const maps = await loadKakaoMapScript().catch(() => null);
     mapNodes.forEach((container) => {
         const address = String(container.dataset.kakaoMapAddress || '').trim();
-        const title = String(container.dataset.kakaoMapTitle || '').trim();
         if (!address) return;
 
         if (!maps) {
@@ -262,7 +256,7 @@ async function initializeBusinessProfileKakaoMaps(root = document) {
             return;
         }
 
-        renderKakaoMap(container, maps, address, title);
+        renderKakaoMap(container, maps, address);
     });
 }
 
@@ -472,15 +466,11 @@ function buildBusinessProfileMapMarkup(ad) {
     const fullAddress = [businessAddress, businessAddressDetail].filter(Boolean).join(' ');
 
     return `
-        <dl class="business-profile-info business-profile-info--map" aria-label="업체 미니맵">
-            <div class="business-profile-map-row">
-                <dt><span aria-hidden="true">🗺️</span>미니맵</dt>
-                <dd>
-                    <div class="business-profile-mini-map" title="${sanitizeHTML(fullAddress)} 카카오맵 미니맵" data-kakao-map-address="${sanitizeHTML(fullAddress)}" data-kakao-map-title="${sanitizeHTML(getBusinessProfileTitle(ad))}">${buildKakaoMapFallbackMarkup(fullAddress, '카카오맵 미니맵을 불러오는 중입니다.')}</div>
-                    <a class="business-profile-map-link" href="${buildKakaoMapSearchUrl(fullAddress)}" target="_blank" rel="noopener noreferrer">카카오맵에서 크게 보기</a>
-                </dd>
-            </div>
-        </dl>
+        <section class="business-profile-extra business-profile-location" aria-label="위치정보">
+            <h3>위치정보</h3>
+            <div class="business-profile-mini-map" title="${sanitizeHTML(fullAddress)} 카카오맵 미니맵" data-kakao-map-address="${sanitizeHTML(fullAddress)}">${buildKakaoMapFallbackMarkup(fullAddress, '카카오맵 미니맵을 불러오는 중입니다.')}</div>
+            <a class="business-profile-map-link" href="${buildKakaoMapSearchUrl(fullAddress)}" target="_blank" rel="noopener noreferrer">카카오맵에서 크게 보기</a>
+        </section>
     `;
 }
 
