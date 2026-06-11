@@ -31,6 +31,7 @@ const {
   parseBusinessInfoValue,
   uploadBusinessInfoDataUrlImages
 } = require('../utils/businessProfileImages');
+const { createSeoSlug } = require('../utils/seoSlug');
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validatePassword } = require('../utils/authPolicy');
 const { hashPassword } = require('../utils/passwordHasher');
@@ -609,7 +610,7 @@ async function myNotifications(req, res, next) {
     const normalizedNotifications = [
       ...commentNotifications.map((item) => ({
         ...item,
-        targetUrl: item.postId ? `/post-detail?id=${item.postId}` : '/'
+        targetUrl: item.postTitle ? `/post-detail/${encodeURIComponent(createSeoSlug(item.postTitle))}` : '/'
       })),
       ...notices.map((notice) => ({
         notificationKey: `admin-notice-${notice.sourceType || 'SUPPORT'}-${notice.sourceId || notice.id}`,
