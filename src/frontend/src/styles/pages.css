@@ -3650,13 +3650,16 @@ body[data-page="admin"] {
 
 .business-profile-location {
     margin-top: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px;
 }
 
 .business-profile-mini-map {
     display: block;
     width: 100%;
     height: 220px;
-    border: 0;
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
     background: #f3f4f6;
     overflow: hidden;
@@ -4283,10 +4286,8 @@ body[data-page="admin"] {
 }
 
 .business-profile-info-item {
-    display: grid;
     grid-template-columns: max-content minmax(0, 1fr);
     align-items: center;
-    column-gap: 12px;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
     padding: 12px;
