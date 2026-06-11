@@ -3602,7 +3602,6 @@ body[data-page="admin"] {
 .ad-profile-stamp-event-fields {
     display: grid;
     gap: 10px;
-    margin-top: 10px;
 }
 
 .ad-profile-stamp-event-fields textarea {
