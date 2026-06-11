@@ -4272,7 +4272,7 @@ body[data-page="admin"] {
     margin: 20px 0;
 }
 
-.business-profile-info div {
+.business-profile-info-item {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr);
     align-items: center;
@@ -4280,6 +4280,47 @@ body[data-page="admin"] {
     border: 1px solid #e5e7eb;
     border-radius: 12px;
     padding: 12px;
+}
+
+.business-profile-info-pair {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.business-profile-info-item--contact {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(84px, max-content) minmax(0, 1fr);
+}
+
+.business-profile-contact-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 0;
+}
+
+.business-profile-contact-item + .business-profile-contact-item {
+    border-top: 1px dashed #e5e7eb;
+}
+
+.business-profile-contact-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.business-profile-contact-value {
+    min-width: 0;
+    color: #111827;
+    text-align: right;
+    word-break: break-word;
 }
 
 .business-profile-info dt {
@@ -4362,7 +4403,7 @@ body.business-profile-modal-open {
         grid-template-columns: 1fr;
     }
 
-    .business-profile-info div {
+    .business-profile-info-item {
         grid-template-columns: minmax(84px, max-content) minmax(0, 1fr);
     }
 }
@@ -5049,7 +5090,7 @@ body.business-profile-modal-open {
     gap: 8px;
 }
 
-.business-profile-standalone .business-profile-info div {
+.business-profile-standalone .business-profile-info-item {
     min-height: 48px;
     grid-template-columns: minmax(112px, max-content) minmax(0, 1fr);
     padding: 12px 14px;
@@ -5059,7 +5100,7 @@ body.business-profile-modal-open {
     text-align: left;
 }
 
-.business-profile-standalone .business-profile-info--extra div {
+.business-profile-standalone .business-profile-info--extra .business-profile-info-item {
     grid-template-columns: minmax(144px, max-content) minmax(0, 1fr);
 }
 
@@ -5068,8 +5109,8 @@ body.business-profile-modal-open {
 }
 
 @media (max-width: 480px) {
-    .business-profile-standalone .business-profile-info div,
-    .business-profile-standalone .business-profile-info--extra div {
+    .business-profile-standalone .business-profile-info-item,
+    .business-profile-standalone .business-profile-info--extra .business-profile-info-item {
         grid-template-columns: minmax(0, 1fr);
         row-gap: 6px;
         align-items: start;
