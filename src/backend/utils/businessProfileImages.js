@@ -78,8 +78,13 @@ async function deleteUnreferencedBusinessInfoImages(previousInfo, retainedInfos 
   return deleteS3ObjectsByUrls(removableUrls);
 }
 
+async function deleteRejectedBusinessInfoImages(rejectedInfo, approvedInfo = null) {
+  return deleteUnreferencedBusinessInfoImages(rejectedInfo, [approvedInfo]);
+}
+
 module.exports = {
   collectBusinessInfoImageUrls,
+  deleteRejectedBusinessInfoImages,
   deleteUnreferencedBusinessInfoImages,
   deleteUploadedBusinessInfoImagesOnFailure,
   parseBusinessInfoValue,
