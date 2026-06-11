@@ -1053,7 +1053,8 @@ function collectBusinessManagementFormData() {
 }
 
 function isBusinessPreviewImageUrl(value) {
-    return /^data:image\//u.test(String(value || '').trim());
+    const normalized = String(value || '').trim();
+    return /^data:image\//u.test(normalized) || /^https?:\/\//iu.test(normalized);
 }
 
 function getBusinessUploadConfig(button) {
