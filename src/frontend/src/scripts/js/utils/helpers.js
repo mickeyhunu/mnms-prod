@@ -224,17 +224,28 @@ function createSeoSlug(value = '', fallback = 'detail') {
    return normalized || fallback;
 }
 
+function createSeoSlugWithId(title = '', id = null, fallbackPrefix = 'detail') {
+   const normalizedId = Number.parseInt(id, 10);
+   const hasValidId = Number.isInteger(normalizedId) && normalizedId > 0;
+   const fallback = hasValidId ? `${fallbackPrefix}-${normalizedId}` : fallbackPrefix;
+   const titleSlug = createSeoSlug(title, fallback);
+
+   if (!hasValidId) return titleSlug;
+   if (titleSlug === fallback && !String(title || '').trim()) return fallback;
+   return `${titleSlug}-${normalizedId}`;
+}
+
 function createPostDetailPath(postOrId, title = '') {
    const post = typeof postOrId === 'object' && postOrId !== null ? postOrId : { id: postOrId, title };
    const titleText = post.title || title;
-   const slug = titleText ? createSeoSlug(titleText, `post-${post.id || ''}`) : String(post.id || 'post');
+   const slug = createSeoSlugWithId(titleText, post.id, 'post');
    return `/post-detail/${encodeURIComponent(slug)}`;
 }
 
 function createBusinessInfoDetailPath(adOrId, title = '') {
    const ad = typeof adOrId === 'object' && adOrId !== null ? adOrId : { id: adOrId, title };
    const titleText = ad.title || title || ad.businessName;
-   const slug = titleText ? createSeoSlug(titleText, `business-${ad.id || ''}`) : String(ad.id || 'business');
+   const slug = createSeoSlugWithId(titleText, ad.id, 'business');
    return `/business-info/${encodeURIComponent(slug)}`;
 }
 
