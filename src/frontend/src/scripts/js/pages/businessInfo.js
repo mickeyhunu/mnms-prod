@@ -221,6 +221,22 @@ function loadKakaoMapScript() {
     return kakaoMapLoader;
 }
 
+function hideKakaoMapChrome(container) {
+    const hideChrome = () => {
+        const chromeNodes = container.querySelectorAll('[style*="bottom: 0px"][style*="height: 19px"]');
+        chromeNodes.forEach((node) => {
+            node.style.display = 'none';
+        });
+    };
+
+    hideChrome();
+    if (container.dataset.kakaoMapChromeHidden) return;
+
+    const observer = new MutationObserver(hideChrome);
+    observer.observe(container, { childList: true, subtree: true });
+    container.dataset.kakaoMapChromeHidden = 'true';
+}
+
 function renderKakaoMap(container, maps, address) {
     const geocoder = new maps.services.Geocoder();
     geocoder.addressSearch(address, (result, status) => {
@@ -238,7 +254,11 @@ function renderKakaoMap(container, maps, address) {
             map,
             position: coords
         });
-        setTimeout(() => map.relayout(), 0);
+        hideKakaoMapChrome(container);
+        setTimeout(() => {
+            map.relayout();
+            hideKakaoMapChrome(container);
+        }, 0);
     });
 }
 
@@ -483,15 +503,12 @@ function buildBusinessProfileMapMarkup(ad) {
         <section class="business-profile-extra" aria-label="위치정보">
             <h3>위치정보</h3>
             <div class="business-profile-mini-map" title="${sanitizeHTML(fullAddress)} 카카오맵 미니맵" data-kakao-map-address="${sanitizeHTML(fullAddress)}">${buildKakaoMapFallbackMarkup(fullAddress, '카카오맵 미니맵을 불러오는 중입니다.')}</div>
-            <a class="business-profile-map-link" href="${buildKakaoMapSearchUrl(fullAddress)}" target="_blank" rel="noopener noreferrer">카카오맵에서 크게 보기</a>
+            <p class="business-profile-map-address">${sanitizeHTML(fullAddress)}</p>
         </section>
     `;
 }
 
 function buildBusinessProfileAdditionalInfoMarkup(ad) {
-    const businessAddress = String(ad?.businessAddress || '').trim();
-    const businessAddressDetail = String(ad?.businessAddressDetail || '').trim();
-    const shouldShowMap = normalizeBooleanFlag(ad?.showBusinessAddressMap) && businessAddress;
     const useVisitVerification = normalizeBooleanFlag(ad?.useVisitVerification);
     const useStampEvent = normalizeBooleanFlag(ad?.useStampEvent);
     const stampEventCount = Number(ad?.stampEventCount || 0);
@@ -503,11 +520,6 @@ function buildBusinessProfileAdditionalInfoMarkup(ad) {
     if (useStampEvent && stampEventCount > 0) {
         infoRows.push(buildBusinessProfileInfoRow('스탬프 이벤트', `사용 업소 · ${stampEventCount.toLocaleString('ko-KR')}개`, '🎟️'));
     }
-    if (shouldShowMap) {
-        const fullAddress = [businessAddress, businessAddressDetail].filter(Boolean).join(' ');
-        infoRows.push(buildBusinessProfileInfoRow('사업자등록기준 주소지', sanitizeHTML(fullAddress), '📍'));
-    }
-
     if (!infoRows.length) return '';
 
     return `
