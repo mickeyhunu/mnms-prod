@@ -3638,13 +3638,12 @@ body[data-page="admin"] {
     color: #111827;
 }
 
-.business-profile-info--extra,
-.business-profile-info--map {
+.business-profile-info--extra {
     margin-top: 0;
 }
 
-.business-profile-map-row {
-    grid-column: 1 / -1;
+.business-profile-location {
+    margin-top: 0;
 }
 
 .business-profile-mini-map {
@@ -3692,15 +3691,6 @@ body[data-page="admin"] {
 
 .business-profile-mini-map-fallback span:last-child {
     font-size: 13px;
-}
-
-.business-profile-kakao-map-label {
-    min-width: 120px;
-    padding: 7px 10px;
-    color: #111827;
-    font-size: 12px;
-    font-weight: 800;
-    text-align: center;
 }
 
 .business-profile-map-link {
