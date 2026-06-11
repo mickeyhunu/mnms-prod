@@ -567,18 +567,18 @@ function buildBusinessProfileDetailMarkup(ad) {
                     buildBusinessProfileInfoRow('업체명', businessName, '🏢'),
                     buildBusinessProfileInfoRow('담당자', managerName, '👤')
                 )}
-                ${contactInfoGroup}
-                ${additionalInfoMarkup}
                 ${buildBusinessProfileInfoPair(
                     buildBusinessProfileInfoRow('지역', `${regionLabel} ${district}`, '📍'),
                     buildBusinessProfileInfoRow('업종', category, '🏷️')
                 )}
+                ${contactInfoGroup}
+                ${additionalInfoMarkup}
             </dl>
+            ${mapMarkup}
             <section class="business-profile-description" aria-label="업체 상세정보">
                 <h3>상세정보</h3>
                 <div class="business-profile-description-content">${description || '<p>등록된 상세정보가 없습니다.</p>'}</div>
             </section>
-            ${mapMarkup}
             ${externalUrl ? `<a class="business-profile-link btn btn-primary" href="${sanitizeHTML(externalUrl)}" target="_blank" rel="noopener noreferrer">업체 링크 열기</a>` : ''}
         </article>
     `;
