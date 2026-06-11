@@ -388,6 +388,52 @@ function sanitizeBusinessRichText(value) {
     const template = document.createElement('template');
     template.innerHTML = rawValue;
     const allowedTags = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'S', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'SPAN', 'A', 'IMG']);
+    const allowedClasses = new Set([
+        'ql-align-center',
+        'ql-align-right',
+        'ql-align-justify',
+        'ql-size-small',
+        'ql-size-large',
+        'ql-size-huge'
+    ]);
+    const allowedStyleProperties = new Set(['color', 'background-color', 'text-align']);
+
+    const normalizeSafeStyleValue = (property, value) => {
+        const normalizedValue = String(value || '').trim();
+        if (!normalizedValue || /url\s*\(|expression\s*\(|javascript:/i.test(normalizedValue)) return '';
+
+        if (property === 'text-align') {
+            return ['left', 'center', 'right', 'justify'].includes(normalizedValue.toLowerCase()) ? normalizedValue.toLowerCase() : '';
+        }
+
+        const isSafeColorValue = /^#[0-9a-f]{3,8}$/i.test(normalizedValue)
+            || /^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/i.test(normalizedValue)
+            || /^hsla?\(\s*\d{1,3}(?:deg)?\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/i.test(normalizedValue)
+            || /^[a-z]+$/i.test(normalizedValue);
+
+        return isSafeColorValue ? normalizedValue : '';
+    };
+
+    const applySafeRichTextAttributes = (sourceNode, targetElement) => {
+        const safeClasses = String(sourceNode.getAttribute('class') || '')
+            .split(/\s+/)
+            .filter((className) => allowedClasses.has(className));
+        if (safeClasses.length) targetElement.setAttribute('class', safeClasses.join(' '));
+
+        const style = String(sourceNode.getAttribute('style') || '');
+        const safeStyles = style.split(';').reduce((styles, declaration) => {
+            const separatorIndex = declaration.indexOf(':');
+            if (separatorIndex === -1) return styles;
+
+            const property = declaration.slice(0, separatorIndex).trim().toLowerCase();
+            if (!allowedStyleProperties.has(property)) return styles;
+
+            const value = normalizeSafeStyleValue(property, declaration.slice(separatorIndex + 1));
+            if (value) styles.push(`${property}: ${value}`);
+            return styles;
+        }, []);
+        if (safeStyles.length) targetElement.setAttribute('style', safeStyles.join('; '));
+    };
 
     const sanitizeNode = (node) => {
         if (node.nodeType === Node.TEXT_NODE) {
@@ -406,6 +452,7 @@ function sanitizeBusinessRichText(value) {
         }
 
         const element = document.createElement(tagName.toLowerCase());
+        applySafeRichTextAttributes(node, element);
         if (tagName === 'A') {
             const href = normalizeBusinessProfileLinkUrl(node.getAttribute('href') || '');
             if (href) {

@@ -4383,6 +4383,30 @@ body[data-page="admin"] {
     margin-bottom: 0;
 }
 
+.business-profile-description-content .ql-align-center {
+    text-align: center;
+}
+
+.business-profile-description-content .ql-align-right {
+    text-align: right;
+}
+
+.business-profile-description-content .ql-align-justify {
+    text-align: justify;
+}
+
+.business-profile-description-content .ql-size-small {
+    font-size: 0.75em;
+}
+
+.business-profile-description-content .ql-size-large {
+    font-size: 1.5em;
+}
+
+.business-profile-description-content .ql-size-huge {
+    font-size: 2.5em;
+}
+
 .business-profile-description-content img {
     max-width: 100%;
     height: auto;
