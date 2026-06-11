@@ -3624,6 +3624,7 @@ body[data-page="admin"] {
     color: #212529;
     font-size: 14px;
     font-weight: 700;
+    margin-top: 12px;
 }
 
 .ad-profile-stamp-event-count input[type="number"] {
