@@ -3638,18 +3638,14 @@ body[data-page="admin"] {
     color: #9ca3af;
 }
 
-.business-profile-extra {
+.business-profile-location-section {
     margin: 20px 0 0;
 }
 
-.business-profile-extra h3 {
+.business-profile-location-section h3 {
     margin: 0 0 10px;
     font-size: 17px;
     color: #111827;
-}
-
-.business-profile-info--extra {
-    margin-top: 0;
 }
 
 .business-profile-location {
@@ -5093,7 +5089,7 @@ body.business-profile-modal-open {
 .business-profile-standalone .business-profile-summary,
 .business-profile-standalone .business-profile-info,
 .business-profile-standalone .business-profile-description,
-.business-profile-standalone .business-profile-extra,
+.business-profile-standalone .business-profile-location-section,
 .business-profile-standalone .business-profile-link {
     margin-left: 16px;
     margin-right: 16px;
@@ -5114,17 +5110,12 @@ body.business-profile-modal-open {
     text-align: left;
 }
 
-.business-profile-standalone .business-profile-info--extra .business-profile-info-item {
-    grid-template-columns: minmax(144px, max-content) minmax(0, 1fr);
-}
-
 .business-profile-standalone .business-profile-link {
     width: calc(100% - 32px);
 }
 
 @media (max-width: 480px) {
-    .business-profile-standalone .business-profile-info-item,
-    .business-profile-standalone .business-profile-info--extra .business-profile-info-item {
+    .business-profile-standalone .business-profile-info-item {
         grid-template-columns: minmax(0, 1fr);
         row-gap: 6px;
         align-items: start;

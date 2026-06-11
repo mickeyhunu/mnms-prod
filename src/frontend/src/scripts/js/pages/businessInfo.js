@@ -500,7 +500,7 @@ function buildBusinessProfileMapMarkup(ad) {
     const fullAddress = [businessAddress, businessAddressDetail].filter(Boolean).join(' ');
 
     return `
-        <section class="business-profile-extra" aria-label="위치정보">
+        <section class="business-profile-location-section" aria-label="위치정보">
             <h3>위치정보</h3>
             <div class="business-profile-location">
                 <div class="business-profile-mini-map" title="${sanitizeHTML(fullAddress)} 카카오맵 미니맵" data-kakao-map-address="${sanitizeHTML(fullAddress)}">${buildKakaoMapFallbackMarkup(fullAddress, '카카오맵 미니맵을 불러오는 중입니다.')}</div>
@@ -521,12 +521,7 @@ function buildBusinessProfileAdditionalInfoMarkup(ad) {
     }
     if (!infoRows.length) return '';
 
-    return `
-        <section class="business-profile-extra" aria-label="업체 부가 정보">
-            <h3>부가 정보</h3>
-            <dl class="business-profile-info business-profile-info--extra">${infoRows.join('')}</dl>
-        </section>
-    `;
+    return infoRows.join('');
 }
 
 function closeBusinessProfileModal() {
@@ -573,6 +568,7 @@ function buildBusinessProfileDetailMarkup(ad) {
                     buildBusinessProfileInfoRow('담당자', managerName, '👤')
                 )}
                 ${contactInfoGroup}
+                ${additionalInfoMarkup}
                 ${buildBusinessProfileInfoPair(
                     buildBusinessProfileInfoRow('지역', `${regionLabel} ${district}`, '📍'),
                     buildBusinessProfileInfoRow('업종', category, '🏷️')
@@ -583,7 +579,6 @@ function buildBusinessProfileDetailMarkup(ad) {
                 <div class="business-profile-description-content">${description || '<p>등록된 상세정보가 없습니다.</p>'}</div>
             </section>
             ${mapMarkup}
-            ${additionalInfoMarkup}
             ${externalUrl ? `<a class="business-profile-link btn btn-primary" href="${sanitizeHTML(externalUrl)}" target="_blank" rel="noopener noreferrer">업체 링크 열기</a>` : ''}
         </article>
     `;
