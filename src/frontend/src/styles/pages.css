@@ -3639,7 +3639,7 @@ body[data-page="admin"] {
 }
 
 .business-profile-location-section {
-    margin: 20px 0 0;
+    margin: 20px 0;
 }
 
 .business-profile-location-section h3 {
@@ -4352,6 +4352,10 @@ body[data-page="admin"] {
     font-size: 14px;
     text-align: right;
     word-break: break-word;
+}
+
+.business-profile-description {
+    margin: 20px 0;
 }
 
 .business-profile-description h3 {
