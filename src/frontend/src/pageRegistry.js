@@ -263,7 +263,7 @@ const pageRegistry = {
                             <span>스탬프 이벤트 사용</span>
                         </label>
                         <div class="ad-profile-stamp-event-fields">
-                            <textarea id="ad-profile-stamp-event-description" rows="3" maxlength="200" placeholder="광고페이지에 노출할 이벤트 설명을 입력해주세요." disabled></textarea>
+                            <input id="ad-profile-stamp-event-description" type="text" maxlength="200" placeholder="광고페이지에 노출할 이벤트 설명을 입력해주세요." disabled>
                             <label class="ad-profile-stamp-event-count" for="ad-profile-stamp-event-count">
                                 <span>스탬프 차감갯수</span>
                                 <input id="ad-profile-stamp-event-count" type="number" min="1" max="999" inputmode="numeric" placeholder="0" disabled>
