@@ -409,7 +409,7 @@ function getStampEventDescriptionValue() {
 function getStampEventFieldError({ useStampEvent, stampEventDescription, stampEventCount }) {
     if (!useStampEvent) return '';
     if (!String(stampEventDescription || '').trim()) {
-        return '스탬프 이벤트 설명을 입력해주세요.';
+        return '이벤트 설명.';
     }
     if (!Number.isInteger(Number(stampEventCount)) || Number(stampEventCount) <= 0) {
         return '스탬프 이벤트 사용시 차감되는 스탬프 갯수를 입력해주세요.';
