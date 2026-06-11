@@ -65,8 +65,7 @@ function updatePostSeo(post, boardName) {
         .slice(0, 140);
     const pageTitle = safeTitle ? `${safeTitle} | 미드나잇 맨즈` : '게시글 상세 | 미드나잇 맨즈';
     const description = safeContent || `${boardName || '커뮤니티'} 게시글 상세 내용을 확인하세요.`;
-    const canonicalUrl = new URL('/post-detail', window.location.origin);
-    if (postId) canonicalUrl.searchParams.set('id', String(postId));
+    const canonicalUrl = new URL(createPostDetailPath(post), window.location.origin);
 
     document.title = pageTitle;
     upsertHeadMeta('meta[name="description"]', { name: 'description', content: description || POST_DETAIL_DEFAULT_DESCRIPTION });
@@ -84,18 +83,12 @@ function initPostDetailPage() {
         Auth.updateHeaderUI();
     }
 
-    const urlParams = getURLParams();
-    postId = urlParams.id;
-    if (!postId) {
-        const pathParts = window.location.pathname.split('/');
-        const lastPart = pathParts[pathParts.length - 1];
-        if (lastPart && !isNaN(lastPart)) {
-            postId = lastPart;
-        }
-    }
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    const lastPart = pathParts[pathParts.length - 1];
+    postId = lastPart && lastPart !== 'post-detail' ? decodeURIComponent(lastPart) : null;
 
     if (!postId) {
-        showError('게시글 ID를 찾을 수 없습니다.');
+        showError('게시글 주소를 찾을 수 없습니다.');
         return;
     }
 
@@ -343,6 +336,8 @@ async function loadPost() {
 
         const response = await PostAPI.getPost(postId);
         const normalizedPost = normalizePostDetailResponse(response);
+        postId = normalizedPost.id;
+        syncPostDetailUrl(normalizedPost);
 
         renderPostDetail(normalizedPost);
 
@@ -364,6 +359,16 @@ async function loadPost() {
         }
 
         showError(error?.message || '게시글을 불러오는 중 오류가 발생했습니다.');
+    }
+}
+
+
+function syncPostDetailUrl(post) {
+    if (!post?.id || !post?.title) return;
+    const canonicalPath = createPostDetailPath(post);
+    const currentPath = `${window.location.pathname}${window.location.search || ''}`;
+    if (currentPath !== canonicalPath) {
+        window.history.replaceState(window.history.state, '', canonicalPath);
     }
 }
 
@@ -873,7 +878,7 @@ function renderAdjacentPosts(previousPost, nextPost) {
         }
 
         element.classList.remove('is-empty');
-        element.href = `/post-detail?id=${post.id}`;
+        element.href = createPostDetailPath(post);
         element.innerHTML = `<span class="adjacent-post-label"><span class="adjacent-post-direction" aria-hidden="true">${directionSymbol}</span>${label}</span><span class="adjacent-post-title">${sanitizeHTML(post.title || '')}</span>`;
     };
 

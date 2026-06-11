@@ -209,6 +209,35 @@ function sanitizeHTML(str) {
    return temp.innerHTML;
 }
 
+
+function createSeoSlug(value = '', fallback = 'detail') {
+   const normalized = String(value || '')
+      .normalize('NFKC')
+      .trim()
+      .toLowerCase()
+      .replace(/[\/\\?#%]+/g, ' ')
+      .replace(/[^\p{L}\p{N}\s._~-]+/gu, ' ')
+      .replace(/[\s._~]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+
+   return normalized || fallback;
+}
+
+function createPostDetailPath(postOrId, title = '') {
+   const post = typeof postOrId === 'object' && postOrId !== null ? postOrId : { id: postOrId, title };
+   const titleText = post.title || title;
+   const slug = titleText ? createSeoSlug(titleText, `post-${post.id || ''}`) : String(post.id || 'post');
+   return `/post-detail/${encodeURIComponent(slug)}`;
+}
+
+function createBusinessInfoDetailPath(adOrId, title = '') {
+   const ad = typeof adOrId === 'object' && adOrId !== null ? adOrId : { id: adOrId, title };
+   const titleText = ad.title || title || ad.businessName;
+   const slug = titleText ? createSeoSlug(titleText, `business-${ad.id || ''}`) : String(ad.id || 'business');
+   return `/business-info/${encodeURIComponent(slug)}`;
+}
+
 function splitTrailingUrlPunctuation(rawUrl) {
    let url = String(rawUrl || '');
    let trailingText = '';

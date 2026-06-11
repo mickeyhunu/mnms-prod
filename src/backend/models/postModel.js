@@ -2,6 +2,7 @@
  * 파일 역할: postModel 도메인 데이터의 DB 조회/저장 쿼리를 담당하는 모델 파일.
  */
 const { getPool } = require('../config/database');
+const { normalizeSeoSlug } = require('../utils/seoSlug');
 const { buildMemberLevelCaseSql } = require('../utils/memberLevel');
 
 const AUTHOR_LEVEL_SQL = buildMemberLevelCaseSql('u.total_points', 'u.id');
@@ -336,6 +337,23 @@ async function findPostDetailById(id) {
     : null;
 }
 
+
+async function findPostDetailBySlug(slug) {
+  const normalizedSlug = normalizeSeoSlug(slug);
+  if (!normalizedSlug) return null;
+
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT id, title
+       FROM posts
+      WHERE is_deleted = 0
+      ORDER BY id DESC
+      LIMIT 5000`
+  );
+  const match = rows.find((row) => normalizeSeoSlug(row.title) === normalizedSlug);
+  return match ? findPostDetailById(match.id) : null;
+}
+
 async function findAdjacentPosts(id) {
   const pool = getPool();
   const [currentRows] = await pool.query(
@@ -637,6 +655,7 @@ module.exports = {
   createPost,
   findPostById,
   findPostDetailById,
+  findPostDetailBySlug,
   findAdjacentPosts,
   findPostByIdIncludingDeleted,
   incrementPostViewCount,

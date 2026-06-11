@@ -945,7 +945,7 @@ function renderPostsTable() {
                     <td>
                         <div class="admin-comment-cell">
                             <div class="admin-comment-flags">${renderAdminPostFlags(post)}</div>
-                            <a href="/post-detail?id=${post.id}" target="_blank">${sanitizeHTML(post.title || '')}</a>
+                            <a href="${createPostDetailPath(post)}" target="_blank">${sanitizeHTML(post.title || '')}</a>
                         </div>
                     </td>
                     <td>${sanitizeHTML(post.authorNickname || `사용자#${post.user_id || post.userId}`)}</td>
@@ -985,7 +985,7 @@ function renderCommentsTable() {
                             <div class="admin-comment-text">${renderLinkedText((comment.content || '').slice(0, 100))}</div>
                         </div>
                     </td>
-                    <td><a href="/post-detail?id=${comment.postId || comment.post_id}" target="_blank">게시글 보기</a></td>
+                    <td><a href="${createPostDetailPath(comment.postId || comment.post_id, comment.postTitle)}" target="_blank">게시글 보기</a></td>
                     <td>${sanitizeHTML(comment.authorNickname || `사용자#${comment.user_id || comment.userId}`)}</td>
                     <td>${formatDate(comment.createdAt || comment.created_at)}</td>
                     <td><button class="btn btn-sm ${isHidden ? 'btn-outline' : 'btn-secondary'}" type="button" data-admin-action="toggle-hide" data-target-type="comment" data-target-id="${comment.id}" data-current-hidden="${isHidden ? 'true' : 'false'}">${isHidden ? '가리기 해제' : '가리기'}</button></td>
@@ -1629,7 +1629,7 @@ function renderInquiryTargetSummary(inquiry, { compact = false } = {}) {
     const statusBadge = deletedOrHidden ? ` <span class="text-muted">(${sanitizeHTML(deletedOrHidden)})</span>` : '';
     const titleLine = postTitle ? sanitizeHTML(truncateText(postTitle, compact ? 34 : 70)) : `${typeLabel} #${sanitizeHTML(targetId)}`;
     const contentLine = content ? `<div class="text-muted">${sanitizeHTML(truncateText(content, compact ? 42 : 100))}</div>` : '';
-    const href = target?.url || (target?.postId ? `/post-detail?id=${encodeURIComponent(target.postId)}` : '');
+    const href = target?.url || (target?.postId ? createPostDetailPath(target.postId, target.postTitle || target.title) : '');
     const linkedTitle = href
         ? `<a href="${sanitizeHTML(href)}" target="_blank" rel="noopener noreferrer">${titleLine}</a>`
         : titleLine;
@@ -1784,7 +1784,7 @@ function renderAdminUserActivity(activity = {}) {
         (post) => `
             <article class="admin-user-activity-item">
                 <div class="admin-user-activity-item__meta">${formatDate(post.createdAt)} · ${sanitizeHTML(formatAdminActivityBoardLabel(post.boardType))}</div>
-                <a class="admin-user-activity-item__title" href="/post-detail?id=${post.id}" target="_blank" rel="noopener noreferrer">${sanitizeHTML(post.title || `게시글 #${post.id}`)}</a>
+                <a class="admin-user-activity-item__title" href="${createPostDetailPath(post)}" target="_blank" rel="noopener noreferrer">${sanitizeHTML(post.title || `게시글 #${post.id}`)}</a>
                 <div class="admin-user-activity-item__sub">좋아요 ${Number(post.likeCount || 0).toLocaleString()} · 댓글 ${Number(post.commentCount || 0).toLocaleString()}</div>
             </article>
         `,
@@ -1797,7 +1797,7 @@ function renderAdminUserActivity(activity = {}) {
         (comment) => `
             <article class="admin-user-activity-item">
                 <div class="admin-user-activity-item__meta">${formatDate(comment.createdAt)} · ${sanitizeHTML(formatAdminActivityBoardLabel(comment.postBoardType))}</div>
-                <a class="admin-user-activity-item__title" href="/post-detail?id=${comment.postId}" target="_blank" rel="noopener noreferrer">${sanitizeHTML(comment.postTitle || `게시글 #${comment.postId}`)}</a>
+                <a class="admin-user-activity-item__title" href="${createPostDetailPath(comment.postId, comment.postTitle)}" target="_blank" rel="noopener noreferrer">${sanitizeHTML(comment.postTitle || `게시글 #${comment.postId}`)}</a>
                 <div class="admin-user-activity-item__sub">${escapeHtmlAndPreserveLineBreaks(comment.content, 100)}</div>
             </article>
         `,
@@ -1810,7 +1810,7 @@ function renderAdminUserActivity(activity = {}) {
         (post) => `
             <article class="admin-user-activity-item">
                 <div class="admin-user-activity-item__meta">${formatDate(post.likedAt)} · ${sanitizeHTML(formatAdminActivityBoardLabel(post.boardType))}</div>
-                <a class="admin-user-activity-item__title" href="/post-detail?id=${post.id}" target="_blank" rel="noopener noreferrer">${sanitizeHTML(post.title || `게시글 #${post.id}`)}</a>
+                <a class="admin-user-activity-item__title" href="${createPostDetailPath(post)}" target="_blank" rel="noopener noreferrer">${sanitizeHTML(post.title || `게시글 #${post.id}`)}</a>
                 <div class="admin-user-activity-item__sub">작성일 ${formatDate(post.createdAt)} · 전체 좋아요 ${Number(post.likeCount || 0).toLocaleString()}</div>
             </article>
         `,

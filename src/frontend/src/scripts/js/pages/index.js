@@ -97,7 +97,7 @@ function renderBestPosts(posts, container, emptyElement) {
 
         return `
             <li class="best-post-item">
-                <a class="best-post-link" href="/post-detail?id=${post.id}">
+                <a class="best-post-link" href="${createPostDetailPath(post)}">
                     <span class="best-post-rank">${index + 1}</span>
                     <span class="best-post-text">[${sanitizeHTML(getBoardLabel(post.boardType))}] ${sanitizeHTML(post.title || '제목 없음')}</span>
                     <span class="best-post-meta">👍 ${likeCount} · 💬 ${commentCount} · 👁 ${viewCount}</span>
@@ -289,7 +289,7 @@ function createArticleItem(post) {
     const sourceType = String(post.sourceType || '').toUpperCase();
     const articleHref = sourceType === 'SUPPORT'
         ? `/support?articleId=${encodeURIComponent(post.sourceId || post.id)}&sourceType=SUPPORT`
-        : `/post-detail?id=${encodeURIComponent(post.id)}`;
+        : createPostDetailPath(post);
     const commentInlineMarkup = isNoticePost
         ? ''
         : `<span class="article-comment-inline">[${commentCount}]</span>`;

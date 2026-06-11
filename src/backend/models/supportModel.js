@@ -2,6 +2,7 @@
  * 파일 역할: 공지사항/FAQ 도메인 데이터의 DB 조회/저장 쿼리를 담당하는 모델 파일.
  */
 const { getPool } = require('../config/database');
+const { createSeoSlug } = require('../utils/seoSlug');
 const communityEditLogModel = require('./communityEditLogModel');
 
 const SUPPORT_CATEGORIES = {
@@ -108,7 +109,7 @@ function buildInquiryTarget(row) {
     authorNickname,
     isDeleted,
     isHidden,
-    url: postId ? `/post-detail?id=${encodeURIComponent(postId)}` : null
+    url: postTitle ? `/post-detail/${encodeURIComponent(createSeoSlug(postTitle))}` : null
   };
 }
 
