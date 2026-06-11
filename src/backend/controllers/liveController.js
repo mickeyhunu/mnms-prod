@@ -143,17 +143,14 @@ async function getBusinessAdAreas(req, res, next) {
 
 async function getBusinessAd(req, res, next) {
   try {
-    const adId = parsePositiveInt(req.params.id);
-    if (!adId) {
-      return res.status(400).json({ message: '유효한 업체정보 번호가 필요합니다.' });
-    }
+    const slug = String(req.params.id || '').trim();
+    const ad = await adminModel.findPublicBusinessAdBySlug(slug);
 
-    const ad = await adminModel.findPublicBusinessAdById(adId);
     if (!ad) {
       return res.status(404).json({ message: '업체정보를 찾을 수 없습니다.' });
     }
 
-    await adminModel.increaseBusinessAdViewCount(adId);
+    await adminModel.increaseBusinessAdViewCount(ad.id);
     return res.json({
       content: {
         ...ad,

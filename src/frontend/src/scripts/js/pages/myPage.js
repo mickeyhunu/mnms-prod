@@ -713,7 +713,7 @@ async function loadActivityHistory() {
                     ${myPosts.length ? `
                     <div class="mypage-point-history-list">
                         ${myPosts.map((post) => `
-                            <a class="mypage-point-history-row" href="/post-detail?id=${post.id}">
+                            <a class="mypage-point-history-row" href="${createPostDetailPath(post)}">
                                 <div>
                                     <strong>${formatActivityTitle(post.title, post.boardType)}</strong>
                                     <p>${sanitizeHTML(formatDate(post.createdAt))} · 좋아요 ${Number(post.likeCount || 0)} · 댓글 ${Number(post.commentCount || 0)}</p>
@@ -728,7 +728,7 @@ async function loadActivityHistory() {
                     ${myComments.length ? `
                     <div class="mypage-point-history-list">
                         ${myComments.map((comment) => `
-                            <a class="mypage-point-history-row" href="/post-detail?id=${comment.postId}">
+                            <a class="mypage-point-history-row" href="${createPostDetailPath(comment.postId, comment.postTitle)}">
                                 <div>
                                     <strong>${formatActivityTitle(comment.postTitle || '원문 보기', comment.postBoardType)}</strong>
                                     <p>${sanitizeHTML(formatDate(comment.createdAt))}</p>
@@ -744,7 +744,7 @@ async function loadActivityHistory() {
                     ${commentedPosts.length ? `
                     <div class="mypage-point-history-list">
                         ${commentedPosts.map((post) => `
-                            <a class="mypage-point-history-row" href="/post-detail?id=${post.postId}">
+                            <a class="mypage-point-history-row" href="${createPostDetailPath(post.postId, post.title || post.postTitle)}">
                                 <div>
                                     <strong>${formatActivityTitle(post.postTitle, post.postBoardType)}</strong>
                                     <p>최근 댓글 ${sanitizeHTML(formatDate(post.commentedAt))}</p>
@@ -759,7 +759,7 @@ async function loadActivityHistory() {
                     ${likedPosts.length ? `
                     <div class="mypage-point-history-list">
                         ${likedPosts.map((post) => `
-                            <a class="mypage-point-history-row" href="/post-detail?id=${post.id}">
+                            <a class="mypage-point-history-row" href="${createPostDetailPath(post)}">
                                 <div>
                                     <strong>${formatActivityTitle(post.title, post.boardType)}</strong>
                                     <p>추천일 ${sanitizeHTML(formatDate(post.likedAt || post.createdAt))} · 좋아요 ${Number(post.likeCount || 0)} · 댓글 ${Number(post.commentCount || 0)}</p>
