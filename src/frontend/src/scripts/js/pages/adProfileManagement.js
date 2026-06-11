@@ -61,21 +61,12 @@ function fileToDataUrl(file) {
     });
 }
 
-async function uploadAdImage(file) {
+async function readAdImageAsDataUrl(file) {
     const dataUrl = await fileToDataUrl(file);
-    const response = await APIClient.post('/uploads/ads/images', {
-        files: [{
-            dataUrl,
-            fileName: file.name || 'ad-profile-image.png'
-        }]
-    });
-
-    const uploaded = Array.isArray(response?.files) ? response.files[0] : null;
-    if (!uploaded?.url) {
-        throw new Error('대표이미지 업로드에 실패했습니다.');
+    if (!dataUrl.startsWith('data:image/')) {
+        throw new Error('이미지 파일만 업로드할 수 있습니다.');
     }
-
-    return uploaded.url;
+    return dataUrl;
 }
 
 function resolveAdProfileImageUrl(imageUrl = '') {
@@ -148,12 +139,12 @@ async function handleRepresentativeImageSelection(file) {
             uploadButton.disabled = true;
             uploadButton.classList.add('is-uploading');
             uploadButton.setAttribute('aria-busy', 'true');
-            uploadButton.setAttribute('aria-label', '대표이미지 업로드 중');
+            uploadButton.setAttribute('aria-label', '대표이미지 처리 중');
         }
-        const imageUrl = await uploadAdImage(file);
+        const imageUrl = await readAdImageAsDataUrl(file);
         setAdProfileImageUrl(imageUrl);
     } catch (error) {
-        showSaveMessage(error.message || '대표이미지 업로드에 실패했습니다.');
+        showSaveMessage(error.message || '대표이미지 처리에 실패했습니다.');
     } finally {
         if (uploadButton) {
             uploadButton.disabled = false;
@@ -251,7 +242,7 @@ function bindDescriptionEditor({ syncPreview, saveDraftData: saveDraftDataCallba
         if (!file || !file.type.startsWith('image/')) return;
 
         try {
-            const imageUrl = await uploadAdImage(file);
+            const imageUrl = await readAdImageAsDataUrl(file);
             const selection = quill.getSelection(true);
             const insertIndex = selection ? selection.index : quill.getLength();
             quill.insertEmbed(insertIndex, 'image', imageUrl, 'user');
