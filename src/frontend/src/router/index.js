@@ -23,7 +23,7 @@ const routes = [
   { path: '/login', component: PageView, meta: { pageKey: 'login', title: '로그인', description: '미드나잇 맨즈 계정으로 로그인하고 커뮤니티 서비스를 이용하세요.', noindex: true } },
   { path: '/register', component: PageView, meta: { pageKey: 'register', title: '회원가입', description: '미드나잇 맨즈 회원가입으로 커뮤니티 활동을 시작하세요.', noindex: true } },
   { path: '/create', component: PageView, meta: { pageKey: 'create-post', title: '게시글 작성', description: '자유게시판, 후기, 질문 게시판에 새 글을 작성해보세요.', noindex: true } },
-  { path: '/post-detail', component: PageView, meta: { pageKey: 'post-detail', title: '업소 리뷰 상세', description: '회원이 작성한 업소 추천 리뷰, 방문 후기, 가격 정보를 상세하게 확인하세요.', keywords: ['업소 리뷰', '방문 후기', '업소 가격 정보', '추천 업소', '커뮤니티 후기'] } },
+  { path: '/post-detail/:slug', component: PageView, meta: { pageKey: 'post-detail', title: '업소 리뷰 상세', description: '회원이 작성한 업소 추천 리뷰, 방문 후기, 가격 정보를 상세하게 확인하세요.', keywords: ['업소 리뷰', '방문 후기', '업소 가격 정보', '추천 업소', '커뮤니티 후기'] } },
   { path: '/community', component: PageView, meta: { pageKey: 'community', title: '업소 추천 커뮤니티', description: '자유·익명·후기 게시판에서 최저가 업소 추천과 리얼 리뷰 후기를 탐색해보세요.', keywords: ['업소 추천 커뮤니티', '리뷰 후기', '최저가 업소', '익명 게시판', '남성 커뮤니티', '유흥 커뮤니티', '밤문화'] } },
   { path: '/my-page', component: PageView, meta: { pageKey: 'my-page', title: '마이페이지', description: '내 계정 정보와 활동 내역, 포인트를 확인하세요.', noindex: true } },
   { path: '/my-page/profile', component: PageView, meta: { pageKey: 'my-page-profile', title: '내 프로필', description: '닉네임, 비밀번호 등 내 프로필 정보를 관리하세요.', noindex: true } },
@@ -40,7 +40,7 @@ const routes = [
   { path: '/ad-purchase', component: PageView, meta: { pageKey: 'ad-purchase', title: '광고 활성화', description: '광고 요금제와 상품 구성을 확인하고 광고 활성화를 진행하세요.', noindex: true } },
   { path: '/ad-order-history', component: PageView, meta: { pageKey: 'ad-order-history', title: '스탬프 결제 내역', description: '스탬프 결제완료와 결제취소 내역을 확인하세요.', noindex: true } },
   { path: '/business-info', component: PageView, meta: { pageKey: 'business-info', title: '업체정보', description: '등록된 업체 정보를 지역과 업종별로 확인하세요.' } },
-  { path: '/business-info/:id', component: PageView, meta: { pageKey: 'business-info-detail', title: '업체정보 상세', description: '업체의 상세정보와 전화 연결 버튼을 확인하세요.' } },
+  { path: '/business-info/:slug', component: PageView, meta: { pageKey: 'business-info-detail', title: '업체정보 상세', description: '업체의 상세정보와 전화 연결 버튼을 확인하세요.' } },
   { path: '/business-apply', component: PageView, meta: { pageKey: 'business-apply', title: '기업회원 신청', description: '기업회원 신청 전 안내 사항을 확인하고 필수 동의 후 사업자정보를 제출하세요.', noindex: true } },
   { path: '/ad-profile-management', component: PageView, meta: { pageKey: 'ad-profile-management', title: '광고프로필 관리', description: '광고프로필 기본 정보와 상세 소개를 등록하고 미리보기를 확인하세요.', noindex: true } },
   { path: '/business-management', component: PageView, meta: { pageKey: 'business-management', title: '사업자정보 관리', description: '사업자등록증, 영업허가증, 사업자 상세정보를 관리하세요.', noindex: true } },
@@ -123,7 +123,7 @@ router.afterEach((to) => {
   const description = typeof to.meta?.description === 'string' && to.meta.description.trim().length > 0
     ? to.meta.description.trim()
     : DEFAULT_DESCRIPTION;
-  const canonicalUrl = buildAbsoluteUrl(to.path, to.path === '/post-detail' ? { id: to.query?.id } : {});
+  const canonicalUrl = buildAbsoluteUrl(to.path);
   const shareImageUrl = buildAbsoluteUrl(DEFAULT_SHARE_IMAGE_PATH);
   const robotsValue = to.meta?.noindex ? 'noindex, nofollow' : 'index, follow';
   const keywords = getMetaKeywords(to.meta);
@@ -132,7 +132,7 @@ router.afterEach((to) => {
   upsertMetaTag('meta[name="description"]', { name: 'description', content: description });
   upsertMetaTag('meta[property="og:title"]', { property: 'og:title', content: document.title });
   upsertMetaTag('meta[property="og:description"]', { property: 'og:description', content: description });
-  upsertMetaTag('meta[property="og:type"]', { property: 'og:type', content: to.path === '/post-detail' ? 'article' : 'website' });
+  upsertMetaTag('meta[property="og:type"]', { property: 'og:type', content: to.path.startsWith('/post-detail') ? 'article' : 'website' });
   upsertMetaTag('meta[property="og:site_name"]', { property: 'og:site_name', content: SITE_NAME });
   upsertMetaTag('meta[property="og:url"]', { property: 'og:url', content: canonicalUrl });
   upsertMetaTag('meta[property="og:image"]', { property: 'og:image', content: shareImageUrl });
@@ -148,7 +148,7 @@ router.afterEach((to) => {
 
   upsertStructuredData('webpage', {
     '@context': 'https://schema.org',
-    '@type': to.path === '/post-detail' ? 'Article' : 'WebPage',
+    '@type': to.path.startsWith('/post-detail') ? 'Article' : 'WebPage',
     name: document.title,
     description,
     keywords,

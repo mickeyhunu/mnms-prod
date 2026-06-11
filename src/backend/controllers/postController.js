@@ -474,10 +474,22 @@ async function listBestPosts(req, res, next) {
   }
 }
 
+
+async function resolvePostIdForDetail(req) {
+  const directId = parseId(req.params.id);
+  if (directId) return directId;
+
+  const slug = String(req.params.slug || '').trim();
+  if (!slug) return null;
+
+  const post = await postModel.findPostDetailBySlug(slug);
+  return post?.id || null;
+}
+
 async function getPost(req, res, next) {
   try {
-    const postId = parseId(req.params.id);
-    if (!postId) return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' });
+    const postId = await resolvePostIdForDetail(req);
+    if (!postId) return res.status(400).json({ message: '유효하지 않은 게시글 주소입니다.' });
 
     const post = await postModel.findPostById(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });

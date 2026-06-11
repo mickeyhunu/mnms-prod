@@ -348,8 +348,9 @@ function renderBusinessAds(ads) {
             ? `${openHour} ~ ${closeHour}`
             : '시간선택 ~ 시간선택';
         const detail = `${regionLabel} ${district} · ${category} · ${formattedTime}`;
+        const detailUrl = sanitizeHTML(createBusinessInfoDetailPath(ad));
         return `
-            <li class="business-directory-item business-directory-item--clickable" data-business-ad-id="${sanitizeHTML(ad.id || '')}" data-business-ad-view-count="${Number(ad.viewCount || 0)}" role="link" tabindex="0" aria-label="${title} 상세 페이지 보기">
+            <li class="business-directory-item business-directory-item--clickable" data-business-ad-id="${sanitizeHTML(ad.id || '')}" data-business-ad-url="${detailUrl}" data-business-ad-view-count="${Number(ad.viewCount || 0)}" role="link" tabindex="0" aria-label="${title} 상세 페이지 보기">
                 <img class="business-directory-thumbnail" src="${thumbnailImageUrl}" alt="${title} 대표이미지" loading="${thumbnailLoading}" fetchpriority="${thumbnailFetchPriority}" decoding="async" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
                 <div class="business-directory-main">
                     <h4>${title}</h4>
@@ -631,9 +632,54 @@ function buildBusinessProfileDetailMarkup(ad) {
     `;
 }
 
+
+function upsertBusinessHeadMeta(selector, attributes) {
+    let element = document.head.querySelector(selector);
+    if (!element) {
+        element = document.createElement('meta');
+        document.head.appendChild(element);
+    }
+    Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+}
+
+function upsertBusinessCanonical(href) {
+    let canonical = document.head.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', href);
+}
+
+function updateBusinessProfileSeo(ad) {
+    const title = getBusinessProfileTitle(ad);
+    const descriptionSource = String(ad?.description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const description = descriptionSource.slice(0, 140) || `${[ad?.region, ad?.district, ad?.category].filter(Boolean).join(' ')} ${title} 업체정보를 확인하세요.`.trim();
+    const pageTitle = `${title} | 미드나잇 맨즈`;
+    const canonicalUrl = new URL(createBusinessInfoDetailPath(ad), window.location.origin);
+
+    document.title = pageTitle;
+    upsertBusinessHeadMeta('meta[name="description"]', { name: 'description', content: description });
+    upsertBusinessHeadMeta('meta[property="og:title"]', { property: 'og:title', content: pageTitle });
+    upsertBusinessHeadMeta('meta[property="og:description"]', { property: 'og:description', content: description });
+    upsertBusinessHeadMeta('meta[property="og:url"]', { property: 'og:url', content: canonicalUrl.toString() });
+    upsertBusinessHeadMeta('meta[name="twitter:title"]', { name: 'twitter:title', content: pageTitle });
+    upsertBusinessHeadMeta('meta[name="twitter:description"]', { name: 'twitter:description', content: description });
+    upsertBusinessCanonical(canonicalUrl.toString());
+}
+
+function syncBusinessProfileUrl(ad) {
+    if (!ad?.id || !ad?.title) return;
+    const canonicalPath = createBusinessInfoDetailPath(ad);
+    if (window.location.pathname !== canonicalPath) {
+        window.history.replaceState(window.history.state, '', canonicalPath);
+    }
+}
+
 function openBusinessProfileModal(ad) {
     if (!ad?.id) return;
-    window.location.href = `/business-info/${encodeURIComponent(ad.id)}`;
+    window.location.href = createBusinessInfoDetailPath(ad);
 }
 
 async function initBusinessProfileDetailPage() {
@@ -654,6 +700,8 @@ async function initBusinessProfileDetailPage() {
         const response = await APIClient.get(`/live/business-ads/${encodeURIComponent(adId)}`);
         const ad = response?.content;
         if (!ad) throw new Error('업체정보를 찾을 수 없습니다.');
+        syncBusinessProfileUrl(ad);
+        updateBusinessProfileSeo(ad);
 
         detail.innerHTML = buildBusinessProfileDetailMarkup(ad);
         initializeBusinessProfileKakaoMaps(detail);
@@ -693,7 +741,7 @@ function bindBusinessProfileModalEvents() {
     list?.addEventListener('click', (event) => {
         const item = event.target.closest('[data-business-ad-id]');
         if (!item) return;
-        window.location.href = `/business-info/${encodeURIComponent(item.dataset.businessAdId)}`;
+        window.location.href = item.dataset.businessAdUrl || createBusinessInfoDetailPath(item.dataset.businessAdId);
     });
 
     list?.addEventListener('keydown', (event) => {
@@ -701,7 +749,7 @@ function bindBusinessProfileModalEvents() {
         const item = event.target.closest('[data-business-ad-id]');
         if (!item) return;
         event.preventDefault();
-        window.location.href = `/business-info/${encodeURIComponent(item.dataset.businessAdId)}`;
+        window.location.href = item.dataset.businessAdUrl || createBusinessInfoDetailPath(item.dataset.businessAdId);
     });
 
     modal?.addEventListener('click', (event) => {
