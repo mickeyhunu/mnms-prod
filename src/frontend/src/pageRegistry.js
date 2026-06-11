@@ -183,6 +183,28 @@ const pageRegistry = {
 
                 <div class="ad-profile-section">
                     <h3>광고프로필</h3>
+
+                    <div class="ad-profile-image-upload">
+                        <div class="ad-profile-image-upload-control">
+                            <button id="ad-profile-image-upload-btn" class="ad-profile-image-preview-wrap active-bg h-70px w-70px rounded-14px border-1px border-line-gray-50" type="button" aria-label="대표이미지 업로드" aria-describedby="ad-profile-image-help">
+                                <img id="ad-profile-image-preview" class="ad-profile-image-preview hidden" src="/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
+                                <svg class="ad-profile-image-add-icon stroke-font-gray" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-width="1.5" d="M9.754.75v18M18.75 9.753h-18"></path>
+                                </svg>
+                            </button>
+                            <button id="ad-profile-image-clear-btn" type="button" class="business-license-clear-btn ad-profile-image-clear-btn hidden" aria-label="대표이미지 첨부 이미지 삭제"><span aria-hidden="true">×</span></button>
+                        </div>
+                        <div class="ad-profile-image-upload-main">
+                            <label class="ad-profile-image-label" for="ad-profile-image-input">대표이미지</label>
+                            <p class="ad-profile-image-help" id="ad-profile-image-help">
+                                이미지 권장 사이즈: 가로 600px, 세로 600px (1:1 비율)<br>
+                                대표 이미지가 없다면, <br>
+                                광고 활성화 후 1~3일 내에 자동으로 제작됩니다.<br>
+                                움직이는 이미지는 등록할 수 없습니다.
+                            </p>
+                            <input id="ad-profile-image-input" class="hidden" type="file" accept="image/*">
+                        </div>
+                    </div>
                     <input id="ad-profile-name" type="text" maxlength="24" placeholder="업소명을 입력해주세요." required>
                     <input id="ad-profile-manager" type="text" maxlength="24" placeholder="담당자명을 입력해주세요." required>
                     <input id="ad-profile-manager-contact" type="text" maxlength="13" placeholder="담당자 연락처를 입력해주세요." required>
@@ -226,32 +248,9 @@ const pageRegistry = {
                         </label>
                     </div>
 
-                    <div class="ad-profile-image-upload">
-                        <div class="ad-profile-image-upload-control">
-                            <button id="ad-profile-image-upload-btn" class="ad-profile-image-preview-wrap active-bg h-70px w-70px rounded-14px border-1px border-line-gray-50" type="button" aria-label="대표이미지 업로드" aria-describedby="ad-profile-image-help">
-                                <img id="ad-profile-image-preview" class="ad-profile-image-preview hidden" src="/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
-                                <svg class="ad-profile-image-add-icon stroke-font-gray" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-width="1.5" d="M9.754.75v18M18.75 9.753h-18"></path>
-                                </svg>
-                            </button>
-                            <button id="ad-profile-image-clear-btn" type="button" class="business-license-clear-btn ad-profile-image-clear-btn hidden" aria-label="대표이미지 첨부 이미지 삭제"><span aria-hidden="true">×</span></button>
-                        </div>
-                        <div class="ad-profile-image-upload-main">
-                            <label class="ad-profile-image-label" for="ad-profile-image-input">대표이미지</label>
-                            <p class="ad-profile-image-help" id="ad-profile-image-help">
-                                이미지 권장 사이즈: 가로 600px, 세로 600px (1:1 비율)<br>
-                                대표 이미지가 없다면, <br>
-                                광고 활성화 후 1~3일 내에 자동으로 제작됩니다.<br>
-                                움직이는 이미지는 등록할 수 없습니다.
-                            </p>
-                            <input id="ad-profile-image-input" class="hidden" type="file" accept="image/*">
-                        </div>
-                    </div>
-
                     <div class="ad-profile-additional-info" aria-labelledby="ad-profile-additional-info-title">
                         <div class="ad-profile-additional-info-heading">
                             <h3 id="ad-profile-additional-info-title">부가 정보<span>(선택)</span></h3>
-                            <p>광고 상세 페이지에 노출할 연락 채널과 지도 정보를 입력해주세요.</p>
                         </div>
                         <input id="ad-profile-kakao-talk-id" type="text" maxlength="50" placeholder="카카오톡 아이디를 입력해주세요." autocomplete="off">
                         <input id="ad-profile-telegram-id" type="text" maxlength="50" placeholder="텔레그램 아이디를 입력해주세요." autocomplete="off">
@@ -259,7 +258,6 @@ const pageRegistry = {
                             <input id="ad-profile-show-business-address-map" type="checkbox">
                             <span>사업자등록기준 주소지 미니맵 노출</span>
                         </label>
-                        <p class="ad-profile-map-toggle-help">체크하면 사업자정보 관리에 저장된 사업장 주소를 기준으로 업체정보 상세 페이지에 미니맵이 표시됩니다.</p>
                         <label class="ad-profile-map-toggle" for="ad-profile-use-stamp-event">
                             <input id="ad-profile-use-stamp-event" type="checkbox">
                             <span>스탬프 이벤트 사용</span>
