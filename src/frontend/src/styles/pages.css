@@ -4224,8 +4224,6 @@ body[data-page="admin"] {
     aspect-ratio: 4 / 2;
     max-height: 180px;
     overflow: hidden;
-    border: 1px solid #e5e7eb;
-    border-radius: 0;
     background: #f3f4f6;
 }
 
