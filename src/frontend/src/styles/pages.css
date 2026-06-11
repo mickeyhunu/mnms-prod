@@ -5044,8 +5044,36 @@ body.business-profile-modal-open {
     margin-right: 16px;
 }
 
+.business-profile-standalone .business-profile-info {
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.business-profile-standalone .business-profile-info div {
+    min-height: 48px;
+    grid-template-columns: minmax(112px, max-content) minmax(0, 1fr);
+    padding: 12px 14px;
+}
+
+.business-profile-standalone .business-profile-info dd {
+    text-align: left;
+}
+
+.business-profile-standalone .business-profile-info--extra div {
+    grid-template-columns: minmax(144px, max-content) minmax(0, 1fr);
+}
+
 .business-profile-standalone .business-profile-link {
     width: calc(100% - 32px);
+}
+
+@media (max-width: 480px) {
+    .business-profile-standalone .business-profile-info div,
+    .business-profile-standalone .business-profile-info--extra div {
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: 6px;
+        align-items: start;
+    }
 }
 
 .business-profile-call-bar {
