@@ -31,6 +31,8 @@ const BUSINESS_AD_AREA_FALLBACK = {
 };
 let businessAdAreaAvailability = BUSINESS_AD_AREA_FALLBACK;
 const KAKAO_POSTCODE_SCRIPT_URL = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+const KAKAO_MAP_SDK_URL = 'https://dapi.kakao.com/v2/maps/sdk.js';
+const KAKAO_MAP_SEARCH_URL = 'https://map.kakao.com/link/search/';
 const BUSINESS_APPLY_AGREEMENT_KEY = 'mnmsBusinessApplyAgreedAt';
 const BUSINESS_OCR_SCRIPT_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
 const BUSINESS_OCR_LANGUAGE = 'kor+eng';
@@ -41,6 +43,7 @@ const BUSINESS_OCR_STATUS = {
     INVALID: 'invalid'
 };
 let kakaoPostcodeLoader = null;
+let kakaoMapLoader = null;
 let businessOcrLoader = null;
 let businessOcrRequestId = 0;
 
@@ -153,6 +156,114 @@ function loadKakaoPostcodeScript() {
     });
 
     return kakaoPostcodeLoader;
+}
+
+function getKakaoMapAppKey() {
+    const configKey = String(window.MNMS_PUBLIC_CONFIG?.kakaoMapAppKey || '').trim();
+    if (configKey) return configKey;
+
+    const metaKey = String(document.querySelector('meta[name="kakao-map-app-key"]')?.content || '').trim();
+    return metaKey;
+}
+
+function buildKakaoMapSearchUrl(address) {
+    return `${KAKAO_MAP_SEARCH_URL}${encodeURIComponent(address)}`;
+}
+
+function buildKakaoMapFallbackMarkup(address, message = '카카오맵에서 위치를 확인해주세요.') {
+    const mapUrl = buildKakaoMapSearchUrl(address);
+    return `
+        <a class="business-profile-mini-map-fallback" href="${mapUrl}" target="_blank" rel="noopener noreferrer">
+            <span class="business-profile-mini-map-fallback__badge">KakaoMap</span>
+            <strong>${sanitizeHTML(address)}</strong>
+            <span>${sanitizeHTML(message)}</span>
+        </a>
+    `;
+}
+
+function loadKakaoMapScript() {
+    const appKey = getKakaoMapAppKey();
+    if (!appKey) {
+        return Promise.reject(new Error('카카오맵 앱 키가 설정되지 않았습니다.'));
+    }
+
+    if (window.kakao?.maps?.services) {
+        return Promise.resolve(window.kakao.maps);
+    }
+
+    if (kakaoMapLoader) return kakaoMapLoader;
+
+    kakaoMapLoader = new Promise((resolve, reject) => {
+        const existingScript = document.querySelector('script[data-kakao-map-sdk="true"]');
+        const script = existingScript || document.createElement('script');
+
+        const handleLoad = () => {
+            if (!window.kakao?.maps?.load) {
+                reject(new Error('카카오맵 서비스를 초기화하지 못했습니다.'));
+                return;
+            }
+
+            window.kakao.maps.load(() => resolve(window.kakao.maps));
+        };
+
+        script.addEventListener('load', handleLoad, { once: true });
+        script.addEventListener('error', () => reject(new Error('카카오맵 서비스를 불러오지 못했습니다.')), { once: true });
+
+        if (!existingScript) {
+            const params = new URLSearchParams({ appkey: appKey, libraries: 'services', autoload: 'false' });
+            script.src = `${KAKAO_MAP_SDK_URL}?${params.toString()}`;
+            script.async = true;
+            script.dataset.kakaoMapSdk = 'true';
+            document.head.appendChild(script);
+        }
+    });
+
+    return kakaoMapLoader;
+}
+
+function renderKakaoMap(container, maps, address, title) {
+    const geocoder = new maps.services.Geocoder();
+    geocoder.addressSearch(address, (result, status) => {
+        if (status !== maps.services.Status.OK || !result?.[0]) {
+            container.innerHTML = buildKakaoMapFallbackMarkup(address, '주소 좌표를 찾지 못했습니다. 카카오맵 검색으로 이동합니다.');
+            return;
+        }
+
+        const coords = new maps.LatLng(Number(result[0].y), Number(result[0].x));
+        const map = new maps.Map(container, {
+            center: coords,
+            level: 3
+        });
+        const marker = new maps.Marker({
+            map,
+            position: coords
+        });
+        const infowindow = new maps.InfoWindow({
+            content: `<div class="business-profile-kakao-map-label">${sanitizeHTML(title || address)}</div>`
+        });
+
+        infowindow.open(map, marker);
+        setTimeout(() => map.relayout(), 0);
+    });
+}
+
+async function initializeBusinessProfileKakaoMaps(root = document) {
+    const mapNodes = [...root.querySelectorAll('[data-kakao-map-address]')];
+    if (!mapNodes.length) return;
+
+    const maps = await loadKakaoMapScript().catch(() => null);
+    mapNodes.forEach((container) => {
+        const address = String(container.dataset.kakaoMapAddress || '').trim();
+        const title = String(container.dataset.kakaoMapTitle || '').trim();
+        if (!address) return;
+
+        if (!maps) {
+            container.innerHTML = buildKakaoMapFallbackMarkup(address, '카카오맵 앱 키 설정 후 미니맵이 표시됩니다.');
+            return;
+        }
+
+        renderKakaoMap(container, maps, address, title);
+    });
 }
 
 function buildBusinessAddress(postcodeResult) {
@@ -359,15 +470,14 @@ function buildBusinessProfileMapMarkup(ad) {
     if (!shouldShowMap) return '';
 
     const fullAddress = [businessAddress, businessAddressDetail].filter(Boolean).join(' ');
-    const encodedAddress = encodeURIComponent(fullAddress);
 
     return `
         <dl class="business-profile-info business-profile-info--map" aria-label="업체 미니맵">
             <div class="business-profile-map-row">
                 <dt><span aria-hidden="true">🗺️</span>미니맵</dt>
                 <dd>
-                    <iframe class="business-profile-mini-map" title="${sanitizeHTML(fullAddress)} 미니맵" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=${encodedAddress}&output=embed"></iframe>
-                    <a class="business-profile-map-link" href="https://maps.google.com/?q=${encodedAddress}" target="_blank" rel="noopener noreferrer">큰 지도에서 보기</a>
+                    <div class="business-profile-mini-map" title="${sanitizeHTML(fullAddress)} 카카오맵 미니맵" data-kakao-map-address="${sanitizeHTML(fullAddress)}" data-kakao-map-title="${sanitizeHTML(getBusinessProfileTitle(ad))}">${buildKakaoMapFallbackMarkup(fullAddress, '카카오맵 미니맵을 불러오는 중입니다.')}</div>
+                    <a class="business-profile-map-link" href="${buildKakaoMapSearchUrl(fullAddress)}" target="_blank" rel="noopener noreferrer">카카오맵에서 크게 보기</a>
                 </dd>
             </div>
         </dl>
@@ -486,6 +596,7 @@ async function initBusinessProfileDetailPage() {
         if (!ad) throw new Error('업체정보를 찾을 수 없습니다.');
 
         detail.innerHTML = buildBusinessProfileDetailMarkup(ad);
+        initializeBusinessProfileKakaoMaps(detail);
         const telHref = getBusinessProfileTelHref(ad.managerContact);
         const visitHref = normalizeBusinessProfileLinkUrl(ad.linkUrl || '') || telHref;
         if (telHref && callButton && visitButton && callBar) {
