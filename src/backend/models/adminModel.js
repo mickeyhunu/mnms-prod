@@ -603,7 +603,7 @@ async function listBusinessAdsByOwner(ownerUserId) {
     `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, manager_name AS managerName, manager_contact AS managerContact,
             title, image_url AS imageUrl, link_url AS linkUrl,
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
-            kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_count AS stampEventCount,
+            kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
             description, plan_type AS planType, view_count AS viewCount,
             registration_status AS registrationStatus, display_order AS displayOrder, is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
@@ -658,7 +658,7 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
     `SELECT ba.id, ba.owner_user_id AS ownerUserId, ba.business_name AS businessName, ba.manager_name AS managerName, ba.manager_contact AS managerContact,
             ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl,
             ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
-            ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification, ba.use_stamp_event AS useStampEvent, ba.stamp_event_count AS stampEventCount,
+            ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification, ba.use_stamp_event AS useStampEvent, ba.stamp_event_description AS stampEventDescription, ba.stamp_event_count AS stampEventCount,
             ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.created_at AS createdAt,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, COALESCE(u.nickname, '업체') AS ownerNickname,
             COALESCE(bp.company_name, '') AS companyName, COALESCE(bp.manager_name, '') AS profileManagerName,
@@ -694,6 +694,7 @@ async function createBusinessAd({
   showBusinessAddressMap = false,
   useVisitVerification = false,
   useStampEvent = false,
+  stampEventDescription = '',
   stampEventCount = 0,
   planType = 'NORMAL',
   displayOrder = 0,
@@ -704,9 +705,9 @@ async function createBusinessAd({
   const [result] = await pool.query(
     `INSERT INTO business_ads (
       owner_user_id, business_name, manager_name, manager_contact, title, image_url, link_url, region, district, category, open_hour, close_hour,
-      kakao_talk_id, telegram_id, show_business_address_map, use_visit_verification, use_stamp_event, stamp_event_count, description, plan_type, registration_status, display_order, is_active
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [ownerUserId, businessName, managerName, managerContact, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, kakaoTalkId, telegramId, showBusinessAddressMap ? 1 : 0, useVisitVerification ? 1 : 0, useStampEvent ? 1 : 0, Number(stampEventCount) || 0, description, planType, registrationStatus, displayOrder, isActive ? 1 : 0]
+      kakao_talk_id, telegram_id, show_business_address_map, use_visit_verification, use_stamp_event, stamp_event_description, stamp_event_count, description, plan_type, registration_status, display_order, is_active
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [ownerUserId, businessName, managerName, managerContact, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, kakaoTalkId, telegramId, showBusinessAddressMap ? 1 : 0, useVisitVerification ? 1 : 0, useStampEvent ? 1 : 0, stampEventDescription, Number(stampEventCount) || 0, description, planType, registrationStatus, displayOrder, isActive ? 1 : 0]
   );
   return result.insertId;
 }
@@ -717,7 +718,7 @@ async function findPublicBusinessAdById(adId) {
     `SELECT ba.id, ba.owner_user_id AS ownerUserId, ba.business_name AS businessName, ba.manager_name AS managerName, ba.manager_contact AS managerContact,
             ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl,
             ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
-            ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification, ba.use_stamp_event AS useStampEvent, ba.stamp_event_count AS stampEventCount,
+            ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification, ba.use_stamp_event AS useStampEvent, ba.stamp_event_description AS stampEventDescription, ba.stamp_event_count AS stampEventCount,
             ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, COALESCE(u.nickname, '업체') AS ownerNickname,
             COALESCE(bp.company_name, '') AS companyName, COALESCE(bp.manager_name, '') AS profileManagerName,
@@ -741,7 +742,7 @@ async function findBusinessAdById(adId) {
     `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, manager_name AS managerName, manager_contact AS managerContact,
             title, image_url AS imageUrl, link_url AS linkUrl,
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
-            kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_count AS stampEventCount,
+            kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
             description, plan_type AS planType, view_count AS viewCount,
             registration_status AS registrationStatus, display_order AS displayOrder, is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
@@ -769,6 +770,7 @@ async function updateBusinessAd(adId, {
   showBusinessAddressMap = false,
   useVisitVerification = false,
   useStampEvent = false,
+  stampEventDescription = '',
   stampEventCount = 0,
   planType = 'NORMAL',
   displayOrder = 0,
@@ -779,9 +781,9 @@ async function updateBusinessAd(adId, {
   await pool.query(
     `UPDATE business_ads
      SET business_name = ?, manager_name = ?, manager_contact = ?, title = ?, image_url = ?, link_url = ?, region = ?, district = ?, category = ?, open_hour = ?, close_hour = ?,
-         kakao_talk_id = ?, telegram_id = ?, show_business_address_map = ?, use_visit_verification = ?, use_stamp_event = ?, stamp_event_count = ?, description = ?, plan_type = ?, registration_status = ?, display_order = ?, is_active = ?
+         kakao_talk_id = ?, telegram_id = ?, show_business_address_map = ?, use_visit_verification = ?, use_stamp_event = ?, stamp_event_description = ?, stamp_event_count = ?, description = ?, plan_type = ?, registration_status = ?, display_order = ?, is_active = ?
      WHERE id = ?`,
-    [businessName, managerName, managerContact, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, kakaoTalkId, telegramId, showBusinessAddressMap ? 1 : 0, useVisitVerification ? 1 : 0, useStampEvent ? 1 : 0, Number(stampEventCount) || 0, description, planType, registrationStatus, displayOrder, isActive ? 1 : 0, adId]
+    [businessName, managerName, managerContact, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, kakaoTalkId, telegramId, showBusinessAddressMap ? 1 : 0, useVisitVerification ? 1 : 0, useStampEvent ? 1 : 0, stampEventDescription, Number(stampEventCount) || 0, description, planType, registrationStatus, displayOrder, isActive ? 1 : 0, adId]
   );
 }
 

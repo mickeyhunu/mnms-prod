@@ -3599,17 +3599,27 @@ body[data-page="admin"] {
     accent-color: #2b6fdb;
 }
 
-.ad-profile-stamp-event-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+.ad-profile-stamp-event-fields {
+    display: grid;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.ad-profile-stamp-event-fields textarea {
+    width: 100%;
+    min-height: 82px;
+    resize: vertical;
+}
+
+.ad-profile-stamp-event-fields textarea:disabled {
+    background: #f3f4f6;
+    color: #9ca3af;
 }
 
 .ad-profile-stamp-event-count {
     display: inline-flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 6px;
     color: #212529;
     font-size: 14px;

@@ -218,9 +218,13 @@ function normalizePositiveIntPayload(value, fallback = 0) {
   return Number.isInteger(normalized) && normalized > 0 ? normalized : fallback;
 }
 
-function getBusinessAdStampEventError({ useStampEvent, stampEventCount }) {
-  if (useStampEvent && (!Number.isInteger(Number(stampEventCount)) || Number(stampEventCount) <= 0)) {
-    return '스탬프 이벤트 사용시 사용되는 스탬프 갯수를 입력해주세요.';
+function getBusinessAdStampEventError({ useStampEvent, stampEventDescription, stampEventCount }) {
+  if (!useStampEvent) return '';
+  if (!String(stampEventDescription || '').trim()) {
+    return '스탬프 이벤트 설명을 입력해주세요.';
+  }
+  if (!Number.isInteger(Number(stampEventCount)) || Number(stampEventCount) <= 0) {
+    return '스탬프 이벤트 사용시 차감되는 스탬프 갯수를 입력해주세요.';
   }
   return '';
 }
@@ -724,8 +728,9 @@ async function createMyBusinessAd(req, res, next) {
     const kakaoTalkId = String(req.body?.kakaoTalkId || '').trim();
     const telegramId = String(req.body?.telegramId || '').trim();
     const showBusinessAddressMap = normalizeBooleanPayload(req.body?.showBusinessAddressMap, false);
-    const useVisitVerification = normalizeBooleanPayload(req.body?.useVisitVerification, false);
     const useStampEvent = normalizeBooleanPayload(req.body?.useStampEvent, false);
+    const useVisitVerification = useStampEvent;
+    const stampEventDescription = useStampEvent ? String(req.body?.stampEventDescription || '').trim() : '';
     const stampEventCount = useStampEvent ? normalizePositiveIntPayload(req.body?.stampEventCount, 0) : 0;
     const planType = String(req.body?.planType || 'NORMAL').trim().toUpperCase() === 'PREMIUM' ? 'PREMIUM' : 'NORMAL';
     const displayOrder = Number(req.body?.displayOrder) || 0;
@@ -739,7 +744,7 @@ async function createMyBusinessAd(req, res, next) {
       return res.status(400).json({ message: '광고프로필 필수 항목을 모두 입력해주세요.' });
     }
 
-    const stampEventError = getBusinessAdStampEventError({ useStampEvent, stampEventCount });
+    const stampEventError = getBusinessAdStampEventError({ useStampEvent, stampEventDescription, stampEventCount });
     if (stampEventError) {
       return res.status(400).json({ message: stampEventError });
     }
@@ -763,6 +768,7 @@ async function createMyBusinessAd(req, res, next) {
       showBusinessAddressMap,
       useVisitVerification,
       useStampEvent,
+      stampEventDescription,
       stampEventCount,
       planType,
       displayOrder,
@@ -803,12 +809,13 @@ async function updateMyBusinessAd(req, res, next) {
     const showBusinessAddressMap = Object.prototype.hasOwnProperty.call(req.body || {}, 'showBusinessAddressMap')
       ? normalizeBooleanPayload(req.body?.showBusinessAddressMap, false)
       : normalizeBooleanPayload(target.showBusinessAddressMap, false);
-    const useVisitVerification = Object.prototype.hasOwnProperty.call(req.body || {}, 'useVisitVerification')
-      ? normalizeBooleanPayload(req.body?.useVisitVerification, false)
-      : normalizeBooleanPayload(target.useVisitVerification, false);
     const useStampEvent = Object.prototype.hasOwnProperty.call(req.body || {}, 'useStampEvent')
       ? normalizeBooleanPayload(req.body?.useStampEvent, false)
       : normalizeBooleanPayload(target.useStampEvent, false);
+    const useVisitVerification = useStampEvent;
+    const stampEventDescription = useStampEvent
+      ? pickTrimmedText(req.body, 'stampEventDescription', target.stampEventDescription || '')
+      : '';
     const stampEventCount = useStampEvent
       ? normalizePositiveIntPayload(
         Object.prototype.hasOwnProperty.call(req.body || {}, 'stampEventCount') ? req.body?.stampEventCount : target.stampEventCount,
@@ -828,7 +835,7 @@ async function updateMyBusinessAd(req, res, next) {
       return res.status(400).json({ message: '광고프로필 필수 항목을 모두 입력해주세요.' });
     }
 
-    const stampEventError = getBusinessAdStampEventError({ useStampEvent, stampEventCount });
+    const stampEventError = getBusinessAdStampEventError({ useStampEvent, stampEventDescription, stampEventCount });
     if (stampEventError) {
       return res.status(400).json({ message: stampEventError });
     }
@@ -851,6 +858,7 @@ async function updateMyBusinessAd(req, res, next) {
       showBusinessAddressMap,
       useVisitVerification,
       useStampEvent,
+      stampEventDescription,
       stampEventCount,
       planType,
       displayOrder,

@@ -511,16 +511,13 @@ function buildBusinessProfileMapMarkup(ad) {
 }
 
 function buildBusinessProfileAdditionalInfoMarkup(ad) {
-    const useVisitVerification = normalizeBooleanFlag(ad?.useVisitVerification);
-    const useStampEvent = normalizeBooleanFlag(ad?.useStampEvent);
+    const useStampEvent = normalizeBooleanFlag(ad?.useStampEvent || ad?.useVisitVerification);
+    const stampEventDescription = sanitizeHTML(String(ad?.stampEventDescription || '').trim());
     const stampEventCount = Number(ad?.stampEventCount || 0);
     const infoRows = [];
 
-    if (useVisitVerification) {
-        infoRows.push(buildBusinessProfileInfoRow('방문 인증', '사용 업소 · 방문인증시 스탬프 1개 차감', '✅'));
-    }
-    if (useStampEvent && stampEventCount > 0) {
-        infoRows.push(buildBusinessProfileInfoRow('스탬프 이벤트', `사용 업소 · ${stampEventCount.toLocaleString('ko-KR')}개`, '🎟️'));
+    if (useStampEvent && stampEventDescription && stampEventCount > 0) {
+        infoRows.push(buildBusinessProfileInfoRow('스탬프 이벤트', `${stampEventDescription}<br><strong>스탬프 ${stampEventCount.toLocaleString('ko-KR')}개</strong>`, '🎟️'));
     }
     if (!infoRows.length) return '';
 
