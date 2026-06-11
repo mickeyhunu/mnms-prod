@@ -23,7 +23,7 @@ const { POINT_RULES } = require('../models/pointModel');
 const { STAMP_TYPES, createStampPurchase, getUserStampBalance, getUserStampHistories, getUserStampPaymentHistories } = require('../models/stampModel');
 const supportModel = require('../models/supportModel');
 const adminModel = require('../models/adminModel');
-const { deleteS3ObjectByUrl, deleteS3ObjectsByUrls } = require('../utils/fileUpload');
+const { deleteS3ObjectsByUrls, parseDataUrl, uploadDataUrlToS3 } = require('../utils/fileUpload');
 const {
   collectBusinessInfoImageUrls,
   deleteUnreferencedBusinessInfoImages,
@@ -129,6 +129,129 @@ const BUSINESS_AD_DEFAULT_IMAGE_URL = '/src/assets/image/ad-profile-default.webp
 
 function isBusinessAdDefaultImageUrl(imageUrl = '') {
   return String(imageUrl || '').trim() === BUSINESS_AD_DEFAULT_IMAGE_URL;
+}
+
+const BUSINESS_AD_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
+const BUSINESS_AD_IMAGE_MAX_BYTES = 8 * 1024 * 1024;
+const BUSINESS_AD_DESCRIPTION_IMAGE_LIMIT = 20;
+
+function isDataUrlImage(value = '') {
+  return Boolean(parseDataUrl(value)?.mimeType?.startsWith('image/'));
+}
+
+function getImageExtensionFromDataUrl(dataUrl = '') {
+  const mimeType = parseDataUrl(dataUrl)?.mimeType || 'image/jpeg';
+  const extensionByMimeType = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/gif': 'gif',
+    'image/webp': 'webp',
+    'image/heic': 'heic',
+    'image/heif': 'heif'
+  };
+  return extensionByMimeType[mimeType] || 'jpg';
+}
+
+function extractImageSrcsFromHtml(html = '') {
+  const imageSrcs = new Set();
+  const imageSrcPattern = /<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi;
+  let matched;
+
+  while ((matched = imageSrcPattern.exec(String(html || ''))) !== null) {
+    const imageSrc = String(matched[1] || '').trim();
+    if (imageSrc) imageSrcs.add(imageSrc);
+  }
+
+  return [...imageSrcs];
+}
+
+function collectBusinessAdImageUrls(...ads) {
+  const urls = new Set();
+
+  for (const ad of ads) {
+    const representativeImageUrl = String(ad?.imageUrl || '').trim();
+    if (representativeImageUrl && !isBusinessAdDefaultImageUrl(representativeImageUrl) && !isDataUrlImage(representativeImageUrl)) {
+      urls.add(representativeImageUrl);
+    }
+
+    extractImageSrcsFromHtml(ad?.description).forEach((imageUrl) => {
+      if (!isDataUrlImage(imageUrl)) urls.add(imageUrl);
+    });
+  }
+
+  return [...urls];
+}
+
+async function uploadBusinessAdDataUrlImage(dataUrl, { fileName, folder, uploadedUrls }) {
+  const uploaded = await uploadDataUrlToS3({
+    dataUrl,
+    fileName,
+    folder,
+    allowedMimeTypes: BUSINESS_AD_IMAGE_MIME_TYPES,
+    maxBytes: BUSINESS_AD_IMAGE_MAX_BYTES
+  });
+  uploadedUrls.push(uploaded.url);
+  return uploaded.url;
+}
+
+async function resolveBusinessAdImageUrl(imageUrl = '', uploadedUrls = []) {
+  const normalizedImageUrl = String(imageUrl || '').trim();
+  if (!isDataUrlImage(normalizedImageUrl)) return normalizedImageUrl;
+
+  return uploadBusinessAdDataUrlImage(normalizedImageUrl, {
+    fileName: `ad-profile-image.${getImageExtensionFromDataUrl(normalizedImageUrl)}`,
+    folder: 'ads',
+    uploadedUrls
+  });
+}
+
+async function uploadBusinessAdDescriptionImages(description = '', uploadedUrls = []) {
+  const pendingDataUrls = [];
+  const descriptionWithPlaceholders = String(description || '').replace(/(src=["'])(data:[^"']+)(["'])/gi, (matched, prefix, dataUrl, suffix) => {
+    if (!isDataUrlImage(dataUrl)) return matched;
+    if (pendingDataUrls.length >= BUSINESS_AD_DESCRIPTION_IMAGE_LIMIT) {
+      throw new Error(`상세정보 이미지는 최대 ${BUSINESS_AD_DESCRIPTION_IMAGE_LIMIT}개까지 등록할 수 있습니다.`);
+    }
+
+    const placeholder = `__PENDING_BUSINESS_AD_IMAGE_${pendingDataUrls.length}__`;
+    pendingDataUrls.push(dataUrl);
+    return `${prefix}${placeholder}${suffix}`;
+  });
+
+  const uploadedUrlsByIndex = [];
+  for (const [index, dataUrl] of pendingDataUrls.entries()) {
+    uploadedUrlsByIndex[index] = await uploadBusinessAdDataUrlImage(dataUrl, {
+      fileName: `ad-profile-description-${index + 1}.${getImageExtensionFromDataUrl(dataUrl)}`,
+      folder: 'ads/description',
+      uploadedUrls
+    });
+  }
+
+  return uploadedUrlsByIndex.reduce(
+    (resolvedDescription, uploadedUrl, index) => resolvedDescription.replace(`__PENDING_BUSINESS_AD_IMAGE_${index}__`, uploadedUrl),
+    descriptionWithPlaceholders
+  );
+}
+
+async function resolveBusinessAdImages({ imageUrl = '', description = '' }, uploadedUrls = []) {
+  const resolvedImageUrl = await resolveBusinessAdImageUrl(imageUrl, uploadedUrls);
+  const resolvedDescription = await uploadBusinessAdDescriptionImages(description, uploadedUrls);
+
+  return {
+    imageUrl: resolvedImageUrl,
+    description: resolvedDescription
+  };
+}
+
+async function deleteUnreferencedBusinessAdImages(previousAd, nextAd) {
+  const previousUrls = collectBusinessAdImageUrls(previousAd);
+  if (!previousUrls.length) return [];
+
+  const retainedUrls = new Set(collectBusinessAdImageUrls(nextAd));
+  const removableUrls = previousUrls.filter((url) => !retainedUrls.has(url));
+  if (!removableUrls.length) return [];
+
+  return deleteS3ObjectsByUrls(removableUrls);
 }
 
 function normalizeRegistrationStatus(value, fallback = 'UNREGISTERED') {
@@ -712,19 +835,21 @@ async function listMyBusinessAds(req, res, next) {
 }
 
 async function createMyBusinessAd(req, res, next) {
+  const uploadedUrls = [];
+
   try {
     const businessName = String(req.body?.businessName || '').trim();
     const managerName = String(req.body?.managerName || '').trim();
     const managerContact = String(req.body?.managerContact || '').trim();
     const title = String(req.body?.title || '').trim();
-    const imageUrl = String(req.body?.imageUrl || '').trim();
+    const requestedImageUrl = String(req.body?.imageUrl || '').trim();
     const linkUrl = String(req.body?.linkUrl || '#').trim() || '#';
     const region = String(req.body?.region || '').trim();
     const district = String(req.body?.district || '').trim();
     const category = String(req.body?.category || '').trim();
     const openHour = String(req.body?.openHour || '').trim();
     const closeHour = String(req.body?.closeHour || '').trim();
-    const description = String(req.body?.description || '').trim();
+    const requestedDescription = String(req.body?.description || '').trim();
     const kakaoTalkId = String(req.body?.kakaoTalkId || '').trim();
     const telegramId = String(req.body?.telegramId || '').trim();
     const showBusinessAddressMap = normalizeBooleanPayload(req.body?.showBusinessAddressMap, false);
@@ -739,7 +864,7 @@ async function createMyBusinessAd(req, res, next) {
     const isActive = isRegisteredStatus;
 
     if (isRegisteredStatus && !isCompleteBusinessAdPayload({
-      businessName, managerName, managerContact, title, region, district, category, openHour, closeHour, description
+      businessName, managerName, managerContact, title, region, district, category, openHour, closeHour, description: requestedDescription
     })) {
       return res.status(400).json({ message: '광고프로필 필수 항목을 모두 입력해주세요.' });
     }
@@ -748,6 +873,11 @@ async function createMyBusinessAd(req, res, next) {
     if (stampEventError) {
       return res.status(400).json({ message: stampEventError });
     }
+
+    const { imageUrl, description } = await resolveBusinessAdImages({
+      imageUrl: requestedImageUrl,
+      description: requestedDescription
+    }, uploadedUrls);
 
     const insertId = await adminModel.createBusinessAd({
       ownerUserId: req.user.id,
@@ -775,13 +905,17 @@ async function createMyBusinessAd(req, res, next) {
       isActive,
       registrationStatus: requestedStatus
     });
+    uploadedUrls.length = 0;
     res.status(201).json({ id: insertId });
   } catch (error) {
+    await deleteS3ObjectsByUrls(uploadedUrls);
     next(error);
   }
 }
 
 async function updateMyBusinessAd(req, res, next) {
+  const uploadedUrls = [];
+
   try {
     const id = Number.parseInt(req.params.id, 10);
     if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 광고 ID입니다.' });
@@ -796,14 +930,14 @@ async function updateMyBusinessAd(req, res, next) {
     const managerContact = pickTrimmedText(req.body, 'managerContact', target.managerContact || '');
     const title = pickTrimmedText(req.body, 'title', target.title || '');
     const hasImageUrlPayload = Object.prototype.hasOwnProperty.call(req.body || {}, 'imageUrl');
-    const imageUrl = hasImageUrlPayload ? pickTrimmedText(req.body, 'imageUrl', '') : String(target.imageUrl || '').trim();
+    const requestedImageUrl = hasImageUrlPayload ? pickTrimmedText(req.body, 'imageUrl', '') : String(target.imageUrl || '').trim();
     const linkUrl = pickTrimmedText(req.body, 'linkUrl', target.linkUrl || '#') || '#';
     const region = pickTrimmedText(req.body, 'region', target.region || '');
     const district = pickTrimmedText(req.body, 'district', target.district || '');
     const category = pickTrimmedText(req.body, 'category', target.category || '');
     const openHour = pickTrimmedText(req.body, 'openHour', target.openHour || '');
     const closeHour = pickTrimmedText(req.body, 'closeHour', target.closeHour || '');
-    const description = pickTrimmedText(req.body, 'description', target.description || '');
+    const requestedDescription = pickTrimmedText(req.body, 'description', target.description || '');
     const kakaoTalkId = pickTrimmedText(req.body, 'kakaoTalkId', target.kakaoTalkId || '');
     const telegramId = pickTrimmedText(req.body, 'telegramId', target.telegramId || '');
     const showBusinessAddressMap = Object.prototype.hasOwnProperty.call(req.body || {}, 'showBusinessAddressMap')
@@ -830,7 +964,7 @@ async function updateMyBusinessAd(req, res, next) {
     const isActive = isRegisteredStatus;
 
     if (isRegisteredStatus && !isCompleteBusinessAdPayload({
-      businessName, managerName, managerContact, title, region, district, category, openHour, closeHour, description
+      businessName, managerName, managerContact, title, region, district, category, openHour, closeHour, description: requestedDescription
     })) {
       return res.status(400).json({ message: '광고프로필 필수 항목을 모두 입력해주세요.' });
     }
@@ -840,12 +974,18 @@ async function updateMyBusinessAd(req, res, next) {
       return res.status(400).json({ message: stampEventError });
     }
 
+    const { imageUrl, description } = await resolveBusinessAdImages({
+      imageUrl: requestedImageUrl,
+      description: requestedDescription
+    }, uploadedUrls);
+    const nextAdImages = { imageUrl: imageUrl || BUSINESS_AD_DEFAULT_IMAGE_URL, description };
+
     await adminModel.updateBusinessAd(id, {
       businessName,
       managerName,
       managerContact,
       title,
-      imageUrl: imageUrl || BUSINESS_AD_DEFAULT_IMAGE_URL,
+      imageUrl: nextAdImages.imageUrl,
       linkUrl,
       region,
       district,
@@ -865,11 +1005,11 @@ async function updateMyBusinessAd(req, res, next) {
       isActive,
       registrationStatus: requestedStatus
     });
-    if (target.imageUrl && target.imageUrl !== imageUrl && !isBusinessAdDefaultImageUrl(target.imageUrl)) {
-      await deleteS3ObjectByUrl(target.imageUrl);
-    }
+    uploadedUrls.length = 0;
+    await deleteUnreferencedBusinessAdImages(target, nextAdImages);
     res.json({ success: true });
   } catch (error) {
+    await deleteS3ObjectsByUrls(uploadedUrls);
     next(error);
   }
 }
@@ -885,9 +1025,7 @@ async function deleteMyBusinessAd(req, res, next) {
     }
 
     await adminModel.deleteBusinessAd(id);
-    if (target.imageUrl && !isBusinessAdDefaultImageUrl(target.imageUrl)) {
-      await deleteS3ObjectByUrl(target.imageUrl);
-    }
+    await deleteS3ObjectsByUrls(collectBusinessAdImageUrls(target));
     res.json({ success: true });
   } catch (error) {
     next(error);
@@ -1083,9 +1221,7 @@ async function withdrawMyAccount(req, res, next) {
     await withdrawUserById(req.user.id, { reason });
     await deleteS3ObjectsByUrls([
       ...collectBusinessInfoImageUrls(businessProfile?.businessInfo, businessProfile?.lastApprovedBusinessInfo),
-      ...businessAds
-        .map((ad) => ad.imageUrl)
-        .filter((imageUrl) => imageUrl && !isBusinessAdDefaultImageUrl(imageUrl))
+      ...collectBusinessAdImageUrls(...businessAds)
     ]);
     res.json({ success: true, message: '회원 탈퇴가 완료되었습니다.' });
   } catch (error) {
