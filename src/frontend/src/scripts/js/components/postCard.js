@@ -49,7 +49,7 @@ function createBoardRow(post, isNotice = false, index = 0) {
     const numberLabel = isNotice ? (post.isPinned ? '📌' : noticeText) : post.id || index + 1;
     const detailHref = String(post.sourceType || '').toUpperCase() === 'SUPPORT'
         ? `/support?articleId=${encodeURIComponent(post.sourceId || post.id)}&sourceType=SUPPORT`
-        : `/post-detail?id=${encodeURIComponent(post.id)}`;
+        : createPostDetailPath(post);
 
     const authorName = getDisplayAuthorName(post);
     const authorBadgeMarkup = getAuthorGradeBadgeMarkup(post);
@@ -104,7 +104,7 @@ function createPostCard(post) {
             <div class="post-header">
                 <div class="post-header-left">
                     <h3 class="post-title">
-                        <a href="/post-detail?id=${post.id}" onclick="handlePostClick(${post.id}); return false;">${titlePrefix}${sanitizeHTML(post.title)}</a>
+                        <a href="${createPostDetailPath(post)}">${titlePrefix}${sanitizeHTML(post.title)}</a>
                     </h3>
                     <div class="post-meta">
                         <span class="post-author">${sanitizeHTML(authorName || '작성자 #' + post.authorId)}${authorBadgeMarkup}${ownBadgeMarkup}</span>
@@ -241,7 +241,7 @@ function getDisplayAuthorName(post) {
 }
 
 function handlePostClick(postId) {
-    window.location.href = `/post-detail?id=${postId}`;
+    window.location.href = createPostDetailPath(postId);
 }
 
 function createImagePreview(imageUrls) {
@@ -273,8 +273,7 @@ function attachPostCardEvents(container) {
         if (titleLink) {
             titleLink.addEventListener('click', (e) => {
                 e.preventDefault();
-                const postId = card.dataset.postId;
-                window.location.href = `/post-detail?id=${postId}`;
+                window.location.href = titleLink.getAttribute('href') || createPostDetailPath(card.dataset.postId);
             });
         }
     });
@@ -335,7 +334,7 @@ async function handlePostDelete(postId) {
 }
 
 function navigateToPost(postId) {
-    window.location.href = `/post-detail?id=${postId}`;
+    window.location.href = createPostDetailPath(postId);
 }
 
 async function toggleLike(postId, event) {
