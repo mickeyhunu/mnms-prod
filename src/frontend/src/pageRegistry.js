@@ -260,22 +260,19 @@ const pageRegistry = {
                             <span>사업자등록기준 주소지 미니맵 노출</span>
                         </label>
                         <p class="ad-profile-map-toggle-help">체크하면 사업자정보 관리에 저장된 사업장 주소를 기준으로 업체정보 상세 페이지에 미니맵이 표시됩니다.</p>
-                        <label class="ad-profile-map-toggle" for="ad-profile-use-visit-verification">
-                            <input id="ad-profile-use-visit-verification" type="checkbox">
-                            <span>방문 인증 사용 업소</span>
+                        <label class="ad-profile-map-toggle" for="ad-profile-use-stamp-event">
+                            <input id="ad-profile-use-stamp-event" type="checkbox">
+                            <span>스탬프 이벤트 사용</span>
                         </label>
-                        <p class="ad-profile-map-toggle-help">방문인증시 스탬프 1개가 차감됩니다.</p>
-                        <div class="ad-profile-stamp-event-row">
-                            <label class="ad-profile-map-toggle" for="ad-profile-use-stamp-event">
-                                <input id="ad-profile-use-stamp-event" type="checkbox">
-                                <span>스탬프 이벤트 사용 업소</span>
-                            </label>
+                        <div class="ad-profile-stamp-event-fields">
+                            <textarea id="ad-profile-stamp-event-description" rows="3" maxlength="200" placeholder="광고페이지에 노출할 이벤트 설명을 입력해주세요." disabled></textarea>
                             <label class="ad-profile-stamp-event-count" for="ad-profile-stamp-event-count">
+                                <span>스탬프 차감갯수</span>
                                 <input id="ad-profile-stamp-event-count" type="number" min="1" max="999" inputmode="numeric" placeholder="0" disabled>
                                 <span>개</span>
                             </label>
                         </div>
-                        <p class="ad-profile-map-toggle-help">스탬프 이벤트 사용시 사용되는 스탬프 갯수를 필수로 입력해주세요.</p>
+                        <p class="ad-profile-map-toggle-help">체크하면 이벤트 설명과 스탬프 차감갯수를 필수로 입력해주세요.</p>
                     </div>
                 </div>
 

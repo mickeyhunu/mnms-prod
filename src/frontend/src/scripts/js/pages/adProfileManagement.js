@@ -281,8 +281,8 @@ function bindAdProfileInteractions() {
     const kakaoTalkIdInput = document.getElementById('ad-profile-kakao-talk-id');
     const telegramIdInput = document.getElementById('ad-profile-telegram-id');
     const showBusinessAddressMapInput = document.getElementById('ad-profile-show-business-address-map');
-    const useVisitVerificationInput = document.getElementById('ad-profile-use-visit-verification');
     const useStampEventInput = document.getElementById('ad-profile-use-stamp-event');
+    const stampEventDescriptionInput = document.getElementById('ad-profile-stamp-event-description');
     const stampEventCountInput = document.getElementById('ad-profile-stamp-event-count');
 
     const previewTitle = document.getElementById('ad-profile-preview-title');
@@ -342,26 +342,32 @@ function bindAdProfileInteractions() {
         saveDraftData();
     });
 
-    const syncStampEventCountState = () => {
-        if (!stampEventCountInput) return;
+    const syncStampEventFieldState = () => {
         const isEnabled = Boolean(useStampEventInput?.checked);
-        stampEventCountInput.disabled = !isEnabled;
-        stampEventCountInput.required = isEnabled;
-        if (!isEnabled) stampEventCountInput.value = '';
+        [stampEventDescriptionInput, stampEventCountInput].forEach((input) => {
+            if (!input) return;
+            input.disabled = !isEnabled;
+            input.required = isEnabled;
+            if (!isEnabled) input.value = '';
+        });
     };
 
+    stampEventDescriptionInput?.addEventListener('input', () => {
+        syncPreview();
+        saveDraftData();
+    });
     stampEventCountInput?.addEventListener('input', () => {
         stampEventCountInput.value = String(stampEventCountInput.value || '').replace(/\D/g, '').slice(0, 3);
         syncPreview();
         saveDraftData();
     });
     useStampEventInput?.addEventListener('change', () => {
-        syncStampEventCountState();
+        syncStampEventFieldState();
         syncPreview();
         saveDraftData();
     });
 
-    [districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput, businessNameInput, managerNameInput, kakaoTalkIdInput, telegramIdInput, showBusinessAddressMapInput, useVisitVerificationInput]
+    [districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput, businessNameInput, managerNameInput, kakaoTalkIdInput, telegramIdInput, showBusinessAddressMapInput]
         .forEach((element) => {
             element?.addEventListener('input', syncPreview);
             element?.addEventListener('change', syncPreview);
@@ -369,7 +375,7 @@ function bindAdProfileInteractions() {
             element?.addEventListener('change', saveDraftData);
         });
 
-    syncStampEventCountState();
+    syncStampEventFieldState();
     adProfileState.syncPreview = syncPreview;
     syncPreview();
 }
@@ -396,9 +402,17 @@ function getStampEventCountValue() {
     return Number.isInteger(count) && count > 0 ? count : 0;
 }
 
-function getStampEventFieldError({ useStampEvent, stampEventCount }) {
-    if (useStampEvent && (!Number.isInteger(Number(stampEventCount)) || Number(stampEventCount) <= 0)) {
-        return '스탬프 이벤트 사용시 사용되는 스탬프 갯수를 입력해주세요.';
+function getStampEventDescriptionValue() {
+    return String(document.getElementById('ad-profile-stamp-event-description')?.value || '').trim();
+}
+
+function getStampEventFieldError({ useStampEvent, stampEventDescription, stampEventCount }) {
+    if (!useStampEvent) return '';
+    if (!String(stampEventDescription || '').trim()) {
+        return '스탬프 이벤트 설명을 입력해주세요.';
+    }
+    if (!Number.isInteger(Number(stampEventCount)) || Number(stampEventCount) <= 0) {
+        return '스탬프 이벤트 사용시 차감되는 스탬프 갯수를 입력해주세요.';
     }
     return '';
 }
@@ -419,8 +433,8 @@ function collectDraftData() {
         kakaoTalkId: String(document.getElementById('ad-profile-kakao-talk-id')?.value || '').trim(),
         telegramId: String(document.getElementById('ad-profile-telegram-id')?.value || '').trim(),
         showBusinessAddressMap: Boolean(document.getElementById('ad-profile-show-business-address-map')?.checked),
-        useVisitVerification: Boolean(document.getElementById('ad-profile-use-visit-verification')?.checked),
         useStampEvent: Boolean(document.getElementById('ad-profile-use-stamp-event')?.checked),
+        stampEventDescription: getStampEventDescriptionValue(),
         stampEventCount: getStampEventCountValue()
     };
 }
@@ -441,6 +455,7 @@ function isAdProfileFormComplete() {
     });
     const stampEventFieldError = getStampEventFieldError({
         useStampEvent: draft.useStampEvent,
+        stampEventDescription: draft.stampEventDescription,
         stampEventCount: draft.stampEventCount
     });
     return !requiredFieldError && !stampEventFieldError;
@@ -479,9 +494,9 @@ function hasAnyAdProfileValue(data) {
         data.kakaoTalkId,
         data.telegramId,
         data.showBusinessAddressMap ? 'Y' : '',
-        data.useVisitVerification ? 'Y' : '',
         data.useStampEvent ? 'Y' : '',
-        data.stampEventCount
+        data.useStampEvent ? data.stampEventDescription : '',
+        data.useStampEvent ? data.stampEventCount : ''
     ];
 
     return valuesToCheck.some((value) => String(value || '').trim());
@@ -539,8 +554,9 @@ async function saveAdProfile({ forceDraft = false } = {}) {
     const kakaoTalkId = String(document.getElementById('ad-profile-kakao-talk-id')?.value || '').trim();
     const telegramId = String(document.getElementById('ad-profile-telegram-id')?.value || '').trim();
     const showBusinessAddressMap = Boolean(document.getElementById('ad-profile-show-business-address-map')?.checked);
-    const useVisitVerification = Boolean(document.getElementById('ad-profile-use-visit-verification')?.checked);
     const useStampEvent = Boolean(document.getElementById('ad-profile-use-stamp-event')?.checked);
+    const useVisitVerification = useStampEvent;
+    const stampEventDescription = getStampEventDescriptionValue();
     const stampEventCount = getStampEventCountValue();
     syncDescriptionInputFromEditor();
     const description = String(document.getElementById('ad-profile-description')?.value || '').trim();
@@ -564,6 +580,7 @@ async function saveAdProfile({ forceDraft = false } = {}) {
         showBusinessAddressMap,
         useVisitVerification,
         useStampEvent,
+        stampEventDescription,
         stampEventCount
     });
 
@@ -592,7 +609,7 @@ async function saveAdProfile({ forceDraft = false } = {}) {
         }
     }
 
-    const stampEventFieldError = getStampEventFieldError({ useStampEvent, stampEventCount });
+    const stampEventFieldError = getStampEventFieldError({ useStampEvent, stampEventDescription, stampEventCount });
     if (stampEventFieldError) {
         showSaveMessage(stampEventFieldError);
         return;
@@ -634,6 +651,7 @@ async function saveAdProfile({ forceDraft = false } = {}) {
             showBusinessAddressMap,
             useVisitVerification,
             useStampEvent,
+            stampEventDescription: useStampEvent ? stampEventDescription : '',
             stampEventCount: useStampEvent ? stampEventCount : 0,
             planType: adProfileState.me?.isBusiness ? 'PREMIUM' : 'NORMAL',
             registrationStatus,
@@ -697,8 +715,8 @@ function applyAdProfileToForm(ad) {
     const kakaoTalkIdInput = document.getElementById('ad-profile-kakao-talk-id');
     const telegramIdInput = document.getElementById('ad-profile-telegram-id');
     const showBusinessAddressMapInput = document.getElementById('ad-profile-show-business-address-map');
-    const useVisitVerificationInput = document.getElementById('ad-profile-use-visit-verification');
     const useStampEventInput = document.getElementById('ad-profile-use-stamp-event');
+    const stampEventDescriptionInput = document.getElementById('ad-profile-stamp-event-description');
     const stampEventCountInput = document.getElementById('ad-profile-stamp-event-count');
     const descriptionInput = document.getElementById('ad-profile-description');
 
@@ -719,12 +737,16 @@ function applyAdProfileToForm(ad) {
     if (kakaoTalkIdInput) kakaoTalkIdInput.value = ad.kakaoTalkId || '';
     if (telegramIdInput) telegramIdInput.value = ad.telegramId || '';
     if (showBusinessAddressMapInput) showBusinessAddressMapInput.checked = normalizeBooleanFlag(ad.showBusinessAddressMap);
-    if (useVisitVerificationInput) useVisitVerificationInput.checked = normalizeBooleanFlag(ad.useVisitVerification);
-    if (useStampEventInput) useStampEventInput.checked = normalizeBooleanFlag(ad.useStampEvent);
+    if (useStampEventInput) useStampEventInput.checked = normalizeBooleanFlag(ad.useStampEvent || ad.useVisitVerification);
+    if (stampEventDescriptionInput) {
+        stampEventDescriptionInput.value = normalizeBooleanFlag(ad.useStampEvent || ad.useVisitVerification) ? String(ad.stampEventDescription || '') : '';
+        stampEventDescriptionInput.disabled = !normalizeBooleanFlag(ad.useStampEvent || ad.useVisitVerification);
+        stampEventDescriptionInput.required = normalizeBooleanFlag(ad.useStampEvent || ad.useVisitVerification);
+    }
     if (stampEventCountInput) {
-        stampEventCountInput.value = normalizeBooleanFlag(ad.useStampEvent) ? String(Number(ad.stampEventCount || 0) || '') : '';
-        stampEventCountInput.disabled = !normalizeBooleanFlag(ad.useStampEvent);
-        stampEventCountInput.required = normalizeBooleanFlag(ad.useStampEvent);
+        stampEventCountInput.value = normalizeBooleanFlag(ad.useStampEvent || ad.useVisitVerification) ? String(Number(ad.stampEventCount || 0) || '') : '';
+        stampEventCountInput.disabled = !normalizeBooleanFlag(ad.useStampEvent || ad.useVisitVerification);
+        stampEventCountInput.required = normalizeBooleanFlag(ad.useStampEvent || ad.useVisitVerification);
     }
     if (descriptionInput) descriptionInput.value = ad.description || '';
     setDescriptionEditorHtml(ad.description || '');
