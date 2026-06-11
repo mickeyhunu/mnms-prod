@@ -24,6 +24,7 @@ const rbtiRoutes = require('./src/backend/routes/rbtiRoutes');
 const adminModel = require('./src/backend/models/adminModel');
 const postModel = require('./src/backend/models/postModel');
 const { startLiveHistoryScheduler } = require('./src/backend/utils/liveHistoryScheduler');
+const { createSeoSlug } = require('./src/backend/utils/seoSlug');
 const { ensureS3BucketExists, isS3UploadEnabled, s3BucketName } = require('./src/backend/config/s3');
 
 const app = express();
@@ -165,13 +166,13 @@ function absoluteUrl(pathOrUrl = '/') {
   return new URL(String(pathOrUrl || '/'), SITE_ORIGIN).toString();
 }
 
-function createDefaultSeo(pathname, query = {}) {
+function createDefaultSeo(pathname) {
   const basePath = pathname === '/live' ? '/play/live' : pathname;
   const routeConfig = SEO_PAGE_CONFIG[basePath] || {};
   const noindex = NOINDEX_PATHS.has(basePath)
     || basePath.startsWith('/admin/')
     || basePath.startsWith('/my-inquiries/');
-  const canonicalPath = basePath === '/post-detail' && query.id ? `${basePath}?id=${encodeURIComponent(query.id)}` : basePath;
+  const canonicalPath = basePath;
   const title = routeConfig.title || '미드나잇 맨즈';
   const description = routeConfig.description || '남성 유흥 커뮤니티 미드나잇 맨즈에서 최저가 업소 추천, 리얼 후기, 지역별 업소 정보를 빠르게 확인하세요.';
   const keywords = routeConfig.keywords || ['남성 유흥 커뮤니티', '최저가 업소 추천', '업소 리뷰 후기', '지역별 업소 정보', '미드나잇 맨즈'];
@@ -188,17 +189,17 @@ function createDefaultSeo(pathname, query = {}) {
 }
 
 async function createPostSeo(req) {
-  const postId = Number(req.query.id || req.params.id || 0);
-  if (!postId || !isDatabaseReady) return null;
+  if (!isDatabaseReady) return null;
 
   try {
-    const post = await postModel.findPostDetailById(postId);
+    const slug = String(req.path.split('/').filter(Boolean).pop() || '').trim();
+    const post = await postModel.findPostDetailBySlug(slug);
     if (!post || Number(post.isHidden || post.is_hidden || 0) === 1) return null;
 
     const titleText = stripHtml(post.title || '게시글 상세');
     const description = truncateText(post.content, 150) || '미드나잇 맨즈 커뮤니티 게시글 상세 내용을 확인하세요.';
     const imageUrl = parsePostImageUrls(post).find(Boolean);
-    const canonicalUrl = absoluteUrl(`/post-detail?id=${encodeURIComponent(postId)}`);
+    const canonicalUrl = absoluteUrl(`/post-detail/${encodeURIComponent(createSeoSlug(titleText, `post-${post.id}`))}`);
 
     return {
       title: `${titleText} | 미드나잇 맨즈`,
@@ -214,6 +215,36 @@ async function createPostSeo(req) {
     };
   } catch (error) {
     console.error('post SEO metadata failed:', error.message);
+    return null;
+  }
+}
+
+
+async function createBusinessAdSeo(req) {
+  if (!isDatabaseReady) return null;
+
+  try {
+    const slug = String(req.path.split('/').filter(Boolean).pop() || '').trim();
+    const ad = await adminModel.findPublicBusinessAdBySlug(slug);
+    if (!ad) return null;
+
+    const titleText = stripHtml(ad.title || ad.businessName || '업체정보 상세');
+    const locationText = [ad.region, ad.district, ad.category].map((item) => stripHtml(item)).filter(Boolean).join(' ');
+    const description = truncateText(ad.description, 150) || `${locationText ? `${locationText} ` : ''}${titleText} 업체정보를 확인하세요.`;
+    const canonicalUrl = absoluteUrl(`/business-info/${encodeURIComponent(createSeoSlug(titleText, `business-${ad.id}`))}`);
+
+    return {
+      title: `${titleText} | 미드나잇 맨즈`,
+      description,
+      keywords: ['업체정보', titleText, ad.region, ad.district, ad.category, '미드나잇 맨즈'].filter(Boolean),
+      canonicalUrl,
+      robots: 'index, follow',
+      ogType: 'website',
+      imageUrl: ad.imageUrl || absoluteUrl('/src/assets/live-avatars/brand-logo.png'),
+      structuredDataType: 'LocalBusiness'
+    };
+  } catch (error) {
+    console.error('business ad SEO metadata failed:', error.message);
     return null;
   }
 }
@@ -271,8 +302,12 @@ function renderSeoHtml(indexHtml, seo) {
 
 async function sendSeoIndex(req, res, statusCode = 200) {
   const indexHtml = await fs.promises.readFile(INDEX_HTML_PATH, 'utf8');
-  const defaultSeo = createDefaultSeo(req.path, req.query);
-  const dynamicSeo = req.path === '/post-detail' ? await createPostSeo(req) : null;
+  const defaultSeo = createDefaultSeo(req.path);
+  const dynamicSeo = req.path.startsWith('/post-detail/')
+    ? await createPostSeo(req)
+    : req.path.startsWith('/business-info/')
+      ? await createBusinessAdSeo(req)
+      : null;
   res.status(statusCode).type('html').send(renderSeoHtml(indexHtml, dynamicSeo || defaultSeo));
 }
 

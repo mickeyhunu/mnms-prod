@@ -2,6 +2,7 @@
  * 파일 역할: 관리자 전용 회원/광고 데이터 조회 및 수정 쿼리를 담당하는 모델 파일.
  */
 const { getPool, getChatbotPool } = require('../config/database');
+const { normalizeSeoSlug } = require('../utils/seoSlug');
 const { pickUserRow } = require('../utils/response');
 const { ensureResolvedLoginRestriction, getUserActivityStats, getUserActivityDetails, getUserLoginHistories, getBusinessProfileByUserId, updateBusinessProfileReviewByUserId: updateBusinessProfileReviewRecordByUserId, updateBusinessAuthorNicknameSnapshots } = require('./userModel');
 const { getStoreByNo, listStores } = require('./liveModel');
@@ -736,6 +737,15 @@ async function findPublicBusinessAdById(adId) {
   return rows[0] || null;
 }
 
+
+async function findPublicBusinessAdBySlug(slug) {
+  const normalizedSlug = normalizeSeoSlug(slug);
+  if (!normalizedSlug) return null;
+
+  const ads = await listPublicBusinessAds();
+  return ads.find((ad) => normalizeSeoSlug(ad.title || ad.businessName) === normalizedSlug) || null;
+}
+
 async function findBusinessAdById(adId) {
   const pool = getPool();
   const [rows] = await pool.query(
@@ -1282,6 +1292,7 @@ module.exports = {
   listPublicBusinessAdAreas,
   listPublicBusinessAds,
   findPublicBusinessAdById,
+  findPublicBusinessAdBySlug,
   increaseBusinessAdViewCount,
   createBusinessAd,
   findBusinessAdById,

@@ -24,9 +24,9 @@ const PostAPI = {
         }
     },
 
-    async getPost(postId) {
+    async getPost(postSlug) {
         try {
-            return await APIClient.get(`/api/posts/${postId}`);
+            return await APIClient.get(`/api/posts/slug/${encodeURIComponent(String(postSlug || '').trim())}`);
         } catch (error) {
             throw error;
         }

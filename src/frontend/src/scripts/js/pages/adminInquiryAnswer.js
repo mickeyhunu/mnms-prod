@@ -124,7 +124,7 @@ function renderInquiryTargetInfo(inquiry) {
     const typeLabel = getInquiryTargetTypeLabel(targetType);
     const postTitle = target?.postTitle || target?.title || '';
     const content = target?.content || '';
-    const href = target?.url || (target?.postId ? `/post-detail?id=${encodeURIComponent(target.postId)}` : '');
+    const href = target?.url || (target?.postId ? createPostDetailPath(target.postId, target.postTitle || target.title) : '');
     const statusText = target?.isDeleted ? '삭제됨' : (target?.isHidden ? '가려짐' : '');
     const statusBadge = statusText ? ` <span class="text-muted">(${escapeHtml(statusText)})</span>` : '';
     const titleLine = postTitle ? escapeHtml(truncateText(postTitle, 100)) : `${escapeHtml(typeLabel)} #${escapeHtml(targetId)}`;
