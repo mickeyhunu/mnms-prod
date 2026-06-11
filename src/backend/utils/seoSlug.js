@@ -15,6 +15,17 @@ function createSeoSlug(value = '', fallback = 'detail') {
   return normalized || fallback;
 }
 
+function createSeoSlugWithId(title = '', id = null, fallbackPrefix = 'detail') {
+  const normalizedId = Number.parseInt(id, 10);
+  const hasValidId = Number.isInteger(normalizedId) && normalizedId > 0;
+  const fallback = hasValidId ? `${fallbackPrefix}-${normalizedId}` : fallbackPrefix;
+  const titleSlug = createSeoSlug(title, fallback);
+
+  if (!hasValidId) return titleSlug;
+  if (titleSlug === fallback && !String(title || '').trim()) return fallback;
+  return `${titleSlug}-${normalizedId}`;
+}
+
 function normalizeSeoSlug(value = '') {
   try {
     return createSeoSlug(decodeURIComponent(String(value || '')));
@@ -23,7 +34,18 @@ function normalizeSeoSlug(value = '') {
   }
 }
 
+function extractTrailingSlugId(slug = '') {
+  const normalizedSlug = normalizeSeoSlug(slug);
+  const match = normalizedSlug.match(/(?:^|-)(\d+)$/);
+  if (!match) return null;
+
+  const id = Number.parseInt(match[1], 10);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
 module.exports = {
   createSeoSlug,
+  createSeoSlugWithId,
+  extractTrailingSlugId,
   normalizeSeoSlug
 };
