@@ -437,23 +437,37 @@ function normalizeBooleanFlag(value) {
     return ['1', 'true', 'y', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
 }
 
-function buildBusinessProfileInfoRow(label, value, icon) {
-    return `<div><dt><span aria-hidden="true">${icon}</span>${label}</dt><dd>${value}</dd></div>`;
+function buildBusinessProfileInfoRow(label, value, icon, className = '') {
+    const rowClass = ['business-profile-info-item', className].filter(Boolean).join(' ');
+    return `<div class="${rowClass}"><dt><span aria-hidden="true">${icon}</span>${label}</dt><dd>${value}</dd></div>`;
 }
 
-function buildBusinessProfileContactInfoRows(ad) {
-    const contactRows = [];
+function buildBusinessProfileInfoPair(firstRow, secondRow) {
+    return `<div class="business-profile-info-pair">${firstRow}${secondRow}</div>`;
+}
+
+function buildBusinessProfileContactInfoGroup(managerContact, ad) {
+    const contactItems = [
+        { label: '연락처', value: managerContact, icon: '📞' }
+    ];
     const kakaoTalkId = String(ad?.kakaoTalkId || '').trim();
     const telegramId = String(ad?.telegramId || '').trim();
 
     if (kakaoTalkId) {
-        contactRows.push(buildBusinessProfileInfoRow('카카오톡', sanitizeHTML(kakaoTalkId), '💬'));
+        contactItems.push({ label: '카카오톡', value: sanitizeHTML(kakaoTalkId), icon: '💬' });
     }
     if (telegramId) {
-        contactRows.push(buildBusinessProfileInfoRow('텔레그램', sanitizeHTML(telegramId), '✈️'));
+        contactItems.push({ label: '텔레그램', value: sanitizeHTML(telegramId), icon: '✈️' });
     }
 
-    return contactRows.join('');
+    const contactMarkup = contactItems.map((item) => `
+        <span class="business-profile-contact-item">
+            <span class="business-profile-contact-label"><span aria-hidden="true">${item.icon}</span>${item.label}</span>
+            <span class="business-profile-contact-value">${item.value}</span>
+        </span>
+    `).join('');
+
+    return `<div class="business-profile-info-item business-profile-info-item--contact"><dt><span aria-hidden="true">📞</span>연락처</dt><dd>${contactMarkup}</dd></div>`;
 }
 
 function buildBusinessProfileMapMarkup(ad) {
@@ -520,7 +534,7 @@ function buildBusinessProfileDetailMarkup(ad) {
     const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
     const imageUrl = sanitizeHTML(ad.imageUrl || BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL);
     const description = sanitizeBusinessRichText(ad.description || '');
-    const contactInfoRows = buildBusinessProfileContactInfoRows(ad);
+    const contactInfoGroup = buildBusinessProfileContactInfoGroup(managerContact, ad);
     const mapMarkup = buildBusinessProfileMapMarkup(ad);
     const additionalInfoMarkup = buildBusinessProfileAdditionalInfoMarkup(ad);
     const externalUrl = normalizeBusinessProfileLinkUrl(ad.linkUrl || '');
@@ -543,12 +557,15 @@ function buildBusinessProfileDetailMarkup(ad) {
                 </div>
             </div>
             <dl class="business-profile-info">
-                ${buildBusinessProfileInfoRow('업체명', businessName, '🏢')}
-                ${buildBusinessProfileInfoRow('담당자', managerName, '👤')}
-                ${buildBusinessProfileInfoRow('연락처', managerContact, '📞')}
-                ${contactInfoRows}
-                ${buildBusinessProfileInfoRow('지역', `${regionLabel} ${district}`, '📍')}
-                ${buildBusinessProfileInfoRow('업종', category, '🏷️')}
+                ${buildBusinessProfileInfoPair(
+                    buildBusinessProfileInfoRow('업체명', businessName, '🏢'),
+                    buildBusinessProfileInfoRow('담당자', managerName, '👤')
+                )}
+                ${contactInfoGroup}
+                ${buildBusinessProfileInfoPair(
+                    buildBusinessProfileInfoRow('지역', `${regionLabel} ${district}`, '📍'),
+                    buildBusinessProfileInfoRow('업종', category, '🏷️')
+                )}
             </dl>
             <section class="business-profile-description" aria-label="업체 상세정보">
                 <h3>상세정보</h3>
