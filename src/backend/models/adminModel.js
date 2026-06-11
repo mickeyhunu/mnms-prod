@@ -2,7 +2,7 @@
  * 파일 역할: 관리자 전용 회원/광고 데이터 조회 및 수정 쿼리를 담당하는 모델 파일.
  */
 const { getPool, getChatbotPool } = require('../config/database');
-const { normalizeSeoSlug } = require('../utils/seoSlug');
+const { createSeoSlugWithId, extractTrailingSlugId, normalizeSeoSlug } = require('../utils/seoSlug');
 const { pickUserRow } = require('../utils/response');
 const { ensureResolvedLoginRestriction, getUserActivityStats, getUserActivityDetails, getUserLoginHistories, getBusinessProfileByUserId, updateBusinessProfileReviewByUserId: updateBusinessProfileReviewRecordByUserId, updateBusinessAuthorNicknameSnapshots } = require('./userModel');
 const { getStoreByNo, listStores } = require('./liveModel');
@@ -741,6 +741,19 @@ async function findPublicBusinessAdById(adId) {
 async function findPublicBusinessAdBySlug(slug) {
   const normalizedSlug = normalizeSeoSlug(slug);
   if (!normalizedSlug) return null;
+
+  const slugId = extractTrailingSlugId(normalizedSlug);
+  if (slugId) {
+    const adById = await findPublicBusinessAdById(slugId);
+    if (adById) {
+      const canonicalSlug = normalizeSeoSlug(createSeoSlugWithId(adById.title || adById.businessName, adById.id, 'business'));
+      const fallbackSlug = normalizeSeoSlug(`business-${adById.id}`);
+      const numericSlug = String(adById.id);
+      if ([canonicalSlug, fallbackSlug, numericSlug].includes(normalizedSlug)) {
+        return adById;
+      }
+    }
+  }
 
   const ads = await listPublicBusinessAds();
   return ads.find((ad) => normalizeSeoSlug(ad.title || ad.businessName) === normalizedSlug) || null;
