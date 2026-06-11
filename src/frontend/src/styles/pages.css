@@ -3600,22 +3600,23 @@ body[data-page="admin"] {
 }
 
 .ad-profile-stamp-event-fields {
-    display: grid;
+    display: flex;
+    align-items: center;
     gap: 10px;
 }
 
-.ad-profile-stamp-event-fields textarea {
-    width: 100%;
-    min-height: 82px;
-    resize: vertical;
+.ad-profile-stamp-event-fields > input[type="text"] {
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
-.ad-profile-stamp-event-fields textarea:disabled {
+.ad-profile-stamp-event-fields > input[type="text"]:disabled {
     background: #f3f4f6;
     color: #9ca3af;
 }
 
 .ad-profile-stamp-event-count {
+    flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
