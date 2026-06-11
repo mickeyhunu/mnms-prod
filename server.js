@@ -31,6 +31,7 @@ const PORT = Number(process.env.PORT || 8080);
 const FRONTEND_DIR = path.join(__dirname, 'src/frontend');
 const INDEX_HTML_PATH = path.join(FRONTEND_DIR, 'index.html');
 const SITE_ORIGIN = String(process.env.SITE_ORIGIN || process.env.PUBLIC_SITE_URL || 'https://nightmens.com').replace(/\/$/, '');
+const KAKAO_MAP_APP_KEY = String(process.env.PUBLIC_KAKAO_MAP_APP_KEY || process.env.KAKAO_MAP_JAVASCRIPT_KEY || process.env.KAKAO_MAP_APP_KEY || '').trim();
 let isDatabaseReady = false;
 const trustProxyValue = String(process.env.TRUST_PROXY || '1').trim();
 
@@ -256,7 +257,8 @@ function renderSeoHtml(indexHtml, seo) {
     `<meta name="twitter:title" content="${escapeHtml(seo.title)}" />`,
     `<meta name="twitter:description" content="${escapeHtml(seo.description)}" />`,
     `<meta name="twitter:image" content="${escapeHtml(seo.imageUrl)}" />`,
-    `<script type="application/ld+json" data-seo-jsonld="server">${escapeJsonForHtml(structuredData)}</script>`
+    `<script type="application/ld+json" data-seo-jsonld="server">${escapeJsonForHtml(structuredData)}</script>`,
+    `<script>window.MNMS_PUBLIC_CONFIG=${escapeJsonForHtml({ kakaoMapAppKey: KAKAO_MAP_APP_KEY })};</script>`
   ].join('\n  ');
 
   return indexHtml
