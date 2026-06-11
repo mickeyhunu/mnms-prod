@@ -10,7 +10,7 @@ const { findByNicknameExceptUser } = require('../models/userModel');
 const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddleware');
 const { LOGIN_STATUS } = require('../utils/loginRestriction');
 const { deleteS3ObjectByUrl, deleteS3ObjectsByUrls } = require('../utils/fileUpload');
-const { collectBusinessInfoImageUrls, deleteUnreferencedBusinessInfoImages } = require('../utils/businessProfileImages');
+const { collectBusinessInfoImageUrls, deleteRejectedBusinessInfoImages, deleteUnreferencedBusinessInfoImages } = require('../utils/businessProfileImages');
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validatePassword } = require('../utils/authPolicy');
 const { hashPassword } = require('../utils/passwordHasher');
@@ -199,8 +199,8 @@ router.put('/business-applications/:userId/review', async (req, res, next) => {
     await adminModel.reviewBusinessApplication(userId, { approvalStatus, rejectionReason, reviewedBy: req.user?.id || null });
     if (approvalStatus === 'APPROVED') {
       await deleteUnreferencedBusinessInfoImages(profile.lastApprovedBusinessInfo, [profile.businessInfo]);
-    } else if (profile.lastApprovedBusinessInfo) {
-      await deleteUnreferencedBusinessInfoImages(profile.businessInfo, [profile.lastApprovedBusinessInfo]);
+    } else {
+      await deleteRejectedBusinessInfoImages(profile.businessInfo, profile.lastApprovedBusinessInfo);
     }
     res.json({ success: true, message: approvalStatus === 'APPROVED' ? '기업회원 신청/변경을 승인했습니다.' : '기업회원 신청/변경을 반려했습니다.' });
   } catch (error) {
@@ -390,8 +390,8 @@ router.put('/users/:id', async (req, res, next) => {
       if (previousBusinessProfile) {
         if (businessApprovalStatus === 'APPROVED') {
           await deleteUnreferencedBusinessInfoImages(previousBusinessProfile.lastApprovedBusinessInfo, [previousBusinessProfile.businessInfo]);
-        } else if (previousBusinessProfile.lastApprovedBusinessInfo) {
-          await deleteUnreferencedBusinessInfoImages(previousBusinessProfile.businessInfo, [previousBusinessProfile.lastApprovedBusinessInfo]);
+        } else if (businessApprovalStatus === 'REJECTED') {
+          await deleteRejectedBusinessInfoImages(previousBusinessProfile.businessInfo, previousBusinessProfile.lastApprovedBusinessInfo);
         }
       }
     }
