@@ -467,7 +467,7 @@ function buildBusinessProfileContactInfoGroup(managerContact, ad) {
         </span>
     `).join('');
 
-    return `<div class="business-profile-info-item business-profile-info-item--contact"><dt><span aria-hidden="true">📞</span>연락처</dt><dd>${contactMarkup}</dd></div>`;
+    return `<div class="business-profile-info-item business-profile-info-item--contact"><dd>${contactMarkup}</dd></div>`;
 }
 
 function buildBusinessProfileMapMarkup(ad) {
@@ -480,7 +480,7 @@ function buildBusinessProfileMapMarkup(ad) {
     const fullAddress = [businessAddress, businessAddressDetail].filter(Boolean).join(' ');
 
     return `
-        <section class="business-profile-extra business-profile-location" aria-label="위치정보">
+        <section class="business-profile-extra" aria-label="위치정보">
             <h3>위치정보</h3>
             <div class="business-profile-mini-map" title="${sanitizeHTML(fullAddress)} 카카오맵 미니맵" data-kakao-map-address="${sanitizeHTML(fullAddress)}">${buildKakaoMapFallbackMarkup(fullAddress, '카카오맵 미니맵을 불러오는 중입니다.')}</div>
             <a class="business-profile-map-link" href="${buildKakaoMapSearchUrl(fullAddress)}" target="_blank" rel="noopener noreferrer">카카오맵에서 크게 보기</a>
