@@ -47,8 +47,9 @@ let kakaoMapLoader = null;
 let businessOcrLoader = null;
 let businessOcrRequestId = 0;
 let currentBusinessProfileAd = null;
+const BUSINESS_PROFILE_VISIT_LIMIT_GUIDE = '방문인증 스탬프는 동일 광고 기준 하루 최대 1회, 회원당 하루 최대 3개까지 지급됩니다.';
 const BUSINESS_PROFILE_STAMP_GUIDE_MESSAGES = {
-    visit: '하단 이벤트버튼 -> 방문 인증 버튼을 클릭하면 방문인증이 신청되며\n광고담당자가 확인 후 승인시 스탬프가 지급됩니다.',
+    visit: `하단 이벤트버튼 -> 방문 인증 버튼을 클릭하면 방문인증이 신청되며\n광고담당자가 확인 후 승인시 스탬프가 지급됩니다.\n${BUSINESS_PROFILE_VISIT_LIMIT_GUIDE}`,
     stamp: '하단 이벤트버튼 -> 스탬프 사용 버튼을 클릭하면 스탬프사용이 신청되며\n광고담당자가 확인 후 승인시 보유한 스탬프가 차감됩니다.'
 };
 
@@ -635,7 +636,7 @@ function openBusinessProfileEventModal(ad) {
     const stampEventCount = getBusinessProfileStampEventCount(ad);
     if (title) title.textContent = '스탬프 이벤트';
     if (description) {
-        description.textContent = '방문 인증시 스탬프 1개가 지급됩니다. 이벤트 혜택 사용시 아래 버튼을 선택해주세요.';
+        description.textContent = `광고담당자 승인시\n방문인증 = 스탬프 1개 지급\n스탬프 사용 = 설정 갯수만큼 차감됩니다.\n${BUSINESS_PROFILE_VISIT_LIMIT_GUIDE}`;
     }
     actions?.classList.remove('hidden');
     visitVerificationButton?.classList.toggle('hidden', !hasBusinessProfileVisitVerification(ad));
