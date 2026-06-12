@@ -4416,6 +4416,52 @@ body[data-page="admin"] {
     margin-top: 16px;
 }
 
+
+.business-profile-stamp-visit-guide {
+    display: inline-block;
+    margin-top: 4px;
+    color: #2563eb;
+    font-weight: 700;
+}
+
+.business-profile-event-modal-panel h3 {
+    margin: 0 0 8px;
+    padding-right: 42px;
+    color: #111827;
+    font-size: 20px;
+}
+
+.business-profile-event-modal-description {
+    margin: 0 0 18px;
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+.business-profile-event-modal-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.btn.btn-primary.business-profile-event-action {
+    min-height: 48px;
+    border-color: #2563eb;
+    background: #2563eb;
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+}
+
+.btn.btn-primary.business-profile-event-action--stamp {
+    border-color: #7c3aed;
+    background: #7c3aed;
+    box-shadow: 0 10px 24px rgba(124, 58, 237, 0.18);
+}
+
+@media (max-width: 480px) {
+    .business-profile-event-modal-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
 body.business-profile-modal-open {
     overflow: hidden;
 }

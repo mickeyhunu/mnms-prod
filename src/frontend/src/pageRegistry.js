@@ -128,10 +128,22 @@ const pageRegistry = {
         </div>
         <footer class="bottom-nav-footer hidden" id="business-profile-call-footer">
             <div class="business-profile-call-bar" id="business-profile-call-bar">
-                <a class="btn btn-primary business-profile-visit-button" id="business-profile-visit-button" href="#">방문신청</a>
+                <button type="button" class="btn btn-primary business-profile-visit-button hidden" id="business-profile-visit-button" aria-haspopup="dialog" aria-controls="business-profile-event-modal">이벤트</button>
                 <a class="btn btn-primary business-profile-call-button" id="business-profile-call-button" href="#">전화하기</a>
             </div>
         </footer>
+        <div class="business-profile-modal business-profile-event-modal hidden" id="business-profile-event-modal" role="dialog" aria-modal="true" aria-labelledby="business-profile-event-modal-title">
+            <div class="business-profile-modal-backdrop" data-business-profile-event-close></div>
+            <div class="business-profile-modal-panel business-profile-event-modal-panel">
+                <button type="button" class="business-profile-modal-close" data-business-profile-event-close aria-label="이벤트 창 닫기">×</button>
+                <h3 id="business-profile-event-modal-title">스탬프 이벤트</h3>
+                <p class="business-profile-event-modal-description" id="business-profile-event-modal-description">방문 인증 또는 스탬프 사용을 선택해주세요.</p>
+                <div class="business-profile-event-modal-actions">
+                    <button type="button" class="btn btn-primary business-profile-event-action" id="business-profile-visit-verification-button">방문 인증</button>
+                    <button type="button" class="btn btn-primary business-profile-event-action business-profile-event-action--stamp" id="business-profile-stamp-use-button">스탬프 사용</button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script src="scripts/js/utils/constants.js"></script>
