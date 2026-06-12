@@ -4440,12 +4440,23 @@ body[data-page="admin"] {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    border: 0;
     border-radius: 999px;
     padding: 4px 8px;
+    background: transparent;
     color: #2563eb;
+    font-family: inherit;
     font-size: 12px;
     font-weight: 800;
     white-space: nowrap;
+    cursor: pointer;
+}
+
+.business-profile-stamp-summary-label:hover,
+.business-profile-stamp-summary-label:focus-visible {
+    background: #eff6ff;
+    outline: 2px solid transparent;
+    text-decoration: underline;
 }
 
 .business-profile-stamp-summary-value {
@@ -4468,6 +4479,7 @@ body[data-page="admin"] {
     margin: 0 0 18px;
     color: #4b5563;
     line-height: 1.6;
+    white-space: pre-line;
 }
 
 .business-profile-event-modal-actions {
