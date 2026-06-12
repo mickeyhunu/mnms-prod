@@ -278,11 +278,11 @@ const pageRegistry = {
                             <input id="ad-profile-stamp-event-description" type="text" maxlength="200" placeholder="광고페이지에 노출할 이벤트 설명을 입력해주세요." disabled>
                             <label class="ad-profile-stamp-event-count" for="ad-profile-stamp-event-count">
                                 <span>스탬프 차감갯수</span>
-                                <input id="ad-profile-stamp-event-count" type="number" min="1" max="999" inputmode="numeric" placeholder="0" disabled>
+                                <input id="ad-profile-stamp-event-count" type="number" min="5" max="999" inputmode="numeric" placeholder="5" disabled>
                                 <span>개</span>
                             </label>
                         </div>
-                        <p class="ad-profile-map-toggle-help">체크하면 이벤트 설명과 스탬프 차감갯수를 필수로 입력해주세요.</p>
+                        <p class="ad-profile-map-toggle-help">체크하면 이벤트 설명과 스탬프 차감갯수(최소 5개)를 필수로 입력해주세요.</p>
                     </div>
                 </div>
 

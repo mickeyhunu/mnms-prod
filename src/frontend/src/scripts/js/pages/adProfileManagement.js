@@ -31,6 +31,7 @@ const adProfileState = {
 };
 const DEFAULT_AD_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
+const MIN_STAMP_EVENT_COUNT = 5;
 function createHourOptions(hourSelect) {
     if (!hourSelect) return;
     const options = ['시간선택'];
@@ -402,8 +403,8 @@ function getStampEventFieldError({ useStampEvent, stampEventDescription, stampEv
     if (!String(stampEventDescription || '').trim()) {
         return '이벤트 설명.';
     }
-    if (!Number.isInteger(Number(stampEventCount)) || Number(stampEventCount) <= 0) {
-        return '스탬프 이벤트 사용시 차감되는 스탬프 갯수를 입력해주세요.';
+    if (!Number.isInteger(Number(stampEventCount)) || Number(stampEventCount) < MIN_STAMP_EVENT_COUNT) {
+        return `스탬프 이벤트는 스탬프 ${MIN_STAMP_EVENT_COUNT}개부터 설정할 수 있습니다.`;
     }
     return '';
 }
