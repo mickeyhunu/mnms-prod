@@ -57,6 +57,20 @@ async function getTodayVisitVerificationRequestPlaceCount(connection, applicantU
   return Number(rows[0]?.totalRequestPlaces || 0);
 }
 
+async function hasStampUseRequestToday(connection, applicantUserId) {
+  const [rows] = await connection.query(
+    `SELECT id
+       FROM stamp_event_requests
+      WHERE applicant_user_id = ?
+        AND request_type = 'STAMP_USE'
+        AND created_at >= CURRENT_DATE()
+        AND created_at < CURRENT_DATE() + INTERVAL 1 DAY
+      LIMIT 1`,
+    [applicantUserId]
+  );
+  return rows.length > 0;
+}
+
 async function hasVisitVerificationRequestForAdToday(connection, applicantUserId, businessAdId) {
   const [rows] = await connection.query(
     `SELECT id
@@ -216,6 +230,12 @@ async function createStampEventRequest({ businessAdId, applicantUserId, requestT
     }
 
     if (normalizedType === REQUEST_TYPES.STAMP_USE) {
+      if (await hasStampUseRequestToday(connection, applicantUserId)) {
+        const error = new Error('스탬프 사용 이벤트는 여러 업소를 통틀어 하루 한 번만 참여할 수 있습니다.');
+        error.status = 429;
+        throw error;
+      }
+
       const balance = await getStampBalanceForConnection(connection, applicantUserId, STAMP_TYPES.MEMBER);
       if (balance < stampAmount) {
         const error = new Error('보유 스탬프가 부족합니다.');
