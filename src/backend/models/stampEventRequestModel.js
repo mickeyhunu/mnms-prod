@@ -17,6 +17,16 @@ const REQUEST_STATUSES = {
 
 const DAILY_VISIT_VERIFICATION_LIMIT = 3;
 
+function getStampUseOwnerDeductionAmount(stampAmount) {
+  const amount = Math.max(0, Number(stampAmount || 0));
+  return Math.floor(amount / 10) + 1;
+}
+
+function getStampUseOwnerRewardAmount(stampAmount) {
+  const amount = Math.max(0, Number(stampAmount || 0));
+  return Math.max(0, amount - getStampUseOwnerDeductionAmount(amount));
+}
+
 function normalizeRequestType(value) {
   const normalized = String(value || '').trim().toUpperCase();
   return Object.prototype.hasOwnProperty.call(REQUEST_TYPES, normalized) ? normalized : '';
@@ -402,7 +412,7 @@ async function reviewStampEventRequest({ requestId, ownerUserId, status, rejecti
            VALUES (?, 'MEMBER', 'SERVICE_BOTTLE_USE', ?, ?, ?)`,
           [request.applicant_user_id, -amount, `${businessName} 스탬프 사용 승인`, `STAMP-EVENT-${request.id}-APPLICANT`]
         );
-        const ownerRewardAmount = Math.max(0, amount - 1);
+        const ownerRewardAmount = getStampUseOwnerRewardAmount(amount);
         if (ownerRewardAmount > 0) {
           await connection.query(
             `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)

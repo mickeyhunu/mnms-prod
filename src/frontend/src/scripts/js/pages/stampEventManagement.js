@@ -92,9 +92,19 @@
         }
     }
 
+    function getStampUseOwnerDeductionAmount(stampAmount) {
+        const amount = Math.max(0, Number(stampAmount || 0));
+        return Math.floor(amount / 10) + 1;
+    }
+
+    function getStampUseOwnerRewardAmount(stampAmount) {
+        const amount = Math.max(0, Number(stampAmount || 0));
+        return Math.max(0, amount - getStampUseOwnerDeductionAmount(amount));
+    }
+
     async function reviewRequest(requestId, status, itemElement) {
         const stampAmount = Number(itemElement?.dataset.stampAmount || 0);
-        const ownerRewardAmount = Math.max(0, stampAmount - 1);
+        const ownerRewardAmount = getStampUseOwnerRewardAmount(stampAmount);
         const isVisitVerification = itemElement?.dataset.requestType === 'VISIT_VERIFICATION';
         const approveMessage = isVisitVerification
             ? '승인시 스탬프 1개가 차감됩니다. 승인하시겠습니까?'
