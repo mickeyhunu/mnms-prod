@@ -113,6 +113,7 @@ const NOINDEX_PATHS = new Set([
   '/stamp-purchase',
   '/ad-purchase',
   '/ad-order-history',
+  '/stamp-event-management',
   '/business-apply',
   '/ad-profile-management',
   '/business-management',

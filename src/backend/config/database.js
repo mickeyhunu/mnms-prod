@@ -1058,6 +1058,30 @@ async function initDatabase() {
 
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS stamp_event_requests (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      business_ad_id BIGINT NOT NULL,
+      owner_user_id BIGINT NOT NULL,
+      applicant_user_id BIGINT NOT NULL,
+      request_type ENUM('VISIT_VERIFICATION','STAMP_USE') NOT NULL,
+      status ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
+      stamp_amount INT NOT NULL DEFAULT 1,
+      rejection_reason VARCHAR(500) NOT NULL DEFAULT '',
+      reviewed_by BIGINT NULL,
+      reviewed_at DATETIME NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_stamp_event_requests_owner_status_created (owner_user_id, status, created_at),
+      INDEX idx_stamp_event_requests_applicant_status (applicant_user_id, status),
+      CONSTRAINT fk_stamp_event_requests_ad FOREIGN KEY (business_ad_id) REFERENCES business_ads(id) ON DELETE CASCADE,
+      CONSTRAINT fk_stamp_event_requests_owner FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE CASCADE,
+      CONSTRAINT fk_stamp_event_requests_applicant FOREIGN KEY (applicant_user_id) REFERENCES users(id) ON DELETE CASCADE,
+      CONSTRAINT fk_stamp_event_requests_reviewer FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS support_articles (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       category ENUM('NOTICE','FAQ') NOT NULL,

@@ -729,6 +729,59 @@ const pageRegistry = {
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/adOrderHistory.js", "scripts/js/components/footerNav.js"]
   },
+  'stamp-event-management': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <a href="/my-page" class="community-back-link icon-btn icon-btn-square" aria-label="마이페이지로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
+                    <span class="community-board-name">스탬프 이벤트 관리</span>
+                </div>
+            </header>
+
+            <div class="ad-order-history-caption">
+                <p>내 광고에 신청된 방문인증 신청과 스탬프사용 신청을 확인하고 승인 또는 반려할 수 있어요.</p>
+                <p id="stamp-event-management-summary">신청 내역을 확인 중입니다.</p>
+            </div>
+
+            <section class="ad-order-history-card stamp-event-management-card" aria-label="스탬프 이벤트 신청 관리">
+                <div class="stamp-event-management-toolbar">
+                    <label for="stamp-event-management-status">상태</label>
+                    <select id="stamp-event-management-status">
+                        <option value="PENDING">대기</option>
+                        <option value="APPROVED">승인</option>
+                        <option value="REJECTED">반려</option>
+                    </select>
+                </div>
+                <div class="ad-order-history-empty hidden" id="stamp-event-management-empty">아직 신청 내역이 없습니다.</div>
+                <div class="ad-order-history-list stamp-event-management-list" id="stamp-event-management-list"></div>
+            </section>
+        </div>
+    </main>
+
+    <script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/stampEventManagement.js", "scripts/js/components/footerNav.js"]
+  },
   'community': communityPageConfig,
   'create-post': {
     template: `<header class="header">
@@ -1225,6 +1278,10 @@ const pageRegistry = {
                             </span>
                         </a>
                         <a class="mypage-link-item" href="/ad-order-history"><span>스탬프 결제 내역</span></a>
+                        <a class="mypage-link-item" href="/stamp-event-management">
+                            <span>스탬프 이벤트 관리</span>
+                            <span id="mypage-stamp-event-status" class="mypage-status-badge mypage-status-badge--unregistered">OFF</span>
+                        </a>
                         <a class="mypage-link-item hidden" id="business-member-apply-link" href="/business-apply">
                             <span class="mypage-link-main-text">기업회원 신청</span>
                             <span class="mypage-business-apply-status-wrap">

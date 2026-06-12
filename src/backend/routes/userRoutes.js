@@ -24,7 +24,10 @@ const {
   deleteMyBusinessAd,
   getMyBusinessProfile,
   saveMyBusinessProfile,
-  verifyMyBusinessRegistration
+  verifyMyBusinessRegistration,
+  createMyStampEventRequest,
+  myStampEventRequests,
+  reviewMyStampEventRequest
 } = require('../controllers/userController');
 
 const router = express.Router();
@@ -34,6 +37,9 @@ router.get('/me/points', authMiddleware, myPointHistories);
 router.get('/me/stamps', authMiddleware, myStampHistories);
 router.get('/me/stamps/payments', authMiddleware, myStampPaymentHistories);
 router.post('/me/stamps/purchases', authMiddleware, purchaseMyStamps);
+router.get('/me/stamp-event-requests', authMiddleware, myStampEventRequests);
+router.patch('/me/stamp-event-requests/:id', authMiddleware, reviewMyStampEventRequest);
+router.post('/me/business-ads/:id/stamp-event-requests', authMiddleware, createMyStampEventRequest);
 router.get('/me/activity', authMiddleware, myActivity);
 router.get('/me/live-access', authMiddleware, myLiveAccessStatus);
 router.get('/me/notifications', authMiddleware, myNotifications);
