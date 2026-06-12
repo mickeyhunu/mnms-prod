@@ -15,6 +15,8 @@ const REQUEST_STATUSES = {
   REJECTED: 'REJECTED'
 };
 
+const DAILY_VISIT_VERIFICATION_LIMIT = 3;
+
 function normalizeRequestType(value) {
   const normalized = String(value || '').trim().toUpperCase();
   return Object.prototype.hasOwnProperty.call(REQUEST_TYPES, normalized) ? normalized : '';
@@ -24,7 +26,6 @@ function normalizeRequestStatus(value) {
   const normalized = String(value || '').trim().toUpperCase();
   return Object.prototype.hasOwnProperty.call(REQUEST_STATUSES, normalized) ? normalized : REQUEST_STATUSES.PENDING;
 }
-
 
 function isRegularMemberRow(user = {}) {
   const role = String(user.role || '').toUpperCase();
@@ -41,6 +42,80 @@ async function getStampBalanceForConnection(connection, userId, stampType) {
     [userId, stampType]
   );
   return Math.max(0, Number(rows[0]?.totalStamps || 0));
+}
+
+async function getTodayVisitVerificationRequestPlaceCount(connection, applicantUserId) {
+  const [rows] = await connection.query(
+    `SELECT COUNT(DISTINCT business_ad_id) AS totalRequestPlaces
+       FROM stamp_event_requests
+      WHERE applicant_user_id = ?
+        AND request_type = 'VISIT_VERIFICATION'
+        AND created_at >= CURRENT_DATE()
+        AND created_at < CURRENT_DATE() + INTERVAL 1 DAY`,
+    [applicantUserId]
+  );
+  return Number(rows[0]?.totalRequestPlaces || 0);
+}
+
+async function hasVisitVerificationRequestForAdToday(connection, applicantUserId, businessAdId) {
+  const [rows] = await connection.query(
+    `SELECT id
+       FROM stamp_event_requests
+      WHERE applicant_user_id = ?
+        AND business_ad_id = ?
+        AND request_type = 'VISIT_VERIFICATION'
+        AND created_at >= CURRENT_DATE()
+        AND created_at < CURRENT_DATE() + INTERVAL 1 DAY
+      LIMIT 1`,
+    [applicantUserId, businessAdId]
+  );
+  return rows.length > 0;
+}
+
+async function hasApprovedVisitVerificationForAdToday(connection, applicantUserId, businessAdId, excludeRequestId = null) {
+  const params = [applicantUserId, businessAdId];
+  let excludeClause = '';
+  if (excludeRequestId) {
+    excludeClause = ' AND id <> ?';
+    params.push(excludeRequestId);
+  }
+
+  const [rows] = await connection.query(
+    `SELECT id
+       FROM stamp_event_requests
+      WHERE applicant_user_id = ?
+        AND business_ad_id = ?
+        AND request_type = 'VISIT_VERIFICATION'
+        AND status = 'APPROVED'
+        AND reviewed_at IS NOT NULL
+        AND reviewed_at >= CURRENT_DATE()
+        AND reviewed_at < CURRENT_DATE() + INTERVAL 1 DAY${excludeClause}
+      LIMIT 1`,
+    params
+  );
+  return rows.length > 0;
+}
+
+async function getTodayApprovedVisitVerificationCount(connection, applicantUserId, excludeRequestId = null) {
+  const params = [applicantUserId];
+  let excludeClause = '';
+  if (excludeRequestId) {
+    excludeClause = ' AND id <> ?';
+    params.push(excludeRequestId);
+  }
+
+  const [rows] = await connection.query(
+    `SELECT COUNT(*) AS totalApprovals
+       FROM stamp_event_requests
+      WHERE applicant_user_id = ?
+        AND request_type = 'VISIT_VERIFICATION'
+        AND status = 'APPROVED'
+        AND reviewed_at IS NOT NULL
+        AND reviewed_at >= CURRENT_DATE()
+        AND reviewed_at < CURRENT_DATE() + INTERVAL 1 DAY${excludeClause}`,
+    params
+  );
+  return Number(rows[0]?.totalApprovals || 0);
 }
 
 function mapRequestRow(row = {}) {
@@ -124,6 +199,22 @@ async function createStampEventRequest({ businessAdId, applicantUserId, requestT
     }
 
     const stampAmount = isVisitRequest ? 1 : Math.max(1, Number(ad.stampEventCount || 0));
+    if (isVisitRequest) {
+      if (await hasApprovedVisitVerificationForAdToday(connection, applicantUserId, businessAdId)) {
+        const error = new Error('오늘 이미 승인된 광고에는 방문 인증을 다시 신청할 수 없습니다.');
+        error.status = 409;
+        throw error;
+      }
+
+      const todayRequestPlaceCount = await getTodayVisitVerificationRequestPlaceCount(connection, applicantUserId);
+      const requestedThisAdToday = await hasVisitVerificationRequestForAdToday(connection, applicantUserId, businessAdId);
+      if (!requestedThisAdToday && todayRequestPlaceCount >= DAILY_VISIT_VERIFICATION_LIMIT) {
+        const error = new Error(`방문 인증 신청은 하루 최대 ${DAILY_VISIT_VERIFICATION_LIMIT}곳까지만 가능합니다.`);
+        error.status = 429;
+        throw error;
+      }
+    }
+
     if (normalizedType === REQUEST_TYPES.STAMP_USE) {
       const balance = await getStampBalanceForConnection(connection, applicantUserId, STAMP_TYPES.MEMBER);
       if (balance < stampAmount) {
@@ -241,6 +332,28 @@ async function reviewStampEventRequest({ requestId, ownerUserId, status, rejecti
       const amount = Number(request.stamp_amount || 0);
       const businessName = request.business_name || request.title || '광고';
       if (request.request_type === REQUEST_TYPES.VISIT_VERIFICATION) {
+        await connection.query(
+          `SELECT id
+             FROM users
+            WHERE id = ?
+            LIMIT 1
+            FOR UPDATE`,
+          [request.applicant_user_id]
+        );
+
+        if (await hasApprovedVisitVerificationForAdToday(connection, request.applicant_user_id, request.business_ad_id, request.id)) {
+          const error = new Error('신청자가 오늘 이미 승인받은 광고는 다시 방문 인증 승인할 수 없습니다.');
+          error.status = 409;
+          throw error;
+        }
+
+        const todayApprovalCount = await getTodayApprovedVisitVerificationCount(connection, request.applicant_user_id, request.id);
+        if (todayApprovalCount >= DAILY_VISIT_VERIFICATION_LIMIT) {
+          const error = new Error(`방문 인증 스탬프 지급은 회원당 하루 최대 ${DAILY_VISIT_VERIFICATION_LIMIT}개까지만 가능합니다.`);
+          error.status = 429;
+          throw error;
+        }
+
         const ownerBalance = await getStampBalanceForConnection(connection, request.owner_user_id, STAMP_TYPES.BUSINESS);
         if (ownerBalance < 1) {
           const error = new Error('승인에 필요한 광고주 스탬프가 부족합니다.');
