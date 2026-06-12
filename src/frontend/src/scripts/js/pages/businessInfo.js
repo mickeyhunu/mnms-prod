@@ -563,8 +563,23 @@ function buildBusinessProfileMapMarkup(ad) {
     `;
 }
 
+function hasBusinessProfileVisitVerification(ad) {
+    return normalizeBooleanFlag(ad?.useVisitVerification);
+}
+
+function hasBusinessProfileStampUseEvent(ad) {
+    return normalizeBooleanFlag(ad?.useStampEvent) && getBusinessProfileStampEventCount(ad) > 0;
+}
+
 function hasBusinessProfileStampEvent(ad) {
-    return normalizeBooleanFlag(ad?.useStampEvent || ad?.useVisitVerification);
+    return hasBusinessProfileVisitVerification(ad) || hasBusinessProfileStampUseEvent(ad);
+}
+
+function isRegularMemberForBusinessEvent(user) {
+    if (!user) return false;
+    const role = String(user.role || '').toUpperCase();
+    const memberType = String(user.memberType || user.member_type || user.accountType || '').toUpperCase();
+    return role === 'MEMBER' && memberType === 'MEMBER';
 }
 
 function getBusinessProfileStampEventCount(ad) {
@@ -572,24 +587,32 @@ function getBusinessProfileStampEventCount(ad) {
 }
 
 function buildBusinessProfileAdditionalInfoMarkup(ad) {
-    const useStampEvent = hasBusinessProfileStampEvent(ad);
+    const useVisitVerification = hasBusinessProfileVisitVerification(ad);
+    const useStampUseEvent = hasBusinessProfileStampUseEvent(ad);
     const stampEventDescription = sanitizeHTML(String(ad?.stampEventDescription || '').trim());
     const stampEventCount = getBusinessProfileStampEventCount(ad);
     const stampEventCountLabel = stampEventCount.toLocaleString('ko-KR');
+    const stampRows = [];
     const infoRows = [];
 
-    if (useStampEvent && stampEventDescription && stampEventCount > 0) {
-        infoRows.push(buildBusinessProfileInfoRow(
-            '스탬프 이벤트',
-            `<div class="business-profile-stamp-summary">
+    if (useVisitVerification) {
+        stampRows.push(`
                 <div class="business-profile-stamp-summary-row">
                     <button type="button" class="business-profile-stamp-summary-label" data-business-profile-stamp-guide="visit" aria-label="방문 인증 안내 보기">방문 인증시</button>
                     <span class="business-profile-stamp-summary-value">스탬프 1개 지급</span>
-                </div>
+                </div>`);
+    }
+    if (useStampUseEvent && stampEventDescription) {
+        stampRows.push(`
                 <div class="business-profile-stamp-summary-row">
                     <button type="button" class="business-profile-stamp-summary-label" data-business-profile-stamp-guide="stamp" aria-label="스탬프 ${stampEventCountLabel}개 사용 안내 보기">스탬프 ${stampEventCountLabel}개 사용시</button>
                     <span class="business-profile-stamp-summary-value">${stampEventDescription}</span>
-                </div>
+                </div>`);
+    }
+    if (stampRows.length) {
+        infoRows.push(buildBusinessProfileInfoRow(
+            '스탬프 이벤트',
+            `<div class="business-profile-stamp-summary">${stampRows.join('')}
             </div>`,
             '🎟️',
             'business-profile-info-item--stamp'
@@ -606,6 +629,7 @@ function openBusinessProfileEventModal(ad) {
     const description = document.getElementById('business-profile-event-modal-description');
     const actions = document.getElementById('business-profile-event-modal-actions');
     const stampUseButton = document.getElementById('business-profile-stamp-use-button');
+    const visitVerificationButton = document.getElementById('business-profile-visit-verification-button');
     if (!modal) return;
 
     const stampEventCount = getBusinessProfileStampEventCount(ad);
@@ -614,6 +638,8 @@ function openBusinessProfileEventModal(ad) {
         description.textContent = '방문 인증시 스탬프 1개가 지급됩니다. 이벤트 혜택 사용시 아래 버튼을 선택해주세요.';
     }
     actions?.classList.remove('hidden');
+    visitVerificationButton?.classList.toggle('hidden', !hasBusinessProfileVisitVerification(ad));
+    stampUseButton?.classList.toggle('hidden', !hasBusinessProfileStampUseEvent(ad));
     if (stampUseButton) {
         stampUseButton.textContent = `스탬프 사용 ${stampEventCount.toLocaleString('ko-KR')}개`;
         stampUseButton.setAttribute('aria-label', `스탬프 ${stampEventCount.toLocaleString('ko-KR')}개 사용`);
@@ -652,7 +678,27 @@ async function submitBusinessProfileStampEventRequest(requestType) {
         return;
     }
 
+    const currentUser = Auth.getUser();
+    if (currentUser && !isRegularMemberForBusinessEvent(currentUser)) {
+        alert('광고 이벤트는 일반 회원만 참여할 수 있습니다.');
+        return;
+    }
+
     const label = requestType === 'VISIT_VERIFICATION' ? '방문인증' : '스탬프사용';
+    const requiredStamps = getBusinessProfileStampEventCount(ad);
+    if (requestType === 'STAMP_USE') {
+        try {
+            const stampResponse = await APIClient.get('/users/me/stamps', { limit: 1 });
+            const totalStamps = Number(stampResponse?.totalStamps || 0);
+            if (totalStamps < requiredStamps) {
+                alert(`보유 스탬프가 부족합니다. 필요 스탬프: ${requiredStamps.toLocaleString('ko-KR')}개 / 보유 스탬프: ${totalStamps.toLocaleString('ko-KR')}개`);
+                return;
+            }
+        } catch (error) {
+            alert(error.message || '보유 스탬프를 확인하지 못했습니다.');
+            return;
+        }
+    }
     if (!window.confirm(`${label}을 신청하시겠습니까?`)) return;
 
     try {
@@ -811,7 +857,7 @@ async function initBusinessProfileDetailPage() {
         });
         initializeBusinessProfileKakaoMaps(detail);
         const telHref = getBusinessProfileTelHref(ad.managerContact);
-        const useStampEvent = hasBusinessProfileStampEvent(ad) && getBusinessProfileStampEventCount(ad) > 0;
+        const useStampEvent = hasBusinessProfileStampEvent(ad);
         if (telHref && callButton && visitButton && callBar) {
             visitButton.textContent = '이벤트';
             visitButton.setAttribute('aria-label', `${getBusinessProfileTitle(ad)} 이벤트`);
