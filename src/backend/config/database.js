@@ -270,7 +270,6 @@ async function initDatabase() {
     await pool.query('ALTER TABLE users ADD COLUMN total_points BIGINT NOT NULL DEFAULT 0 AFTER role');
   }
 
-
   const [memberTypeColumn] = await pool.query(
     `SELECT 1
      FROM INFORMATION_SCHEMA.COLUMNS
@@ -783,7 +782,6 @@ async function initDatabase() {
     await pool.query("ALTER TABLE posts ADD COLUMN board_type ENUM('FREE','ANON','REVIEW','STORY','ATTENDANCE','QUESTION','EVENT','PROMOTION') NOT NULL DEFAULT 'FREE' AFTER user_id");
   }
 
-
   await pool.query("ALTER TABLE posts MODIFY COLUMN board_type ENUM('FREE','ANON','REVIEW','STORY','ATTENDANCE','QUESTION','EVENT','PROMOTION') NOT NULL DEFAULT 'FREE'");
 
   const [isNoticeColumn] = await pool.query(
@@ -813,7 +811,6 @@ async function initDatabase() {
   if (!noticeTargetColumn.length) {
     await pool.query('ALTER TABLE posts ADD COLUMN notice_target_boards VARCHAR(50) NULL AFTER is_notice');
   }
-
 
   const [noticeTypeColumn] = await pool.query(
     `SELECT 1
@@ -1014,7 +1011,6 @@ async function initDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
-
   await pool.query(`
     ALTER TABLE point_histories
     MODIFY COLUMN action_type ENUM('REGISTER','LOGIN_DAILY','CREATE_POST','CREATE_REVIEW_BONUS','CREATE_COMMENT','LIKE_POST','RECEIVE_POST_LIKE','REVOKE_CREATE_POST','REVOKE_CREATE_REVIEW_BONUS','REVOKE_CREATE_COMMENT','REVOKE_LIKE_POST','REVOKE_RECEIVE_POST_LIKE','ADMIN_ADJUST_ADD','ADMIN_ADJUST_DEDUCT') NOT NULL
@@ -1034,7 +1030,6 @@ async function initDatabase() {
     await pool.query('ALTER TABLE point_histories ADD COLUMN reason VARCHAR(255) NULL AFTER points');
   }
 
-
   await pool.query(`
     CREATE TABLE IF NOT EXISTS stamp_histories (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -1050,12 +1045,10 @@ async function initDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
-
   await pool.query(`
     ALTER TABLE stamp_histories
     MODIFY COLUMN action_type ENUM('STAMP_PURCHASE','STAMP_PURCHASE_CANCEL','VISIT_VERIFICATION','SERVICE_BOTTLE_USE','BUSINESS_AD_BRONZE','BUSINESS_AD_SILVER','BUSINESS_AD_GOLD','ADMIN_ADJUST_ADD','ADMIN_ADJUST_DEDUCT','EXPIRED') NOT NULL
   `);
-
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS stamp_event_requests (
@@ -1080,6 +1073,33 @@ async function initDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
+  await ensureIndex(
+    pool,
+    'stamp_event_requests',
+    'idx_stamp_event_requests_applicant_type_created',
+    'CREATE INDEX idx_stamp_event_requests_applicant_type_created ON stamp_event_requests (applicant_user_id, request_type, created_at)'
+  );
+
+  await ensureIndex(
+    pool,
+    'stamp_event_requests',
+    'idx_stamp_event_requests_applicant_type_status_reviewed',
+    'CREATE INDEX idx_stamp_event_requests_applicant_type_status_reviewed ON stamp_event_requests (applicant_user_id, request_type, status, reviewed_at)'
+  );
+
+  await ensureIndex(
+    pool,
+    'stamp_event_requests',
+    'idx_stamp_event_requests_applicant_ad_type_created',
+    'CREATE INDEX idx_stamp_event_requests_applicant_ad_type_created ON stamp_event_requests (applicant_user_id, business_ad_id, request_type, created_at)'
+  );
+
+  await ensureIndex(
+    pool,
+    'stamp_event_requests',
+    'idx_stamp_event_requests_applicant_ad_type_status_reviewed',
+    'CREATE INDEX idx_stamp_event_requests_applicant_ad_type_status_reviewed ON stamp_event_requests (applicant_user_id, business_ad_id, request_type, status, reviewed_at)'
+  );
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS support_articles (
@@ -1156,8 +1176,6 @@ async function initDatabase() {
   if (!supportViewCountColumn.length) {
     await pool.query('ALTER TABLE support_articles ADD COLUMN view_count BIGINT NOT NULL DEFAULT 0 AFTER content');
   }
-
-
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS support_inquiries (
