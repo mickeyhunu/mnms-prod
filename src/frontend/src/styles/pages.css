@@ -4490,25 +4490,6 @@ body[data-page="admin"] {
     box-shadow: 0 10px 24px rgba(124, 58, 237, 0.18);
 }
 
-@media (max-width: 480px) {
-    .business-profile-stamp-summary-row {
-        grid-template-columns: 1fr;
-        gap: 4px;
-    }
-
-    .business-profile-stamp-summary-label {
-        justify-self: start;
-    }
-
-    .business-profile-stamp-summary-value {
-        padding-top: 0;
-    }
-
-    .business-profile-event-modal-actions {
-        grid-template-columns: 1fr;
-    }
-}
-
 body.business-profile-modal-open {
     overflow: hidden;
 }
@@ -5223,8 +5204,10 @@ body.business-profile-modal-open {
 
 .business-profile-standalone .business-profile-info-item {
     min-height: 48px;
-    grid-template-columns: minmax(112px, max-content) minmax(0, 1fr);
-    padding: 12px 14px;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 12px 14px;         
+    row-gap: 6px;
+    align-items: start;
 }
 
 .business-profile-standalone .business-profile-info dd {
@@ -5233,14 +5216,6 @@ body.business-profile-modal-open {
 
 .business-profile-standalone .business-profile-link {
     width: calc(100% - 32px);
-}
-
-@media (max-width: 480px) {
-    .business-profile-standalone .business-profile-info-item {
-        grid-template-columns: minmax(0, 1fr);
-        row-gap: 6px;
-        align-items: start;
-    }
 }
 
 .business-profile-call-bar {
