@@ -46,6 +46,7 @@ let kakaoPostcodeLoader = null;
 let kakaoMapLoader = null;
 let businessOcrLoader = null;
 let businessOcrRequestId = 0;
+let currentBusinessProfileAd = null;
 const BUSINESS_PROFILE_STAMP_GUIDE_MESSAGES = {
     visit: '하단 이벤트버튼 -> 방문 인증 버튼을 클릭하면 방문인증이 신청되며\n광고담당자가 확인 후 승인시 스탬프가 지급됩니다.',
     stamp: '하단 이벤트버튼 -> 스탬프 사용 버튼을 클릭하면 스탬프사용이 신청되며\n광고담당자가 확인 후 승인시 보유한 스탬프가 차감됩니다.'
@@ -638,6 +639,31 @@ function openBusinessProfileStampGuideModal(guideType) {
     document.body.classList.add('business-profile-modal-open');
 }
 
+async function submitBusinessProfileStampEventRequest(requestType) {
+    if (!Auth.isAuthenticated()) {
+        alert('로그인 후 신청할 수 있습니다.');
+        window.location.href = '/login';
+        return;
+    }
+
+    const ad = currentBusinessProfileAd;
+    if (!ad?.id) {
+        alert('업체정보를 확인할 수 없습니다.');
+        return;
+    }
+
+    const label = requestType === 'VISIT_VERIFICATION' ? '방문인증' : '스탬프사용';
+    if (!window.confirm(`${label}을 신청하시겠습니까?`)) return;
+
+    try {
+        await APIClient.post(`/users/me/business-ads/${encodeURIComponent(ad.id)}/stamp-event-requests`, { requestType });
+        alert(`${label} 신청이 접수되었습니다. 광고담당자 승인 후 반영됩니다.`);
+        closeBusinessProfileEventModal();
+    } catch (error) {
+        alert(error.message || `${label} 신청에 실패했습니다.`);
+    }
+}
+
 function closeBusinessProfileEventModal() {
     const modal = document.getElementById('business-profile-event-modal');
     modal?.classList.add('hidden');
@@ -772,6 +798,7 @@ async function initBusinessProfileDetailPage() {
         const response = await APIClient.get(`/live/business-ads/${encodeURIComponent(adId)}`);
         const ad = response?.content;
         if (!ad) throw new Error('업체정보를 찾을 수 없습니다.');
+        currentBusinessProfileAd = ad;
         syncBusinessProfileUrl(ad);
         updateBusinessProfileSeo(ad);
 
@@ -839,6 +866,14 @@ function bindBusinessProfileModalEvents() {
         if (event.target.closest('[data-business-profile-event-close]')) {
             closeBusinessProfileEventModal();
         }
+    });
+
+    document.getElementById('business-profile-visit-verification-button')?.addEventListener('click', () => {
+        submitBusinessProfileStampEventRequest('VISIT_VERIFICATION');
+    });
+
+    document.getElementById('business-profile-stamp-use-button')?.addEventListener('click', () => {
+        submitBusinessProfileStampEventRequest('STAMP_USE');
     });
 
     document.addEventListener('keydown', (event) => {

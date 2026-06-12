@@ -255,6 +255,15 @@ function renderBusinessRejectionReason(elementId, isRejected, rejectionReason) {
     reason.classList.toggle('hidden', !isRejected);
 }
 
+function applyStampEventStatusBadge(isEnabled) {
+    const badge = document.getElementById('mypage-stamp-event-status');
+    if (!badge) return;
+
+    badge.classList.remove('mypage-status-badge--registered', 'mypage-status-badge--unregistered');
+    badge.textContent = isEnabled ? 'ON' : 'OFF';
+    badge.classList.add(isEnabled ? 'mypage-status-badge--registered' : 'mypage-status-badge--unregistered');
+}
+
 function renderBusinessInfoStatusBadge({ registrationStatus, approvalStatus, rejectionReason } = {}) {
     const normalizedApprovalStatus = normalizeBusinessApprovalStatus(approvalStatus);
     const resolvedStatus = resolveBusinessInfoBadgeStatus(registrationStatus, normalizedApprovalStatus);
@@ -286,12 +295,14 @@ async function renderBusinessProfileStatuses() {
     let businessStatus = 'unregistered';
     let businessApprovalStatus = 'pending';
     let businessRejectionReason = '';
+    let stampEventEnabled = false;
 
     try {
         const response = await APIClient.get('/users/me/business-ads');
         const existingAd = Array.isArray(response?.content) ? response.content[0] : null;
         adStatus = normalizeRegistrationStatus(existingAd?.registrationStatus);
         if (adStatus === 'unregistered' && hasCompleteAdProfile(existingAd)) adStatus = 'registered';
+        stampEventEnabled = Boolean(Number(existingAd?.useStampEvent || existingAd?.useVisitVerification || 0));
     } catch (error) {
         adStatus = 'unregistered';
     }
@@ -306,6 +317,7 @@ async function renderBusinessProfileStatuses() {
     }
 
     applyStatusBadge('mypage-ad-profile-status', adStatus);
+    applyStampEventStatusBadge(stampEventEnabled);
     renderBusinessInfoStatusBadge({
         registrationStatus: businessStatus,
         approvalStatus: businessApprovalStatus,
