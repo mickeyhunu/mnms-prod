@@ -4493,6 +4493,7 @@ body[data-page="admin"] {
     border-color: #2563eb;
     background: #2563eb;
     box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+    border-radius: 12px;
 }
 
 .btn.btn-primary.business-profile-event-action--stamp {
@@ -4507,7 +4508,6 @@ body.business-profile-modal-open {
 
 @media (max-width: 640px) {
     .business-profile-modal {
-        align-items: flex-end;
         padding: 10px;
     }
 
