@@ -138,7 +138,7 @@ const pageRegistry = {
                 <button type="button" class="business-profile-modal-close" data-business-profile-event-close aria-label="이벤트 창 닫기">×</button>
                 <h3 id="business-profile-event-modal-title">스탬프 이벤트</h3>
                 <p class="business-profile-event-modal-description" id="business-profile-event-modal-description">방문 인증 또는 스탬프 사용을 선택해주세요.</p>
-                <div class="business-profile-event-modal-actions">
+                <div class="business-profile-event-modal-actions" id="business-profile-event-modal-actions">
                     <button type="button" class="btn btn-primary business-profile-event-action" id="business-profile-visit-verification-button">방문 인증</button>
                     <button type="button" class="btn btn-primary business-profile-event-action business-profile-event-action--stamp" id="business-profile-stamp-use-button">스탬프 사용</button>
                 </div>
