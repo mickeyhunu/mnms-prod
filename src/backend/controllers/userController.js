@@ -39,6 +39,7 @@ const { hashPassword } = require('../utils/passwordHasher');
 
 
 const NTS_BUSINESS_STATUS_API_URL = 'https://api.odcloud.kr/api/nts-businessman/v1/status';
+const MIN_STAMP_EVENT_COUNT = 5;
 
 function normalizeBusinessRegistrationNumber(value) {
   return String(value || '').replace(/\D/g, '').slice(0, 10);
@@ -348,8 +349,8 @@ function getBusinessAdStampEventError({ useStampEvent, stampEventDescription, st
   if (!String(stampEventDescription || '').trim()) {
     return '스탬프 이벤트 설명을 입력해주세요.';
   }
-  if (!Number.isInteger(Number(stampEventCount)) || Number(stampEventCount) <= 0) {
-    return '스탬프 이벤트 사용시 차감되는 스탬프 갯수를 입력해주세요.';
+  if (!Number.isInteger(Number(stampEventCount)) || Number(stampEventCount) < MIN_STAMP_EVENT_COUNT) {
+    return `스탬프 이벤트는 스탬프 ${MIN_STAMP_EVENT_COUNT}개부터 설정할 수 있습니다.`;
   }
   return '';
 }
