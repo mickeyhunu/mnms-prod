@@ -69,7 +69,6 @@
                         <div><dt>신청자</dt><dd>${sanitizeHTML(applicant)}</dd></div>
                         <div><dt>스탬프</dt><dd>${stampAmount}개</dd></div>
                         <div><dt>신청일</dt><dd>${sanitizeHTML(formatDate(item.createdAt))}</dd></div>
-                        ${item.rejectionReason ? `<div><dt>반려사유</dt><dd>${sanitizeHTML(item.rejectionReason)}</dd></div>` : ''}
                     </dl>
                     ${isPending ? `
                         <div class="stamp-event-management-actions">
@@ -94,9 +93,6 @@
     }
 
     async function reviewRequest(requestId, status, itemElement) {
-        const isReject = status === 'REJECTED';
-        const rejectionReason = isReject ? window.prompt('반려 사유를 입력해주세요.', '') : '';
-        if (isReject && rejectionReason === null) return;
         const stampAmount = Number(itemElement?.dataset.stampAmount || 0);
         const ownerRewardAmount = Math.max(0, stampAmount - 1);
         const isVisitVerification = itemElement?.dataset.requestType === 'VISIT_VERIFICATION';
@@ -110,8 +106,7 @@
 
         try {
             await APIClient.patch(`/users/me/stamp-event-requests/${encodeURIComponent(requestId)}`, {
-                status,
-                rejectionReason: rejectionReason || ''
+                status
             });
             alert(status === 'APPROVED' ? '승인되었습니다.' : '반려되었습니다.');
             await loadRequests();
