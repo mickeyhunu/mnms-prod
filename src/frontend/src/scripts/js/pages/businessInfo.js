@@ -558,18 +558,55 @@ function buildBusinessProfileMapMarkup(ad) {
     `;
 }
 
+function hasBusinessProfileStampEvent(ad) {
+    return normalizeBooleanFlag(ad?.useStampEvent || ad?.useVisitVerification);
+}
+
+function getBusinessProfileStampEventCount(ad) {
+    return Math.max(0, Number(ad?.stampEventCount || 0));
+}
+
 function buildBusinessProfileAdditionalInfoMarkup(ad) {
-    const useStampEvent = normalizeBooleanFlag(ad?.useStampEvent || ad?.useVisitVerification);
+    const useStampEvent = hasBusinessProfileStampEvent(ad);
     const stampEventDescription = sanitizeHTML(String(ad?.stampEventDescription || '').trim());
-    const stampEventCount = Number(ad?.stampEventCount || 0);
+    const stampEventCount = getBusinessProfileStampEventCount(ad);
     const infoRows = [];
 
     if (useStampEvent && stampEventDescription && stampEventCount > 0) {
-        infoRows.push(buildBusinessProfileInfoRow('스탬프 이벤트', `${stampEventDescription}<br><strong>스탬프 ${stampEventCount.toLocaleString('ko-KR')}개</strong>`, '🎟️'));
+        infoRows.push(buildBusinessProfileInfoRow(
+            '스탬프 이벤트',
+            `${stampEventDescription}<br><span class="business-profile-stamp-visit-guide">방문 인증시 스탬프 1개 지급</span><br><strong>스탬프 ${stampEventCount.toLocaleString('ko-KR')}개</strong>`,
+            '🎟️'
+        ));
     }
     if (!infoRows.length) return '';
 
     return infoRows.join('');
+}
+
+function openBusinessProfileEventModal(ad) {
+    const modal = document.getElementById('business-profile-event-modal');
+    const description = document.getElementById('business-profile-event-modal-description');
+    const stampUseButton = document.getElementById('business-profile-stamp-use-button');
+    if (!modal) return;
+
+    const stampEventCount = getBusinessProfileStampEventCount(ad);
+    if (description) {
+        description.textContent = '방문 인증시 스탬프 1개가 지급됩니다. 이벤트 혜택 사용시 아래 버튼을 선택해주세요.';
+    }
+    if (stampUseButton) {
+        stampUseButton.textContent = `스탬프 사용 ${stampEventCount.toLocaleString('ko-KR')}개`;
+        stampUseButton.setAttribute('aria-label', `스탬프 ${stampEventCount.toLocaleString('ko-KR')}개 사용`);
+    }
+
+    modal.classList.remove('hidden');
+    document.body.classList.add('business-profile-modal-open');
+}
+
+function closeBusinessProfileEventModal() {
+    const modal = document.getElementById('business-profile-event-modal');
+    modal?.classList.add('hidden');
+    document.body.classList.remove('business-profile-modal-open');
 }
 
 function closeBusinessProfileModal() {
@@ -706,18 +743,16 @@ async function initBusinessProfileDetailPage() {
         detail.innerHTML = buildBusinessProfileDetailMarkup(ad);
         initializeBusinessProfileKakaoMaps(detail);
         const telHref = getBusinessProfileTelHref(ad.managerContact);
-        const visitHref = normalizeBusinessProfileLinkUrl(ad.linkUrl || '') || telHref;
+        const useStampEvent = hasBusinessProfileStampEvent(ad) && getBusinessProfileStampEventCount(ad) > 0;
         if (telHref && callButton && visitButton && callBar) {
-            visitButton.setAttribute('href', visitHref);
-            visitButton.textContent = '방문신청';
-            visitButton.setAttribute('aria-label', `${getBusinessProfileTitle(ad)} 방문신청`);
-            if (visitHref !== telHref) {
-                visitButton.setAttribute('target', '_blank');
-                visitButton.setAttribute('rel', 'noopener noreferrer');
-            } else {
-                visitButton.removeAttribute('target');
-                visitButton.removeAttribute('rel');
-            }
+            visitButton.textContent = '이벤트';
+            visitButton.setAttribute('aria-label', `${getBusinessProfileTitle(ad)} 이벤트`);
+            visitButton.classList.toggle('hidden', !useStampEvent);
+            visitButton.onclick = (event) => {
+                event.preventDefault();
+                openBusinessProfileEventModal(ad);
+            };
+
             callButton.setAttribute('href', telHref);
             callButton.textContent = '전화하기';
             callButton.setAttribute('aria-label', `${getBusinessProfileTitle(ad)} 전화하기`);
@@ -758,9 +793,19 @@ function bindBusinessProfileModalEvents() {
         }
     });
 
+    const eventModal = document.getElementById('business-profile-event-modal');
+    eventModal?.addEventListener('click', (event) => {
+        if (event.target.closest('[data-business-profile-event-close]')) {
+            closeBusinessProfileEventModal();
+        }
+    });
+
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && !modal?.classList.contains('hidden')) {
             closeBusinessProfileModal();
+        }
+        if (event.key === 'Escape' && !eventModal?.classList.contains('hidden')) {
+            closeBusinessProfileEventModal();
         }
     });
 }
@@ -1617,12 +1662,13 @@ async function initBusinessInfoPage() {
     if (typeof initHeader === 'function') initHeader();
     Auth.bindLogoutButton();
 
+    bindBusinessProfileModalEvents();
+
     if (document.getElementById('business-profile-detail')) {
         await initBusinessProfileDetailPage();
         return;
     }
 
-    bindBusinessProfileModalEvents();
     await bindBusinessFilterEvents();
     await loadBusinessAds();
 }
