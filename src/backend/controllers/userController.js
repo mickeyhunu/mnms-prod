@@ -21,6 +21,7 @@ const {
 const { resolveMemberLevel, MEMBER_LEVELS } = require('../utils/memberLevel');
 const { POINT_RULES } = require('../models/pointModel');
 const { STAMP_TYPES, createStampPurchase, getUserStampBalance, getUserStampHistories, getUserStampPaymentHistories } = require('../models/stampModel');
+const { createStampEventRequest, listOwnerStampEventRequests, reviewStampEventRequest } = require('../models/stampEventRequestModel');
 const supportModel = require('../models/supportModel');
 const adminModel = require('../models/adminModel');
 const { deleteS3ObjectsByUrls, parseDataUrl, uploadDataUrlToS3 } = require('../utils/fileUpload');
@@ -1015,6 +1016,64 @@ async function updateMyBusinessAd(req, res, next) {
   }
 }
 
+async function createMyStampEventRequest(req, res, next) {
+  try {
+    const businessAdId = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(businessAdId) || businessAdId <= 0) {
+      return res.status(400).json({ message: '유효한 광고 ID가 필요합니다.' });
+    }
+
+    const request = await createStampEventRequest({
+      businessAdId,
+      applicantUserId: req.user.id,
+      requestType: req.body?.requestType
+    });
+
+    return res.status(201).json({
+      message: '스탬프 이벤트 신청이 접수되었습니다.',
+      content: request
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function myStampEventRequests(req, res, next) {
+  try {
+    const requests = await listOwnerStampEventRequests(req.user.id, {
+      status: req.query?.status || 'PENDING',
+      limit: req.query?.limit
+    });
+
+    return res.json({
+      content: requests,
+      totalElements: requests.length
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function reviewMyStampEventRequest(req, res, next) {
+  try {
+    const requestId = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(requestId) || requestId <= 0) {
+      return res.status(400).json({ message: '유효한 신청 ID가 필요합니다.' });
+    }
+
+    const result = await reviewStampEventRequest({
+      requestId,
+      ownerUserId: req.user.id,
+      status: req.body?.status,
+      rejectionReason: req.body?.rejectionReason
+    });
+
+    return res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function deleteMyBusinessAd(req, res, next) {
   try {
     const id = Number.parseInt(req.params.id, 10);
@@ -1251,5 +1310,8 @@ module.exports = {
   getMyBusinessProfile,
   saveMyBusinessProfile,
   verifyMyBusinessRegistration,
+  createMyStampEventRequest,
+  myStampEventRequests,
+  reviewMyStampEventRequest,
   withdrawMyAccount
 };
