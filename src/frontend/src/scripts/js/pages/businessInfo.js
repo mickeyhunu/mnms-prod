@@ -570,13 +570,24 @@ function buildBusinessProfileAdditionalInfoMarkup(ad) {
     const useStampEvent = hasBusinessProfileStampEvent(ad);
     const stampEventDescription = sanitizeHTML(String(ad?.stampEventDescription || '').trim());
     const stampEventCount = getBusinessProfileStampEventCount(ad);
+    const stampEventCountLabel = stampEventCount.toLocaleString('ko-KR');
     const infoRows = [];
 
     if (useStampEvent && stampEventDescription && stampEventCount > 0) {
         infoRows.push(buildBusinessProfileInfoRow(
             '스탬프 이벤트',
-            `${stampEventDescription}<br><span class="business-profile-stamp-visit-guide">방문 인증시 스탬프 1개 지급</span><br><strong>스탬프 ${stampEventCount.toLocaleString('ko-KR')}개</strong>`,
-            '🎟️'
+            `<div class="business-profile-stamp-summary">
+                <div class="business-profile-stamp-summary-row">
+                    <span class="business-profile-stamp-summary-label">방문 인증시</span>
+                    <span class="business-profile-stamp-summary-value">스탬프 1개 지급</span>
+                </div>
+                <div class="business-profile-stamp-summary-row">
+                    <span class="business-profile-stamp-summary-label">스탬프 ${stampEventCountLabel}개 사용시</span>
+                    <span class="business-profile-stamp-summary-value">${stampEventDescription}</span>
+                </div>
+            </div>`,
+            '🎟️',
+            'business-profile-info-item--stamp'
         ));
     }
     if (!infoRows.length) return '';

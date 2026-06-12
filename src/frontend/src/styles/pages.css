@@ -4417,11 +4417,45 @@ body[data-page="admin"] {
 }
 
 
-.business-profile-stamp-visit-guide {
-    display: inline-block;
-    margin-top: 4px;
+.business-profile-info-item--stamp {
+    display: grid;
+    grid-column: 1 / -1;
+    align-items: start;
+}
+
+.business-profile-stamp-summary {
+    display: grid;
+    gap: 8px;
+    text-align: left;
+}
+
+.business-profile-stamp-summary-row {
+    display: grid;
+    grid-template-columns: minmax(112px, max-content) minmax(0, 1fr);
+    align-items: start;
+    gap: 8px;
+}
+
+.business-profile-stamp-summary-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #eff6ff;
+    padding: 4px 8px;
     color: #2563eb;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.business-profile-stamp-summary-value {
+    min-width: 0;
+    padding-top: 4px;
+    color: #111827;
     font-weight: 700;
+    line-height: 1.45;
+    word-break: break-word;
 }
 
 .business-profile-event-modal-panel h3 {
@@ -4457,6 +4491,19 @@ body[data-page="admin"] {
 }
 
 @media (max-width: 480px) {
+    .business-profile-stamp-summary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .business-profile-stamp-summary-label {
+        justify-self: start;
+    }
+
+    .business-profile-stamp-summary-value {
+        padding-top: 0;
+    }
+
     .business-profile-event-modal-actions {
         grid-template-columns: 1fr;
     }
