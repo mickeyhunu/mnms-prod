@@ -2,7 +2,7 @@
  * 파일 역할: 광고 스탬프 이벤트 신청 조회/승인/반려와 신청 생성 로직을 담당하는 모델 파일.
  */
 const { getPool } = require('../config/database');
-const { getUserStampBalance, STAMP_TYPES } = require('./stampModel');
+const { STAMP_TYPES } = require('./stampModel');
 
 const REQUEST_TYPES = {
   VISIT_VERIFICATION: 'VISIT_VERIFICATION',
@@ -23,6 +23,24 @@ function normalizeRequestType(value) {
 function normalizeRequestStatus(value) {
   const normalized = String(value || '').trim().toUpperCase();
   return Object.prototype.hasOwnProperty.call(REQUEST_STATUSES, normalized) ? normalized : REQUEST_STATUSES.PENDING;
+}
+
+
+function isRegularMemberRow(user = {}) {
+  const role = String(user.role || '').toUpperCase();
+  const memberType = String(user.member_type || user.memberType || '').toUpperCase();
+  return role === 'MEMBER' && memberType === 'MEMBER';
+}
+
+async function getStampBalanceForConnection(connection, userId, stampType) {
+  const [rows] = await connection.query(
+    `SELECT COALESCE(SUM(amount), 0) AS totalStamps
+       FROM stamp_histories
+      WHERE user_id = ?
+        AND stamp_type = ?`,
+    [userId, stampType]
+  );
+  return Math.max(0, Number(rows[0]?.totalStamps || 0));
 }
 
 function mapRequestRow(row = {}) {
@@ -58,7 +76,9 @@ async function createStampEventRequest({ businessAdId, applicantUserId, requestT
   try {
     await connection.beginTransaction();
     const [ads] = await connection.query(
-      `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, title, use_stamp_event AS useStampEvent, stamp_event_count AS stampEventCount
+      `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, title,
+              use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent,
+              stamp_event_count AS stampEventCount
          FROM business_ads
         WHERE id = ?
           AND is_active = 1
@@ -68,20 +88,44 @@ async function createStampEventRequest({ businessAdId, applicantUserId, requestT
       [businessAdId]
     );
     const ad = ads[0];
-    if (!ad || !Number(ad.useStampEvent)) {
-      const error = new Error('스탬프 이벤트를 사용 중인 광고가 아닙니다.');
+    if (!ad) {
+      const error = new Error('이벤트를 신청할 수 있는 광고가 아닙니다.');
       error.status = 404;
       throw error;
     }
+
+    const [applicants] = await connection.query(
+      `SELECT id, role, member_type
+         FROM users
+        WHERE id = ?
+        LIMIT 1
+        FOR UPDATE`,
+      [applicantUserId]
+    );
+    const applicant = applicants[0];
+    if (!applicant || !isRegularMemberRow(applicant)) {
+      const error = new Error('광고 이벤트는 일반 회원만 참여할 수 있습니다.');
+      error.status = 403;
+      throw error;
+    }
+
+    const isVisitRequest = normalizedType === REQUEST_TYPES.VISIT_VERIFICATION;
+    const eventEnabled = isVisitRequest ? Number(ad.useVisitVerification) : Number(ad.useStampEvent);
+    if (!eventEnabled) {
+      const error = new Error(isVisitRequest ? '방문 인증 이벤트를 사용 중인 광고가 아닙니다.' : '스탬프 사용 이벤트를 사용 중인 광고가 아닙니다.');
+      error.status = 404;
+      throw error;
+    }
+
     if (Number(ad.ownerUserId) === Number(applicantUserId)) {
       const error = new Error('내 광고에는 이벤트를 신청할 수 없습니다.');
       error.status = 400;
       throw error;
     }
 
-    const stampAmount = normalizedType === REQUEST_TYPES.VISIT_VERIFICATION ? 1 : Math.max(1, Number(ad.stampEventCount || 0));
+    const stampAmount = isVisitRequest ? 1 : Math.max(1, Number(ad.stampEventCount || 0));
     if (normalizedType === REQUEST_TYPES.STAMP_USE) {
-      const balance = await getUserStampBalance(applicantUserId, STAMP_TYPES.MEMBER);
+      const balance = await getStampBalanceForConnection(connection, applicantUserId, STAMP_TYPES.MEMBER);
       if (balance < stampAmount) {
         const error = new Error('보유 스탬프가 부족합니다.');
         error.status = 400;
@@ -195,24 +239,45 @@ async function reviewStampEventRequest({ requestId, ownerUserId, status, rejecti
 
     if (normalizedStatus === REQUEST_STATUSES.APPROVED) {
       const amount = Number(request.stamp_amount || 0);
-      if (request.request_type === REQUEST_TYPES.STAMP_USE) {
-        const balance = await getUserStampBalance(request.applicant_user_id, STAMP_TYPES.MEMBER);
-        if (balance < amount) {
+      const businessName = request.business_name || request.title || '광고';
+      if (request.request_type === REQUEST_TYPES.VISIT_VERIFICATION) {
+        const ownerBalance = await getStampBalanceForConnection(connection, request.owner_user_id, STAMP_TYPES.BUSINESS);
+        if (ownerBalance < 1) {
+          const error = new Error('승인에 필요한 광고주 스탬프가 부족합니다.');
+          error.status = 400;
+          throw error;
+        }
+        await connection.query(
+          `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
+           VALUES (?, 'BUSINESS', 'VISIT_VERIFICATION', -1, ?, ?)`,
+          [request.owner_user_id, `${businessName} 방문 인증 승인 차감`, `STAMP-EVENT-${request.id}-OWNER`]
+        );
+        await connection.query(
+          `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
+           VALUES (?, 'MEMBER', 'VISIT_VERIFICATION', ?, ?, ?)`,
+          [request.applicant_user_id, amount, `${businessName} 방문 인증 승인`, `STAMP-EVENT-${request.id}-APPLICANT`]
+        );
+      } else {
+        const applicantBalance = await getStampBalanceForConnection(connection, request.applicant_user_id, STAMP_TYPES.MEMBER);
+        if (applicantBalance < amount) {
           const error = new Error('신청자의 보유 스탬프가 부족합니다.');
           error.status = 400;
           throw error;
         }
+        await connection.query(
+          `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
+           VALUES (?, 'MEMBER', 'SERVICE_BOTTLE_USE', ?, ?, ?)`,
+          [request.applicant_user_id, -amount, `${businessName} 스탬프 사용 승인`, `STAMP-EVENT-${request.id}-APPLICANT`]
+        );
+        const ownerRewardAmount = Math.max(0, amount - 1);
+        if (ownerRewardAmount > 0) {
+          await connection.query(
+            `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
+             VALUES (?, 'BUSINESS', 'SERVICE_BOTTLE_USE', ?, ?, ?)`,
+            [request.owner_user_id, ownerRewardAmount, `${businessName} 스탬프 사용 승인 적립`, `STAMP-EVENT-${request.id}-OWNER`]
+          );
+        }
       }
-      const actionType = request.request_type === REQUEST_TYPES.VISIT_VERIFICATION ? 'VISIT_VERIFICATION' : 'SERVICE_BOTTLE_USE';
-      const historyAmount = request.request_type === REQUEST_TYPES.VISIT_VERIFICATION ? amount : -amount;
-      const reason = request.request_type === REQUEST_TYPES.VISIT_VERIFICATION
-        ? `${request.business_name || request.title || '광고'} 방문 인증 승인`
-        : `${request.business_name || request.title || '광고'} 스탬프 사용 승인`;
-      await connection.query(
-        `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
-         VALUES (?, 'MEMBER', ?, ?, ?, ?)`,
-        [request.applicant_user_id, actionType, historyAmount, reason, `STAMP-EVENT-${request.id}`]
-      );
     }
 
     await connection.query(
