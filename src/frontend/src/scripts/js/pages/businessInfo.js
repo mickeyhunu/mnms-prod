@@ -46,6 +46,10 @@ let kakaoPostcodeLoader = null;
 let kakaoMapLoader = null;
 let businessOcrLoader = null;
 let businessOcrRequestId = 0;
+const BUSINESS_PROFILE_STAMP_GUIDE_MESSAGES = {
+    visit: '하단 이벤트버튼 -> 방문 인증 버튼을 클릭하면 방문인증이 신청되며\n광고담당자가 확인 후 승인시 스탬프가 지급됩니다.',
+    stamp: '하단 이벤트버튼 -> 스탬프 사용 버튼을 클릭하면 스탬프사용이 신청되며\n광고담당자가 확인 후 승인시 보유한 스탬프가 차감됩니다.'
+};
 
 function isBusinessApplicationMode() {
     const searchParams = new URLSearchParams(window.location.search || '');
@@ -578,11 +582,11 @@ function buildBusinessProfileAdditionalInfoMarkup(ad) {
             '스탬프 이벤트',
             `<div class="business-profile-stamp-summary">
                 <div class="business-profile-stamp-summary-row">
-                    <span class="business-profile-stamp-summary-label">방문 인증시</span>
+                    <button type="button" class="business-profile-stamp-summary-label" data-business-profile-stamp-guide="visit" aria-label="방문 인증 안내 보기">방문 인증시</button>
                     <span class="business-profile-stamp-summary-value">스탬프 1개 지급</span>
                 </div>
                 <div class="business-profile-stamp-summary-row">
-                    <span class="business-profile-stamp-summary-label">스탬프 ${stampEventCountLabel}개 사용시</span>
+                    <button type="button" class="business-profile-stamp-summary-label" data-business-profile-stamp-guide="stamp" aria-label="스탬프 ${stampEventCountLabel}개 사용 안내 보기">스탬프 ${stampEventCountLabel}개 사용시</button>
                     <span class="business-profile-stamp-summary-value">${stampEventDescription}</span>
                 </div>
             </div>`,
@@ -597,18 +601,38 @@ function buildBusinessProfileAdditionalInfoMarkup(ad) {
 
 function openBusinessProfileEventModal(ad) {
     const modal = document.getElementById('business-profile-event-modal');
+    const title = document.getElementById('business-profile-event-modal-title');
     const description = document.getElementById('business-profile-event-modal-description');
+    const actions = document.getElementById('business-profile-event-modal-actions');
     const stampUseButton = document.getElementById('business-profile-stamp-use-button');
     if (!modal) return;
 
     const stampEventCount = getBusinessProfileStampEventCount(ad);
+    if (title) title.textContent = '스탬프 이벤트';
     if (description) {
         description.textContent = '방문 인증시 스탬프 1개가 지급됩니다. 이벤트 혜택 사용시 아래 버튼을 선택해주세요.';
     }
+    actions?.classList.remove('hidden');
     if (stampUseButton) {
         stampUseButton.textContent = `스탬프 사용 ${stampEventCount.toLocaleString('ko-KR')}개`;
         stampUseButton.setAttribute('aria-label', `스탬프 ${stampEventCount.toLocaleString('ko-KR')}개 사용`);
     }
+
+    modal.classList.remove('hidden');
+    document.body.classList.add('business-profile-modal-open');
+}
+
+function openBusinessProfileStampGuideModal(guideType) {
+    const modal = document.getElementById('business-profile-event-modal');
+    const title = document.getElementById('business-profile-event-modal-title');
+    const description = document.getElementById('business-profile-event-modal-description');
+    const actions = document.getElementById('business-profile-event-modal-actions');
+    const guideMessage = BUSINESS_PROFILE_STAMP_GUIDE_MESSAGES[guideType];
+    if (!modal || !guideMessage) return;
+
+    if (title) title.textContent = '스탬프 이벤트 안내';
+    if (description) description.textContent = guideMessage;
+    actions?.classList.add('hidden');
 
     modal.classList.remove('hidden');
     document.body.classList.add('business-profile-modal-open');
@@ -752,6 +776,12 @@ async function initBusinessProfileDetailPage() {
         updateBusinessProfileSeo(ad);
 
         detail.innerHTML = buildBusinessProfileDetailMarkup(ad);
+        detail.querySelectorAll('[data-business-profile-stamp-guide]').forEach((button) => {
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                openBusinessProfileStampGuideModal(button.dataset.businessProfileStampGuide);
+            });
+        });
         initializeBusinessProfileKakaoMaps(detail);
         const telHref = getBusinessProfileTelHref(ad.managerContact);
         const useStampEvent = hasBusinessProfileStampEvent(ad) && getBusinessProfileStampEventCount(ad) > 0;
