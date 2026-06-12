@@ -912,7 +912,7 @@ function formatStampActionLabel(actionType) {
         STAMP_PURCHASE: '스탬프 구매',
         STAMP_PURCHASE_CANCEL: '스탬프 결제취소',
         VISIT_VERIFICATION: '업소 방문 인증',
-        SERVICE_BOTTLE_USE: '서비스 주류 사용',
+        SERVICE_BOTTLE_USE: '이벤트 참여 사용',
         BUSINESS_AD_BRONZE: '브론즈 광고 사용',
         BUSINESS_AD_SILVER: '실버 광고 사용',
         BUSINESS_AD_GOLD: '골드 광고 사용',
