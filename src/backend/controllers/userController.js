@@ -464,6 +464,13 @@ const POINT_ACTION_LABELS = {
 };
 
 
+
+function isRegularMemberUser(user = {}) {
+  const role = String(user.role || '').toUpperCase();
+  const memberType = String(user.member_type || user.memberType || '').toUpperCase();
+  return role === 'MEMBER' && memberType === 'MEMBER';
+}
+
 function resolveUserStampType(user = {}) {
   const role = String(user.role || '').toUpperCase();
   const memberType = String(user.member_type || user.memberType || '').toUpperCase();
@@ -1021,6 +1028,9 @@ async function createMyStampEventRequest(req, res, next) {
     const businessAdId = Number.parseInt(req.params.id, 10);
     if (!Number.isInteger(businessAdId) || businessAdId <= 0) {
       return res.status(400).json({ message: '유효한 광고 ID가 필요합니다.' });
+    }
+    if (!isRegularMemberUser(req.user)) {
+      return res.status(403).json({ message: '광고 이벤트는 일반 회원만 참여할 수 있습니다.' });
     }
 
     const request = await createStampEventRequest({

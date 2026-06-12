@@ -57,7 +57,7 @@
             const title = item.businessName || item.adTitle || '내 광고';
             const stampAmount = Number(item.stampAmount || 0).toLocaleString('ko-KR');
             return `
-                <article class="stamp-event-management-item" data-request-id="${sanitizeHTML(item.id)}">
+                <article class="stamp-event-management-item" data-request-id="${sanitizeHTML(item.id)}" data-request-type="${sanitizeHTML(item.requestType || '')}" data-stamp-amount="${sanitizeHTML(item.stampAmount || 0)}">
                     <div class="stamp-event-management-item-head">
                         <div>
                             <strong>${sanitizeHTML(requestType)}</strong>
@@ -93,12 +93,18 @@
         }
     }
 
-    async function reviewRequest(requestId, status) {
+    async function reviewRequest(requestId, status, itemElement) {
         const isReject = status === 'REJECTED';
         const rejectionReason = isReject ? window.prompt('반려 사유를 입력해주세요.', '') : '';
         if (isReject && rejectionReason === null) return;
+        const stampAmount = Number(itemElement?.dataset.stampAmount || 0);
+        const ownerRewardAmount = Math.max(0, stampAmount - 1);
+        const isVisitVerification = itemElement?.dataset.requestType === 'VISIT_VERIFICATION';
+        const approveMessage = isVisitVerification
+            ? '승인시 스탬프 1개가 차감됩니다. 승인하시겠습니까?'
+            : `승인시 신청자에게서 스탬프 ${stampAmount.toLocaleString('ko-KR')}개가 차감되고 광고주에게 ${ownerRewardAmount.toLocaleString('ko-KR')}개가 지급됩니다. 승인하시겠습니까?`;
         const confirmMessage = status === 'APPROVED'
-            ? '이 신청을 승인하시겠습니까?'
+            ? approveMessage
             : '이 신청을 반려하시겠습니까?';
         if (!window.confirm(confirmMessage)) return;
 
@@ -121,7 +127,7 @@
         const requestId = item?.dataset.requestId;
         if (!requestId) return;
         const action = button.dataset.stampEventAction;
-        reviewRequest(requestId, action === 'approve' ? 'APPROVED' : 'REJECTED');
+        reviewRequest(requestId, action === 'approve' ? 'APPROVED' : 'REJECTED', item);
     });
 
     filterElement?.addEventListener('change', loadRequests);
