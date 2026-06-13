@@ -21,6 +21,7 @@ const {
   listMyBusinessAds,
   createMyBusinessAd,
   updateMyBusinessAd,
+  updateMyBusinessAdActivation,
   deleteMyBusinessAd,
   getMyBusinessProfile,
   saveMyBusinessProfile,
@@ -52,6 +53,7 @@ router.delete('/me', authMiddleware, withdrawMyAccount);
 router.get('/me/business-ads', authMiddleware, listMyBusinessAds);
 router.post('/me/business-ads', authMiddleware, createMyBusinessAd);
 router.put('/me/business-ads/:id', authMiddleware, updateMyBusinessAd);
+router.patch('/me/business-ads/:id/activation', authMiddleware, updateMyBusinessAdActivation);
 router.delete('/me/business-ads/:id', authMiddleware, deleteMyBusinessAd);
 router.get('/me/business-profile', authMiddleware, getMyBusinessProfile);
 router.post('/me/business-profile/verify-registration', authMiddleware, verifyMyBusinessRegistration);

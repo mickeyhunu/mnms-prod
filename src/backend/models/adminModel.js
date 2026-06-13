@@ -8,6 +8,27 @@ const { ensureResolvedLoginRestriction, getUserActivityStats, getUserActivityDet
 const { getStoreByNo, listStores } = require('./liveModel');
 
 
+const BUSINESS_AD_PLAN_DURATIONS = {
+  BASIC: 3,
+  PLUS: 2,
+  PREMIUM: 1
+};
+
+function normalizeBusinessAdPlanType(planType) {
+  const normalized = String(planType || '').trim().toUpperCase();
+  if (Object.prototype.hasOwnProperty.call(BUSINESS_AD_PLAN_DURATIONS, normalized)) return normalized;
+  if (normalized === 'NORMAL') return 'BASIC';
+  return 'BASIC';
+}
+
+function getBusinessAdPlanDurationDays(planType) {
+  return BUSINESS_AD_PLAN_DURATIONS[normalizeBusinessAdPlanType(planType)] || BUSINESS_AD_PLAN_DURATIONS.BASIC;
+}
+
+function getBusinessAdPublicVisibilityCondition(alias = 'ba') {
+  return `${alias}.registration_status = 'REGISTERED' AND ${alias}.activated_until IS NOT NULL AND ${alias}.activated_until > NOW()`;
+}
+
 function normalizeBusinessInfoValue(value) {
   if (!value) return {};
   if (typeof value === 'object') return value;
@@ -606,7 +627,7 @@ async function listBusinessAdsByOwner(ownerUserId) {
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
             kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
             description, plan_type AS planType, view_count AS viewCount,
-            registration_status AS registrationStatus, display_order AS displayOrder, is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
+            registration_status AS registrationStatus, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
       WHERE owner_user_id = ?
       ORDER BY display_order ASC, id DESC`,
@@ -620,8 +641,7 @@ async function listPublicBusinessAdAreas() {
   const [rows] = await pool.query(
     `SELECT TRIM(ba.region) AS region, TRIM(COALESCE(ba.district, '')) AS district, COUNT(*) AS adCount
        FROM business_ads ba
-      WHERE ba.is_active = 1
-        AND ba.registration_status = 'REGISTERED'
+      WHERE ${getBusinessAdPublicVisibilityCondition('ba')}
         AND TRIM(COALESCE(ba.region, '')) <> ''
       GROUP BY TRIM(ba.region), TRIM(COALESCE(ba.district, ''))
       ORDER BY MIN(ba.display_order) ASC, TRIM(ba.region) ASC, TRIM(COALESCE(ba.district, '')) ASC`
@@ -632,7 +652,7 @@ async function listPublicBusinessAdAreas() {
 
 async function listPublicBusinessAds({ region = '', district = '', category = '', keyword = '' } = {}) {
   const pool = getPool();
-  const whereConditions = ['ba.is_active = 1', "ba.registration_status = 'REGISTERED'"];
+  const whereConditions = [getBusinessAdPublicVisibilityCondition('ba')];
   const whereParams = [];
 
   if (region) {
@@ -660,7 +680,7 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
             ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl,
             ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
             ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification, ba.use_stamp_event AS useStampEvent, ba.stamp_event_description AS stampEventDescription, ba.stamp_event_count AS stampEventCount,
-            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.created_at AS createdAt,
+            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.activated_until AS activatedUntil, ba.created_at AS createdAt,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, COALESCE(u.nickname, '업체') AS ownerNickname,
             COALESCE(bp.company_name, '') AS companyName, COALESCE(bp.manager_name, '') AS profileManagerName,
             COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessName')), COALESCE(bp.company_name, '')) AS businessDisclosureName,
@@ -671,7 +691,7 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
        LEFT JOIN users u ON u.id = ba.owner_user_id
        LEFT JOIN business_profiles bp ON bp.user_id = ba.owner_user_id
       WHERE ${whereConditions.join(' AND ')}
-      ORDER BY CASE WHEN ba.plan_type = 'PREMIUM' THEN 0 ELSE 1 END, ba.display_order ASC, ba.id DESC`,
+      ORDER BY CASE ba.plan_type WHEN 'PREMIUM' THEN 0 WHEN 'PLUS' THEN 1 ELSE 2 END, ba.display_order ASC, ba.id DESC`,
     whereParams
   );
 
@@ -699,7 +719,7 @@ async function createBusinessAd({
   useStampEvent = false,
   stampEventDescription = '',
   stampEventCount = 0,
-  planType = 'NORMAL',
+  planType = 'BASIC',
   displayOrder = 0,
   isActive = true,
   registrationStatus = 'UNREGISTERED'
@@ -710,7 +730,7 @@ async function createBusinessAd({
       owner_user_id, business_name, manager_name, manager_contact, title, image_url, link_url, region, district, category, open_hour, close_hour,
       kakao_talk_id, telegram_id, show_business_address_map, use_visit_verification, use_stamp_event, stamp_event_description, stamp_event_count, description, plan_type, registration_status, display_order, is_active
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [ownerUserId, businessName, managerName, managerContact, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, kakaoTalkId, telegramId, showBusinessAddressMap ? 1 : 0, useVisitVerification ? 1 : 0, useStampEvent ? 1 : 0, stampEventDescription, Number(stampEventCount) || 0, description, planType, registrationStatus, displayOrder, isActive ? 1 : 0]
+    [ownerUserId, businessName, managerName, managerContact, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, kakaoTalkId, telegramId, showBusinessAddressMap ? 1 : 0, useVisitVerification ? 1 : 0, useStampEvent ? 1 : 0, stampEventDescription, Number(stampEventCount) || 0, description, normalizeBusinessAdPlanType(planType), registrationStatus, displayOrder, isActive ? 1 : 0]
   );
   return result.insertId;
 }
@@ -722,7 +742,7 @@ async function findPublicBusinessAdById(adId) {
             ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl,
             ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
             ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification, ba.use_stamp_event AS useStampEvent, ba.stamp_event_description AS stampEventDescription, ba.stamp_event_count AS stampEventCount,
-            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
+            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.activated_until AS activatedUntil, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, COALESCE(u.nickname, '업체') AS ownerNickname,
             COALESCE(bp.company_name, '') AS companyName, COALESCE(bp.manager_name, '') AS profileManagerName,
             COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessName')), COALESCE(bp.company_name, '')) AS businessDisclosureName,
@@ -733,8 +753,7 @@ async function findPublicBusinessAdById(adId) {
        LEFT JOIN users u ON u.id = ba.owner_user_id
        LEFT JOIN business_profiles bp ON bp.user_id = ba.owner_user_id
       WHERE ba.id = ?
-        AND ba.is_active = 1
-        AND ba.registration_status = 'REGISTERED'
+        AND ${getBusinessAdPublicVisibilityCondition('ba')}
       LIMIT 1`,
     [adId]
   );
@@ -771,7 +790,7 @@ async function findBusinessAdById(adId) {
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
             kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
             description, plan_type AS planType, view_count AS viewCount,
-            registration_status AS registrationStatus, display_order AS displayOrder, is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
+            registration_status AS registrationStatus, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
       WHERE id = ?`,
     [adId]
@@ -799,7 +818,7 @@ async function updateBusinessAd(adId, {
   useStampEvent = false,
   stampEventDescription = '',
   stampEventCount = 0,
-  planType = 'NORMAL',
+  planType = 'BASIC',
   displayOrder = 0,
   isActive = true,
   registrationStatus = 'UNREGISTERED'
@@ -810,7 +829,7 @@ async function updateBusinessAd(adId, {
      SET business_name = ?, manager_name = ?, manager_contact = ?, title = ?, image_url = ?, link_url = ?, region = ?, district = ?, category = ?, open_hour = ?, close_hour = ?,
          kakao_talk_id = ?, telegram_id = ?, show_business_address_map = ?, use_visit_verification = ?, use_stamp_event = ?, stamp_event_description = ?, stamp_event_count = ?, description = ?, plan_type = ?, registration_status = ?, display_order = ?, is_active = ?
      WHERE id = ?`,
-    [businessName, managerName, managerContact, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, kakaoTalkId, telegramId, showBusinessAddressMap ? 1 : 0, useVisitVerification ? 1 : 0, useStampEvent ? 1 : 0, stampEventDescription, Number(stampEventCount) || 0, description, planType, registrationStatus, displayOrder, isActive ? 1 : 0, adId]
+    [businessName, managerName, managerContact, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, kakaoTalkId, telegramId, showBusinessAddressMap ? 1 : 0, useVisitVerification ? 1 : 0, useStampEvent ? 1 : 0, stampEventDescription, Number(stampEventCount) || 0, description, normalizeBusinessAdPlanType(planType), registrationStatus, displayOrder, isActive ? 1 : 0, adId]
   );
 }
 
@@ -823,11 +842,109 @@ async function increaseBusinessAdViewCount(adId) {
     `UPDATE business_ads
         SET view_count = view_count + 1
       WHERE id = ?
-        AND is_active = 1
+        AND activated_until IS NOT NULL
+        AND activated_until > NOW()
         AND registration_status = 'REGISTERED'`,
     [normalizedAdId]
   );
   return result.affectedRows > 0;
+}
+
+
+async function setBusinessAdActivationOff(adId) {
+  const pool = getPool();
+  await pool.query(
+    `UPDATE business_ads
+        SET is_active = 0
+      WHERE id = ?`,
+    [adId]
+  );
+}
+
+async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: requestedPlanType }) {
+  const pool = getPool();
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    const [adRows] = await connection.query(
+      `SELECT id, owner_user_id AS ownerUserId, plan_type AS planType, registration_status AS registrationStatus, activated_until AS activatedUntil
+         FROM business_ads
+        WHERE id = ?
+          AND owner_user_id = ?
+        FOR UPDATE`,
+      [adId, ownerUserId]
+    );
+    const ad = adRows[0];
+    if (!ad) {
+      const error = new Error('광고를 찾을 수 없습니다.');
+      error.status = 404;
+      throw error;
+    }
+    if (ad.registrationStatus !== 'REGISTERED') {
+      const error = new Error('등록 완료된 광고만 활성화할 수 있습니다.');
+      error.status = 400;
+      throw error;
+    }
+
+    const [activeRows] = await connection.query('SELECT (? IS NOT NULL AND ? > NOW()) AS isActivePeriod', [ad.activatedUntil, ad.activatedUntil]);
+    if (Number(activeRows[0]?.isActivePeriod || 0) === 1) {
+      await connection.query('UPDATE business_ads SET is_active = 1 WHERE id = ?', [adId]);
+      await connection.commit();
+      return {
+        consumedStampCount: 0,
+        planType: normalizeBusinessAdPlanType(ad.planType),
+        durationDays: getBusinessAdPlanDurationDays(ad.planType),
+        activatedUntil: ad.activatedUntil,
+        isCurrentlyVisible: true
+      };
+    }
+
+    const planType = normalizeBusinessAdPlanType(requestedPlanType || ad.planType);
+    const durationDays = getBusinessAdPlanDurationDays(planType);
+    const actionType = `BUSINESS_AD_${planType}`;
+    await connection.query('SELECT id FROM users WHERE id = ? FOR UPDATE', [ownerUserId]);
+    const [balanceRows] = await connection.query(
+      `SELECT COALESCE(SUM(amount), 0) AS totalStamps
+         FROM stamp_histories
+        WHERE user_id = ?
+          AND stamp_type = 'BUSINESS'
+        FOR UPDATE`,
+      [ownerUserId]
+    );
+    const balance = Number(balanceRows[0]?.totalStamps || 0);
+    if (balance < 1) {
+      const error = new Error('광고 활성화에 필요한 비즈니스 스탬프가 부족합니다.');
+      error.status = 400;
+      throw error;
+    }
+
+    await connection.query(
+      `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
+       VALUES (?, 'BUSINESS', ?, -1, ?, ?)`,
+      [ownerUserId, actionType, `${planType} 광고 ${durationDays}일 활성화`, `BUSINESS_AD-${adId}`]
+    );
+    await connection.query(
+      `UPDATE business_ads
+          SET is_active = 1, plan_type = ?, activated_until = DATE_ADD(NOW(), INTERVAL ? DAY)
+        WHERE id = ?`,
+      [planType, durationDays, adId]
+    );
+    const [[updatedAd]] = await connection.query('SELECT activated_until AS activatedUntil FROM business_ads WHERE id = ?', [adId]);
+    await connection.commit();
+    return {
+      consumedStampCount: 1,
+      planType,
+      durationDays,
+      activatedUntil: updatedAd?.activatedUntil || null,
+      isCurrentlyVisible: true
+    };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 
 async function deleteBusinessAd(adId) {
@@ -1305,6 +1422,10 @@ module.exports = {
   getStoreByNo,
   updateAd,
   deleteAd,
+  BUSINESS_AD_PLAN_DURATIONS,
+  normalizeBusinessAdPlanType,
+  getBusinessAdPlanDurationDays,
+  getBusinessAdPublicVisibilityCondition,
   listBusinessAdsByOwner,
   listPublicBusinessAdAreas,
   listPublicBusinessAds,
@@ -1314,6 +1435,8 @@ module.exports = {
   createBusinessAd,
   findBusinessAdById,
   updateBusinessAd,
+  activateBusinessAdWithStamp,
+  setBusinessAdActivationOff,
   deleteBusinessAd,
   updateEntry,
   recordSiteVisit,

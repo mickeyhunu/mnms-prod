@@ -1,63 +1,83 @@
 /**
- * 파일 역할: ad-purchase 페이지 광고 활성화 요금제 상세/결제정보 UI를 담당하는 스크립트 파일.
+ * 파일 역할: ad-purchase 페이지에서 비즈니스 스탬프로 업체 광고 ON/OFF 활성화를 처리하는 스크립트 파일.
  */
 (() => {
     const tabs = Array.from(document.querySelectorAll('.ad-plan-tab'));
     const featureList = document.getElementById('ad-plan-features');
     const priceOptions = document.getElementById('ad-price-options');
     const selectedProduct = document.getElementById('ad-selected-product');
-    const productPrice = document.getElementById('ad-product-price');
-    const vatPrice = document.getElementById('ad-vat-price');
-    const totalPrice = document.getElementById('ad-total-price');
-    const purchaseButton = document.getElementById('ad-purchase-submit');
+    const stampCost = document.getElementById('ad-product-price');
+    const durationText = document.getElementById('ad-vat-price');
+    const stampBalance = document.getElementById('ad-total-price');
+    const activationStatus = document.getElementById('ad-activation-current-status');
+    const activationToggle = document.getElementById('ad-purchase-activation-toggle');
+    const activationToggleLabel = document.getElementById('ad-purchase-activation-toggle-label');
+    const activationButton = document.getElementById('ad-purchase-submit');
 
-    if (!tabs.length || !featureList || !priceOptions || !selectedProduct || !productPrice || !vatPrice || !totalPrice) {
+    if (!tabs.length || !featureList || !priceOptions || !selectedProduct || !stampCost || !durationText || !stampBalance || !activationButton) {
         return;
     }
 
     const plans = {
         basic: {
-            name: 'BASIC',
+            code: 'BASIC',
+            name: '베이직 광고',
+            durationDays: 3,
             features: [
-                { text: '광고프로필 노출', enabled: true },
-                { text: '점프 6개', enabled: true },
-                { text: '자동점프 30일', enabled: true }
-            ],
-            options: [{ days: 30, price: 190000, originalPrice: null }]
+                { text: '스탬프 1개로 업체정보 3일 노출', enabled: true },
+                { text: '광고 등록만으로는 업체정보에 노출되지 않음', enabled: true },
+                { text: '활성화 ON 시 즉시 노출 시작', enabled: true }
+            ]
         },
         plus: {
-            name: 'PLUS',
+            code: 'PLUS',
+            name: '플러스 광고',
+            durationDays: 2,
             features: [
-                { text: '광고프로필 노출', enabled: true },
-                { text: '점프 9개', enabled: true },
-                { text: '자동점프 30일', enabled: true },
-                { text: '커뮤니티 홍보글 1일 1회', enabled: true }
-            ],
-            options: [{ days: 30, price: 390000, originalPrice: null }]
+                { text: '스탬프 1개로 업체정보 2일 노출', enabled: true },
+                { text: '베이직보다 높은 광고 등급으로 표시', enabled: true },
+                { text: '활성화 ON 시 즉시 노출 시작', enabled: true }
+            ]
         },
         premium: {
-            name: 'PREMIUM',
+            code: 'PREMIUM',
+            name: '프리미엄 광고',
+            durationDays: 1,
             features: [
-                { text: '지역 상단 광고프로필 노출', enabled: true },
-                { text: '점프 12개', enabled: true },
-                { text: '자동점프 30일', enabled: true },
-                { text: '커뮤니티 홍보글 1일 1회', enabled: true },
-                { text: '기업회원 익명 커뮤니티 이용가능', enabled: true }
-            ],
-            options: [{ days: 30, price: 590000, originalPrice: null }]
-        },
-        banner: {
-            name: 'BANNER',
-            features: [
-                { text: '배너광고 최대 20개 등록 가능', enabled: true },
-                { text: '배너 영역 랜덤 노출', enabled: true }
-            ],
-            options: [{ days: 30, price: 500000, originalPrice: null }]
+                { text: '스탬프 1개로 업체정보 1일 노출', enabled: true },
+                { text: '지역 상단 우선 노출 대상', enabled: true },
+                { text: '활성화 ON 시 즉시 노출 시작', enabled: true }
+            ]
         }
     };
 
-    const state = { plan: 'basic', duration: 30 };
-    const formatPrice = (value) => `${value.toLocaleString('ko-KR')}원`;
+    const state = {
+        plan: 'basic',
+        ad: null,
+        totalStamps: 0,
+        isSubmitting: false
+    };
+
+    const planCodesByApiCode = Object.entries(plans).reduce((acc, [key, plan]) => {
+        acc[plan.code] = key;
+        return acc;
+    }, {});
+
+    const normalizePlanKey = (value) => {
+        const normalized = String(value || '').trim().toUpperCase();
+        return planCodesByApiCode[normalized] || (plans[value] ? value : 'basic');
+    };
+
+    const formatDate = (value) => {
+        if (!value) return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return String(value);
+        return date.toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    };
+
+    const isRegisteredAd = () => String(state.ad?.registrationStatus || '').toUpperCase() === 'REGISTERED';
+    const isSwitchOn = () => Boolean(Number(state.ad?.isActive || 0));
+    const isVisible = () => Boolean(Number(state.ad?.isCurrentlyVisible || 0));
 
     const render = () => {
         const currentPlan = plans[state.plan];
@@ -73,51 +93,104 @@
             .map((item) => `<li class="${item.enabled ? 'is-enabled' : 'is-disabled'}">${item.text}</li>`)
             .join('');
 
-        priceOptions.innerHTML = currentPlan.options
-            .map((option) => {
-                const checked = option.days === state.duration;
-                const originalPrice = option.originalPrice
-                    ? `<span class="ad-price-original">${formatPrice(option.originalPrice)}</span>`
-                    : '';
+        priceOptions.innerHTML = `<button type="button" class="ad-price-option is-selected" data-days="${currentPlan.durationDays}">
+            <div><strong>스탬프 1개 / ${currentPlan.durationDays}일</strong></div>
+            <span class="ad-price-check is-selected" aria-hidden="true">●</span>
+        </button>`;
 
-                return `<button type="button" class="ad-price-option ${checked ? 'is-selected' : ''}" data-days="${option.days}">
-                    <div>${originalPrice}<strong>${option.days}일 / ${formatPrice(option.price)}</strong></div>
-                    <span class="ad-price-check ${checked ? 'is-selected' : ''}" aria-hidden="true">${checked ? '●' : '○'}</span>
-                </button>`;
-            })
-            .join('');
+        selectedProduct.textContent = currentPlan.name;
+        stampCost.textContent = '스탬프 1개';
+        durationText.textContent = `${currentPlan.durationDays}일`;
+        stampBalance.textContent = `${Number(state.totalStamps || 0).toLocaleString('ko-KR')}개`;
 
-        const selectedOption = currentPlan.options.find((option) => option.days === state.duration) || currentPlan.options[0];
-        state.duration = selectedOption.days;
+        const registered = isRegisteredAd();
+        const checked = isSwitchOn();
+        const visible = isVisible();
+        const expiresAt = formatDate(state.ad?.activatedUntil);
+        const canToggle = Boolean(state.ad?.id) && registered && !state.isSubmitting;
 
-        const vat = Math.round(selectedOption.price * 0.1);
-        const total = selectedOption.price + vat;
-        selectedProduct.textContent = `${currentPlan.name} ${selectedOption.days}일`;
-        productPrice.textContent = formatPrice(selectedOption.price);
-        vatPrice.textContent = formatPrice(vat);
-        totalPrice.textContent = formatPrice(total);
+        if (activationToggle) {
+            activationToggle.disabled = !canToggle;
+            activationToggle.checked = checked;
+        }
+        if (activationToggleLabel) {
+            activationToggleLabel.textContent = `광고 활성화 ${checked ? 'ON' : 'OFF'}`;
+        }
+
+        if (!state.ad) {
+            activationStatus.textContent = '등록된 광고프로필이 없습니다. 광고프로필을 먼저 등록해주세요.';
+        } else if (!registered) {
+            activationStatus.textContent = '임시저장 상태입니다. 광고프로필을 등록 완료한 뒤 활성화할 수 있습니다.';
+        } else if (visible && expiresAt) {
+            activationStatus.textContent = checked
+                ? `현재 업체정보에 노출 중입니다. 만료 예정: ${expiresAt}`
+                : `활성화는 OFF 상태입니다. 진행 중인 광고는 ${expiresAt}까지 노출됩니다.`;
+        } else {
+            activationStatus.textContent = `${currentPlan.name}은 스탬프 1개를 사용해 ${currentPlan.durationDays}일간 업체정보에 노출됩니다.`;
+        }
+
+        activationButton.disabled = !canToggle || (checked && !visible);
+        activationButton.textContent = checked ? '광고 활성화 OFF' : '광고 활성화 ON';
+    };
+
+    const loadActivationData = async () => {
+        const [adsResponse, stampResponse] = await Promise.all([
+            APIClient.get('/users/me/business-ads'),
+            APIClient.get('/users/me/stamps')
+        ]);
+        state.ad = Array.isArray(adsResponse?.content) ? adsResponse.content[0] : null;
+        state.totalStamps = Number(stampResponse?.totalStamps || 0);
+        if (state.ad?.planType) {
+            state.plan = normalizePlanKey(state.ad.planType);
+        }
+        render();
+    };
+
+    const updateActivation = async (nextActive) => {
+        if (!state.ad?.id || state.isSubmitting) return;
+        const currentPlan = plans[state.plan];
+        try {
+            state.isSubmitting = true;
+            render();
+            const response = await APIClient.patch(`/users/me/business-ads/${state.ad.id}/activation`, {
+                isActive: nextActive,
+                planType: currentPlan.code
+            });
+            alert(response?.message || '광고 활성화 상태가 변경되었습니다.');
+            state.ad = response?.content || state.ad;
+            state.totalStamps = Number(response?.totalStamps ?? state.totalStamps);
+        } catch (error) {
+            alert(error.message || '광고 활성화 처리에 실패했습니다.');
+        } finally {
+            state.isSubmitting = false;
+            render();
+        }
     };
 
     tabs.forEach((tab) => {
         tab.addEventListener('click', () => {
-            state.plan = tab.dataset.plan || 'basic';
-            state.duration = 30;
+            state.plan = normalizePlanKey(tab.dataset.plan || 'basic');
             render();
         });
     });
 
-    priceOptions.addEventListener('click', (event) => {
-        const optionButton = event.target.closest('.ad-price-option');
-        if (!optionButton) return;
-        state.duration = Number(optionButton.dataset.days);
-        render();
+    activationToggle?.addEventListener('change', (event) => {
+        updateActivation(Boolean(event.target.checked));
     });
 
-    if (purchaseButton) {
-        purchaseButton.addEventListener('click', () => {
-            alert('광고 활성화가 완료되었습니다.');
-        });
+    activationButton.addEventListener('click', () => {
+        updateActivation(!isSwitchOn());
+    });
+
+    if (!Auth.isAuthenticated()) {
+        window.location.href = '/login';
+        return;
     }
 
-    render();
+    if (typeof initHeader === 'function') initHeader();
+    Auth.bindLogoutButton();
+    loadActivationData().catch((error) => {
+        activationStatus.textContent = error.message || '광고 활성화 정보를 불러오지 못했습니다.';
+        render();
+    });
 })();

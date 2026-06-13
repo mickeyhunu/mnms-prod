@@ -27,11 +27,28 @@ const adProfileState = {
     me: null,
     isSaving: false,
     syncPreview: null,
-    descriptionEditor: null
+    descriptionEditor: null,
+    currentPlanType: 'BASIC'
 };
 const DEFAULT_AD_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const MIN_STAMP_EVENT_COUNT = 5;
+const AD_PLAN_LABELS = { BASIC: '베이직', PLUS: '플러스', PREMIUM: '프리미엄', NORMAL: '베이직' };
+const AD_PLAN_DAYS = { BASIC: 3, PLUS: 2, PREMIUM: 1, NORMAL: 3 };
+
+function normalizeAdPlanType(planType) {
+    const normalized = String(planType || '').trim().toUpperCase();
+    if (['BASIC', 'PLUS', 'PREMIUM'].includes(normalized)) return normalized;
+    return normalized === 'NORMAL' ? 'BASIC' : 'BASIC';
+}
+
+function formatActivationDate(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return date.toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
 function createHourOptions(hourSelect) {
     if (!hourSelect) return;
     const options = ['시간선택'];
@@ -698,8 +715,11 @@ async function loadMyAdProfile() {
     const response = await APIClient.get('/users/me/business-ads');
     const existingAd = Array.isArray(response?.content) ? response.content[0] : null;
     adProfileState.currentAdId = Number(existingAd?.id || 0) || null;
-    if (existingAd) applyAdProfileToForm(existingAd);
+    if (existingAd) {
+        applyAdProfileToForm(existingAd);
+    }
 }
+
 
 async function saveAdProfile({ forceDraft = false } = {}) {
     if (adProfileState.isSaving) return;
@@ -816,7 +836,7 @@ async function saveAdProfile({ forceDraft = false } = {}) {
             useStampEvent,
             stampEventDescription: useStampEvent ? stampEventDescription : '',
             stampEventCount: useStampEvent ? stampEventCount : 0,
-            planType: adProfileState.me?.isBusiness ? 'PREMIUM' : 'NORMAL',
+            planType: adProfileState.currentPlanType || 'BASIC',
             registrationStatus,
             isActive: !forceDraft,
             displayOrder: 0
@@ -844,7 +864,7 @@ async function saveAdProfile({ forceDraft = false } = {}) {
             return;
         }
 
-        showSaveMessage('광고프로필이 저장되었습니다. 업체정보 메뉴에서 확인할 수 있습니다.');
+        showSaveMessage('광고프로필이 저장되었습니다. 광고 활성화 ON 후 업체정보에 노출됩니다.');
         await loadMyAdProfile();
         window.location.href = '/my-page';
     } catch (error) {
@@ -864,6 +884,7 @@ async function saveAdProfile({ forceDraft = false } = {}) {
 
 function applyAdProfileToForm(ad) {
     if (!ad) return;
+    adProfileState.currentPlanType = normalizeAdPlanType(ad.planType);
 
     const storeNameInput = document.getElementById('ad-profile-name');
     const regionSelect = document.getElementById('ad-profile-region');

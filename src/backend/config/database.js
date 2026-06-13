@@ -623,6 +623,7 @@ async function initDatabase() {
       plan_type VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
       view_count BIGINT NOT NULL DEFAULT 0,
       registration_status ENUM('UNREGISTERED','DRAFT','REGISTERED') NOT NULL DEFAULT 'UNREGISTERED',
+      activated_until DATETIME NULL,
       display_order INT NOT NULL DEFAULT 0,
       is_active TINYINT(1) NOT NULL DEFAULT 1,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -651,7 +652,8 @@ async function initDatabase() {
     { name: 'description', sql: 'ALTER TABLE business_ads ADD COLUMN description TEXT NULL AFTER stamp_event_count' },
     { name: 'plan_type', sql: "ALTER TABLE business_ads ADD COLUMN plan_type VARCHAR(20) NOT NULL DEFAULT 'NORMAL' AFTER description" },
     { name: 'view_count', sql: "ALTER TABLE business_ads ADD COLUMN view_count BIGINT NOT NULL DEFAULT 0 AFTER plan_type" },
-    { name: 'registration_status', sql: "ALTER TABLE business_ads ADD COLUMN registration_status ENUM('UNREGISTERED','DRAFT','REGISTERED') NOT NULL DEFAULT 'UNREGISTERED' AFTER view_count" }
+    { name: 'registration_status', sql: "ALTER TABLE business_ads ADD COLUMN registration_status ENUM('UNREGISTERED','DRAFT','REGISTERED') NOT NULL DEFAULT 'UNREGISTERED' AFTER view_count" },
+    { name: 'activated_until', sql: 'ALTER TABLE business_ads ADD COLUMN activated_until DATETIME NULL AFTER registration_status' }
   ];
 
   for (const migration of businessAdsColumnMigrations) {
@@ -1035,7 +1037,7 @@ async function initDatabase() {
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       user_id BIGINT NOT NULL,
       stamp_type ENUM('MEMBER','BUSINESS') NOT NULL DEFAULT 'MEMBER',
-      action_type ENUM('STAMP_PURCHASE','STAMP_PURCHASE_CANCEL','VISIT_VERIFICATION','SERVICE_BOTTLE_USE','BUSINESS_AD_BRONZE','BUSINESS_AD_SILVER','BUSINESS_AD_GOLD','ADMIN_ADJUST_ADD','ADMIN_ADJUST_DEDUCT','EXPIRED') NOT NULL,
+      action_type ENUM('STAMP_PURCHASE','STAMP_PURCHASE_CANCEL','VISIT_VERIFICATION','SERVICE_BOTTLE_USE','BUSINESS_AD_BRONZE','BUSINESS_AD_SILVER','BUSINESS_AD_GOLD','BUSINESS_AD_BASIC','BUSINESS_AD_PLUS','BUSINESS_AD_PREMIUM','ADMIN_ADJUST_ADD','ADMIN_ADJUST_DEDUCT','EXPIRED') NOT NULL,
       amount INT NOT NULL,
       reason VARCHAR(255) NULL,
       source_label VARCHAR(255) NULL,
@@ -1047,7 +1049,7 @@ async function initDatabase() {
 
   await pool.query(`
     ALTER TABLE stamp_histories
-    MODIFY COLUMN action_type ENUM('STAMP_PURCHASE','STAMP_PURCHASE_CANCEL','VISIT_VERIFICATION','SERVICE_BOTTLE_USE','BUSINESS_AD_BRONZE','BUSINESS_AD_SILVER','BUSINESS_AD_GOLD','ADMIN_ADJUST_ADD','ADMIN_ADJUST_DEDUCT','EXPIRED') NOT NULL
+    MODIFY COLUMN action_type ENUM('STAMP_PURCHASE','STAMP_PURCHASE_CANCEL','VISIT_VERIFICATION','SERVICE_BOTTLE_USE','BUSINESS_AD_BRONZE','BUSINESS_AD_SILVER','BUSINESS_AD_GOLD','BUSINESS_AD_BASIC','BUSINESS_AD_PLUS','BUSINESS_AD_PREMIUM','ADMIN_ADJUST_ADD','ADMIN_ADJUST_DEDUCT','EXPIRED') NOT NULL
   `);
 
   await pool.query(`

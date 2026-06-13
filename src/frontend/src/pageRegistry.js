@@ -716,9 +716,6 @@ const pageRegistry = {
                     <button type="button" class="ad-plan-tab" data-plan="premium" role="tab" aria-selected="false">
                         <img class="ad-plan-tab-icon" src="/src/assets/ad-plan-badges/premium-badge.png" alt="" aria-hidden="true">
                     </button>
-                    <button type="button" class="ad-plan-tab" data-plan="banner" role="tab" aria-selected="false">
-                        <img class="ad-plan-tab-icon" src="/src/assets/ad-plan-badges/banner-badge.png" alt="" aria-hidden="true">
-                    </button>
                 </div>
 
                 <article class="ad-plan-detail" id="ad-plan-detail">
@@ -728,27 +725,32 @@ const pageRegistry = {
 
                 <hr class="ad-payment-divider">
 
-                <article class="ad-payment-card" aria-label="결제 정보">
-                    <h3 class="ad-payment-title">결제정보</h3>
+                <article class="ad-payment-card" aria-label="광고 활성화 정보">
+                    <h3 class="ad-payment-title">활성화 정보</h3>
                     <dl class="ad-payment-list">
                         <div class="ad-payment-row">
-                            <dt>선택한 상품</dt>
-                            <dd id="ad-selected-product">BASIC 30일</dd>
+                            <dt>선택한 광고</dt>
+                            <dd id="ad-selected-product">BASIC 광고</dd>
                         </div>
                         <div class="ad-payment-row">
-                            <dt>상품 금액</dt>
-                            <dd id="ad-product-price">190,000원</dd>
+                            <dt>차감 스탬프</dt>
+                            <dd id="ad-product-price">1개</dd>
                         </div>
                         <div class="ad-payment-row">
-                            <dt>부가세 (VAT)</dt>
-                            <dd id="ad-vat-price">19,000원</dd>
+                            <dt>노출 기간</dt>
+                            <dd id="ad-vat-price">3일</dd>
+                        </div>
+                        <div class="ad-payment-row">
+                            <dt>보유 스탬프</dt>
+                            <dd id="ad-total-price">확인 중...</dd>
                         </div>
                     </dl>
-                    <div class="ad-payment-total">
-                        <strong>총 결제 금액</strong>
-                        <strong id="ad-total-price">209,000원</strong>
-                    </div>
-                    <button type="button" class="btn btn-primary ad-purchase-submit" id="ad-purchase-submit">광고 활성화하기</button>
+                    <p class="ad-profile-map-toggle-help" id="ad-activation-current-status">광고프로필 정보를 확인 중입니다.</p>
+                    <label class="ad-profile-map-toggle" for="ad-purchase-activation-toggle">
+                        <input id="ad-purchase-activation-toggle" type="checkbox" disabled>
+                        <span id="ad-purchase-activation-toggle-label">광고 활성화 OFF</span>
+                    </label>
+                    <button type="button" class="btn btn-primary ad-purchase-submit" id="ad-purchase-submit" disabled>광고 활성화 ON</button>
                 </article>
             </section>
         </div>

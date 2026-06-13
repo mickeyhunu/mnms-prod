@@ -41,6 +41,10 @@ const { hashPassword } = require('../utils/passwordHasher');
 const NTS_BUSINESS_STATUS_API_URL = 'https://api.odcloud.kr/api/nts-businessman/v1/status';
 const MIN_STAMP_EVENT_COUNT = 5;
 
+function normalizeBusinessAdPlanTypePayload(planType) {
+  return adminModel.normalizeBusinessAdPlanType(planType);
+}
+
 function normalizeBusinessRegistrationNumber(value) {
   return String(value || '').replace(/\D/g, '').slice(0, 10);
 }
@@ -867,11 +871,11 @@ async function createMyBusinessAd(req, res, next) {
     const useVisitVerification = useStampEvent;
     const stampEventDescription = useStampEvent ? String(req.body?.stampEventDescription || '').trim() : '';
     const stampEventCount = useStampEvent ? normalizePositiveIntPayload(req.body?.stampEventCount, 0) : 0;
-    const planType = String(req.body?.planType || 'NORMAL').trim().toUpperCase() === 'PREMIUM' ? 'PREMIUM' : 'NORMAL';
+    const planType = normalizeBusinessAdPlanTypePayload(req.body?.planType || 'BASIC');
     const displayOrder = Number(req.body?.displayOrder) || 0;
     const requestedStatus = normalizeRegistrationStatus(req.body?.registrationStatus, 'UNREGISTERED');
     const isRegisteredStatus = requestedStatus === 'REGISTERED';
-    const isActive = isRegisteredStatus;
+    const isActive = false;
 
     if (isRegisteredStatus && !isCompleteBusinessAdPayload({
       businessName, managerName, managerContact, title, region, district, category, openHour, closeHour, description: requestedDescription
@@ -966,12 +970,13 @@ async function updateMyBusinessAd(req, res, next) {
         0
       )
       : 0;
-    const planTypeRaw = pickTrimmedText(req.body, 'planType', target.planType || 'NORMAL').toUpperCase();
-    const planType = planTypeRaw === 'PREMIUM' ? 'PREMIUM' : 'NORMAL';
+    const planType = normalizeBusinessAdPlanTypePayload(pickTrimmedText(req.body, 'planType', target.planType || 'BASIC'));
     const displayOrder = Object.prototype.hasOwnProperty.call(req.body || {}, 'displayOrder') ? (Number(req.body?.displayOrder) || 0) : (Number(target.displayOrder) || 0);
     const requestedStatus = normalizeRegistrationStatus(req.body?.registrationStatus, target.registrationStatus || 'UNREGISTERED');
     const isRegisteredStatus = requestedStatus === 'REGISTERED';
-    const isActive = isRegisteredStatus;
+    const isActive = isRegisteredStatus && target.registrationStatus === 'REGISTERED'
+      ? normalizeBooleanPayload(target.isActive, false)
+      : false;
 
     if (isRegisteredStatus && !isCompleteBusinessAdPayload({
       businessName, managerName, managerContact, title, region, district, category, openHour, closeHour, description: requestedDescription
@@ -1080,6 +1085,52 @@ async function reviewMyStampEventRequest(req, res, next) {
     });
 
     return res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+
+async function updateMyBusinessAdActivation(req, res, next) {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 광고 ID입니다.' });
+
+    const target = await adminModel.findBusinessAdById(id);
+    if (!target || Number(target.ownerUserId) !== Number(req.user.id)) {
+      return res.status(404).json({ message: '광고를 찾을 수 없습니다.' });
+    }
+
+    const nextActive = normalizeBooleanPayload(req.body?.isActive, false);
+    if (!nextActive) {
+      await adminModel.setBusinessAdActivationOff(id);
+      const updated = await adminModel.findBusinessAdById(id);
+      return res.json({
+        success: true,
+        message: updated?.isCurrentlyVisible
+          ? '광고 활성화가 OFF되었습니다. 진행 중인 광고는 만료일까지 노출됩니다.'
+          : '광고 활성화가 OFF되었습니다.',
+        content: updated
+      });
+    }
+
+    const activation = await adminModel.activateBusinessAdWithStamp({
+      adId: id,
+      ownerUserId: req.user.id,
+      planType: req.body?.planType
+    });
+    const totalStamps = await getUserStampBalance(req.user.id, STAMP_TYPES.BUSINESS);
+    const updated = await adminModel.findBusinessAdById(id);
+
+    return res.json({
+      success: true,
+      message: activation.consumedStampCount > 0
+        ? `스탬프 1개를 사용해 ${activation.durationDays}일간 광고가 활성화되었습니다.`
+        : '진행 중인 광고 활성화가 ON으로 변경되었습니다.',
+      activation,
+      totalStamps,
+      content: updated
+    });
   } catch (error) {
     next(error);
   }
@@ -1317,6 +1368,7 @@ module.exports = {
   listMyBusinessAds,
   createMyBusinessAd,
   updateMyBusinessAd,
+  updateMyBusinessAdActivation,
   deleteMyBusinessAd,
   getMyBusinessProfile,
   saveMyBusinessProfile,
