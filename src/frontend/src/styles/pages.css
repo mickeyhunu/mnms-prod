@@ -3964,6 +3964,45 @@ body[data-page="admin"] {
     margin-top: 12px;
 }
 
+.ad-profile-user-preview {
+    margin-top: 28px;
+}
+
+.ad-profile-user-preview-heading {
+    margin-bottom: 14px;
+}
+
+.ad-profile-user-preview-heading h4 {
+    margin: 0 0 6px;
+    color: #111827;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.ad-profile-user-preview-heading p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.ad-profile-user-preview-card {
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 12px 34px rgba(17, 24, 39, 0.08);
+}
+
+.ad-profile-detail-preview-map-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 800;
+}
+
 .ad-profile-notice--bottom {
     margin-top: 24px;
 }

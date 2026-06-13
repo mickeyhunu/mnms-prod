@@ -337,6 +337,80 @@ const pageRegistry = {
                             </div>
                         </li>
                     </ul>
+                    <div class="ad-profile-user-preview" aria-label="사용자에게 표시되는 광고프로필 화면 미리보기">
+                        <div class="ad-profile-user-preview-heading">
+                            <h4>사용자 화면 미리보기</h4>
+                            <p>업체정보 상세 화면에 실제로 표시되는 구성을 미리 확인할 수 있어요.</p>
+                        </div>
+                        <article class="business-profile-standalone ad-profile-user-preview-card">
+                            <div class="business-profile-hero">
+                                <div class="business-profile-image-frame">
+                                    <img id="ad-profile-detail-preview-image-blur" class="business-profile-image-blur" src="/src/assets/image/ad-profile-default.webp" alt="" aria-hidden="true">
+                                    <img id="ad-profile-detail-preview-image" class="business-profile-image" src="/src/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
+                                </div>
+                                <div class="business-profile-summary">
+                                    <p class="business-profile-eyebrow" id="ad-profile-detail-preview-eyebrow">선택 선택 · 선택</p>
+                                    <h2 id="ad-profile-detail-preview-title">[선택-업소명] 제목을 입력해주세요.</h2>
+                                    <div class="business-profile-stats">
+                                        <span id="ad-profile-detail-preview-hours">영업시간 시간선택 ~ 시간선택</span>
+                                        <span>조회수 0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <dl class="business-profile-info">
+                                <div class="business-profile-info-pair">
+                                    <div class="business-profile-info-item"><dt><span aria-hidden="true">🏢</span>업체명</dt><dd id="ad-profile-detail-preview-business-name">업소명</dd></div>
+                                    <div class="business-profile-info-item"><dt><span aria-hidden="true">👤</span>담당자</dt><dd id="ad-profile-detail-preview-manager-name">담당자</dd></div>
+                                </div>
+                                <div class="business-profile-info-pair">
+                                    <div class="business-profile-info-item"><dt><span aria-hidden="true">📍</span>지역</dt><dd id="ad-profile-detail-preview-region">선택 선택</dd></div>
+                                    <div class="business-profile-info-item"><dt><span aria-hidden="true">🏷️</span>업종</dt><dd id="ad-profile-detail-preview-category">선택</dd></div>
+                                </div>
+                                <div class="business-profile-info-item business-profile-info-item--contact">
+                                    <dd>
+                                        <span class="business-profile-contact-item">
+                                            <span class="business-profile-contact-label"><span aria-hidden="true">📞</span>연락처</span>
+                                            <span class="business-profile-contact-value" id="ad-profile-detail-preview-manager-contact">연락처</span>
+                                        </span>
+                                        <span class="business-profile-contact-item hidden" id="ad-profile-detail-preview-kakao-row">
+                                            <span class="business-profile-contact-label"><span aria-hidden="true">💬</span>카카오톡</span>
+                                            <span class="business-profile-contact-value" id="ad-profile-detail-preview-kakao">-</span>
+                                        </span>
+                                        <span class="business-profile-contact-item hidden" id="ad-profile-detail-preview-telegram-row">
+                                            <span class="business-profile-contact-label"><span aria-hidden="true">✈️</span>텔레그램</span>
+                                            <span class="business-profile-contact-value" id="ad-profile-detail-preview-telegram">-</span>
+                                        </span>
+                                    </dd>
+                                </div>
+                                <div class="business-profile-info-item business-profile-info-item--stamp hidden" id="ad-profile-detail-preview-stamp-row">
+                                    <dt><span aria-hidden="true">🎟️</span>스탬프 이벤트</dt>
+                                    <dd>
+                                        <div class="business-profile-stamp-summary">
+                                            <div class="business-profile-stamp-summary-row">
+                                                <button type="button" class="business-profile-stamp-summary-label" aria-label="방문 인증 안내 보기">방문 인증시</button>
+                                                <span class="business-profile-stamp-summary-value">스탬프 1개 지급</span>
+                                            </div>
+                                            <div class="business-profile-stamp-summary-row" id="ad-profile-detail-preview-stamp-use-row">
+                                                <button type="button" class="business-profile-stamp-summary-label" id="ad-profile-detail-preview-stamp-count-label" aria-label="스탬프 사용 안내 보기">스탬프 5개 사용시</button>
+                                                <span class="business-profile-stamp-summary-value" id="ad-profile-detail-preview-stamp-description">이벤트 설명</span>
+                                            </div>
+                                        </div>
+                                    </dd>
+                                </div>
+                            </dl>
+                            <section class="business-profile-location-section hidden" id="ad-profile-detail-preview-map-section" aria-label="위치정보">
+                                <h3>위치정보</h3>
+                                <div class="business-profile-location">
+                                    <div class="business-profile-mini-map ad-profile-detail-preview-map-placeholder">지도 미리보기</div>
+                                    <p class="business-profile-map-address">사업자등록기준 주소지가 표시됩니다.</p>
+                                </div>
+                            </section>
+                            <section class="business-profile-description" aria-label="업체 상세정보">
+                                <h3>상세정보</h3>
+                                <div class="business-profile-description-content" id="ad-profile-detail-preview-description"><p>등록된 상세정보가 없습니다.</p></div>
+                            </section>
+                        </article>
+                    </div>
                 </div>
                 
                 <div class="ad-profile-submit-wrap">
