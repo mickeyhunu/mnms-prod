@@ -708,7 +708,6 @@ const pageRegistry = {
             <div class="container ad-management-container">
                 <section class="ad-management-status-card" aria-labelledby="ad-management-status-title">
                     <div class="ad-management-status-copy">
-                        <span class="ad-management-status-pill" id="ad-management-status-pill">확인 중</span>
                         <img src="/src/assets/ad-plan-badges/premium-badge.png" alt="광고 등급" class="ad-management-status-badge" id="ad-management-status-badge">
                         <h2 id="ad-management-status-title">광고 상태를 확인하고 있습니다</h2>
                         <div class="ad-management-status-periods" aria-label="광고 노출 기간">
