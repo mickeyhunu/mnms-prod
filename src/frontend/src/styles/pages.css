@@ -5792,17 +5792,18 @@ body.business-profile-modal-open {
 
 .ad-management-illustration {
     position: relative;
-    width: 350px;
-    height: 210px;
-    flex: 0 0 350px;
+    width: min(100%, 350px);
+    aspect-ratio: 5 / 3;
+    height: auto;
+    flex: 0 1 35%;
 }
 
 .ad-management-browser {
     position: absolute;
-    right: 28px;
-    top: 26px;
-    width: 255px;
-    height: 145px;
+    right: 8%;
+    top: 12%;
+    width: 73%;
+    height: 69%;
     border: 2px solid #d0d7e2;
     border-radius: 18px;
     background: linear-gradient(#f1f5f9 0 34px, #fff 34px);
@@ -5820,12 +5821,12 @@ body.business-profile-modal-open {
 
 .ad-management-ad-tile {
     position: absolute;
-    left: 24px;
-    top: 55px;
+    left: 9%;
+    top: 38%;
     display: grid;
     place-items: center;
-    width: 62px;
-    height: 62px;
+    width: 24%;
+    aspect-ratio: 1;
     border-radius: 7px;
     background: linear-gradient(135deg, #22c55e, #4ade80);
     color: #fff;
@@ -5835,25 +5836,25 @@ body.business-profile-modal-open {
 
 .ad-management-browser i {
     position: absolute;
-    left: 104px;
-    height: 14px;
+    left: 41%;
+    height: 10%;
     border-radius: 999px;
     background: #e5e9ef;
 }
 
-.ad-management-browser i:nth-of-type(1) { top: 56px; width: 128px; }
-.ad-management-browser i:nth-of-type(2) { top: 82px; width: 104px; }
-.ad-management-browser i:nth-of-type(3) { top: 108px; width: 72px; }
-.ad-management-browser i:nth-of-type(4) { left: 22px; top: 124px; width: 130px; opacity: 0.65; }
+.ad-management-browser i:nth-of-type(1) { top: 39%; width: 50%; }
+.ad-management-browser i:nth-of-type(2) { top: 57%; width: 41%; }
+.ad-management-browser i:nth-of-type(3) { top: 74%; width: 28%; }
+.ad-management-browser i:nth-of-type(4) { left: 9%; top: 86%; width: 51%; opacity: 0.65; }
 
 .ad-management-check {
     position: absolute;
-    right: 8px;
-    bottom: 12px;
+    right: 2%;
+    bottom: 6%;
     display: grid;
     place-items: center;
-    width: 82px;
-    height: 82px;
+    width: 23%;
+    aspect-ratio: 1;
     border-radius: 50%;
     background: linear-gradient(135deg, #4ade80, #16a34a);
     color: #fff;
@@ -5890,7 +5891,7 @@ body.business-profile-modal-open {
 .ad-product-grid,
 .ad-stamp-info-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
     gap: 20px;
 }
 
@@ -6099,7 +6100,7 @@ body.business-profile-modal-open {
 
 .ad-activation-panel {
     display: grid;
-    grid-template-columns: 0.8fr 1.5fr 1.6fr;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
     align-items: center;
     gap: 26px;
     padding-bottom: 0;
@@ -6176,21 +6177,8 @@ body.business-profile-modal-open {
 }
 
 @media (max-width: 860px) {
-    .ad-management-heading,
-    .ad-management-status-card,
-    .ad-management-section-title-row {
-        flex-direction: column;
-    }
-
     .ad-management-illustration {
-        width: 100%;
-        flex-basis: 210px;
-    }
-
-    .ad-product-grid,
-    .ad-stamp-info-grid,
-    .ad-activation-panel {
-        grid-template-columns: 1fr;
+        flex-basis: 45%;
     }
 }
 
