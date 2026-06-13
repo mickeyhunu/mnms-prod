@@ -6210,3 +6210,270 @@ body.business-profile-modal-open {
 .ad-product-card.is-active .ad-product-selected-ribbon {
     display: inline-block;
 }
+
+/* Ad purchase mobile-first sizing */
+body[data-page="ad-purchase"] .main-content {
+    background: #f8fafc;
+}
+
+body[data-page="ad-purchase"] .main-content > .container {
+    width: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 0;
+    background: #fff;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-container {
+    width: 100%;
+    padding: 12px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-status-card,
+body[data-page="ad-purchase"] .main-content .ad-management-panel {
+    width: 100%;
+    margin-bottom: 14px;
+    padding: 16px 14px;
+    border-radius: 14px;
+    box-shadow: none;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-status-card {
+    display: block;
+    min-height: 0;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-status-pill {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-status-card h2,
+body[data-page="ad-purchase"] .main-content .ad-management-panel h2 {
+    font-size: 18px;
+    line-height: 1.35;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-status-card h2 {
+    margin: 12px 0 14px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-section-title-row {
+    display: block;
+    margin-bottom: 14px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-section-title-row p,
+body[data-page="ad-purchase"] .main-content .ad-activation-copy p {
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-compare-link {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-status-time {
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-status-time strong {
+    font-size: 19px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-status-time span {
+    padding: 5px 8px;
+    font-size: 12px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-stop-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 11px 14px;
+    font-size: 14px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-illustration {
+    display: none;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-product-grid,
+body[data-page="ad-purchase"] .main-content .ad-stamp-info-grid,
+body[data-page="ad-purchase"] .main-content .ad-activation-panel {
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-product-card {
+    display: grid;
+    grid-template-columns: 74px minmax(0, 1fr) 24px;
+    grid-template-areas:
+        "badge title radio"
+        "badge divider divider"
+        "badge cost cost";
+    align-items: center;
+    min-height: 112px;
+    padding: 12px;
+    text-align: left;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-product-badge {
+    grid-area: badge;
+    width: 66px;
+    height: 52px;
+    margin: 0;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-product-card strong {
+    grid-area: title;
+    margin: 0;
+    font-size: 15px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-product-divider {
+    grid-area: divider;
+    margin: 8px 0;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-product-radio {
+    grid-area: radio;
+    position: static;
+    width: 22px;
+    height: 22px;
+    justify-self: end;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-product-card.is-active .ad-product-radio {
+    box-shadow: inset 0 0 0 5px #fff, inset 0 0 0 11px #16a34a;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-product-cost {
+    grid-area: cost;
+    padding-left: 0;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-product-cost small {
+    font-size: 12px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-product-cost b {
+    font-size: 16px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-product-selected-ribbon {
+    padding: 5px 8px;
+    border-radius: 10px 0 10px 0;
+    font-size: 11px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-product-selected-check {
+    top: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-stamp-info-card {
+    min-height: 0;
+    padding: 14px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-stamp-icon {
+    width: 30px;
+    height: 30px;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-stamp-info-card p {
+    font-size: 13px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-stamp-info-card strong {
+    font-size: 22px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-stamp-progress {
+    height: 8px;
+    margin: 14px 0 6px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-stamp-summary-card div {
+    margin-bottom: 10px;
+    font-size: 13px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-notice {
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-activation-panel {
+    padding-bottom: 0;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-activation-benefits {
+    gap: 10px;
+    padding: 12px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-activation-benefits > span {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    font-size: 20px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-activation-benefits b,
+body[data-page="ad-purchase"] .main-content .ad-activation-benefits li,
+body[data-page="ad-purchase"] .main-content .ad-activation-action p,
+body[data-page="ad-purchase"] .main-content .ad-management-safe-note,
+body[data-page="ad-purchase"] .main-content .ad-activation-panel .ad-profile-map-toggle-help {
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-start-btn {
+    min-height: 54px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 15px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-safe-note {
+    margin: 10px -14px 0;
+    padding: 14px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-activation-panel .ad-profile-map-toggle-help {
+    margin: 0 -14px;
+    padding: 10px 14px 14px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-activation-switch {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-activation-switch-track {
+    width: 58px;
+    height: 30px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-activation-switch-track::after {
+    width: 22px;
+    height: 22px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-activation-switch input:checked + .ad-activation-switch-track::after {
+    transform: translateX(28px);
+}
