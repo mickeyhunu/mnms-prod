@@ -721,6 +721,38 @@ function closeBusinessProfileModal() {
     document.body.classList.remove('business-profile-modal-open');
 }
 
+function getBusinessProfileDisclosureItems(ad) {
+    const registeredBusinessName = String(ad?.businessDisclosureName || ad?.companyName || '').trim();
+    const registeredBusinessOwner = String(ad?.businessDisclosureOwner || ad?.profileManagerName || '').trim();
+    const registeredBusinessAddress = String(ad?.businessAddress || '').trim();
+    const registeredBusinessAddressDetail = String(ad?.businessAddressDetail || '').trim();
+
+    return [
+        ['사업자상호', registeredBusinessName],
+        ['사업자주소', registeredBusinessAddress],
+        ['상세주소', registeredBusinessAddressDetail],
+        ['사업자대표', registeredBusinessOwner]
+    ].filter(([, value]) => value);
+}
+
+function buildBusinessProfileDisclosureMarkup(ad) {
+    const disclosureItems = getBusinessProfileDisclosureItems(ad);
+    if (!disclosureItems.length) return '';
+
+    return `
+        <section class="business-profile-disclosure" aria-label="사업자정보">
+            <dl>
+                ${disclosureItems.map(([label, value]) => `
+                    <div class="business-profile-disclosure-row">
+                        <dt>${sanitizeHTML(label)}</dt>
+                        <dd>${sanitizeHTML(value)}</dd>
+                    </div>
+                `).join('')}
+            </dl>
+        </section>
+    `;
+}
+
 function buildBusinessProfileDetailMarkup(ad) {
     const regionLabel = sanitizeHTML(ad.region || '지역미지정');
     const district = sanitizeHTML(ad.district || '선택');
@@ -773,6 +805,7 @@ function buildBusinessProfileDetailMarkup(ad) {
                 <div class="business-profile-description-content">${description || '<p>등록된 상세정보가 없습니다.</p>'}</div>
             </section>
             ${externalUrl ? `<a class="business-profile-link btn btn-primary" href="${sanitizeHTML(externalUrl)}" target="_blank" rel="noopener noreferrer">업체 링크 열기</a>` : ''}
+            ${buildBusinessProfileDisclosureMarkup(ad)}
         </article>
     `;
 }
