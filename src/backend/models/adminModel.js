@@ -663,8 +663,10 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
             ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.created_at AS createdAt,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, COALESCE(u.nickname, '업체') AS ownerNickname,
             COALESCE(bp.company_name, '') AS companyName, COALESCE(bp.manager_name, '') AS profileManagerName,
-            COALESCE(JSON_UNQUOTE(JSON_EXTRACT(bp.business_info, '$.businessAddress')), '') AS businessAddress,
-            COALESCE(JSON_UNQUOTE(JSON_EXTRACT(bp.business_info, '$.businessAddressDetail')), '') AS businessAddressDetail
+            COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessName')), COALESCE(bp.company_name, '')) AS businessDisclosureName,
+            COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessOwner')), COALESCE(bp.manager_name, '')) AS businessDisclosureOwner,
+            COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessAddress')), '') AS businessAddress,
+            COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessAddressDetail')), '') AS businessAddressDetail
        FROM business_ads ba
        LEFT JOIN users u ON u.id = ba.owner_user_id
        LEFT JOIN business_profiles bp ON bp.user_id = ba.owner_user_id
@@ -723,8 +725,10 @@ async function findPublicBusinessAdById(adId) {
             ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, COALESCE(u.nickname, '업체') AS ownerNickname,
             COALESCE(bp.company_name, '') AS companyName, COALESCE(bp.manager_name, '') AS profileManagerName,
-            COALESCE(JSON_UNQUOTE(JSON_EXTRACT(bp.business_info, '$.businessAddress')), '') AS businessAddress,
-            COALESCE(JSON_UNQUOTE(JSON_EXTRACT(bp.business_info, '$.businessAddressDetail')), '') AS businessAddressDetail
+            COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessName')), COALESCE(bp.company_name, '')) AS businessDisclosureName,
+            COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessOwner')), COALESCE(bp.manager_name, '')) AS businessDisclosureOwner,
+            COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessAddress')), '') AS businessAddress,
+            COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessAddressDetail')), '') AS businessAddressDetail
        FROM business_ads ba
        LEFT JOIN users u ON u.id = ba.owner_user_id
        LEFT JOIN business_profiles bp ON bp.user_id = ba.owner_user_id
