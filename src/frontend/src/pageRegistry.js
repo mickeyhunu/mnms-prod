@@ -413,6 +413,19 @@ const pageRegistry = {
                     </div>
                 </div>
                 
+                <div class="ad-profile-additional-info" id="ad-profile-activation-panel" aria-labelledby="ad-profile-activation-title">
+                    <div class="ad-profile-additional-info-heading">
+                        <h3 id="ad-profile-activation-title">광고 활성화</h3>
+                    </div>
+                    <p class="ad-profile-map-toggle-help">광고 등록 후에도 활성화 ON을 해야 업체정보에 노출됩니다. ON 시 비즈니스 스탬프 1개가 차감됩니다.</p>
+                    <p class="ad-profile-map-toggle-help">베이직 3일 · 플러스 2일 · 프리미엄 1일 동안 노출됩니다. OFF 시 진행 중인 광고는 만료일까지 노출됩니다.</p>
+                    <label class="ad-profile-map-toggle" for="ad-profile-activation-toggle">
+                        <input id="ad-profile-activation-toggle" type="checkbox" disabled>
+                        <span id="ad-profile-activation-toggle-label">광고 활성화 OFF</span>
+                    </label>
+                    <p class="ad-profile-map-toggle-help" id="ad-profile-activation-status">광고프로필 저장 후 활성화할 수 있습니다.</p>
+                </div>
+
                 <div class="ad-profile-submit-wrap">
                     <button id="ad-profile-draft-btn" class="btn btn-secondary hidden" type="button">임시저장</button>
                     <button id="ad-profile-save-btn" class="btn btn-primary" type="button">광고프로필 저장</button>
