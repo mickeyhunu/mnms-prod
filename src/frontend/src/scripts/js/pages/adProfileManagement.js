@@ -267,6 +267,26 @@ function bindDescriptionEditor({ syncPreview, saveDraftData: saveDraftDataCallba
     });
 }
 
+
+function bindAdProfilePreviewToggle() {
+    const toggleButton = document.getElementById('ad-profile-preview-toggle');
+    const previewContent = document.getElementById('ad-profile-preview-content');
+    const toggleHint = toggleButton?.querySelector('.ad-profile-preview-toggle-hint');
+    if (!toggleButton || !previewContent) return;
+
+    const setPreviewOpen = (isOpen) => {
+        previewContent.classList.toggle('hidden', !isOpen);
+        toggleButton.setAttribute('aria-expanded', String(isOpen));
+        toggleButton.classList.toggle('is-open', isOpen);
+        if (toggleHint) toggleHint.textContent = isOpen ? '접기' : '클릭해서 보기';
+    };
+
+    setPreviewOpen(false);
+    toggleButton.addEventListener('click', () => {
+        setPreviewOpen(toggleButton.getAttribute('aria-expanded') !== 'true');
+    });
+}
+
 function bindAdProfileInteractions() {
     const regionSelect = document.getElementById('ad-profile-region');
     const districtSelect = document.getElementById('ad-profile-district');
@@ -294,6 +314,7 @@ function bindAdProfileInteractions() {
     createHourOptions(openHourSelect);
     createHourOptions(closeHourSelect);
     updateSelectOptions(regionSelect, Object.keys(REGION_DISTRICT_MAP));
+    bindAdProfilePreviewToggle();
 
     const syncPreview = () => {
         const storeName = businessNameInput?.value?.trim() || '업소명';
