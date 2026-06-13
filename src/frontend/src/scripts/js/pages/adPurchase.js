@@ -14,7 +14,7 @@
     const activationToggleLabel = document.getElementById('ad-purchase-activation-toggle-label');
     const activationButton = document.getElementById('ad-purchase-submit');
 
-    if (!tabs.length || !featureList || !priceOptions || !selectedProduct || !stampCost || !durationText || !stampBalance || !activationButton) {
+    if (!tabs.length || !featureList || !priceOptions || !selectedProduct || !stampCost || !durationText || !stampBalance) {
         return;
     }
 
@@ -78,15 +78,25 @@
     const isRegisteredAd = () => String(state.ad?.registrationStatus || '').toUpperCase() === 'REGISTERED';
     const isSwitchOn = () => Boolean(Number(state.ad?.isActive || 0));
     const isVisible = () => Boolean(Number(state.ad?.isCurrentlyVisible || 0));
+    const activePlanKey = () => (isSwitchOn() ? normalizePlanKey(state.ad?.planType) : null);
 
     const render = () => {
+        const lockedPlan = activePlanKey();
+        if (lockedPlan) {
+            state.plan = lockedPlan;
+        }
         const currentPlan = plans[state.plan];
         if (!currentPlan) return;
 
         tabs.forEach((tab) => {
-            const isActive = tab.dataset.plan === state.plan;
+            const planKey = normalizePlanKey(tab.dataset.plan || 'basic');
+            const isActive = planKey === state.plan;
+            const isDisabled = Boolean(lockedPlan && planKey !== lockedPlan);
             tab.classList.toggle('is-active', isActive);
+            tab.classList.toggle('is-disabled', isDisabled);
+            tab.disabled = isDisabled;
             tab.setAttribute('aria-selected', String(isActive));
+            tab.setAttribute('aria-disabled', String(isDisabled));
         });
 
         featureList.innerHTML = currentPlan.features
@@ -129,8 +139,10 @@
             activationStatus.textContent = `${currentPlan.name}은 스탬프 1개를 사용해 ${currentPlan.durationDays}일간 업체정보에 노출됩니다.`;
         }
 
-        activationButton.disabled = !canToggle || (checked && !visible);
-        activationButton.textContent = checked ? '광고 활성화 OFF' : '광고 활성화 ON';
+        if (activationButton) {
+            activationButton.disabled = !canToggle || (checked && !visible);
+            activationButton.textContent = checked ? '광고 활성화 OFF' : '광고 활성화 ON';
+        }
     };
 
     const loadActivationData = async () => {
@@ -169,7 +181,11 @@
 
     tabs.forEach((tab) => {
         tab.addEventListener('click', () => {
-            state.plan = normalizePlanKey(tab.dataset.plan || 'basic');
+            if (tab.disabled) return;
+            const nextPlan = normalizePlanKey(tab.dataset.plan || 'basic');
+            const lockedPlan = activePlanKey();
+            if (lockedPlan && nextPlan !== lockedPlan) return;
+            state.plan = nextPlan;
             render();
         });
     });
@@ -178,7 +194,7 @@
         updateActivation(Boolean(event.target.checked));
     });
 
-    activationButton.addEventListener('click', () => {
+    activationButton?.addEventListener('click', () => {
         updateActivation(!isSwitchOn());
     });
 
