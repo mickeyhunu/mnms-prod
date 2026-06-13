@@ -3406,8 +3406,7 @@ body[data-page="admin"] {
     padding: 40px 16px 0;
 }
 
-.ad-profile-section h3,
-.ad-profile-preview h3 {
+.ad-profile-section h3 {
     margin: 0;
     font-size: 17px;
     color: #212529;
@@ -3960,8 +3959,59 @@ body[data-page="admin"] {
     padding: 16px;
 }
 
-.ad-profile-preview-list {
+.ad-profile-preview-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 48px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 0 14px;
+    background: #f8fafc;
+    color: #212529;
+    font-size: 17px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ad-profile-preview-toggle:hover,
+.ad-profile-preview-toggle:focus-visible {
+    border-color: #cbd5e1;
+    background: #eef2f7;
+    box-shadow: 0 0 0 3px rgba(43, 111, 219, 0.10);
+    outline: none;
+}
+
+.ad-profile-preview-toggle::after {
+    content: '';
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+}
+
+.ad-profile-preview-toggle.is-open::after {
+    transform: rotate(225deg);
+}
+
+.ad-profile-preview-toggle-hint {
+    margin-left: auto;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.ad-profile-preview-content {
     margin-top: 12px;
+}
+
+.ad-profile-preview-list {
+    margin-top: 0;
 }
 
 .ad-profile-user-preview {
