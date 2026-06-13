@@ -29,6 +29,79 @@ function getBusinessAdPublicVisibilityCondition(alias = 'ba') {
   return `${alias}.registration_status = 'REGISTERED' AND ${alias}.activated_until IS NOT NULL AND ${alias}.activated_until > NOW()`;
 }
 
+async function renewExpiredBusinessAdsWithStamp() {
+  const pool = getPool();
+  const [expiredAds] = await pool.query(
+    `SELECT id
+       FROM business_ads
+      WHERE registration_status = 'REGISTERED'
+        AND is_active = 1
+        AND activated_until IS NOT NULL
+        AND activated_until <= NOW()
+      ORDER BY activated_until ASC, id ASC
+      LIMIT 100`
+  );
+
+  for (const row of expiredAds) {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      const [adRows] = await connection.query(
+        `SELECT id, owner_user_id AS ownerUserId, plan_type AS planType
+           FROM business_ads
+          WHERE id = ?
+            AND registration_status = 'REGISTERED'
+            AND is_active = 1
+            AND activated_until IS NOT NULL
+            AND activated_until <= NOW()
+          FOR UPDATE`,
+        [row.id]
+      );
+      const ad = adRows[0];
+      if (!ad) {
+        await connection.rollback();
+        continue;
+      }
+
+      await connection.query('SELECT id FROM users WHERE id = ? FOR UPDATE', [ad.ownerUserId]);
+      const [balanceRows] = await connection.query(
+        `SELECT COALESCE(SUM(amount), 0) AS totalStamps
+           FROM stamp_histories
+          WHERE user_id = ?
+            AND stamp_type = 'BUSINESS'
+          FOR UPDATE`,
+        [ad.ownerUserId]
+      );
+      const balance = Number(balanceRows[0]?.totalStamps || 0);
+      if (balance < 1) {
+        await connection.query('UPDATE business_ads SET is_active = 0 WHERE id = ?', [ad.id]);
+        await connection.commit();
+        continue;
+      }
+
+      const planType = normalizeBusinessAdPlanType(ad.planType);
+      const durationDays = getBusinessAdPlanDurationDays(planType);
+      await connection.query(
+        `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
+         VALUES (?, 'BUSINESS', ?, -1, ?, ?)`,
+        [ad.ownerUserId, `BUSINESS_AD_${planType}`, `${planType} 광고 ${durationDays}일 자동연장`, `BUSINESS_AD-AUTO-${ad.id}-${Date.now()}`]
+      );
+      await connection.query(
+        `UPDATE business_ads
+            SET plan_type = ?, activated_until = DATE_ADD(NOW(), INTERVAL ? DAY)
+          WHERE id = ?`,
+        [planType, durationDays, ad.id]
+      );
+      await connection.commit();
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  }
+}
+
 function normalizeBusinessInfoValue(value) {
   if (!value) return {};
   if (typeof value === 'object') return value;
@@ -620,6 +693,7 @@ async function deleteAd(adId) {
 }
 
 async function listBusinessAdsByOwner(ownerUserId) {
+  await renewExpiredBusinessAdsWithStamp();
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, manager_name AS managerName, manager_contact AS managerContact,
@@ -637,6 +711,7 @@ async function listBusinessAdsByOwner(ownerUserId) {
 }
 
 async function listPublicBusinessAdAreas() {
+  await renewExpiredBusinessAdsWithStamp();
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT TRIM(ba.region) AS region, TRIM(COALESCE(ba.district, '')) AS district, COUNT(*) AS adCount
@@ -651,6 +726,7 @@ async function listPublicBusinessAdAreas() {
 }
 
 async function listPublicBusinessAds({ region = '', district = '', category = '', keyword = '' } = {}) {
+  await renewExpiredBusinessAdsWithStamp();
   const pool = getPool();
   const whereConditions = [getBusinessAdPublicVisibilityCondition('ba')];
   const whereParams = [];
@@ -736,6 +812,7 @@ async function createBusinessAd({
 }
 
 async function findPublicBusinessAdById(adId) {
+  await renewExpiredBusinessAdsWithStamp();
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT ba.id, ba.owner_user_id AS ownerUserId, ba.business_name AS businessName, ba.manager_name AS managerName, ba.manager_contact AS managerContact,
@@ -783,6 +860,7 @@ async function findPublicBusinessAdBySlug(slug) {
 }
 
 async function findBusinessAdById(adId) {
+  await renewExpiredBusinessAdsWithStamp();
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, manager_name AS managerName, manager_contact AS managerContact,

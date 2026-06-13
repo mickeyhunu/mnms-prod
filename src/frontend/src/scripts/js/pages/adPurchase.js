@@ -39,8 +39,8 @@
             durationDays: 3,
             features: [
                 { text: '스탬프 1개로 업체정보 3일 노출', enabled: true },
-                { text: '광고 등록만으로는 업체정보에 노출되지 않음', enabled: true },
-                { text: '활성화 ON 시 즉시 노출 시작', enabled: true }
+                { text: '수동 활성화 시 스탬프 1개 소모', enabled: true },
+                { text: '자동연장 ON 시 기간 종료마다 스탬프 1개 자동 소모', enabled: true }
             ]
         },
         plus: {
@@ -51,7 +51,7 @@
             features: [
                 { text: '스탬프 1개로 업체정보 2일 노출', enabled: true },
                 { text: '베이직보다 높은 광고 등급으로 표시', enabled: true },
-                { text: '활성화 ON 시 즉시 노출 시작', enabled: true }
+                { text: '자동연장 ON 시 기간 종료마다 스탬프 1개 자동 소모', enabled: true }
             ]
         },
         premium: {
@@ -62,7 +62,7 @@
             features: [
                 { text: '스탬프 1개로 업체정보 1일 노출', enabled: true },
                 { text: '지역 상단 우선 노출 대상', enabled: true },
-                { text: '활성화 ON 시 즉시 노출 시작', enabled: true }
+                { text: '자동연장 ON 시 기간 종료마다 스탬프 1개 자동 소모', enabled: true }
             ]
         }
     };
@@ -169,10 +169,10 @@
         if (estimatedRunUntil) estimatedRunUntil.textContent = totalStamps ? formatProjectedUntil(estimatedDays) : '';
         if (activationStampBalance) activationStampBalance.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         if (activationBenefitTitle) activationBenefitTitle.textContent = `${currentPlan.name}를 활성화하면`;
-        if (activationButton) activationButton.textContent = checked ? '광고 중지하기' : `⚡ 1 스탬프 사용하고 광고 시작하기`;
+        if (activationButton) activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '현재 기간 후 중지 예정') : `⚡ 1 스탬프 사용하고 광고 시작하기`;
 
-        if (statusPill) statusPill.textContent = visible ? '노출 중' : (checked ? '대기 중' : '비활성');
-        if (statusTitle) statusTitle.textContent = visible ? `${currentPlan.name}가 노출 중입니다` : `${currentPlan.name} 활성화를 준비하세요`;
+        if (statusPill) statusPill.textContent = visible ? '노출 중' : (checked ? '자동연장 ON' : '비활성');
+        if (statusTitle) statusTitle.textContent = visible ? `${currentPlan.name}가 노출 중입니다` : `${currentPlan.name} 수동 활성화를 준비하세요`;
         if (expireDate) expireDate.textContent = visible ? formatDateOnly(state.ad?.activatedUntil) : '-';
         if (remainingTime) remainingTime.textContent = visible ? formatRemainingTime(state.ad?.activatedUntil) : '활성화 대기 중';
         if (stopButton) stopButton.disabled = !canToggle || !checked;
@@ -182,7 +182,7 @@
             activationToggle.checked = checked;
         }
         if (activationToggleLabel) {
-            activationToggleLabel.textContent = `광고 활성화 ${checked ? 'ON' : 'OFF'}`;
+            activationToggleLabel.textContent = `자동연장 ${checked ? 'ON' : 'OFF'}`;
         }
 
         if (!state.ad) {
@@ -191,15 +191,15 @@
             activationStatus.textContent = '임시저장 상태입니다. 광고프로필을 등록 완료한 뒤 활성화할 수 있습니다.';
         } else if (visible && expiresAt) {
             activationStatus.textContent = checked
-                ? `현재 업체정보에 노출 중입니다. 만료 예정: ${expiresAt}`
-                : `활성화는 OFF 상태입니다. 진행 중인 광고는 ${expiresAt}까지 노출됩니다.`;
+                ? `현재 업체정보에 노출 중입니다. 자동연장 ON 상태이며 만료 예정: ${expiresAt}`
+                : `자동연장은 OFF 상태입니다. 진행 중인 광고는 ${expiresAt}까지 노출됩니다.`;
         } else {
-            activationStatus.textContent = `${currentPlan.name}은 스탬프 1개를 사용해 ${currentPlan.durationDays}일간 업체정보에 노출됩니다.`;
+            activationStatus.textContent = `${currentPlan.name}은 수동 활성화 시 스탬프 1개를 사용해 ${currentPlan.durationDays}일간 업체정보에 노출됩니다.`;
         }
 
         if (activationButton) {
-            activationButton.disabled = !canToggle || (checked && !visible);
-            activationButton.textContent = checked ? '광고 중지하기' : '⚡ 1 스탬프 사용하고 광고 시작하기';
+            activationButton.disabled = !canToggle || (visible && !checked);
+            activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '현재 기간 후 중지 예정') : '⚡ 1 스탬프 사용하고 광고 시작하기';
         }
     };
 
@@ -253,7 +253,7 @@
     });
 
     activationButton?.addEventListener('click', () => {
-        updateActivation(!isSwitchOn());
+        updateActivation(!isVisible());
     });
 
     stopButton?.addEventListener('click', () => {
