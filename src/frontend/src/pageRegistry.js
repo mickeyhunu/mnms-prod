@@ -323,22 +323,26 @@ const pageRegistry = {
                 </div>
 
                 <div class="ad-profile-preview">
-                    <h3>미리보기</h3>
-                    <ul class="business-directory-list ad-profile-preview-list">
-                        <li class="business-directory-item ad-profile-preview-item">
-                            <img id="ad-profile-preview-image" class="business-directory-thumbnail" src="/src/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
-                            <div class="business-directory-main">
-                                <h4 id="ad-profile-preview-title">[선택-업소명] 제목을 입력해주세요.</h4>
-                                <p class="business-directory-region-detail" id="ad-profile-preview-detail">선택 선택 · 선택 · 시간선택 ~ 시간선택</p>
-                                <div class="business-directory-meta">
-                                    <span class="business-directory-manager" id="ad-profile-preview-manager">담당자 · 연락처</span>
-                                    <span class="business-directory-views">조회수 0</span>
+                    <button type="button" class="ad-profile-preview-toggle" id="ad-profile-preview-toggle" aria-expanded="false" aria-controls="ad-profile-preview-content">
+                        <span>미리보기</span>
+                        <span class="ad-profile-preview-toggle-hint">클릭해서 보기</span>
+                    </button>
+                    <div id="ad-profile-preview-content" class="ad-profile-preview-content hidden">
+                        <ul class="business-directory-list ad-profile-preview-list">
+                            <li class="business-directory-item ad-profile-preview-item">
+                                <img id="ad-profile-preview-image" class="business-directory-thumbnail" src="/src/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
+                                <div class="business-directory-main">
+                                    <h4 id="ad-profile-preview-title">[선택-업소명] 제목을 입력해주세요.</h4>
+                                    <p class="business-directory-region-detail" id="ad-profile-preview-detail">선택 선택 · 선택 · 시간선택 ~ 시간선택</p>
+                                    <div class="business-directory-meta">
+                                        <span class="business-directory-manager" id="ad-profile-preview-manager">담당자 · 연락처</span>
+                                        <span class="business-directory-views">조회수 0</span>
+                                    </div>
                                 </div>
-                            </div>
-                        </li>
-                    </ul>
-                    <div class="ad-profile-user-preview" aria-label="사용자에게 표시되는 광고프로필 화면 미리보기">
-                        <article class="business-profile-standalone ad-profile-user-preview-card">
+                            </li>
+                        </ul>
+                        <div class="ad-profile-user-preview" aria-label="사용자에게 표시되는 광고프로필 화면 미리보기">
+                            <article class="business-profile-standalone ad-profile-user-preview-card">
                             <div class="business-profile-hero">
                                 <div class="business-profile-image-frame">
                                     <img id="ad-profile-detail-preview-image-blur" class="business-profile-image-blur" src="/src/assets/image/ad-profile-default.webp" alt="" aria-hidden="true">
@@ -405,7 +409,8 @@ const pageRegistry = {
                                 <h3>상세정보</h3>
                                 <div class="business-profile-description-content" id="ad-profile-detail-preview-description"><p>등록된 상세정보가 없습니다.</p></div>
                             </section>
-                        </article>
+                            </article>
+                        </div>
                     </div>
                 </div>
                 
