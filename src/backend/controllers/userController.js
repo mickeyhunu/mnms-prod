@@ -1116,7 +1116,8 @@ async function updateMyBusinessAdActivation(req, res, next) {
 
     const activation = await adminModel.activateBusinessAdWithStamp({
       adId: id,
-      ownerUserId: req.user.id
+      ownerUserId: req.user.id,
+      planType: req.body?.planType
     });
     const totalStamps = await getUserStampBalance(req.user.id, STAMP_TYPES.BUSINESS);
     const updated = await adminModel.findBusinessAdById(id);
