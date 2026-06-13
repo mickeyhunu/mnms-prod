@@ -143,15 +143,19 @@ async function listPosts(page = 0, size = 10, options = {}) {
                 SELECT ba.plan_type
                   FROM business_ads ba
                  WHERE ba.owner_user_id = u.id
-                   AND ba.is_active = 1
-                 ORDER BY CASE WHEN ba.plan_type = 'PREMIUM' THEN 0 ELSE 1 END, ba.display_order ASC, ba.id DESC
+                   AND ba.registration_status = 'REGISTERED'
+                   AND ba.activated_until IS NOT NULL
+                   AND ba.activated_until > NOW()
+                 ORDER BY CASE ba.plan_type WHEN 'PREMIUM' THEN 0 WHEN 'PLUS' THEN 1 ELSE 2 END, ba.display_order ASC, ba.id DESC
                  LIMIT 1
               ) AS authorPlanType,
               EXISTS (
                 SELECT 1
                   FROM business_ads ba
                  WHERE ba.owner_user_id = u.id
-                   AND ba.is_active = 1
+                   AND ba.registration_status = 'REGISTERED'
+                   AND ba.activated_until IS NOT NULL
+                   AND ba.activated_until > NOW()
                  LIMIT 1
               ) AS authorHasActiveBusinessAd,
               ${AUTHOR_LEVEL_SQL} AS authorLevel
@@ -311,15 +315,19 @@ async function findPostDetailById(id) {
               SELECT ba.plan_type
                 FROM business_ads ba
                WHERE ba.owner_user_id = u.id
-                 AND ba.is_active = 1
-               ORDER BY CASE WHEN ba.plan_type = 'PREMIUM' THEN 0 ELSE 1 END, ba.display_order ASC, ba.id DESC
+                 AND ba.registration_status = 'REGISTERED'
+                   AND ba.activated_until IS NOT NULL
+                   AND ba.activated_until > NOW()
+               ORDER BY CASE ba.plan_type WHEN 'PREMIUM' THEN 0 WHEN 'PLUS' THEN 1 ELSE 2 END, ba.display_order ASC, ba.id DESC
                LIMIT 1
             ) AS authorPlanType,
             EXISTS (
               SELECT 1
                 FROM business_ads ba
                WHERE ba.owner_user_id = u.id
-                 AND ba.is_active = 1
+                 AND ba.registration_status = 'REGISTERED'
+                   AND ba.activated_until IS NOT NULL
+                   AND ba.activated_until > NOW()
                LIMIT 1
             ) AS authorHasActiveBusinessAd,
             ${AUTHOR_LEVEL_SQL} AS authorLevel,
@@ -458,15 +466,19 @@ async function listComments(postId) {
               SELECT ba.plan_type
                 FROM business_ads ba
                WHERE ba.owner_user_id = u.id
-                 AND ba.is_active = 1
-               ORDER BY CASE WHEN ba.plan_type = 'PREMIUM' THEN 0 ELSE 1 END, ba.display_order ASC, ba.id DESC
+                 AND ba.registration_status = 'REGISTERED'
+                   AND ba.activated_until IS NOT NULL
+                   AND ba.activated_until > NOW()
+               ORDER BY CASE ba.plan_type WHEN 'PREMIUM' THEN 0 WHEN 'PLUS' THEN 1 ELSE 2 END, ba.display_order ASC, ba.id DESC
                LIMIT 1
             ) AS authorPlanType,
             EXISTS (
               SELECT 1
                 FROM business_ads ba
                WHERE ba.owner_user_id = u.id
-                 AND ba.is_active = 1
+                 AND ba.registration_status = 'REGISTERED'
+                   AND ba.activated_until IS NOT NULL
+                   AND ba.activated_until > NOW()
                LIMIT 1
             ) AS authorHasActiveBusinessAd,
             ${AUTHOR_LEVEL_SQL} AS authorLevel
@@ -612,15 +624,19 @@ async function listBestPosts() {
               SELECT ba.plan_type
                 FROM business_ads ba
                WHERE ba.owner_user_id = u.id
-                 AND ba.is_active = 1
-               ORDER BY CASE WHEN ba.plan_type = 'PREMIUM' THEN 0 ELSE 1 END, ba.display_order ASC, ba.id DESC
+                 AND ba.registration_status = 'REGISTERED'
+                   AND ba.activated_until IS NOT NULL
+                   AND ba.activated_until > NOW()
+               ORDER BY CASE ba.plan_type WHEN 'PREMIUM' THEN 0 WHEN 'PLUS' THEN 1 ELSE 2 END, ba.display_order ASC, ba.id DESC
                LIMIT 1
             ) AS authorPlanType,
             EXISTS (
               SELECT 1
                 FROM business_ads ba
                WHERE ba.owner_user_id = u.id
-                 AND ba.is_active = 1
+                 AND ba.registration_status = 'REGISTERED'
+                   AND ba.activated_until IS NOT NULL
+                   AND ba.activated_until > NOW()
                LIMIT 1
             ) AS authorHasActiveBusinessAd,
             ${AUTHOR_LEVEL_SQL} AS authorLevel,
