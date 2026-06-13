@@ -78,14 +78,17 @@ function updateAdProfileImagePreviews(imageUrl = '') {
     const normalizedImageUrl = String(imageUrl || '').trim();
     const resolvedImageUrl = resolveAdProfileImageUrl(normalizedImageUrl);
     const hasUploadedImage = Boolean(normalizedImageUrl) && resolvedImageUrl !== DEFAULT_AD_IMAGE_URL;
+    const previewImageUrl = hasUploadedImage ? resolvedImageUrl : DEFAULT_AD_IMAGE_URL;
     const uploadPreview = document.getElementById('ad-profile-image-preview');
     const uploadButton = document.getElementById('ad-profile-image-upload-btn');
     const addIcon = uploadButton?.querySelector('.ad-profile-image-add-icon');
     const clearButton = document.getElementById('ad-profile-image-clear-btn');
     const directoryPreview = document.getElementById('ad-profile-preview-image');
+    const detailPreviewImage = document.getElementById('ad-profile-detail-preview-image');
+    const detailPreviewImageBlur = document.getElementById('ad-profile-detail-preview-image-blur');
 
     if (uploadPreview) {
-        uploadPreview.src = hasUploadedImage ? resolvedImageUrl : DEFAULT_AD_IMAGE_URL;
+        uploadPreview.src = previewImageUrl;
         uploadPreview.alt = '대표이미지 미리보기';
         uploadPreview.classList.toggle('hidden', !hasUploadedImage);
     }
@@ -96,8 +99,15 @@ function updateAdProfileImagePreviews(imageUrl = '') {
     clearButton?.classList.toggle('hidden', !hasUploadedImage);
 
     if (directoryPreview) {
-        directoryPreview.src = hasUploadedImage ? resolvedImageUrl : DEFAULT_AD_IMAGE_URL;
+        directoryPreview.src = previewImageUrl;
         directoryPreview.alt = '대표이미지 미리보기';
+    }
+    if (detailPreviewImage) {
+        detailPreviewImage.src = previewImageUrl;
+        detailPreviewImage.alt = '대표이미지 미리보기';
+    }
+    if (detailPreviewImageBlur) {
+        detailPreviewImageBlur.src = previewImageUrl;
     }
 }
 
@@ -294,6 +304,13 @@ function bindAdProfileInteractions() {
         const category = categorySelect?.value?.trim() || '선택';
         const managerName = managerNameInput?.value?.trim() || '담당자';
         const managerContact = managerContactInput?.value?.trim() || '연락처';
+        const kakaoTalkId = kakaoTalkIdInput?.value?.trim() || '';
+        const telegramId = telegramIdInput?.value?.trim() || '';
+        const showBusinessAddressMap = Boolean(showBusinessAddressMapInput?.checked);
+        const useStampEvent = Boolean(useStampEventInput?.checked);
+        const stampEventDescription = stampEventDescriptionInput?.value?.trim() || '';
+        const stampEventCount = Number(stampEventCountInput?.value || 0);
+        const description = String(document.getElementById('ad-profile-description')?.value || '').trim();
         const openHour = openHourSelect?.value?.trim() || '시간선택';
         const closeHour = closeHourSelect?.value?.trim() || '시간선택';
         const isOpenHourSelected = openHour && openHour !== '시간선택';
@@ -305,6 +322,23 @@ function bindAdProfileInteractions() {
         if (previewTitle) previewTitle.textContent = `[${region}-${storeName}] ${title}`;
         if (previewManager) previewManager.textContent = `${managerName} · ${managerContact}`;
         if (previewDetail) previewDetail.textContent = `${region} ${district} · ${category} · ${formattedTime}`;
+        syncAdProfileDetailPreview({
+            storeName,
+            title,
+            region,
+            district,
+            category,
+            managerName,
+            managerContact,
+            formattedTime,
+            kakaoTalkId,
+            telegramId,
+            showBusinessAddressMap,
+            useStampEvent,
+            stampEventDescription,
+            stampEventCount,
+            description
+        });
     };
 
     bindDescriptionEditor({ syncPreview, saveDraftData });
@@ -376,6 +410,124 @@ function normalizeBooleanFlag(value) {
     if (typeof value === 'boolean') return value;
     if (typeof value === 'number') return value === 1;
     return ['1', 'true', 'y', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
+}
+
+function sanitizeAdProfilePreviewRichText(rawValue) {
+    const value = String(rawValue || '').trim();
+    if (!value) return '';
+
+    const allowedTags = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'S', 'SPAN', 'A', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'IMG']);
+    const allowedClasses = new Set(['ql-align-center', 'ql-align-right', 'ql-align-justify', 'ql-size-small', 'ql-size-large', 'ql-size-huge']);
+    const allowedAttributes = new Set(['href', 'target', 'rel', 'src', 'alt', 'class', 'style']);
+    const template = document.createElement('template');
+    template.innerHTML = value;
+
+    const sanitizeStyle = (styleValue = '') => String(styleValue || '')
+        .split(';')
+        .map((rule) => rule.trim())
+        .filter((rule) => /^(color|background-color|text-align)\s*:/iu.test(rule))
+        .join('; ');
+
+    const sanitizeNode = (node) => {
+        if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.textContent || '');
+        if (node.nodeType !== Node.ELEMENT_NODE || !allowedTags.has(node.tagName)) return document.createTextNode('');
+
+        const element = document.createElement(node.tagName.toLowerCase());
+        Array.from(node.attributes || []).forEach((attribute) => {
+            const name = attribute.name.toLowerCase();
+            const attrValue = String(attribute.value || '').trim();
+            if (!allowedAttributes.has(name)) return;
+            if (name === 'href') {
+                if (/^(https?:|mailto:|tel:)/iu.test(attrValue)) element.setAttribute(name, attrValue);
+                return;
+            }
+            if (name === 'src') {
+                if (/^(https?:|data:image\/)/iu.test(attrValue)) element.setAttribute(name, attrValue);
+                return;
+            }
+            if (name === 'target') {
+                if (attrValue === '_blank') element.setAttribute(name, attrValue);
+                return;
+            }
+            if (name === 'rel') {
+                element.setAttribute(name, 'noopener noreferrer');
+                return;
+            }
+            if (name === 'class') {
+                const classes = attrValue.split(/\s+/u).filter((className) => allowedClasses.has(className));
+                if (classes.length) element.className = classes.join(' ');
+                return;
+            }
+            if (name === 'style') {
+                const safeStyle = sanitizeStyle(attrValue);
+                if (safeStyle) element.setAttribute(name, safeStyle);
+                return;
+            }
+            element.setAttribute(name, attrValue);
+        });
+        node.childNodes.forEach((child) => element.appendChild(sanitizeNode(child)));
+        return element;
+    };
+
+    const fragment = document.createDocumentFragment();
+    template.content.childNodes.forEach((child) => fragment.appendChild(sanitizeNode(child)));
+
+    const container = document.createElement('div');
+    container.appendChild(fragment);
+    return container.innerHTML.trim();
+}
+
+function setAdProfilePreviewText(id, value) {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+}
+
+function syncAdProfileDetailPreview({
+    storeName,
+    title,
+    region,
+    district,
+    category,
+    managerName,
+    managerContact,
+    formattedTime,
+    kakaoTalkId,
+    telegramId,
+    showBusinessAddressMap,
+    useStampEvent,
+    stampEventDescription,
+    stampEventCount,
+    description
+}) {
+    setAdProfilePreviewText('ad-profile-detail-preview-eyebrow', `${region} ${district} · ${category}`);
+    setAdProfilePreviewText('ad-profile-detail-preview-title', `[${region}-${storeName}] ${title}`);
+    setAdProfilePreviewText('ad-profile-detail-preview-hours', `영업시간 ${formattedTime}`);
+    setAdProfilePreviewText('ad-profile-detail-preview-business-name', storeName);
+    setAdProfilePreviewText('ad-profile-detail-preview-manager-name', managerName);
+    setAdProfilePreviewText('ad-profile-detail-preview-region', `${region} ${district}`);
+    setAdProfilePreviewText('ad-profile-detail-preview-category', category);
+    setAdProfilePreviewText('ad-profile-detail-preview-manager-contact', managerContact);
+
+    const kakaoRow = document.getElementById('ad-profile-detail-preview-kakao-row');
+    const telegramRow = document.getElementById('ad-profile-detail-preview-telegram-row');
+    kakaoRow?.classList.toggle('hidden', !kakaoTalkId);
+    telegramRow?.classList.toggle('hidden', !telegramId);
+    setAdProfilePreviewText('ad-profile-detail-preview-kakao', kakaoTalkId || '-');
+    setAdProfilePreviewText('ad-profile-detail-preview-telegram', telegramId || '-');
+
+    const hasStampUseEvent = Boolean(useStampEvent && stampEventDescription && Number(stampEventCount) > 0);
+    document.getElementById('ad-profile-detail-preview-stamp-row')?.classList.toggle('hidden', !useStampEvent);
+    document.getElementById('ad-profile-detail-preview-stamp-use-row')?.classList.toggle('hidden', !hasStampUseEvent);
+    setAdProfilePreviewText('ad-profile-detail-preview-stamp-count-label', `스탬프 ${Number(stampEventCount || MIN_STAMP_EVENT_COUNT).toLocaleString('ko-KR')}개 사용시`);
+    setAdProfilePreviewText('ad-profile-detail-preview-stamp-description', stampEventDescription || '이벤트 설명');
+
+    document.getElementById('ad-profile-detail-preview-map-section')?.classList.toggle('hidden', !showBusinessAddressMap);
+
+    const descriptionPreview = document.getElementById('ad-profile-detail-preview-description');
+    if (descriptionPreview) {
+        const sanitizedDescription = sanitizeAdProfilePreviewRichText(description);
+        descriptionPreview.innerHTML = sanitizedDescription || '<p>등록된 상세정보가 없습니다.</p>';
+    }
 }
 
 function formatPhoneNumber(value) {
