@@ -338,10 +338,6 @@ const pageRegistry = {
                         </li>
                     </ul>
                     <div class="ad-profile-user-preview" aria-label="사용자에게 표시되는 광고프로필 화면 미리보기">
-                        <div class="ad-profile-user-preview-heading">
-                            <h4>사용자 화면 미리보기</h4>
-                            <p>업체정보 상세 화면에 실제로 표시되는 구성을 미리 확인할 수 있어요.</p>
-                        </div>
                         <article class="business-profile-standalone ad-profile-user-preview-card">
                             <div class="business-profile-hero">
                                 <div class="business-profile-image-frame">
