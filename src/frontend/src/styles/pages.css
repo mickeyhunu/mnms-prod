@@ -2771,7 +2771,7 @@ body[data-page="admin"] {
 
 .ad-plan-tabs {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     background: #fff;
 }
 
@@ -2795,6 +2795,23 @@ body[data-page="admin"] {
     border-radius: 50%;
     flex-shrink: 0;
 }
+
+.ad-plan-tab span {
+    line-height: 1;
+}
+
+.ad-plan-tab.is-disabled,
+.ad-plan-tab:disabled {
+    color: #cbd5e1;
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.ad-plan-tab.is-disabled .ad-plan-tab-icon,
+.ad-plan-tab:disabled .ad-plan-tab-icon {
+    filter: grayscale(1);
+}
+
 
 .ad-plan-tab::before {
     content: "";
@@ -3287,6 +3304,90 @@ body[data-page="admin"] {
 
 .business-info-notice--bottom {
     margin-top: 24px;
+}
+
+
+.ad-activation-switch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #f9fafb;
+    cursor: pointer;
+    user-select: none;
+}
+
+.ad-activation-switch:has(input:disabled) {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.ad-activation-switch input {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ad-activation-switch-text {
+    min-width: 32px;
+    color: #9ca3af;
+    font-size: 14px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.ad-activation-switch-track {
+    position: relative;
+    width: 74px;
+    height: 38px;
+    border-radius: 999px;
+    background: #d1d5db;
+    transition: background 0.2s ease;
+}
+
+.ad-activation-switch-track::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.22);
+    transition: transform 0.2s ease;
+}
+
+.ad-activation-switch input:checked + .ad-activation-switch-track {
+    background: #111827;
+}
+
+.ad-activation-switch input:checked + .ad-activation-switch-track::after {
+    transform: translateX(36px);
+}
+
+.ad-activation-switch:has(input:not(:checked)) .ad-activation-switch-text:first-child,
+.ad-activation-switch:has(input:checked) .ad-activation-switch-text:last-child {
+    color: #111827;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .ad-purchase-submit {
