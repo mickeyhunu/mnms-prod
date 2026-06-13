@@ -122,7 +122,7 @@ const pageRegistry = {
                 </div>
             </header>
 
-            <section class="business-profile-detail" id="business-profile-detail" aria-live="polite">
+            <section id="business-profile-detail" aria-live="polite">
                 <p class="text-muted">업체정보를 불러오는 중입니다.</p>
             </section>
         </div>
@@ -569,7 +569,7 @@ const pageRegistry = {
                         <button id="business-verify-btn" type="button" disabled>검증</button>
                     </div>
                     <input id="business-name" type="text" maxlength="100" placeholder="사업자 상호를 입력해주세요.">
-                    <input id="business-owner" type="text" maxlength="24" placeholder="담당자명을 입력해주세요.">
+                    <input id="business-owner" type="text" maxlength="24" placeholder="대표자명을 입력해주세요.">
                     <div class="business-address-wrap">
                         <input id="business-address" type="text" maxlength="100" placeholder="사업자 주소를 입력해주세요." readonly>
                         <button id="business-address-search-btn" type="button" aria-label="주소 검색">
