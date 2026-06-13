@@ -88,7 +88,7 @@ async function renewExpiredBusinessAdsWithStamp() {
       );
       await connection.query(
         `UPDATE business_ads
-            SET plan_type = ?, activated_until = DATE_ADD(NOW(), INTERVAL ? DAY)
+            SET plan_type = ?, activated_at = NOW(), activated_until = DATE_ADD(NOW(), INTERVAL ? DAY)
           WHERE id = ?`,
         [planType, durationDays, ad.id]
       );
@@ -701,7 +701,7 @@ async function listBusinessAdsByOwner(ownerUserId) {
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
             kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
             description, plan_type AS planType, view_count AS viewCount,
-            registration_status AS registrationStatus, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, created_at AS createdAt, updated_at AS updatedAt
+            registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
       WHERE owner_user_id = ?
       ORDER BY display_order ASC, id DESC`,
@@ -756,7 +756,7 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
             ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl,
             ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
             ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification, ba.use_stamp_event AS useStampEvent, ba.stamp_event_description AS stampEventDescription, ba.stamp_event_count AS stampEventCount,
-            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.activated_until AS activatedUntil, ba.created_at AS createdAt,
+            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.activated_at AS activatedAt, ba.activated_until AS activatedUntil, ba.created_at AS createdAt,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, COALESCE(u.nickname, '업체') AS ownerNickname,
             COALESCE(bp.company_name, '') AS companyName, COALESCE(bp.manager_name, '') AS profileManagerName,
             COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessName')), COALESCE(bp.company_name, '')) AS businessDisclosureName,
@@ -819,7 +819,7 @@ async function findPublicBusinessAdById(adId) {
             ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl,
             ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
             ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification, ba.use_stamp_event AS useStampEvent, ba.stamp_event_description AS stampEventDescription, ba.stamp_event_count AS stampEventCount,
-            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.activated_until AS activatedUntil, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
+            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.activated_at AS activatedAt, ba.activated_until AS activatedUntil, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, COALESCE(u.nickname, '업체') AS ownerNickname,
             COALESCE(bp.company_name, '') AS companyName, COALESCE(bp.manager_name, '') AS profileManagerName,
             COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessName')), COALESCE(bp.company_name, '')) AS businessDisclosureName,
@@ -868,7 +868,7 @@ async function findBusinessAdById(adId) {
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
             kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
             description, plan_type AS planType, view_count AS viewCount,
-            registration_status AS registrationStatus, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, created_at AS createdAt, updated_at AS updatedAt
+            registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
       WHERE id = ?`,
     [adId]
@@ -946,7 +946,7 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
   try {
     await connection.beginTransaction();
     const [adRows] = await connection.query(
-      `SELECT id, owner_user_id AS ownerUserId, plan_type AS planType, registration_status AS registrationStatus, activated_until AS activatedUntil
+      `SELECT id, owner_user_id AS ownerUserId, plan_type AS planType, registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil
          FROM business_ads
         WHERE id = ?
           AND owner_user_id = ?
@@ -973,6 +973,7 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
         consumedStampCount: 0,
         planType: normalizeBusinessAdPlanType(ad.planType),
         durationDays: getBusinessAdPlanDurationDays(ad.planType),
+        activatedAt: ad.activatedAt || null,
         activatedUntil: ad.activatedUntil,
         isCurrentlyVisible: true
       };
@@ -1004,16 +1005,17 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
     );
     await connection.query(
       `UPDATE business_ads
-          SET is_active = 1, plan_type = ?, activated_until = DATE_ADD(NOW(), INTERVAL ? DAY)
+          SET is_active = 1, plan_type = ?, activated_at = NOW(), activated_until = DATE_ADD(NOW(), INTERVAL ? DAY)
         WHERE id = ?`,
       [planType, durationDays, adId]
     );
-    const [[updatedAd]] = await connection.query('SELECT activated_until AS activatedUntil FROM business_ads WHERE id = ?', [adId]);
+    const [[updatedAd]] = await connection.query('SELECT activated_at AS activatedAt, activated_until AS activatedUntil FROM business_ads WHERE id = ?', [adId]);
     await connection.commit();
     return {
       consumedStampCount: 1,
       planType,
       durationDays,
+      activatedAt: updatedAd?.activatedAt || null,
       activatedUntil: updatedAd?.activatedUntil || null,
       isCurrentlyVisible: true
     };

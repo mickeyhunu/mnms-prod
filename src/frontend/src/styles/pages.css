@@ -5764,11 +5764,39 @@ body.business-profile-modal-open {
     font-weight: 800;
 }
 
+.ad-management-status-copy {
+    flex: 1;
+    text-align: center;
+}
+
+.ad-management-status-badge {
+    display: block;
+    width: min(180px, 58vw);
+    height: auto;
+    margin: 18px auto 0;
+    object-fit: contain;
+}
+
 .ad-management-status-card h2 {
     margin: 20px 0 28px;
     color: #111827;
     font-size: 31px;
     line-height: 1.25;
+    text-align: center;
+}
+
+.ad-management-status-periods {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.ad-management-status-period {
+    border: 1px solid rgba(22, 101, 52, 0.16);
+    border-radius: 14px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.72);
 }
 
 .ad-management-status-label {
@@ -5780,14 +5808,15 @@ body.business-profile-modal-open {
 .ad-management-status-time {
     display: flex;
     align-items: center;
+    justify-content: center;
     flex-wrap: wrap;
     gap: 12px;
     margin-bottom: 22px;
 }
 
-.ad-management-status-time strong {
+.ad-management-status-period strong {
     color: #0f172a;
-    font-size: 27px;
+    font-size: 23px;
 }
 
 .ad-management-status-time span {
@@ -6291,6 +6320,20 @@ body[data-page="ad-purchase"] .main-content .ad-management-status-card h2 {
     margin: 12px 0 14px;
 }
 
+body[data-page="ad-purchase"] .main-content .ad-management-status-badge {
+    width: min(132px, 52vw);
+    margin-top: 12px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-status-periods {
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+body[data-page="ad-purchase"] .main-content .ad-management-status-period {
+    padding: 10px 8px;
+}
+
 body[data-page="ad-purchase"] .main-content .ad-management-section-title-row {
     display: block;
     margin-bottom: 14px;
@@ -6313,8 +6356,8 @@ body[data-page="ad-purchase"] .main-content .ad-management-status-time {
     margin-bottom: 14px;
 }
 
-body[data-page="ad-purchase"] .main-content .ad-management-status-time strong {
-    font-size: 19px;
+body[data-page="ad-purchase"] .main-content .ad-management-status-period strong {
+    font-size: 15px;
 }
 
 body[data-page="ad-purchase"] .main-content .ad-management-status-time span {
