@@ -325,7 +325,6 @@ const pageRegistry = {
                 <div class="ad-profile-preview">
                     <button type="button" class="ad-profile-preview-toggle" id="ad-profile-preview-toggle" aria-expanded="false" aria-controls="ad-profile-preview-content">
                         <span>미리보기</span>
-                        <span class="ad-profile-preview-toggle-hint">클릭해서 보기</span>
                     </button>
                     <div id="ad-profile-preview-content" class="ad-profile-preview-content hidden">
                         <ul class="business-directory-list ad-profile-preview-list">
