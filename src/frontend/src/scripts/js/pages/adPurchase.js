@@ -13,7 +13,6 @@
     const activationToggle = document.getElementById('ad-purchase-activation-toggle');
     const activationToggleLabel = document.getElementById('ad-purchase-activation-toggle-label');
     const activationButton = document.getElementById('ad-purchase-submit');
-    const statusPill = document.getElementById('ad-management-status-pill');
     const statusTitle = document.getElementById('ad-management-status-title');
     const statusBadge = document.getElementById('ad-management-status-badge');
     const startDate = document.getElementById('ad-management-start-date');
@@ -189,7 +188,6 @@
         if (activationButton) activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '현재 기간 후 중지 예정') : `⚡ 1 스탬프 사용하고 광고 시작하기`;
 
         const visiblePlan = plans[exposedPlanKey()] || currentPlan;
-        if (statusPill) statusPill.textContent = visible ? '노출 중' : (checked ? '자동연장 ON' : '비활성');
         if (statusBadge) {
             statusBadge.src = visiblePlan.badgeImage;
             statusBadge.alt = visible ? visiblePlan.badgeAlt : '광고 등급';
