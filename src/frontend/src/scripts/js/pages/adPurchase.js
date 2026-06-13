@@ -13,7 +13,6 @@
     const activationToggle = document.getElementById('ad-purchase-activation-toggle');
     const activationToggleLabel = document.getElementById('ad-purchase-activation-toggle-label');
     const activationButton = document.getElementById('ad-purchase-submit');
-    const stopButton = document.getElementById('ad-management-stop-btn');
     const statusPill = document.getElementById('ad-management-status-pill');
     const statusTitle = document.getElementById('ad-management-status-title');
     const expireDate = document.getElementById('ad-management-expire-date');
@@ -95,6 +94,7 @@
     const isSwitchOn = () => Boolean(Number(state.ad?.isActive || 0));
     const isVisible = () => Boolean(Number(state.ad?.isCurrentlyVisible || 0));
     const activePlanKey = () => (isSwitchOn() ? normalizePlanKey(state.ad?.planType) : null);
+    const exposedPlanKey = () => (isVisible() ? normalizePlanKey(state.ad?.planType) : null);
 
     const formatRemainingTime = (value) => {
         if (!value) return '활성화 대기 중';
@@ -171,12 +171,11 @@
         if (activationBenefitTitle) activationBenefitTitle.textContent = `${currentPlan.name}를 활성화하면`;
         if (activationButton) activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '현재 기간 후 중지 예정') : `⚡ 1 스탬프 사용하고 광고 시작하기`;
 
+        const visiblePlan = plans[exposedPlanKey()] || currentPlan;
         if (statusPill) statusPill.textContent = visible ? '노출 중' : (checked ? '자동연장 ON' : '비활성');
-        if (statusTitle) statusTitle.textContent = visible ? `${currentPlan.name}가 노출 중입니다` : `${currentPlan.name} 수동 활성화를 준비하세요`;
+        if (statusTitle) statusTitle.textContent = visible ? `${visiblePlan.name}가 노출 중입니다` : '노출 중인 광고가 없습니다';
         if (expireDate) expireDate.textContent = visible ? formatDateOnly(state.ad?.activatedUntil) : '-';
         if (remainingTime) remainingTime.textContent = visible ? formatRemainingTime(state.ad?.activatedUntil) : '활성화 대기 중';
-        if (stopButton) stopButton.disabled = !canToggle || !checked;
-
         if (activationToggle) {
             activationToggle.disabled = !canToggle;
             activationToggle.checked = checked;
@@ -256,9 +255,6 @@
         updateActivation(!isVisible());
     });
 
-    stopButton?.addEventListener('click', () => {
-        updateActivation(false);
-    });
 
     if (!Auth.isAuthenticated()) {
         window.location.href = '/login';

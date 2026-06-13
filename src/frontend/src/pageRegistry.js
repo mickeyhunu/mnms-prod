@@ -715,10 +715,6 @@ const pageRegistry = {
                             <strong id="ad-management-expire-date">-</strong>
                             <span id="ad-management-remaining-time">정보 확인 중</span>
                         </div>
-                        <button type="button" class="ad-management-stop-btn" id="ad-management-stop-btn" disabled>
-                            <span aria-hidden="true">⏱</span>
-                            광고 중지하기
-                        </button>
                     </div>
                     <div class="ad-management-illustration" aria-hidden="true">
                         <div class="ad-management-browser">
