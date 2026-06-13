@@ -679,12 +679,14 @@ const pageRegistry = {
   'ad-purchase': {
     template: `<header class="header">
         <div class="header-container">
-            <nav class="nav">
-                <a href="/" class="logo"><img src="/src/assets/image/mnms-logo.webp" alt="미드나잇 맨즈 로고" class="logo-img"></a>
-                <div class="nav-buttons">
-                    <a href="/login" class="btn btn-outline btn-sm" id="login-link">로그인</a>
-                    <a href="/register" class="btn btn-primary btn-sm" id="register-link">회원가입</a>
-                    <a href="/my-page" class="btn btn-outline btn-sm hidden" id="profile-link">마이페이지</a>
+            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
                     <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
                     <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
                 </div>
@@ -694,16 +696,6 @@ const pageRegistry = {
 
     <main class="main-content ad-management-main">
         <div class="container ad-management-container">
-            <header class="ad-management-heading">
-                <div>
-                    <h1>광고 관리</h1>
-                    <p>선택한 상품을 활성화하면 업체 광고가 노출됩니다.</p>
-                </div>
-                <a class="ad-management-guide-btn" href="/customer-service" aria-label="광고 이용 안내 보기">
-                    <span aria-hidden="true">ⓘ</span>
-                    이용 안내
-                </a>
-            </header>
 
             <section class="ad-management-status-card" aria-labelledby="ad-management-status-title">
                 <div class="ad-management-status-copy">
