@@ -709,12 +709,15 @@ const pageRegistry = {
                 <div class="ad-plan-tabs" role="tablist" aria-label="요금제 선택">
                     <button type="button" class="ad-plan-tab is-active" data-plan="basic" role="tab" aria-selected="true">
                         <img class="ad-plan-tab-icon" src="/src/assets/ad-plan-badges/basic-badge.png" alt="" aria-hidden="true">
+                        <span>베이직</span>
                     </button>
                     <button type="button" class="ad-plan-tab" data-plan="plus" role="tab" aria-selected="false">
                         <img class="ad-plan-tab-icon" src="/src/assets/ad-plan-badges/plus-badge.png" alt="" aria-hidden="true">
+                        <span>플러스</span>
                     </button>
                     <button type="button" class="ad-plan-tab" data-plan="premium" role="tab" aria-selected="false">
                         <img class="ad-plan-tab-icon" src="/src/assets/ad-plan-badges/premium-badge.png" alt="" aria-hidden="true">
+                        <span>프리미엄</span>
                     </button>
                 </div>
 
@@ -746,11 +749,13 @@ const pageRegistry = {
                         </div>
                     </dl>
                     <p class="ad-profile-map-toggle-help" id="ad-activation-current-status">광고프로필 정보를 확인 중입니다.</p>
-                    <label class="ad-profile-map-toggle" for="ad-purchase-activation-toggle">
+                    <label class="ad-activation-switch" for="ad-purchase-activation-toggle">
+                        <span class="ad-activation-switch-text">OFF</span>
                         <input id="ad-purchase-activation-toggle" type="checkbox" disabled>
-                        <span id="ad-purchase-activation-toggle-label">광고 활성화 OFF</span>
+                        <span class="ad-activation-switch-track" aria-hidden="true"></span>
+                        <span class="ad-activation-switch-text">ON</span>
+                        <span class="sr-only" id="ad-purchase-activation-toggle-label">광고 활성화 OFF</span>
                     </label>
-                    <button type="button" class="btn btn-primary ad-purchase-submit" id="ad-purchase-submit" disabled>광고 활성화 ON</button>
                 </article>
             </section>
         </div>
