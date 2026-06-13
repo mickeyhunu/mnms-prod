@@ -679,14 +679,12 @@ const pageRegistry = {
   'ad-purchase': {
     template: `<header class="header">
         <div class="header-container">
-            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
-            <nav class="nav" id="navigation">
-                <div class="nav-guest" id="nav-guest">
-                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
-                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
-                </div>
-                <div class="nav-user hidden" id="nav-user">
-                    <span class="user-nickname" id="user-nickname"></span>
+            <nav class="nav">
+                <a href="/" class="logo"><img src="/src/assets/image/mnms-logo.webp" alt="미드나잇 맨즈 로고" class="logo-img"></a>
+                <div class="nav-buttons">
+                    <a href="/login" class="btn btn-outline btn-sm" id="login-link">로그인</a>
+                    <a href="/register" class="btn btn-primary btn-sm" id="register-link">회원가입</a>
+                    <a href="/my-page" class="btn btn-outline btn-sm hidden" id="profile-link">마이페이지</a>
                     <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
                     <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
                 </div>
@@ -694,69 +692,135 @@ const pageRegistry = {
         </div>
     </header>
 
-    <main class="main-content">
-        <div class="container">
-            <header class="community-section-header">
-                <div class="community-header-left">
-                    <a href="/my-page" class="community-back-link icon-btn icon-btn-square" aria-label="마이페이지로 이동">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
-                    </a>
-                    <span class="community-board-name">광고 활성화</span>
+    <main class="main-content ad-management-main">
+        <div class="container ad-management-container">
+            <header class="ad-management-heading">
+                <div>
+                    <h1>광고 관리</h1>
+                    <p>선택한 상품을 활성화하면 업체 광고가 노출됩니다.</p>
                 </div>
+                <a class="ad-management-guide-btn" href="/customer-service" aria-label="광고 이용 안내 보기">
+                    <span aria-hidden="true">ⓘ</span>
+                    이용 안내
+                </a>
             </header>
 
-            <section class="ad-purchase-layout" aria-label="광고 요금제 안내">
-                <div class="ad-plan-tabs" role="tablist" aria-label="요금제 선택">
-                    <button type="button" class="ad-plan-tab is-active" data-plan="basic" role="tab" aria-selected="true">
-                        <img class="ad-plan-tab-icon" src="/src/assets/ad-plan-badges/basic-badge.png" alt="" aria-hidden="true">
-                        <span>베이직</span>
-                    </button>
-                    <button type="button" class="ad-plan-tab" data-plan="plus" role="tab" aria-selected="false">
-                        <img class="ad-plan-tab-icon" src="/src/assets/ad-plan-badges/plus-badge.png" alt="" aria-hidden="true">
-                        <span>플러스</span>
-                    </button>
-                    <button type="button" class="ad-plan-tab" data-plan="premium" role="tab" aria-selected="false">
-                        <img class="ad-plan-tab-icon" src="/src/assets/ad-plan-badges/premium-badge.png" alt="" aria-hidden="true">
-                        <span>프리미엄</span>
+            <section class="ad-management-status-card" aria-labelledby="ad-management-status-title">
+                <div class="ad-management-status-copy">
+                    <span class="ad-management-status-pill" id="ad-management-status-pill">확인 중</span>
+                    <h2 id="ad-management-status-title">광고 상태를 확인하고 있습니다</h2>
+                    <p class="ad-management-status-label">광고 종료 예정</p>
+                    <div class="ad-management-status-time">
+                        <strong id="ad-management-expire-date">-</strong>
+                        <span id="ad-management-remaining-time">정보 확인 중</span>
+                    </div>
+                    <button type="button" class="ad-management-stop-btn" id="ad-management-stop-btn" disabled>
+                        <span aria-hidden="true">⏱</span>
+                        광고 중지하기
                     </button>
                 </div>
+                <div class="ad-management-illustration" aria-hidden="true">
+                    <div class="ad-management-browser">
+                        <span></span><span></span><span></span>
+                        <div class="ad-management-ad-tile">AD</div>
+                        <i></i><i></i><i></i><i></i>
+                    </div>
+                    <div class="ad-management-check">✓</div>
+                </div>
+            </section>
 
-                <article class="ad-plan-detail" id="ad-plan-detail">
-                    <ul class="ad-package-feature-list" id="ad-plan-features"></ul>
-                    <div class="ad-price-options" id="ad-price-options"></div>
-                </article>
+            <section class="ad-management-panel" aria-labelledby="ad-management-product-title">
+                <div class="ad-management-section-title-row">
+                    <div>
+                        <h2 id="ad-management-product-title">상품 선택</h2>
+                        <p>노출 위치와 혜택에 따라 상품을 선택하세요.</p>
+                    </div>
+                    <a href="/business-info" class="ad-management-compare-link">상품 비교 보기 ›</a>
+                </div>
+                <div class="ad-product-grid" role="tablist" aria-label="광고 상품 선택">
+                    <button type="button" class="ad-product-card is-active" data-plan="basic" role="tab" aria-selected="true">
+                        <img src="/src/assets/ad-plan-badges/basic-badge.png" alt="BASIC" class="ad-product-badge">
+                        <strong>지역 목록 일반 노출</strong>
+                        <span class="ad-product-divider"></span>
+                        <span class="ad-product-radio" aria-hidden="true"></span>
+                        <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 3일</b></span>
+                    </button>
+                    <button type="button" class="ad-product-card" data-plan="plus" role="tab" aria-selected="false">
+                        <img src="/src/assets/ad-plan-badges/plus-badge.png" alt="PLUS" class="ad-product-badge">
+                        <strong>지역 상단 우선 노출</strong>
+                        <span class="ad-product-divider"></span>
+                        <span class="ad-product-radio" aria-hidden="true"></span>
+                        <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 2일</b></span>
+                    </button>
+                    <button type="button" class="ad-product-card" data-plan="premium" role="tab" aria-selected="false">
+                        <span class="ad-product-selected-ribbon">선택됨</span>
+                        <span class="ad-product-selected-check" aria-hidden="true">✓</span>
+                        <img src="/src/assets/ad-plan-badges/premium-badge.png" alt="PREMIUM" class="ad-product-badge">
+                        <strong>지역 상단 최우선 노출</strong>
+                        <span class="ad-product-divider"></span>
+                        <span class="ad-product-radio" aria-hidden="true"></span>
+                        <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 1일</b></span>
+                    </button>
+                </div>
+            </section>
 
-                <hr class="ad-payment-divider">
+            <section class="ad-management-panel" aria-labelledby="ad-management-stamp-title">
+                <h2 id="ad-management-stamp-title">스탬프 정보</h2>
+                <div class="ad-stamp-info-grid">
+                    <article class="ad-stamp-info-card">
+                        <span class="ad-stamp-icon">♟</span>
+                        <p>보유 스탬프</p>
+                        <strong id="ad-total-price">확인 중...</strong>
+                        <div class="ad-stamp-progress"><span id="ad-stamp-progress-bar"></span></div>
+                        <small><span id="ad-stamp-progress-text">0</span> / 100</small>
+                        <em>이번 활성화 시 1개 사용됩니다.</em>
+                    </article>
+                    <article class="ad-stamp-info-card">
+                        <span class="ad-stamp-icon">▣</span>
+                        <p>사용 후 잔여 스탬프</p>
+                        <strong id="ad-stamps-after-use">-</strong>
+                        <hr>
+                        <p>예상 연속 노출 기간</p>
+                        <strong id="ad-estimated-run-days">-</strong>
+                        <small id="ad-estimated-run-until"></small>
+                    </article>
+                    <article class="ad-stamp-info-card ad-stamp-summary-card">
+                        <dl>
+                            <div><dt>선택한 상품</dt><dd id="ad-selected-product">프리미엄 광고</dd></div>
+                            <div><dt>차감 스탬프</dt><dd id="ad-product-price">1개 / 1일</dd></div>
+                            <div><dt>노출 기간</dt><dd id="ad-vat-price">1일</dd></div>
+                            <div><dt>보유 스탬프</dt><dd id="ad-summary-stamp-balance">확인 중...</dd></div>
+                        </dl>
+                    </article>
+                </div>
+                <p class="ad-management-notice"><span aria-hidden="true">💡</span><b>안내</b><span>보유 스탬프가 0개가 되면 광고 노출이 자동으로 중지됩니다.</span></p>
+            </section>
 
-                <article class="ad-payment-card" aria-label="광고 활성화 정보">
-                    <h3 class="ad-payment-title">활성화 정보</h3>
-                    <dl class="ad-payment-list">
-                        <div class="ad-payment-row">
-                            <dt>선택한 광고</dt>
-                            <dd id="ad-selected-product">BASIC 광고</dd>
-                        </div>
-                        <div class="ad-payment-row">
-                            <dt>차감 스탬프</dt>
-                            <dd id="ad-product-price">1개</dd>
-                        </div>
-                        <div class="ad-payment-row">
-                            <dt>노출 기간</dt>
-                            <dd id="ad-vat-price">3일</dd>
-                        </div>
-                        <div class="ad-payment-row">
-                            <dt>보유 스탬프</dt>
-                            <dd id="ad-total-price">확인 중...</dd>
-                        </div>
-                    </dl>
-                    <p class="ad-profile-map-toggle-help" id="ad-activation-current-status">광고프로필 정보를 확인 중입니다.</p>
-                    <label class="ad-activation-switch" for="ad-purchase-activation-toggle">
-                        <span class="ad-activation-switch-text">OFF</span>
-                        <input id="ad-purchase-activation-toggle" type="checkbox" disabled>
-                        <span class="ad-activation-switch-track" aria-hidden="true"></span>
-                        <span class="ad-activation-switch-text">ON</span>
-                        <span class="sr-only" id="ad-purchase-activation-toggle-label">광고 활성화 OFF</span>
-                    </label>
-                </article>
+            <section class="ad-management-panel ad-activation-panel" aria-labelledby="ad-management-activation-title">
+                <div class="ad-activation-copy">
+                    <h2 id="ad-management-activation-title">광고 활성화</h2>
+                    <p>선택한 상품으로 광고를 시작합니다.</p>
+                </div>
+                <div class="ad-activation-benefits">
+                    <span aria-hidden="true">📣</span>
+                    <div>
+                        <b id="ad-activation-benefit-title">프리미엄 광고를 활성화하면</b>
+                        <ul id="ad-plan-features"></ul>
+                    </div>
+                </div>
+                <div class="ad-activation-action">
+                    <button type="button" class="ad-management-start-btn" id="ad-purchase-submit" disabled>⚡ 1 스탬프 사용하고 광고 시작하기</button>
+                    <p>현재 보유 스탬프 : <strong id="ad-activation-stamp-balance">확인 중...</strong></p>
+                </div>
+                <p class="ad-management-safe-note"><span aria-hidden="true">🔒</span><b>안심하고 이용하세요</b><br>광고는 선택한 기간 동안만 노출되며, 언제든지 중지할 수 있습니다.</p>
+                <p class="ad-profile-map-toggle-help" id="ad-activation-current-status">광고프로필 정보를 확인 중입니다.</p>
+                <label class="ad-activation-switch hidden" for="ad-purchase-activation-toggle">
+                    <span class="ad-activation-switch-text">OFF</span>
+                    <input id="ad-purchase-activation-toggle" type="checkbox" disabled>
+                    <span class="ad-activation-switch-track" aria-hidden="true"></span>
+                    <span class="ad-activation-switch-text">ON</span>
+                    <span class="sr-only" id="ad-purchase-activation-toggle-label">광고 활성화 OFF</span>
+                </label>
             </section>
         </div>
     </main>

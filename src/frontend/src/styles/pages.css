@@ -5658,3 +5658,574 @@ body.business-profile-modal-open {
         flex: 1;
     }
 }
+
+/* Ad management renewal */
+.ad-management-main {
+    background: #f8fafc;
+}
+
+.ad-management-container {
+    max-width: 1080px;
+    padding-bottom: 42px;
+}
+
+.ad-management-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin: 10px 0 28px;
+}
+
+.ad-management-heading h1 {
+    margin: 0 0 12px;
+    color: #0f172a;
+    font-size: 32px;
+    line-height: 1.2;
+}
+
+.ad-management-heading p,
+.ad-management-section-title-row p,
+.ad-activation-copy p {
+    margin: 0;
+    color: #475569;
+    font-size: 17px;
+}
+
+.ad-management-guide-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: max-content;
+    padding: 12px 18px;
+    border: 1px solid #d8dee8;
+    border-radius: 10px;
+    background: #fff;
+    color: #334155;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+}
+
+.ad-management-status-card,
+.ad-management-panel {
+    border: 1px solid #dbe2ea;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+}
+
+.ad-management-status-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    min-height: 300px;
+    margin-bottom: 26px;
+    padding: 32px 38px;
+    border-color: #afe7c2;
+    background: radial-gradient(circle at 78% 45%, rgba(80, 200, 120, 0.14), transparent 34%), linear-gradient(120deg, #f4fff8 0%, #fbfffd 58%, #f7fff9 100%);
+}
+
+.ad-management-status-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 8px 18px;
+    background: #16a34a;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.ad-management-status-card h2 {
+    margin: 20px 0 28px;
+    color: #111827;
+    font-size: 31px;
+    line-height: 1.25;
+}
+
+.ad-management-status-label {
+    margin: 0 0 8px;
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.ad-management-status-time {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.ad-management-status-time strong {
+    color: #0f172a;
+    font-size: 27px;
+}
+
+.ad-management-status-time span {
+    border-radius: 6px;
+    padding: 7px 12px;
+    background: #d9f4dd;
+    color: #166534;
+    font-weight: 700;
+}
+
+.ad-management-stop-btn,
+.ad-management-start-btn {
+    border: 0;
+    border-radius: 10px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.ad-management-stop-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 26px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #111827;
+    font-size: 18px;
+}
+
+.ad-management-stop-btn:disabled,
+.ad-management-start-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.ad-management-illustration {
+    position: relative;
+    width: 350px;
+    height: 210px;
+    flex: 0 0 350px;
+}
+
+.ad-management-browser {
+    position: absolute;
+    right: 28px;
+    top: 26px;
+    width: 255px;
+    height: 145px;
+    border: 2px solid #d0d7e2;
+    border-radius: 18px;
+    background: linear-gradient(#f1f5f9 0 34px, #fff 34px);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+}
+
+.ad-management-browser span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin: 13px 0 0 12px;
+    border-radius: 50%;
+    background: #cfd6e1;
+}
+
+.ad-management-ad-tile {
+    position: absolute;
+    left: 24px;
+    top: 55px;
+    display: grid;
+    place-items: center;
+    width: 62px;
+    height: 62px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, #22c55e, #4ade80);
+    color: #fff;
+    font-size: 28px;
+    font-weight: 900;
+}
+
+.ad-management-browser i {
+    position: absolute;
+    left: 104px;
+    height: 14px;
+    border-radius: 999px;
+    background: #e5e9ef;
+}
+
+.ad-management-browser i:nth-of-type(1) { top: 56px; width: 128px; }
+.ad-management-browser i:nth-of-type(2) { top: 82px; width: 104px; }
+.ad-management-browser i:nth-of-type(3) { top: 108px; width: 72px; }
+.ad-management-browser i:nth-of-type(4) { left: 22px; top: 124px; width: 130px; opacity: 0.65; }
+
+.ad-management-check {
+    position: absolute;
+    right: 8px;
+    bottom: 12px;
+    display: grid;
+    place-items: center;
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4ade80, #16a34a);
+    color: #fff;
+    font-size: 52px;
+    font-weight: 900;
+    box-shadow: 0 18px 34px rgba(22, 163, 74, 0.24);
+}
+
+.ad-management-panel {
+    margin-bottom: 22px;
+    padding: 26px;
+}
+
+.ad-management-panel h2 {
+    margin: 0 0 8px;
+    color: #0f172a;
+    font-size: 25px;
+}
+
+.ad-management-section-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.ad-management-compare-link {
+    color: #4f46e5;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.ad-product-grid,
+.ad-stamp-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.ad-product-card {
+    position: relative;
+    min-height: 285px;
+    padding: 24px 22px 22px;
+    border: 2px solid #dde5ef;
+    border-radius: 12px;
+    background: #fff;
+    color: #0f172a;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.ad-product-card:hover,
+.ad-product-card:focus-visible {
+    border-color: #22c55e;
+    box-shadow: 0 12px 28px rgba(22, 163, 74, 0.12);
+    transform: translateY(-2px);
+}
+
+.ad-product-card.is-active {
+    border-color: #16a34a;
+    background: linear-gradient(180deg, #f2fff5 0%, #fff 100%);
+}
+
+.ad-product-card.is-disabled {
+    cursor: not-allowed;
+    filter: grayscale(0.8);
+    opacity: 0.55;
+}
+
+.ad-product-badge {
+    display: block;
+    width: 142px;
+    height: 92px;
+    object-fit: contain;
+    margin: 2px auto 16px;
+}
+
+.ad-product-card strong {
+    display: block;
+    margin-bottom: 22px;
+    font-size: 20px;
+}
+
+.ad-product-divider {
+    display: block;
+    height: 1px;
+    margin: 0 0 22px;
+    background: #dce5ef;
+}
+
+.ad-product-radio {
+    position: absolute;
+    left: 22px;
+    bottom: 30px;
+    width: 28px;
+    height: 28px;
+    border: 2px solid #94a3b8;
+    border-radius: 50%;
+    background: #fff;
+}
+
+.ad-product-card.is-active .ad-product-radio {
+    border-color: #16a34a;
+    box-shadow: inset 0 0 0 7px #fff, inset 0 0 0 14px #16a34a;
+}
+
+.ad-product-cost {
+    display: block;
+    padding-left: 48px;
+    text-align: left;
+}
+
+.ad-product-cost small {
+    display: block;
+    color: #64748b;
+    font-size: 15px;
+}
+
+.ad-product-cost b {
+    font-size: 22px;
+}
+
+.ad-product-selected-ribbon {
+    position: absolute;
+    left: -2px;
+    top: -2px;
+    border-radius: 10px 0 12px 0;
+    padding: 9px 15px;
+    background: #16a34a;
+    color: #fff;
+    font-weight: 900;
+}
+
+.ad-product-selected-check {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: none;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #22c55e;
+    color: #fff;
+    font-size: 23px;
+    font-weight: 900;
+}
+
+.ad-product-card.is-active .ad-product-selected-check {
+    display: grid;
+}
+
+.ad-stamp-info-card {
+    min-height: 180px;
+    padding: 24px 20px;
+    border: 1px solid #d9e1ec;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fff, #f8fbff);
+}
+
+.ad-stamp-info-card p {
+    margin: 0 0 4px;
+    color: #334155;
+    font-size: 16px;
+}
+
+.ad-stamp-info-card strong {
+    display: block;
+    color: #0f172a;
+    font-size: 31px;
+    line-height: 1.2;
+}
+
+.ad-stamp-info-card small,
+.ad-stamp-info-card em {
+    color: #64748b;
+    font-style: normal;
+}
+
+.ad-stamp-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    background: #ede9fe;
+    color: #4f46e5;
+    font-weight: 900;
+}
+
+.ad-stamp-progress {
+    height: 12px;
+    margin: 24px 0 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e5e7eb;
+}
+
+.ad-stamp-progress span {
+    display: block;
+    width: 0%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #6d5dfc, #4f46e5);
+}
+
+.ad-stamp-summary-card dl,
+.ad-stamp-summary-card div {
+    margin: 0;
+}
+
+.ad-stamp-summary-card div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.ad-stamp-summary-card dt {
+    color: #0f172a;
+}
+
+.ad-stamp-summary-card dd {
+    margin: 0;
+    color: #0f172a;
+    font-weight: 800;
+}
+
+.ad-management-notice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0 0;
+    padding: 15px 20px;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    background: #fffbeb;
+    color: #92400e;
+}
+
+.ad-activation-panel {
+    display: grid;
+    grid-template-columns: 0.8fr 1.5fr 1.6fr;
+    align-items: center;
+    gap: 26px;
+    padding-bottom: 0;
+    overflow: hidden;
+}
+
+.ad-activation-benefits {
+    display: flex;
+    gap: 18px;
+    padding: 18px 22px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fff, #f8fafc);
+}
+
+.ad-activation-benefits > span {
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 54px;
+    border-radius: 12px;
+    background: #eef2ff;
+    font-size: 28px;
+}
+
+.ad-activation-benefits ul {
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ad-activation-benefits li {
+    margin-top: 5px;
+    color: #334155;
+}
+
+.ad-activation-benefits li::before {
+    content: "✓";
+    margin-right: 8px;
+    color: #16a34a;
+    font-weight: 900;
+}
+
+.ad-management-start-btn {
+    width: 100%;
+    min-height: 80px;
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #5b43f1, #4f46e5);
+    color: #fff;
+    font-size: 24px;
+    box-shadow: 0 16px 28px rgba(79, 70, 229, 0.24);
+}
+
+.ad-activation-action p {
+    margin: 14px 0 0;
+    color: #475569;
+    text-align: center;
+}
+
+.ad-management-safe-note {
+    grid-column: 1 / -1;
+    margin: 22px -26px 0;
+    padding: 22px 30px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.ad-activation-panel .ad-profile-map-toggle-help {
+    grid-column: 1 / -1;
+    margin: 0 -26px;
+    padding: 12px 30px 20px;
+    background: #f8fafc;
+}
+
+@media (max-width: 860px) {
+    .ad-management-heading,
+    .ad-management-status-card,
+    .ad-management-section-title-row {
+        flex-direction: column;
+    }
+
+    .ad-management-illustration {
+        width: 100%;
+        flex-basis: 210px;
+    }
+
+    .ad-product-grid,
+    .ad-stamp-info-grid,
+    .ad-activation-panel {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 520px) {
+    .ad-management-status-card,
+    .ad-management-panel {
+        padding: 22px 16px;
+        border-radius: 14px;
+    }
+
+    .ad-management-heading h1,
+    .ad-management-status-card h2 {
+        font-size: 26px;
+    }
+
+    .ad-management-illustration {
+        display: none;
+    }
+
+    .ad-management-start-btn {
+        font-size: 19px;
+    }
+}
+
+.ad-product-selected-ribbon {
+    display: none;
+}
+
+.ad-product-card.is-active .ad-product-selected-ribbon {
+    display: inline-block;
+}
