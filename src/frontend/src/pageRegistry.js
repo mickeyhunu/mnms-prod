@@ -709,10 +709,19 @@ const pageRegistry = {
                 <section class="ad-management-status-card" aria-labelledby="ad-management-status-title">
                     <div class="ad-management-status-copy">
                         <span class="ad-management-status-pill" id="ad-management-status-pill">확인 중</span>
+                        <img src="/src/assets/ad-plan-badges/premium-badge.png" alt="광고 등급" class="ad-management-status-badge" id="ad-management-status-badge">
                         <h2 id="ad-management-status-title">광고 상태를 확인하고 있습니다</h2>
-                        <p class="ad-management-status-label">광고 종료 예정</p>
+                        <div class="ad-management-status-periods" aria-label="광고 노출 기간">
+                            <div class="ad-management-status-period">
+                                <p class="ad-management-status-label">광고 시작 시간</p>
+                                <strong id="ad-management-start-date">-</strong>
+                            </div>
+                            <div class="ad-management-status-period">
+                                <p class="ad-management-status-label">광고 종료 예정</p>
+                                <strong id="ad-management-expire-date">-</strong>
+                            </div>
+                        </div>
                         <div class="ad-management-status-time">
-                            <strong id="ad-management-expire-date">-</strong>
                             <span id="ad-management-remaining-time">정보 확인 중</span>
                         </div>
                     </div>

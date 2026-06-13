@@ -15,6 +15,8 @@
     const activationButton = document.getElementById('ad-purchase-submit');
     const statusPill = document.getElementById('ad-management-status-pill');
     const statusTitle = document.getElementById('ad-management-status-title');
+    const statusBadge = document.getElementById('ad-management-status-badge');
+    const startDate = document.getElementById('ad-management-start-date');
     const expireDate = document.getElementById('ad-management-expire-date');
     const remainingTime = document.getElementById('ad-management-remaining-time');
     const stampBalanceSummary = document.getElementById('ad-summary-stamp-balance');
@@ -36,6 +38,8 @@
             name: '베이직 광고',
             headline: '지역 목록 일반 노출',
             durationDays: 3,
+            badgeImage: '/src/assets/ad-plan-badges/basic-badge.png',
+            badgeAlt: 'BASIC',
             features: [
                 { text: '스탬프 1개로 업체정보 3일 노출', enabled: true },
                 { text: '수동 활성화 시 스탬프 1개 소모', enabled: true },
@@ -47,6 +51,8 @@
             name: '플러스 광고',
             headline: '지역 상단 우선 노출',
             durationDays: 2,
+            badgeImage: '/src/assets/ad-plan-badges/plus-badge.png',
+            badgeAlt: 'PLUS',
             features: [
                 { text: '스탬프 1개로 업체정보 2일 노출', enabled: true },
                 { text: '베이직보다 높은 광고 등급으로 표시', enabled: true },
@@ -58,6 +64,8 @@
             name: '프리미엄 광고',
             headline: '지역 상단 최우선 노출',
             durationDays: 1,
+            badgeImage: '/src/assets/ad-plan-badges/premium-badge.png',
+            badgeAlt: 'PREMIUM',
             features: [
                 { text: '스탬프 1개로 업체정보 1일 노출', enabled: true },
                 { text: '지역 상단 우선 노출 대상', enabled: true },
@@ -118,6 +126,15 @@
         return `(${date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}까지)`;
     };
 
+    const getActivationStartValue = (ad, plan) => {
+        if (!ad) return null;
+        if (ad.activatedAt) return ad.activatedAt;
+        if (!ad.activatedUntil) return null;
+        const until = new Date(ad.activatedUntil);
+        if (Number.isNaN(until.getTime())) return null;
+        return new Date(until.getTime() - Number(plan?.durationDays || 0) * 24 * 60 * 60 * 1000);
+    };
+
     const render = () => {
         const lockedPlan = activePlanKey();
         if (lockedPlan) {
@@ -173,7 +190,12 @@
 
         const visiblePlan = plans[exposedPlanKey()] || currentPlan;
         if (statusPill) statusPill.textContent = visible ? '노출 중' : (checked ? '자동연장 ON' : '비활성');
+        if (statusBadge) {
+            statusBadge.src = visiblePlan.badgeImage;
+            statusBadge.alt = visible ? visiblePlan.badgeAlt : '광고 등급';
+        }
         if (statusTitle) statusTitle.textContent = visible ? `${visiblePlan.name}가 노출 중입니다` : '노출 중인 광고가 없습니다';
+        if (startDate) startDate.textContent = visible ? formatDateOnly(getActivationStartValue(state.ad, visiblePlan)) : '-';
         if (expireDate) expireDate.textContent = visible ? formatDateOnly(state.ad?.activatedUntil) : '-';
         if (remainingTime) remainingTime.textContent = visible ? formatRemainingTime(state.ad?.activatedUntil) : '활성화 대기 중';
         if (activationToggle) {

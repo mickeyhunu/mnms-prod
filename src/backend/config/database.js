@@ -623,6 +623,7 @@ async function initDatabase() {
       plan_type VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
       view_count BIGINT NOT NULL DEFAULT 0,
       registration_status ENUM('UNREGISTERED','DRAFT','REGISTERED') NOT NULL DEFAULT 'UNREGISTERED',
+      activated_at DATETIME NULL,
       activated_until DATETIME NULL,
       display_order INT NOT NULL DEFAULT 0,
       is_active TINYINT(1) NOT NULL DEFAULT 1,
@@ -653,7 +654,8 @@ async function initDatabase() {
     { name: 'plan_type', sql: "ALTER TABLE business_ads ADD COLUMN plan_type VARCHAR(20) NOT NULL DEFAULT 'NORMAL' AFTER description" },
     { name: 'view_count', sql: "ALTER TABLE business_ads ADD COLUMN view_count BIGINT NOT NULL DEFAULT 0 AFTER plan_type" },
     { name: 'registration_status', sql: "ALTER TABLE business_ads ADD COLUMN registration_status ENUM('UNREGISTERED','DRAFT','REGISTERED') NOT NULL DEFAULT 'UNREGISTERED' AFTER view_count" },
-    { name: 'activated_until', sql: 'ALTER TABLE business_ads ADD COLUMN activated_until DATETIME NULL AFTER registration_status' }
+    { name: 'activated_at', sql: 'ALTER TABLE business_ads ADD COLUMN activated_at DATETIME NULL AFTER registration_status' },
+    { name: 'activated_until', sql: 'ALTER TABLE business_ads ADD COLUMN activated_until DATETIME NULL AFTER activated_at' }
   ];
 
   for (const migration of businessAdsColumnMigrations) {
