@@ -5658,13 +5658,8 @@ body.business-profile-modal-open {
 }
 
 /* Ad management renewal */
-.ad-management-main {
-    background: #f8fafc;
-}
-
 .ad-management-container {
-    max-width: 1080px;
-    padding: 24px 24px 42px;
+    padding: 3%;
 }
 
 .ad-management-heading {
@@ -6200,10 +6195,6 @@ body.business-profile-modal-open {
 }
 
 @media (max-width: 520px) {
-    .ad-management-container {
-        padding: 16px 14px 32px;
-    }
-
     .ad-management-status-card,
     .ad-management-panel {
         padding: 22px 16px;
