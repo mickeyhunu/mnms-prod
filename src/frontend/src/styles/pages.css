@@ -6274,23 +6274,6 @@ body.business-profile-modal-open {
 }
 
 /* Ad purchase mobile-first sizing */
-body[data-page="ad-purchase"] .main-content {
-    background: #f8fafc;
-}
-
-body[data-page="ad-purchase"] .main-content > .container {
-    width: 100%;
-    max-width: 430px;
-    margin: 0 auto;
-    padding: 0;
-    background: #fff;
-}
-
-body[data-page="ad-purchase"] .main-content .ad-management-container {
-    width: 100%;
-    padding: 12px;
-}
-
 body[data-page="ad-purchase"] .main-content .ad-management-status-card,
 body[data-page="ad-purchase"] .main-content .ad-management-panel {
     width: 100%;
