@@ -5666,7 +5666,7 @@ body.business-profile-modal-open {
 
 .ad-management-container {
     max-width: 1080px;
-    padding-bottom: 42px;
+    padding: 24px 24px 42px;
 }
 
 .ad-management-heading {
@@ -6202,6 +6202,10 @@ body.business-profile-modal-open {
 }
 
 @media (max-width: 520px) {
+    .ad-management-container {
+        padding: 16px 14px 32px;
+    }
+
     .ad-management-status-card,
     .ad-management-panel {
         padding: 22px 16px;
