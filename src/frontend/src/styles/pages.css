@@ -3968,23 +3968,6 @@ body[data-page="admin"] {
     margin-top: 28px;
 }
 
-.ad-profile-user-preview-heading {
-    margin-bottom: 14px;
-}
-
-.ad-profile-user-preview-heading h4 {
-    margin: 0 0 6px;
-    color: #111827;
-    font-size: 16px;
-    font-weight: 800;
-}
-
-.ad-profile-user-preview-heading p {
-    margin: 0;
-    color: #6b7280;
-    font-size: 13px;
-    line-height: 1.45;
-}
 
 .ad-profile-user-preview-card {
     overflow: hidden;
