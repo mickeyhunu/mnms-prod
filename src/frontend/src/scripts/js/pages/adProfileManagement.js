@@ -717,64 +717,9 @@ async function loadMyAdProfile() {
     adProfileState.currentAdId = Number(existingAd?.id || 0) || null;
     if (existingAd) {
         applyAdProfileToForm(existingAd);
-    } else {
-        updateActivationPanel(null);
     }
 }
 
-
-function updateActivationPanel(ad) {
-    const toggle = document.getElementById('ad-profile-activation-toggle');
-    const label = document.getElementById('ad-profile-activation-toggle-label');
-    const status = document.getElementById('ad-profile-activation-status');
-    const isRegistered = String(ad?.registrationStatus || '').toUpperCase() === 'REGISTERED';
-    const planType = normalizeAdPlanType(ad?.planType);
-    const planLabel = AD_PLAN_LABELS[planType] || '베이직';
-    const durationDays = AD_PLAN_DAYS[planType] || 3;
-    const isSwitchOn = Boolean(Number(ad?.isActive || 0));
-    const isVisible = Boolean(Number(ad?.isCurrentlyVisible || 0));
-    const untilText = formatActivationDate(ad?.activatedUntil);
-
-    if (toggle) {
-        toggle.disabled = !adProfileState.currentAdId || !isRegistered || adProfileState.isSaving;
-        toggle.checked = isSwitchOn;
-    }
-    if (label) label.textContent = `광고 활성화 ${isSwitchOn ? 'ON' : 'OFF'}`;
-    if (status) {
-        if (!adProfileState.currentAdId) {
-            status.textContent = '광고프로필 저장 후 활성화할 수 있습니다.';
-        } else if (!isRegistered) {
-            status.textContent = '임시저장 상태에서는 광고를 활성화할 수 없습니다.';
-        } else if (isVisible && untilText) {
-            status.textContent = `${planLabel} 광고가 ${untilText}까지 노출됩니다. OFF해도 만료일까지 노출됩니다.`;
-        } else {
-            status.textContent = `${planLabel} 광고는 스탬프 1개로 ${durationDays}일간 노출됩니다.`;
-        }
-    }
-}
-
-async function updateAdActivation(nextActive) {
-    if (!adProfileState.currentAdId || adProfileState.isSaving) return;
-    const toggle = document.getElementById('ad-profile-activation-toggle');
-    const previousChecked = !nextActive;
-    try {
-        adProfileState.isSaving = true;
-        if (toggle) toggle.disabled = true;
-        const response = await APIClient.patch(`/users/me/business-ads/${adProfileState.currentAdId}/activation`, { isActive: nextActive });
-        showSaveMessage(response?.message || '광고 활성화 상태가 변경되었습니다.');
-        if (response?.content) {
-            applyAdProfileToForm(response.content);
-        } else {
-            await loadMyAdProfile();
-        }
-    } catch (error) {
-        if (toggle) toggle.checked = previousChecked;
-        showSaveMessage(error.message || '광고 활성화 상태 변경에 실패했습니다.');
-    } finally {
-        adProfileState.isSaving = false;
-        if (toggle) toggle.disabled = false;
-    }
-}
 
 async function saveAdProfile({ forceDraft = false } = {}) {
     if (adProfileState.isSaving) return;
@@ -991,7 +936,6 @@ function applyAdProfileToForm(ad) {
     setDescriptionEditorHtml(ad.description || '');
     setAdProfileImageUrl(ad.imageUrl || '');
     adProfileState.syncPreview?.();
-    updateActivationPanel(ad);
     updateAdProfileActionButtons();
 }
 
@@ -1022,7 +966,6 @@ async function initAdProfileManagementPage() {
         const draftButton = document.getElementById('ad-profile-draft-btn');
         saveButton?.addEventListener('click', () => saveAdProfile({ forceDraft: false }));
         draftButton?.addEventListener('click', () => saveAdProfile({ forceDraft: true }));
-        document.getElementById('ad-profile-activation-toggle')?.addEventListener('change', (event) => updateAdActivation(Boolean(event.target.checked)));
 
         updateAdProfileActionButtons();
         await loadMyAdProfile();

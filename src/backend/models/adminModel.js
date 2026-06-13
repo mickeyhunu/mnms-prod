@@ -861,7 +861,7 @@ async function setBusinessAdActivationOff(adId) {
   );
 }
 
-async function activateBusinessAdWithStamp({ adId, ownerUserId }) {
+async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: requestedPlanType }) {
   const pool = getPool();
   const connection = await pool.getConnection();
 
@@ -900,7 +900,7 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId }) {
       };
     }
 
-    const planType = normalizeBusinessAdPlanType(ad.planType);
+    const planType = normalizeBusinessAdPlanType(requestedPlanType || ad.planType);
     const durationDays = getBusinessAdPlanDurationDays(planType);
     const actionType = `BUSINESS_AD_${planType}`;
     await connection.query('SELECT id FROM users WHERE id = ? FOR UPDATE', [ownerUserId]);
@@ -926,9 +926,9 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId }) {
     );
     await connection.query(
       `UPDATE business_ads
-          SET is_active = 1, activated_until = DATE_ADD(NOW(), INTERVAL ? DAY)
+          SET is_active = 1, plan_type = ?, activated_until = DATE_ADD(NOW(), INTERVAL ? DAY)
         WHERE id = ?`,
-      [durationDays, adId]
+      [planType, durationDays, adId]
     );
     const [[updatedAd]] = await connection.query('SELECT activated_until AS activatedUntil FROM business_ads WHERE id = ?', [adId]);
     await connection.commit();
