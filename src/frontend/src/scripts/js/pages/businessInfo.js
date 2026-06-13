@@ -319,6 +319,13 @@ async function openBusinessAddressSearch() {
     }).open();
 }
 
+function normalizeBusinessDirectoryAdPlan(plan) {
+    const normalized = String(plan || '').trim().toLowerCase();
+    if (['basic', 'plus', 'premium'].includes(normalized)) return normalized;
+    if (normalized === 'normal') return 'basic';
+    return '';
+}
+
 function renderBusinessAds(ads) {
     const list = document.getElementById('business-directory-list');
     const empty = document.getElementById('business-directory-empty');
@@ -355,8 +362,10 @@ function renderBusinessAds(ads) {
             : '시간선택 ~ 시간선택';
         const detail = `${regionLabel} ${district} · ${category} · ${formattedTime}`;
         const detailUrl = sanitizeHTML(createBusinessInfoDetailPath(ad));
+        const planType = normalizeBusinessDirectoryAdPlan(ad.planType || ad.adPlan || ad.plan || ad.businessAdPlan || ad.businessPlan);
+        const planClassName = planType ? ` business-directory-item--${planType}` : '';
         return `
-            <li class="business-directory-item business-directory-item--clickable" data-business-ad-id="${sanitizeHTML(ad.id || '')}" data-business-ad-url="${detailUrl}" data-business-ad-view-count="${Number(ad.viewCount || 0)}" role="link" tabindex="0" aria-label="${title} 상세 페이지 보기">
+            <li class="business-directory-item business-directory-item--clickable${planClassName}" data-business-ad-id="${sanitizeHTML(ad.id || '')}" data-business-ad-url="${detailUrl}" data-business-ad-view-count="${Number(ad.viewCount || 0)}" role="link" tabindex="0" aria-label="${title} 상세 페이지 보기">
                 <img class="business-directory-thumbnail" src="${thumbnailImageUrl}" alt="${title} 대표이미지" loading="${thumbnailLoading}" fetchpriority="${thumbnailFetchPriority}" decoding="async" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
                 <div class="business-directory-main">
                     <h4>${title}</h4>
