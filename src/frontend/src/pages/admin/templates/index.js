@@ -290,56 +290,42 @@ export const adminTemplate = `
                     <section class="admin-entry-editor">
                         <div>
                             <p class="admin-user-detail-eyebrow">업체 광고 등록/수정</p>
-                            <h3 id="business-ads-editor-title">새 업체 광고 등록</h3>
-                            <p class="admin-user-detail-description">업체 광고는 배너광고 DB와 분리되어 저장됩니다.</p>
+                            <h3 id="business-ads-editor-title">업체 광고 정보 수정</h3>
+                            <p class="admin-user-detail-description">기업회원이 작성한 업체광고 프로필의 전체 입력값을 관리자에서 확인하고 수정합니다.</p>
                         </div>
                         <div class="admin-user-form-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px;">
-                            <div class="form-group">
-                                <label class="form-label" for="business-ads-form-title">광고 제목</label>
-                                <input type="text" id="business-ads-form-title" class="form-control" maxlength="255" placeholder="광고 제목을 입력하세요">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="business-ads-form-link-url">광고 링크 URL</label>
-                                <input type="url" id="business-ads-form-link-url" class="form-control" placeholder="https://">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="business-ads-form-image-file">광고 이미지 첨부</label>
-                                <input type="file" id="business-ads-form-image-file" class="form-control" accept="image/*">
-                                <p class="help-text text-muted" id="business-ads-form-image-help">이미지를 선택하고 업로드 버튼을 누르세요.</p>
-                                <button class="btn btn-outline btn-sm" id="business-ads-image-upload-btn" type="button">이미지 업로드</button>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="business-ads-form-image-url">업로드된 이미지 URL</label>
-                                <input type="text" id="business-ads-form-image-url" class="form-control" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="business-ads-form-display-order">노출 순서</label>
-                                <input type="number" id="business-ads-form-display-order" class="form-control" value="0">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="business-ads-form-is-active">노출 여부</label>
-                                <select id="business-ads-form-is-active" class="form-control">
-                                    <option value="true">노출</option>
-                                    <option value="false">숨김</option>
-                                </select>
-                            </div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-owner-user-id">소유 회원 ID</label><input type="number" id="business-ads-form-owner-user-id" class="form-control" min="1" placeholder="기업회원 ID"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-plan-type">광고 등급</label><select id="business-ads-form-plan-type" class="form-control"><option value="BASIC">BASIC</option><option value="PLUS">PLUS</option><option value="PREMIUM">PREMIUM</option></select></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-business-name">업체명</label><input type="text" id="business-ads-form-business-name" class="form-control" maxlength="255"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-title">광고 제목</label><input type="text" id="business-ads-form-title" class="form-control" maxlength="255"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-manager-name">담당자명</label><input type="text" id="business-ads-form-manager-name" class="form-control" maxlength="100"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-manager-contact">담당자 연락처</label><input type="text" id="business-ads-form-manager-contact" class="form-control" maxlength="30"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-region">지역</label><input type="text" id="business-ads-form-region" class="form-control" maxlength="50" placeholder="예: 서울"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-district">상세 지역</label><input type="text" id="business-ads-form-district" class="form-control" maxlength="50" placeholder="예: 강남구"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-category">업종</label><input type="text" id="business-ads-form-category" class="form-control" maxlength="50"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-link-url">광고 링크 URL</label><input type="url" id="business-ads-form-link-url" class="form-control" placeholder="https:// 또는 #"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-open-hour">오픈 시간</label><input type="text" id="business-ads-form-open-hour" class="form-control" maxlength="20" placeholder="예: 10:00"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-close-hour">마감 시간</label><input type="text" id="business-ads-form-close-hour" class="form-control" maxlength="20" placeholder="예: 22:00"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-kakao-talk-id">카카오톡 ID</label><input type="text" id="business-ads-form-kakao-talk-id" class="form-control" maxlength="100"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-telegram-id">텔레그램 ID</label><input type="text" id="business-ads-form-telegram-id" class="form-control" maxlength="100"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-image-file">대표 이미지 첨부</label><input type="file" id="business-ads-form-image-file" class="form-control" accept="image/*"><p class="help-text text-muted" id="business-ads-form-image-help">이미지를 선택하고 업로드 버튼을 누르세요.</p><button class="btn btn-outline btn-sm" id="business-ads-image-upload-btn" type="button">이미지 업로드</button></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-image-url">대표 이미지 URL</label><input type="text" id="business-ads-form-image-url" class="form-control"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-stamp-event-description">스탬프 이벤트 설명</label><input type="text" id="business-ads-form-stamp-event-description" class="form-control" maxlength="255"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-stamp-event-count">스탬프 사용 개수</label><input type="number" id="business-ads-form-stamp-event-count" class="form-control" min="0" value="0"></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-registration-status">등록 상태</label><select id="business-ads-form-registration-status" class="form-control"><option value="UNREGISTERED">미등록</option><option value="DRAFT">임시저장</option><option value="REGISTERED">등록완료</option></select></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-is-active">노출 여부</label><select id="business-ads-form-is-active" class="form-control"><option value="true">노출</option><option value="false">숨김</option></select></div>
+                            <div class="form-group"><label class="form-label" for="business-ads-form-display-order">노출 순서</label><input type="number" id="business-ads-form-display-order" class="form-control" value="0"></div>
+                            <div class="form-group" style="display:flex;gap:16px;align-items:center;"><label><input type="checkbox" id="business-ads-form-show-business-address-map"> 사업장 지도 표시</label><label><input type="checkbox" id="business-ads-form-use-stamp-event"> 스탬프 이벤트 사용</label></div>
+                            <div class="form-group" style="grid-column:1 / -1;"><label class="form-label" for="business-ads-form-description">상세 설명</label><textarea id="business-ads-form-description" class="form-control" rows="6"></textarea></div>
                         </div>
-                        <div class="admin-entry-editor__actions" style="margin-top:12px;">
-                            <button class="btn btn-secondary hidden" id="business-ads-cancel-btn" type="button">수정 취소</button>
-                            <button class="btn btn-primary" id="business-ads-save-btn" type="button">광고 등록</button>
-                        </div>
+                        <div class="admin-entry-editor__actions" style="margin-top:12px;"><button class="btn btn-secondary hidden" id="business-ads-cancel-btn" type="button">수정 취소</button><button class="btn btn-primary" id="business-ads-save-btn" type="button">업체 광고 등록</button></div>
                         <p id="business-ads-form-help" class="help-text admin-user-save-result" role="status"></p>
                     </section>
-
-                    <div class="admin-list-toolbar">
-                        <p class="admin-list-toolbar__meta">총 <strong id="business-ads-total">0</strong>건</p>
-                    </div>
-                    <div class="admin-table-container">
-                        <table class="admin-table">
-                            <thead><tr><th>ID</th><th>제목</th><th>링크</th><th>순서</th><th>노출</th><th>생성일</th><th>수정일</th><th>관리</th></tr></thead>
-                            <tbody id="business-ads-tbody"></tbody>
-                        </table>
-                    </div>
+                    <div class="loading" id="business-ads-loading"><div class="spinner"></div><p>업체 광고를 불러오는 중...</p></div>
+                    <div class="error-banner hidden" id="business-ads-error"><p id="business-ads-error-message"></p><button class="btn btn-sm btn-primary" id="business-ads-retry-btn">다시 시도</button></div>
+                    <div class="admin-list-toolbar"><p class="admin-list-toolbar__meta">총 <strong id="business-ads-total">0</strong>건</p><input type="search" id="business-ads-search-input" class="form-control admin-list-toolbar__search" placeholder="업체명/제목/소유자 검색" aria-label="업체광고 검색"></div>
+                    <div class="admin-table-container hidden" id="business-ads-content"><table class="admin-table"><thead><tr><th>ID</th><th>소유자</th><th>업체명</th><th>제목</th><th>지역</th><th>등급</th><th>상태</th><th>노출</th><th>조회</th><th>관리</th></tr></thead><tbody id="business-ads-tbody"></tbody></table></div>
+                    <div class="admin-pagination hidden" id="business-ads-pagination"></div>
                 </div>
 
                 <div id="support-section" class="tab-pane hidden">
