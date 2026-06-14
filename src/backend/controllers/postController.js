@@ -581,6 +581,17 @@ async function createPost(req, res, next) {
     if (isBusinessUser(req.user) && boardType !== BOARD_TYPES.PROMOTION) {
       return res.status(403).json({ message: '광고자 계정은 홍보게시판에만 글을 작성할 수 있습니다.' });
     }
+    if (!isAdmin && isBusinessUser(req.user) && boardType === BOARD_TYPES.PROMOTION) {
+      const activePlanType = String(await postModel.findActiveBusinessAdPlanForUser(req.user.id) || '').toUpperCase();
+      if (activePlanType !== 'PREMIUM') {
+        return res.status(403).json({ message: '홍보게시글은 활성화된 프리미엄 광고 기간에만 작성할 수 있습니다.' });
+      }
+
+      const existingPromotionPost = await postModel.findUserPromotionPostForCurrentDbDay(req.user.id);
+      if (existingPromotionPost) {
+        return res.status(409).json({ message: '홍보게시글은 활성화 기간동안 하루에 한 번만 작성할 수 있습니다.' });
+      }
+    }
     if (boardType === BOARD_TYPES.ATTENDANCE) {
       const existingAttendancePost = await postModel.findUserAttendancePostForCurrentDbDay(req.user.id);
       if (existingAttendancePost) {
