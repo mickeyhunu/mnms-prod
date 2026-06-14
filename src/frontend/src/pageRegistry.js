@@ -817,9 +817,9 @@ const pageRegistry = {
                                 <div><dt>차감 스탬프</dt><dd id="ad-product-price">스탬프 1개</dd></div>
                                 <div><dt>노출 기간</dt><dd id="ad-vat-price">1분</dd></div>
                                 <div><dt>예상 노출 기간</dt><dd id="ad-estimated-run-days">-</dd></div>
+                                <div><dt>최대 자동연장 기간</dt><dd id="ad-estimated-run-until">-</dd></div>
                                 <div><dt>사용후 잔여 스탬프</dt><dd id="ad-stamps-after-use">-</dd></div>
                             </dl>
-                            <small id="ad-estimated-run-until"></small>
                         </article>
                     </div>
                     <p class="ad-management-notice"><span aria-hidden="true">💡</span><b>안내</b><span>자동연장 ON 상태에서 보유 스탬프가 0개이면 자동연장이 OFF되고 현재 활성화된 광고 기간 종료 후 노출이 중지됩니다.</span></p>
