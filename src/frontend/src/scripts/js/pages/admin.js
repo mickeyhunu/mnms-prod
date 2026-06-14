@@ -10,6 +10,7 @@ let inquiryAnswerTarget = null;
 let editingUserId = null;
 let editingEntryId = null;
 let editingAdId = null;
+let editingBusinessAdId = null;
 let currentEntryStoreNo = null;
 let entryStores = [];
 let adStores = [];
@@ -51,6 +52,7 @@ const ADMIN_LIST_STATE = {
     admins: { items: [], query: '', page: 1 },
     entries: { items: [], query: '', page: 1 },
     ads: { items: [], query: '', page: 1 },
+    'business-ads': { items: [], query: '', page: 1 },
     support: { items: [], query: '', page: 1 },
     inquiries: { items: [], query: '', page: 1 }
 };
@@ -62,6 +64,7 @@ const ADMIN_SEARCH_PLACEHOLDERS = {
     admins: '관리자 검색',
     entries: '엔트리 검색',
     ads: '광고 검색',
+    'business-ads': '업체광고 검색',
     support: '공지/FAQ 검색',
     inquiries: '1:1 문의 검색'
 };
@@ -207,9 +210,7 @@ async function activateAdminTab(tabKey, options = {}) {
     else if (resolvedTabKey === 'admins') await loadAdmins();
     else if (resolvedTabKey === 'entries') await loadEntries();
     else if (resolvedTabKey === 'banner-ads') await loadAds();
-    else if (resolvedTabKey === 'business-ads') {
-        // 업체광고 관리는 businessInfo.js에서 독립적으로 데이터를 초기화한다.
-    }
+    else if (resolvedTabKey === 'business-ads') await loadBusinessAdsAdmin();
     else if (resolvedTabKey === 'support') await loadSupportArticles();
     else if (resolvedTabKey === 'inquiries') await loadInquiries();
 }
@@ -277,6 +278,7 @@ function bindCommonEvents() {
     document.getElementById('entries-retry-btn')?.addEventListener('click', loadEntries);
     document.getElementById('entries-retry-btn-secondary')?.addEventListener('click', loadEntries);
     document.getElementById('ads-retry-btn')?.addEventListener('click', loadAds);
+    document.getElementById('business-ads-retry-btn')?.addEventListener('click', loadBusinessAdsAdmin);
     document.getElementById('support-retry-btn')?.addEventListener('click', loadSupportArticles);
     document.getElementById('inquiries-retry-btn')?.addEventListener('click', loadInquiries);
 
@@ -299,6 +301,9 @@ function bindCommonEvents() {
     document.getElementById('ads-cancel-btn')?.addEventListener('click', resetAdEditor);
     document.getElementById('ads-image-upload-btn')?.addEventListener('click', uploadAdImage);
     document.getElementById('ads-form-ad-type')?.addEventListener('change', handleAdTypeChange);
+    document.getElementById('business-ads-save-btn')?.addEventListener('click', saveBusinessAdAdmin);
+    document.getElementById('business-ads-cancel-btn')?.addEventListener('click', resetBusinessAdEditor);
+    document.getElementById('business-ads-image-upload-btn')?.addEventListener('click', uploadBusinessAdImage);
     document.getElementById('entry-store-select')?.addEventListener('change', async (event) => {
         currentEntryStoreNo = Number.parseInt(event.target.value || '', 10);
         resetEntryEditor();
@@ -314,6 +319,7 @@ function bindCommonEvents() {
     document.getElementById('inquiry-answer-cancel-btn')?.addEventListener('click', closeInquiryAnswerModal);
     document.getElementById('inquiry-answer-save-btn')?.addEventListener('click', saveInquiryAnswer);
     resetAdEditor();
+    resetBusinessAdEditor();
 
     if (!isGlobalAdminClickBound) {
         document.addEventListener('click', handleGlobalAdminClick);
@@ -454,6 +460,7 @@ function getAdminFilteredItems(prefix) {
         admins: ['id', 'loginId', 'nickname', 'role'],
         entries: ['workerName', 'entryId'],
         ads: ['id', 'title', 'adType', 'storeNo', 'linkUrl', 'imageUrl', 'displayOrder'],
+        'business-ads': ['id', 'ownerUserId', 'ownerLoginId', 'ownerNickname', 'ownerCompanyName', 'businessName', 'title', 'region', 'district', 'category', 'planType', 'registrationStatus'],
         support: ['id', 'title', 'category', 'sourceType'],
         inquiries: ['id', 'title', 'userNickname', 'userLoginId', 'userId', 'type', 'status', (item) => item.target?.postTitle, (item) => item.target?.content, 'targetId', 'targetType']
     };
@@ -532,6 +539,7 @@ function renderAdminList(prefix) {
     else if (prefix === 'business-applications') renderBusinessApplicationsTable();
     else if (prefix === 'entries') renderEntriesTable();
     else if (prefix === 'ads') renderAdsTable();
+    else if (prefix === 'business-ads') renderBusinessAdsAdminTable();
     else if (prefix === 'support') renderSupportTable();
     else if (prefix === 'inquiries') renderInquiriesTable();
 }
@@ -2337,6 +2345,185 @@ function normalizeExternalUrl(url) {
     return isValidExternalUrl(target) ? target : '#';
 }
 
+
+function setBusinessAdHelpMessage(message, color = '#6c757d') {
+    const help = document.getElementById('business-ads-form-help');
+    if (!help) return;
+    help.textContent = message;
+    help.style.color = color;
+}
+
+function fillBusinessAdEditorForm(ad = null) {
+    const isEdit = Boolean(ad && Number.isInteger(Number(ad.id)));
+    editingBusinessAdId = isEdit ? Number(ad.id) : null;
+    const setValue = (id, value = '') => { const el = document.getElementById(id); if (el) el.value = value; };
+    const setChecked = (id, value) => { const el = document.getElementById(id); if (el) el.checked = Boolean(value); };
+
+    document.getElementById('business-ads-editor-title').textContent = isEdit ? `업체 광고 수정 #${ad.id}` : '새 업체 광고 등록';
+    document.getElementById('business-ads-save-btn').textContent = isEdit ? '업체 광고 수정 저장' : '업체 광고 등록';
+    document.getElementById('business-ads-cancel-btn')?.classList.toggle('hidden', !isEdit);
+    setValue('business-ads-form-owner-user-id', ad?.ownerUserId || '');
+    setValue('business-ads-form-plan-type', ad?.planType || 'BASIC');
+    setValue('business-ads-form-business-name', ad?.businessName || '');
+    setValue('business-ads-form-title', ad?.title || '');
+    setValue('business-ads-form-manager-name', ad?.managerName || '');
+    setValue('business-ads-form-manager-contact', ad?.managerContact || '');
+    setValue('business-ads-form-region', ad?.region || '');
+    setValue('business-ads-form-district', ad?.district || '');
+    setValue('business-ads-form-category', ad?.category || '');
+    setValue('business-ads-form-link-url', ad?.linkUrl || '#');
+    setValue('business-ads-form-open-hour', ad?.openHour || '');
+    setValue('business-ads-form-close-hour', ad?.closeHour || '');
+    setValue('business-ads-form-kakao-talk-id', ad?.kakaoTalkId || '');
+    setValue('business-ads-form-telegram-id', ad?.telegramId || '');
+    setValue('business-ads-form-image-url', ad?.imageUrl || '');
+    setValue('business-ads-form-stamp-event-description', ad?.stampEventDescription || '');
+    setValue('business-ads-form-stamp-event-count', Number(ad?.stampEventCount || 0));
+    setValue('business-ads-form-registration-status', ad?.registrationStatus || 'UNREGISTERED');
+    setValue('business-ads-form-is-active', String(Boolean(ad?.isActive)));
+    setValue('business-ads-form-display-order', Number(ad?.displayOrder || 0));
+    setValue('business-ads-form-description', ad?.description || '');
+    setChecked('business-ads-form-show-business-address-map', ad?.showBusinessAddressMap);
+    setChecked('business-ads-form-use-stamp-event', ad?.useStampEvent);
+    setValue('business-ads-form-image-file', '');
+    const help = document.getElementById('business-ads-form-image-help');
+    if (help) help.textContent = ad?.imageUrl ? '현재 이미지를 사용 중입니다. 새 파일 업로드 시 교체됩니다.' : '이미지를 선택하고 업로드 버튼을 누르세요.';
+    setBusinessAdHelpMessage('');
+}
+
+function resetBusinessAdEditor() {
+    fillBusinessAdEditorForm(null);
+}
+
+async function openBusinessAdEditor(adId) {
+    const target = (ADMIN_LIST_STATE['business-ads'].items || []).find((item) => Number(item.id) === Number(adId));
+    if (!target) {
+        alert('업체 광고 정보를 찾을 수 없습니다.');
+        return;
+    }
+    fillBusinessAdEditorForm(target);
+    document.getElementById('business-ads-editor-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function uploadBusinessAdImage() {
+    const fileInput = document.getElementById('business-ads-form-image-file');
+    const imageUrlInput = document.getElementById('business-ads-form-image-url');
+    const uploadButton = document.getElementById('business-ads-image-upload-btn');
+    const file = fileInput?.files?.[0];
+    if (!file) return setBusinessAdHelpMessage('먼저 업로드할 이미지를 선택해주세요.', '#dc3545');
+    if (!String(file.type || '').startsWith('image/')) return setBusinessAdHelpMessage('이미지 파일만 업로드할 수 있습니다.', '#dc3545');
+
+    const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('이미지 파일을 읽지 못했습니다.'));
+        reader.readAsDataURL(file);
+    });
+
+    try {
+        if (uploadButton) { uploadButton.disabled = true; uploadButton.textContent = '업로드 중...'; }
+        const response = await APIClient.post('/uploads/ads/images', { files: [{ dataUrl, fileName: file.name }] });
+        const uploaded = Array.isArray(response.files) ? response.files[0] : null;
+        if (!uploaded?.url) throw new Error('업로드 URL을 받지 못했습니다.');
+        if (imageUrlInput) imageUrlInput.value = uploaded.url;
+        setBusinessAdHelpMessage('대표 이미지가 업로드되었습니다.', '#198754');
+    } catch (error) {
+        setBusinessAdHelpMessage(error.message || '이미지 업로드에 실패했습니다.', '#dc3545');
+    } finally {
+        if (uploadButton) { uploadButton.disabled = false; uploadButton.textContent = '이미지 업로드'; }
+    }
+}
+
+function getBusinessAdAdminPayload() {
+    const value = (id) => String(document.getElementById(id)?.value || '').trim();
+    return {
+        ownerUserId: Number.parseInt(value('business-ads-form-owner-user-id'), 10),
+        businessName: value('business-ads-form-business-name'),
+        managerName: value('business-ads-form-manager-name'),
+        managerContact: value('business-ads-form-manager-contact'),
+        title: value('business-ads-form-title'),
+        imageUrl: value('business-ads-form-image-url'),
+        linkUrl: value('business-ads-form-link-url') || '#',
+        region: value('business-ads-form-region'),
+        district: value('business-ads-form-district'),
+        category: value('business-ads-form-category'),
+        openHour: value('business-ads-form-open-hour'),
+        closeHour: value('business-ads-form-close-hour'),
+        kakaoTalkId: value('business-ads-form-kakao-talk-id'),
+        telegramId: value('business-ads-form-telegram-id'),
+        showBusinessAddressMap: Boolean(document.getElementById('business-ads-form-show-business-address-map')?.checked),
+        useStampEvent: Boolean(document.getElementById('business-ads-form-use-stamp-event')?.checked),
+        stampEventDescription: value('business-ads-form-stamp-event-description'),
+        stampEventCount: Number.parseInt(value('business-ads-form-stamp-event-count'), 10) || 0,
+        description: value('business-ads-form-description'),
+        planType: value('business-ads-form-plan-type') || 'BASIC',
+        registrationStatus: value('business-ads-form-registration-status') || 'UNREGISTERED',
+        displayOrder: Number(value('business-ads-form-display-order')) || 0,
+        isActive: value('business-ads-form-is-active') === 'true'
+    };
+}
+
+async function saveBusinessAdAdmin() {
+    const saveButton = document.getElementById('business-ads-save-btn');
+    const wasEdit = Boolean(editingBusinessAdId);
+    const payload = getBusinessAdAdminPayload();
+    if (!wasEdit && (!Number.isInteger(payload.ownerUserId) || payload.ownerUserId <= 0)) return setBusinessAdHelpMessage('소유 회원 ID를 입력해주세요.', '#dc3545');
+    if (!payload.title || !payload.imageUrl) return setBusinessAdHelpMessage('광고 제목과 대표 이미지 URL은 필수입니다.', '#dc3545');
+    if (payload.linkUrl !== '#' && !isValidExternalUrl(payload.linkUrl)) return setBusinessAdHelpMessage('광고 링크 URL은 http:// 또는 https:// 형식이어야 합니다.', '#dc3545');
+    if (payload.useStampEvent && (!payload.stampEventDescription || payload.stampEventCount <= 0)) return setBusinessAdHelpMessage('스탬프 이벤트 사용 시 설명과 사용 개수를 입력하세요.', '#dc3545');
+
+    try {
+        if (saveButton) { saveButton.disabled = true; saveButton.textContent = '저장 중...'; }
+        if (wasEdit) await APIClient.put(`/admin/business-ads/${editingBusinessAdId}`, payload);
+        else await APIClient.post('/admin/business-ads', payload);
+        resetBusinessAdEditor();
+        await loadBusinessAdsAdmin();
+        setBusinessAdHelpMessage('업체 광고가 저장되었습니다.', '#198754');
+    } catch (error) {
+        setBusinessAdHelpMessage(error.message || '업체 광고 저장에 실패했습니다.', '#dc3545');
+    } finally {
+        if (saveButton) { saveButton.disabled = false; saveButton.textContent = wasEdit ? '업체 광고 수정 저장' : '업체 광고 등록'; }
+    }
+}
+
+function renderBusinessAdsAdminTable() {
+    const tbody = document.getElementById('business-ads-tbody');
+    if (!tbody) return;
+    const { filteredItems, pageItems, page, totalPages } = getAdminPagination('business-ads');
+    updateAdminTotal('business-ads', filteredItems.length);
+    if (!pageItems.length) {
+        tbody.innerHTML = `<tr><td colspan="10">${filteredItems.length ? '현재 페이지에 표시할 업체 광고가 없습니다.' : '등록된 업체 광고가 없습니다.'}</td></tr>`;
+    } else {
+        tbody.innerHTML = pageItems.map((ad) => `
+            <tr>
+                <td>${ad.id}</td>
+                <td>#${ad.ownerUserId || '-'} ${sanitizeHTML(ad.ownerNickname || ad.ownerLoginId || '')}</td>
+                <td>${sanitizeHTML(ad.businessName || '')}</td>
+                <td>${sanitizeHTML(ad.title || '')}</td>
+                <td>${sanitizeHTML([ad.region, ad.district].filter(Boolean).join(' '))}</td>
+                <td>${sanitizeHTML(ad.planType || 'BASIC')}</td>
+                <td>${sanitizeHTML(ad.registrationStatus || 'UNREGISTERED')}</td>
+                <td>${ad.isActive ? '노출' : '숨김'}</td>
+                <td>${Number(ad.viewCount || 0).toLocaleString('ko-KR')}</td>
+                <td><button type="button" class="btn btn-sm btn-secondary" data-admin-action="edit-business-ad" data-target-id="${ad.id}">수정</button> <button type="button" class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="business-ad" data-target-id="${ad.id}">삭제</button></td>
+            </tr>
+        `).join('');
+    }
+    renderAdminPagination('business-ads', totalPages, page);
+}
+
+async function loadBusinessAdsAdmin() {
+    toggleLoading('business-ads', true);
+    try {
+        const response = await APIClient.get('/admin/business-ads');
+        ADMIN_LIST_STATE['business-ads'].items = response.content || [];
+        renderBusinessAdsAdminTable();
+        showContent('business-ads');
+    } catch (error) {
+        showError('business-ads', error.message || '업체 광고 목록을 불러오지 못했습니다.');
+    }
+}
+
 async function loadSupportArticles() {
     toggleLoading('support', true);
     try {
@@ -2455,6 +2642,11 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
+    if (action === 'edit-business-ad' && Number.isInteger(targetId)) {
+        await openBusinessAdEditor(targetId);
+        return;
+    }
+
     if (action === 'edit-support' && Number.isInteger(targetId)) {
         const category = encodeURIComponent(currentSupportCategory || 'NOTICE');
         const query = `?id=${targetId}&sourceType=${encodeURIComponent(sourceType)}&category=${category}`;
@@ -2492,7 +2684,7 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
-    if (['delete', 'toggle-hide', 'edit-ad', 'edit-support', 'edit-user', 'answer-inquiry', 'review-business-application', 'preview-business-document', 'revoke-admin'].includes(action) && !entryId && !Number.isInteger(targetId)) {
+    if (['delete', 'toggle-hide', 'edit-ad', 'edit-business-ad', 'edit-support', 'edit-user', 'answer-inquiry', 'review-business-application', 'preview-business-document', 'revoke-admin'].includes(action) && !entryId && !Number.isInteger(targetId)) {
         alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
     }
 }
@@ -2809,6 +3001,10 @@ async function confirmDelete() {
             await APIClient.delete(`/admin/ads/${adminActionTarget.id}`);
             closeDeleteModal();
             await loadAds();
+        } else if (adminActionTarget.type === 'business-ad') {
+            await APIClient.delete(`/admin/business-ads/${adminActionTarget.id}`);
+            closeDeleteModal();
+            await loadBusinessAdsAdmin();
         } else if (adminActionTarget.type === 'entry') {
             await APIClient.delete(`/admin/entries/${encodeURIComponent(adminActionTarget.entryId)}`);
             if (editingEntryId === adminActionTarget.entryId) resetEntryEditor();

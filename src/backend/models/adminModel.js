@@ -774,6 +774,26 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
   return rows;
 }
 
+
+async function listBusinessAdsForAdmin() {
+  await renewExpiredBusinessAdsWithStamp();
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT ba.id, ba.owner_user_id AS ownerUserId, ba.business_name AS businessName, ba.manager_name AS managerName, ba.manager_contact AS managerContact,
+            ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl, ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
+            ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification,
+            ba.use_stamp_event AS useStampEvent, ba.stamp_event_description AS stampEventDescription, ba.stamp_event_count AS stampEventCount, ba.description, ba.plan_type AS planType,
+            ba.view_count AS viewCount, ba.registration_status AS registrationStatus, ba.activated_at AS activatedAt, ba.activated_until AS activatedUntil, ba.display_order AS displayOrder,
+            (ba.is_active = 1) AS isActive, (ba.activated_until IS NOT NULL AND ba.activated_until > NOW()) AS isCurrentlyVisible, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
+            COALESCE(u.login_id, '') AS ownerLoginId, COALESCE(u.nickname, '') AS ownerNickname, COALESCE(bp.company_name, '') AS ownerCompanyName
+       FROM business_ads ba
+       LEFT JOIN users u ON u.id = ba.owner_user_id
+       LEFT JOIN business_profiles bp ON bp.user_id = ba.owner_user_id
+      ORDER BY ba.id DESC`
+  );
+  return rows;
+}
+
 async function createBusinessAd({
   ownerUserId,
   businessName = '',
@@ -1507,6 +1527,7 @@ module.exports = {
   getBusinessAdPlanDurationDays,
   getBusinessAdPublicVisibilityCondition,
   listBusinessAdsByOwner,
+  listBusinessAdsForAdmin,
   listPublicBusinessAdAreas,
   listPublicBusinessAds,
   findPublicBusinessAdById,
