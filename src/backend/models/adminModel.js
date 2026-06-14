@@ -965,7 +965,7 @@ async function setBusinessAdActivationOff(adId) {
   );
 }
 
-async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: requestedPlanType }) {
+async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: requestedPlanType, autoRenew = true }) {
   const pool = getPool();
   const connection = await pool.getConnection();
 
@@ -993,7 +993,7 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
 
     const [activeRows] = await connection.query('SELECT (? IS NOT NULL AND ? > NOW()) AS isActivePeriod', [ad.activatedUntil, ad.activatedUntil]);
     if (Number(activeRows[0]?.isActivePeriod || 0) === 1) {
-      await connection.query('UPDATE business_ads SET is_active = 1 WHERE id = ?', [adId]);
+      await connection.query('UPDATE business_ads SET is_active = ? WHERE id = ?', [autoRenew ? 1 : 0, adId]);
       await connection.commit();
       return {
         consumedStampCount: 0,
@@ -1032,9 +1032,9 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
     );
     await connection.query(
       `UPDATE business_ads
-          SET is_active = 1, plan_type = ?, activated_at = NOW(), activated_until = DATE_ADD(NOW(), INTERVAL ? ${BUSINESS_AD_PLAN_DURATION_UNIT_SQL})
+          SET is_active = ?, plan_type = ?, activated_at = NOW(), activated_until = DATE_ADD(NOW(), INTERVAL ? ${BUSINESS_AD_PLAN_DURATION_UNIT_SQL})
         WHERE id = ?`,
-      [planType, durationDays, adId]
+      [autoRenew ? 1 : 0, planType, durationDays, adId]
     );
     const [[updatedAd]] = await connection.query('SELECT activated_at AS activatedAt, activated_until AS activatedUntil FROM business_ads WHERE id = ?', [adId]);
     await connection.commit();
