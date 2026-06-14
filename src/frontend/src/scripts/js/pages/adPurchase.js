@@ -247,7 +247,7 @@
         render();
     };
 
-    const updateActivation = async (nextActive) => {
+    const updateActivation = async (nextActive, { autoRenew = nextActive } = {}) => {
         if (!state.ad?.id || state.isSubmitting) return;
         const currentPlan = plans[state.plan];
         try {
@@ -255,7 +255,8 @@
             render();
             const response = await APIClient.patch(`/users/me/business-ads/${state.ad.id}/activation`, {
                 isActive: nextActive,
-                planType: currentPlan.code
+                planType: currentPlan.code,
+                autoRenew
             });
             alert(response?.message || '광고 활성화 상태가 변경되었습니다.');
             state.ad = response?.content || state.ad;
@@ -280,11 +281,11 @@
     });
 
     activationToggle?.addEventListener('change', (event) => {
-        updateActivation(Boolean(event.target.checked));
+        updateActivation(Boolean(event.target.checked), { autoRenew: Boolean(event.target.checked) });
     });
 
     activationButton?.addEventListener('click', () => {
-        updateActivation(!isVisible());
+        updateActivation(!isVisible(), { autoRenew: false });
     });
 
 
