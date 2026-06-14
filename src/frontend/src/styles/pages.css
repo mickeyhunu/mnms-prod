@@ -4323,18 +4323,18 @@ body[data-page="admin"] {
 }
 
 .business-directory-item--basic {
-    border-color: #38bdf8;
-    box-shadow: inset 4px 0 0 #38bdf8;
+    border-color: #5c4033;
+    box-shadow: inset 4px 0 0 #5c4033;
 }
 
 .business-directory-item--plus {
-    border-color: #8b5cf6;
-    box-shadow: inset 4px 0 0 #8b5cf6;
+    border-color: #c0c0c0;
+    box-shadow: inset 4px 0 0 #c0c0c0;
 }
 
 .business-directory-item--premium {
-    border-color: #f59e0b;
-    box-shadow: inset 4px 0 0 #f59e0b;
+    border-color: #d4af37;
+    box-shadow: inset 4px 0 0 #d4af37;
 }
 
 .business-directory-item--clickable:hover,
@@ -4347,20 +4347,20 @@ body[data-page="admin"] {
 
 .business-directory-item--basic:hover,
 .business-directory-item--basic:focus-visible {
-    border-color: #0284c7;
-    box-shadow: inset 4px 0 0 #0284c7, 0 8px 24px rgba(2, 132, 199, 0.16);
+    border-color: #4a2f24;
+    box-shadow: inset 4px 0 0 #4a2f24, 0 8px 24px rgba(74, 47, 36, 0.16);
 }
 
 .business-directory-item--plus:hover,
 .business-directory-item--plus:focus-visible {
-    border-color: #7c3aed;
-    box-shadow: inset 4px 0 0 #7c3aed, 0 8px 24px rgba(124, 58, 237, 0.16);
+    border-color: #a8a8a8;
+    box-shadow: inset 4px 0 0 #a8a8a8, 0 8px 24px rgba(168, 168, 168, 0.16);
 }
 
 .business-directory-item--premium:hover,
 .business-directory-item--premium:focus-visible {
-    border-color: #d97706;
-    box-shadow: inset 4px 0 0 #d97706, 0 8px 24px rgba(217, 119, 6, 0.18);
+    border-color: #b8860b;
+    box-shadow: inset 4px 0 0 #b8860b, 0 8px 24px rgba(184, 134, 11, 0.18);
 }
 
 .business-profile-modal {
