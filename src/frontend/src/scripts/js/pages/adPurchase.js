@@ -88,6 +88,7 @@
     const state = {
         plan: 'premium',
         ad: null,
+        businessProfile: null,
         totalStamps: 0,
         isSubmitting: false
     };
@@ -110,6 +111,11 @@
     };
 
     const isRegisteredAd = () => String(state.ad?.registrationStatus || '').toUpperCase() === 'REGISTERED';
+    const isRegisteredBusinessProfile = () => {
+        const registrationStatus = String(state.businessProfile?.registrationStatus || '').toUpperCase();
+        const approvalStatus = String(state.businessProfile?.approvalStatus || '').toUpperCase();
+        return registrationStatus === 'REGISTERED' && approvalStatus === 'APPROVED';
+    };
     const isSwitchOn = () => Boolean(Number(state.ad?.isActive || 0));
     const isVisible = () => Boolean(Number(state.ad?.isCurrentlyVisible || 0));
     const activePlanKey = () => (isSwitchOn() ? normalizePlanKey(state.ad?.planType) : null);
@@ -187,7 +193,8 @@
         const checked = isSwitchOn();
         const visible = isVisible();
         const expiresAt = formatDate(state.ad?.activatedUntil);
-        const canToggle = Boolean(state.ad?.id) && registered && !state.isSubmitting;
+        const businessProfileRegistered = isRegisteredBusinessProfile();
+        const canToggle = Boolean(state.ad?.id) && registered && businessProfileRegistered && !state.isSubmitting;
 
         selectedProduct.textContent = currentPlan.name;
         stampCost.textContent = '스탬프 1개';
@@ -227,6 +234,8 @@
             activationStatus.textContent = '등록된 광고프로필이 없습니다. 광고프로필을 먼저 등록해주세요.';
         } else if (!registered) {
             activationStatus.textContent = '임시저장 상태입니다. 광고프로필을 등록 완료한 뒤 활성화할 수 있습니다.';
+        } else if (!businessProfileRegistered) {
+            activationStatus.textContent = '승인 완료된 사업자정보를 먼저 등록해야 광고를 활성화할 수 있습니다.';
         } else if (visible && expiresAt) {
             activationStatus.textContent = checked
                 ? `현재 업체정보에 노출 중입니다. 자동연장 ON 상태이며 만료 예정: ${expiresAt}`
@@ -242,11 +251,13 @@
     };
 
     const loadActivationData = async () => {
-        const [adsResponse, stampResponse] = await Promise.all([
+        const [adsResponse, stampResponse, businessProfileResponse] = await Promise.all([
             APIClient.get('/users/me/business-ads'),
-            APIClient.get('/users/me/stamps')
+            APIClient.get('/users/me/stamps'),
+            APIClient.get('/users/me/business-profile')
         ]);
         state.ad = Array.isArray(adsResponse?.content) ? adsResponse.content[0] : null;
+        state.businessProfile = businessProfileResponse || null;
         state.totalStamps = Number(stampResponse?.totalStamps || 0);
         if (state.ad?.planType) {
             state.plan = normalizePlanKey(state.ad.planType);
