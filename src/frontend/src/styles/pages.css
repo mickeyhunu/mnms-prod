@@ -6031,36 +6031,6 @@ body.business-profile-modal-open {
     font-size: 22px;
 }
 
-.ad-product-selected-ribbon {
-    position: absolute;
-    left: -2px;
-    top: -2px;
-    border-radius: 10px 0 12px 0;
-    padding: 9px 15px;
-    background: #16a34a;
-    color: #fff;
-    font-weight: 900;
-}
-
-.ad-product-selected-check {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    display: none;
-    place-items: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: #22c55e;
-    color: #fff;
-    font-size: 23px;
-    font-weight: 900;
-}
-
-.ad-product-card.is-active .ad-product-selected-check {
-    display: grid;
-}
-
 .ad-stamp-info-card {
     min-height: 180px;
     padding: 24px 20px;
@@ -6255,14 +6225,6 @@ body.business-profile-modal-open {
     }
 }
 
-.ad-product-selected-ribbon {
-    display: none;
-}
-
-.ad-product-card.is-active .ad-product-selected-ribbon {
-    display: inline-block;
-}
-
 /* Ad purchase mobile-first sizing */
 .ad-management-status-card,
 .ad-management-panel {
@@ -6404,20 +6366,6 @@ body.business-profile-modal-open {
 }
 
 .ad-product-cost b {
-    font-size: 16px;
-}
-
-.ad-product-selected-ribbon {
-    padding: 5px 8px;
-    border-radius: 10px 0 10px 0;
-    font-size: 11px;
-}
-
-.ad-product-selected-check {
-    top: 10px;
-    right: 10px;
-    width: 24px;
-    height: 24px;
     font-size: 16px;
 }
 
