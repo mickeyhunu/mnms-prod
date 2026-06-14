@@ -764,6 +764,17 @@ const pageRegistry = {
                             <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 1일</b></span>
                         </button>
                     </div>
+                    <div class="ad-activation-benefits">
+                        <span aria-hidden="true">📣</span>
+                        <div>
+                            <b id="ad-activation-benefit-title">프리미엄 광고를 활성화하면</b>
+                            <ul id="ad-plan-features"></ul>
+                        </div>
+                    </div>
+                    <div class="ad-activation-action">
+                        <button type="button" class="ad-management-start-btn" id="ad-purchase-submit" disabled>⚡ 1 스탬프 사용하고 광고 시작하기</button>
+                        <p>현재 보유 스탬프 : <strong id="ad-activation-stamp-balance">확인 중...</strong></p>
+                    </div>
                 </section>
 
                 <section class="ad-management-panel" aria-labelledby="ad-management-stamp-title">
@@ -802,17 +813,6 @@ const pageRegistry = {
                     <div class="ad-activation-copy">
                         <h2 id="ad-management-activation-title">광고 활성화</h2>
                         <p>선택한 상품을 스탬프 1개로 수동 활성화하고, 자동연장 ON/OFF를 설정합니다.</p>
-                    </div>
-                    <div class="ad-activation-benefits">
-                        <span aria-hidden="true">📣</span>
-                        <div>
-                            <b id="ad-activation-benefit-title">프리미엄 광고를 활성화하면</b>
-                            <ul id="ad-plan-features"></ul>
-                        </div>
-                    </div>
-                    <div class="ad-activation-action">
-                        <button type="button" class="ad-management-start-btn" id="ad-purchase-submit" disabled>⚡ 1 스탬프 사용하고 광고 시작하기</button>
-                        <p>현재 보유 스탬프 : <strong id="ad-activation-stamp-balance">확인 중...</strong></p>
                     </div>
                     <p class="ad-management-safe-note"><span aria-hidden="true">🔒</span><b>안심하고 이용하세요</b><br>자동연장 ON 시 선택한 광고가 계속 노출되도록 기간 종료마다 스탬프 1개가 자동 소모됩니다.</p>
                     <p class="ad-profile-map-toggle-help" id="ad-activation-current-status">광고프로필 정보를 확인 중입니다.</p>
