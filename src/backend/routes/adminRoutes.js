@@ -568,6 +568,105 @@ router.put('/ads/:id', async (req, res, next) => {
   }
 });
 
+
+router.get('/business-ads', async (req, res, next) => {
+  try {
+    const ads = await adminModel.listBusinessAdsForAdmin();
+    res.json({ content: ads, totalElements: ads.length });
+  } catch (error) {
+    next(error);
+  }
+});
+
+function readBusinessAdPayload(body = {}, fallback = {}) {
+  const useStampEvent = Boolean(body.useStampEvent);
+  return {
+    ownerUserId: Number.parseInt(body.ownerUserId ?? fallback.ownerUserId, 10),
+    businessName: String(body.businessName ?? fallback.businessName ?? '').trim(),
+    managerName: String(body.managerName ?? fallback.managerName ?? '').trim(),
+    managerContact: String(body.managerContact ?? fallback.managerContact ?? '').trim(),
+    title: String(body.title ?? fallback.title ?? '').trim(),
+    imageUrl: String(body.imageUrl ?? fallback.imageUrl ?? '').trim(),
+    linkUrl: String(body.linkUrl ?? fallback.linkUrl ?? '#').trim() || '#',
+    region: String(body.region ?? fallback.region ?? '').trim(),
+    district: String(body.district ?? fallback.district ?? '').trim(),
+    category: String(body.category ?? fallback.category ?? '').trim(),
+    openHour: String(body.openHour ?? fallback.openHour ?? '').trim(),
+    closeHour: String(body.closeHour ?? fallback.closeHour ?? '').trim(),
+    description: String(body.description ?? fallback.description ?? '').trim(),
+    kakaoTalkId: String(body.kakaoTalkId ?? fallback.kakaoTalkId ?? '').trim(),
+    telegramId: String(body.telegramId ?? fallback.telegramId ?? '').trim(),
+    showBusinessAddressMap: Boolean(body.showBusinessAddressMap),
+    useVisitVerification: useStampEvent,
+    useStampEvent,
+    stampEventDescription: useStampEvent ? String(body.stampEventDescription ?? fallback.stampEventDescription ?? '').trim() : '',
+    stampEventCount: useStampEvent ? (Number.parseInt(body.stampEventCount, 10) || 0) : 0,
+    planType: String(body.planType ?? fallback.planType ?? 'BASIC').trim().toUpperCase(),
+    registrationStatus: String(body.registrationStatus ?? fallback.registrationStatus ?? 'UNREGISTERED').trim().toUpperCase(),
+    displayOrder: Number(body.displayOrder ?? fallback.displayOrder) || 0,
+    isActive: Boolean(body.isActive)
+  };
+}
+
+function validateBusinessAdPayload(payload, { requireOwner = true } = {}) {
+  if (requireOwner && (!Number.isInteger(payload.ownerUserId) || payload.ownerUserId <= 0)) return '소유 회원 ID가 필요합니다.';
+  if (!payload.title || !payload.imageUrl) return '광고 제목과 대표 이미지 URL은 필수입니다.';
+  if (!['UNREGISTERED', 'DRAFT', 'REGISTERED'].includes(payload.registrationStatus)) return '유효하지 않은 등록 상태입니다.';
+  if (payload.linkUrl !== '#') {
+    try {
+      const parsed = new URL(payload.linkUrl);
+      if (!['http:', 'https:'].includes(parsed.protocol)) return '광고 링크 URL은 http:// 또는 https:// 형식이어야 합니다.';
+    } catch (error) {
+      return '광고 링크 URL은 http:// 또는 https:// 형식이어야 합니다.';
+    }
+  }
+  if (payload.useStampEvent && (!payload.stampEventDescription || payload.stampEventCount <= 0)) return '스탬프 이벤트 사용 시 설명과 사용 개수를 입력하세요.';
+  return '';
+}
+
+router.post('/business-ads', async (req, res, next) => {
+  try {
+    const payload = readBusinessAdPayload(req.body);
+    const errorMessage = validateBusinessAdPayload(payload);
+    if (errorMessage) return res.status(400).json({ message: errorMessage });
+    const insertId = await adminModel.createBusinessAd(payload);
+    res.status(201).json({ id: insertId });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/business-ads/:id', async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 업체 광고 ID입니다.' });
+    const target = await adminModel.findBusinessAdById(id);
+    if (!target) return res.status(404).json({ message: '업체 광고를 찾을 수 없습니다.' });
+    const payload = readBusinessAdPayload(req.body, target);
+    const errorMessage = validateBusinessAdPayload(payload, { requireOwner: false });
+    if (errorMessage) return res.status(400).json({ message: errorMessage });
+    await adminModel.updateBusinessAd(id, payload);
+    if (target.imageUrl && target.imageUrl !== payload.imageUrl) await deleteS3ObjectByUrl(target.imageUrl);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/business-ads/:id', async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 업체 광고 ID입니다.' });
+    const target = await adminModel.findBusinessAdById(id);
+    if (!target) return res.status(404).json({ message: '업체 광고를 찾을 수 없습니다.' });
+    await adminModel.deleteBusinessAd(id);
+    if (target.imageUrl) await deleteS3ObjectByUrl(target.imageUrl);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.delete('/ads/:id', async (req, res, next) => {
   try {
     const id = Number.parseInt(req.params.id, 10);
