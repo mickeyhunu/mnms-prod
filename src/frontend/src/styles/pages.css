@@ -3311,7 +3311,7 @@ body[data-page="admin"] {
     justify-content: center;
     gap: 10px;
     width: 100%;
-    margin-top: 16px;
+    margin: 0;
     padding: 14px 16px;
     border: 1px solid #e5e7eb;
     border-radius: 16px;
@@ -3364,16 +3364,19 @@ body[data-page="admin"] {
 }
 
 .ad-activation-switch input:checked + .ad-activation-switch-track {
-    background: #111827;
+    background: #16a34a;
 }
 
 .ad-activation-switch input:checked + .ad-activation-switch-track::after {
     transform: translateX(36px);
 }
 
-.ad-activation-switch:has(input:not(:checked)) .ad-activation-switch-text:first-child,
-.ad-activation-switch:has(input:checked) .ad-activation-switch-text:last-child {
+.ad-activation-switch:has(input:not(:checked)) .ad-activation-switch-text:first-child {
     color: #111827;
+}
+
+.ad-activation-switch:has(input:checked) .ad-activation-switch-text:last-child {
+    color: #16a34a;
 }
 
 .sr-only {
@@ -5947,6 +5950,10 @@ body.business-profile-modal-open {
     gap: 20px;
 }
 
+.ad-product-grid {
+    margin-bottom: 20px;
+}
+
 .ad-product-card {
     position: relative;
     min-height: 285px;
@@ -6135,6 +6142,7 @@ body.business-profile-modal-open {
     padding: 18px 22px;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
+    margin-bottom: 20px;
     background: linear-gradient(135deg, #fff, #f8fafc);
 }
 
@@ -6414,6 +6422,7 @@ body.business-profile-modal-open {
 
 .ad-activation-benefits {
     gap: 10px;
+    margin-bottom: 10px;
     padding: 12px;
 }
 
@@ -6451,7 +6460,7 @@ body.business-profile-modal-open {
 }
 
 .ad-activation-switch {
-    margin-top: 10px;
+    margin: 0;
     padding: 10px 12px;
     border-radius: 14px;
 }
