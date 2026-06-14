@@ -197,7 +197,7 @@
         if (estimatedRunUntil) estimatedRunUntil.textContent = totalStamps ? formatProjectedUntil(estimatedDays) : '';
         if (activationStampBalance) activationStampBalance.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         if (activationBenefitTitle) activationBenefitTitle.textContent = `${currentPlan.name}를 활성화하면`;
-        if (activationButton) activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '현재 기간 후 중지 예정') : `⚡ 1 스탬프 사용하고 광고 시작하기`;
+        if (activationButton) activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '기간 만료 후 중지 예정') : `⚡ 1 스탬프 사용하고 광고 시작하기`;
 
         const visiblePlan = plans[exposedPlanKey()] || currentPlan;
         if (statusBadge) {
@@ -230,7 +230,7 @@
 
         if (activationButton) {
             activationButton.disabled = !canToggle || (visible && !checked);
-            activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '현재 기간 후 중지 예정') : '⚡ 1 스탬프 사용하고 광고 시작하기';
+            activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '기간 만료 후 중지 예정') : '⚡ 1 스탬프 사용하고 광고 시작하기';
         }
     };
 

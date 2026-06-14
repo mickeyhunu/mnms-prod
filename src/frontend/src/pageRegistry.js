@@ -773,7 +773,6 @@ const pageRegistry = {
                     </div>
                     <div class="ad-activation-action">
                         <button type="button" class="ad-management-start-btn" id="ad-purchase-submit" disabled>⚡ 1 스탬프 사용하고 광고 시작하기</button>
-                        <p>현재 보유 스탬프 : <strong id="ad-activation-stamp-balance">확인 중...</strong></p>
                     </div>
                 </section>
 
