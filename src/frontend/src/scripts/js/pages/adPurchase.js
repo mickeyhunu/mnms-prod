@@ -37,10 +37,12 @@
             name: '베이직 광고',
             headline: '지역 목록 일반 노출',
             durationDays: 3,
+            durationUnit: 'minute',
+            durationLabel: '3분',
             badgeImage: '/src/assets/ad-plan-badges/basic-badge.png',
             badgeAlt: 'BASIC',
             features: [
-                { text: '스탬프 1개로 업체정보 3일 노출', enabled: true },
+                { text: '스탬프 1개로 업체정보 3분 노출', enabled: true },
                 { text: '수동 활성화 시 스탬프 1개 소모', enabled: true },
                 { text: '자동연장 ON 시 기간 종료마다 스탬프 1개 자동 소모', enabled: true }
             ]
@@ -50,10 +52,12 @@
             name: '플러스 광고',
             headline: '지역 상단 우선 노출',
             durationDays: 2,
+            durationUnit: 'minute',
+            durationLabel: '2분',
             badgeImage: '/src/assets/ad-plan-badges/plus-badge.png',
             badgeAlt: 'PLUS',
             features: [
-                { text: '스탬프 1개로 업체정보 2일 노출', enabled: true },
+                { text: '스탬프 1개로 업체정보 2분 노출', enabled: true },
                 { text: '베이직보다 높은 광고 등급으로 표시', enabled: true },
                 { text: '자동연장 ON 시 기간 종료마다 스탬프 1개 자동 소모', enabled: true }
             ]
@@ -63,10 +67,12 @@
             name: '프리미엄 광고',
             headline: '지역 상단 최우선 노출',
             durationDays: 1,
+            durationUnit: 'minute',
+            durationLabel: '1분',
             badgeImage: '/src/assets/ad-plan-badges/premium-badge.png',
             badgeAlt: 'PREMIUM',
             features: [
-                { text: '스탬프 1개로 업체정보 1일 노출', enabled: true },
+                { text: '스탬프 1개로 업체정보 1분 노출', enabled: true },
                 { text: '지역 상단 우선 노출 대상', enabled: true },
                 { text: '자동연장 ON 시 기간 종료마다 스탬프 1개 자동 소모', enabled: true }
             ]
@@ -121,7 +127,7 @@
     };
 
     const formatProjectedUntil = (days) => {
-        const date = new Date(Date.now() + Number(days || 0) * 24 * 60 * 60 * 1000);
+        const date = new Date(Date.now() + Number(days || 0) * 60 * 1000);
         return `(${date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}까지)`;
     };
 
@@ -131,7 +137,7 @@
         if (!ad.activatedUntil) return null;
         const until = new Date(ad.activatedUntil);
         if (Number.isNaN(until.getTime())) return null;
-        return new Date(until.getTime() - Number(plan?.durationDays || 0) * 24 * 60 * 60 * 1000);
+        return new Date(until.getTime() - Number(plan?.durationDays || 0) * 60 * 1000);
     };
 
     const render = () => {
@@ -159,7 +165,7 @@
 
         if (priceOptions) {
             priceOptions.innerHTML = `<button type="button" class="ad-price-option is-selected" data-days="${currentPlan.durationDays}">
-                <div><strong>스탬프 1개 / ${currentPlan.durationDays}일</strong></div>
+                <div><strong>스탬프 1개 / ${currentPlan.durationLabel || `${currentPlan.durationDays}일`}</strong></div>
                 <span class="ad-price-check is-selected" aria-hidden="true">●</span>
             </button>`;
         }
@@ -172,7 +178,7 @@
 
         selectedProduct.textContent = currentPlan.name;
         stampCost.textContent = '스탬프 1개';
-        durationText.textContent = `${currentPlan.durationDays}일`;
+        durationText.textContent = currentPlan.durationLabel || `${currentPlan.durationDays}일`;
         const totalStamps = Number(state.totalStamps || 0);
         const remainingStamps = Math.max(totalStamps - 1, 0);
         const estimatedDays = totalStamps * currentPlan.durationDays;
@@ -181,7 +187,7 @@
         if (stampAfterUse) stampAfterUse.textContent = `${remainingStamps.toLocaleString('ko-KR')}개`;
         if (stampProgressBar) stampProgressBar.style.width = `${Math.min(totalStamps, 100)}%`;
         if (stampProgressText) stampProgressText.textContent = totalStamps.toLocaleString('ko-KR');
-        if (estimatedRunDays) estimatedRunDays.textContent = `${estimatedDays.toLocaleString('ko-KR')}일`;
+        if (estimatedRunDays) estimatedRunDays.textContent = `${estimatedDays.toLocaleString('ko-KR')}${currentPlan.durationUnit === 'minute' ? '분' : '일'}`;
         if (estimatedRunUntil) estimatedRunUntil.textContent = totalStamps ? formatProjectedUntil(estimatedDays) : '';
         if (activationStampBalance) activationStampBalance.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         if (activationBenefitTitle) activationBenefitTitle.textContent = `${currentPlan.name}를 활성화하면`;
@@ -213,7 +219,7 @@
                 ? `현재 업체정보에 노출 중입니다. 자동연장 ON 상태이며 만료 예정: ${expiresAt}`
                 : `자동연장은 OFF 상태입니다. 진행 중인 광고는 ${expiresAt}까지 노출됩니다.`;
         } else {
-            activationStatus.textContent = `${currentPlan.name}은 수동 활성화 시 스탬프 1개를 사용해 ${currentPlan.durationDays}일간 업체정보에 노출됩니다.`;
+            activationStatus.textContent = `${currentPlan.name}은 수동 활성화 시 스탬프 1개를 사용해 ${currentPlan.durationLabel || `${currentPlan.durationDays}일`}간 업체정보에 노출됩니다.`;
         }
 
         if (activationButton) {
