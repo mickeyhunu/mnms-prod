@@ -9,7 +9,7 @@
     const stampCost = document.getElementById('ad-product-price');
     const durationText = document.getElementById('ad-vat-price');
     const stampBalance = document.getElementById('ad-total-price');
-    const activationStatus = document.getElementById('ad-activation-current-status');
+    const activationPanel = document.getElementById('ad-management-activation-panel');
     const activationToggle = document.getElementById('ad-purchase-activation-toggle');
     const activationToggleLabel = document.getElementById('ad-purchase-activation-toggle-label');
     const activationButton = document.getElementById('ad-purchase-submit');
@@ -103,13 +103,6 @@
         return planCodesByApiCode[normalized] || (plans[value] ? value : 'basic');
     };
 
-    const formatDate = (value) => {
-        if (!value) return '';
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return String(value);
-        return date.toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short', hour: '2-digit', minute: '2-digit' });
-    };
-
     const isRegisteredAd = () => String(state.ad?.registrationStatus || '').toUpperCase() === 'REGISTERED';
     const isRegisteredBusinessProfile = () => {
         const registrationStatus = String(state.businessProfile?.registrationStatus || '').toUpperCase();
@@ -192,7 +185,6 @@
         const registered = isRegisteredAd();
         const checked = isSwitchOn();
         const visible = isVisible();
-        const expiresAt = formatDate(state.ad?.activatedUntil);
         const businessProfileRegistered = isRegisteredBusinessProfile();
         const canToggle = Boolean(state.ad?.id) && registered && businessProfileRegistered && !state.isSubmitting;
 
@@ -222,6 +214,9 @@
         if (startDate) startDate.textContent = visible ? formatDateOnly(getActivationStartValue(state.ad, visiblePlan)) : '-';
         if (expireDate) expireDate.textContent = visible ? formatDateOnly(state.ad?.activatedUntil) : '-';
         if (remainingTime) remainingTime.textContent = visible ? formatRemainingTime(state.ad?.activatedUntil, state.ad?.remainingSeconds) : '활성화 대기 중';
+        if (activationPanel) {
+            activationPanel.classList.toggle('hidden', !visible);
+        }
         if (activationToggle) {
             activationToggle.disabled = !canToggle;
             activationToggle.checked = checked;
@@ -230,19 +225,6 @@
             activationToggleLabel.textContent = `자동연장 ${checked ? 'ON' : 'OFF'}`;
         }
 
-        if (!state.ad) {
-            activationStatus.textContent = '등록된 광고프로필이 없습니다. 광고프로필을 먼저 등록해주세요.';
-        } else if (!registered) {
-            activationStatus.textContent = '임시저장 상태입니다. 광고프로필을 등록 완료한 뒤 활성화할 수 있습니다.';
-        } else if (!businessProfileRegistered) {
-            activationStatus.textContent = '승인 완료된 사업자정보를 먼저 등록해야 광고를 활성화할 수 있습니다.';
-        } else if (visible && expiresAt) {
-            activationStatus.textContent = checked
-                ? `현재 업체정보에 노출 중입니다. 자동연장 ON 상태이며 만료 예정: ${expiresAt}`
-                : `자동연장은 OFF 상태입니다. 진행 중인 광고는 ${expiresAt}까지 노출됩니다.`;
-        } else {
-            activationStatus.textContent = `${currentPlan.name}은 수동 활성화 시 스탬프 1개를 사용해 ${currentPlan.durationLabel || `${currentPlan.durationDays}일`}간 업체정보에 노출됩니다.`;
-        }
 
         if (activationButton) {
             activationButton.disabled = !canToggle || (visible && !checked);
@@ -315,7 +297,7 @@
     if (typeof initHeader === 'function') initHeader();
     Auth.bindLogoutButton();
     loadActivationData().catch((error) => {
-        activationStatus.textContent = error.message || '광고 활성화 정보를 불러오지 못했습니다.';
+        alert(error.message || '광고 활성화 정보를 불러오지 못했습니다.');
         render();
     });
 })();

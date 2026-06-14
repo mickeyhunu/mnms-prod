@@ -734,6 +734,20 @@ const pageRegistry = {
                     </div>
                 </section>
 
+                <section class="ad-management-panel ad-activation-panel hidden" aria-labelledby="ad-management-activation-title" id="ad-management-activation-panel">
+                    <div class="ad-activation-copy">
+                        <h2 id="ad-management-activation-title">자동연장 활성화</h2>
+                    </div>
+                    <label class="ad-activation-switch" for="ad-purchase-activation-toggle">
+                        <span class="ad-activation-switch-text">OFF</span>
+                        <input id="ad-purchase-activation-toggle" type="checkbox" disabled>
+                        <span class="ad-activation-switch-track" aria-hidden="true"></span>
+                        <span class="ad-activation-switch-text">ON</span>
+                        <span class="sr-only" id="ad-purchase-activation-toggle-label">자동연장 OFF</span>
+                    </label>
+                    <p class="ad-management-safe-note"><span aria-hidden="true">🔒</span><b>안심하고 이용하세요</b><br>자동연장 ON 시 선택한 광고가 계속 노출되도록 기간 종료마다 스탬프 1개가 자동 소모됩니다.</p>
+                </section>
+
                 <section class="ad-management-panel" aria-labelledby="ad-management-product-title">
                     <div class="ad-management-section-title-row">
                         <div>
@@ -808,20 +822,6 @@ const pageRegistry = {
                     <p class="ad-management-notice"><span aria-hidden="true">💡</span><b>안내</b><span>자동연장 ON 상태에서 보유 스탬프가 0개이면 자동연장이 OFF되고 현재 활성화된 광고 기간 종료 후 노출이 중지됩니다.</span></p>
                 </section>
 
-                <section class="ad-management-panel ad-activation-panel" aria-labelledby="ad-management-activation-title">
-                    <div class="ad-activation-copy">
-                        <h2 id="ad-management-activation-title">자동연장 활성화</h2>
-                    </div>
-                    <label class="ad-activation-switch" for="ad-purchase-activation-toggle">
-                        <span class="ad-activation-switch-text">OFF</span>
-                        <input id="ad-purchase-activation-toggle" type="checkbox" disabled>
-                        <span class="ad-activation-switch-track" aria-hidden="true"></span>
-                        <span class="ad-activation-switch-text">ON</span>
-                        <span class="sr-only" id="ad-purchase-activation-toggle-label">자동연장 OFF</span>
-                    </label>
-                    <p class="ad-management-safe-note"><span aria-hidden="true">🔒</span><b>안심하고 이용하세요</b><br>자동연장 ON 시 선택한 광고가 계속 노출되도록 기간 종료마다 스탬프 1개가 자동 소모됩니다.</p>
-                    <p class="ad-profile-map-toggle-help" id="ad-activation-current-status">광고프로필 정보를 확인 중입니다.</p>
-                </section>
             </div>
         </div>
     </main>
