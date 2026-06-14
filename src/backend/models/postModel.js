@@ -271,6 +271,39 @@ async function findUserAttendancePostForCurrentDbDay(userId) {
   return rows[0] || null;
 }
 
+async function findActiveBusinessAdPlanForUser(userId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT plan_type AS planType
+       FROM business_ads
+      WHERE owner_user_id = ?
+        AND registration_status = 'REGISTERED'
+        AND activated_until IS NOT NULL
+        AND activated_until > NOW()
+      ORDER BY CASE plan_type WHEN 'PREMIUM' THEN 0 WHEN 'PLUS' THEN 1 ELSE 2 END, display_order ASC, id DESC
+      LIMIT 1`,
+    [userId]
+  );
+  return rows[0]?.planType || null;
+}
+
+async function findUserPromotionPostForCurrentDbDay(userId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT id, created_at AS createdAt
+       FROM posts
+      WHERE user_id = ?
+        AND board_type = ?
+        AND is_deleted = 0
+        AND created_at >= CURRENT_DATE()
+        AND created_at < DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)
+      ORDER BY created_at ASC, id ASC
+      LIMIT 1`,
+    [userId, BOARD_TYPES.PROMOTION]
+  );
+  return rows[0] || null;
+}
+
 async function createPost({ userId, title, content, imageUrls = [], boardType = BOARD_TYPES.FREE, isNotice = false, noticeType = null, isPinned = false, noticeTargetBoards = [], authorSnapshot = null }) {
   const pool = getPool();
   const normalizedBoardType = normalizeBoardType(boardType);
@@ -681,6 +714,8 @@ module.exports = {
   BOARD_TYPES,
   listPosts,
   findUserAttendancePostForCurrentDbDay,
+  findActiveBusinessAdPlanForUser,
+  findUserPromotionPostForCurrentDbDay,
   createPost,
   findPostById,
   findPostDetailById,
