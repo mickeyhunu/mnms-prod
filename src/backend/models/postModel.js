@@ -290,11 +290,10 @@ async function findActiveBusinessAdPlanForUser(userId) {
 async function findUserPromotionPostForCurrentDbDay(userId) {
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT id, created_at AS createdAt
+    `SELECT id, created_at AS createdAt, is_deleted AS isDeleted
        FROM posts
       WHERE user_id = ?
         AND board_type = ?
-        AND is_deleted = 0
         AND created_at >= CURRENT_DATE()
         AND created_at < DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)
       ORDER BY created_at ASC, id ASC
