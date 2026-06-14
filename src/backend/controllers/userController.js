@@ -1114,10 +1114,12 @@ async function updateMyBusinessAdActivation(req, res, next) {
       });
     }
 
+    const autoRenew = normalizeBooleanPayload(req.body?.autoRenew, true);
     const activation = await adminModel.activateBusinessAdWithStamp({
       adId: id,
       ownerUserId: req.user.id,
-      planType: req.body?.planType
+      planType: req.body?.planType,
+      autoRenew
     });
     const totalStamps = await getUserStampBalance(req.user.id, STAMP_TYPES.BUSINESS);
     const updated = await adminModel.findBusinessAdById(id);
@@ -1125,8 +1127,8 @@ async function updateMyBusinessAdActivation(req, res, next) {
     return res.json({
       success: true,
       message: activation.consumedStampCount > 0
-        ? `스탬프 1개를 사용해 ${activation.durationLabel || `${activation.durationDays}일`}간 광고가 활성화되었고 자동연장이 ON되었습니다.`
-        : '진행 중인 광고 자동연장이 ON으로 변경되었습니다.',
+        ? `스탬프 1개를 사용해 ${activation.durationLabel || `${activation.durationDays}일`}간 광고가 활성화되었습니다.${autoRenew ? ' 자동연장이 ON되었습니다.' : ''}`
+        : `진행 중인 광고 자동연장이 ${autoRenew ? 'ON' : 'OFF'}으로 변경되었습니다.`,
       activation,
       totalStamps,
       content: updated
