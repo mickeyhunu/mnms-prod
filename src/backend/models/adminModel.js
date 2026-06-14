@@ -15,6 +15,11 @@ const BUSINESS_AD_PLAN_DURATIONS = {
 };
 const BUSINESS_AD_PLAN_DURATION_UNIT_SQL = 'MINUTE';
 const BUSINESS_AD_PLAN_DURATION_UNIT_LABEL = '분';
+const BUSINESS_AD_CURRENT_MINUTE_SQL = "CAST(DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:00') AS DATETIME)";
+const BUSINESS_AD_RENEWAL_INTERVAL_MS = Number(process.env.BUSINESS_AD_RENEWAL_INTERVAL_MS || 1000);
+let businessAdRenewalTimer = null;
+let businessAdRenewalRunPromise = null;
+let businessAdRenewalSchedulerStarted = false;
 
 function normalizeBusinessAdPlanType(planType) {
   const normalized = String(planType || '').trim().toUpperCase();
@@ -94,7 +99,9 @@ async function renewExpiredBusinessAdsWithStamp() {
       );
       await connection.query(
         `UPDATE business_ads
-            SET plan_type = ?, activated_at = NOW(), activated_until = DATE_ADD(NOW(), INTERVAL ? ${BUSINESS_AD_PLAN_DURATION_UNIT_SQL})
+            SET plan_type = ?,
+                activated_at = ${BUSINESS_AD_CURRENT_MINUTE_SQL},
+                activated_until = DATE_ADD(${BUSINESS_AD_CURRENT_MINUTE_SQL}, INTERVAL ? ${BUSINESS_AD_PLAN_DURATION_UNIT_SQL})
           WHERE id = ?`,
         [planType, durationDays, ad.id]
       );
@@ -105,6 +112,61 @@ async function renewExpiredBusinessAdsWithStamp() {
     } finally {
       connection.release();
     }
+  }
+}
+
+
+async function runBusinessAdRenewal() {
+  if (businessAdRenewalRunPromise) return businessAdRenewalRunPromise;
+
+  businessAdRenewalRunPromise = renewExpiredBusinessAdsWithStamp();
+  try {
+    await businessAdRenewalRunPromise;
+  } finally {
+    businessAdRenewalRunPromise = null;
+  }
+}
+
+function scheduleNextBusinessAdRenewal() {
+  if (!businessAdRenewalSchedulerStarted || businessAdRenewalTimer) return businessAdRenewalTimer;
+
+  businessAdRenewalTimer = setTimeout(() => {
+    businessAdRenewalTimer = null;
+    runBusinessAdRenewal()
+      .catch((error) => {
+        console.error('Business ad renewal scheduler error:', error);
+      })
+      .finally(() => {
+        scheduleNextBusinessAdRenewal();
+      });
+  }, BUSINESS_AD_RENEWAL_INTERVAL_MS);
+
+  if (typeof businessAdRenewalTimer.unref === 'function') {
+    businessAdRenewalTimer.unref();
+  }
+
+  return businessAdRenewalTimer;
+}
+
+async function startBusinessAdRenewalScheduler() {
+  if (businessAdRenewalSchedulerStarted) return businessAdRenewalTimer;
+
+  businessAdRenewalSchedulerStarted = true;
+  try {
+    await runBusinessAdRenewal();
+  } catch (error) {
+    businessAdRenewalSchedulerStarted = false;
+    throw error;
+  }
+
+  return scheduleNextBusinessAdRenewal();
+}
+
+function stopBusinessAdRenewalScheduler() {
+  businessAdRenewalSchedulerStarted = false;
+  if (businessAdRenewalTimer) {
+    clearTimeout(businessAdRenewalTimer);
+    businessAdRenewalTimer = null;
   }
 }
 
@@ -1032,7 +1094,7 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
     );
     await connection.query(
       `UPDATE business_ads
-          SET is_active = ?, plan_type = ?, activated_at = NOW(), activated_until = DATE_ADD(NOW(), INTERVAL ? ${BUSINESS_AD_PLAN_DURATION_UNIT_SQL})
+          SET is_active = ?, plan_type = ?, activated_at = ${BUSINESS_AD_CURRENT_MINUTE_SQL}, activated_until = DATE_ADD(${BUSINESS_AD_CURRENT_MINUTE_SQL}, INTERVAL ? ${BUSINESS_AD_PLAN_DURATION_UNIT_SQL})
         WHERE id = ?`,
       [autoRenew ? 1 : 0, planType, durationDays, adId]
     );
@@ -1531,8 +1593,12 @@ module.exports = {
   updateAd,
   deleteAd,
   BUSINESS_AD_PLAN_DURATIONS,
+  BUSINESS_AD_RENEWAL_INTERVAL_MS,
   normalizeBusinessAdPlanType,
   getBusinessAdPlanDurationDays,
+  renewExpiredBusinessAdsWithStamp,
+  startBusinessAdRenewalScheduler,
+  stopBusinessAdRenewalScheduler,
   getBusinessAdPublicVisibilityCondition,
   listBusinessAdsByOwner,
   listBusinessAdsForAdmin,

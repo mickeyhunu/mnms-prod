@@ -24,6 +24,7 @@ const rbtiRoutes = require('./src/backend/routes/rbtiRoutes');
 const adminModel = require('./src/backend/models/adminModel');
 const postModel = require('./src/backend/models/postModel');
 const { startLiveHistoryScheduler } = require('./src/backend/utils/liveHistoryScheduler');
+const { startBusinessAdRenewalScheduler } = adminModel;
 const { createSeoSlug } = require('./src/backend/utils/seoSlug');
 const { ensureS3BucketExists, isS3UploadEnabled, s3BucketName } = require('./src/backend/config/s3');
 
@@ -440,10 +441,14 @@ Promise.resolve()
   .then(() => initDatabase())
   .then(() => {
     isDatabaseReady = true;
-    return startLiveHistoryScheduler()
-      .catch((error) => {
+    return Promise.all([
+      startLiveHistoryScheduler().catch((error) => {
         console.error('LIVE history scheduler start failed:', error.message);
+      }),
+      startBusinessAdRenewalScheduler().catch((error) => {
+        console.error('Business ad renewal scheduler start failed:', error.message);
       })
+    ])
       .then(() => {
         app.listen(PORT, () => {
           console.log(`Express MVC server running on http://localhost:${PORT}`);
