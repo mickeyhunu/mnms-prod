@@ -115,11 +115,17 @@
     const activePlanKey = () => (isSwitchOn() ? normalizePlanKey(state.ad?.planType) : null);
     const exposedPlanKey = () => (isVisible() ? normalizePlanKey(state.ad?.planType) : null);
 
-    const formatRemainingTime = (value) => {
-        if (!value) return '활성화 대기 중';
-        const date = new Date(value);
-        const diff = date.getTime() - Date.now();
-        if (Number.isNaN(date.getTime()) || diff <= 0) return '종료됨';
+    const formatRemainingTime = (value, remainingSeconds) => {
+        const serverRemainingSeconds = Number(remainingSeconds);
+        const diff = Number.isFinite(serverRemainingSeconds)
+            ? serverRemainingSeconds * 1000
+            : (() => {
+                if (!value) return 0;
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return 0;
+                return date.getTime() - Date.now();
+            })();
+        if (diff <= 0) return '종료됨';
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         return `${hours}시간 ${minutes}분 남음`;
@@ -207,7 +213,7 @@
         if (statusTitle) statusTitle.textContent = visible ? `${visiblePlan.name}가 노출 중입니다` : '노출 중인 광고가 없습니다';
         if (startDate) startDate.textContent = visible ? formatDateOnly(getActivationStartValue(state.ad, visiblePlan)) : '-';
         if (expireDate) expireDate.textContent = visible ? formatDateOnly(state.ad?.activatedUntil) : '-';
-        if (remainingTime) remainingTime.textContent = visible ? formatRemainingTime(state.ad?.activatedUntil) : '활성화 대기 중';
+        if (remainingTime) remainingTime.textContent = visible ? formatRemainingTime(state.ad?.activatedUntil, state.ad?.remainingSeconds) : '활성화 대기 중';
         if (activationToggle) {
             activationToggle.disabled = !canToggle;
             activationToggle.checked = checked;

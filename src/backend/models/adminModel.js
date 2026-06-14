@@ -707,7 +707,7 @@ async function listBusinessAdsByOwner(ownerUserId) {
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
             kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
             description, plan_type AS planType, view_count AS viewCount,
-            registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, created_at AS createdAt, updated_at AS updatedAt
+            registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), activated_until), 0) AS remainingSeconds, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
       WHERE owner_user_id = ?
       ORDER BY display_order ASC, id DESC`,
@@ -790,7 +790,7 @@ async function listBusinessAdsForAdmin() {
             ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification,
             ba.use_stamp_event AS useStampEvent, ba.stamp_event_description AS stampEventDescription, ba.stamp_event_count AS stampEventCount, ba.description, ba.plan_type AS planType,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, ba.activated_at AS activatedAt, ba.activated_until AS activatedUntil, ba.display_order AS displayOrder,
-            (ba.is_active = 1) AS isActive, (ba.activated_until IS NOT NULL AND ba.activated_until > NOW()) AS isCurrentlyVisible, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
+            (ba.is_active = 1) AS isActive, (ba.activated_until IS NOT NULL AND ba.activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), ba.activated_until), 0) AS remainingSeconds, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
             COALESCE(u.login_id, '') AS ownerLoginId, COALESCE(u.nickname, '') AS ownerNickname, COALESCE(bp.company_name, '') AS ownerCompanyName
        FROM business_ads ba
        LEFT JOIN users u ON u.id = ba.owner_user_id
@@ -894,7 +894,7 @@ async function findBusinessAdById(adId) {
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
             kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
             description, plan_type AS planType, view_count AS viewCount,
-            registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, created_at AS createdAt, updated_at AS updatedAt
+            registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), activated_until), 0) AS remainingSeconds, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
       WHERE id = ?`,
     [adId]
