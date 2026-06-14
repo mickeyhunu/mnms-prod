@@ -114,6 +114,7 @@
     const isVisible = () => Boolean(Number(state.ad?.isCurrentlyVisible || 0));
     const activePlanKey = () => (isSwitchOn() ? normalizePlanKey(state.ad?.planType) : null);
     const exposedPlanKey = () => (isVisible() ? normalizePlanKey(state.ad?.planType) : null);
+    const lockedPlanKey = () => activePlanKey() || exposedPlanKey();
 
     const formatRemainingTime = (value, remainingSeconds) => {
         const serverRemainingSeconds = Number(remainingSeconds);
@@ -153,7 +154,7 @@
     };
 
     const render = () => {
-        const lockedPlan = activePlanKey();
+        const lockedPlan = lockedPlanKey();
         if (lockedPlan) {
             state.plan = lockedPlan;
         }
@@ -279,7 +280,7 @@
         tab.addEventListener('click', () => {
             if (tab.disabled) return;
             const nextPlan = normalizePlanKey(tab.dataset.plan || 'basic');
-            const lockedPlan = activePlanKey();
+            const lockedPlan = lockedPlanKey();
             if (lockedPlan && nextPlan !== lockedPlan) return;
             state.plan = nextPlan;
             render();
