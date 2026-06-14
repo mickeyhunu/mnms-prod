@@ -28,7 +28,8 @@ const adProfileState = {
     isSaving: false,
     syncPreview: null,
     descriptionEditor: null,
-    currentPlanType: 'BASIC'
+    currentPlanType: 'BASIC',
+    isCurrentlyVisible: false
 };
 const DEFAULT_AD_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
@@ -689,8 +690,8 @@ function updateAdProfileActionButtons() {
     const isComplete = isAdProfileFormComplete();
 
     saveButton?.classList.toggle('hidden', !isComplete);
-    draftButton?.classList.toggle('hidden', isComplete);
-    if (draftButton) draftButton.disabled = !hasAnyValue;
+    draftButton?.classList.toggle('hidden', isComplete || adProfileState.isCurrentlyVisible);
+    if (draftButton) draftButton.disabled = !hasAnyValue || adProfileState.isCurrentlyVisible;
 }
 
 function saveDraftData() {
@@ -715,6 +716,7 @@ async function loadMyAdProfile() {
     const response = await APIClient.get('/users/me/business-ads');
     const existingAd = Array.isArray(response?.content) ? response.content[0] : null;
     adProfileState.currentAdId = Number(existingAd?.id || 0) || null;
+    adProfileState.isCurrentlyVisible = Boolean(Number(existingAd?.isCurrentlyVisible || 0));
     if (existingAd) {
         applyAdProfileToForm(existingAd);
     }
@@ -766,6 +768,12 @@ async function saveAdProfile({ forceDraft = false } = {}) {
         stampEventDescription,
         stampEventCount
     });
+
+    if (forceDraft && adProfileState.isCurrentlyVisible) {
+        showSaveMessage('광고가 활성화되어 노출 중인 동안에는 임시저장 상태로 변경할 수 없습니다.');
+        updateAdProfileActionButtons();
+        return;
+    }
 
     if (forceDraft && !hasAnyValue) {
         showSaveMessage('입력한 항목이 없습니다.');

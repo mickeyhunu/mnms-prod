@@ -374,6 +374,23 @@ function hasBusinessInfoChanged(previousInfo, nextInfo) {
 }
 
 
+
+function isBusinessProfileRegisteredForAdActivation(profile = {}) {
+  if (!profile) return false;
+  const registrationStatus = normalizeBusinessProfileRegistrationStatus(profile.registrationStatus, 'UNREGISTERED');
+  const approvalStatus = normalizeBusinessProfileApprovalStatus(profile.approvalStatus, 'PENDING');
+  const businessInfo = parseBusinessInfoValue(profile.lastApprovedBusinessInfo || profile.businessInfo);
+  return registrationStatus === 'REGISTERED'
+    && approvalStatus === 'APPROVED'
+    && Boolean(String(businessInfo.businessNumber || '').trim())
+    && Boolean(String(businessInfo.businessName || '').trim());
+}
+
+async function hasCurrentlyVisibleBusinessAd(ownerUserId) {
+  const ads = await adminModel.listBusinessAdsByOwner(ownerUserId);
+  return ads.some((ad) => Boolean(ad.isCurrentlyVisible));
+}
+
 function isNicknameChangeLocked(lastChangedAt) {
   if (!lastChangedAt) return false;
   const nextAllowedAt = new Date(lastChangedAt);
@@ -974,6 +991,11 @@ async function updateMyBusinessAd(req, res, next) {
     const displayOrder = Object.prototype.hasOwnProperty.call(req.body || {}, 'displayOrder') ? (Number(req.body?.displayOrder) || 0) : (Number(target.displayOrder) || 0);
     const requestedStatus = normalizeRegistrationStatus(req.body?.registrationStatus, target.registrationStatus || 'UNREGISTERED');
     const isRegisteredStatus = requestedStatus === 'REGISTERED';
+
+    if (target.isCurrentlyVisible && !isRegisteredStatus) {
+      return res.status(409).json({ message: '광고가 활성화되어 노출 중인 동안에는 광고프로필을 임시저장 상태로 변경할 수 없습니다.' });
+    }
+
     const isActive = isRegisteredStatus && target.registrationStatus === 'REGISTERED'
       ? normalizeBooleanPayload(target.isActive, false)
       : false;
@@ -1114,6 +1136,11 @@ async function updateMyBusinessAdActivation(req, res, next) {
       });
     }
 
+    const businessProfile = await getBusinessProfileByUserId(req.user.id);
+    if (!isBusinessProfileRegisteredForAdActivation(businessProfile)) {
+      return res.status(400).json({ message: '광고프로필과 승인 완료된 사업자정보가 모두 등록된 상태에서만 광고를 활성화할 수 있습니다.' });
+    }
+
     const autoRenew = normalizeBooleanPayload(req.body?.autoRenew, true);
     const activation = await adminModel.activateBusinessAdWithStamp({
       adId: id,
@@ -1205,6 +1232,10 @@ async function saveMyBusinessProfile(req, res, next) {
     }
 
     const registrationStatus = normalizeBusinessProfileRegistrationStatus(req.body?.registrationStatus, 'UNREGISTERED');
+    if (await hasCurrentlyVisibleBusinessAd(req.user.id)) {
+      return res.status(409).json({ message: '광고가 활성화되어 노출 중인 동안에는 사업자정보를 변경할 수 없습니다.' });
+    }
+
     const existingProfile = await getBusinessProfileByUserId(req.user.id);
     if (isBusinessProfilePendingReview(existingProfile, req.user)) {
       return res.status(409).json({ message: '이미 접수된 기업회원 신청이 검토중입니다. 검토 완료 후 다시 이용해주세요.' });
