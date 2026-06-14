@@ -83,6 +83,8 @@
         }
     };
 
+    const noneBadgeImage = '/src/assets/ad-plan-badges/none-badge.png';
+
     const state = {
         plan: 'premium',
         ad: null,
@@ -199,8 +201,8 @@
 
         const visiblePlan = plans[exposedPlanKey()] || currentPlan;
         if (statusBadge) {
-            statusBadge.src = visiblePlan.badgeImage;
-            statusBadge.alt = visible ? visiblePlan.badgeAlt : '광고 등급';
+            statusBadge.src = visible ? visiblePlan.badgeImage : noneBadgeImage;
+            statusBadge.alt = visible ? visiblePlan.badgeAlt : '미광고';
         }
         if (statusTitle) statusTitle.textContent = visible ? `${visiblePlan.name}가 노출 중입니다` : '노출 중인 광고가 없습니다';
         if (startDate) startDate.textContent = visible ? formatDateOnly(getActivationStartValue(state.ad, visiblePlan)) : '-';
