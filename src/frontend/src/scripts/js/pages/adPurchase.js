@@ -141,16 +141,18 @@
         return date.toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short', hour: '2-digit', minute: '2-digit' });
     };
 
-    const formatProjectedUntil = (minutes) => {
+    const formatProjectedExposureUntil = (minutes) => {
         const date = new Date(Date.now() + Number(minutes || 0) * 60 * 1000);
-        return `(최대 자동연장 기간: ${date.toLocaleString('ko-KR', {
+        return `${date.toLocaleString('ko-KR', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
             hour: '2-digit',
             minute: '2-digit'
-        })}까지)`;
+        })}까지`;
     };
+
+    const formatProjectedUntil = (minutes) => `(최대 자동연장 기간: ${formatProjectedExposureUntil(minutes)})`;
 
     const getActivationStartValue = (ad, plan) => {
         if (!ad) return null;
@@ -202,18 +204,20 @@
         durationText.textContent = currentPlan.durationLabel || `${currentPlan.durationDays}일`;
         const totalStamps = Number(state.totalStamps || 0);
         const remainingStamps = Math.max(totalStamps - 1, 0);
-        const estimatedDays = totalStamps * currentPlan.durationDays;
+        const exposureMinutes = Number(currentPlan.durationDays || 0);
+        const estimatedDays = totalStamps * exposureMinutes;
         stampBalance.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         if (stampBalanceSummary) stampBalanceSummary.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         const remainingStampsText = `${remainingStamps.toLocaleString('ko-KR')}개`;
-        const estimatedRunText = `${estimatedDays.toLocaleString('ko-KR')}${currentPlan.durationUnit === 'minute' ? '분' : '일'}`;
+        const estimatedRunText = formatProjectedExposureUntil(exposureMinutes);
+        const estimatedContinuousRunText = `${estimatedDays.toLocaleString('ko-KR')}${currentPlan.durationUnit === 'minute' ? '분' : '일'}`;
         const estimatedUntilText = totalStamps ? formatProjectedUntil(estimatedDays) : '';
         if (stampAfterUse) stampAfterUse.textContent = remainingStampsText;
         if (stampAfterUsePanel) stampAfterUsePanel.textContent = remainingStampsText;
         if (stampProgressBar) stampProgressBar.style.width = `${Math.min(totalStamps, 100)}%`;
         if (stampProgressText) stampProgressText.textContent = totalStamps.toLocaleString('ko-KR');
         if (estimatedRunDays) estimatedRunDays.textContent = estimatedRunText;
-        if (estimatedRunDaysPanel) estimatedRunDaysPanel.textContent = estimatedRunText;
+        if (estimatedRunDaysPanel) estimatedRunDaysPanel.textContent = estimatedContinuousRunText;
         if (estimatedRunUntil) estimatedRunUntil.textContent = estimatedUntilText;
         if (estimatedRunUntilPanel) estimatedRunUntilPanel.textContent = estimatedUntilText;
         if (activationStampBalance) activationStampBalance.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
