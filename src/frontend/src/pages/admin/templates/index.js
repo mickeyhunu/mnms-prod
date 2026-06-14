@@ -287,7 +287,7 @@ export const adminTemplate = `
                 </div>
 
                 <div id="business-ads-section" class="tab-pane hidden">
-                    <section class="admin-entry-editor">
+                    <section class="admin-entry-editor hidden" id="business-ads-editor">
                         <div>
                             <p class="admin-user-detail-eyebrow">업체 광고 등록/수정</p>
                             <h3 id="business-ads-editor-title">업체 광고 정보 수정</h3>

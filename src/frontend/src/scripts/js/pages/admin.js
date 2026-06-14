@@ -2393,6 +2393,7 @@ function fillBusinessAdEditorForm(ad = null) {
 
 function resetBusinessAdEditor() {
     fillBusinessAdEditorForm(null);
+    document.getElementById('business-ads-editor')?.classList.add('hidden');
 }
 
 async function openBusinessAdEditor(adId) {
@@ -2401,6 +2402,7 @@ async function openBusinessAdEditor(adId) {
         alert('업체 광고 정보를 찾을 수 없습니다.');
         return;
     }
+    document.getElementById('business-ads-editor')?.classList.remove('hidden');
     fillBusinessAdEditorForm(target);
     document.getElementById('business-ads-editor-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
