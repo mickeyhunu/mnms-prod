@@ -152,7 +152,8 @@
         })}까지`;
     };
 
-    const formatProjectedUntil = (minutes) => `(최대 자동연장 기간: ${formatProjectedExposureUntil(minutes)})`;
+    const formatProjectedUntil = (minutes) => formatProjectedExposureUntil(minutes);
+    const formatProjectedUntilNote = (minutes) => `(최대 자동연장 기간: ${formatProjectedUntil(minutes)})`;
 
     const getActivationStartValue = (ad, plan) => {
         if (!ad) return null;
@@ -211,7 +212,8 @@
         const remainingStampsText = `${remainingStamps.toLocaleString('ko-KR')}개`;
         const estimatedRunText = formatProjectedExposureUntil(exposureMinutes);
         const estimatedContinuousRunText = `${estimatedDays.toLocaleString('ko-KR')}${currentPlan.durationUnit === 'minute' ? '분' : '일'}`;
-        const estimatedUntilText = totalStamps ? formatProjectedUntil(estimatedDays) : '';
+        const estimatedUntilText = totalStamps ? formatProjectedUntil(estimatedDays) : '-';
+        const estimatedUntilNoteText = totalStamps ? formatProjectedUntilNote(estimatedDays) : '';
         if (stampAfterUse) stampAfterUse.textContent = remainingStampsText;
         if (stampAfterUsePanel) stampAfterUsePanel.textContent = remainingStampsText;
         if (stampProgressBar) stampProgressBar.style.width = `${Math.min(totalStamps, 100)}%`;
@@ -219,7 +221,7 @@
         if (estimatedRunDays) estimatedRunDays.textContent = estimatedRunText;
         if (estimatedRunDaysPanel) estimatedRunDaysPanel.textContent = estimatedContinuousRunText;
         if (estimatedRunUntil) estimatedRunUntil.textContent = estimatedUntilText;
-        if (estimatedRunUntilPanel) estimatedRunUntilPanel.textContent = estimatedUntilText;
+        if (estimatedRunUntilPanel) estimatedRunUntilPanel.textContent = estimatedUntilNoteText;
         if (activationStampBalance) activationStampBalance.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         if (activationBenefitTitle) activationBenefitTitle.textContent = `${currentPlan.name}를 활성화하면`;
         if (activationButton) activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '기간 만료 후 중지 예정') : `⚡ 1 스탬프 사용하고 광고 시작하기`;
