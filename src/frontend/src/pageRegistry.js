@@ -804,19 +804,22 @@ const pageRegistry = {
                         <article class="ad-stamp-info-card">
                             <span class="ad-stamp-icon">▣</span>
                             <p>사용 후 잔여 스탬프</p>
-                            <strong id="ad-stamps-after-use">-</strong>
+                            <strong id="ad-stamps-after-use-panel">-</strong>
                             <hr>
                             <p>예상 연속 노출 기간</p>
-                            <strong id="ad-estimated-run-days">-</strong>
-                            <small id="ad-estimated-run-until"></small>
+                            <strong id="ad-estimated-run-days-panel">-</strong>
+                            <small id="ad-estimated-run-until-panel"></small>
                         </article>
                         <article class="ad-stamp-info-card ad-stamp-summary-card">
+                            <div><dt>보유 스탬프</dt><dd id="ad-summary-stamp-balance">확인 중...</dd></div>
                             <dl>
                                 <div><dt>선택한 상품</dt><dd id="ad-selected-product">프리미엄 광고</dd></div>
-                                <div><dt>차감 스탬프</dt><dd id="ad-product-price">1개 / 1분</dd></div>
+                                <div><dt>차감 스탬프</dt><dd id="ad-product-price">스탬프 1개</dd></div>
                                 <div><dt>노출 기간</dt><dd id="ad-vat-price">1분</dd></div>
-                                <div><dt>보유 스탬프</dt><dd id="ad-summary-stamp-balance">확인 중...</dd></div>
+                                <div><dt>예상 노출 기간</dt><dd id="ad-estimated-run-days">-</dd></div>
+                                <div><dt>사용후 잔여 스탬프</dt><dd id="ad-stamps-after-use">-</dd></div>
                             </dl>
+                            <small id="ad-estimated-run-until"></small>
                         </article>
                     </div>
                     <p class="ad-management-notice"><span aria-hidden="true">💡</span><b>안내</b><span>자동연장 ON 상태에서 보유 스탬프가 0개이면 자동연장이 OFF되고 현재 활성화된 광고 기간 종료 후 노출이 중지됩니다.</span></p>
