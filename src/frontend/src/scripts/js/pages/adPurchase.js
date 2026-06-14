@@ -20,10 +20,13 @@
     const remainingTime = document.getElementById('ad-management-remaining-time');
     const stampBalanceSummary = document.getElementById('ad-summary-stamp-balance');
     const stampAfterUse = document.getElementById('ad-stamps-after-use');
+    const stampAfterUsePanel = document.getElementById('ad-stamps-after-use-panel');
     const stampProgressBar = document.getElementById('ad-stamp-progress-bar');
     const stampProgressText = document.getElementById('ad-stamp-progress-text');
     const estimatedRunDays = document.getElementById('ad-estimated-run-days');
+    const estimatedRunDaysPanel = document.getElementById('ad-estimated-run-days-panel');
     const estimatedRunUntil = document.getElementById('ad-estimated-run-until');
+    const estimatedRunUntilPanel = document.getElementById('ad-estimated-run-until-panel');
     const activationStampBalance = document.getElementById('ad-activation-stamp-balance');
     const activationBenefitTitle = document.getElementById('ad-activation-benefit-title');
 
@@ -138,9 +141,15 @@
         return date.toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short', hour: '2-digit', minute: '2-digit' });
     };
 
-    const formatProjectedUntil = (days) => {
-        const date = new Date(Date.now() + Number(days || 0) * 60 * 1000);
-        return `(${date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}까지)`;
+    const formatProjectedUntil = (minutes) => {
+        const date = new Date(Date.now() + Number(minutes || 0) * 60 * 1000);
+        return `(최대 자동연장 기간: ${date.toLocaleString('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        })}까지)`;
     };
 
     const getActivationStartValue = (ad, plan) => {
@@ -196,11 +205,17 @@
         const estimatedDays = totalStamps * currentPlan.durationDays;
         stampBalance.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         if (stampBalanceSummary) stampBalanceSummary.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
-        if (stampAfterUse) stampAfterUse.textContent = `${remainingStamps.toLocaleString('ko-KR')}개`;
+        const remainingStampsText = `${remainingStamps.toLocaleString('ko-KR')}개`;
+        const estimatedRunText = `${estimatedDays.toLocaleString('ko-KR')}${currentPlan.durationUnit === 'minute' ? '분' : '일'}`;
+        const estimatedUntilText = totalStamps ? formatProjectedUntil(estimatedDays) : '';
+        if (stampAfterUse) stampAfterUse.textContent = remainingStampsText;
+        if (stampAfterUsePanel) stampAfterUsePanel.textContent = remainingStampsText;
         if (stampProgressBar) stampProgressBar.style.width = `${Math.min(totalStamps, 100)}%`;
         if (stampProgressText) stampProgressText.textContent = totalStamps.toLocaleString('ko-KR');
-        if (estimatedRunDays) estimatedRunDays.textContent = `${estimatedDays.toLocaleString('ko-KR')}${currentPlan.durationUnit === 'minute' ? '분' : '일'}`;
-        if (estimatedRunUntil) estimatedRunUntil.textContent = totalStamps ? formatProjectedUntil(estimatedDays) : '';
+        if (estimatedRunDays) estimatedRunDays.textContent = estimatedRunText;
+        if (estimatedRunDaysPanel) estimatedRunDaysPanel.textContent = estimatedRunText;
+        if (estimatedRunUntil) estimatedRunUntil.textContent = estimatedUntilText;
+        if (estimatedRunUntilPanel) estimatedRunUntilPanel.textContent = estimatedUntilText;
         if (activationStampBalance) activationStampBalance.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         if (activationBenefitTitle) activationBenefitTitle.textContent = `${currentPlan.name}를 활성화하면`;
         if (activationButton) activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '기간 만료 후 중지 예정') : `⚡ 1 스탬프 사용하고 광고 시작하기`;
