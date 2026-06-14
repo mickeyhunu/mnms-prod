@@ -6127,6 +6127,11 @@ body.business-profile-modal-open {
     color: #92400e;
 }
 
+.ad-management-notice > span[aria-hidden],
+.ad-management-notice b {
+    align-self: center;
+}
+
 .ad-management-notice b {
     flex-shrink: 0;
     white-space: nowrap;
