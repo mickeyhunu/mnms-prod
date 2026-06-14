@@ -13,6 +13,8 @@ const BUSINESS_AD_PLAN_DURATIONS = {
   PLUS: 2,
   PREMIUM: 1
 };
+const BUSINESS_AD_PLAN_DURATION_UNIT_SQL = 'MINUTE';
+const BUSINESS_AD_PLAN_DURATION_UNIT_LABEL = '분';
 
 function normalizeBusinessAdPlanType(planType) {
   const normalized = String(planType || '').trim().toUpperCase();
@@ -23,6 +25,10 @@ function normalizeBusinessAdPlanType(planType) {
 
 function getBusinessAdPlanDurationDays(planType) {
   return BUSINESS_AD_PLAN_DURATIONS[normalizeBusinessAdPlanType(planType)] || BUSINESS_AD_PLAN_DURATIONS.BASIC;
+}
+
+function getBusinessAdPlanDurationLabel(planType) {
+  return `${getBusinessAdPlanDurationDays(planType)}${BUSINESS_AD_PLAN_DURATION_UNIT_LABEL}`;
 }
 
 function getBusinessAdPublicVisibilityCondition(alias = 'ba') {
@@ -84,11 +90,11 @@ async function renewExpiredBusinessAdsWithStamp() {
       await connection.query(
         `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
          VALUES (?, 'BUSINESS', ?, -1, ?, ?)`,
-        [ad.ownerUserId, `BUSINESS_AD_${planType}`, `${planType} 광고 ${durationDays}일 자동연장`, `BUSINESS_AD-AUTO-${ad.id}-${Date.now()}`]
+        [ad.ownerUserId, `BUSINESS_AD_${planType}`, `${planType} 광고 ${getBusinessAdPlanDurationLabel(planType)} 자동연장`, `BUSINESS_AD-AUTO-${ad.id}-${Date.now()}`]
       );
       await connection.query(
         `UPDATE business_ads
-            SET plan_type = ?, activated_at = NOW(), activated_until = DATE_ADD(NOW(), INTERVAL ? DAY)
+            SET plan_type = ?, activated_at = NOW(), activated_until = DATE_ADD(NOW(), INTERVAL ? ${BUSINESS_AD_PLAN_DURATION_UNIT_SQL})
           WHERE id = ?`,
         [planType, durationDays, ad.id]
       );
@@ -973,6 +979,7 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
         consumedStampCount: 0,
         planType: normalizeBusinessAdPlanType(ad.planType),
         durationDays: getBusinessAdPlanDurationDays(ad.planType),
+        durationLabel: getBusinessAdPlanDurationLabel(ad.planType),
         activatedAt: ad.activatedAt || null,
         activatedUntil: ad.activatedUntil,
         isCurrentlyVisible: true
@@ -1001,11 +1008,11 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
     await connection.query(
       `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
        VALUES (?, 'BUSINESS', ?, -1, ?, ?)`,
-      [ownerUserId, actionType, `${planType} 광고 ${durationDays}일 활성화`, `BUSINESS_AD-${adId}`]
+      [ownerUserId, actionType, `${planType} 광고 ${getBusinessAdPlanDurationLabel(planType)} 활성화`, `BUSINESS_AD-${adId}`]
     );
     await connection.query(
       `UPDATE business_ads
-          SET is_active = 1, plan_type = ?, activated_at = NOW(), activated_until = DATE_ADD(NOW(), INTERVAL ? DAY)
+          SET is_active = 1, plan_type = ?, activated_at = NOW(), activated_until = DATE_ADD(NOW(), INTERVAL ? ${BUSINESS_AD_PLAN_DURATION_UNIT_SQL})
         WHERE id = ?`,
       [planType, durationDays, adId]
     );
@@ -1015,6 +1022,7 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
       consumedStampCount: 1,
       planType,
       durationDays,
+      durationLabel: getBusinessAdPlanDurationLabel(planType),
       activatedAt: updatedAd?.activatedAt || null,
       activatedUntil: updatedAd?.activatedUntil || null,
       isCurrentlyVisible: true

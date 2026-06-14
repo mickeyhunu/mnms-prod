@@ -1125,7 +1125,7 @@ async function updateMyBusinessAdActivation(req, res, next) {
     return res.json({
       success: true,
       message: activation.consumedStampCount > 0
-        ? `스탬프 1개를 사용해 ${activation.durationDays}일간 광고가 활성화되었고 자동연장이 ON되었습니다.`
+        ? `스탬프 1개를 사용해 ${activation.durationLabel || `${activation.durationDays}일`}간 광고가 활성화되었고 자동연장이 ON되었습니다.`
         : '진행 중인 광고 자동연장이 ON으로 변경되었습니다.',
       activation,
       totalStamps,
