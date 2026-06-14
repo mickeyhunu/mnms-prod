@@ -757,8 +757,6 @@ const pageRegistry = {
                             <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 2일</b></span>
                         </button>
                         <button type="button" class="ad-product-card" data-plan="premium" role="tab" aria-selected="false">
-                            <span class="ad-product-selected-ribbon">선택됨</span>
-                            <span class="ad-product-selected-check" aria-hidden="true">✓</span>
                             <img src="/src/assets/ad-plan-badges/premium-badge.png" alt="PREMIUM" class="ad-product-badge">
                             <strong>지역 상단 최우선 노출</strong>
                             <span class="ad-product-divider"></span>
