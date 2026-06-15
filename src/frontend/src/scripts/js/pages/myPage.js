@@ -904,25 +904,52 @@ function parseLevelBadgeLabel(rawLabel = '') {
     if (!label) return { image: '', title: '' };
 
     const match = label.match(/^((?:[a-z]:\\workspace\\mnms-prod\\)?(?:\/?src)?\/?assets\/lv-badges\/lv\d+\.png)\s*(.*)$/i);
-    if (!match) return { image: '', title: label };
+    if (match) {
+        const filenameMatch = String(match[1]).replace(/\\/g, '/').match(/(lv\d+\.png)$/i);
+        const filename = (filenameMatch?.[1] || '').toLowerCase();
+        if (filename) {
+            return {
+                image: `/src/assets/lv-badges/${filename}`,
+                title: String(match[2] || '').trim()
+            };
+        }
+    }
 
-    const filenameMatch = String(match[1]).replace(/\\/g, '/').match(/(lv\d+\.png)$/i);
-    const filename = (filenameMatch?.[1] || '').toLowerCase();
-    if (!filename) return { image: '', title: label };
+    const advertiserLevelBadges = [
+        { level: 1, emoji: '🌱', title: '미광고' },
+        { level: 2, emoji: '🥉', title: '브론즈' },
+        { level: 3, emoji: '🥈', title: '실버' },
+        { level: 4, emoji: '🥇', title: '골드' },
+        { level: 5, emoji: '💠', title: '플래티넘' },
+        { level: 6, emoji: '💎', title: '다이아' },
+        { level: 7, emoji: '👑', title: '레전드' }
+    ];
+    const advertiserLevel = advertiserLevelBadges.find((levelInfo) => (
+        label.includes(levelInfo.emoji) || label.includes(levelInfo.title)
+    ));
 
-    return {
-        image: `/src/assets/lv-badges/${filename}`,
-        title: String(match[2] || '').trim()
-    };
+    if (advertiserLevel) {
+        return {
+            image: '',
+            emoji: advertiserLevel.emoji,
+            title: advertiserLevel.title
+        };
+    }
+
+    return { image: '', title: label };
 }
 
 function renderLevelBadgeLabel(rawLabel = '') {
     const parsed = parseLevelBadgeLabel(rawLabel);
-    if (!parsed.image) return sanitizeHTML(parsed.title);
-
     const titleMarkup = parsed.title
         ? `<span class="mypage-rank-label">${sanitizeHTML(parsed.title)}</span>`
         : '';
+
+    if (parsed.emoji) {
+        return `<span class="mypage-rank-with-label"><span class="mypage-level-badge" aria-hidden="true">${sanitizeHTML(parsed.emoji)}</span>${titleMarkup}</span>`;
+    }
+
+    if (!parsed.image) return sanitizeHTML(parsed.title);
 
     return `<span class="mypage-rank-with-label"><img class="mypage-level-badge" src="${parsed.image}" alt="회원 등급 배지" loading="lazy">${titleMarkup}</span>`;
 }
@@ -1294,7 +1321,7 @@ async function loadStats() {
                 <div class="mypage-summary-row"><span>누적 광고일수</span><strong class="point-value">${Number(response.cumulativeAdDays || 0).toLocaleString()}일</strong></div>
                 <div class="mypage-level-progress">
                     <div class="mypage-level-progress-meta">
-                        <span>${sanitizeHTML(response.advertiserLevelLabel || '🌱 미광고')} → ${sanitizeHTML(response.nextAdvertiserLevelLabel || 'MAX')}</span>
+                        ${renderLevelProgressLabel(response.advertiserLevelLabel || '🌱 미광고', response.nextAdvertiserLevelLabel || 'MAX')}
                         <span>${Number(response.neededAdDaysToNextAdvertiserLevel || 0).toLocaleString()}일 필요</span>
                     </div>
                     <progress class="mypage-progress-bar" max="100" value="${Number(response.advertiserProgressRate || 0)}"></progress>
