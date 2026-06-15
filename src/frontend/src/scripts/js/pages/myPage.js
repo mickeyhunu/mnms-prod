@@ -1193,7 +1193,7 @@ async function loadStats() {
         const isBusinessStamp = stampType === 'BUSINESS';
         const stampSectionTitle = isBusinessStamp ? '광고 스탬프' : '스탬프';
         const stampSummaryTitle = isBusinessStamp ? '보유 광고 스탬프' : '보유 스탬프';
-        const stampSection = `
+        const stampSection = isAdAccount(currentUser) ? '' : `
             <section class="mypage-summary-section">
                 <div class="mypage-summary-head">
                     <h3 class="mypage-summary-title">${stampSectionTitle}</h3>
@@ -1210,6 +1210,7 @@ async function loadStats() {
             <section class="mypage-summary-section">
                 <div class="mypage-summary-head">
                     <h3 class="mypage-summary-title">광고</h3>
+                    <a class="mypage-summary-action" href="/my-page/stamps">스탬프 내역 보기</a>
                 </div>
                 <div class="mypage-summary-row"><span>보유 광고 스탬프</span><strong class="point-value">${Number(response.totalStamps || 0).toLocaleString()}개</strong></div>
                 <div class="mypage-summary-row"><span>누적 광고일수</span><strong class="point-value">${Number(response.cumulativeAdDays || 0).toLocaleString()}일</strong></div>
