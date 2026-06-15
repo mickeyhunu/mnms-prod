@@ -3,6 +3,7 @@
  */
 const {
   getUserActivityStats,
+  getUserCumulativeBusinessAdDays,
   getUserDailyActivityStats,
   getUserPointHistories,
   getUserActivityDetails,
@@ -18,7 +19,7 @@ const {
   getBusinessProfileByUserId,
   upsertBusinessProfileByUserId
 } = require('../models/userModel');
-const { resolveMemberLevel, MEMBER_LEVELS } = require('../utils/memberLevel');
+const { resolveMemberLevel, resolveAdvertiserAdDayLevel, MEMBER_LEVELS } = require('../utils/memberLevel');
 const { POINT_RULES } = require('../models/pointModel');
 const { STAMP_TYPES, createStampPurchase, getUserStampBalance, getUserStampHistories, getUserStampPaymentHistories } = require('../models/stampModel');
 const { createStampEventRequest, listOwnerStampEventRequests, reviewStampEventRequest } = require('../models/stampEventRequestModel');
@@ -530,6 +531,10 @@ async function myStats(req, res, next) {
 
     const stampType = resolveUserStampType(req.user);
     const totalStamps = await getUserStampBalance(req.user.id, stampType);
+    const isBusinessMember = String(req.user.member_type || req.user.memberType || '').toUpperCase() === 'BUSINESS'
+      || String(req.user.role || '').toUpperCase() === 'BUSINESS';
+    const cumulativeAdDays = isBusinessMember ? await getUserCumulativeBusinessAdDays(req.user.id) : 0;
+    const advertiserLevel = resolveAdvertiserAdDayLevel(cumulativeAdDays);
 
     res.json({
       loginId: req.user.login_id,
@@ -539,6 +544,9 @@ async function myStats(req, res, next) {
       stampType,
       level: currentLevel.level,
       levelLabel: currentLevel.label,
+      cumulativeAdDays,
+      advertiserLevel: advertiserLevel.level,
+      advertiserLevelLabel: advertiserLevel.label,
       joinedAt: req.user.created_at,
       postCount: Number(stats.postCount || 0),
       commentCount: Number(stats.commentCount || 0),
