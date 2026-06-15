@@ -480,7 +480,7 @@ function resolveAuthorBadgeMarkup(author = {}) {
     }
 
     if (isBusinessAuthor(author)) {
-        return `<span class="author-rank-badge comment-level-badge">${sanitizeHTML(resolveAdvertiserRankLabel(author))}</span>`;
+        return `<span class="comment-level-badge">${sanitizeHTML(resolveAdvertiserRankLabel(author))}</span>`;
     }
 
     const badgeImage = resolveLevelBadgeImage(author?.authorLevel ?? author?.level);
