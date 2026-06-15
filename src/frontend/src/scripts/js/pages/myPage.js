@@ -967,6 +967,44 @@ const STAMP_ASSET_PATHS = {
     }
 };
 
+const ADVERTISER_AD_DAY_LEVELS = [
+    { level: 1, emoji: '🌱', title: '미광고', minDays: 0 },
+    { level: 2, emoji: '🥉', title: '브론즈', minDays: 1 },
+    { level: 3, emoji: '🥈', title: '실버', minDays: 91 },
+    { level: 4, emoji: '🥇', title: '골드', minDays: 181 },
+    { level: 5, emoji: '💠', title: '플래티넘', minDays: 361 },
+    { level: 6, emoji: '💎', title: '다이아', minDays: 721 },
+    { level: 7, emoji: '👑', title: '레전드', minDays: 1441 }
+];
+
+function formatAdvertiserLevelRange(level, index) {
+    const nextLevel = ADVERTISER_AD_DAY_LEVELS[index + 1];
+    const minDays = Number(level.minDays || 0).toLocaleString('ko-KR');
+    if (!nextLevel) return `${minDays}일 ~ 이상`;
+
+    const maxDays = Math.max(Number(nextLevel.minDays || 0) - 1, Number(level.minDays || 0)).toLocaleString('ko-KR');
+    return `${minDays}일 ~ ${maxDays}일`;
+}
+
+function renderAdvertiserAdDayLevelGuide() {
+    return `
+        <div class="mypage-guide-list">
+            ${ADVERTISER_AD_DAY_LEVELS.map((level, index) => `
+                <div class="mypage-guide-row">
+                    <span>
+                        <span class="mypage-rank-with-label">
+                            <span aria-hidden="true">${sanitizeHTML(level.emoji)}</span>
+                            <span class="mypage-rank-label">${sanitizeHTML(level.title)}</span>
+                        </span>
+                    </span>
+                    <strong>${formatAdvertiserLevelRange(level, index)}</strong>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+
 function resolveStampAssetPaths(stampType = 'MEMBER') {
     const normalizedType = String(stampType || '').trim().toUpperCase();
     return STAMP_ASSET_PATHS[normalizedType] || STAMP_ASSET_PATHS.MEMBER;
@@ -1149,7 +1187,7 @@ async function loadStampHistories(page = 1) {
                         <div class="mypage-summary-head">
                             <h3 class="mypage-summary-title">광고 회원 등급 기준</h3>
                         </div>
-                        ${renderLevelGuide(response.levelGuide || [])}
+                        ${renderAdvertiserAdDayLevelGuide()}
                     </section>
                 </div>
         ` : '';
