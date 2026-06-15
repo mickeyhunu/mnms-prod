@@ -153,6 +153,10 @@
     };
 
     const formatProjectedUntil = (minutes) => formatProjectedExposureUntil(minutes);
+    const formatProjectedUntilWithDuration = (minutes, durationText) => {
+        const untilText = formatProjectedUntil(minutes);
+        return durationText ? `${untilText} (${durationText})` : untilText;
+    };
     const formatProjectedUntilNote = (minutes) => `(최대 자동연장 기간: ${formatProjectedUntil(minutes)})`;
 
     const getActivationStartValue = (ad, plan) => {
@@ -210,9 +214,9 @@
         stampBalance.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         if (stampBalanceSummary) stampBalanceSummary.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         const remainingStampsText = `${remainingStamps.toLocaleString('ko-KR')}개`;
-        const estimatedRunText = formatProjectedExposureUntil(exposureMinutes);
         const estimatedContinuousRunText = `${estimatedDays.toLocaleString('ko-KR')}${currentPlan.durationUnit === 'minute' ? '분' : '일'}`;
-        const estimatedUntilText = totalStamps ? formatProjectedUntil(estimatedDays) : '-';
+        const estimatedRunText = formatProjectedUntilWithDuration(exposureMinutes, currentPlan.durationLabel || `${exposureMinutes}${currentPlan.durationUnit === 'minute' ? '분' : '일'}`);
+        const estimatedUntilText = totalStamps ? formatProjectedUntilWithDuration(estimatedDays, estimatedContinuousRunText) : '-';
         const estimatedUntilNoteText = totalStamps ? formatProjectedUntilNote(estimatedDays) : '';
         if (stampAfterUse) stampAfterUse.textContent = remainingStampsText;
         if (stampAfterUsePanel) stampAfterUsePanel.textContent = remainingStampsText;
