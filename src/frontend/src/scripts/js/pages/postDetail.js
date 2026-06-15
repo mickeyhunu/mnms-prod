@@ -423,11 +423,6 @@ function isBusinessAuthor(author = {}) {
 
 
 function resolveAdvertiserRankLabel(source = {}) {
-    const explicit = String(source?.authorAdvertiserLevelLabel || source?.advertiserLevelLabel || '').trim();
-    if (explicit) return explicit;
-
-    const days = Number(source?.authorAdvertiserAdDays ?? source?.cumulativeAdDays ?? 0);
-    const normalizedDays = Number.isFinite(days) && days > 0 ? Math.floor(days) : 0;
     const levels = [
         { emoji: '🌱', title: '미광고', minDays: 0 },
         { emoji: '🥉', title: '브론즈', minDays: 1 },
@@ -437,7 +432,14 @@ function resolveAdvertiserRankLabel(source = {}) {
         { emoji: '💎', title: '다이아', minDays: 721 },
         { emoji: '👑', title: '레전드', minDays: 1441 }
     ];
-    return levels.reduce((current, level) => (normalizedDays >= level.minDays ? level : current), levels[0]).emoji + ' ' + levels.reduce((current, level) => (normalizedDays >= level.minDays ? level : current), levels[0]).title;
+
+    const explicit = String(source?.authorAdvertiserLevelLabel || source?.advertiserLevelLabel || '').trim();
+    const explicitLevel = levels.find((level) => explicit.includes(level.emoji) || explicit.includes(level.title));
+    if (explicitLevel) return explicitLevel.emoji;
+
+    const days = Number(source?.authorAdvertiserAdDays ?? source?.cumulativeAdDays ?? 0);
+    const normalizedDays = Number.isFinite(days) && days > 0 ? Math.floor(days) : 0;
+    return levels.reduce((current, level) => (normalizedDays >= level.minDays ? level : current), levels[0]).emoji;
 }
 
 function normalizeBusinessAdPlan(plan) {
@@ -478,7 +480,7 @@ function resolveAuthorBadgeMarkup(author = {}) {
     }
 
     if (isBusinessAuthor(author)) {
-        return `<span class="author-rank-badge">${sanitizeHTML(resolveAdvertiserRankLabel(author))}</span>`;
+        return `<span class="author-rank-badge comment-level-badge">${sanitizeHTML(resolveAdvertiserRankLabel(author))}</span>`;
     }
 
     const badgeImage = resolveLevelBadgeImage(author?.authorLevel ?? author?.level);
