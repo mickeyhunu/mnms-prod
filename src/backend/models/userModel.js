@@ -108,6 +108,31 @@ async function getUserActivityStats(userId) {
   return rows[0] || {};
 }
 
+async function getUserCumulativeBusinessAdDays(userId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT COALESCE(SUM(
+        CASE action_type
+          WHEN 'BUSINESS_AD_PREMIUM' THEN 1
+          WHEN 'BUSINESS_AD_PLUS' THEN 2
+          WHEN 'BUSINESS_AD_BASIC' THEN 3
+          WHEN 'BUSINESS_AD_GOLD' THEN 1
+          WHEN 'BUSINESS_AD_SILVER' THEN 2
+          WHEN 'BUSINESS_AD_BRONZE' THEN 3
+          ELSE 0
+        END * ABS(amount)
+      ), 0) AS totalAdDays
+       FROM stamp_histories
+      WHERE user_id = ?
+        AND stamp_type = 'BUSINESS'
+        AND amount < 0
+        AND action_type IN ('BUSINESS_AD_PREMIUM','BUSINESS_AD_PLUS','BUSINESS_AD_BASIC','BUSINESS_AD_GOLD','BUSINESS_AD_SILVER','BUSINESS_AD_BRONZE')`,
+    [userId]
+  );
+
+  return Number(rows[0]?.totalAdDays || 0);
+}
+
 
 async function getUserDailyActivityStats(userId) {
   const pool = getPool();
@@ -718,6 +743,7 @@ module.exports = {
   recordUserLoginHistory,
   getUserLoginHistories,
   getUserActivityStats,
+  getUserCumulativeBusinessAdDays,
   getUserDailyActivityStats,
   getUserPointHistories,
   getUserActivityDetails,
