@@ -1126,13 +1126,18 @@ async function loadPointHistories(page = 1) {
 
 
 
-async function loadStampHistories() {
+async function loadStampHistories(page = 1) {
     const container = document.getElementById('my-stats');
     if (!container || !currentUser) return;
 
+    const currentPage = Math.max(1, Number(page) || 1);
+
     try {
-        const response = await APIClient.get('/users/me/stamps', { limit: 50 });
+        const response = await APIClient.get('/users/me/stamps', { page: currentPage, limit: 20 });
         const stampHistories = response.stampHistories || [];
+        const pagination = response.pagination || {};
+        const pageNumber = Math.max(1, Number(pagination.page) || currentPage);
+        const totalPages = Math.max(1, Number(pagination.totalPages) || 1);
         const totalStamps = normalizeStampCount(response.totalStamps || 0);
         const stampType = String(response.stampType || (isAdAccount(currentUser) ? 'BUSINESS' : 'MEMBER')).toUpperCase();
         const isBusinessStamp = stampType === 'BUSINESS';
@@ -1157,11 +1162,36 @@ async function loadStampHistories() {
                         <div class="mypage-summary-head">
                             <h3 class="mypage-summary-title">${historyTitle}</h3>
                         </div>
-                        ${renderStampHistoryList(stampHistories)}
+                        ${stampHistories.length ? `
+                            ${renderStampHistoryList(stampHistories)}
+                            <div class="mypage-point-pagination" aria-label="스탬프 내역 페이지">
+                                <button type="button" class="mypage-point-page-btn" data-page="${Math.max(1, pageNumber - 1)}" ${pageNumber <= 1 ? 'disabled' : ''}>이전</button>
+                                <span class="mypage-point-page-indicator">${pageNumber} / ${totalPages}</span>
+                                <button type="button" class="mypage-point-page-btn" data-page="${Math.min(totalPages, pageNumber + 1)}" ${pageNumber >= totalPages ? 'disabled' : ''}>다음</button>
+                            </div>
+                        ` : '<div class="no-data">스탬프 내역이 없습니다.</div>'}
+                    </section>
+                </div>
+
+                <div class="mypage-point-reference-grid">
+                    <section class="mypage-summary-section mypage-summary-section--compact">
+                        <div class="mypage-summary-head">
+                            <h3 class="mypage-summary-title">회원 등급 기준</h3>
+                        </div>
+                        ${renderLevelGuide(response.levelGuide || [])}
                     </section>
                 </div>
             </div>
         `;
+
+        const pageButtons = container.querySelectorAll('.mypage-point-page-btn[data-page]');
+        pageButtons.forEach((button) => {
+            if (button.disabled) return;
+            button.addEventListener('click', async () => {
+                const nextPage = Number(button.dataset.page || pageNumber);
+                await loadStampHistories(nextPage);
+            });
+        });
     } catch (error) {
         container.innerHTML = '<div class="error-message">스탬프 내역을 불러오지 못했습니다.</div>';
     }
