@@ -263,7 +263,7 @@ function getAuthorGradeBadgeMarkup(post = {}) {
     }
 
     if (isBusinessAuthor(post)) {
-        return ` <span class="user-business-rank-badge user-level-badge">${sanitizeHTML(resolveAdvertiserRankLabel(post))}</span>`;
+        return ` <span class="user-level-badge">${sanitizeHTML(resolveAdvertiserRankLabel(post))}</span>`;
     }
 
     const badgeImage = resolveAuthorLevelBadgeImage(post?.authorLevel ?? post?.level ?? post?.authorRank ?? post?.rank ?? post?.authorGrade ?? post?.grade);
