@@ -774,18 +774,6 @@ span.mypage-level-badge {
     white-space: nowrap;
 }
 
-@media (max-width: 640px) {
-    .mypage-point-reference-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-    }
-
-    .mypage-summary-section--compact {
-        flex: initial;
-    }
-}
-
 .mypage-point-pagination {
     margin-top: 14px;
     display: flex;
