@@ -793,23 +793,6 @@ const pageRegistry = {
                 <section class="ad-management-panel" aria-labelledby="ad-management-stamp-title">
                     <h2 id="ad-management-stamp-title">스탬프 정보</h2>
                     <div class="ad-stamp-info-grid">
-                        <article class="ad-stamp-info-card">
-                            <span class="ad-stamp-icon">♟</span>
-                            <p>보유 스탬프</p>
-                            <strong id="ad-total-price">확인 중...</strong>
-                            <div class="ad-stamp-progress"><span id="ad-stamp-progress-bar"></span></div>
-                            <small><span id="ad-stamp-progress-text">0</span> / 100</small>
-                            <em>이번 활성화 시 1개 사용됩니다.</em>
-                        </article>
-                        <article class="ad-stamp-info-card">
-                            <span class="ad-stamp-icon">▣</span>
-                            <p>사용 후 잔여 스탬프</p>
-                            <strong id="ad-stamps-after-use-panel">-</strong>
-                            <hr>
-                            <p>예상 연속 노출 기간</p>
-                            <strong id="ad-estimated-run-days-panel">-</strong>
-                            <small id="ad-estimated-run-until-panel"></small>
-                        </article>
                         <article class="ad-stamp-info-card ad-stamp-summary-card">
                             <div><dt>보유 스탬프</dt><dd id="ad-summary-stamp-balance">확인 중...</dd></div>
                             <dl>
