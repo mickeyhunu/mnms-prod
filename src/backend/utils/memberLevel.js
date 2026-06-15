@@ -2,12 +2,13 @@
  * 파일 역할: 회원 포인트 기반 레벨/등급 계산 규칙을 제공하는 유틸리티 파일.
  */
 const ADVERTISER_AD_DAY_LEVELS = [
-  { level: 1, emoji: '🌱', title: '광고 새싹', minDays: 0 },
-  { level: 2, emoji: '🥉', title: '브론즈 광고주', minDays: 1 },
-  { level: 3, emoji: '🥈', title: '실버 광고주', minDays: 91 },
-  { level: 4, emoji: '🥇', title: '골드 광고주', minDays: 181 },
-  { level: 5, emoji: '💎', title: '플래티넘 광고주', minDays: 361 },
-  { level: 6, emoji: '👑', title: '레전드 광고주', minDays: 721 }
+  { level: 1, emoji: '🌱', title: '미광고', minDays: 0 },
+  { level: 2, emoji: '🥉', title: '브론즈', minDays: 1 },
+  { level: 3, emoji: '🥈', title: '실버', minDays: 91 },
+  { level: 4, emoji: '🥇', title: '골드', minDays: 181 },
+  { level: 5, emoji: '💠', title: '플래티넘', minDays: 361 },
+  { level: 6, emoji: '💎', title: '다이아', minDays: 721 },
+  { level: 7, emoji: '👑', title: '레전드', minDays: 1441 }
 ];
 
 const MEMBER_LEVELS = [
