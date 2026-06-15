@@ -939,19 +939,21 @@ function parseLevelBadgeLabel(rawLabel = '') {
     return { image: '', title: label };
 }
 
-function renderLevelBadgeLabel(rawLabel = '') {
+function renderLevelBadgeLabel(rawLabel = '', wrapperTag = 'span') {
     const parsed = parseLevelBadgeLabel(rawLabel);
     const titleMarkup = parsed.title
         ? `<span class="mypage-rank-label">${sanitizeHTML(parsed.title)}</span>`
         : '';
 
+    const tagName = wrapperTag === 'strong' ? 'strong' : 'span';
+
     if (parsed.emoji) {
-        return `<span class="mypage-rank-with-label"><span class="mypage-level-badge" aria-hidden="true">${sanitizeHTML(parsed.emoji)}</span>${titleMarkup}</span>`;
+        return `<${tagName} class="mypage-rank-with-label"><span class="mypage-level-badge" aria-hidden="true">${sanitizeHTML(parsed.emoji)}</span>${titleMarkup}</${tagName}>`;
     }
 
     if (!parsed.image) return sanitizeHTML(parsed.title);
 
-    return `<span class="mypage-rank-with-label"><img class="mypage-level-badge" src="${parsed.image}" alt="회원 등급 배지" loading="lazy">${titleMarkup}</span>`;
+    return `<${tagName} class="mypage-rank-with-label"><img class="mypage-level-badge" src="${parsed.image}" alt="회원 등급 배지" loading="lazy">${titleMarkup}</${tagName}>`;
 }
 
 function renderLevelProgressLabel(currentLabel = '', nextLabel = '') {
@@ -1121,7 +1123,7 @@ async function loadPointHistories(page = 1) {
                         <div class="mypage-summary-head">
                             <h3 class="mypage-summary-title">보유 포인트</h3>
                         </div>
-                        <div class="mypage-summary-row"><span>현재 등급</span><strong>${renderLevelBadgeLabel(response.levelLabel || '-')}</strong></div>
+                        <div class="mypage-summary-row"><span>현재 등급</span>${renderLevelBadgeLabel(response.levelLabel || '-', 'strong')}</div>
                         <div class="mypage-summary-row"><span>누적 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
                     </section>
 
