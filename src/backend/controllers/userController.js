@@ -19,7 +19,7 @@ const {
   getBusinessProfileByUserId,
   upsertBusinessProfileByUserId
 } = require('../models/userModel');
-const { resolveMemberLevel, resolveAdvertiserAdDayLevel, MEMBER_LEVELS } = require('../utils/memberLevel');
+const { resolveMemberLevel, resolveAdvertiserAdDayLevel, MEMBER_LEVELS, ADVERTISER_AD_DAY_LEVELS } = require('../utils/memberLevel');
 const { POINT_RULES } = require('../models/pointModel');
 const { STAMP_TYPES, createStampPurchase, getUserStampBalance, getUserStampHistories, getUserStampPaymentHistories } = require('../models/stampModel');
 const { createStampEventRequest, listOwnerStampEventRequests, reviewStampEventRequest } = require('../models/stampEventRequestModel');
@@ -515,6 +515,10 @@ function getNextLevelInfo(level) {
   return MEMBER_LEVELS.find((item) => item.level === level + 1) || null;
 }
 
+function getNextAdvertiserLevelInfo(level) {
+  return ADVERTISER_AD_DAY_LEVELS.find((item) => item.level === level + 1) || null;
+}
+
 async function myStats(req, res, next) {
   try {
     const stats = await getUserActivityStats(req.user.id);
@@ -535,6 +539,12 @@ async function myStats(req, res, next) {
       || String(req.user.role || '').toUpperCase() === 'BUSINESS';
     const cumulativeAdDays = isBusinessMember ? await getUserCumulativeBusinessAdDays(req.user.id) : 0;
     const advertiserLevel = resolveAdvertiserAdDayLevel(cumulativeAdDays);
+    const nextAdvertiserLevel = getNextAdvertiserLevelInfo(advertiserLevel.level);
+    const advertiserLevelRange = nextAdvertiserLevel ? nextAdvertiserLevel.minDays - advertiserLevel.minDays : 0;
+    const advertiserCurrentProgress = nextAdvertiserLevel ? cumulativeAdDays - advertiserLevel.minDays : advertiserLevelRange;
+    const advertiserProgressRate = nextAdvertiserLevel && advertiserLevelRange > 0
+      ? Math.max(0, Math.min(100, Math.floor((advertiserCurrentProgress / advertiserLevelRange) * 100)))
+      : 100;
 
     res.json({
       loginId: req.user.login_id,
@@ -547,6 +557,10 @@ async function myStats(req, res, next) {
       cumulativeAdDays,
       advertiserLevel: advertiserLevel.level,
       advertiserLevelLabel: advertiserLevel.label,
+      nextAdvertiserLevelLabel: nextAdvertiserLevel ? `${nextAdvertiserLevel.emoji} ${nextAdvertiserLevel.title}` : 'MAX',
+      neededAdDaysToNextAdvertiserLevel: nextAdvertiserLevel ? Math.max(0, nextAdvertiserLevel.minDays - cumulativeAdDays) : 0,
+      advertiserProgressRate,
+      nextAdvertiserLevelMinDays: nextAdvertiserLevel ? nextAdvertiserLevel.minDays : cumulativeAdDays,
       joinedAt: req.user.created_at,
       postCount: Number(stats.postCount || 0),
       commentCount: Number(stats.commentCount || 0),
