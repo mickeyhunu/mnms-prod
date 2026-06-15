@@ -6,6 +6,24 @@ const { createSeoSlugWithId, extractTrailingSlugId, normalizeSeoSlug } = require
 const { buildMemberLevelCaseSql } = require('../utils/memberLevel');
 
 const AUTHOR_LEVEL_SQL = buildMemberLevelCaseSql('u.total_points', 'u.id');
+const AUTHOR_ADVERTISER_AD_DAYS_SQL = `(
+  SELECT COALESCE(SUM(
+    CASE sh.action_type
+      WHEN 'BUSINESS_AD_PREMIUM' THEN 1
+      WHEN 'BUSINESS_AD_PLUS' THEN 2
+      WHEN 'BUSINESS_AD_BASIC' THEN 3
+      WHEN 'BUSINESS_AD_GOLD' THEN 1
+      WHEN 'BUSINESS_AD_SILVER' THEN 2
+      WHEN 'BUSINESS_AD_BRONZE' THEN 3
+      ELSE 0
+    END * ABS(sh.amount)
+  ), 0)
+    FROM stamp_histories sh
+   WHERE sh.user_id = u.id
+     AND sh.stamp_type = 'BUSINESS'
+     AND sh.amount < 0
+     AND sh.action_type IN ('BUSINESS_AD_PREMIUM','BUSINESS_AD_PLUS','BUSINESS_AD_BASIC','BUSINESS_AD_GOLD','BUSINESS_AD_SILVER','BUSINESS_AD_BRONZE')
+)`;
 
 const BOARD_TYPES = {
   FREE: 'FREE',
@@ -158,7 +176,8 @@ async function listPosts(page = 0, size = 10, options = {}) {
                    AND ba.activated_until > NOW()
                  LIMIT 1
               ) AS authorHasActiveBusinessAd,
-              ${AUTHOR_LEVEL_SQL} AS authorLevel
+              ${AUTHOR_LEVEL_SQL} AS authorLevel,
+              ${AUTHOR_ADVERTISER_AD_DAYS_SQL} AS authorAdvertiserAdDays
        FROM posts p
        LEFT JOIN users u ON u.id = p.user_id
        ${whereClause}
@@ -198,6 +217,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
               NULL AS authorPlanType,
               0 AS authorHasActiveBusinessAd,
               NULL AS authorLevel,
+              NULL AS authorAdvertiserAdDays,
               0 AS commentCount,
               0 AS likeCount,
               '' AS noticeTargetBoards
@@ -363,6 +383,7 @@ async function findPostDetailById(id) {
                LIMIT 1
             ) AS authorHasActiveBusinessAd,
             ${AUTHOR_LEVEL_SQL} AS authorLevel,
+              ${AUTHOR_ADVERTISER_AD_DAYS_SQL} AS authorAdvertiserAdDays,
             (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
@@ -513,7 +534,8 @@ async function listComments(postId) {
                    AND ba.activated_until > NOW()
                LIMIT 1
             ) AS authorHasActiveBusinessAd,
-            ${AUTHOR_LEVEL_SQL} AS authorLevel
+            ${AUTHOR_LEVEL_SQL} AS authorLevel,
+              ${AUTHOR_ADVERTISER_AD_DAYS_SQL} AS authorAdvertiserAdDays
      FROM comments c
      LEFT JOIN users u ON u.id = c.user_id
      WHERE c.post_id = ?
@@ -672,6 +694,7 @@ async function listBestPosts() {
                LIMIT 1
             ) AS authorHasActiveBusinessAd,
             ${AUTHOR_LEVEL_SQL} AS authorLevel,
+              ${AUTHOR_ADVERTISER_AD_DAYS_SQL} AS authorAdvertiserAdDays,
             COALESCE(stats.commentCount, 0) AS commentCount,
             COALESCE(stats.likeCount, 0) AS likeCount,
             ((COALESCE(stats.likeCount, 0) * 5) + (COALESCE(stats.commentCount, 0) * 2) + (p.view_count * 0.1)) AS score
