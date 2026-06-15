@@ -947,6 +947,25 @@ async function findPublicBusinessAdBySlug(slug) {
   return ads.find((ad) => normalizeSeoSlug(ad.title || ad.businessName) === normalizedSlug) || null;
 }
 
+
+async function listSeoSitemapBusinessAds(limit = 300) {
+  await renewExpiredBusinessAdsWithStamp();
+  const pool = getPool();
+  const safeLimit = Math.min(Math.max(Number(limit) || 300, 1), 1000);
+  const [rows] = await pool.query(
+    `SELECT id, title, business_name AS businessName, activated_at AS activatedAt, created_at AS createdAt, updated_at AS updatedAt
+       FROM business_ads
+      WHERE ${getBusinessAdPublicVisibilityCondition('business_ads')}
+      ORDER BY CASE plan_type WHEN 'PREMIUM' THEN 0 WHEN 'PLUS' THEN 1 ELSE 2 END,
+               display_order ASC,
+               updated_at DESC,
+               id DESC
+      LIMIT ?`,
+    [safeLimit]
+  );
+  return rows;
+}
+
 async function findBusinessAdById(adId) {
   await renewExpiredBusinessAdsWithStamp();
   const pool = getPool();
@@ -1606,6 +1625,7 @@ module.exports = {
   listPublicBusinessAds,
   findPublicBusinessAdById,
   findPublicBusinessAdBySlug,
+  listSeoSitemapBusinessAds,
   increaseBusinessAdViewCount,
   createBusinessAd,
   findBusinessAdById,

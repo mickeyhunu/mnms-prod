@@ -7,6 +7,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const ONE_HOUR_IN_SECONDS = 60 * 60;
+const ONE_DAY_IN_SECONDS = 24 * ONE_HOUR_IN_SECONDS;
+const ONE_YEAR_IN_SECONDS = 365 * ONE_DAY_IN_SECONDS;
 
 require('./src/backend/config/loadEnv');
 
@@ -34,10 +36,21 @@ const FRONTEND_DIR = path.join(__dirname, 'src/frontend');
 const INDEX_HTML_PATH = path.join(FRONTEND_DIR, 'index.html');
 const SITE_ORIGIN = String(process.env.SITE_ORIGIN || process.env.PUBLIC_SITE_URL || 'https://nightmens.com').replace(/\/$/, '');
 const KAKAO_MAP_APP_KEY = String(process.env.PUBLIC_KAKAO_MAP_APP_KEY || process.env.KAKAO_MAP_JAVASCRIPT_KEY || process.env.KAKAO_MAP_APP_KEY || '').trim();
+const DEFAULT_SHARE_IMAGE_URL = absoluteUrl('/src/assets/live-avatars/brand-logo3.png');
 let isDatabaseReady = false;
 const trustProxyValue = String(process.env.TRUST_PROXY || '1').trim();
 
 app.set('trust proxy', trustProxyValue);
+
+function setSeoSecurityHeaders(req, res, next) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
+  next();
+}
+
+app.use(setSeoSecurityHeaders);
 
 app.use(cors());
 app.use(express.json({ limit: '20mb' }));
@@ -186,7 +199,7 @@ function createDefaultSeo(pathname) {
     canonicalUrl: absoluteUrl(canonicalPath),
     robots: noindex ? 'noindex, nofollow' : 'index, follow',
     ogType: 'website',
-    imageUrl: absoluteUrl('/src/assets/live-avatars/brand-logo.png')
+    imageUrl: DEFAULT_SHARE_IMAGE_URL
   };
 }
 
@@ -210,7 +223,7 @@ async function createPostSeo(req) {
       canonicalUrl,
       robots: 'index, follow',
       ogType: 'article',
-      imageUrl: imageUrl || absoluteUrl('/src/assets/live-avatars/brand-logo.png'),
+      imageUrl: imageUrl || DEFAULT_SHARE_IMAGE_URL,
       publishedTime: post.createdAt,
       modifiedTime: post.updatedAt,
       structuredDataType: 'Article'
@@ -242,7 +255,7 @@ async function createBusinessAdSeo(req) {
       canonicalUrl,
       robots: 'index, follow',
       ogType: 'website',
-      imageUrl: ad.imageUrl || absoluteUrl('/src/assets/live-avatars/brand-logo.png'),
+      imageUrl: ad.imageUrl || DEFAULT_SHARE_IMAGE_URL,
       structuredDataType: 'LocalBusiness'
     };
   } catch (error) {
@@ -300,6 +313,84 @@ function renderSeoHtml(indexHtml, seo) {
     .replace(/\s*<link\s+rel="canonical"[^>]*>\s*/gi, '\n')
     .replace(/\s*<script\s+type="application\/ld\+json"\s+data-seo-jsonld="server">[\s\S]*?<\/script>\s*/gi, '\n')
     .replace('</head>', `  ${seoTags}\n</head>`);
+}
+
+
+function escapeXml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function formatSitemapDate(value) {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) return new Date().toISOString().slice(0, 10);
+  return date.toISOString().slice(0, 10);
+}
+
+function createSitemapUrl({ loc, changefreq, priority, lastmod }) {
+  return [
+    '  <url>',
+    `    <loc>${escapeXml(loc)}</loc>`,
+    lastmod ? `    <lastmod>${escapeXml(formatSitemapDate(lastmod))}</lastmod>` : '',
+    changefreq ? `    <changefreq>${escapeXml(changefreq)}</changefreq>` : '',
+    priority ? `    <priority>${escapeXml(priority)}</priority>` : '',
+    '  </url>'
+  ].filter(Boolean).join('\n');
+}
+
+async function buildSitemapXml() {
+  const staticUrls = [
+    { loc: absoluteUrl('/'), changefreq: 'daily', priority: '1.0' },
+    { loc: absoluteUrl('/community'), changefreq: 'hourly', priority: '0.9' },
+    { loc: absoluteUrl('/business-info'), changefreq: 'daily', priority: '0.8' },
+    { loc: absoluteUrl('/play'), changefreq: 'weekly', priority: '0.7' },
+    { loc: absoluteUrl('/play/live'), changefreq: 'hourly', priority: '0.9' },
+    { loc: absoluteUrl('/play/rbti'), changefreq: 'monthly', priority: '0.5' },
+    { loc: absoluteUrl('/play/alcohol'), changefreq: 'monthly', priority: '0.4' },
+    { loc: absoluteUrl('/support'), changefreq: 'weekly', priority: '0.6' },
+    { loc: absoluteUrl('/support/faq'), changefreq: 'weekly', priority: '0.5' },
+    { loc: absoluteUrl('/board/terms'), changefreq: 'monthly', priority: '0.4' }
+  ];
+
+  let dynamicUrls = [];
+  if (isDatabaseReady) {
+    const [posts, businessAds] = await Promise.all([
+      postModel.listSeoSitemapPosts?.(300).catch((error) => {
+        console.error('post sitemap generation failed:', error.message);
+        return [];
+      }) || [],
+      adminModel.listSeoSitemapBusinessAds?.(300).catch((error) => {
+        console.error('business sitemap generation failed:', error.message);
+        return [];
+      }) || []
+    ]);
+
+    dynamicUrls = [
+      ...posts.map((post) => ({
+        loc: absoluteUrl(`/post-detail/${encodeURIComponent(createSeoSlug(post.title, `post-${post.id}`))}`),
+        changefreq: 'weekly',
+        priority: '0.6',
+        lastmod: post.updatedAt || post.createdAt
+      })),
+      ...businessAds.map((ad) => ({
+        loc: absoluteUrl(`/business-info/${encodeURIComponent(createSeoSlug(ad.title || ad.businessName, `business-${ad.id}`))}`),
+        changefreq: 'daily',
+        priority: '0.7',
+        lastmod: ad.updatedAt || ad.activatedAt || ad.createdAt
+      }))
+    ];
+  }
+
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...[...staticUrls, ...dynamicUrls].map(createSitemapUrl),
+    '</urlset>'
+  ].join('\n');
 }
 
 async function sendSeoIndex(req, res, statusCode = 200) {
@@ -367,6 +458,32 @@ app.use((req, res, next) => {
   next();
 });
 
+
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain').set('Cache-Control', `public, max-age=${ONE_DAY_IN_SECONDS}`);
+  res.send([
+    'User-agent: *',
+    'Allow: /',
+    'Disallow: /admin',
+    'Disallow: /my-page',
+    'Disallow: /my-inquiries',
+    'Disallow: /login',
+    'Disallow: /register',
+    'Disallow: /create',
+    '',
+    `Sitemap: ${absoluteUrl('/sitemap.xml')}`,
+    ''
+  ].join('\n'));
+});
+
+app.get('/sitemap.xml', (req, res, next) => {
+  buildSitemapXml()
+    .then((xml) => {
+      res.type('application/xml').set('Cache-Control', `public, max-age=${ONE_HOUR_IN_SECONDS}, stale-while-revalidate=${ONE_DAY_IN_SECONDS}`).send(xml);
+    })
+    .catch(next);
+});
+
 app.use(express.static(FRONTEND_DIR, {
   index: false,
   etag: true,
@@ -380,7 +497,12 @@ app.use(express.static(FRONTEND_DIR, {
     }
 
     if (['.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico'].includes(extension)) {
-      res.setHeader('Cache-Control', `public, max-age=${ONE_HOUR_IN_SECONDS}, must-revalidate`);
+      const isImageAsset = ['.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico'].includes(extension);
+      const cacheMaxAge = isImageAsset ? ONE_YEAR_IN_SECONDS : ONE_HOUR_IN_SECONDS;
+      const cacheDirective = isImageAsset
+        ? `public, max-age=${cacheMaxAge}, immutable`
+        : `public, max-age=${cacheMaxAge}, must-revalidate`;
+      res.setHeader('Cache-Control', cacheDirective);
     }
   }
 }));
