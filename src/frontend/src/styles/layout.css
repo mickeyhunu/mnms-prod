@@ -117,16 +117,6 @@
     vertical-align: text-bottom;
 }
 
-.user-business-rank-badge {
-    display: inline-flex;
-    align-items: center;
-    line-height: 1;
-    font-size: 12px;
-    font-weight: 700;
-    color: #6c0391;
-    vertical-align: middle;
-}
-
 .user-level-badge {
     height: 16px;
     width: auto;
