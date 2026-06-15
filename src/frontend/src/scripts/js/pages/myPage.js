@@ -930,7 +930,8 @@ function parseLevelBadgeLabel(rawLabel = '') {
 
     if (advertiserLevel) {
         return {
-            image: `/src/assets/lv-badges/lv${advertiserLevel.level}.png`,
+            image: '',
+            emoji: advertiserLevel.emoji,
             title: advertiserLevel.title
         };
     }
@@ -940,11 +941,15 @@ function parseLevelBadgeLabel(rawLabel = '') {
 
 function renderLevelBadgeLabel(rawLabel = '') {
     const parsed = parseLevelBadgeLabel(rawLabel);
-    if (!parsed.image) return sanitizeHTML(parsed.title);
-
     const titleMarkup = parsed.title
         ? `<span class="mypage-rank-label">${sanitizeHTML(parsed.title)}</span>`
         : '';
+
+    if (parsed.emoji) {
+        return `<span class="mypage-rank-with-label"><span class="mypage-level-badge" aria-hidden="true">${sanitizeHTML(parsed.emoji)}</span>${titleMarkup}</span>`;
+    }
+
+    if (!parsed.image) return sanitizeHTML(parsed.title);
 
     return `<span class="mypage-rank-with-label"><img class="mypage-level-badge" src="${parsed.image}" alt="회원 등급 배지" loading="lazy">${titleMarkup}</span>`;
 }
