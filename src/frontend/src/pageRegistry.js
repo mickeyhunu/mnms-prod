@@ -1396,7 +1396,13 @@ const pageRegistry = {
                     <p class="mypage-link-section-title">광고센터</p>
                     <div class="mypage-link-list" id="ad-center-section">
                         <a class="mypage-link-item" id="stamp-purchase-link" href="/stamp-purchase"><span>스탬프 구매</span></a>
-                        <a class="mypage-link-item" href="/ad-purchase"><span>광고 활성화</span></a>
+                        <a class="mypage-link-item" href="/ad-purchase">
+                            <span>광고 활성화</span>
+                            <span class="mypage-ad-activation-status-wrap" id="mypage-ad-activation-status-wrap">
+                                <span id="mypage-ad-activation-status" class="mypage-status-badge mypage-status-badge--unregistered">비활성화</span>
+                                <span id="mypage-ad-auto-renew-status" class="mypage-ad-auto-renew-status">자동연장 확인 중</span>
+                            </span>
+                        </a>
                         <a class="mypage-link-item" href="/business-info"><span>점프 관리</span></a>
                         <a class="mypage-link-item" href="/ad-profile-management">
                             <span>광고프로필 관리</span>
