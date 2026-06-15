@@ -8,7 +8,6 @@
     const selectedProduct = document.getElementById('ad-selected-product');
     const stampCost = document.getElementById('ad-product-price');
     const durationText = document.getElementById('ad-vat-price');
-    const stampBalance = document.getElementById('ad-total-price');
     const activationPanel = document.getElementById('ad-management-activation-panel');
     const activationToggle = document.getElementById('ad-purchase-activation-toggle');
     const activationToggleLabel = document.getElementById('ad-purchase-activation-toggle-label');
@@ -20,17 +19,12 @@
     const remainingTime = document.getElementById('ad-management-remaining-time');
     const stampBalanceSummary = document.getElementById('ad-summary-stamp-balance');
     const stampAfterUse = document.getElementById('ad-stamps-after-use');
-    const stampAfterUsePanel = document.getElementById('ad-stamps-after-use-panel');
-    const stampProgressBar = document.getElementById('ad-stamp-progress-bar');
-    const stampProgressText = document.getElementById('ad-stamp-progress-text');
     const estimatedRunDays = document.getElementById('ad-estimated-run-days');
-    const estimatedRunDaysPanel = document.getElementById('ad-estimated-run-days-panel');
     const estimatedRunUntil = document.getElementById('ad-estimated-run-until');
-    const estimatedRunUntilPanel = document.getElementById('ad-estimated-run-until-panel');
     const activationStampBalance = document.getElementById('ad-activation-stamp-balance');
     const activationBenefitTitle = document.getElementById('ad-activation-benefit-title');
 
-    if (!tabs.length || !featureList || !selectedProduct || !stampCost || !durationText || !stampBalance) {
+    if (!tabs.length || !featureList || !selectedProduct || !stampCost || !durationText) {
         return;
     }
 
@@ -211,7 +205,6 @@
         const remainingStamps = Math.max(totalStamps - 1, 0);
         const exposureMinutes = Number(currentPlan.durationDays || 0);
         const estimatedDays = totalStamps * exposureMinutes;
-        stampBalance.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         if (stampBalanceSummary) stampBalanceSummary.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         const remainingStampsText = `${remainingStamps.toLocaleString('ko-KR')}개`;
         const estimatedContinuousRunText = `${estimatedDays.toLocaleString('ko-KR')}${currentPlan.durationUnit === 'minute' ? '분' : '일'}`;
@@ -219,13 +212,8 @@
         const estimatedUntilText = totalStamps ? formatProjectedUntilWithDuration(estimatedDays, estimatedContinuousRunText) : '-';
         const estimatedUntilNoteText = totalStamps ? formatProjectedUntilNote(estimatedDays) : '';
         if (stampAfterUse) stampAfterUse.textContent = remainingStampsText;
-        if (stampAfterUsePanel) stampAfterUsePanel.textContent = remainingStampsText;
-        if (stampProgressBar) stampProgressBar.style.width = `${Math.min(totalStamps, 100)}%`;
-        if (stampProgressText) stampProgressText.textContent = totalStamps.toLocaleString('ko-KR');
         if (estimatedRunDays) estimatedRunDays.textContent = estimatedRunText;
-        if (estimatedRunDaysPanel) estimatedRunDaysPanel.textContent = estimatedContinuousRunText;
         if (estimatedRunUntil) estimatedRunUntil.textContent = estimatedUntilText;
-        if (estimatedRunUntilPanel) estimatedRunUntilPanel.textContent = estimatedUntilNoteText;
         if (activationStampBalance) activationStampBalance.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         if (activationBenefitTitle) activationBenefitTitle.textContent = `${currentPlan.name}를 활성화하면`;
         if (activationButton) activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '기간 만료 후 중지 예정') : `⚡ 1 스탬프 사용하고 광고 시작하기`;
