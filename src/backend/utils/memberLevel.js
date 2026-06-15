@@ -1,6 +1,15 @@
 /**
  * 파일 역할: 회원 포인트 기반 레벨/등급 계산 규칙을 제공하는 유틸리티 파일.
  */
+const ADVERTISER_AD_DAY_LEVELS = [
+  { level: 1, emoji: '🌱', title: '광고 새싹', minDays: 0 },
+  { level: 2, emoji: '🥉', title: '브론즈 광고주', minDays: 1 },
+  { level: 3, emoji: '🥈', title: '실버 광고주', minDays: 91 },
+  { level: 4, emoji: '🥇', title: '골드 광고주', minDays: 181 },
+  { level: 5, emoji: '💎', title: '플래티넘 광고주', minDays: 361 },
+  { level: 6, emoji: '👑', title: '레전드 광고주', minDays: 721 }
+];
+
 const MEMBER_LEVELS = [
   { level: 1, emoji: '/assets/lv-badges/lv1.png', title: '신입', minPoints: 0 },
   { level: 2, emoji: '/assets/lv-badges/lv2.png', title: '룸린이', minPoints: 100 },
@@ -36,6 +45,31 @@ function resolveMemberLevel(totalPoints) {
 }
 
 
+function normalizeAdDays(days) {
+  const parsed = Number(days || 0);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0;
+}
+
+function resolveAdvertiserAdDayLevel(totalAdDays) {
+  const normalizedDays = normalizeAdDays(totalAdDays);
+  let current = ADVERTISER_AD_DAY_LEVELS[0];
+
+  for (const info of ADVERTISER_AD_DAY_LEVELS) {
+    if (normalizedDays >= info.minDays) {
+      current = info;
+    } else {
+      break;
+    }
+  }
+
+  return {
+    ...current,
+    label: `${current.emoji} ${current.title}`,
+    emoji: current.emoji,
+    totalAdDays: normalizedDays
+  };
+}
+
 function buildMemberLevelCaseSql(pointsExpression = 'total_points', nullExpression = null) {
   const normalizedPointsExpression = `COALESCE(${pointsExpression}, 0)`;
   const clauses = [...MEMBER_LEVELS]
@@ -47,4 +81,10 @@ function buildMemberLevelCaseSql(pointsExpression = 'total_points', nullExpressi
   return `CASE\n${nullClause}${clauses}\nEND`;
 }
 
-module.exports = { MEMBER_LEVELS, resolveMemberLevel, buildMemberLevelCaseSql };
+module.exports = {
+  MEMBER_LEVELS,
+  ADVERTISER_AD_DAY_LEVELS,
+  resolveMemberLevel,
+  resolveAdvertiserAdDayLevel,
+  buildMemberLevelCaseSql
+};
