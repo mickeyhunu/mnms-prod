@@ -36,15 +36,55 @@ async function createUser({
   return result.insertId;
 }
 
+const USER_WITH_ACTIVE_BUSINESS_AD_SELECT = `SELECT u.*,
+    (
+      SELECT ba.plan_type
+        FROM business_ads ba
+       WHERE ba.owner_user_id = u.id
+         AND ba.registration_status = 'REGISTERED'
+         AND ba.activated_until IS NOT NULL
+         AND ba.activated_until > NOW()
+       ORDER BY CASE ba.plan_type WHEN 'PREMIUM' THEN 0 WHEN 'PLUS' THEN 1 ELSE 2 END, ba.display_order ASC, ba.id DESC
+       LIMIT 1
+    ) AS active_business_ad_plan,
+    EXISTS (
+      SELECT 1
+        FROM business_ads ba
+       WHERE ba.owner_user_id = u.id
+         AND ba.registration_status = 'REGISTERED'
+         AND ba.activated_until IS NOT NULL
+         AND ba.activated_until > NOW()
+       LIMIT 1
+    ) AS has_active_business_ad,
+    (
+      SELECT COALESCE(SUM(
+        CASE sh.action_type
+          WHEN 'BUSINESS_AD_PREMIUM' THEN 1
+          WHEN 'BUSINESS_AD_PLUS' THEN 2
+          WHEN 'BUSINESS_AD_BASIC' THEN 3
+          WHEN 'BUSINESS_AD_GOLD' THEN 1
+          WHEN 'BUSINESS_AD_SILVER' THEN 2
+          WHEN 'BUSINESS_AD_BRONZE' THEN 3
+          ELSE 0
+        END * ABS(sh.amount)
+      ), 0)
+        FROM stamp_histories sh
+       WHERE sh.user_id = u.id
+         AND sh.stamp_type = 'BUSINESS'
+         AND sh.amount < 0
+         AND sh.action_type IN ('BUSINESS_AD_PREMIUM','BUSINESS_AD_PLUS','BUSINESS_AD_BASIC','BUSINESS_AD_GOLD','BUSINESS_AD_SILVER','BUSINESS_AD_BRONZE')
+    ) AS cumulative_business_ad_days
+   FROM users u`;
+
 async function findByLoginId(loginId) {
   const pool = getPool();
-  const [rows] = await pool.query('SELECT * FROM users WHERE login_id = ?', [loginId]);
+  const [rows] = await pool.query(`${USER_WITH_ACTIVE_BUSINESS_AD_SELECT} WHERE u.login_id = ?`, [loginId]);
   return ensureResolvedLoginRestriction(rows[0] || null);
 }
 
 async function findById(id) {
   const pool = getPool();
-  const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
+  const [rows] = await pool.query(`${USER_WITH_ACTIVE_BUSINESS_AD_SELECT} WHERE u.id = ?`, [id]);
   return ensureResolvedLoginRestriction(rows[0] || null);
 }
 

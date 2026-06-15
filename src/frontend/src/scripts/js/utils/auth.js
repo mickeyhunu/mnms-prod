@@ -61,6 +61,11 @@ const Auth = {
             return { image: '', label: '' };
         }
 
+        const advertiserLevelLabel = String(user?.advertiserLevelLabel || '').trim();
+        if (advertiserLevelLabel) {
+            return { image: '', label: advertiserLevelLabel };
+        }
+
         const rawPlan = user?.adPlan
             || user?.plan
             || user?.businessAdPlan
@@ -154,15 +159,23 @@ const Auth = {
             element.appendChild(adminBadge);
         }
 
-        const badgeImage = this.resolveBusinessBadgeImage(user);
-        if (!badgeImage) return;
+        const businessBadge = this.resolveBusinessBadge(user);
+        if (!businessBadge.image && !businessBadge.label) return;
 
-        const badge = document.createElement('img');
-        badge.className = 'user-business-badge';
-        badge.src = badgeImage;
-        badge.alt = '기업회원 광고 등급 배지';
-        badge.loading = 'lazy';
         element.appendChild(document.createTextNode(' '));
+        if (businessBadge.image) {
+            const badge = document.createElement('img');
+            badge.className = 'user-business-badge';
+            badge.src = businessBadge.image;
+            badge.alt = '기업회원 광고 등급 배지';
+            badge.loading = 'lazy';
+            element.appendChild(badge);
+            return;
+        }
+
+        const badge = document.createElement('span');
+        badge.className = 'user-business-rank-badge';
+        badge.textContent = businessBadge.label;
         element.appendChild(badge);
     },
     getToken() {
@@ -216,6 +229,14 @@ const Auth = {
             levelEmoji: user.levelEmoji,
             levelTitle: user.levelTitle,
             levelLabel: user.levelLabel,
+            adPlan: user.adPlan,
+            businessAdPlan: user.businessAdPlan,
+            hasActiveBusinessAd: user.hasActiveBusinessAd,
+            cumulativeAdDays: user.cumulativeAdDays,
+            advertiserLevel: user.advertiserLevel,
+            advertiserLevelEmoji: user.advertiserLevelEmoji,
+            advertiserLevelTitle: user.advertiserLevelTitle,
+            advertiserLevelLabel: user.advertiserLevelLabel,
             accountStatus: user.accountStatus,
             isLoginRestricted: user.isLoginRestricted,
             loginRestrictedUntil: user.loginRestrictedUntil,

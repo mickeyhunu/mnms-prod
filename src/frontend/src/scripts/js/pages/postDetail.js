@@ -421,6 +421,25 @@ function isBusinessAuthor(author = {}) {
     return role === 'BUSINESS' || memberType === 'BUSINESS' || Boolean(author?.authorIsBusiness);
 }
 
+
+function resolveAdvertiserRankLabel(source = {}) {
+    const explicit = String(source?.authorAdvertiserLevelLabel || source?.advertiserLevelLabel || '').trim();
+    if (explicit) return explicit;
+
+    const days = Number(source?.authorAdvertiserAdDays ?? source?.cumulativeAdDays ?? 0);
+    const normalizedDays = Number.isFinite(days) && days > 0 ? Math.floor(days) : 0;
+    const levels = [
+        { emoji: '🌱', title: '미광고', minDays: 0 },
+        { emoji: '🥉', title: '브론즈', minDays: 1 },
+        { emoji: '🥈', title: '실버', minDays: 91 },
+        { emoji: '🥇', title: '골드', minDays: 181 },
+        { emoji: '💠', title: '플래티넘', minDays: 361 },
+        { emoji: '💎', title: '다이아', minDays: 721 },
+        { emoji: '👑', title: '레전드', minDays: 1441 }
+    ];
+    return levels.reduce((current, level) => (normalizedDays >= level.minDays ? level : current), levels[0]).emoji + ' ' + levels.reduce((current, level) => (normalizedDays >= level.minDays ? level : current), levels[0]).title;
+}
+
 function normalizeBusinessAdPlan(plan) {
     const normalized = String(plan || '').trim().toLowerCase();
     if (!normalized) return '';
@@ -458,9 +477,8 @@ function resolveAuthorBadgeMarkup(author = {}) {
         return '<img class="comment-level-badge" src="/src/assets/lv-badges/admin.png" alt="관리자 배지" loading="lazy">';
     }
 
-    const businessBadgeImage = resolveBusinessBadgeImage(author);
-    if (businessBadgeImage) {
-        return `<img class="author-plan-badge" src="${businessBadgeImage}" alt="기업회원 광고 등급 배지">`;
+    if (isBusinessAuthor(author)) {
+        return `<span class="author-rank-badge">${sanitizeHTML(resolveAdvertiserRankLabel(author))}</span>`;
     }
 
     const badgeImage = resolveLevelBadgeImage(author?.authorLevel ?? author?.level);
