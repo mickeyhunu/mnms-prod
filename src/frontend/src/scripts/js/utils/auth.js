@@ -56,6 +56,22 @@ const Auth = {
 
         return false;
     },
+    resolveAdvertiserLevelEmoji(label) {
+        const normalizedLabel = String(label || '').trim();
+        if (!normalizedLabel) return '';
+
+        const levels = [
+            { emoji: '🌱', title: '미광고' },
+            { emoji: '🥉', title: '브론즈' },
+            { emoji: '🥈', title: '실버' },
+            { emoji: '🥇', title: '골드' },
+            { emoji: '💠', title: '플래티넘' },
+            { emoji: '💎', title: '다이아' },
+            { emoji: '👑', title: '레전드' }
+        ];
+        const level = levels.find((item) => normalizedLabel.includes(item.emoji) || normalizedLabel.includes(item.title));
+        return level?.emoji || '';
+    },
     resolveBusinessBadge(user) {
         if (!this.isBusinessAccount(user)) {
             return { image: '', label: '' };
@@ -63,7 +79,8 @@ const Auth = {
 
         const advertiserLevelLabel = String(user?.advertiserLevelLabel || '').trim();
         if (advertiserLevelLabel) {
-            return { image: '', label: advertiserLevelLabel };
+            const advertiserLevelBadge = this.resolveAdvertiserLevelEmoji(advertiserLevelLabel);
+            return { image: '', label: advertiserLevelBadge || advertiserLevelLabel };
         }
 
         const rawPlan = user?.adPlan
@@ -174,7 +191,7 @@ const Auth = {
         }
 
         const badge = document.createElement('span');
-        badge.className = 'user-business-rank-badge';
+        badge.className = 'user-business-rank-badge user-level-badge';
         badge.textContent = businessBadge.label;
         element.appendChild(badge);
     },
