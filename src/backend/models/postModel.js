@@ -428,6 +428,22 @@ async function findPostDetailBySlug(slug) {
   return match ? findPostDetailById(match.id) : null;
 }
 
+
+async function listSeoSitemapPosts(limit = 300) {
+  const pool = getPool();
+  const safeLimit = Math.min(Math.max(Number(limit) || 300, 1), 1000);
+  const [rows] = await pool.query(
+    `SELECT id, title, created_at AS createdAt, updated_at AS updatedAt
+       FROM posts
+      WHERE is_deleted = 0
+        AND is_hidden = 0
+      ORDER BY updated_at DESC, id DESC
+      LIMIT ?`,
+    [safeLimit]
+  );
+  return rows;
+}
+
 async function findAdjacentPosts(id) {
   const pool = getPool();
   const [currentRows] = await pool.query(
@@ -742,6 +758,7 @@ module.exports = {
   findPostById,
   findPostDetailById,
   findPostDetailBySlug,
+  listSeoSitemapPosts,
   findAdjacentPosts,
   findPostByIdIncludingDeleted,
   incrementPostViewCount,
