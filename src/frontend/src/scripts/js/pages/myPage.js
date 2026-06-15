@@ -927,6 +927,13 @@ function renderLevelBadgeLabel(rawLabel = '') {
     return `<span class="mypage-rank-with-label"><img class="mypage-level-badge" src="${parsed.image}" alt="회원 등급 배지" loading="lazy">${titleMarkup}</span>`;
 }
 
+function renderLevelProgressLabel(currentLabel = '', nextLabel = '') {
+    const currentMarkup = renderLevelBadgeLabel(currentLabel);
+    const nextMarkup = renderLevelBadgeLabel(nextLabel || 'MAX');
+
+    return `<span class="mypage-level-progress-rank">${currentMarkup} <span class="mypage-level-progress-arrow">→</span> ${nextMarkup}</span>`;
+}
+
 
 function formatStampActionLabel(actionType) {
     const labels = {
@@ -1232,7 +1239,7 @@ async function loadStats() {
                 <div class="mypage-summary-row"><span>보유 포인트</span><strong class="point-value">${Number(response.totalPoints || 0).toLocaleString()} P</strong></div>
                 <div class="mypage-level-progress">
                     <div class="mypage-level-progress-meta">
-                        <span>${sanitizeHTML(parseLevelBadgeLabel(response.levelLabel || '').title || '')} → ${sanitizeHTML(parseLevelBadgeLabel(response.nextLevelLabel || '').title || 'MAX')}</span>
+                        ${renderLevelProgressLabel(response.levelLabel || '', response.nextLevelLabel || 'MAX')}
                         <span>${Number(response.neededPointsToNextLevel || 0).toLocaleString()}P 필요</span>
                     </div>
                     <progress class="mypage-progress-bar" max="100" value="${Number(response.progressRate || 0)}"></progress>
