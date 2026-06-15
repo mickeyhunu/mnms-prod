@@ -1288,7 +1288,7 @@ async function loadStats() {
             ? formatDate(response.joinedAt).split(' ')[0].replace(/\.$/, '')
             : '-';
         const rankLabel = isAdAccount(currentUser)
-            ? (response.advertiserLevelLabel || '🌱 광고 새싹')
+            ? (response.advertiserLevelLabel || '🌱 새싹')
             : resolveRankLabel(currentUser, response.levelLabel || '');
         const rankMarkup = isAdAccount(currentUser)
             ? `<strong>${sanitizeHTML(rankLabel)}</strong>`
