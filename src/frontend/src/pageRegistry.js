@@ -1400,7 +1400,6 @@ const pageRegistry = {
                             <span>광고 활성화</span>
                             <span class="mypage-ad-activation-status-wrap" id="mypage-ad-activation-status-wrap">
                                 <span id="mypage-ad-activation-status" class="mypage-status-badge mypage-status-badge--unregistered">비활성화</span>
-                                <span id="mypage-ad-auto-renew-status" class="mypage-ad-auto-renew-status">자동연장 확인 중</span>
                             </span>
                         </a>
                         <a class="mypage-link-item" href="/business-info"><span>점프 관리</span></a>

@@ -1275,13 +1275,6 @@ body[data-page="admin"] {
     text-align: right;
 }
 
-.mypage-ad-auto-renew-status {
-    color: #6b7280;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1.35;
-    word-break: keep-all;
-}
 
 .mypage-rejection-reason {
     display: contents;
