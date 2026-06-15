@@ -1143,6 +1143,16 @@ async function loadStampHistories(page = 1) {
         const isBusinessStamp = stampType === 'BUSINESS';
         const summaryTitle = isBusinessStamp ? '보유 광고 스탬프' : '보유 스탬프';
         const historyTitle = isBusinessStamp ? '광고 스탬프 적립/사용 내역' : '스탬프 적립/사용 내역';
+        const levelGuideSection = isBusinessStamp ? `
+                <div class="mypage-point-reference-grid">
+                    <section class="mypage-summary-section mypage-summary-section--compact">
+                        <div class="mypage-summary-head">
+                            <h3 class="mypage-summary-title">광고 회원 등급 기준</h3>
+                        </div>
+                        ${renderLevelGuide(response.levelGuide || [])}
+                    </section>
+                </div>
+        ` : '';
 
         container.innerHTML = `
             <div class="mypage-point-layout">
@@ -1173,14 +1183,7 @@ async function loadStampHistories(page = 1) {
                     </section>
                 </div>
 
-                <div class="mypage-point-reference-grid">
-                    <section class="mypage-summary-section mypage-summary-section--compact">
-                        <div class="mypage-summary-head">
-                            <h3 class="mypage-summary-title">회원 등급 기준</h3>
-                        </div>
-                        ${renderLevelGuide(response.levelGuide || [])}
-                    </section>
-                </div>
+                ${levelGuideSection}
             </div>
         `;
 
