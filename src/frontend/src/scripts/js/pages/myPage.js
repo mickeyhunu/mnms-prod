@@ -264,6 +264,49 @@ function applyStampEventStatusBadge(isEnabled) {
     badge.classList.add(isEnabled ? 'mypage-status-badge--registered' : 'mypage-status-badge--unregistered');
 }
 
+function formatMyPageAdDate(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleString('ko-KR', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function renderAdActivationStatus(ad) {
+    const badge = document.getElementById('mypage-ad-activation-status');
+    const autoRenewStatus = document.getElementById('mypage-ad-auto-renew-status');
+    if (!badge || !autoRenewStatus) return;
+
+    const isVisible = Boolean(Number(ad?.isCurrentlyVisible || 0));
+    const autoRenewEnabled = Boolean(Number(ad?.isActive || 0));
+    const expireText = formatMyPageAdDate(ad?.activatedUntil);
+
+    badge.classList.remove('mypage-status-badge--registered', 'mypage-status-badge--pending', 'mypage-status-badge--unregistered');
+
+    if (!isVisible) {
+        badge.textContent = '비활성화';
+        badge.classList.add('mypage-status-badge--unregistered');
+        autoRenewStatus.textContent = '자동연장 OFF';
+        return;
+    }
+
+    badge.textContent = '활성화';
+    badge.classList.add('mypage-status-badge--registered');
+
+    if (autoRenewEnabled) {
+        autoRenewStatus.textContent = expireText ? `자동연장 ON · ${expireText} 연장 예정` : '자동연장 ON';
+        return;
+    }
+
+    badge.classList.remove('mypage-status-badge--registered');
+    badge.classList.add('mypage-status-badge--pending');
+    autoRenewStatus.textContent = expireText ? `자동연장 OFF · ${expireText} 종료 예정` : '자동연장 OFF · 종료 예정';
+}
+
 function renderBusinessInfoStatusBadge({ registrationStatus, approvalStatus, rejectionReason } = {}) {
     const normalizedApprovalStatus = normalizeBusinessApprovalStatus(approvalStatus);
     const resolvedStatus = resolveBusinessInfoBadgeStatus(registrationStatus, normalizedApprovalStatus);
@@ -303,8 +346,10 @@ async function renderBusinessProfileStatuses() {
         adStatus = normalizeRegistrationStatus(existingAd?.registrationStatus);
         if (adStatus === 'unregistered' && hasCompleteAdProfile(existingAd)) adStatus = 'registered';
         stampEventEnabled = Boolean(Number(existingAd?.useStampEvent || existingAd?.useVisitVerification || 0));
+        renderAdActivationStatus(existingAd);
     } catch (error) {
         adStatus = 'unregistered';
+        renderAdActivationStatus(null);
     }
 
     try {

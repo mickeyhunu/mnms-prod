@@ -1260,11 +1260,27 @@ body[data-page="admin"] {
 }
 
 .mypage-business-apply-status-wrap,
-.mypage-business-info-status-wrap {
+.mypage-business-info-status-wrap,
+.mypage-ad-activation-status-wrap {
     display: inline-flex;
     align-items: flex-end;
     gap: 6px;
     min-width: 0;
+}
+
+.mypage-ad-activation-status-wrap {
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    text-align: right;
+}
+
+.mypage-ad-auto-renew-status {
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.35;
+    word-break: keep-all;
 }
 
 .mypage-rejection-reason {
