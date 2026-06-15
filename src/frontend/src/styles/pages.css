@@ -989,10 +989,6 @@ span.mypage-level-badge {
     color: #111827;
 }
 
-.mypage-summary-row .mypage-rank-label {
-    color: #111827;
-}
-
 .profile-form-actions {
     display: flex;
     justify-content: flex-end;
