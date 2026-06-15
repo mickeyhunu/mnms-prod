@@ -137,13 +137,27 @@
 
     const formatProjectedExposureUntil = (minutes) => {
         const date = new Date(Date.now() + Number(minutes || 0) * 60 * 1000);
-        return `${date.toLocaleString('ko-KR', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
+        const now = new Date();
+        const timeText = date.toLocaleTimeString('ko-KR', {
             hour: '2-digit',
             minute: '2-digit'
-        })}까지`;
+        });
+
+        if (date.toDateString() === now.toDateString()) {
+            return `${timeText}까지`;
+        }
+
+        const dateText = date.toLocaleDateString('ko-KR', {
+            month: 'numeric',
+            day: 'numeric'
+        });
+
+        if (date.getFullYear() === now.getFullYear()) {
+            return `${dateText} ${timeText}까지`;
+        }
+
+        const yearText = String(date.getFullYear()).slice(-2);
+        return `${yearText}. ${dateText} ${timeText}까지`;
     };
 
     const formatProjectedUntil = (minutes) => formatProjectedExposureUntil(minutes);
