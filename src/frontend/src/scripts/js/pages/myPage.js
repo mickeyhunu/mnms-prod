@@ -115,14 +115,14 @@ function resolveRankMarkup(user, fallbackLabel = '') {
     }
 
     const badgeImage = Auth.resolveBusinessBadgeImage(user);
-    const badgeLabel = Auth.resolveBusinessBadgeLabel(user) || '기업회원 등급';
-    if (!badgeImage) return `<strong>${sanitizeHTML(badgeLabel)}</strong>`;
+    const badgeLabel = Auth.resolveBusinessBadgeLabel(user) || fallbackLabel || '기업회원 등급';
+    if (!badgeImage) return renderLevelBadgeLabel(badgeLabel);
 
     return `
-        <div class="mypage-rank-with-label">
-            <img class="mypage-rank-badge" src="${badgeImage}" alt="기업회원 광고 등급 배지">
-            <strong class="mypage-rank-label">${sanitizeHTML(badgeLabel)}</strong>
-        </div>
+        <span class="mypage-rank-with-label">
+            <img class="mypage-level-badge" src="${badgeImage}" alt="회원 등급 배지" loading="lazy">
+            <span class="mypage-rank-label">${sanitizeHTML(badgeLabel)}</span>
+        </span>
     `;
 }
 
@@ -1290,9 +1290,7 @@ async function loadStats() {
         const rankLabel = isAdAccount(currentUser)
             ? (response.advertiserLevelLabel || '🌱 새싹')
             : resolveRankLabel(currentUser, response.levelLabel || '');
-        const rankMarkup = isAdAccount(currentUser)
-            ? `<strong>${sanitizeHTML(rankLabel)}</strong>`
-            : resolveRankMarkup(currentUser, rankLabel);
+        const rankMarkup = resolveRankMarkup(currentUser, rankLabel);
         const totalStamps = normalizeStampCount(response.totalStamps || 0);
         const stampType = String(response.stampType || (isAdAccount(currentUser) ? 'BUSINESS' : 'MEMBER')).toUpperCase();
         const isBusinessStamp = stampType === 'BUSINESS';
