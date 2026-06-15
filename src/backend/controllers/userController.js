@@ -787,17 +787,26 @@ async function markMyPostsRead(req, res, next) {
 
 async function myStampHistories(req, res, next) {
   try {
-    const limit = Math.max(1, Math.min(50, Number(req.query.limit) || 50));
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.max(1, Math.min(20, Number(req.query.limit) || 20));
     const stampType = resolveUserStampType(req.user);
-    const [totalStamps, stampHistories] = await Promise.all([
+    const levelGuide = MEMBER_LEVELS.map((info, index) => ({
+      level: info.level,
+      label: `${info.emoji} ${info.title}`,
+      minPoints: info.minPoints,
+      maxPoints: MEMBER_LEVELS[index + 1] ? MEMBER_LEVELS[index + 1].minPoints - 1 : null
+    }));
+    const [totalStamps, stampHistoryResult] = await Promise.all([
       getUserStampBalance(req.user.id, stampType),
-      getUserStampHistories(req.user.id, { stampType, limit })
+      getUserStampHistories(req.user.id, { stampType, page, limit })
     ]);
 
     res.json({
       totalStamps,
       stampType,
-      stampHistories
+      stampHistories: stampHistoryResult.histories,
+      levelGuide,
+      pagination: stampHistoryResult.pagination
     });
   } catch (error) {
     next(error);

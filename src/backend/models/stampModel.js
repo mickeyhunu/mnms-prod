@@ -137,6 +137,18 @@ async function getUserStampHistories(userId, options = {}) {
   const pool = getPool();
   const stampType = normalizeStampType(options.stampType);
   const limit = Math.max(1, Math.min(50, Number(options.limit) || 20));
+  const page = Math.max(1, Number(options.page) || 1);
+  const offset = (page - 1) * limit;
+
+  const [countRows] = await pool.query(
+    `SELECT COUNT(*) AS totalCount
+     FROM stamp_histories
+     WHERE user_id = ?
+       AND stamp_type = ?`,
+    [userId, stampType]
+  );
+  const totalCount = Number(countRows[0]?.totalCount || 0);
+
   const [rows] = await pool.query(
     `SELECT
        id,
@@ -150,11 +162,11 @@ async function getUserStampHistories(userId, options = {}) {
      WHERE user_id = ?
        AND stamp_type = ?
      ORDER BY created_at DESC, id DESC
-     LIMIT ?`,
-    [userId, stampType, limit]
+     LIMIT ? OFFSET ?`,
+    [userId, stampType, limit, offset]
   );
 
-  return rows.map((row) => ({
+  const histories = rows.map((row) => ({
     id: Number(row.id),
     stampType: row.stampType,
     actionType: row.actionType,
@@ -164,6 +176,16 @@ async function getUserStampHistories(userId, options = {}) {
     sourceLabel: row.sourceLabel || '',
     createdAt: row.createdAt
   }));
+
+  return {
+    histories,
+    pagination: {
+      page,
+      limit,
+      totalCount,
+      totalPages: Math.max(1, Math.ceil(totalCount / limit))
+    }
+  };
 }
 
 
