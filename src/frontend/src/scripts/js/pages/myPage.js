@@ -1209,10 +1209,18 @@ async function loadStats() {
         const pointsSection = isAdAccount(currentUser) ? `
             <section class="mypage-summary-section">
                 <div class="mypage-summary-head">
-                    <h3 class="mypage-summary-title">누적 광고일수</h3>
+                    <h3 class="mypage-summary-title">광고</h3>
                 </div>
-                <div class="mypage-summary-row"><span>광고주 계급</span><strong>${sanitizeHTML(response.advertiserLevelLabel || '🌱 광고 새싹')}</strong></div>
+                <div class="mypage-summary-row"><span>보유 광고 스탬프</span><strong class="point-value">${Number(response.totalStamps || 0).toLocaleString()}개</strong></div>
                 <div class="mypage-summary-row"><span>누적 광고일수</span><strong class="point-value">${Number(response.cumulativeAdDays || 0).toLocaleString()}일</strong></div>
+                <div class="mypage-level-progress">
+                    <div class="mypage-level-progress-meta">
+                        <span>${sanitizeHTML(response.advertiserLevelLabel || '🌱 미광고')} → ${sanitizeHTML(response.nextAdvertiserLevelLabel || 'MAX')}</span>
+                        <span>${Number(response.neededAdDaysToNextAdvertiserLevel || 0).toLocaleString()}일 필요</span>
+                    </div>
+                    <progress class="mypage-progress-bar" max="100" value="${Number(response.advertiserProgressRate || 0)}"></progress>
+                    <div class="mypage-level-progress-meta"><span>${Number(response.cumulativeAdDays || 0).toLocaleString()}일</span><span>${Number(response.nextAdvertiserLevelMinDays || response.cumulativeAdDays || 0).toLocaleString()}일</span></div>
+                </div>
             </section>
         ` : `
             <section class="mypage-summary-section">
