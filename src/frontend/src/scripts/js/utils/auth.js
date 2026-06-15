@@ -191,7 +191,7 @@ const Auth = {
         }
 
         const badge = document.createElement('span');
-        badge.className = 'user-business-rank-badge user-level-badge';
+        badge.className = 'user-level-badge';
         badge.textContent = businessBadge.label;
         element.appendChild(badge);
     },
