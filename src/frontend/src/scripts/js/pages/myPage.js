@@ -968,9 +968,9 @@ function formatStampActionLabel(actionType) {
         STAMP_PURCHASE_CANCEL: '스탬프 결제취소',
         VISIT_VERIFICATION: '업소 방문 인증',
         SERVICE_BOTTLE_USE: '이벤트 참여 사용',
-        BUSINESS_AD_BRONZE: '브론즈 광고 사용',
-        BUSINESS_AD_SILVER: '실버 광고 사용',
-        BUSINESS_AD_GOLD: '골드 광고 사용',
+        BUSINESS_AD_BASIC: '베이직 광고 활성화',
+        BUSINESS_AD_PLUS: '플러스 광고 활성화',
+        BUSINESS_AD_PREMIUM: '프리미엄 광고 활성화',
         ADMIN_ADJUST_ADD: '관리자 수동 적립',
         ADMIN_ADJUST_DEDUCT: '관리자 수동 차감',
         EXPIRED: '유효기간 만료'
