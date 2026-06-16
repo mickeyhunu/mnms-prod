@@ -9,8 +9,6 @@
     const remainingTime = document.getElementById('jump-management-remaining-time');
     const dailyRemaining = document.getElementById('jump-management-daily-remaining');
     const lastJumpedAt = document.getElementById('jump-management-last-jumped-at');
-    const cooldown = document.getElementById('jump-management-cooldown');
-    const scheduleSummary = document.getElementById('jump-management-schedule-summary');
     const manualJumpButton = document.getElementById('jump-management-manual-submit');
     const autoJumpButton = document.getElementById('jump-management-auto-submit');
     const scheduler = document.getElementById('jump-management-scheduler');
@@ -100,8 +98,6 @@
         if (remainingTime) remainingTime.textContent = visible ? formatRemainingTime(state.ad?.activatedUntil, state.ad?.remainingSeconds) : '활성화 대기 중';
         if (dailyRemaining) dailyRemaining.textContent = visible ? `${dailyJumpRemaining.toLocaleString('ko-KR')}개` : '-';
         if (lastJumpedAt) lastJumpedAt.textContent = visible && state.ad?.jumpedAt ? formatDateTime(state.ad.jumpedAt) : '-';
-        if (cooldown) cooldown.textContent = !visible ? '-' : (cooldownSeconds > 0 ? formatClock(cooldownSeconds) : '지금 가능');
-        if (scheduleSummary) scheduleSummary.textContent = state.schedules.length ? `${state.schedules.length}개 등록됨` : '-';
         manualJumpButton.disabled = !canJump;
         manualJumpButton.textContent = !visible
             ? '광고 활성화 후 수동 점프 가능'
@@ -130,10 +126,19 @@
                 saveSchedules();
             }
             render();
+            const jumpedAt = new Date().toISOString();
+            const previousRemaining = getRemainingCount();
             const response = await APIClient.post(`/users/me/business-ads/${state.ad.id}/jump`);
+            state.ad = {
+                ...state.ad,
+                ...(response?.content || {}),
+                jumpedAt: response?.content?.jumpedAt || jumpedAt,
+                jumpCooldownSeconds: COOLDOWN_SECONDS,
+                dailyJumpRemaining: response?.content?.dailyJumpRemaining ?? Math.max(0, previousRemaining - 1)
+            };
+            state.ad.cooldownLoadedAt = Date.now();
+            render();
             if (mode === 'manual') alert(response?.message || '수동으로 점프를 사용했습니다.');
-            state.ad = response?.content || state.ad;
-            if (state.ad) state.ad.cooldownLoadedAt = Date.now();
         } catch (error) {
             if (mode === 'manual') alert(error.message || '점프 사용에 실패했습니다.');
         } finally {
