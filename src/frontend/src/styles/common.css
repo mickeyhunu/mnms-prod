@@ -117,26 +117,14 @@ a:hover {
 }
 
 .btn.btn-primary {
-    min-height: 52px;
-    padding: 10px;
-    background: #000000;
+    background: var(--primary-color);
     color: white;
-    border-color: #000000;
-    border-radius: 14px;
-    font-size: 16px;
-    font-weight: 800;
+    border-color: var(--primary-color);
 }
 
-.btn.btn-primary:hover:not(:disabled),
-.btn.btn-primary:focus-visible:not(:disabled) {
-    background: #111111;
-    border-color: #111111;
-}
-
-.btn.btn-primary:disabled {
-    background: #9ca3af;
-    border-color: #9ca3af;
-    opacity: 1;
+.btn.btn-primary:hover {
+    background: var(--primary-color-hover);
+    border-color: var(--primary-color-hover);
 }
 
 .btn.btn-secondary {
