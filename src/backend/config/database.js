@@ -625,6 +625,9 @@ async function initDatabase() {
       registration_status ENUM('UNREGISTERED','DRAFT','REGISTERED') NOT NULL DEFAULT 'UNREGISTERED',
       activated_at DATETIME NULL,
       activated_until DATETIME NULL,
+      daily_jump_remaining INT NOT NULL DEFAULT 0,
+      jump_reset_date DATE NULL,
+      jumped_at DATETIME NULL,
       display_order INT NOT NULL DEFAULT 0,
       is_active TINYINT(1) NOT NULL DEFAULT 1,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -655,7 +658,10 @@ async function initDatabase() {
     { name: 'view_count', sql: "ALTER TABLE business_ads ADD COLUMN view_count BIGINT NOT NULL DEFAULT 0 AFTER plan_type" },
     { name: 'registration_status', sql: "ALTER TABLE business_ads ADD COLUMN registration_status ENUM('UNREGISTERED','DRAFT','REGISTERED') NOT NULL DEFAULT 'UNREGISTERED' AFTER view_count" },
     { name: 'activated_at', sql: 'ALTER TABLE business_ads ADD COLUMN activated_at DATETIME NULL AFTER registration_status' },
-    { name: 'activated_until', sql: 'ALTER TABLE business_ads ADD COLUMN activated_until DATETIME NULL AFTER activated_at' }
+    { name: 'activated_until', sql: 'ALTER TABLE business_ads ADD COLUMN activated_until DATETIME NULL AFTER activated_at' },
+    { name: 'daily_jump_remaining', sql: 'ALTER TABLE business_ads ADD COLUMN daily_jump_remaining INT NOT NULL DEFAULT 0 AFTER activated_until' },
+    { name: 'jump_reset_date', sql: 'ALTER TABLE business_ads ADD COLUMN jump_reset_date DATE NULL AFTER daily_jump_remaining' },
+    { name: 'jumped_at', sql: 'ALTER TABLE business_ads ADD COLUMN jumped_at DATETIME NULL AFTER jump_reset_date' }
   ];
 
   for (const migration of businessAdsColumnMigrations) {
