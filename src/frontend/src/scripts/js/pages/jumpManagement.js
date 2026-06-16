@@ -115,7 +115,7 @@
         if (scheduler) scheduler.hidden = !state.autoOpen;
         const maxScheduleCount = getPlanScheduleLimit();
         if (addScheduleButton) addScheduleButton.disabled = !visible || state.isSubmitting || state.schedules.length >= maxScheduleCount;
-        if (schedulerHelp) schedulerHelp.textContent = `오늘 남은 점프와 무관하게 광고 상품의 일일 점프 수(${maxScheduleCount.toLocaleString('ko-KR')}개)까지 매일 반복 스케줄을 등록할 수 있습니다. 각 스케줄은 최소 10분 간격이어야 하며, 실행 시 남은 점프가 없거나 10분 쿨타임 중이면 실행되지 않습니다.`;
+        if (schedulerHelp) schedulerHelp.textContent = `광고 상품의 일일 점프 수(${maxScheduleCount.toLocaleString('ko-KR')}개)까지 스케줄을 등록할 수 있습니다. 실행 시 남은 점프가 없으면 실행되지 않습니다.`;
         renderScheduleList();
     };
 
