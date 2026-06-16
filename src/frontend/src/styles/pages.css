@@ -646,8 +646,14 @@
     box-shadow: inset 4px 0 0 #b8860b, 0 8px 24px rgba(184, 134, 11, 0.18);
 }
 
-.business-directory-thumbnail {
+.business-directory-thumbnail-wrap {
+    position: relative;
     flex: 0 0 62px;
+    width: 62px;
+    height: 62px;
+}
+
+.business-directory-thumbnail {
     width: 62px;
     height: 62px;
     display: block;
@@ -655,6 +661,16 @@
     border: 1px solid #d1d5db;
     border-radius: 12px;
     background-color: #f3f4f6;
+}
+
+.business-directory-new-badge-image {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    width: 34px;
+    height: auto;
+    display: block;
+    pointer-events: none;
 }
 
 .business-directory-main {
@@ -671,16 +687,7 @@
     text-overflow: ellipsis;
 }
 
-.business-directory-badges {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    margin-top: 4px;
-}
-
-.business-directory-ad-days,
-.business-directory-new-badge {
+.business-directory-ad-days {
     display: inline-flex;
     align-items: center;
     border-radius: 999px;
@@ -696,12 +703,6 @@
     color: #374151;
 }
 
-.business-directory-new-badge {
-    padding: 4px 7px;
-    background: #ef4444;
-    color: #fff;
-    letter-spacing: 0.02em;
-}
 
 .business-directory-meta {
     display: flex;
