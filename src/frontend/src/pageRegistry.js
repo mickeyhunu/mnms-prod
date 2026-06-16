@@ -880,8 +880,6 @@ const pageRegistry = {
                             <dl>
                                 <div><dt>오늘 남은 점프</dt><dd id="jump-management-daily-remaining">확인 중...</dd></div>
                                 <div><dt>최근 점프 사용</dt><dd id="jump-management-last-jumped-at">-</dd></div>
-                                <div><dt>다음 점프 가능</dt><dd id="jump-management-cooldown">확인 중...</dd></div>
-                                <div><dt>자동 점프 예약</dt><dd id="jump-management-schedule-summary">-</dd></div>
                             </dl>
                         </article>
                     </div>
