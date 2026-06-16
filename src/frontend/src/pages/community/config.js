@@ -42,7 +42,7 @@ const communityTemplate = `
                     <span class="community-board-name">커뮤니티 게시글</span>
                 </div>
                 <div class="community-actions hidden" id="community-actions">
-                    <a href="create-post.html" class="btn btn-primary btn-sm">글쓰기</a>
+                    <a href="create-post.html" class="btn btn-primary btn-sm" style="border-color: #6b7280;">글쓰기</a>
                 </div>
             </header>
 
