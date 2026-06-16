@@ -361,9 +361,7 @@ function buildBusinessDirectoryAdvertiserMeta(ad = {}) {
 
 function buildBusinessDirectoryAdDayBadges(ad) {
     const cumulativeAdDays = getBusinessDirectoryCumulativeAdDays(ad);
-    const formattedDays = cumulativeAdDays.toLocaleString('ko-KR');
-    const newBadge = cumulativeAdDays < 30 ? '<span class="business-directory-new-badge">NEW</span>' : '';
-    return `<span class="business-directory-ad-days">누적광고일 ${formattedDays}일</span>${newBadge}`;
+    return cumulativeAdDays < 30 ? '<span class="business-directory-new-badge">NEW</span>' : '';
 }
 
 function getBusinessDirectoryPlanRank(ad) {
@@ -432,13 +430,13 @@ function renderBusinessAds(ads) {
             <li class="business-directory-item business-directory-item--clickable${planClassName}" data-business-ad-id="${sanitizeHTML(ad.id || '')}" data-business-ad-url="${detailUrl}" data-business-ad-view-count="${Number(ad.viewCount || 0)}" role="link" tabindex="0" aria-label="${title} 상세 페이지 보기">
                 <img class="business-directory-thumbnail" src="${thumbnailImageUrl}" alt="${title} 대표이미지" loading="${thumbnailLoading}" fetchpriority="${thumbnailFetchPriority}" decoding="async" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
                 <div class="business-directory-main">
-                    <h4>${title}</h4>
-                    <div class="business-directory-badges">${adDayBadges}</div>
-                    <p class="business-directory-region-detail">${detail}</p>
                     <div class="business-directory-meta">
                         <span class="business-directory-manager">${advertiserMeta}</span>
                         <span class="business-directory-views" data-business-ad-view-count>조회수 ${viewCount}</span>
                     </div>
+                    <h4>${title}</h4>
+                    ${adDayBadges ? `<div class="business-directory-badges">${adDayBadges}</div>` : ''}
+                    <p class="business-directory-region-detail">${detail}</p>
                 </div>
             </li>
         `;
