@@ -711,6 +711,7 @@
 }
 
 .business-directory-manager {
+    color: #8d969f;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
