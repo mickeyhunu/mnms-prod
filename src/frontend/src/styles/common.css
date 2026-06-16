@@ -117,14 +117,26 @@ a:hover {
 }
 
 .btn.btn-primary {
-    background: var(--primary-color);
+    min-height: 52px;
+    padding: 10px;
+    background: #000000;
     color: white;
-    border-color: var(--primary-color);
+    border-color: #000000;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 800;
 }
 
-.btn.btn-primary:hover {
-    background: var(--primary-color-hover);
-    border-color: var(--primary-color-hover);
+.btn.btn-primary:hover:not(:disabled),
+.btn.btn-primary:focus-visible:not(:disabled) {
+    background: #111111;
+    border-color: #111111;
+}
+
+.btn.btn-primary:disabled {
+    background: #9ca3af;
+    border-color: #9ca3af;
+    opacity: 1;
 }
 
 .btn.btn-secondary {
