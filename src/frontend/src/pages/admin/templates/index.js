@@ -28,7 +28,6 @@ export const adminTemplate = `
                         <svg class="admin-sidebar-toggle__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
                     </button>
                     <span class="community-board-name">관리자 페이지</span>
-                    <span class="admin-review-alert hidden" id="admin-review-alert" role="status" aria-live="polite"></span>
                 </div>
             </header>
 
