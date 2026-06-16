@@ -870,16 +870,13 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
                     WHEN 'BUSINESS_AD_PREMIUM' THEN 1
                     WHEN 'BUSINESS_AD_PLUS' THEN 2
                     WHEN 'BUSINESS_AD_BASIC' THEN 3
-                    WHEN 'BUSINESS_AD_GOLD' THEN 1
-                    WHEN 'BUSINESS_AD_SILVER' THEN 2
-                    WHEN 'BUSINESS_AD_BRONZE' THEN 3
                     ELSE 0
                   END * ABS(amount)
                 ), 0) AS cumulativeAdDays
            FROM stamp_histories
           WHERE stamp_type = 'BUSINESS'
             AND amount < 0
-            AND action_type IN ('BUSINESS_AD_PREMIUM','BUSINESS_AD_PLUS','BUSINESS_AD_BASIC','BUSINESS_AD_GOLD','BUSINESS_AD_SILVER','BUSINESS_AD_BRONZE')
+            AND action_type IN ('BUSINESS_AD_PREMIUM','BUSINESS_AD_PLUS','BUSINESS_AD_BASIC')
           GROUP BY user_id
        ) ad_days ON ad_days.user_id = ba.owner_user_id
       WHERE ${whereConditions.join(' AND ')}
