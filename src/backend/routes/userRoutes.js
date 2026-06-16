@@ -21,6 +21,7 @@ const {
   listMyBusinessAds,
   createMyBusinessAd,
   updateMyBusinessAd,
+  getMyBusinessAdPlanConfig,
   updateMyBusinessAdActivation,
   jumpMyBusinessAd,
   getMyBusinessAdJumpSchedules,
@@ -53,6 +54,7 @@ router.get('/me/posts/read', authMiddleware, myReadPosts);
 router.post('/me/posts/read', authMiddleware, markMyPostsRead);
 router.put('/me', authMiddleware, updateMyProfile);
 router.delete('/me', authMiddleware, withdrawMyAccount);
+router.get('/me/business-ad-plans', authMiddleware, getMyBusinessAdPlanConfig);
 router.get('/me/business-ads', authMiddleware, listMyBusinessAds);
 router.post('/me/business-ads', authMiddleware, createMyBusinessAd);
 router.put('/me/business-ads/:id', authMiddleware, updateMyBusinessAd);

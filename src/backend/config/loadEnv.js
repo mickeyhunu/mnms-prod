@@ -44,6 +44,7 @@ function loadEnvFile(filePath = path.join(process.cwd(), '.env')) {
 }
 
 function loadDefaultEnvFiles() {
+  let loadedLocalEnv = false;
   const candidates = [
     { filePath: path.join(process.cwd(), '.env') },
     { filePath: path.resolve(__dirname, '..', '.env') },
@@ -52,8 +53,12 @@ function loadDefaultEnvFiles() {
   ];
 
   candidates.forEach((candidatePath) => {
-    loadEnvFile(candidatePath);
+    const loaded = loadEnvFile(candidatePath);
+    const filePath = typeof candidatePath === 'object' && candidatePath !== null ? candidatePath.filePath : candidatePath;
+    if (loaded && path.basename(filePath || '') === '.env.local') loadedLocalEnv = true;
   });
+
+  if (loadedLocalEnv) process.env.MNMS_ENV_LOCAL_LOADED = 'true';
 }
 
 loadDefaultEnvFiles();

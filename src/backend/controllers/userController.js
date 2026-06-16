@@ -1144,6 +1144,17 @@ async function reviewMyStampEventRequest(req, res, next) {
 }
 
 
+
+async function getMyBusinessAdPlanConfig(req, res, next) {
+  try {
+    return res.json({
+      content: adminModel.getBusinessAdPlanDurationConfig()
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function updateMyBusinessAdActivation(req, res, next) {
   try {
     const id = Number.parseInt(req.params.id, 10);
@@ -1476,6 +1487,7 @@ module.exports = {
   listMyBusinessAds,
   createMyBusinessAd,
   updateMyBusinessAd,
+  getMyBusinessAdPlanConfig,
   updateMyBusinessAdActivation,
   jumpMyBusinessAd,
   getMyBusinessAdJumpSchedules,
