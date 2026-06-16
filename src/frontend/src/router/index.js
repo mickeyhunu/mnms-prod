@@ -38,6 +38,7 @@ const routes = [
   { path: '/find-account', component: PageView, meta: { pageKey: 'find-account', title: '아이디/비밀번호 찾기', description: '아이디 또는 비밀번호를 안전하게 찾을 수 있습니다.', noindex: true } },
   { path: '/stamp-purchase', component: PageView, meta: { pageKey: 'stamp-purchase', title: '스탬프 구매', description: '스탬프 상품 구성을 확인하고 구매를 진행하세요.', noindex: true } },
   { path: '/ad-purchase', component: PageView, meta: { pageKey: 'ad-purchase', title: '광고 활성화', description: '광고 요금제와 상품 구성을 확인하고 광고 활성화를 진행하세요.', noindex: true } },
+  { path: '/jump-management', component: PageView, meta: { pageKey: 'jump-management', title: '점프 관리', description: '활성화된 업체 광고의 일일 점프 잔여 횟수와 최근 사용 시간을 확인하고 점프를 사용할 수 있습니다.', noindex: true } },
   { path: '/ad-order-history', component: PageView, meta: { pageKey: 'ad-order-history', title: '스탬프 결제 내역', description: '스탬프 결제완료와 결제취소 내역을 확인하세요.', noindex: true } },
   { path: '/stamp-event-management', component: PageView, meta: { pageKey: 'stamp-event-management', title: '스탬프 이벤트 관리', description: '내 광고에 신청된 방문인증/스탬프사용 신청을 관리하세요.', noindex: true } },
   { path: '/business-info', component: PageView, meta: { pageKey: 'business-info', title: '업체정보', description: '등록된 업체 정보를 지역과 업종별로 확인하세요.' } },

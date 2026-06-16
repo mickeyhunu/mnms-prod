@@ -837,6 +837,88 @@ const pageRegistry = {
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js", "scripts/js/pages/adPurchase.js"]
   },
+  'jump-management': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <a href="/my-page" class="community-back-link icon-btn icon-btn-square" aria-label="마이페이지로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
+                    <span class="community-board-name">점프 관리</span>
+                </div>
+            </header>
+
+            <div class="container ad-management-container">
+                <section class="ad-management-status-card" aria-labelledby="jump-management-status-title">
+                    <div class="ad-management-status-copy">
+                        <img src="/src/assets/ad-plan-badges/none-badge.png" alt="미광고" class="ad-management-status-badge" id="jump-management-status-badge">
+                        <h2 id="jump-management-status-title">점프 정보를 확인하고 있습니다</h2>
+                        <div class="ad-management-status-periods" aria-label="광고 노출 기간">
+                            <div class="ad-management-status-period">
+                                <p class="ad-management-status-label">광고 시작 시간</p>
+                                <strong id="jump-management-start-date">-</strong>
+                            </div>
+                            <div class="ad-management-status-period">
+                                <p class="ad-management-status-label">광고 종료 예정</p>
+                                <strong id="jump-management-expire-date">-</strong>
+                            </div>
+                        </div>
+                        <div class="ad-management-status-time"><span id="jump-management-remaining-time">정보 확인 중</span></div>
+                    </div>
+                    <div class="ad-management-illustration" aria-hidden="true">
+                        <div class="ad-management-browser"><span></span><span></span><span></span><div class="ad-management-ad-tile">UP</div><i></i><i></i><i></i><i></i></div>
+                        <div class="ad-management-check">↟</div>
+                    </div>
+                </section>
+
+                <section class="ad-management-panel" aria-labelledby="jump-management-title">
+                    <div class="ad-management-section-title-row">
+                        <div>
+                            <h2 id="jump-management-title">점프 관리</h2>
+                            <p>활성화된 광고의 점프를 사용하면 업체정보 목록 노출 순서를 최상위로 올릴 수 있습니다.</p>
+                        </div>
+                    </div>
+                    <div class="ad-stamp-info-grid">
+                        <article class="ad-stamp-info-card ad-stamp-summary-card">
+                            <dl>
+                                <div><dt>오늘 남은 점프</dt><dd id="jump-management-daily-remaining">확인 중...</dd></div>
+                                <div><dt>최근 점프 사용</dt><dd id="jump-management-last-jumped-at">-</dd></div>
+                                <div><dt>광고 등급</dt><dd id="jump-management-plan-type">-</dd></div>
+                                <div><dt>등록 상태</dt><dd id="jump-management-registration-status">-</dd></div>
+                            </dl>
+                        </article>
+                    </div>
+                    <div class="ad-activation-action">
+                        <button type="button" class="ad-management-start-btn" id="jump-management-submit" disabled>광고 활성화 후 점프 사용 가능</button>
+                    </div>
+                    <p class="ad-management-safe-note"><span aria-hidden="true">⏱</span><b>점프는 매일 00시에 초기화됩니다</b><br>점프는 광고 활성화 기간 동안만 사용할 수 있으며, 남은 개수는 00~24시 기준으로 관리됩니다.</p>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js", "scripts/js/pages/jumpManagement.js"]
+  },
   'ad-order-history': {
     template: `<header class="header">
         <div class="header-container">
@@ -1423,7 +1505,7 @@ const pageRegistry = {
                                 <span id="mypage-ad-activation-status" class="mypage-status-badge mypage-status-badge--unregistered">비활성화</span>
                             </span>
                         </a>
-                        <a class="mypage-link-item" href="/ad-purchase#jump-management"><span>점프 관리</span></a>
+                        <a class="mypage-link-item" href="/jump-management"><span>점프 관리</span></a>
                         <a class="mypage-link-item" href="/ad-profile-management">
                             <span>광고프로필 관리</span>
                             <span id="mypage-ad-profile-status" class="mypage-status-badge mypage-status-badge--unregistered">미등록</span>
