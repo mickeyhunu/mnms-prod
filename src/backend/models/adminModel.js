@@ -854,6 +854,7 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
             ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification, ba.use_stamp_event AS useStampEvent, ba.stamp_event_description AS stampEventDescription, ba.stamp_event_count AS stampEventCount,
             ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.daily_jump_remaining AS dailyJumpRemaining, ba.jump_reset_date AS jumpResetDate, ba.jumped_at AS jumpedAt, ba.activated_at AS activatedAt, ba.activated_until AS activatedUntil, ba.created_at AS createdAt,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, COALESCE(u.nickname, '업체') AS ownerNickname,
+            COALESCE(ad_days.cumulativeAdDays, 0) AS cumulativeAdDays,
             COALESCE(bp.company_name, '') AS companyName, COALESCE(bp.manager_name, '') AS profileManagerName,
             COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessName')), COALESCE(bp.company_name, '')) AS businessDisclosureName,
             COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessOwner')), COALESCE(bp.manager_name, '')) AS businessDisclosureOwner,
@@ -862,8 +863,27 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
        FROM business_ads ba
        LEFT JOIN users u ON u.id = ba.owner_user_id
        LEFT JOIN business_profiles bp ON bp.user_id = ba.owner_user_id
+       LEFT JOIN (
+         SELECT user_id,
+                COALESCE(SUM(
+                  CASE action_type
+                    WHEN 'BUSINESS_AD_PREMIUM' THEN 1
+                    WHEN 'BUSINESS_AD_PLUS' THEN 2
+                    WHEN 'BUSINESS_AD_BASIC' THEN 3
+                    WHEN 'BUSINESS_AD_GOLD' THEN 1
+                    WHEN 'BUSINESS_AD_SILVER' THEN 2
+                    WHEN 'BUSINESS_AD_BRONZE' THEN 3
+                    ELSE 0
+                  END * ABS(amount)
+                ), 0) AS cumulativeAdDays
+           FROM stamp_histories
+          WHERE stamp_type = 'BUSINESS'
+            AND amount < 0
+            AND action_type IN ('BUSINESS_AD_PREMIUM','BUSINESS_AD_PLUS','BUSINESS_AD_BASIC','BUSINESS_AD_GOLD','BUSINESS_AD_SILVER','BUSINESS_AD_BRONZE')
+          GROUP BY user_id
+       ) ad_days ON ad_days.user_id = ba.owner_user_id
       WHERE ${whereConditions.join(' AND ')}
-      ORDER BY CASE WHEN ba.jumped_at IS NULL THEN 1 ELSE 0 END, ba.jumped_at DESC, CASE ba.plan_type WHEN 'PREMIUM' THEN 0 WHEN 'PLUS' THEN 1 ELSE 2 END, ba.display_order ASC, ba.id DESC`,
+      ORDER BY CASE ba.plan_type WHEN 'PREMIUM' THEN 0 WHEN 'PLUS' THEN 1 ELSE 2 END, CASE WHEN ba.jumped_at IS NULL THEN 1 ELSE 0 END, ba.jumped_at DESC, ba.display_order ASC, ba.id DESC`,
     whereParams
   );
 

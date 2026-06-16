@@ -671,6 +671,38 @@
     text-overflow: ellipsis;
 }
 
+.business-directory-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.business-directory-ad-days,
+.business-directory-new-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.business-directory-ad-days {
+    padding: 4px 8px;
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.business-directory-new-badge {
+    padding: 4px 7px;
+    background: #ef4444;
+    color: #fff;
+    letter-spacing: 0.02em;
+}
+
 .business-directory-meta {
     display: flex;
     justify-content: space-between;

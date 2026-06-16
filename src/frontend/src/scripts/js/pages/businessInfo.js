@@ -326,12 +326,49 @@ function normalizeBusinessDirectoryAdPlan(plan) {
     return '';
 }
 
+
+function getBusinessDirectoryCumulativeAdDays(ad) {
+    const days = Number(ad?.cumulativeAdDays ?? ad?.cumulative_ad_days ?? ad?.authorAdvertiserAdDays ?? 0);
+    return Number.isFinite(days) && days > 0 ? Math.floor(days) : 0;
+}
+
+function buildBusinessDirectoryAdDayBadges(ad) {
+    const cumulativeAdDays = getBusinessDirectoryCumulativeAdDays(ad);
+    const formattedDays = cumulativeAdDays.toLocaleString('ko-KR');
+    const newBadge = cumulativeAdDays < 30 ? '<span class="business-directory-new-badge">NEW</span>' : '';
+    return `<span class="business-directory-ad-days">누적광고일 ${formattedDays}일</span>${newBadge}`;
+}
+
+function getBusinessDirectoryPlanRank(ad) {
+    const planType = normalizeBusinessDirectoryAdPlan(ad?.planType || ad?.adPlan || ad?.plan || ad?.businessAdPlan || ad?.businessPlan);
+    if (planType === 'premium') return 0;
+    if (planType === 'plus') return 1;
+    return 2;
+}
+
+function getBusinessDirectoryTimestamp(value) {
+    const timestamp = new Date(value || 0).getTime();
+    return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function sortBusinessDirectoryAds(ads) {
+    return [...ads].sort((left, right) => {
+        const planDiff = getBusinessDirectoryPlanRank(left) - getBusinessDirectoryPlanRank(right);
+        if (planDiff !== 0) return planDiff;
+
+        const jumpedDiff = getBusinessDirectoryTimestamp(right?.jumpedAt || right?.jumped_at) - getBusinessDirectoryTimestamp(left?.jumpedAt || left?.jumped_at);
+        if (jumpedDiff !== 0) return jumpedDiff;
+
+        return Number(right?.id || 0) - Number(left?.id || 0);
+    });
+}
+
 function renderBusinessAds(ads) {
     const list = document.getElementById('business-directory-list');
     const empty = document.getElementById('business-directory-empty');
     if (!list || !empty) return;
 
-    businessDirectoryAds = Array.isArray(ads) ? ads : [];
+    businessDirectoryAds = Array.isArray(ads) ? sortBusinessDirectoryAds(ads) : [];
     closeBusinessProfileModal();
 
     if (!businessDirectoryAds.length) {
@@ -353,6 +390,7 @@ function renderBusinessAds(ads) {
         const baseTitle = sanitizeHTML(ad.title || '업체정보');
         const title = `[${regionLabel}-${businessName}] ${baseTitle}`;
         const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
+        const adDayBadges = buildBusinessDirectoryAdDayBadges(ad);
         const uploadedImageUrl = sanitizeHTML(ad.imageUrl || '');
         const thumbnailImageUrl = uploadedImageUrl || BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL;
         const thumbnailLoading = uploadedImageUrl || index < 6 ? 'eager' : 'lazy';
@@ -369,6 +407,7 @@ function renderBusinessAds(ads) {
                 <img class="business-directory-thumbnail" src="${thumbnailImageUrl}" alt="${title} 대표이미지" loading="${thumbnailLoading}" fetchpriority="${thumbnailFetchPriority}" decoding="async" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
                 <div class="business-directory-main">
                     <h4>${title}</h4>
+                    <div class="business-directory-badges">${adDayBadges}</div>
                     <p class="business-directory-region-detail">${detail}</p>
                     <div class="business-directory-meta">
                         <span class="business-directory-manager">${managerName} · ${managerContact}</span>
