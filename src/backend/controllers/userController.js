@@ -1196,6 +1196,23 @@ async function updateMyBusinessAdActivation(req, res, next) {
   }
 }
 
+
+async function jumpMyBusinessAd(req, res, next) {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 광고 ID입니다.' });
+
+    const updated = await adminModel.jumpBusinessAd({ adId: id, ownerUserId: req.user.id });
+    return res.json({
+      success: true,
+      message: `점프를 사용해 광고 노출 순서를 최상위로 올렸습니다. 오늘 남은 점프: ${Number(updated?.dailyJumpRemaining || 0).toLocaleString('ko-KR')}개`,
+      content: updated
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function deleteMyBusinessAd(req, res, next) {
   try {
     const id = Number.parseInt(req.params.id, 10);
@@ -1433,6 +1450,7 @@ module.exports = {
   createMyBusinessAd,
   updateMyBusinessAd,
   updateMyBusinessAdActivation,
+  jumpMyBusinessAd,
   deleteMyBusinessAd,
   getMyBusinessProfile,
   saveMyBusinessProfile,

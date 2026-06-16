@@ -23,6 +23,9 @@
     const estimatedRunUntil = document.getElementById('ad-estimated-run-until');
     const activationStampBalance = document.getElementById('ad-activation-stamp-balance');
     const activationBenefitTitle = document.getElementById('ad-activation-benefit-title');
+    const jumpButton = document.getElementById('ad-jump-submit');
+    const dailyJumpRemainingText = document.getElementById('ad-daily-jump-remaining');
+    const lastJumpedAtText = document.getElementById('ad-last-jumped-at');
 
     if (!tabs.length || !featureList || !selectedProduct || !stampCost || !durationText) {
         return;
@@ -72,7 +75,7 @@
             badgeAlt: 'PREMIUM',
             features: [
                 { text: '스탬프 1개로 업체정보 1분 노출', enabled: true },
-                { text: '점프 9개', enabled: true },
+                { text: '점프 12개', enabled: true },
                 { text: '활성화 기간동안 1일 1회 홍보게시글 작성 가능', enabled: true },
                 { text: '지역 상단 우선 노출 대상', enabled: true },
                 { text: '자동연장 ON 시 기간 종료마다 스탬프 1개 자동 소모', enabled: true }
@@ -257,6 +260,15 @@
             activationButton.disabled = !canToggle || (visible && !checked);
             activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '기간 만료 후 중지 예정') : '⚡ 1 스탬프 사용하고 광고 시작하기';
         }
+        const dailyJumpRemaining = Number(state.ad?.dailyJumpRemaining || 0);
+        if (dailyJumpRemainingText) dailyJumpRemainingText.textContent = visible ? `${dailyJumpRemaining.toLocaleString('ko-KR')}개` : '-';
+        if (lastJumpedAtText) lastJumpedAtText.textContent = visible && state.ad?.jumpedAt ? formatDateOnly(state.ad.jumpedAt) : '-';
+        if (jumpButton) {
+            jumpButton.disabled = !visible || state.isSubmitting || dailyJumpRemaining <= 0;
+            jumpButton.textContent = visible
+                ? `점프 사용하기 (오늘 ${dailyJumpRemaining.toLocaleString('ko-KR')}개 남음)`
+                : '광고 활성화 후 점프 사용 가능';
+        }
     };
 
     const loadActivationData = async () => {
@@ -272,6 +284,22 @@
             state.plan = normalizePlanKey(state.ad.planType);
         }
         render();
+    };
+
+    const useJump = async () => {
+        if (!state.ad?.id || state.isSubmitting) return;
+        try {
+            state.isSubmitting = true;
+            render();
+            const response = await APIClient.post(`/users/me/business-ads/${state.ad.id}/jump`);
+            alert(response?.message || '점프를 사용했습니다.');
+            state.ad = response?.content || state.ad;
+        } catch (error) {
+            alert(error.message || '점프 사용에 실패했습니다.');
+        } finally {
+            state.isSubmitting = false;
+            render();
+        }
     };
 
     const updateActivation = async (nextActive, { autoRenew = nextActive } = {}) => {
@@ -314,6 +342,8 @@
     activationButton?.addEventListener('click', () => {
         updateActivation(!isVisible(), { autoRenew: false });
     });
+
+    jumpButton?.addEventListener('click', useJump);
 
 
     if (!Auth.isAuthenticated()) {
