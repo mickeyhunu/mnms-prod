@@ -795,7 +795,7 @@ async function listBusinessAdsByOwner(ownerUserId) {
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
             kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
             description, plan_type AS planType, view_count AS viewCount, daily_jump_remaining AS dailyJumpRemaining, jump_reset_date AS jumpResetDate, jumped_at AS jumpedAt,
-            registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), activated_until), 0) AS remainingSeconds, created_at AS createdAt, updated_at AS updatedAt
+            registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), activated_until), 0) AS remainingSeconds, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), DATE_ADD(jumped_at, INTERVAL 10 MINUTE)), 0) AS jumpCooldownSeconds, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
       WHERE owner_user_id = ?
       ORDER BY display_order ASC, id DESC`,
@@ -1177,7 +1177,8 @@ async function jumpBusinessAd({ adId, ownerUserId }) {
     await connection.beginTransaction();
     await resetBusinessAdDailyJumps(connection);
     const [rows] = await connection.query(
-      `SELECT id, daily_jump_remaining AS dailyJumpRemaining
+      `SELECT id, daily_jump_remaining AS dailyJumpRemaining, jumped_at AS jumpedAt,
+              GREATEST(TIMESTAMPDIFF(SECOND, NOW(), DATE_ADD(jumped_at, INTERVAL 10 MINUTE)), 0) AS jumpCooldownSeconds
          FROM business_ads
         WHERE id = ?
           AND owner_user_id = ?
@@ -1190,6 +1191,12 @@ async function jumpBusinessAd({ adId, ownerUserId }) {
     const ad = rows[0];
     if (!ad) {
       const error = new Error('점프는 활성화 기간의 등록 완료 광고에만 사용할 수 있습니다.');
+      error.status = 400;
+      throw error;
+    }
+    const cooldownSeconds = Number(ad.jumpCooldownSeconds || 0);
+    if (cooldownSeconds > 0) {
+      const error = new Error(`점프는 최근 사용 10분 뒤부터 다시 사용할 수 있습니다. 남은 시간: ${Math.floor(cooldownSeconds / 60)}분 ${cooldownSeconds % 60}초`);
       error.status = 400;
       throw error;
     }
