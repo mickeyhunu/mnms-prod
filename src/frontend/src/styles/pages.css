@@ -594,7 +594,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 8px;
+    padding: 10px;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
     margin-bottom: 6px;
@@ -606,8 +606,8 @@
 }
 
 .business-directory-item--basic {
-    border-color: #5c4033;
-    box-shadow: inset 4px 0 0 #5c4033;
+    border-color: #5c403399;
+    box-shadow: inset 4px 0 0 #5c403399;
 }
 
 .business-directory-item--plus {
@@ -665,9 +665,9 @@
 
 .business-directory-new-badge-image {
     position: absolute;
-    top: -6px;
-    left: -6px;
-    width: 34px;
+    top: -3px;
+    left: -2px;
+    width: 55px;
     height: auto;
     display: block;
     pointer-events: none;
