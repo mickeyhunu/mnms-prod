@@ -63,13 +63,13 @@
             code: 'PREMIUM',
             name: '프리미엄 광고',
             headline: '지역 상단 최우선 노출',
-            durationDays: 3,
+            durationDays: 1,
             durationUnit: 'day',
-            durationLabel: '3일',
+            durationLabel: '1일',
             badgeImage: '/src/assets/ad-plan-badges/premium-badge.png',
             badgeAlt: 'PREMIUM',
             features: [
-                { text: '스탬프 1개로 업체정보 3일 노출', enabled: true },
+                { text: '스탬프 1개로 업체정보 1일 노출', enabled: true },
                 { text: '1일 점프 12개', enabled: true },
                 { text: '활성화 기간동안 1일 1회 홍보게시글 작성 가능', enabled: true },
                 { text: '지역 상단 우선 노출 대상', enabled: true },
@@ -93,6 +93,14 @@
 
     const getPlanDurationUnitLabel = (plan) => plan?.durationUnit === 'minute' ? '분' : '일';
 
+    const updatePlanCostLabels = () => {
+        tabs.forEach((tab) => {
+            const plan = plans[normalizePlanKey(tab.dataset.plan || 'basic')];
+            const costLabel = tab.querySelector('.ad-product-cost b');
+            if (plan && costLabel) costLabel.textContent = `1개 / ${plan.durationLabel || `${plan.durationDays}${getPlanDurationUnitLabel(plan)}`}`;
+        });
+    };
+
     const applyPlanDurationConfig = (config) => {
         if (!config || typeof config !== 'object') return;
         Object.values(plans).forEach((plan) => {
@@ -104,6 +112,7 @@
             plan.durationLabel = planConfig.durationLabel || `${plan.durationDays}${getPlanDurationUnitLabel(plan)}`;
             if (plan.features?.[0]) plan.features[0].text = `스탬프 1개로 업체정보 ${plan.durationLabel} 노출`;
         });
+        updatePlanCostLabels();
     };
 
     const planCodesByApiCode = Object.entries(plans).reduce((acc, [key, plan]) => {
