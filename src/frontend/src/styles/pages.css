@@ -718,6 +718,10 @@
     max-width: 60%;
 }
 
+.business-directory-manager-nickname {
+    color: #111827;
+}
+
 .business-directory-views {
     flex-shrink: 0;
 }

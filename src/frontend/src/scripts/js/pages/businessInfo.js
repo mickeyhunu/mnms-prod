@@ -356,7 +356,7 @@ function buildBusinessDirectoryAdvertiserMeta(ad = {}) {
     const rankLabel = resolveBusinessDirectoryAdvertiserRankLabel(ad);
     const nickname = sanitizeHTML(ad.ownerNickname || ad.authorNickname || ad.nickname || ad.managerName || ad.profileManagerName || '닉네임');
     const cumulativeAdDays = getBusinessDirectoryCumulativeAdDays(ad).toLocaleString('ko-KR');
-    return `${rankLabel} ${nickname} · ${cumulativeAdDays}일째 광고중`;
+    return `${rankLabel} <span class="business-directory-manager-nickname">${nickname}</span> · ${cumulativeAdDays}일째 광고중`;
 }
 
 function buildBusinessDirectoryAdDayBadges(ad) {
