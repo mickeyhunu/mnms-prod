@@ -24,7 +24,7 @@ const BUSINESS_AD_PLAN_DURATIONS = isLocalEnvLoaded
   : {
       BASIC: 3,
       PLUS: 2,
-      PREMIUM: 3
+      PREMIUM: 1
     };
 const BUSINESS_AD_PLAN_JUMP_COUNTS = {
   BASIC: 6,

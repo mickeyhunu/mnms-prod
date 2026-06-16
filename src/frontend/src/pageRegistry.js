@@ -761,21 +761,21 @@ const pageRegistry = {
                             <strong>지역 목록 일반 노출</strong>
                             <span class="ad-product-divider"></span>
                             <span class="ad-product-radio" aria-hidden="true"></span>
-                            <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 3분</b></span>
+                            <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 3일</b></span>
                         </button>
                         <button type="button" class="ad-product-card" data-plan="plus" role="tab" aria-selected="false">
                             <img src="/src/assets/ad-plan-badges/plus-badge.png" alt="PLUS" class="ad-product-badge">
                             <strong>지역 상단 우선 노출</strong>
                             <span class="ad-product-divider"></span>
                             <span class="ad-product-radio" aria-hidden="true"></span>
-                            <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 2분</b></span>
+                            <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 2일</b></span>
                         </button>
                         <button type="button" class="ad-product-card" data-plan="premium" role="tab" aria-selected="false">
                             <img src="/src/assets/ad-plan-badges/premium-badge.png" alt="PREMIUM" class="ad-product-badge">
                             <strong>지역 상단 최우선 노출</strong>
                             <span class="ad-product-divider"></span>
                             <span class="ad-product-radio" aria-hidden="true"></span>
-                            <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 1분</b></span>
+                            <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 1일</b></span>
                         </button>
                     </div>
                     <div class="ad-activation-benefits">
@@ -798,7 +798,7 @@ const pageRegistry = {
                             <dl>
                                 <div><dt>선택한 상품</dt><dd id="ad-selected-product">프리미엄 광고</dd></div>
                                 <div><dt>차감 스탬프</dt><dd id="ad-product-price">스탬프 1개</dd></div>
-                                <div><dt>노출 기간</dt><dd id="ad-vat-price">1분</dd></div>
+                                <div><dt>노출 기간</dt><dd id="ad-vat-price">1일</dd></div>
                                 <div><dt>예상 노출 기간</dt><dd id="ad-estimated-run-days">-</dd></div>
                                 <div><dt>최대 자동연장 기간</dt><dd id="ad-estimated-run-until">-</dd></div>
                                 <div><dt>사용후 잔여 스탬프</dt><dd id="ad-stamps-after-use">-</dd></div>
