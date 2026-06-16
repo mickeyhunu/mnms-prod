@@ -3,6 +3,7 @@
  */
 const BUSINESS_IMAGE_PLACEHOLDER = '등록할 이미지를 선택해주세요.';
 const BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
+const BUSINESS_DIRECTORY_NEW_BADGE_IMAGE_URL = '/src/assets/image/business-directory-new-badge.webp';
 let businessDirectoryAds = [];
 const REGION_DISTRICT_MAP = {
     서울: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
@@ -359,9 +360,8 @@ function buildBusinessDirectoryAdvertiserMeta(ad = {}) {
     return `${rankLabel} <span class="business-directory-manager-nickname">${nickname}</span> · ${cumulativeAdDays}일째 광고중`;
 }
 
-function buildBusinessDirectoryAdDayBadges(ad) {
-    const cumulativeAdDays = getBusinessDirectoryCumulativeAdDays(ad);
-    return cumulativeAdDays < 30 ? '<span class="business-directory-new-badge">NEW</span>' : '';
+function isBusinessDirectoryNewAd(ad) {
+    return getBusinessDirectoryCumulativeAdDays(ad) < 30;
 }
 
 function getBusinessDirectoryPlanRank(ad) {
@@ -414,7 +414,7 @@ function renderBusinessAds(ads) {
         const baseTitle = sanitizeHTML(ad.title || '업체정보');
         const title = `[${regionLabel}-${businessName}] ${baseTitle}`;
         const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
-        const adDayBadges = buildBusinessDirectoryAdDayBadges(ad);
+        const isNewAd = isBusinessDirectoryNewAd(ad);
         const uploadedImageUrl = sanitizeHTML(ad.imageUrl || '');
         const thumbnailImageUrl = uploadedImageUrl || BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL;
         const thumbnailLoading = uploadedImageUrl || index < 6 ? 'eager' : 'lazy';
@@ -428,14 +428,16 @@ function renderBusinessAds(ads) {
         const planClassName = planType ? ` business-directory-item--${planType}` : '';
         return `
             <li class="business-directory-item business-directory-item--clickable${planClassName}" data-business-ad-id="${sanitizeHTML(ad.id || '')}" data-business-ad-url="${detailUrl}" data-business-ad-view-count="${Number(ad.viewCount || 0)}" role="link" tabindex="0" aria-label="${title} 상세 페이지 보기">
-                <img class="business-directory-thumbnail" src="${thumbnailImageUrl}" alt="${title} 대표이미지" loading="${thumbnailLoading}" fetchpriority="${thumbnailFetchPriority}" decoding="async" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
+                <div class="business-directory-thumbnail-wrap">
+                    <img class="business-directory-thumbnail" src="${thumbnailImageUrl}" alt="${title} 대표이미지" loading="${thumbnailLoading}" fetchpriority="${thumbnailFetchPriority}" decoding="async" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
+                    ${isNewAd ? `<img class="business-directory-new-badge-image" src="${BUSINESS_DIRECTORY_NEW_BADGE_IMAGE_URL}" alt="신규 광고" loading="eager" decoding="async">` : ''}
+                </div>
                 <div class="business-directory-main">
                     <div class="business-directory-meta">
                         <span class="business-directory-manager">${advertiserMeta}</span>
                         <span class="business-directory-views" data-business-ad-view-count>조회수 ${viewCount}</span>
                     </div>
                     <h4>${title}</h4>
-                    ${adDayBadges ? `<div class="business-directory-badges">${adDayBadges}</div>` : ''}
                     <p class="business-directory-region-detail">${detail}</p>
                 </div>
             </li>
