@@ -2541,3 +2541,68 @@
 .ad-activation-switch input:checked + .ad-activation-switch-track::after {
     transform: translateX(28px);
 }
+
+.jump-management-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.jump-management-auto-btn {
+    background: linear-gradient(135deg, #0ea5e9, #2563eb);
+}
+
+.jump-management-scheduler {
+    margin-top: 16px;
+    padding: 18px;
+    border: 1px solid #dbeafe;
+    border-radius: 14px;
+    background: #f8fbff;
+}
+
+.jump-management-scheduler-label {
+    display: block;
+    margin-bottom: 10px;
+    color: #0f172a;
+    font-weight: 800;
+}
+
+.jump-management-scheduler-row {
+    display: grid;
+    grid-template-columns: minmax(130px, 1fr) auto auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.jump-management-scheduler-help {
+    margin: 10px 0 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.jump-management-schedule-list {
+    display: grid;
+    gap: 8px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.jump-management-schedule-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fff;
+    color: #1e3a8a;
+    font-weight: 800;
+}
+
+@media (max-width: 640px) {
+    .jump-management-actions,
+    .jump-management-scheduler-row {
+        grid-template-columns: 1fr;
+    }
+}
