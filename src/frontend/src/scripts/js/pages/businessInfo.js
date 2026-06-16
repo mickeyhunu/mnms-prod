@@ -332,6 +332,33 @@ function getBusinessDirectoryCumulativeAdDays(ad) {
     return Number.isFinite(days) && days > 0 ? Math.floor(days) : 0;
 }
 
+
+function resolveBusinessDirectoryAdvertiserRankLabel(ad = {}) {
+    const levels = [
+        { emoji: '🌱', title: '미광고', minDays: 0 },
+        { emoji: '🥉', title: '브론즈', minDays: 1 },
+        { emoji: '🥈', title: '실버', minDays: 91 },
+        { emoji: '🥇', title: '골드', minDays: 181 },
+        { emoji: '💠', title: '플래티넘', minDays: 361 },
+        { emoji: '💎', title: '다이아', minDays: 721 },
+        { emoji: '👑', title: '레전드', minDays: 1441 }
+    ];
+
+    const explicit = String(ad?.authorAdvertiserLevelLabel || ad?.advertiserLevelLabel || '').trim();
+    const explicitLevel = levels.find((level) => explicit.includes(level.emoji) || explicit.includes(level.title));
+    if (explicitLevel) return explicitLevel.emoji;
+
+    const cumulativeAdDays = getBusinessDirectoryCumulativeAdDays(ad);
+    return levels.reduce((current, level) => (cumulativeAdDays >= level.minDays ? level : current), levels[0]).emoji;
+}
+
+function buildBusinessDirectoryAdvertiserMeta(ad = {}) {
+    const rankLabel = resolveBusinessDirectoryAdvertiserRankLabel(ad);
+    const nickname = sanitizeHTML(ad.ownerNickname || ad.authorNickname || ad.nickname || ad.managerName || ad.profileManagerName || '닉네임');
+    const cumulativeAdDays = getBusinessDirectoryCumulativeAdDays(ad).toLocaleString('ko-KR');
+    return `${rankLabel} ${nickname} · ${cumulativeAdDays}일째 광고중`;
+}
+
 function buildBusinessDirectoryAdDayBadges(ad) {
     const cumulativeAdDays = getBusinessDirectoryCumulativeAdDays(ad);
     const formattedDays = cumulativeAdDays.toLocaleString('ko-KR');
@@ -381,8 +408,7 @@ function renderBusinessAds(ads) {
     list.innerHTML = businessDirectoryAds.map((ad, index) => {
         const regionLabel = sanitizeHTML(ad.region || '지역미지정');
         const businessName = sanitizeHTML(ad.businessName || ad.companyName || ad.ownerNickname || '업소');
-        const managerName = sanitizeHTML(ad.managerName || ad.profileManagerName || ad.ownerNickname || '담당자');
-        const managerContact = sanitizeHTML(ad.managerContact || '연락처');
+        const advertiserMeta = buildBusinessDirectoryAdvertiserMeta(ad);
         const district = sanitizeHTML(ad.district || '선택');
         const category = sanitizeHTML(ad.category || '선택');
         const openHour = sanitizeHTML(ad.openHour || '시간선택');
@@ -410,7 +436,7 @@ function renderBusinessAds(ads) {
                     <div class="business-directory-badges">${adDayBadges}</div>
                     <p class="business-directory-region-detail">${detail}</p>
                     <div class="business-directory-meta">
-                        <span class="business-directory-manager">${managerName} · ${managerContact}</span>
+                        <span class="business-directory-manager">${advertiserMeta}</span>
                         <span class="business-directory-views" data-business-ad-view-count>조회수 ${viewCount}</span>
                     </div>
                 </div>
