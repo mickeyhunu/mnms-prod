@@ -144,6 +144,7 @@ a:hover {
     background: var(--danger-color);
     color: white;
     border-color: var(--danger-color);
+    border-radius: 9px;
 }
 
 .btn.btn-danger:hover {
@@ -154,6 +155,7 @@ a:hover {
     background: transparent;
     border-color: var(--primary-color);
     color: var(--primary-color);
+    border-radius: 9px;
 }
 
 .btn.btn-outline-primary:hover {
