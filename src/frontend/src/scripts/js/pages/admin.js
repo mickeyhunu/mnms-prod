@@ -189,23 +189,8 @@ function setAdminBadge(elementId, count) {
 function renderAdminReviewSummary(summary = {}) {
     const pendingInquiries = Math.max(0, Number(summary.pendingInquiries) || 0);
     const pendingBusinessApplications = Math.max(0, Number(summary.pendingBusinessApplications) || 0);
-    const totalPending = Math.max(0, Number(summary.totalPending) || pendingInquiries + pendingBusinessApplications);
     setAdminBadge('inquiries-tab-badge', pendingInquiries);
     setAdminBadge('business-applications-tab-badge', pendingBusinessApplications);
-
-    const alert = document.getElementById('admin-review-alert');
-    if (!alert) return;
-    if (totalPending <= 0) {
-        alert.classList.add('hidden');
-        alert.textContent = '';
-        return;
-    }
-
-    const parts = [];
-    if (pendingInquiries > 0) parts.push(`새 문의 ${pendingInquiries}건`);
-    if (pendingBusinessApplications > 0) parts.push(`기업회원 신청/변경 ${pendingBusinessApplications}건`);
-    alert.textContent = `확인 필요: ${parts.join(' · ')}`;
-    alert.classList.remove('hidden');
 }
 
 async function loadAdminReviewSummary() {
