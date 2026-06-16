@@ -335,6 +335,31 @@ ${INQUIRY_TARGET_JOIN_SQL}
   return rows.map((row) => normalizeInquiryRow(row));
 }
 
+async function countPendingInquiries() {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    'SELECT COUNT(*) AS count FROM support_inquiries WHERE status = ?',
+    [INQUIRY_STATUSES.PENDING]
+  );
+  return Number(rows[0]?.count || 0);
+}
+
+async function listRecentPendingInquiries({ limit = 5 } = {}) {
+  const pool = getPool();
+  const safeLimit = Math.max(1, Math.min(20, Number(limit) || 5));
+  const [rows] = await pool.query(
+    `SELECT i.id, i.user_id AS userId, u.nickname AS userNickname, u.login_id AS userLoginId,
+            i.inquiry_type AS type, i.title, i.created_at AS createdAt
+       FROM support_inquiries i
+       INNER JOIN users u ON u.id = i.user_id
+      WHERE i.status = ?
+      ORDER BY i.created_at DESC, i.id DESC
+      LIMIT ?`,
+    [INQUIRY_STATUSES.PENDING, safeLimit]
+  );
+  return rows;
+}
+
 async function listAnsweredInquiriesByUser(userId, { limit = 20 } = {}) {
   const pool = getPool();
   const safeLimit = Math.max(1, Math.min(100, Number(limit) || 20));
@@ -397,6 +422,8 @@ module.exports = {
   listInquiriesByUser,
   findInquiryById,
   listInquiriesForAdmin,
+  countPendingInquiries,
+  listRecentPendingInquiries,
   listAnsweredInquiriesByUser,
   answerInquiry
 };
