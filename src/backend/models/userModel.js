@@ -62,9 +62,6 @@ const USER_WITH_ACTIVE_BUSINESS_AD_SELECT = `SELECT u.*,
           WHEN 'BUSINESS_AD_PREMIUM' THEN 1
           WHEN 'BUSINESS_AD_PLUS' THEN 2
           WHEN 'BUSINESS_AD_BASIC' THEN 3
-          WHEN 'BUSINESS_AD_GOLD' THEN 1
-          WHEN 'BUSINESS_AD_SILVER' THEN 2
-          WHEN 'BUSINESS_AD_BRONZE' THEN 3
           ELSE 0
         END * ABS(sh.amount)
       ), 0)
@@ -72,7 +69,7 @@ const USER_WITH_ACTIVE_BUSINESS_AD_SELECT = `SELECT u.*,
        WHERE sh.user_id = u.id
          AND sh.stamp_type = 'BUSINESS'
          AND sh.amount < 0
-         AND sh.action_type IN ('BUSINESS_AD_PREMIUM','BUSINESS_AD_PLUS','BUSINESS_AD_BASIC','BUSINESS_AD_GOLD','BUSINESS_AD_SILVER','BUSINESS_AD_BRONZE')
+         AND sh.action_type IN ('BUSINESS_AD_PREMIUM','BUSINESS_AD_PLUS','BUSINESS_AD_BASIC')
     ) AS cumulative_business_ad_days
    FROM users u`;
 
@@ -156,9 +153,6 @@ async function getUserCumulativeBusinessAdDays(userId) {
           WHEN 'BUSINESS_AD_PREMIUM' THEN 1
           WHEN 'BUSINESS_AD_PLUS' THEN 2
           WHEN 'BUSINESS_AD_BASIC' THEN 3
-          WHEN 'BUSINESS_AD_GOLD' THEN 1
-          WHEN 'BUSINESS_AD_SILVER' THEN 2
-          WHEN 'BUSINESS_AD_BRONZE' THEN 3
           ELSE 0
         END * ABS(amount)
       ), 0) AS totalAdDays
@@ -166,7 +160,7 @@ async function getUserCumulativeBusinessAdDays(userId) {
       WHERE user_id = ?
         AND stamp_type = 'BUSINESS'
         AND amount < 0
-        AND action_type IN ('BUSINESS_AD_PREMIUM','BUSINESS_AD_PLUS','BUSINESS_AD_BASIC','BUSINESS_AD_GOLD','BUSINESS_AD_SILVER','BUSINESS_AD_BRONZE')`,
+        AND action_type IN ('BUSINESS_AD_PREMIUM','BUSINESS_AD_PLUS','BUSINESS_AD_BASIC')`,
     [userId]
   );
 
