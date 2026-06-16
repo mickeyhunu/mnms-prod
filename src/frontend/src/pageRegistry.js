@@ -880,13 +880,24 @@ const pageRegistry = {
                             <dl>
                                 <div><dt>오늘 남은 점프</dt><dd id="jump-management-daily-remaining">확인 중...</dd></div>
                                 <div><dt>최근 점프 사용</dt><dd id="jump-management-last-jumped-at">-</dd></div>
-                                <div><dt>광고 등급</dt><dd id="jump-management-plan-type">-</dd></div>
-                                <div><dt>등록 상태</dt><dd id="jump-management-registration-status">-</dd></div>
+                                <div><dt>다음 점프 가능</dt><dd id="jump-management-cooldown">확인 중...</dd></div>
+                                <div><dt>자동 점프 예약</dt><dd id="jump-management-schedule-summary">-</dd></div>
                             </dl>
                         </article>
                     </div>
-                    <div class="ad-activation-action">
-                        <button type="button" class="ad-management-start-btn" id="jump-management-submit" disabled>광고 활성화 후 점프 사용 가능</button>
+                    <div class="ad-activation-action jump-management-actions">
+                        <button type="button" class="ad-management-start-btn" id="jump-management-manual-submit" disabled>수동 점프</button>
+                        <button type="button" class="ad-management-start-btn jump-management-auto-btn" id="jump-management-auto-submit" disabled>자동 점프</button>
+                    </div>
+                    <div class="jump-management-scheduler" id="jump-management-scheduler" hidden>
+                        <label class="jump-management-scheduler-label" for="jump-management-schedule-time">점프 스케줄 시간</label>
+                        <div class="jump-management-scheduler-row">
+                            <input type="time" id="jump-management-schedule-time" class="form-control" step="60">
+                            <button type="button" class="btn btn-secondary btn-sm" id="jump-management-add-schedule">스케줄 추가</button>
+                            <button type="button" class="btn btn-outline btn-sm" id="jump-management-clear-schedule">자동 점프 해제</button>
+                        </div>
+                        <p class="jump-management-scheduler-help" id="jump-management-scheduler-help">남은 점프 개수만큼 오늘의 자동 점프 시간을 등록할 수 있습니다.</p>
+                        <ul class="jump-management-schedule-list" id="jump-management-schedule-list"></ul>
                     </div>
                     <p class="ad-management-safe-note"><span aria-hidden="true">⏱</span><b>점프는 매일 00시에 초기화됩니다</b><br>점프는 광고 활성화 기간 동안만 사용할 수 있으며, 남은 개수는 00~24시 기준으로 관리됩니다.</p>
                 </section>
