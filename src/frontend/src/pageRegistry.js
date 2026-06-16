@@ -748,27 +748,6 @@ const pageRegistry = {
                     <p class="ad-management-safe-note"><span aria-hidden="true">🔒</span><b>안심하고 이용하세요</b><br>자동연장 ON 시 선택한 광고가 계속 노출되도록 기간 종료마다 스탬프 1개가 자동 소모됩니다.</p>
                 </section>
 
-                <section class="ad-management-panel" aria-labelledby="ad-jump-management-title" id="jump-management">
-                    <div class="ad-management-section-title-row">
-                        <div>
-                            <h2 id="ad-jump-management-title">점프 관리</h2>
-                            <p>활성화된 광고의 점프를 사용하면 업체정보 목록 노출 순서를 최상위로 올릴 수 있습니다.</p>
-                        </div>
-                    </div>
-                    <div class="ad-stamp-info-grid">
-                        <article class="ad-stamp-info-card ad-stamp-summary-card">
-                            <dl>
-                                <div><dt>오늘 남은 점프</dt><dd id="ad-daily-jump-remaining">확인 중...</dd></div>
-                                <div><dt>최근 점프 사용</dt><dd id="ad-last-jumped-at">-</dd></div>
-                            </dl>
-                        </article>
-                    </div>
-                    <div class="ad-activation-action">
-                        <button type="button" class="ad-management-start-btn" id="ad-jump-submit" disabled>광고 활성화 후 점프 사용 가능</button>
-                    </div>
-                    <p class="ad-management-safe-note"><span aria-hidden="true">⏱</span><b>점프는 매일 00시에 초기화됩니다</b><br>점프는 광고 활성화 기간 동안만 사용할 수 있으며, 남은 개수는 00~24시 기준으로 관리됩니다.</p>
-                </section>
-
                 <section class="ad-management-panel" aria-labelledby="ad-management-product-title">
                     <div class="ad-management-section-title-row">
                         <div>
