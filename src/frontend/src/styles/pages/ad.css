@@ -2601,7 +2601,6 @@
 }
 
 @media (max-width: 640px) {
-    .jump-management-actions,
     .jump-management-scheduler-row {
         grid-template-columns: 1fr;
     }
