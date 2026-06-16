@@ -42,7 +42,6 @@
                 { text: '스탬프 1개로 업체정보 3분 노출', enabled: true },
                 { text: '1일 점프 6개', enabled: true },
                 { text: '수동 활성화 시 스탬프 1개 소모', enabled: true },
-                { text: '자동연장 ON 시 기간 종료마다 스탬프 1개 자동 소모', enabled: true }
             ]
         },
         plus: {
@@ -58,7 +57,6 @@
                 { text: '스탬프 1개로 업체정보 2분 노출', enabled: true },
                 { text: '1일 점프 9개', enabled: true },
                 { text: '베이직보다 높은 광고 등급으로 표시', enabled: true },
-                { text: '자동연장 ON 시 기간 종료마다 스탬프 1개 자동 소모', enabled: true }
             ]
         },
         premium: {
@@ -75,7 +73,6 @@
                 { text: '1일 점프 12개', enabled: true },
                 { text: '활성화 기간동안 1일 1회 홍보게시글 작성 가능', enabled: true },
                 { text: '지역 상단 우선 노출 대상', enabled: true },
-                { text: '자동연장 ON 시 기간 종료마다 스탬프 1개 자동 소모', enabled: true }
             ]
         }
     };
