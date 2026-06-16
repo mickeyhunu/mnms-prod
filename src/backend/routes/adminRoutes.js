@@ -6,6 +6,7 @@ const postModel = require('../models/postModel');
 const adminModel = require('../models/adminModel');
 const liveModel = require('../models/liveModel');
 const supportController = require('../controllers/supportController');
+const supportModel = require('../models/supportModel');
 const { findByNicknameExceptUser } = require('../models/userModel');
 const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddleware');
 const { LOGIN_STATUS } = require('../utils/loginRestriction');
@@ -58,6 +59,28 @@ function revealAnonymousAuthorForAdmin(item) {
 }
 
 router.use(authMiddleware, adminMiddleware);
+
+
+router.get('/review-summary', async (req, res, next) => {
+  try {
+    const [pendingInquiries, pendingBusinessApplications, recentInquiries, recentBusinessApplications] = await Promise.all([
+      supportModel.countPendingInquiries(),
+      adminModel.countPendingBusinessApplications(),
+      supportModel.listRecentPendingInquiries({ limit: 5 }),
+      adminModel.listRecentPendingBusinessApplications({ limit: 5 })
+    ]);
+
+    res.json({
+      pendingInquiries,
+      pendingBusinessApplications,
+      totalPending: pendingInquiries + pendingBusinessApplications,
+      recentInquiries,
+      recentBusinessApplications
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.get('/stats/dashboard', async (req, res, next) => {
   try {
