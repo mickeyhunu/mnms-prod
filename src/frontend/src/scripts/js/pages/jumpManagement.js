@@ -21,7 +21,6 @@
     if (!manualJumpButton || !autoJumpButton) return;
 
     const COOLDOWN_SECONDS = 10 * 60;
-    const STORAGE_KEY = 'mnms.jumpManagement.autoSchedules';
     const planBadges = {
         BASIC: { image: '/src/assets/ad-plan-badges/basic-badge.png', alt: 'BASIC', name: '베이직 광고' },
         PLUS: { image: '/src/assets/ad-plan-badges/plus-badge.png', alt: 'PLUS', name: '플러스 광고' },
@@ -29,19 +28,28 @@
     };
     const noneBadge = { image: '/src/assets/ad-plan-badges/none-badge.png', alt: '미광고', name: '미광고' };
 
-    const state = { ad: null, isSubmitting: false, schedules: [], autoOpen: false, ticker: null };
+    const state = { ad: null, isSubmitting: false, schedules: [], maxScheduleCount: 0, autoOpen: false };
     const isVisible = () => Boolean(Number(state.ad?.isCurrentlyVisible || 0));
     const getRemainingCount = () => Number(state.ad?.dailyJumpRemaining || 0);
 
-    const readSchedules = () => {
-        try {
-            const schedules = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            return Array.isArray(schedules) ? schedules.filter((time) => /^\d{2}:\d{2}$/.test(time)).sort() : [];
-        } catch (_) {
-            return [];
-        }
+    const getPlanScheduleLimit = () => Number(state.maxScheduleCount || ({ BASIC: 6, PLUS: 9, PREMIUM: 12 }[String(state.ad?.planType || '').toUpperCase()] || 6));
+    const getTimeMinutes = (time) => {
+        const [hour, minute] = String(time || '').split(':').map(Number);
+        return (hour * 60) + minute;
     };
-    const saveSchedules = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state.schedules));
+    const hasScheduleIntervalConflict = (candidate, schedules = state.schedules) => {
+        const candidateMinutes = getTimeMinutes(candidate);
+        return schedules.some((time) => {
+            const diff = Math.abs(candidateMinutes - getTimeMinutes(time));
+            return Math.min(diff, (24 * 60) - diff) < 10;
+        });
+    };
+    const persistSchedules = async (nextSchedules) => {
+        if (!state.ad?.id) return;
+        const response = await APIClient.put(`/users/me/business-ads/${state.ad.id}/jump-schedules`, { schedules: nextSchedules });
+        state.schedules = Array.isArray(response?.content?.schedules) ? response.content.schedules : nextSchedules;
+        state.maxScheduleCount = Number(response?.content?.maxScheduleCount || state.maxScheduleCount || 0);
+    };
 
     const formatDateTime = (value) => {
         if (!value) return '-';
@@ -102,18 +110,24 @@
         manualJumpButton.textContent = !visible
             ? '수동 점프'
             : (cooldownSeconds > 0 ? `수동 점프 (${formatClock(cooldownSeconds)})` : `수동 점프 (${dailyJumpRemaining.toLocaleString('ko-KR')}개 남음)`);
-        autoJumpButton.disabled = !visible || state.isSubmitting || dailyJumpRemaining <= 0;
+        autoJumpButton.disabled = !visible || state.isSubmitting;
         autoJumpButton.textContent = !visible ? '자동 점프' : (state.schedules.length ? `자동 점프 관리 (${state.schedules.length}개)` : '자동 점프');
         if (scheduler) scheduler.hidden = !state.autoOpen;
-        if (addScheduleButton) addScheduleButton.disabled = !visible || state.schedules.length >= dailyJumpRemaining;
-        if (schedulerHelp) schedulerHelp.textContent = `오늘 남은 점프 ${dailyJumpRemaining.toLocaleString('ko-KR')}개 기준으로 최대 ${dailyJumpRemaining.toLocaleString('ko-KR')}개까지 등록할 수 있습니다. 점프 후 10분 동안은 자동 실행도 대기합니다.`;
+        const maxScheduleCount = getPlanScheduleLimit();
+        if (addScheduleButton) addScheduleButton.disabled = !visible || state.isSubmitting || state.schedules.length >= maxScheduleCount;
+        if (schedulerHelp) schedulerHelp.textContent = `오늘 남은 점프와 무관하게 광고 상품의 일일 점프 수(${maxScheduleCount.toLocaleString('ko-KR')}개)까지 매일 반복 스케줄을 등록할 수 있습니다. 각 스케줄은 최소 10분 간격이어야 하며, 실행 시 남은 점프가 없거나 10분 쿨타임 중이면 실행되지 않습니다.`;
         renderScheduleList();
     };
 
     const loadJumpData = async () => {
         const response = await APIClient.get('/users/me/business-ads');
         state.ad = Array.isArray(response?.content) ? response.content[0] : null;
-        if (state.ad) state.ad.cooldownLoadedAt = Date.now();
+        if (state.ad) {
+            state.ad.cooldownLoadedAt = Date.now();
+            const scheduleResponse = await APIClient.get(`/users/me/business-ads/${state.ad.id}/jump-schedules`);
+            state.schedules = Array.isArray(scheduleResponse?.content?.schedules) ? scheduleResponse.content.schedules : [];
+            state.maxScheduleCount = Number(scheduleResponse?.content?.maxScheduleCount || 0);
+        }
         render();
     };
 
@@ -121,10 +135,6 @@
         if (!state.ad?.id || state.isSubmitting || getCooldownSeconds() > 0) return;
         try {
             state.isSubmitting = true;
-            if (mode === 'manual' && state.schedules.length) {
-                state.schedules = [];
-                saveSchedules();
-            }
             render();
             const jumpedAt = new Date().toISOString();
             const previousRemaining = getRemainingCount();
@@ -147,35 +157,49 @@
         }
     };
 
-    const runDueAutoJump = () => {
-        const now = new Date();
-        const current = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        if (state.schedules.includes(current) && getCooldownSeconds() <= 0 && getRemainingCount() > 0) {
-            state.schedules = state.schedules.filter((time) => time !== current);
-            saveSchedules();
-            useJump('auto');
-        }
-        render();
-    };
+
 
     manualJumpButton.addEventListener('click', () => useJump('manual'));
     autoJumpButton.addEventListener('click', () => { state.autoOpen = !state.autoOpen; render(); });
-    addScheduleButton?.addEventListener('click', () => {
+    addScheduleButton?.addEventListener('click', async () => {
         const time = scheduleTimeInput?.value;
         if (!/^\d{2}:\d{2}$/.test(time || '')) return alert('자동 점프 시간을 선택해주세요.');
-        if (state.schedules.length >= getRemainingCount()) return alert('오늘 남은 점프 개수만큼만 스케줄을 등록할 수 있습니다.');
+        if (state.schedules.length >= getPlanScheduleLimit()) return alert('현재 광고 상품의 일일 점프 수만큼만 스케줄을 등록할 수 있습니다.');
         if (state.schedules.includes(time)) return alert('이미 등록된 시간입니다.');
-        state.schedules = [...state.schedules, time].sort();
-        saveSchedules();
-        render();
+        if (hasScheduleIntervalConflict(time)) return alert('자동 점프 스케줄은 최소 10분 간격으로 등록해주세요.');
+        try {
+            state.isSubmitting = true;
+            await persistSchedules([...state.schedules, time].sort());
+        } catch (error) {
+            alert(error.message || '자동 점프 스케줄 저장에 실패했습니다.');
+        } finally {
+            state.isSubmitting = false;
+            render();
+        }
     });
-    clearScheduleButton?.addEventListener('click', () => { state.schedules = []; saveSchedules(); render(); });
-    scheduleList?.addEventListener('click', (event) => {
+    clearScheduleButton?.addEventListener('click', async () => {
+        try {
+            state.isSubmitting = true;
+            await persistSchedules([]);
+        } catch (error) {
+            alert(error.message || '자동 점프 해제에 실패했습니다.');
+        } finally {
+            state.isSubmitting = false;
+            render();
+        }
+    });
+    scheduleList?.addEventListener('click', async (event) => {
         const time = event.target?.dataset?.scheduleTime;
         if (!time) return;
-        state.schedules = state.schedules.filter((item) => item !== time);
-        saveSchedules();
-        render();
+        try {
+            state.isSubmitting = true;
+            await persistSchedules(state.schedules.filter((item) => item !== time));
+        } catch (error) {
+            alert(error.message || '자동 점프 스케줄 삭제에 실패했습니다.');
+        } finally {
+            state.isSubmitting = false;
+            render();
+        }
     });
 
     if (!Auth.isAuthenticated()) {
@@ -183,12 +207,10 @@
         return;
     }
 
-    state.schedules = readSchedules();
     if (typeof initHeader === 'function') initHeader();
     Auth.bindLogoutButton();
     loadJumpData().catch((error) => {
         alert(error.message || '점프 정보를 불러오지 못했습니다.');
         render();
     });
-    state.ticker = setInterval(runDueAutoJump, 1000);
 })();

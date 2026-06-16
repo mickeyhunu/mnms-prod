@@ -1213,6 +1213,33 @@ async function jumpMyBusinessAd(req, res, next) {
   }
 }
 
+
+async function getMyBusinessAdJumpSchedules(req, res, next) {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 광고 ID입니다.' });
+    const content = await adminModel.listBusinessAdJumpSchedules({ adId: id, ownerUserId: req.user.id });
+    return res.json({ success: true, content });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateMyBusinessAdJumpSchedules(req, res, next) {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 광고 ID입니다.' });
+    const content = await adminModel.replaceBusinessAdJumpSchedules({
+      adId: id,
+      ownerUserId: req.user.id,
+      schedules: Array.isArray(req.body?.schedules) ? req.body.schedules : []
+    });
+    return res.json({ success: true, message: '자동 점프 스케줄이 저장되었습니다.', content });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function deleteMyBusinessAd(req, res, next) {
   try {
     const id = Number.parseInt(req.params.id, 10);
@@ -1451,6 +1478,8 @@ module.exports = {
   updateMyBusinessAd,
   updateMyBusinessAdActivation,
   jumpMyBusinessAd,
+  getMyBusinessAdJumpSchedules,
+  updateMyBusinessAdJumpSchedules,
   deleteMyBusinessAd,
   getMyBusinessProfile,
   saveMyBusinessProfile,
