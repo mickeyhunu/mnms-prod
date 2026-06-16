@@ -332,7 +332,7 @@ const pageRegistry = {
                                 <img id="ad-profile-preview-image" class="business-directory-thumbnail" src="/src/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
                                 <div class="business-directory-main">
                                     <div class="business-directory-meta">
-                                        <span class="business-directory-manager" id="ad-profile-preview-manager">🌱 닉네임 · 0일째 광고중</span>
+                                        <span class="business-directory-manager" id="ad-profile-preview-manager">🌱 <span class="business-directory-manager-nickname">닉네임</span> · 0일째 광고중</span>
                                         <span class="business-directory-views">조회수 0</span>
                                     </div>
                                     <h4 id="ad-profile-preview-title">[선택-업소명] 제목을 입력해주세요.</h4>
