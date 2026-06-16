@@ -100,10 +100,10 @@
         if (lastJumpedAt) lastJumpedAt.textContent = visible && state.ad?.jumpedAt ? formatDateTime(state.ad.jumpedAt) : '-';
         manualJumpButton.disabled = !canJump;
         manualJumpButton.textContent = !visible
-            ? '광고 활성화 후 수동 점프 가능'
+            ? '수동 점프'
             : (cooldownSeconds > 0 ? `수동 점프 (${formatClock(cooldownSeconds)})` : `수동 점프 (${dailyJumpRemaining.toLocaleString('ko-KR')}개 남음)`);
         autoJumpButton.disabled = !visible || state.isSubmitting || dailyJumpRemaining <= 0;
-        autoJumpButton.textContent = !visible ? '광고 활성화 후 자동 점프 가능' : (state.schedules.length ? `자동 점프 관리 (${state.schedules.length}개)` : '자동 점프');
+        autoJumpButton.textContent = !visible ? '자동 점프' : (state.schedules.length ? `자동 점프 관리 (${state.schedules.length}개)` : '자동 점프');
         if (scheduler) scheduler.hidden = !state.autoOpen;
         if (addScheduleButton) addScheduleButton.disabled = !visible || state.schedules.length >= dailyJumpRemaining;
         if (schedulerHelp) schedulerHelp.textContent = `오늘 남은 점프 ${dailyJumpRemaining.toLocaleString('ko-KR')}개 기준으로 최대 ${dailyJumpRemaining.toLocaleString('ko-KR')}개까지 등록할 수 있습니다. 점프 후 10분 동안은 자동 실행도 대기합니다.`;
