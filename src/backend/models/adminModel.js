@@ -13,6 +13,11 @@ const BUSINESS_AD_PLAN_DURATIONS = {
   PLUS: 2,
   PREMIUM: 1
 };
+const BUSINESS_AD_PLAN_JUMP_COUNTS = {
+  BASIC: 6,
+  PLUS: 9,
+  PREMIUM: 12
+};
 const BUSINESS_AD_PLAN_DURATION_UNIT_SQL = 'MINUTE';
 const BUSINESS_AD_PLAN_DURATION_UNIT_LABEL = '분';
 const BUSINESS_AD_CURRENT_MINUTE_SQL = "CAST(DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:00') AS DATETIME)";
@@ -36,8 +41,25 @@ function getBusinessAdPlanDurationLabel(planType) {
   return `${getBusinessAdPlanDurationDays(planType)}${BUSINESS_AD_PLAN_DURATION_UNIT_LABEL}`;
 }
 
+function getBusinessAdPlanJumpCount(planType) {
+  return BUSINESS_AD_PLAN_JUMP_COUNTS[normalizeBusinessAdPlanType(planType)] || BUSINESS_AD_PLAN_JUMP_COUNTS.BASIC;
+}
+
 function getBusinessAdPublicVisibilityCondition(alias = 'ba') {
   return `${alias}.registration_status = 'REGISTERED' AND ${alias}.activated_until IS NOT NULL AND ${alias}.activated_until > NOW()`;
+}
+
+async function resetBusinessAdDailyJumps(connectionOrPool = getPool()) {
+  await connectionOrPool.query(
+    `UPDATE business_ads
+        SET daily_jump_remaining = CASE plan_type WHEN 'PREMIUM' THEN ? WHEN 'PLUS' THEN ? ELSE ? END,
+            jump_reset_date = CURDATE()
+      WHERE registration_status = 'REGISTERED'
+        AND activated_until IS NOT NULL
+        AND activated_until > NOW()
+        AND (jump_reset_date IS NULL OR jump_reset_date < CURDATE())`,
+    [BUSINESS_AD_PLAN_JUMP_COUNTS.PREMIUM, BUSINESS_AD_PLAN_JUMP_COUNTS.PLUS, BUSINESS_AD_PLAN_JUMP_COUNTS.BASIC]
+  );
 }
 
 async function renewExpiredBusinessAdsWithStamp() {
@@ -101,9 +123,12 @@ async function renewExpiredBusinessAdsWithStamp() {
         `UPDATE business_ads
             SET plan_type = ?,
                 activated_at = ${BUSINESS_AD_CURRENT_MINUTE_SQL},
-                activated_until = DATE_ADD(${BUSINESS_AD_CURRENT_MINUTE_SQL}, INTERVAL ? ${BUSINESS_AD_PLAN_DURATION_UNIT_SQL})
+                activated_until = DATE_ADD(${BUSINESS_AD_CURRENT_MINUTE_SQL}, INTERVAL ? ${BUSINESS_AD_PLAN_DURATION_UNIT_SQL}),
+                daily_jump_remaining = ?,
+                jump_reset_date = CURDATE(),
+                jumped_at = NULL
           WHERE id = ?`,
-        [planType, durationDays, ad.id]
+        [planType, durationDays, getBusinessAdPlanJumpCount(planType), ad.id]
       );
       await connection.commit();
     } catch (error) {
@@ -762,13 +787,14 @@ async function deleteAd(adId) {
 
 async function listBusinessAdsByOwner(ownerUserId) {
   await renewExpiredBusinessAdsWithStamp();
+  await resetBusinessAdDailyJumps();
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, manager_name AS managerName, manager_contact AS managerContact,
             title, image_url AS imageUrl, link_url AS linkUrl,
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
             kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
-            description, plan_type AS planType, view_count AS viewCount,
+            description, plan_type AS planType, view_count AS viewCount, daily_jump_remaining AS dailyJumpRemaining, jump_reset_date AS jumpResetDate, jumped_at AS jumpedAt,
             registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), activated_until), 0) AS remainingSeconds, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
       WHERE owner_user_id = ?
@@ -780,6 +806,7 @@ async function listBusinessAdsByOwner(ownerUserId) {
 
 async function listPublicBusinessAdAreas() {
   await renewExpiredBusinessAdsWithStamp();
+  await resetBusinessAdDailyJumps();
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT TRIM(ba.region) AS region, TRIM(COALESCE(ba.district, '')) AS district, COUNT(*) AS adCount
@@ -795,6 +822,7 @@ async function listPublicBusinessAdAreas() {
 
 async function listPublicBusinessAds({ region = '', district = '', category = '', keyword = '' } = {}) {
   await renewExpiredBusinessAdsWithStamp();
+  await resetBusinessAdDailyJumps();
   const pool = getPool();
   const whereConditions = [getBusinessAdPublicVisibilityCondition('ba')];
   const whereParams = [];
@@ -824,7 +852,7 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
             ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl,
             ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
             ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification, ba.use_stamp_event AS useStampEvent, ba.stamp_event_description AS stampEventDescription, ba.stamp_event_count AS stampEventCount,
-            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.activated_at AS activatedAt, ba.activated_until AS activatedUntil, ba.created_at AS createdAt,
+            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.daily_jump_remaining AS dailyJumpRemaining, ba.jump_reset_date AS jumpResetDate, ba.jumped_at AS jumpedAt, ba.activated_at AS activatedAt, ba.activated_until AS activatedUntil, ba.created_at AS createdAt,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, COALESCE(u.nickname, '업체') AS ownerNickname,
             COALESCE(bp.company_name, '') AS companyName, COALESCE(bp.manager_name, '') AS profileManagerName,
             COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessName')), COALESCE(bp.company_name, '')) AS businessDisclosureName,
@@ -835,7 +863,7 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
        LEFT JOIN users u ON u.id = ba.owner_user_id
        LEFT JOIN business_profiles bp ON bp.user_id = ba.owner_user_id
       WHERE ${whereConditions.join(' AND ')}
-      ORDER BY CASE ba.plan_type WHEN 'PREMIUM' THEN 0 WHEN 'PLUS' THEN 1 ELSE 2 END, ba.display_order ASC, ba.id DESC`,
+      ORDER BY CASE WHEN ba.jumped_at IS NULL THEN 1 ELSE 0 END, ba.jumped_at DESC, CASE ba.plan_type WHEN 'PREMIUM' THEN 0 WHEN 'PLUS' THEN 1 ELSE 2 END, ba.display_order ASC, ba.id DESC`,
     whereParams
   );
 
@@ -901,13 +929,14 @@ async function createBusinessAd({
 
 async function findPublicBusinessAdById(adId) {
   await renewExpiredBusinessAdsWithStamp();
+  await resetBusinessAdDailyJumps();
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT ba.id, ba.owner_user_id AS ownerUserId, ba.business_name AS businessName, ba.manager_name AS managerName, ba.manager_contact AS managerContact,
             ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl,
             ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
             ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification, ba.use_stamp_event AS useStampEvent, ba.stamp_event_description AS stampEventDescription, ba.stamp_event_count AS stampEventCount,
-            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.activated_at AS activatedAt, ba.activated_until AS activatedUntil, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
+            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.daily_jump_remaining AS dailyJumpRemaining, ba.jump_reset_date AS jumpResetDate, ba.jumped_at AS jumpedAt, ba.activated_at AS activatedAt, ba.activated_until AS activatedUntil, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, COALESCE(u.nickname, '업체') AS ownerNickname,
             COALESCE(bp.company_name, '') AS companyName, COALESCE(bp.manager_name, '') AS profileManagerName,
             COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessName')), COALESCE(bp.company_name, '')) AS businessDisclosureName,
@@ -968,13 +997,14 @@ async function listSeoSitemapBusinessAds(limit = 300) {
 
 async function findBusinessAdById(adId) {
   await renewExpiredBusinessAdsWithStamp();
+  await resetBusinessAdDailyJumps();
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, manager_name AS managerName, manager_contact AS managerContact,
             title, image_url AS imageUrl, link_url AS linkUrl,
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
             kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
-            description, plan_type AS planType, view_count AS viewCount,
+            description, plan_type AS planType, view_count AS viewCount, daily_jump_remaining AS dailyJumpRemaining, jump_reset_date AS jumpResetDate, jumped_at AS jumpedAt,
             registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), activated_until), 0) AS remainingSeconds, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
       WHERE id = ?`,
@@ -1113,9 +1143,12 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
     );
     await connection.query(
       `UPDATE business_ads
-          SET is_active = ?, plan_type = ?, activated_at = ${BUSINESS_AD_CURRENT_MINUTE_SQL}, activated_until = DATE_ADD(${BUSINESS_AD_CURRENT_MINUTE_SQL}, INTERVAL ? ${BUSINESS_AD_PLAN_DURATION_UNIT_SQL})
+          SET is_active = ?, plan_type = ?, activated_at = ${BUSINESS_AD_CURRENT_MINUTE_SQL}, activated_until = DATE_ADD(${BUSINESS_AD_CURRENT_MINUTE_SQL}, INTERVAL ? ${BUSINESS_AD_PLAN_DURATION_UNIT_SQL}),
+              daily_jump_remaining = ?,
+              jump_reset_date = CURDATE(),
+              jumped_at = NULL
         WHERE id = ?`,
-      [autoRenew ? 1 : 0, planType, durationDays, adId]
+      [autoRenew ? 1 : 0, planType, durationDays, getBusinessAdPlanJumpCount(planType), adId]
     );
     const [[updatedAd]] = await connection.query('SELECT activated_at AS activatedAt, activated_until AS activatedUntil FROM business_ads WHERE id = ?', [adId]);
     await connection.commit();
@@ -1128,6 +1161,53 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
       activatedUntil: updatedAd?.activatedUntil || null,
       isCurrentlyVisible: true
     };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+
+async function jumpBusinessAd({ adId, ownerUserId }) {
+  const pool = getPool();
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    await resetBusinessAdDailyJumps(connection);
+    const [rows] = await connection.query(
+      `SELECT id, daily_jump_remaining AS dailyJumpRemaining
+         FROM business_ads
+        WHERE id = ?
+          AND owner_user_id = ?
+          AND registration_status = 'REGISTERED'
+          AND activated_until IS NOT NULL
+          AND activated_until > NOW()
+        FOR UPDATE`,
+      [adId, ownerUserId]
+    );
+    const ad = rows[0];
+    if (!ad) {
+      const error = new Error('점프는 활성화 기간의 등록 완료 광고에만 사용할 수 있습니다.');
+      error.status = 400;
+      throw error;
+    }
+    const remaining = Number(ad.dailyJumpRemaining || 0);
+    if (remaining <= 0) {
+      const error = new Error('오늘 사용 가능한 점프를 모두 사용했습니다.');
+      error.status = 400;
+      throw error;
+    }
+    await connection.query(
+      `UPDATE business_ads
+          SET daily_jump_remaining = daily_jump_remaining - 1,
+              jumped_at = NOW()
+        WHERE id = ?`,
+      [adId]
+    );
+    await connection.commit();
+    return findBusinessAdById(adId);
   } catch (error) {
     await connection.rollback();
     throw error;
@@ -1631,6 +1711,7 @@ module.exports = {
   findBusinessAdById,
   updateBusinessAd,
   activateBusinessAdWithStamp,
+  jumpBusinessAd,
   setBusinessAdActivationOff,
   deleteBusinessAd,
   updateEntry,
