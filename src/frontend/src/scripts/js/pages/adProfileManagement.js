@@ -357,7 +357,7 @@ function bindAdProfileInteractions() {
             : '시간선택 ~ 시간선택';
 
         if (previewTitle) previewTitle.textContent = `[${region}-${storeName}] ${title}`;
-        if (previewManager) previewManager.textContent = `${managerName} · ${managerContact}`;
+        if (previewManager) previewManager.textContent = `🌱 ${managerName} · 0일째 광고중`;
         if (previewDetail) previewDetail.textContent = `${region} ${district} · ${category} · ${formattedTime}`;
         syncAdProfileDetailPreview({
             storeName,

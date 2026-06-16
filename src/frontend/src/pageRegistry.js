@@ -334,7 +334,7 @@ const pageRegistry = {
                                     <h4 id="ad-profile-preview-title">[선택-업소명] 제목을 입력해주세요.</h4>
                                     <p class="business-directory-region-detail" id="ad-profile-preview-detail">선택 선택 · 선택 · 시간선택 ~ 시간선택</p>
                                     <div class="business-directory-meta">
-                                        <span class="business-directory-manager" id="ad-profile-preview-manager">담당자 · 연락처</span>
+                                        <span class="business-directory-manager" id="ad-profile-preview-manager">🌱 닉네임 · 0일째 광고중</span>
                                         <span class="business-directory-views">조회수 0</span>
                                     </div>
                                 </div>
