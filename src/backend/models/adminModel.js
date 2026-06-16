@@ -257,6 +257,33 @@ function decorateBusinessApplication(row) {
   };
 }
 
+async function countPendingBusinessApplications() {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT COUNT(*) AS count
+       FROM business_profiles bp
+      WHERE bp.registration_status = 'REGISTERED'
+        AND bp.approval_status = 'PENDING'`
+  );
+  return Number(rows[0]?.count || 0);
+}
+
+async function listRecentPendingBusinessApplications({ limit = 5 } = {}) {
+  const pool = getPool();
+  const safeLimit = Math.max(1, Math.min(20, Number(limit) || 5));
+  const [rows] = await pool.query(
+    `${BUSINESS_APPLICATION_SELECT_COLUMNS}
+       FROM business_profiles bp FORCE INDEX (idx_business_profiles_registered_updated)
+       STRAIGHT_JOIN users u ON u.id = bp.user_id
+      WHERE bp.registration_status = 'REGISTERED'
+        AND bp.approval_status = 'PENDING'
+      ORDER BY bp.updated_at DESC, bp.user_id DESC
+      LIMIT ?`,
+    [safeLimit]
+  );
+  return rows.map(decorateBusinessApplication);
+}
+
 async function listBusinessApplications() {
   const pool = getPool();
   const [rows] = await pool.query(
@@ -1688,6 +1715,8 @@ module.exports = {
   decodeEntryId,
   deleteEntry,
   listBusinessApplications,
+  countPendingBusinessApplications,
+  listRecentPendingBusinessApplications,
   findBusinessApplicationByUserId,
   reviewBusinessApplication,
   listUsers,

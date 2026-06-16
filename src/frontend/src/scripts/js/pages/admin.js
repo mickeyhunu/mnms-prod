@@ -22,6 +22,7 @@ const TOP_AD_PLACEMENT_OPTIONS = [
 let isGlobalAdminClickBound = false;
 let isDeleteModalActionBound = false;
 let isBusinessDocumentModalActionBound = false;
+let lastAdminReviewSummary = null;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
@@ -176,6 +177,49 @@ function syncAdminPageState(nextState = {}, { replace = true } = {}) {
     window.history[method]({}, '', url);
 }
 
+
+function setAdminBadge(elementId, count) {
+    const badge = document.getElementById(elementId);
+    if (!badge) return;
+    const safeCount = Math.max(0, Number(count) || 0);
+    badge.textContent = safeCount > 99 ? '99+' : String(safeCount);
+    badge.classList.toggle('hidden', safeCount <= 0);
+}
+
+function renderAdminReviewSummary(summary = {}) {
+    const pendingInquiries = Math.max(0, Number(summary.pendingInquiries) || 0);
+    const pendingBusinessApplications = Math.max(0, Number(summary.pendingBusinessApplications) || 0);
+    const totalPending = Math.max(0, Number(summary.totalPending) || pendingInquiries + pendingBusinessApplications);
+    setAdminBadge('inquiries-tab-badge', pendingInquiries);
+    setAdminBadge('business-applications-tab-badge', pendingBusinessApplications);
+
+    const alert = document.getElementById('admin-review-alert');
+    if (!alert) return;
+    if (totalPending <= 0) {
+        alert.classList.add('hidden');
+        alert.textContent = '';
+        return;
+    }
+
+    const parts = [];
+    if (pendingInquiries > 0) parts.push(`새 문의 ${pendingInquiries}건`);
+    if (pendingBusinessApplications > 0) parts.push(`기업회원 신청/변경 ${pendingBusinessApplications}건`);
+    alert.textContent = `확인 필요: ${parts.join(' · ')}`;
+    alert.classList.remove('hidden');
+}
+
+async function loadAdminReviewSummary() {
+    try {
+        const summary = await APIClient.get('/admin/review-summary');
+        lastAdminReviewSummary = summary;
+        renderAdminReviewSummary(summary);
+        return summary;
+    } catch (error) {
+        if (lastAdminReviewSummary) renderAdminReviewSummary(lastAdminReviewSummary);
+        return null;
+    }
+}
+
 async function activateAdminTab(tabKey, options = {}) {
     const { updateHistory = true, replaceHistory = true } = options;
     const resolvedTabKey = ADMIN_TABS.includes(tabKey) ? tabKey : 'stats';
@@ -240,6 +284,8 @@ async function initAdminPage() {
 
         const nickname = Auth.resolveNicknameDisplayElement();
         if (nickname) Auth.applyNicknameDisplay(nickname, me);
+
+        await loadAdminReviewSummary();
 
         const pageState = getAdminPageState();
         await activateAdminTab(pageState.activeTab, { updateHistory: true, replaceHistory: true });
@@ -315,6 +361,7 @@ function bindCommonEvents() {
     document.getElementById('inquiries-status')?.addEventListener('change', async (event) => {
         currentInquiryStatus = event.target.value || '';
         await loadInquiries();
+        await loadAdminReviewSummary();
     });
     document.getElementById('inquiry-answer-cancel-btn')?.addEventListener('click', closeInquiryAnswerModal);
     document.getElementById('inquiry-answer-save-btn')?.addEventListener('click', saveInquiryAnswer);
@@ -774,6 +821,7 @@ async function loadBusinessApplications() {
         const response = await APIClient.get('/admin/business-applications');
         ADMIN_LIST_STATE['business-applications'].items = response.content || [];
         renderBusinessApplicationsTable();
+        await loadAdminReviewSummary();
         showContent('business-applications');
     } catch (error) {
         showError('business-applications', error.message || '기업회원 신청서를 불러오지 못했습니다.');
@@ -2753,6 +2801,7 @@ async function loadInquiries() {
         const response = await APIClient.get('/admin/support/inquiries', params);
         ADMIN_LIST_STATE.inquiries.items = response.content || [];
         renderInquiriesTable();
+        await loadAdminReviewSummary();
         showContent('inquiries');
     } catch (error) {
         showError('inquiries', error.message || '문의 목록을 불러오지 못했습니다.');

@@ -28,6 +28,7 @@ export const adminTemplate = `
                         <svg class="admin-sidebar-toggle__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
                     </button>
                     <span class="community-board-name">관리자 페이지</span>
+                    <span class="admin-review-alert hidden" id="admin-review-alert" role="status" aria-live="polite"></span>
                 </div>
             </header>
 
@@ -51,8 +52,8 @@ export const adminTemplate = `
                         <button class="admin-tab" data-tab="business-ads" title="업체광고관리"><span class="admin-tab__label">업체광고관리</span></button>
                         <button class="admin-tab" data-tab="entries" title="엔트리 관리"><span class="admin-tab__label">엔트리 관리</span></button>
                         <button class="admin-tab" data-tab="support" title="공지/FAQ 관리"><span class="admin-tab__label">공지/FAQ 관리</span></button>
-                        <button class="admin-tab" data-tab="business-applications" title="기업회원 신청/변경 검토"><span class="admin-tab__label">기업회원 신청/변경 검토</span></button>
-                        <button class="admin-tab" data-tab="inquiries" title="1:1 문의 관리"><span class="admin-tab__label">1:1 문의 관리</span></button>
+                        <button class="admin-tab" data-tab="business-applications" title="기업회원 신청/변경 검토"><span class="admin-tab__label">기업회원 신청/변경 검토</span><span class="admin-tab__badge hidden" id="business-applications-tab-badge">0</span></button>
+                        <button class="admin-tab" data-tab="inquiries" title="1:1 문의 관리"><span class="admin-tab__label">1:1 문의 관리</span><span class="admin-tab__badge hidden" id="inquiries-tab-badge">0</span></button>
                     </nav>
                 </aside>
 
