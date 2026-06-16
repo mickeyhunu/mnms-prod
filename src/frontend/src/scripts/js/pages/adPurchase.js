@@ -34,12 +34,12 @@
             name: '베이직 광고',
             headline: '지역 목록 일반 노출',
             durationDays: 3,
-            durationUnit: 'minute',
-            durationLabel: '3분',
+            durationUnit: 'day',
+            durationLabel: '3일',
             badgeImage: '/src/assets/ad-plan-badges/basic-badge.png',
             badgeAlt: 'BASIC',
             features: [
-                { text: '스탬프 1개로 업체정보 3분 노출', enabled: true },
+                { text: '스탬프 1개로 업체정보 3일 노출', enabled: true },
                 { text: '1일 점프 6개', enabled: true },
                 { text: '수동 활성화 시 스탬프 1개 소모', enabled: true },
             ]
@@ -49,12 +49,12 @@
             name: '플러스 광고',
             headline: '지역 상단 우선 노출',
             durationDays: 2,
-            durationUnit: 'minute',
-            durationLabel: '2분',
+            durationUnit: 'day',
+            durationLabel: '2일',
             badgeImage: '/src/assets/ad-plan-badges/plus-badge.png',
             badgeAlt: 'PLUS',
             features: [
-                { text: '스탬프 1개로 업체정보 2분 노출', enabled: true },
+                { text: '스탬프 1개로 업체정보 2일 노출', enabled: true },
                 { text: '1일 점프 9개', enabled: true },
                 { text: '베이직보다 높은 광고 등급으로 표시', enabled: true },
             ]
@@ -63,13 +63,13 @@
             code: 'PREMIUM',
             name: '프리미엄 광고',
             headline: '지역 상단 최우선 노출',
-            durationDays: 1,
-            durationUnit: 'minute',
-            durationLabel: '1분',
+            durationDays: 3,
+            durationUnit: 'day',
+            durationLabel: '3일',
             badgeImage: '/src/assets/ad-plan-badges/premium-badge.png',
             badgeAlt: 'PREMIUM',
             features: [
-                { text: '스탬프 1개로 업체정보 1분 노출', enabled: true },
+                { text: '스탬프 1개로 업체정보 3일 노출', enabled: true },
                 { text: '1일 점프 12개', enabled: true },
                 { text: '활성화 기간동안 1일 1회 홍보게시글 작성 가능', enabled: true },
                 { text: '지역 상단 우선 노출 대상', enabled: true },
@@ -85,6 +85,25 @@
         businessProfile: null,
         totalStamps: 0,
         isSubmitting: false
+    };
+
+    const DURATION_UNIT_TO_MS = { minute: 60 * 1000, day: 24 * 60 * 60 * 1000 };
+
+    const getPlanDurationMs = (plan) => Number(plan?.durationDays || 0) * (DURATION_UNIT_TO_MS[plan?.durationUnit] || DURATION_UNIT_TO_MS.day);
+
+    const getPlanDurationUnitLabel = (plan) => plan?.durationUnit === 'minute' ? '분' : '일';
+
+    const applyPlanDurationConfig = (config) => {
+        if (!config || typeof config !== 'object') return;
+        Object.values(plans).forEach((plan) => {
+            const planConfig = config[plan.code];
+            if (!planConfig) return;
+            const duration = Number(planConfig.duration || planConfig.durationDays || 0);
+            if (Number.isFinite(duration) && duration > 0) plan.durationDays = duration;
+            plan.durationUnit = planConfig.durationUnit === 'minute' ? 'minute' : 'day';
+            plan.durationLabel = planConfig.durationLabel || `${plan.durationDays}${getPlanDurationUnitLabel(plan)}`;
+            if (plan.features?.[0]) plan.features[0].text = `스탬프 1개로 업체정보 ${plan.durationLabel} 노출`;
+        });
     };
 
     const planCodesByApiCode = Object.entries(plans).reduce((acc, [key, plan]) => {
@@ -132,8 +151,8 @@
         return date.toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short', hour: '2-digit', minute: '2-digit' });
     };
 
-    const formatProjectedExposureUntil = (minutes) => {
-        const date = new Date(Date.now() + Number(minutes || 0) * 60 * 1000);
+    const formatProjectedExposureUntil = (durationMs) => {
+        const date = new Date(Date.now() + Number(durationMs || 0));
         const now = new Date();
         const timeText = date.toLocaleTimeString('ko-KR', {
             hour: '2-digit',
@@ -170,7 +189,7 @@
         if (!ad.activatedUntil) return null;
         const until = new Date(ad.activatedUntil);
         if (Number.isNaN(until.getTime())) return null;
-        return new Date(until.getTime() - Number(plan?.durationDays || 0) * 60 * 1000);
+        return new Date(until.getTime() - getPlanDurationMs(plan));
     };
 
     const render = () => {
@@ -214,14 +233,16 @@
         durationText.textContent = currentPlan.durationLabel || `${currentPlan.durationDays}일`;
         const totalStamps = Number(state.totalStamps || 0);
         const remainingStamps = Math.max(totalStamps - 1, 0);
-        const exposureMinutes = Number(currentPlan.durationDays || 0);
-        const estimatedDays = totalStamps * exposureMinutes;
+        const exposureDuration = Number(currentPlan.durationDays || 0);
+        const estimatedDuration = totalStamps * exposureDuration;
         if (stampBalanceSummary) stampBalanceSummary.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         const remainingStampsText = `${remainingStamps.toLocaleString('ko-KR')}개`;
-        const estimatedContinuousRunText = `${estimatedDays.toLocaleString('ko-KR')}${currentPlan.durationUnit === 'minute' ? '분' : '일'}`;
-        const estimatedRunText = formatProjectedUntilWithDuration(exposureMinutes, currentPlan.durationLabel || `${exposureMinutes}${currentPlan.durationUnit === 'minute' ? '분' : '일'}`);
-        const estimatedUntilText = totalStamps ? formatProjectedUntilWithDuration(estimatedDays, estimatedContinuousRunText) : '-';
-        const estimatedUntilNoteText = totalStamps ? formatProjectedUntilNote(estimatedDays) : '';
+        const estimatedContinuousRunText = `${estimatedDuration.toLocaleString('ko-KR')}${getPlanDurationUnitLabel(currentPlan)}`;
+        const durationMs = getPlanDurationMs(currentPlan);
+        const continuousDurationMs = totalStamps * durationMs;
+        const estimatedRunText = formatProjectedUntilWithDuration(durationMs, currentPlan.durationLabel || `${exposureDuration}${getPlanDurationUnitLabel(currentPlan)}`);
+        const estimatedUntilText = totalStamps ? formatProjectedUntilWithDuration(continuousDurationMs, estimatedContinuousRunText) : '-';
+        const estimatedUntilNoteText = totalStamps ? formatProjectedUntilNote(continuousDurationMs) : '';
         if (stampAfterUse) stampAfterUse.textContent = remainingStampsText;
         if (estimatedRunDays) estimatedRunDays.textContent = estimatedRunText;
         if (estimatedRunUntil) estimatedRunUntil.textContent = estimatedUntilText;
@@ -257,11 +278,13 @@
     };
 
     const loadActivationData = async () => {
-        const [adsResponse, stampResponse, businessProfileResponse] = await Promise.all([
+        const [planResponse, adsResponse, stampResponse, businessProfileResponse] = await Promise.all([
+            APIClient.get('/users/me/business-ad-plans'),
             APIClient.get('/users/me/business-ads'),
             APIClient.get('/users/me/stamps'),
             APIClient.get('/users/me/business-profile')
         ]);
+        applyPlanDurationConfig(planResponse?.content);
         state.ad = Array.isArray(adsResponse?.content) ? adsResponse.content[0] : null;
         state.businessProfile = businessProfileResponse || null;
         state.totalStamps = Number(stampResponse?.totalStamps || 0);
