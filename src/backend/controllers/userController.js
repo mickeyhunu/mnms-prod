@@ -653,10 +653,13 @@ async function myLiveAccessStatus(req, res, next) {
 async function myNotifications(req, res, next) {
   try {
     const limit = Math.max(1, Math.min(100, Number(req.query.limit) || 50));
-    const [commentNotifications, notices, answeredInquiries] = await Promise.all([
+    const isAdmin = String(req.user?.role || '').toUpperCase() === 'ADMIN';
+    const [commentNotifications, notices, answeredInquiries, pendingInquiries, pendingBusinessApplications] = await Promise.all([
       getUserNotifications(req.user.id, { limit }),
       supportModel.listArticles(supportModel.SUPPORT_CATEGORIES.NOTICE, false),
-      supportModel.listAnsweredInquiriesByUser(req.user.id, { limit })
+      supportModel.listAnsweredInquiriesByUser(req.user.id, { limit }),
+      isAdmin ? supportModel.listRecentPendingInquiries({ limit }) : Promise.resolve([]),
+      isAdmin ? adminModel.listRecentPendingBusinessApplications({ limit }) : Promise.resolve([])
     ]);
 
     const normalizedNotifications = [
@@ -679,6 +682,36 @@ async function myNotifications(req, res, next) {
         createdAt: notice.createdAt,
         sourceType: notice.sourceType || 'SUPPORT',
         targetUrl: `/support?articleId=${notice.sourceId || notice.id}&sourceType=${String(notice.sourceType || 'SUPPORT').toUpperCase()}`
+      })),
+      ...pendingInquiries.map((item) => ({
+        notificationKey: `admin-pending-inquiry-${item.id}`,
+        type: 'admin_pending_inquiry',
+        sourceId: item.id,
+        postId: null,
+        inquiryId: item.id,
+        parentId: null,
+        postTitle: null,
+        content: item.title,
+        actorNickname: item.userNickname || item.userLoginId || '회원',
+        title: item.title,
+        message: `새 1:1 문의가 접수되었습니다: ${item.title}`,
+        createdAt: item.createdAt,
+        targetUrl: '/admin?tab=inquiries'
+      })),
+      ...pendingBusinessApplications.map((item) => ({
+        notificationKey: `admin-pending-business-application-${item.userId}-${item.updatedAt || item.createdAt || ''}`,
+        type: 'admin_pending_business_application',
+        sourceId: item.userId,
+        postId: null,
+        inquiryId: null,
+        parentId: null,
+        postTitle: null,
+        content: item.companyName || item.businessInfo?.businessName || '',
+        actorNickname: item.nickname || item.loginId || '회원',
+        title: item.companyName || item.businessInfo?.businessName || '기업회원 신청/변경',
+        message: `새 기업회원 신청/변경 검토가 필요합니다: ${item.companyName || item.businessInfo?.businessName || item.loginId || `회원#${item.userId}`}`,
+        createdAt: item.updatedAt || item.createdAt,
+        targetUrl: '/admin?tab=business-applications'
       })),
       ...answeredInquiries.map((item) => ({
         notificationKey: `inquiry-answer-${item.id}`,
@@ -736,15 +769,20 @@ async function markMyNotificationsRead(req, res, next) {
 async function markMyNotificationsReadAll(req, res, next) {
   try {
     const limit = Math.max(1, Math.min(100, Number(req.body.limit) || 100));
-    const [commentNotifications, notices, answeredInquiries] = await Promise.all([
+    const isAdmin = String(req.user?.role || '').toUpperCase() === 'ADMIN';
+    const [commentNotifications, notices, answeredInquiries, pendingInquiries, pendingBusinessApplications] = await Promise.all([
       getUserNotifications(req.user.id, { limit }),
       supportModel.listArticles(supportModel.SUPPORT_CATEGORIES.NOTICE, false),
-      supportModel.listAnsweredInquiriesByUser(req.user.id, { limit })
+      supportModel.listAnsweredInquiriesByUser(req.user.id, { limit }),
+      isAdmin ? supportModel.listRecentPendingInquiries({ limit }) : Promise.resolve([]),
+      isAdmin ? adminModel.listRecentPendingBusinessApplications({ limit }) : Promise.resolve([])
     ]);
 
     const allNotificationKeys = [
       ...commentNotifications.map((item) => item.notificationKey),
       ...notices.map((notice) => `admin-notice-${notice.sourceType || 'SUPPORT'}-${notice.sourceId || notice.id}`),
+      ...pendingInquiries.map((item) => `admin-pending-inquiry-${item.id}`),
+      ...pendingBusinessApplications.map((item) => `admin-pending-business-application-${item.userId}-${item.updatedAt || item.createdAt || ''}`),
       ...answeredInquiries.map((item) => `inquiry-answer-${item.id}`)
     ];
 
