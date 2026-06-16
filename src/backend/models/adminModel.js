@@ -1,6 +1,8 @@
 /**
  * 파일 역할: 관리자 전용 회원/광고 데이터 조회 및 수정 쿼리를 담당하는 모델 파일.
  */
+const fs = require('fs');
+const path = require('path');
 const { getPool, getChatbotPool } = require('../config/database');
 const { createSeoSlugWithId, extractTrailingSlugId, normalizeSeoSlug } = require('../utils/seoSlug');
 const { pickUserRow } = require('../utils/response');
@@ -8,18 +10,27 @@ const { ensureResolvedLoginRestriction, getUserActivityStats, getUserActivityDet
 const { getStoreByNo, listStores } = require('./liveModel');
 
 
-const BUSINESS_AD_PLAN_DURATIONS = {
-  BASIC: 3,
-  PLUS: 2,
-  PREMIUM: 1
-};
+const isLocalEnvLoaded = process.env.MNMS_ENV_LOCAL_LOADED === 'true'
+  || fs.existsSync(path.join(process.cwd(), '.env.local'))
+  || fs.existsSync(path.resolve(__dirname, '..', '.env.local'));
+const BUSINESS_AD_PLAN_DURATION_UNIT_SQL = isLocalEnvLoaded ? 'MINUTE' : 'DAY';
+const BUSINESS_AD_PLAN_DURATION_UNIT_LABEL = isLocalEnvLoaded ? '분' : '일';
+const BUSINESS_AD_PLAN_DURATIONS = isLocalEnvLoaded
+  ? {
+      BASIC: 3,
+      PLUS: 2,
+      PREMIUM: 1
+    }
+  : {
+      BASIC: 3,
+      PLUS: 2,
+      PREMIUM: 3
+    };
 const BUSINESS_AD_PLAN_JUMP_COUNTS = {
   BASIC: 6,
   PLUS: 9,
   PREMIUM: 12
 };
-const BUSINESS_AD_PLAN_DURATION_UNIT_SQL = 'MINUTE';
-const BUSINESS_AD_PLAN_DURATION_UNIT_LABEL = '분';
 const BUSINESS_AD_CURRENT_MINUTE_SQL = "CAST(DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:00') AS DATETIME)";
 const BUSINESS_AD_RENEWAL_INTERVAL_MS = Number(process.env.BUSINESS_AD_RENEWAL_INTERVAL_MS || 1000);
 let businessAdRenewalTimer = null;
@@ -43,6 +54,21 @@ function getBusinessAdPlanDurationDays(planType) {
 
 function getBusinessAdPlanDurationLabel(planType) {
   return `${getBusinessAdPlanDurationDays(planType)}${BUSINESS_AD_PLAN_DURATION_UNIT_LABEL}`;
+}
+
+function getBusinessAdPlanDurationUnit() {
+  return BUSINESS_AD_PLAN_DURATION_UNIT_LABEL === '분' ? 'minute' : 'day';
+}
+
+function getBusinessAdPlanDurationConfig() {
+  return Object.keys(BUSINESS_AD_PLAN_DURATIONS).reduce((acc, planType) => {
+    acc[planType] = {
+      duration: getBusinessAdPlanDurationDays(planType),
+      durationUnit: getBusinessAdPlanDurationUnit(),
+      durationLabel: getBusinessAdPlanDurationLabel(planType)
+    };
+    return acc;
+  }, {});
 }
 
 function getBusinessAdPlanJumpCount(planType) {
@@ -1923,6 +1949,9 @@ module.exports = {
   stopBusinessAdJumpScheduleScheduler,
   normalizeBusinessAdPlanType,
   getBusinessAdPlanDurationDays,
+  getBusinessAdPlanDurationLabel,
+  getBusinessAdPlanDurationUnit,
+  getBusinessAdPlanDurationConfig,
   renewExpiredBusinessAdsWithStamp,
   startBusinessAdRenewalScheduler,
   stopBusinessAdRenewalScheduler,
