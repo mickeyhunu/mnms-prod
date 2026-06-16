@@ -23,6 +23,8 @@ const {
   updateMyBusinessAd,
   updateMyBusinessAdActivation,
   jumpMyBusinessAd,
+  getMyBusinessAdJumpSchedules,
+  updateMyBusinessAdJumpSchedules,
   deleteMyBusinessAd,
   getMyBusinessProfile,
   saveMyBusinessProfile,
@@ -55,6 +57,8 @@ router.get('/me/business-ads', authMiddleware, listMyBusinessAds);
 router.post('/me/business-ads', authMiddleware, createMyBusinessAd);
 router.put('/me/business-ads/:id', authMiddleware, updateMyBusinessAd);
 router.patch('/me/business-ads/:id/activation', authMiddleware, updateMyBusinessAdActivation);
+router.get('/me/business-ads/:id/jump-schedules', authMiddleware, getMyBusinessAdJumpSchedules);
+router.put('/me/business-ads/:id/jump-schedules', authMiddleware, updateMyBusinessAdJumpSchedules);
 router.post('/me/business-ads/:id/jump', authMiddleware, jumpMyBusinessAd);
 router.delete('/me/business-ads/:id', authMiddleware, deleteMyBusinessAd);
 router.get('/me/business-profile', authMiddleware, getMyBusinessProfile);

@@ -661,7 +661,9 @@ async function initDatabase() {
     { name: 'activated_until', sql: 'ALTER TABLE business_ads ADD COLUMN activated_until DATETIME NULL AFTER activated_at' },
     { name: 'daily_jump_remaining', sql: 'ALTER TABLE business_ads ADD COLUMN daily_jump_remaining INT NOT NULL DEFAULT 0 AFTER activated_until' },
     { name: 'jump_reset_date', sql: 'ALTER TABLE business_ads ADD COLUMN jump_reset_date DATE NULL AFTER daily_jump_remaining' },
-    { name: 'jumped_at', sql: 'ALTER TABLE business_ads ADD COLUMN jumped_at DATETIME NULL AFTER jump_reset_date' }
+    { name: 'jumped_at', sql: 'ALTER TABLE business_ads ADD COLUMN jumped_at DATETIME NULL AFTER jump_reset_date' },
+    { name: 'jump_schedule_times', sql: 'ALTER TABLE business_ads ADD COLUMN jump_schedule_times TEXT NULL AFTER jumped_at' },
+    { name: 'jump_schedule_last_executed_at', sql: 'ALTER TABLE business_ads ADD COLUMN jump_schedule_last_executed_at DATETIME NULL AFTER jump_schedule_times' }
   ];
 
   for (const migration of businessAdsColumnMigrations) {
@@ -679,6 +681,8 @@ async function initDatabase() {
       await pool.query(migration.sql);
     }
   }
+
+
 
   const [businessProfileRegistrationStatusColumn] = await pool.query(
     `SELECT 1
