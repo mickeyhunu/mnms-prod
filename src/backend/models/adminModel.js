@@ -25,6 +25,10 @@ const BUSINESS_AD_RENEWAL_INTERVAL_MS = Number(process.env.BUSINESS_AD_RENEWAL_I
 let businessAdRenewalTimer = null;
 let businessAdRenewalRunPromise = null;
 let businessAdRenewalSchedulerStarted = false;
+let businessAdJumpScheduleTimer = null;
+let businessAdJumpScheduleRunPromise = null;
+let businessAdJumpScheduleSchedulerStarted = false;
+const BUSINESS_AD_JUMP_SCHEDULE_INTERVAL_MS = Number(process.env.BUSINESS_AD_JUMP_SCHEDULE_INTERVAL_MS || 30000);
 
 function normalizeBusinessAdPlanType(planType) {
   const normalized = String(planType || '').trim().toUpperCase();
@@ -43,6 +47,58 @@ function getBusinessAdPlanDurationLabel(planType) {
 
 function getBusinessAdPlanJumpCount(planType) {
   return BUSINESS_AD_PLAN_JUMP_COUNTS[normalizeBusinessAdPlanType(planType)] || BUSINESS_AD_PLAN_JUMP_COUNTS.BASIC;
+}
+
+
+function normalizeJumpScheduleTime(value) {
+  const raw = String(value || '').trim();
+  const match = raw.match(/^(\d{2}):(\d{2})(?::\d{2})?$/);
+  if (!match) return null;
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (!Number.isInteger(hour) || !Number.isInteger(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+
+function normalizeJumpScheduleTimes(times) {
+  if (!Array.isArray(times)) return [];
+  return [...new Set(times.map(normalizeJumpScheduleTime).filter(Boolean))].sort();
+}
+
+function validateJumpScheduleTimes(times, planType = 'BASIC') {
+  if (!Array.isArray(times)) {
+    const error = new Error('자동 점프 스케줄은 배열로 입력해주세요.');
+    error.status = 400;
+    throw error;
+  }
+  const normalized = normalizeJumpScheduleTimes(times);
+  if (normalized.length !== times.length) {
+    const error = new Error('자동 점프 시간은 HH:mm 형식으로 중복 없이 입력해주세요.');
+    error.status = 400;
+    throw error;
+  }
+  const maxCount = getBusinessAdPlanJumpCount(planType);
+  if (normalized.length > maxCount) {
+    const error = new Error(`자동 점프 스케줄은 현재 광고 상품 기준 최대 ${maxCount}개까지 등록할 수 있습니다.`);
+    error.status = 400;
+    throw error;
+  }
+  const minutes = normalized.map((time) => {
+    const [hour, minute] = time.split(':').map(Number);
+    return hour * 60 + minute;
+  });
+  for (let index = 0; index < minutes.length; index += 1) {
+    const current = minutes[index];
+    const next = minutes[(index + 1) % minutes.length];
+    const diff = index === minutes.length - 1 ? next + (24 * 60) - current : next - current;
+    if (minutes.length > 1 && diff < 10) {
+      const error = new Error('자동 점프 스케줄은 각 시간 사이에 최소 10분 간격이 필요합니다.');
+      error.status = 400;
+      throw error;
+    }
+  }
+  return normalized;
 }
 
 function getBusinessAdPublicVisibilityCondition(alias = 'ba') {
@@ -1240,6 +1296,148 @@ async function jumpBusinessAd({ adId, ownerUserId }) {
   }
 }
 
+
+function parseJumpScheduleTimes(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return normalizeJumpScheduleTimes(value);
+  try {
+    const parsed = JSON.parse(String(value));
+    return normalizeJumpScheduleTimes(parsed);
+  } catch (_error) {
+    return [];
+  }
+}
+
+async function listBusinessAdJumpSchedules({ adId, ownerUserId }) {
+  const pool = getPool();
+  const [adRows] = await pool.query(
+    `SELECT id, plan_type AS planType, jump_schedule_times AS jumpScheduleTimes
+       FROM business_ads
+      WHERE id = ?
+        AND owner_user_id = ?
+      LIMIT 1`,
+    [adId, ownerUserId]
+  );
+  const ad = adRows[0];
+  if (!ad) {
+    const error = new Error('광고를 찾을 수 없습니다.');
+    error.status = 404;
+    throw error;
+  }
+  return {
+    schedules: parseJumpScheduleTimes(ad.jumpScheduleTimes),
+    maxScheduleCount: getBusinessAdPlanJumpCount(ad.planType)
+  };
+}
+
+async function replaceBusinessAdJumpSchedules({ adId, ownerUserId, schedules }) {
+  const pool = getPool();
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [adRows] = await connection.query(
+      `SELECT id, plan_type AS planType
+         FROM business_ads
+        WHERE id = ?
+          AND owner_user_id = ?
+        FOR UPDATE`,
+      [adId, ownerUserId]
+    );
+    const ad = adRows[0];
+    if (!ad) {
+      const error = new Error('광고를 찾을 수 없습니다.');
+      error.status = 404;
+      throw error;
+    }
+    const normalized = validateJumpScheduleTimes(schedules, ad.planType);
+    await connection.query(
+      `UPDATE business_ads
+          SET jump_schedule_times = ?,
+              jump_schedule_last_executed_at = NULL
+        WHERE id = ?`,
+      [JSON.stringify(normalized), adId]
+    );
+    await connection.commit();
+    return { schedules: normalized, maxScheduleCount: getBusinessAdPlanJumpCount(ad.planType) };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+async function runDueBusinessAdJumpSchedules() {
+  const pool = getPool();
+  await resetBusinessAdDailyJumps(pool);
+  const [[timeRow]] = await pool.query("SELECT DATE_FORMAT(NOW(), '%H:%i') AS currentTime");
+  const currentTime = timeRow?.currentTime;
+  if (!currentTime) return;
+  const [rows] = await pool.query(
+    `SELECT id AS adId,
+            owner_user_id AS ownerUserId,
+            jump_schedule_times AS jumpScheduleTimes
+       FROM business_ads
+      WHERE registration_status = 'REGISTERED'
+        AND activated_until IS NOT NULL
+        AND activated_until > NOW()
+        AND jump_schedule_times IS NOT NULL
+        AND jump_schedule_times <> ''
+        AND (jump_schedule_last_executed_at IS NULL OR DATE_FORMAT(jump_schedule_last_executed_at, '%Y-%m-%d %H:%i') < DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i'))
+      ORDER BY id ASC
+      LIMIT 500`
+  );
+  for (const row of rows) {
+    const schedules = parseJumpScheduleTimes(row.jumpScheduleTimes);
+    if (!schedules.includes(currentTime)) continue;
+    try {
+      await jumpBusinessAd({ adId: row.adId, ownerUserId: row.ownerUserId });
+    } catch (error) {
+      if (Number(error.status || 500) >= 500) {
+        console.error('Business ad jump schedule failed:', error);
+        continue;
+      }
+    }
+    await pool.query(
+      `UPDATE business_ads
+          SET jump_schedule_last_executed_at = CAST(DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:00') AS DATETIME)
+        WHERE id = ?`,
+      [row.adId]
+    );
+  }
+}
+
+
+
+async function runBusinessAdJumpScheduleWorker() {
+  if (businessAdJumpScheduleRunPromise) return businessAdJumpScheduleRunPromise;
+  businessAdJumpScheduleRunPromise = runDueBusinessAdJumpSchedules();
+  try {
+    await businessAdJumpScheduleRunPromise;
+  } finally {
+    businessAdJumpScheduleRunPromise = null;
+  }
+}
+
+function startBusinessAdJumpScheduleScheduler() {
+  if (businessAdJumpScheduleSchedulerStarted) return businessAdJumpScheduleTimer;
+  businessAdJumpScheduleSchedulerStarted = true;
+  businessAdJumpScheduleTimer = setInterval(() => {
+    runBusinessAdJumpScheduleWorker().catch((error) => console.error('Business ad jump schedule scheduler error:', error));
+  }, BUSINESS_AD_JUMP_SCHEDULE_INTERVAL_MS);
+  if (typeof businessAdJumpScheduleTimer.unref === 'function') businessAdJumpScheduleTimer.unref();
+  runBusinessAdJumpScheduleWorker().catch((error) => console.error('Business ad jump schedule scheduler start failed:', error));
+  return businessAdJumpScheduleTimer;
+}
+
+function stopBusinessAdJumpScheduleScheduler() {
+  businessAdJumpScheduleSchedulerStarted = false;
+  if (businessAdJumpScheduleTimer) {
+    clearInterval(businessAdJumpScheduleTimer);
+    businessAdJumpScheduleTimer = null;
+  }
+}
+
 async function deleteBusinessAd(adId) {
   const pool = getPool();
   await pool.query('DELETE FROM business_ads WHERE id = ?', [adId]);
@@ -1717,6 +1915,12 @@ module.exports = {
   deleteAd,
   BUSINESS_AD_PLAN_DURATIONS,
   BUSINESS_AD_RENEWAL_INTERVAL_MS,
+  BUSINESS_AD_JUMP_SCHEDULE_INTERVAL_MS,
+  listBusinessAdJumpSchedules,
+  replaceBusinessAdJumpSchedules,
+  runDueBusinessAdJumpSchedules,
+  startBusinessAdJumpScheduleScheduler,
+  stopBusinessAdJumpScheduleScheduler,
   normalizeBusinessAdPlanType,
   getBusinessAdPlanDurationDays,
   renewExpiredBusinessAdsWithStamp,
