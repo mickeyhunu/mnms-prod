@@ -897,7 +897,7 @@ const pageRegistry = {
                         <p class="jump-management-scheduler-help" id="jump-management-scheduler-help">광고 상품의 일일 점프 수만큼 매일 반복되는 자동 점프 시간을 등록할 수 있습니다.</p>
                         <ul class="jump-management-schedule-list" id="jump-management-schedule-list"></ul>
                     </div>
-                    <p class="ad-management-safe-note"><span aria-hidden="true"> ⏱ </span><b>점프는 매일 00시에 초기화됩니다</b><br>점프는 광고 활성화 기간 동안만 사용할 수 있으며, 남은 개수는 00~24시 기준으로 관리됩니다.</p>
+                    <p class="ad-management-safe-note"><span aria-hidden="true"> ⏱ </span><b>점프 갯수는 매일 00시에 초기화됩니다</b><br>점프는 광고 활성화 기간 동안만 사용할 수 있으며, 남은 개수는 00~24시 기준으로 관리됩니다.</p>
                 </section>
             </div>
         </div>
