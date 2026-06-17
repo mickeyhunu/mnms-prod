@@ -265,7 +265,7 @@ router.get('/users/:id', async (req, res, next) => {
     const user = await adminModel.getUserDetail(id);
     if (!user || !isManagedUserAccount(user)) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
 
-    const activity = await adminModel.getUserActivityOverview(id, { limit: 10 });
+    const activity = await adminModel.getUserActivityOverview(id, { limit: 1000 });
 
     res.json({
       user: {

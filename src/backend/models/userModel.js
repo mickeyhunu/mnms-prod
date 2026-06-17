@@ -96,7 +96,7 @@ async function recordUserLoginHistory(userId, { ipAddress, userAgent }) {
 
 async function getUserLoginHistories(userId, { limit = 10 } = {}) {
   const pool = getPool();
-  const safeLimit = Math.max(1, Math.min(100, Number(limit) || 10));
+  const safeLimit = Math.max(1, Math.min(1000, Number(limit) || 10));
   const [rows] = await pool.query(
     `SELECT id, ip_address AS ipAddress, user_agent AS userAgent, created_at AS createdAt
      FROM user_login_histories
@@ -192,7 +192,7 @@ async function getUserDailyActivityStats(userId) {
 
 async function getUserPointHistories(userId, { limit = 20, page = 1 } = {}) {
   const pool = getPool();
-  const safeLimit = Math.max(1, Math.min(100, Number(limit) || 20));
+  const safeLimit = Math.max(1, Math.min(1000, Number(limit) || 20));
   const safePage = Math.max(1, Number(page) || 1);
   const offset = (safePage - 1) * safeLimit;
 
@@ -224,7 +224,7 @@ async function getUserPointHistories(userId, { limit = 20, page = 1 } = {}) {
 
 async function getUserActivityDetails(userId, { limit = 20 } = {}) {
   const pool = getPool();
-  const safeLimit = Math.max(1, Math.min(100, Number(limit) || 20));
+  const safeLimit = Math.max(1, Math.min(1000, Number(limit) || 20));
 
   const [posts] = await pool.query(
     `SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt,
