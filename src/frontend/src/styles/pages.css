@@ -830,7 +830,7 @@
 .ranking-list__item--rank-1 .ranking-list__rank { background: #f6c85f; color: #1f1600; }
 .ranking-list__item--rank-2 .ranking-list__rank { background: #cbd5e1; color: #111827; }
 .ranking-list__item--rank-3 .ranking-list__rank { background: #c58b52; color: #1c1006; }
-.ranking-list__details { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.ranking-list__details { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 1px; }
 .ranking-list__nickname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #1f2937; font-weight: 700; }
 .ranking-list__score { color: #b7791f; }
 .ranking-list__empty { padding: 18px 12px; color: #64748b; text-align: center; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 16px; }
