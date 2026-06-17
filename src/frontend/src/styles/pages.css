@@ -843,7 +843,3 @@
 .ranking-list__nickname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #1f2937; font-weight: 700; }
 .ranking-list__score { color: #b7791f; }
 .ranking-list__empty { padding: 18px 12px; color: #64748b; text-align: center; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 16px; }
-
-@media (max-width: 900px) {
-  .ranking-grid { grid-template-columns: 1fr; }
-}
