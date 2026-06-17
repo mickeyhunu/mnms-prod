@@ -47,6 +47,7 @@ const routes = [
   { path: '/ad-profile-management', component: PageView, meta: { pageKey: 'ad-profile-management', title: '광고프로필 관리', description: '광고프로필 기본 정보와 상세 소개를 등록하고 미리보기를 확인하세요.', noindex: true } },
   { path: '/business-management', component: PageView, meta: { pageKey: 'business-management', title: '사업자정보 관리', description: '사업자등록증, 영업허가증, 사업자 상세정보를 관리하세요.', noindex: true } },
   { path: '/play', component: PageView, meta: { pageKey: 'play', title: 'PLAY', description: 'LIVE와 RBTI를 한 번에 이동할 수 있는 PLAY 메뉴입니다.' } },
+  { path: '/play/ranking', component: PageView, meta: { pageKey: 'ranking', title: '월간 랭킹', description: '현재 달 일반회원 활동 랭킹을 확인하세요.' } },
   { path: '/play/live', component: PageView, meta: { pageKey: 'live', title: '실시간 출근부 웨이팅 초톡', description: '실시간 업소 출근부 웨이팅 초이스, 엔트리 현황, 오늘의 추천 정보를 빠르게 확인하세요.', keywords: ['실시간 업소', '라이브 정보', '오늘의 추천 업소', '엔트리 현황', '지역 업소'] } },
   { path: '/play/rbti', component: PageView, meta: { pageKey: 'rbti', title: 'RBTI 테스트', description: '유흥 MBTI 성향 테스트 RBTI 검사.' } },
   { path: '/play/alcohol', component: PageView, meta: { pageKey: 'alcohol', title: '음주 측정기', description: '간단한 음주 상태 자가 점검을 위한 음주측정 페이지입니다.' } },
