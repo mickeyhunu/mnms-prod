@@ -51,7 +51,7 @@
     setLoading(true);
 
     try {
-      const data = await APIClient.get('/rankings/monthly', { limit: 10 });
+      const data = await APIClient.get('/rankings/monthly', { limit: 5 });
       const period = data.period || {};
       const month = Number(period.month || new Date().getMonth() + 1);
       const year = Number(period.year || new Date().getFullYear());
