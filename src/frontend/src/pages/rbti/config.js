@@ -25,7 +25,7 @@ const rbtiTemplate = `
         </div>
       </header>
 
-      <div style="margin: 5%">
+      <div class="play-tool-content">
         <div style="margin-top: 18px; border-radius: 18px; padding: 26px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #fff; box-shadow: 0 10px 30px rgba(79,70,229,0.22); text-align: center;">
           <div id="rbti-hero-intro">
             <div style="font-size: 40px; margin-bottom: 8px;">🧠</div>
