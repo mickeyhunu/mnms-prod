@@ -18,8 +18,8 @@
     if (rank === 1) return '🥇 1위';
     if (rank === 2) return '🥈 2위';
     if (rank === 3) return '🥉 3위';
-    if (rank === 4) return '🥉 4위';
-    if (rank === 5) return '🥉 5위';
+    if (rank === 4) return '🏅 4위';
+    if (rank === 5) return '🏅 5위';
     return '🏅 순위권';
   }
 
