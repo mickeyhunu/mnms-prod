@@ -71,8 +71,14 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function initRankingPage() {
     $('ranking-retry-btn')?.addEventListener('click', loadRankings);
     loadRankings();
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initRankingPage);
+  } else {
+    initRankingPage();
+  }
 }());
