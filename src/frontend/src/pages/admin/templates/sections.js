@@ -104,29 +104,29 @@ export const userEditPanelTemplate = `
                                         <p class="admin-user-detail-eyebrow">회원 활동 내역</p>
                                         <h4 id="admin-user-activity-title">최근 활동 및 접속 기록</h4>
                                     </div>
-                                    <p class="admin-user-activity__caption">최근 10건 기준으로 관리자에게 표시됩니다.</p>
+                                    <p class="admin-user-activity__caption">항목을 펼치면 최근 5건을 먼저 표시하며, 모두 보기로 전체 내역을 확인할 수 있습니다.</p>
                                 </div>
                                 <div class="admin-user-activity-stats" id="admin-user-activity-stats">
                                     <div class="admin-user-activity-empty">회원 활동 데이터를 불러오는 중...</div>
                                 </div>
                                 <div class="admin-user-activity-grid">
-                                    <section class="admin-user-activity-card">
-                                        <h5>최근 게시글</h5>
+                                    <details class="admin-user-activity-card">
+                                        <summary>최근 게시글</summary>
                                         <div id="admin-user-activity-posts" class="admin-user-activity-list"></div>
-                                    </section>
-                                    <section class="admin-user-activity-card">
-                                        <h5>최근 댓글</h5>
+                                    </details>
+                                    <details class="admin-user-activity-card">
+                                        <summary>최근 댓글</summary>
                                         <div id="admin-user-activity-comments" class="admin-user-activity-list"></div>
-                                    </section>
-                                    <section class="admin-user-activity-card">
-                                        <h5>최근 좋아요</h5>
+                                    </details>
+                                    <details class="admin-user-activity-card">
+                                        <summary>최근 좋아요</summary>
                                         <div id="admin-user-activity-likes" class="admin-user-activity-list"></div>
-                                    </section>
-                                    <section class="admin-user-activity-card">
-                                        <h5>접속 IP 기록</h5>
+                                    </details>
+                                    <details class="admin-user-activity-card">
+                                        <summary>접속 IP 기록</summary>
                                         <div id="admin-user-top-login-ips" class="admin-user-top-login-ips"></div>
                                         <div id="admin-user-login-history" class="admin-user-activity-list"></div>
-                                    </section>
+                                    </details>
                                 </div>
                             </section>
                             <p id="admin-user-save-result" class="help-text admin-user-save-result" role="status"></p>

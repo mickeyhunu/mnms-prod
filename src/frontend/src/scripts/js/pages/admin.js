@@ -740,6 +740,13 @@ async function handleGlobalAdminClick(event) {
 
     const actionButton = event.target.closest('[data-admin-action]');
     if (!actionButton) return;
+
+    if (actionButton.dataset.adminAction === 'toggle-activity-list') {
+        event.preventDefault();
+        toggleAdminActivityList(actionButton);
+        return;
+    }
+
     await handleAdminTableActionClick(event);
 }
 
@@ -1790,12 +1797,42 @@ function renderAdminActivityItems(containerId, items, renderItem, emptyMessage) 
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    if (!Array.isArray(items) || !items.length) {
+    const normalizedItems = Array.isArray(items) ? items : [];
+    if (!normalizedItems.length) {
         container.innerHTML = `<div class="admin-user-activity-empty">${sanitizeHTML(emptyMessage)}</div>`;
         return;
     }
 
-    container.innerHTML = items.map(renderItem).join('');
+    const previewLimit = 5;
+    container.dataset.previewLimit = String(previewLimit);
+    container.dataset.expanded = 'false';
+    container.innerHTML = `
+        ${normalizedItems.map((item, index) => `
+            <div class="admin-user-activity-row${index >= previewLimit ? ' admin-user-activity-row--extra hidden' : ''}">
+                ${renderItem(item)}
+            </div>
+        `).join('')}
+        ${normalizedItems.length > previewLimit ? `
+            <button type="button" class="admin-user-activity-more-btn" data-admin-action="toggle-activity-list" data-target-list="${sanitizeHTML(containerId)}">
+                모두 보기 (${normalizedItems.length}건)
+            </button>
+        ` : ''}
+    `;
+}
+
+function toggleAdminActivityList(button) {
+    const targetListId = button?.dataset?.targetList;
+    const container = targetListId ? document.getElementById(targetListId) : null;
+    if (!container) return;
+
+    const isExpanded = container.dataset.expanded === 'true';
+    container.dataset.expanded = isExpanded ? 'false' : 'true';
+    container.querySelectorAll('.admin-user-activity-row--extra').forEach((row) => {
+        row.classList.toggle('hidden', isExpanded);
+    });
+
+    const totalCount = container.querySelectorAll('.admin-user-activity-row').length;
+    button.textContent = isExpanded ? `모두 보기 (${totalCount}건)` : '접기';
 }
 
 function renderAdminUserActivity(activity = {}) {

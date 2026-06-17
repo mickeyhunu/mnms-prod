@@ -603,8 +603,8 @@ async function getUserDetail(userId) {
   };
 }
 
-async function getUserActivityOverview(userId, { limit = 10 } = {}) {
-  const safeLimit = Math.max(1, Math.min(20, Number(limit) || 10));
+async function getUserActivityOverview(userId, { limit = 1000 } = {}) {
+  const safeLimit = Math.max(1, Math.min(1000, Number(limit) || 1000));
   const [stats, activityDetails, loginHistories] = await Promise.all([
     getUserActivityStats(userId),
     getUserActivityDetails(userId, { limit: safeLimit }),
