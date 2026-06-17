@@ -23,6 +23,7 @@ const chatbotRoutes = require('./src/backend/routes/chatbotRoutes');
 const liveRoutes = require('./src/backend/routes/liveRoutes');
 const uploadRoutes = require('./src/backend/routes/uploadRoutes');
 const rbtiRoutes = require('./src/backend/routes/rbtiRoutes');
+const rankingRoutes = require('./src/backend/routes/rankingRoutes');
 const adminModel = require('./src/backend/models/adminModel');
 const postModel = require('./src/backend/models/postModel');
 const { startLiveHistoryScheduler } = require('./src/backend/utils/liveHistoryScheduler');
@@ -527,6 +528,7 @@ app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/live', liveRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/rbti', rbtiRoutes);
+app.use('/api/rankings', rankingRoutes);
 
 app.get('/live', (req, res) => {
   res.redirect(301, '/play/live');

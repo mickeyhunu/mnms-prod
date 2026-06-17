@@ -1809,6 +1809,17 @@ const pageRegistry = {
               </a>
             </div>
             <div class="card-enter" style="animation-delay: 40ms;">
+              <a class="play-tool-card" href="/play/ranking">
+                <div class="play-tool-card__content">
+                  <span class="play-tool-card__icon">🏆</span>
+                  <div class="play-tool-card__text">
+                    <p class="play-tool-card__title">랭킹</p>
+                    <p class="play-tool-card__description">월간 회원 랭킹</p>
+                  </div>
+                </div>
+              </a>
+            </div>
+            <div class="card-enter" style="animation-delay: 80ms;">
               <a class="play-tool-card" href="/play/rbti">
                 <div class="play-tool-card__content">
                   <span class="play-tool-card__icon">🧪</span>
@@ -1819,7 +1830,7 @@ const pageRegistry = {
                 </div>
               </a>
             </div>
-            <div class="card-enter" style="animation-delay: 80ms;">
+            <div class="card-enter" style="animation-delay: 120ms;">
               <a class="play-tool-card" href="/play/alcohol">
                 <div class="play-tool-card__content">
                   <span class="play-tool-card__icon">🍺</span>
@@ -1844,6 +1855,29 @@ const pageRegistry = {
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js"]
+  },
+
+  'ranking': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation"><div class="nav-guest" id="nav-guest"><a href="/login" class="btn btn-outline btn-sm">로그인</a><a href="/register" class="btn btn-outline btn-sm">회원가입</a></div><div class="nav-user hidden" id="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="/admin" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav>
+        </div>
+    </header>
+    <main class="main-content"><div class="container">
+      <header class="community-section-header"><div class="community-header-left"><a href="/play" class="community-back-link icon-btn icon-btn-square" aria-label="PLAY로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">월간 랭킹</span></div></header>
+      <section class="ranking-hero card-enter"><p class="ranking-hero__eyebrow" id="ranking-period-label">이번 달 랭킹</p><h2>일반회원 월간 활동 TOP 10</h2><p>현재 달 1일부터 오늘까지 집계된 포인트 획득량, 출석게시판 작성글, 게시글 추천받은 수 순위입니다.</p></section>
+      <div class="loading" id="ranking-loading"><div class="spinner"></div><p>랭킹을 불러오는 중...</p></div>
+      <div class="error-banner hidden" id="ranking-error"><p id="ranking-error-message"></p><button class="btn btn-sm btn-primary" id="ranking-retry-btn">다시 시도</button></div>
+      <div class="ranking-grid hidden" id="ranking-content">
+        <section class="ranking-card"><h3>포인트 획득량</h3><p class="ranking-card__description">이번 달 획득 포인트 합계</p><ol class="ranking-list" id="ranking-points"></ol></section>
+        <section class="ranking-card"><h3>출석게시판 글</h3><p class="ranking-card__description">이번 달 출석게시판 작성글 수</p><ol class="ranking-list" id="ranking-attendance"></ol></section>
+        <section class="ranking-card"><h3>추천받은 수</h3><p class="ranking-card__description">이번 달 내 게시글이 받은 추천 수</p><ol class="ranking-list" id="ranking-likes"></ol></section>
+      </div>
+    </div></main>
+    <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/api/authAPI.js"></script><script src="scripts/js/components/header.js"></script><script src="scripts/js/pages/ranking.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/ranking.js", "scripts/js/components/footerNav.js"]
   },
   'alcohol': {
     template: `<header class="header">
