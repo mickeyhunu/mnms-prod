@@ -621,10 +621,17 @@ body[data-page="admin"] {
     background: #f8f9fa;
 }
 
-.admin-user-activity-card h5 {
-    margin: 0 0 12px;
+.admin-user-activity-card summary {
+    margin: 0;
     font-size: 15px;
+    font-weight: 700;
     color: #212529;
+    cursor: pointer;
+    list-style-position: inside;
+}
+
+.admin-user-activity-card[open] summary {
+    margin-bottom: 12px;
 }
 
 .admin-user-top-login-ips {
@@ -701,6 +708,22 @@ body[data-page="admin"] {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.admin-user-activity-more-btn {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #495057;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-user-activity-more-btn:hover {
+    background: #f1f3f5;
 }
 
 .admin-user-activity-empty {
