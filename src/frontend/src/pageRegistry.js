@@ -1867,7 +1867,7 @@ const pageRegistry = {
     <main class="main-content"><div class="container">
       <header class="community-section-header"><div class="community-header-left"><a href="/play" class="community-back-link icon-btn icon-btn-square" aria-label="PLAY로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">월간 랭킹</span></div></header>
       <div class="play-tool-content">
-        <section class="ranking-hero card-enter"><p class="ranking-hero__eyebrow" id="ranking-period-label">이번 달 랭킹</p><h2>일반회원 월간 활동 TOP 10</h2><p>현재 달 1일부터 오늘까지 집계된 포인트 획득량, 출석게시판 작성글, 게시글 추천받은 수 순위입니다.</p></section>
+        <section class="ranking-hero card-enter"><p class="ranking-hero__eyebrow" id="ranking-period-label">이번 달 랭킹</p><h2>일반회원 월간 활동 TOP 5</h2><p>현재 달 1일부터 오늘까지 집계된 포인트 획득량, 출석게시판 작성글, 게시글 추천받은 수 순위입니다.</p></section>
         <div class="loading" id="ranking-loading"><div class="spinner"></div><p>랭킹을 불러오는 중...</p></div>
         <div class="error-banner hidden" id="ranking-error"><p id="ranking-error-message"></p><button class="btn btn-sm btn-primary" id="ranking-retry-btn">다시 시도</button></div>
         <div class="ranking-grid hidden" id="ranking-content">

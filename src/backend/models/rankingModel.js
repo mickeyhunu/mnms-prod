@@ -3,8 +3,8 @@
  */
 const { getPool } = require('../config/database');
 
-const DEFAULT_LIMIT = 10;
-const MAX_LIMIT = 50;
+const DEFAULT_LIMIT = 5;
+const MAX_LIMIT = 5;
 
 function normalizeLimit(limit) {
   const parsed = Number.parseInt(limit, 10);
@@ -69,7 +69,7 @@ async function getMonthlyRankings(options = {}) {
       `SELECT u.id AS userId,
               u.nickname,
               u.total_points AS totalPoints,
-              COUNT(DISTINCT pl.user_id) AS score
+              COUNT(*) AS score
          FROM post_likes pl
          INNER JOIN posts p ON p.id = pl.post_id
          INNER JOIN users u ON u.id = p.user_id
