@@ -34,7 +34,7 @@
       <li class="ranking-list__item ranking-list__item--rank-${row.rank}">
         <span class="ranking-list__rank">${getRankLabel(row.rank)}</span>
         <div class="ranking-list__details">
-          <span class="ranking-list__nickname">${escapeHtml(row.nickname)}</span>
+          <span class="ranking-list__nickname">${escapeHtml(row.nickname)} 님</span>
           <strong class="ranking-list__score">${formatNumber(row.score)}${unit}</strong>
         </div>
       </li>
