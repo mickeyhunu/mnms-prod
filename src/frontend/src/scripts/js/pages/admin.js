@@ -154,12 +154,10 @@ function getAdminPageState() {
     const requestedTab = params.get('tab');
     const activeTab = ADMIN_TABS.includes(requestedTab) ? requestedTab : 'stats';
     const editUserId = Number.parseInt(params.get('editUserId') || '', 10);
-    const activityUserId = Number.parseInt(params.get('activityUserId') || '', 10);
 
     return {
         activeTab,
-        editUserId: Number.isInteger(editUserId) && editUserId > 0 ? editUserId : null,
-        activityUserId: Number.isInteger(activityUserId) && activityUserId > 0 ? activityUserId : null
+        editUserId: Number.isInteger(editUserId) && editUserId > 0 ? editUserId : null
     };
 }
 
@@ -168,19 +166,12 @@ function syncAdminPageState(nextState = {}, { replace = true } = {}) {
     const currentState = getAdminPageState();
     const activeTab = ADMIN_TABS.includes(nextState.activeTab) ? nextState.activeTab : currentState.activeTab;
     const editUserId = Object.prototype.hasOwnProperty.call(nextState, 'editUserId') ? nextState.editUserId : currentState.editUserId;
-    const activityUserId = Object.prototype.hasOwnProperty.call(nextState, 'activityUserId') ? nextState.activityUserId : currentState.activityUserId;
 
     if (activeTab && activeTab !== 'stats') url.searchParams.set('tab', activeTab);
     else url.searchParams.delete('tab');
 
-    if (Number.isInteger(editUserId) && editUserId > 0) {
-        url.searchParams.set('editUserId', String(editUserId));
-        url.searchParams.delete('activityUserId');
-    } else {
-        url.searchParams.delete('editUserId');
-        if (Number.isInteger(activityUserId) && activityUserId > 0) url.searchParams.set('activityUserId', String(activityUserId));
-        else url.searchParams.delete('activityUserId');
-    }
+    if (Number.isInteger(editUserId) && editUserId > 0) url.searchParams.set('editUserId', String(editUserId));
+    else url.searchParams.delete('editUserId');
 
     const method = replace ? 'replaceState' : 'pushState';
     window.history[method]({}, '', url);
@@ -236,8 +227,7 @@ async function activateAdminTab(tabKey, options = {}) {
     if (updateHistory) {
         syncAdminPageState({
             activeTab: resolvedTabKey,
-            editUserId: isUserManagementTab(resolvedTabKey) ? getAdminPageState().editUserId : null,
-            activityUserId: isUserManagementTab(resolvedTabKey) ? getAdminPageState().activityUserId : null
+            editUserId: isUserManagementTab(resolvedTabKey) ? getAdminPageState().editUserId : null
         }, { replace: replaceHistory });
     }
 
@@ -287,8 +277,6 @@ async function initAdminPage() {
 
         if (isUserManagementTab(pageState.activeTab) && pageState.editUserId) {
             await openUserEditModal(pageState.editUserId, { syncHistory: false });
-        } else if (isUserManagementTab(pageState.activeTab) && pageState.activityUserId) {
-            await openUserEditModal(pageState.activityUserId, { syncHistory: false, focusActivity: true });
         }
     } catch (error) {
         window.location.replace(NOT_FOUND_PATH);
@@ -1283,7 +1271,6 @@ function renderBusinessApplicationsTable() {
                             <button type="button" class="btn btn-sm btn-primary" data-admin-action="review-business-application" data-review-status="APPROVED" data-target-id="${application.userId}" ${isPending ? '' : 'disabled'}>승인</button>
                             <button type="button" class="btn btn-sm btn-danger" data-admin-action="review-business-application" data-review-status="REJECTED" data-target-id="${application.userId}" ${isPending ? '' : 'disabled'}>반려</button>
                             <a class="btn btn-sm btn-secondary" href="/admin?tab=users&editUserId=${application.userId}" data-admin-action="edit-user" data-target-id="${application.userId}">회원 정보</a>
-                            <a class="btn btn-sm btn-outline" href="/admin?tab=users&activityUserId=${application.userId}" data-admin-action="view-user-activity" data-target-id="${application.userId}">활동내역</a>
                         </div>
                     </td>
                 </tr>
@@ -1388,7 +1375,6 @@ function renderUsersTable() {
                 <td>
                     <div class="admin-user-actions">
                         <a class="btn btn-sm btn-secondary" href="/admin?tab=${activeUserTab}&editUserId=${user.id}" data-admin-action="edit-user" data-target-id="${user.id}">정보 수정</a>
-                        <a class="btn btn-sm btn-outline" href="/admin?tab=${activeUserTab}&activityUserId=${user.id}" data-admin-action="view-user-activity" data-target-id="${user.id}">활동내역 보기</a>
                         <button type="button" class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="user" data-target-id="${user.id}">삭제</button>
                     </div>
                 </td>
@@ -2009,7 +1995,7 @@ function fillUserEditForm(user) {
 }
 
 async function openUserEditModal(userId, options = {}) {
-    const { syncHistory = true, replaceHistory = true, focusActivity = false } = options;
+    const { syncHistory = true, replaceHistory = true } = options;
 
     try {
         const response = await APIClient.get(`/admin/users/${userId}`);
@@ -2017,22 +2003,18 @@ async function openUserEditModal(userId, options = {}) {
         if (!user) throw new Error('회원 정보를 찾을 수 없습니다.');
 
         editingUserId = userId;
-        document.getElementById('user-edit-modal-title').textContent = focusActivity ? `회원 활동내역 #${userId}` : `회원 정보 수정 #${userId}`;
+        document.getElementById('user-edit-modal-title').textContent = `회원 정보 수정 #${userId}`;
         fillUserEditForm(user);
         renderAdminUserActivity(response.activity || {});
         showAdminModal('user-edit-modal');
-        document.getElementById(focusActivity ? 'admin-user-activity-title' : 'user-edit-modal')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('user-edit-modal')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         if (syncHistory) {
-            syncAdminPageState({
-                activeTab: getActiveUserManagementTab(),
-                editUserId: focusActivity ? null : userId,
-                activityUserId: focusActivity ? userId : null
-            }, { replace: replaceHistory });
+            syncAdminPageState({ activeTab: getActiveUserManagementTab(), editUserId: userId }, { replace: replaceHistory });
         }
     } catch (error) {
         if (syncHistory) {
-            syncAdminPageState({ activeTab: getActiveUserManagementTab(), editUserId: null, activityUserId: null }, { replace: true });
+            syncAdminPageState({ activeTab: getActiveUserManagementTab(), editUserId: null }, { replace: true });
         }
         alert(error.message || '회원 정보를 불러오지 못했습니다.');
     }
@@ -2045,7 +2027,7 @@ function closeUserEditModal() {
     setAdminUserHelpMessage('');
     resetAdminUserActivity();
     hideAdminModal('user-edit-modal');
-    syncAdminPageState({ activeTab: getActiveUserManagementTab(), editUserId: null, activityUserId: null }, { replace: true });
+    syncAdminPageState({ activeTab: getActiveUserManagementTab(), editUserId: null }, { replace: true });
 }
 
 async function revokeAdminRole(actionElement) {
@@ -2712,11 +2694,6 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
-    if (action === 'view-user-activity' && Number.isInteger(targetId)) {
-        await openUserEditModal(targetId, { focusActivity: true });
-        return;
-    }
-
     if (action === 'preview-business-document') {
         openBusinessDocumentModal(actionElement);
         return;
@@ -2742,7 +2719,7 @@ async function handleAdminTableActionClick(event) {
         return;
     }
 
-    if (['delete', 'toggle-hide', 'edit-ad', 'edit-business-ad', 'edit-support', 'edit-user', 'view-user-activity', 'answer-inquiry', 'review-business-application', 'preview-business-document', 'revoke-admin'].includes(action) && !entryId && !Number.isInteger(targetId)) {
+    if (['delete', 'toggle-hide', 'edit-ad', 'edit-business-ad', 'edit-support', 'edit-user', 'answer-inquiry', 'review-business-application', 'preview-business-document', 'revoke-admin'].includes(action) && !entryId && !Number.isInteger(targetId)) {
         alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
     }
 }
