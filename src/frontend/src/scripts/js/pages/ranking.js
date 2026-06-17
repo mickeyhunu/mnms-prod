@@ -65,7 +65,7 @@
       if (periodLabel) periodLabel.textContent = `🏆 ${month}월 랭킹 🏆`;
 
       renderList('ranking-points', data.rankings?.points, 'P');
-      renderList('ranking-attendance', data.rankings?.attendancePosts, '개');
+      renderList('ranking-attendance', data.rankings?.attendancePosts, '회');
       renderList('ranking-likes', data.rankings?.receivedLikes, '개');
 
       $('ranking-content')?.classList.remove('hidden');
