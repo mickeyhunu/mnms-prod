@@ -1867,13 +1867,13 @@ const pageRegistry = {
     <main class="main-content"><div class="container">
       <header class="community-section-header"><div class="community-header-left"><a href="/play" class="community-back-link icon-btn icon-btn-square" aria-label="PLAY로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">월간 랭킹</span></div></header>
       <div class="play-tool-content">
-        <section class="ranking-hero card-enter"><p class="ranking-hero__eyebrow" id="ranking-period-label">이번 달 랭킹</p><h2>일반회원 월간 활동 TOP 5</h2><p>현재 달 1일부터 오늘까지 집계된 포인트 획득량, 출석게시판 작성글, 게시글 추천받은 수 순위입니다.</p></section>
+        <section class="ranking-hero card-enter"><p class="ranking-hero__eyebrow" id="ranking-period-label">🏆 이번 달 랭킹 🏆</p><h2>월간 활동 TOP 5</h2></section>
         <div class="loading" id="ranking-loading"><div class="spinner"></div><p>랭킹을 불러오는 중...</p></div>
         <div class="error-banner hidden" id="ranking-error"><p id="ranking-error-message"></p><button class="btn btn-sm btn-primary" id="ranking-retry-btn">다시 시도</button></div>
         <div class="ranking-grid hidden" id="ranking-content">
           <section class="ranking-card"><h3>포인트 획득량</h3><p class="ranking-card__description">이번 달 획득 포인트 합계</p><ol class="ranking-list" id="ranking-points"></ol></section>
-          <section class="ranking-card"><h3>출석게시판 글</h3><p class="ranking-card__description">이번 달 출석게시판 작성글 수</p><ol class="ranking-list" id="ranking-attendance"></ol></section>
-          <section class="ranking-card"><h3>추천받은 수</h3><p class="ranking-card__description">이번 달 내 게시글이 받은 추천 수</p><ol class="ranking-list" id="ranking-likes"></ol></section>
+          <section class="ranking-card"><h3>출석률</h3><p class="ranking-card__description">출석게시판 작성기준</p><ol class="ranking-list" id="ranking-attendance"></ol></section>
+          <section class="ranking-card"><h3>추천받은 수</h3><p class="ranking-card__description">게시글 추천 받은 수</p><ol class="ranking-list" id="ranking-likes"></ol></section>
         </div>
       </div>
     </div></main>
