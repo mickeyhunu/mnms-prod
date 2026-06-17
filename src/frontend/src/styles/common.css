@@ -402,3 +402,7 @@ body,
     box-shadow: none;
     transform: none;
 }
+
+.play-tool-content {
+    margin: 5%;
+}
