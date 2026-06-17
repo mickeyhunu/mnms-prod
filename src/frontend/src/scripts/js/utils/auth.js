@@ -338,8 +338,16 @@ const Auth = {
             showNotification('오류가 발생했습니다. 잠시 후 다시 시도해주세요.', 'error');
         }
     },
+    syncAdminOnlyElements(user = this.getUser()) {
+        const isAdmin = user && this.isAuthenticated() && this.isAdminAccount(user);
+
+        document.querySelectorAll('[data-admin-only]').forEach((element) => {
+            element.classList.toggle('hidden', !isAdmin);
+        });
+    },
     updateHeaderUI() {
         const user = this.getUser();
+        this.syncAdminOnlyElements(user);
         const navGuest = document.getElementById('nav-guest');
         const navUser = document.getElementById('nav-user');
         const userNickname = this.resolveNicknameDisplayElement();
