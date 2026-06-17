@@ -788,18 +788,6 @@
   text-align: center;
 }
 
-.ranking-hero::after {
-  content: '';
-  position: absolute;
-  right: -36px;
-  bottom: -52px;
-  width: 170px;
-  height: 170px;
-  border-radius: 999px;
-  background: rgba(255, 193, 7, 0.14);
-  pointer-events: none;
-}
-
 .ranking-hero__eyebrow {
   display: inline-flex;
   align-items: center;
@@ -823,7 +811,7 @@
 }
 
 .ranking-card {
-  padding: 20px;
+  padding: 15px;
   border-radius: 22px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -846,3 +834,7 @@
 .ranking-list__nickname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #1f2937; font-weight: 700; }
 .ranking-list__score { color: #b7791f; }
 .ranking-list__empty { padding: 18px 12px; color: #64748b; text-align: center; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 16px; }
+
+@media (max-width: 700px) {
+  .ranking-grid { grid-template-columns: 1fr; }
+}
