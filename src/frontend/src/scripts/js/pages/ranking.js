@@ -14,6 +14,13 @@
     return Number(value || 0).toLocaleString('ko-KR');
   }
 
+  function getRankLabel(rank) {
+    if (rank === 1) return '🥇 1위';
+    if (rank === 2) return '🥈 2위';
+    if (rank === 3) return '🥉 3위';
+    return '🏅 순위권';
+  }
+
   function renderList(elementId, rows, unit) {
     const list = $(elementId);
     if (!list) return;
@@ -25,7 +32,7 @@
 
     list.innerHTML = rows.map((row) => `
       <li class="ranking-list__item ranking-list__item--rank-${row.rank}">
-        <span class="ranking-list__rank">${row.rank}</span>
+        <span class="ranking-list__rank">${getRankLabel(row.rank)}</span>
         <span class="ranking-list__nickname">${escapeHtml(row.nickname)}</span>
         <strong class="ranking-list__score">${formatNumber(row.score)}${unit}</strong>
       </li>
@@ -54,9 +61,8 @@
       const data = await APIClient.get('/rankings/monthly', { limit: 5 });
       const period = data.period || {};
       const month = Number(period.month || new Date().getMonth() + 1);
-      const year = Number(period.year || new Date().getFullYear());
       const periodLabel = $('ranking-period-label');
-      if (periodLabel) periodLabel.textContent = `${year}년 ${month}월 랭킹`;
+      if (periodLabel) periodLabel.textContent = `🏆 ${month}월 랭킹 🏆`;
 
       renderList('ranking-points', data.rankings?.points, 'P');
       renderList('ranking-attendance', data.rankings?.attendancePosts, '개');
