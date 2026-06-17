@@ -774,21 +774,45 @@
 }
 
 .ranking-hero {
-  margin-bottom: 18px;
-  padding: 22px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.16), rgba(98, 0, 234, 0.12));
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+  padding: 26px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 214, 102, 0.22), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #fffaf0 48%, #f8fbff 100%);
+  border: 1px solid rgba(229, 231, 235, 0.95);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  color: #1f2937;
+}
+
+.ranking-hero::after {
+  content: '';
+  position: absolute;
+  right: -36px;
+  bottom: -52px;
+  width: 170px;
+  height: 170px;
+  border-radius: 999px;
+  background: rgba(255, 193, 7, 0.14);
+  pointer-events: none;
 }
 
 .ranking-hero__eyebrow {
-  margin: 0 0 8px;
-  color: #f6c85f;
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fff4cc;
+  color: #8a5a00;
+  font-size: 0.88rem;
   font-weight: 800;
 }
 
-.ranking-hero h2 { margin: 0 0 8px; }
-.ranking-hero p:last-child { margin-bottom: 0; color: var(--text-secondary, #9ca3af); }
+.ranking-hero h2 { margin: 0 0 8px; color: #111827; }
+.ranking-hero p:last-child { margin-bottom: 0; color: #64748b; line-height: 1.6; }
 
 .ranking-grid {
   display: grid;
@@ -797,23 +821,28 @@
 }
 
 .ranking-card {
-  padding: 18px;
-  border-radius: 18px;
-  background: var(--card-bg, #15151c);
-  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  padding: 20px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+  color: #1f2937;
 }
 
-.ranking-card h3 { margin: 0 0 6px; }
-.ranking-card__description { margin: 0 0 14px; color: var(--text-secondary, #9ca3af); font-size: 0.92rem; }
+.ranking-card h3 { margin: 0 0 6px; color: #111827; }
+.ranking-card__description { margin: 0 0 16px; color: #64748b; font-size: 0.92rem; }
 .ranking-list { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.ranking-list__item { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; background: rgba(255, 255, 255, 0.04); }
-.ranking-list__rank { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); font-weight: 800; }
+.ranking-list__item { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 10px; padding: 12px; border-radius: 16px; background: #f8fafc; border: 1px solid #eef2f7; }
+.ranking-list__rank { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 999px; background: #e5e7eb; color: #475569; font-weight: 800; }
+.ranking-list__item--rank-1 { background: #fff8df; border-color: #fde68a; }
+.ranking-list__item--rank-2 { background: #f8fafc; border-color: #dbe4ef; }
+.ranking-list__item--rank-3 { background: #fff1e7; border-color: #fed7aa; }
 .ranking-list__item--rank-1 .ranking-list__rank { background: #f6c85f; color: #1f1600; }
-.ranking-list__item--rank-2 .ranking-list__rank { background: #c0c7d1; color: #101318; }
+.ranking-list__item--rank-2 .ranking-list__rank { background: #cbd5e1; color: #111827; }
 .ranking-list__item--rank-3 .ranking-list__rank { background: #c58b52; color: #1c1006; }
-.ranking-list__nickname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
-.ranking-list__score { color: #f6c85f; }
-.ranking-list__empty { padding: 18px 12px; color: var(--text-secondary, #9ca3af); text-align: center; background: rgba(255, 255, 255, 0.04); border-radius: 14px; }
+.ranking-list__nickname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #1f2937; font-weight: 700; }
+.ranking-list__score { color: #b7791f; }
+.ranking-list__empty { padding: 18px 12px; color: #64748b; text-align: center; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 16px; }
 
 @media (max-width: 900px) {
   .ranking-grid { grid-template-columns: 1fr; }
