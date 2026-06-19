@@ -807,10 +807,43 @@ header.community-section-header .board-tab.active {
   background: rgba(15, 23, 42, 0.04);
 }
 
+.black-db-comment-header {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
 .black-db-comment-meta {
   color: #64748b;
   font-size: 0.86rem;
-  margin-bottom: 8px;
+}
+
+.black-db-comment-recommend-btn {
+  align-items: center;
+  border: 1px solid rgba(108, 46, 150, 0.24);
+  border-radius: 999px;
+  background: #fff;
+  color: #6c2e96;
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  font-weight: 800;
+  gap: 4px;
+  padding: 6px 10px;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.black-db-comment-recommend-btn:hover,
+.black-db-comment-recommend-btn.active {
+  border-color: rgba(108, 46, 150, 0.42);
+  background: rgba(108, 46, 150, 0.08);
+}
+
+.black-db-comment-recommend-btn:active {
+  transform: scale(0.96);
 }
 
 .black-db-comment-body {
@@ -825,11 +858,6 @@ header.community-section-header .board-tab.active {
   margin-top: 18px;
 }
 
-.black-db-area-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
 
 .black-db-area-row {
   display: flex;

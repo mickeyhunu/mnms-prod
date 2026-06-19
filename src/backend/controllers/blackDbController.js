@@ -43,11 +43,16 @@ async function searchBlackDbComments(req, res, next) {
       return res.status(400).json({ message: '검색할 번호를 7~20자리 숫자로 입력해주세요.' });
     }
 
-    const comments = await blackDbModel.findCommentsByPhoneNumber(phoneNumber);
+    const comments = await blackDbModel.findCommentsByPhoneNumber(phoneNumber, req.user.id);
     return res.json({ phoneNumber, comments, hasComments: comments.length > 0 });
   } catch (error) {
     return next(error);
   }
+}
+
+function parsePositiveId(value) {
+  const id = Number.parseInt(value, 10);
+  return Number.isInteger(id) && id > 0 ? id : null;
 }
 
 async function createBlackDbComment(req, res, next) {
@@ -84,8 +89,27 @@ async function createBlackDbComment(req, res, next) {
   }
 }
 
+async function recommendBlackDbComment(req, res, next) {
+  try {
+    const commentId = parsePositiveId(req.params.commentId);
+    if (!commentId) {
+      return res.status(400).json({ message: '유효하지 않은 코멘트 ID입니다.' });
+    }
+
+    const recommendationCount = await blackDbModel.recommendComment({
+      commentId,
+      userId: req.user.id
+    });
+
+    return res.json({ recommendationCount });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   requireBusinessUser,
   searchBlackDbComments,
-  createBlackDbComment
+  createBlackDbComment,
+  recommendBlackDbComment
 };
