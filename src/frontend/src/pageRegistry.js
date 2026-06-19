@@ -1413,7 +1413,7 @@ const pageRegistry = {
         </div>
     </main>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/blackDb.js", "scripts/js/components/footerNav.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/sectionHeader.js", "scripts/js/pages/blackDb.js", "scripts/js/components/footerNav.js"]
   },
   'live': livePageConfig,
   'login': {
