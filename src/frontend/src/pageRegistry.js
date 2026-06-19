@@ -1381,9 +1381,16 @@ const pageRegistry = {
         </div>
     </header>
     <main class="main-content">
+        <header class="community-section-header black-db-section-header">
+            <div class="community-header-left">
+                <span class="community-board-name">BLACK DB</span>
+            </div>
+            <div class="community-actions black-db-header-note" aria-label="BLACK DB 이용 대상">
+                기업회원 전용 번호 코멘트 검색
+            </div>
+        </header>
         <div class="container black-db-page">
             <section class="card black-db-card" aria-labelledby="black-db-title">
-                <p class="black-db-eyebrow">기업회원 전용</p>
                 <h2 id="black-db-title">BLACK DB</h2>
                 <p class="text-muted">번호를 검색해 기업회원들이 공유한 코멘트를 확인하고, 정보가 없으면 직접 코멘트를 남겨주세요.</p>
                 <form id="black-db-search-form" class="black-db-search-form">
