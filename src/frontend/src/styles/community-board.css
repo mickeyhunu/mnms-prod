@@ -781,11 +781,6 @@ header.community-section-header .board-tab.active {
   padding: 24px;
 }
 
-.black-db-section-header .black-db-header-note {
-  color: #9ca3af;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
 
 .black-db-search-row {
   display: flex;
