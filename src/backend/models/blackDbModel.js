@@ -16,6 +16,8 @@ async function findCommentsByPhoneNumber(phoneNumber) {
     `SELECT bc.id,
             bc.phone_number AS phoneNumber,
             bc.comment,
+            bc.region,
+            bc.district,
             bc.created_at AS createdAt,
             u.nickname AS authorNickname
        FROM black_db_comments bc
@@ -28,20 +30,24 @@ async function findCommentsByPhoneNumber(phoneNumber) {
   return rows;
 }
 
-async function createComment({ phoneNumber, authorUserId, comment }) {
+async function createComment({ phoneNumber, authorUserId, region, district, comment }) {
   const normalizedPhoneNumber = normalizePhoneNumber(phoneNumber);
+  const trimmedRegion = String(region || '').trim();
+  const trimmedDistrict = String(district || '').trim();
   const trimmedComment = String(comment || '').trim();
   const pool = getPool();
   const [result] = await pool.query(
-    `INSERT INTO black_db_comments (phone_number, author_user_id, comment)
-     VALUES (?, ?, ?)`,
-    [normalizedPhoneNumber, authorUserId, trimmedComment]
+    `INSERT INTO black_db_comments (phone_number, author_user_id, region, district, comment)
+     VALUES (?, ?, ?, ?, ?)`,
+    [normalizedPhoneNumber, authorUserId, trimmedRegion, trimmedDistrict, trimmedComment]
   );
 
   const [rows] = await pool.query(
     `SELECT bc.id,
             bc.phone_number AS phoneNumber,
             bc.comment,
+            bc.region,
+            bc.district,
             bc.created_at AS createdAt,
             u.nickname AS authorNickname
        FROM black_db_comments bc
