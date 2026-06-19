@@ -1395,12 +1395,14 @@ const pageRegistry = {
                     </div>
                 </form>
                 <p class="text-muted" id="black-db-status" aria-live="polite"></p>
+                <section class="black-db-overview hidden" id="black-db-overview" aria-label="번호 검색 요약"></section>
                 <ul class="black-db-comment-list" id="black-db-comment-list"></ul>
                 <p class="text-muted black-db-empty" id="black-db-empty"></p>
                 <form id="black-db-comment-form" class="black-db-comment-form hidden">
                     <input type="hidden" id="black-db-comment-phone">
                     <label class="form-label" for="black-db-comment-input">코멘트 남기기</label>
-                    <textarea class="form-control" id="black-db-comment-input" rows="5" maxlength="1000" placeholder="이 번호에 대한 정보를 입력해주세요." required></textarea>
+                    <textarea class="form-control" id="black-db-comment-input" rows="5" maxlength="1000" placeholder="예: [강남] 예약 문의 후 연락 두절 제보가 있습니다." required></textarea>
+                    <p class="black-db-policy-notice">주의 안내: 실명, 주소, 욕설, 범죄 단정 표현은 금지됩니다.</p>
                     <button class="btn btn-secondary w-full" type="submit">코멘트 등록</button>
                 </form>
             </section>
