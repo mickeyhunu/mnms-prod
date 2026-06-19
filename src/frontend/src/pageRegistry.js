@@ -1389,8 +1389,9 @@ const pageRegistry = {
         <div class="container black-db-page">
             <section class="card black-db-card">
                 <form id="black-db-search-form" class="black-db-search-form">
+                    <label class="form-label" for="black-db-phone-input">번호 검색</label>
                     <div class="black-db-search-row">
-                        <input class="form-control" id="black-db-phone-input" type="search" inputmode="numeric" placeholder="숫자만 입력" autocomplete="off" aria-label="번호 검색" required>
+                        <input class="form-control" id="black-db-phone-input" type="search" inputmode="numeric" placeholder="숫자만 입력" autocomplete="off" required>
                         <button class="btn btn-primary" type="submit">검색</button>
                     </div>
                 </form>
