@@ -12,7 +12,13 @@ function formatBlackDbDate(value) {
 }
 
 function normalizeBlackDbPhoneNumber(value) {
-    return String(value || '').replace(/[^0-9]/g, '').trim();
+    return String(value || '').replace(/[^0-9]/g, '').slice(0, 11).trim();
+}
+
+function enforceBlackDbPhoneInputLimit(event) {
+    const input = event?.target;
+    if (!input) return;
+    input.value = normalizeBlackDbPhoneNumber(input.value);
 }
 
 function formatBlackDbPhoneNumber(value) {
@@ -22,14 +28,21 @@ function formatBlackDbPhoneNumber(value) {
     return phoneNumber;
 }
 
+function maskRandomBlackDbPhonePart(part) {
+    if (!part) return part;
+    const index = Math.floor(Math.random() * part.length);
+    return `${part.slice(0, index)}*${part.slice(index + 1)}`;
+}
+
 function maskBlackDbPhoneNumber(value) {
     const formatted = formatBlackDbPhoneNumber(value);
     const parts = formatted.split('-');
     if (parts.length >= 3) {
-        parts[parts.length - 1] = '••••';
+        parts[parts.length - 2] = maskRandomBlackDbPhonePart(parts[parts.length - 2]);
+        parts[parts.length - 1] = maskRandomBlackDbPhonePart(parts[parts.length - 1]);
         return parts.join('-');
     }
-    return formatted.length > 4 ? `${formatted.slice(0, -4)}••••` : formatted;
+    return formatted.length > 4 ? `${formatted.slice(0, -4)}${maskRandomBlackDbPhonePart(formatted.slice(-4))}` : formatted;
 }
 
 function extractBlackDbRegion(comment) {
@@ -142,8 +155,8 @@ async function searchBlackDbComments(event) {
     const status = document.getElementById('black-db-status');
     const phoneNumber = normalizeBlackDbPhoneNumber(input?.value);
 
-    if (!phoneNumber || phoneNumber.length < 7 || phoneNumber.length > 20) {
-        if (status) status.textContent = '검색할 번호를 7~20자리 숫자로 입력해주세요.';
+    if (!phoneNumber || phoneNumber.length < 7 || phoneNumber.length > 11) {
+        if (status) status.textContent = '검색할 번호를 7~11자리 숫자로 입력해주세요.';
         renderBlackDbComments([], '');
         return;
     }
@@ -191,6 +204,7 @@ function initBlackDbPage() {
         return;
     }
 
+    document.getElementById('black-db-phone-input')?.addEventListener('input', enforceBlackDbPhoneInputLimit);
     document.getElementById('black-db-search-form')?.addEventListener('submit', searchBlackDbComments);
     document.getElementById('black-db-comment-form')?.addEventListener('submit', submitBlackDbComment);
     renderBlackDbComments([], '');

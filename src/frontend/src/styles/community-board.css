@@ -899,6 +899,6 @@ header.community-section-header .board-tab.active {
 
 @media (max-width: 640px) {
   .black-db-search-row {
-    flex-direction: column;
+    flex-direction: row;
   }
 }
