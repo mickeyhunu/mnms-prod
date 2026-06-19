@@ -1381,12 +1381,12 @@ const pageRegistry = {
         </div>
     </header>
     <main class="main-content">
-        <header class="community-section-header black-db-section-header">
-            <div class="community-header-left">
-                <span class="community-board-name">BLACK DB</span>
-            </div>
-        </header>
-        <div class="container black-db-page">
+        <div class="container">
+            <header class="community-section-header black-db-section-header">
+                <div class="community-header-left">
+                    <span class="community-board-name">BLACK DB</span>
+                </div>
+            </header>
             <section class="card black-db-card">
                 <form id="black-db-search-form" class="black-db-search-form">
                     <div class="black-db-search-row">

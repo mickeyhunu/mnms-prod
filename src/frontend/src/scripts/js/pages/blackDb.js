@@ -153,7 +153,7 @@ function renderBlackDbComments(comments, searchedPhoneNumber) {
         empty.classList.remove('hidden');
         empty.textContent = searchedPhoneNumber
             ? '검색된 코멘트가 없습니다. 아래에서 이 번호에 대한 정보를 남겨주세요.'
-            : '번호를 검색하면 기업회원들이 남긴 코멘트가 표시됩니다.';
+            : '번호를 검색하면 코멘트가 표시됩니다.';
         return;
     }
 
