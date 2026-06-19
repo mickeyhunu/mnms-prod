@@ -1314,6 +1314,19 @@ async function initDatabase() {
     "ALTER TABLE black_db_comments ADD COLUMN district VARCHAR(50) NOT NULL DEFAULT '' AFTER region"
   );
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS black_db_comment_recommendations (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      comment_id BIGINT NOT NULL,
+      user_id BIGINT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY uq_black_db_comment_recommendation (comment_id, user_id),
+      INDEX idx_black_db_comment_recommendations_user (user_id),
+      CONSTRAINT fk_black_db_comment_recommendations_comment FOREIGN KEY (comment_id) REFERENCES black_db_comments(id) ON DELETE CASCADE,
+      CONSTRAINT fk_black_db_comment_recommendations_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
   const [adminRows] = await pool.query('SELECT id, password FROM users WHERE login_id = ?', ['master']);
   if (!adminRows.length) {
     const adminPasswordHash = await hashPassword('admin1234');

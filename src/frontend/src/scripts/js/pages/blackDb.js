@@ -117,8 +117,8 @@ function renderBlackDbOverview(comments, searchedPhoneNumber) {
     const grid = document.createElement('div');
     grid.className = 'black-db-overview-grid';
     [
-        ['활동지역', regionText],
-        ['제보 요약', reportSummary]
+        ['📍 활동지역', regionText],
+        ['📝 제보 요약', reportSummary]
     ].forEach(([labelText, valueText, valueClass]) => {
         const item = document.createElement('div');
         const label = document.createElement('span');
@@ -161,14 +161,23 @@ function renderBlackDbComments(comments, searchedPhoneNumber) {
     comments.forEach((item) => {
         const li = document.createElement('li');
         li.className = 'black-db-comment-item';
+        const header = document.createElement('div');
+        header.className = 'black-db-comment-header';
         const meta = document.createElement('div');
         meta.className = 'black-db-comment-meta';
         const areaText = getBlackDbAreaText(item);
         meta.textContent = `${areaText ? `[${areaText}] ` : ''}${formatBlackDbDate(item.createdAt)}`;
+        const recommendButton = document.createElement('button');
+        recommendButton.className = 'black-db-comment-recommend-btn';
+        recommendButton.type = 'button';
+        recommendButton.dataset.commentId = item.id;
+        recommendButton.textContent = `👍 ${Number(item.recommendationCount || 0)}`;
+        if (item.isRecommendedByMe) recommendButton.classList.add('active');
+        header.append(meta, recommendButton);
         const body = document.createElement('p');
         body.className = 'black-db-comment-body';
         body.textContent = stripLegacyBlackDbRegionPrefix(item.comment);
-        li.append(meta, body);
+        li.append(header, body);
         list.appendChild(li);
     });
 }
@@ -193,6 +202,22 @@ async function searchBlackDbComments(event) {
     } catch (error) {
         if (status) status.textContent = error.message || '검색 중 오류가 발생했습니다.';
         renderBlackDbComments([], '');
+    }
+}
+
+async function recommendBlackDbComment(commentId) {
+    if (!commentId) return;
+    const status = document.getElementById('black-db-status');
+
+    try {
+        const response = await APIClient.post(`/black-db/comments/${encodeURIComponent(commentId)}/recommend`, {});
+        const button = document.querySelector(`.black-db-comment-recommend-btn[data-comment-id="${CSS.escape(String(commentId))}"]`);
+        if (button) {
+            button.textContent = `👍 ${Number(response.recommendationCount || 0)}`;
+            button.classList.add('active');
+        }
+    } catch (error) {
+        if (status) status.textContent = error.message || '코멘트 추천 중 오류가 발생했습니다.';
     }
 }
 
@@ -243,6 +268,11 @@ function initBlackDbPage() {
     document.getElementById('black-db-search-form')?.addEventListener('submit', searchBlackDbComments);
     document.getElementById('black-db-comment-region')?.addEventListener('change', updateBlackDbDistrictOptions);
     document.getElementById('black-db-comment-form')?.addEventListener('submit', submitBlackDbComment);
+    document.getElementById('black-db-comment-list')?.addEventListener('click', (event) => {
+        const button = event.target.closest('.black-db-comment-recommend-btn');
+        if (!button) return;
+        recommendBlackDbComment(button.dataset.commentId);
+    });
     updateBlackDbDistrictOptions();
     renderBlackDbComments([], '');
 }
