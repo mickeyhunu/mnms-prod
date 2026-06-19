@@ -79,6 +79,11 @@ function stripLegacyBlackDbRegionPrefix(comment) {
     return String(comment || '').replace(/^\s*\[[^\]\n]{1,12}\]\s*/, '');
 }
 
+function isBlackDbAdminViewer() {
+    const user = Auth.getUser();
+    return typeof Auth.isAdminAccount === 'function' && Auth.isAdminAccount(user);
+}
+
 function updateBlackDbDistrictOptions() {
     const regionSelect = document.getElementById('black-db-comment-region');
     const districtSelect = document.getElementById('black-db-comment-district');
@@ -158,6 +163,8 @@ function renderBlackDbComments(comments, searchedPhoneNumber) {
     heading.textContent = '💬 이용자 코멘트';
     list.appendChild(heading);
 
+    const isAdminViewer = isBlackDbAdminViewer();
+
     comments.forEach((item) => {
         const li = document.createElement('li');
         li.className = 'black-db-comment-item';
@@ -172,12 +179,26 @@ function renderBlackDbComments(comments, searchedPhoneNumber) {
         recommendButton.type = 'button';
         recommendButton.dataset.commentId = item.id;
         recommendButton.textContent = `👍 ${Number(item.recommendationCount || 0)}`;
+        recommendButton.setAttribute('aria-pressed', item.isRecommendedByMe ? 'true' : 'false');
         if (item.isRecommendedByMe) recommendButton.classList.add('active');
-        header.append(meta, recommendButton);
+
+        header.append(meta);
+        if (isAdminViewer) {
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'black-db-comment-delete-btn';
+            deleteButton.type = 'button';
+            deleteButton.dataset.commentId = item.id;
+            deleteButton.textContent = '삭제';
+            header.append(deleteButton);
+        }
+
+        const content = document.createElement('div');
+        content.className = 'black-db-comment-content';
         const body = document.createElement('p');
         body.className = 'black-db-comment-body';
         body.textContent = stripLegacyBlackDbRegionPrefix(item.comment);
-        li.append(header, body);
+        content.append(body, recommendButton);
+        li.append(header, content);
         list.appendChild(li);
     });
 }
@@ -214,10 +235,24 @@ async function recommendBlackDbComment(commentId) {
         const button = document.querySelector(`.black-db-comment-recommend-btn[data-comment-id="${CSS.escape(String(commentId))}"]`);
         if (button) {
             button.textContent = `👍 ${Number(response.recommendationCount || 0)}`;
-            button.classList.add('active');
+            button.classList.toggle('active', Boolean(response.isRecommendedByMe));
+            button.setAttribute('aria-pressed', response.isRecommendedByMe ? 'true' : 'false');
         }
     } catch (error) {
         if (status) status.textContent = error.message || '코멘트 추천 중 오류가 발생했습니다.';
+    }
+}
+
+async function deleteBlackDbComment(commentId) {
+    if (!commentId || !window.confirm('이 코멘트를 삭제하시겠습니까?')) return;
+    const status = document.getElementById('black-db-status');
+
+    try {
+        await APIClient.delete(`/black-db/comments/${encodeURIComponent(commentId)}`);
+        if (status) status.textContent = '코멘트가 삭제되었습니다.';
+        await searchBlackDbComments();
+    } catch (error) {
+        if (status) status.textContent = error.message || '코멘트 삭제 중 오류가 발생했습니다.';
     }
 }
 
@@ -259,7 +294,7 @@ function initBlackDbPage() {
     Auth.bindLogoutButton();
 
     const user = Auth.getUser();
-    if (!Auth.isBusinessAccount(user)) {
+    if (!Auth.isBusinessAccount(user) && !Auth.isAdminAccount(user)) {
         window.location.href = '/';
         return;
     }
@@ -269,6 +304,12 @@ function initBlackDbPage() {
     document.getElementById('black-db-comment-region')?.addEventListener('change', updateBlackDbDistrictOptions);
     document.getElementById('black-db-comment-form')?.addEventListener('submit', submitBlackDbComment);
     document.getElementById('black-db-comment-list')?.addEventListener('click', (event) => {
+        const deleteButton = event.target.closest('.black-db-comment-delete-btn');
+        if (deleteButton) {
+            deleteBlackDbComment(deleteButton.dataset.commentId);
+            return;
+        }
+
         const button = event.target.closest('.black-db-comment-recommend-btn');
         if (!button) return;
         recommendBlackDbComment(button.dataset.commentId);

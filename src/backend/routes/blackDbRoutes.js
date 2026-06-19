@@ -7,7 +7,8 @@ const {
   requireBusinessUser,
   searchBlackDbComments,
   createBlackDbComment,
-  recommendBlackDbComment
+  recommendBlackDbComment,
+  deleteBlackDbComment
 } = require('../controllers/blackDbController');
 
 const router = express.Router();
@@ -16,5 +17,6 @@ router.use(authMiddleware, requireBusinessUser);
 router.get('/comments', searchBlackDbComments);
 router.post('/comments', createBlackDbComment);
 router.post('/comments/:commentId/recommend', recommendBlackDbComment);
+router.delete('/comments/:commentId', deleteBlackDbComment);
 
 module.exports = router;

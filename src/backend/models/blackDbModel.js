@@ -65,24 +65,48 @@ async function createComment({ phoneNumber, authorUserId, region, district, comm
   return rows[0] || null;
 }
 
-async function recommendComment({ commentId, userId }) {
+async function toggleCommentRecommendation({ commentId, userId }) {
   const pool = getPool();
-  await pool.query(
-    'INSERT IGNORE INTO black_db_comment_recommendations (comment_id, user_id) SELECT id, ? FROM black_db_comments WHERE id = ?',
-    [userId, commentId]
+  const [existingRows] = await pool.query(
+    'SELECT id FROM black_db_comment_recommendations WHERE comment_id = ? AND user_id = ? LIMIT 1',
+    [commentId, userId]
   );
+
+  let isRecommendedByMe = false;
+  if (existingRows.length) {
+    await pool.query(
+      'DELETE FROM black_db_comment_recommendations WHERE comment_id = ? AND user_id = ?',
+      [commentId, userId]
+    );
+  } else {
+    const [result] = await pool.query(
+      'INSERT IGNORE INTO black_db_comment_recommendations (comment_id, user_id) SELECT id, ? FROM black_db_comments WHERE id = ?',
+      [userId, commentId]
+    );
+    isRecommendedByMe = result.affectedRows > 0;
+  }
 
   const [rows] = await pool.query(
     'SELECT COUNT(*) AS recommendationCount FROM black_db_comment_recommendations WHERE comment_id = ?',
     [commentId]
   );
 
-  return Number(rows[0]?.recommendationCount || 0);
+  return {
+    recommendationCount: Number(rows[0]?.recommendationCount || 0),
+    isRecommendedByMe
+  };
+}
+
+async function deleteComment(commentId) {
+  const pool = getPool();
+  const [result] = await pool.query('DELETE FROM black_db_comments WHERE id = ?', [commentId]);
+  return result.affectedRows > 0;
 }
 
 module.exports = {
   normalizePhoneNumber,
   findCommentsByPhoneNumber,
   createComment,
-  recommendComment
+  toggleCommentRecommendation,
+  deleteComment
 };

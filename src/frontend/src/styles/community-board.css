@@ -820,7 +820,15 @@ header.community-section-header .board-tab.active {
   font-size: 0.86rem;
 }
 
-.black-db-comment-recommend-btn {
+.black-db-comment-content {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.black-db-comment-recommend-btn,
+.black-db-comment-delete-btn {
   align-items: center;
   border: 1px solid rgba(108, 46, 150, 0.24);
   border-radius: 999px;
@@ -842,12 +850,25 @@ header.community-section-header .board-tab.active {
   background: rgba(108, 46, 150, 0.08);
 }
 
-.black-db-comment-recommend-btn:active {
+.black-db-comment-recommend-btn:active,
+.black-db-comment-delete-btn:active {
   transform: scale(0.96);
 }
 
+.black-db-comment-delete-btn {
+  border-color: rgba(220, 38, 38, 0.24);
+  color: #dc2626;
+}
+
+.black-db-comment-delete-btn:hover {
+  border-color: rgba(220, 38, 38, 0.42);
+  background: rgba(220, 38, 38, 0.08);
+}
+
 .black-db-comment-body {
+  flex: 1 1 auto;
   margin: 0;
+  min-width: 0;
   white-space: pre-wrap;
 }
 
