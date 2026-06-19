@@ -1381,9 +1381,30 @@ const pageRegistry = {
         </div>
     </header>
     <main class="main-content">
+        <header class="community-section-header">
+            <div class="community-header-left">
+                <button type="button" class="board-menu-toggle" id="board-menu-toggle" aria-label="카테고리 열기" aria-expanded="false" aria-controls="board-tabs-panel">
+                    <span aria-hidden="true">☰</span>
+                </button>
+                <nav class="board-tabs hidden" id="board-tabs-panel" aria-label="게시판 카테고리">
+                    <button type="button" class="board-tab active" data-board-type="ALL">전체</button>
+                    <button type="button" class="board-tab" data-board-type="FREE">자유게시판</button>
+                    <button type="button" class="board-tab" data-board-type="ANON">익명게시판</button>
+                    <button type="button" class="board-tab" data-board-type="REVIEW">후기게시판</button>
+                    <button type="button" class="board-tab" data-board-type="STORY">썰게시판</button>
+                    <button type="button" class="board-tab" data-board-type="ATTENDANCE">출석게시판</button>
+                    <button type="button" class="board-tab" data-board-type="QUESTION">질문게시판</button>
+                    <button type="button" class="board-tab" data-board-type="EVENT">이벤트게시판</button>
+                    <button type="button" class="board-tab" data-board-type="PROMOTION">홍보게시판</button>
+                </nav>
+                <span class="community-board-name">커뮤니티 게시글</span>
+            </div>
+            <div class="community-actions" id="community-actions">
+                <a href="/create" class="btn btn-primary btn-sm" style="border-color: #6b7280;">글쓰기</a>
+            </div>
+        </header>
         <div class="container black-db-page">
             <section class="card black-db-card" aria-labelledby="black-db-title">
-                <p class="black-db-eyebrow">기업회원 전용</p>
                 <h2 id="black-db-title">BLACK DB</h2>
                 <p class="text-muted">번호를 검색해 기업회원들이 공유한 코멘트를 확인하고, 정보가 없으면 직접 코멘트를 남겨주세요.</p>
                 <form id="black-db-search-form" class="black-db-search-form">
@@ -1406,7 +1427,7 @@ const pageRegistry = {
         </div>
     </main>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/blackDb.js", "scripts/js/components/footerNav.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/sectionHeader.js", "scripts/js/pages/blackDb.js", "scripts/js/components/footerNav.js"]
   },
   'live': livePageConfig,
   'login': {
