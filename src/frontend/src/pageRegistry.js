@@ -1399,7 +1399,6 @@ const pageRegistry = {
                 <p class="text-muted black-db-empty" id="black-db-empty"></p>
                 <form id="black-db-comment-form" class="black-db-comment-form hidden">
                     <input type="hidden" id="black-db-comment-phone">
-                    <label class="form-label" for="black-db-comment-region">📍 활동지역</label>
                     <label class="form-label" for="black-db-comment-input">코멘트 남기기</label>
                     <div class="black-db-area-row">
                             <select class="form-control" id="black-db-comment-region" required>
