@@ -825,6 +825,18 @@ header.community-section-header .board-tab.active {
   margin-top: 18px;
 }
 
+.black-db-area-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.black-db-area-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
 .black-db-overview {
   border: 1px solid rgba(108, 46, 150, 0.18);
   border-radius: 18px;
@@ -884,5 +896,9 @@ header.community-section-header .board-tab.active {
 @media (max-width: 640px) {
   .black-db-search-row {
     flex-direction: row;
+  }
+
+  .black-db-area-row {
+    grid-template-columns: 1fr;
   }
 }

@@ -1292,12 +1292,27 @@ async function initDatabase() {
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       phone_number VARCHAR(20) NOT NULL,
       author_user_id BIGINT NOT NULL,
+      region VARCHAR(50) NOT NULL DEFAULT '',
+      district VARCHAR(50) NOT NULL DEFAULT '',
       comment TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       INDEX idx_black_db_comments_phone_created (phone_number, created_at),
       CONSTRAINT fk_black_db_comments_author FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  await ensureColumn(
+    pool,
+    'black_db_comments',
+    'region',
+    "ALTER TABLE black_db_comments ADD COLUMN region VARCHAR(50) NOT NULL DEFAULT '' AFTER author_user_id"
+  );
+  await ensureColumn(
+    pool,
+    'black_db_comments',
+    'district',
+    "ALTER TABLE black_db_comments ADD COLUMN district VARCHAR(50) NOT NULL DEFAULT '' AFTER region"
+  );
 
   const [adminRows] = await pool.query('SELECT id, password FROM users WHERE login_id = ?', ['master']);
   if (!adminRows.length) {
