@@ -863,22 +863,6 @@ header.community-section-header .board-tab.active {
   line-height: 1.45;
 }
 
-.black-db-caution.is-normal {
-  color: #15803d;
-}
-
-.black-db-caution.is-check {
-  color: #a16207;
-}
-
-.black-db-caution.is-warning {
-  color: #b91c1c;
-}
-
-.black-db-caution.is-reported {
-  color: #111827;
-}
-
 .black-db-comment-heading {
   color: #111827;
   font-size: 1rem;
