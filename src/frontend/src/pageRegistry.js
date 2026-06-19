@@ -1399,8 +1399,36 @@ const pageRegistry = {
                 <p class="text-muted black-db-empty" id="black-db-empty"></p>
                 <form id="black-db-comment-form" class="black-db-comment-form hidden">
                     <input type="hidden" id="black-db-comment-phone">
+                    <div class="black-db-area-fields">
+                        <label class="form-label" for="black-db-comment-region">활동지역</label>
+                        <div class="black-db-area-row">
+                            <select class="form-control" id="black-db-comment-region" required>
+                                <option value="">시/도 선택</option>
+                                <option value="서울">서울</option>
+                                <option value="경기">경기</option>
+                                <option value="인천">인천</option>
+                                <option value="부산">부산</option>
+                                <option value="대구">대구</option>
+                                <option value="광주">광주</option>
+                                <option value="대전">대전</option>
+                                <option value="울산">울산</option>
+                                <option value="강원">강원</option>
+                                <option value="경남">경남</option>
+                                <option value="경북">경북</option>
+                                <option value="전남">전남</option>
+                                <option value="전북">전북</option>
+                                <option value="충남">충남</option>
+                                <option value="충북">충북</option>
+                                <option value="세종">세종</option>
+                                <option value="제주">제주</option>
+                            </select>
+                            <select class="form-control" id="black-db-comment-district" required disabled>
+                                <option value="">구/군 선택</option>
+                            </select>
+                        </div>
+                    </div>
                     <label class="form-label" for="black-db-comment-input">코멘트 남기기</label>
-                    <textarea class="form-control" id="black-db-comment-input" rows="5" maxlength="1000" placeholder="예: [강남] 예약 문의 후 연락 두절 제보가 있습니다." required></textarea>
+                    <textarea class="form-control" id="black-db-comment-input" rows="5" maxlength="1000" placeholder="예: 예약 문의 후 연락 두절 제보가 있습니다." required></textarea>
                     <p class="black-db-policy-notice">주의 안내: 실명, 주소, 욕설, 범죄 단정 표현은 금지됩니다.</p>
                     <button class="btn btn-secondary w-full" type="submit">코멘트 등록</button>
                 </form>
