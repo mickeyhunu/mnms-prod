@@ -1884,7 +1884,7 @@ const pageRegistry = {
                 </div>
               </a>
             </div>
-            <div class="card-enter hidden" style="animation-delay: 40ms;" data-admin-only>
+            <div class="card-enter" style="animation-delay: 40ms;">
               <a class="play-tool-card" href="/play/ranking">
                 <div class="play-tool-card__content">
                   <span class="play-tool-card__icon">🏆</span>
