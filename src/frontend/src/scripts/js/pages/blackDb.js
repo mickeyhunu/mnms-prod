@@ -5,11 +5,94 @@ function formatBlackDbDate(value) {
     if (!value) return '';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '';
-    return date.toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' });
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}.${month}.${day}`;
 }
 
 function normalizeBlackDbPhoneNumber(value) {
     return String(value || '').replace(/[^0-9]/g, '').trim();
+}
+
+function formatBlackDbPhoneNumber(value) {
+    const phoneNumber = normalizeBlackDbPhoneNumber(value);
+    if (phoneNumber.length === 11) return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3, 7)}-${phoneNumber.slice(7)}`;
+    if (phoneNumber.length === 10) return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6)}`;
+    return phoneNumber;
+}
+
+function maskBlackDbPhoneNumber(value) {
+    const formatted = formatBlackDbPhoneNumber(value);
+    const parts = formatted.split('-');
+    if (parts.length >= 3) {
+        parts[parts.length - 1] = '••••';
+        return parts.join('-');
+    }
+    return formatted.length > 4 ? `${formatted.slice(0, -4)}••••` : formatted;
+}
+
+function extractBlackDbRegion(comment) {
+    const match = String(comment || '').match(/^\s*\[([^\]\n]{1,12})\]/);
+    return match ? match[1].trim() : '';
+}
+
+function buildBlackDbSummary(comments) {
+    const reportWords = ['주의', '신고', '먹튀', '노쇼', '연락 두절', '잠수', '문제', '피해', '차단'];
+    const normalWords = ['정상', '문제 없', '문제없', '좋았', '괜찮', '안전'];
+    const reportCount = comments.filter((item) => reportWords.some((word) => String(item.comment || '').includes(word))).length;
+    const normalCount = comments.filter((item) => normalWords.some((word) => String(item.comment || '').includes(word))).length;
+    const explicitReportCount = comments.filter((item) => String(item.comment || '').includes('신고')).length;
+    let caution = { label: '확인 필요', emoji: '🟡', className: 'is-check' };
+
+    if (comments.length >= 5 && explicitReportCount >= 3) {
+        caution = { label: '신고 누적', emoji: '⚫', className: 'is-reported' };
+    } else if (reportCount >= 3 || (comments.length >= 3 && reportCount > normalCount)) {
+        caution = { label: '주의 제보 많음', emoji: '🔴', className: 'is-warning' };
+    } else if (comments.length >= 2 && normalCount > reportCount) {
+        caution = { label: '정상 의견 많음', emoji: '🟢', className: 'is-normal' };
+    }
+
+    return { caution, reportCount, normalCount };
+}
+
+function renderBlackDbOverview(comments, searchedPhoneNumber) {
+    const overview = document.getElementById('black-db-overview');
+    if (!overview) return;
+
+    overview.innerHTML = '';
+    overview.classList.toggle('hidden', !searchedPhoneNumber);
+    if (!searchedPhoneNumber) return;
+
+    const regions = [...new Set(comments.map((item) => extractBlackDbRegion(item.comment)).filter(Boolean))];
+    const latestDate = comments[0]?.createdAt ? formatBlackDbDate(comments[0].createdAt) : '';
+    const summary = buildBlackDbSummary(comments);
+    const regionText = regions.length ? regions.slice(0, 6).join(' / ') : '등록된 활동지역 없음';
+    const reportSummary = comments.length
+        ? `댓글 ${comments.length}개${latestDate ? ` · 최근 제보 ${latestDate}` : ''}`
+        : '등록된 댓글이 없습니다.';
+
+    const phone = document.createElement('div');
+    phone.className = 'black-db-phone';
+    phone.textContent = `📞 ${maskBlackDbPhoneNumber(searchedPhoneNumber)}`;
+
+    const grid = document.createElement('div');
+    grid.className = 'black-db-overview-grid';
+    [
+        ['활동지역', regionText],
+        ['제보 요약', reportSummary],
+        ['주의도', `${summary.caution.emoji} ${summary.caution.label}`, `black-db-caution ${summary.caution.className}`]
+    ].forEach(([labelText, valueText, valueClass]) => {
+        const item = document.createElement('div');
+        const label = document.createElement('span');
+        label.textContent = labelText;
+        const value = document.createElement('strong');
+        value.textContent = valueText;
+        if (valueClass) value.className = valueClass;
+        item.append(label, value);
+        grid.appendChild(item);
+    });
+    overview.append(phone, grid);
 }
 
 function renderBlackDbComments(comments, searchedPhoneNumber) {
@@ -19,6 +102,7 @@ function renderBlackDbComments(comments, searchedPhoneNumber) {
     const phoneInput = document.getElementById('black-db-comment-phone');
     if (!list || !empty || !form || !phoneInput) return;
 
+    renderBlackDbOverview(comments, searchedPhoneNumber);
     list.innerHTML = '';
     phoneInput.value = searchedPhoneNumber || '';
     form.classList.toggle('hidden', !searchedPhoneNumber);
@@ -32,15 +116,21 @@ function renderBlackDbComments(comments, searchedPhoneNumber) {
     }
 
     empty.classList.add('hidden');
+    const heading = document.createElement('li');
+    heading.className = 'black-db-comment-heading';
+    heading.textContent = '💬 이용자 코멘트';
+    list.appendChild(heading);
+
     comments.forEach((item) => {
         const li = document.createElement('li');
         li.className = 'black-db-comment-item';
         const meta = document.createElement('div');
         meta.className = 'black-db-comment-meta';
-        meta.textContent = `${item.authorNickname || '기업회원'} · ${formatBlackDbDate(item.createdAt)}`;
+        const region = extractBlackDbRegion(item.comment);
+        meta.textContent = `${region ? `[${region}] ` : ''}${formatBlackDbDate(item.createdAt)}`;
         const body = document.createElement('p');
         body.className = 'black-db-comment-body';
-        body.textContent = item.comment || '';
+        body.textContent = String(item.comment || '').replace(/^\s*\[[^\]\n]{1,12}\]\s*/, '');
         li.append(meta, body);
         list.appendChild(li);
     });
