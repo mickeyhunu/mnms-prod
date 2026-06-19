@@ -1343,6 +1343,10 @@ const pageRegistry = {
                     <span class="service-icon">🏢</span>
                     <span class="service-label">업체정보</span>
                 </a>
+                <a class="service-item service-item-business-only hidden" href="/black-db" id="black-db-service-item">
+                    <span class="service-icon">🕵️</span>
+                    <span class="service-label">BLACK DB</span>
+                </a>
             </section>
         </div>
     </main>
@@ -1358,6 +1362,51 @@ const pageRegistry = {
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/topAds.js", "scripts/js/pages/home.js", "scripts/js/components/footerNav.js"]
+  },
+
+  'black-db': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+    <main class="main-content">
+        <div class="container black-db-page">
+            <section class="card black-db-card" aria-labelledby="black-db-title">
+                <p class="black-db-eyebrow">기업회원 전용</p>
+                <h2 id="black-db-title">BLACK DB</h2>
+                <p class="text-muted">번호를 검색해 기업회원들이 공유한 코멘트를 확인하고, 정보가 없으면 직접 코멘트를 남겨주세요.</p>
+                <form id="black-db-search-form" class="black-db-search-form">
+                    <label class="form-label" for="black-db-phone-input">번호 검색</label>
+                    <div class="black-db-search-row">
+                        <input class="form-control" id="black-db-phone-input" type="search" inputmode="numeric" placeholder="숫자만 입력" autocomplete="off" required>
+                        <button class="btn btn-primary" type="submit">검색</button>
+                    </div>
+                </form>
+                <p class="text-muted" id="black-db-status" aria-live="polite"></p>
+                <ul class="black-db-comment-list" id="black-db-comment-list"></ul>
+                <p class="text-muted black-db-empty" id="black-db-empty"></p>
+                <form id="black-db-comment-form" class="black-db-comment-form hidden">
+                    <input type="hidden" id="black-db-comment-phone">
+                    <label class="form-label" for="black-db-comment-input">코멘트 남기기</label>
+                    <textarea class="form-control" id="black-db-comment-input" rows="5" maxlength="1000" placeholder="이 번호에 대한 정보를 입력해주세요." required></textarea>
+                    <button class="btn btn-secondary w-full" type="submit">코멘트 등록</button>
+                </form>
+            </section>
+        </div>
+    </main>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/blackDb.js", "scripts/js/components/footerNav.js"]
   },
   'live': livePageConfig,
   'login': {
