@@ -7,7 +7,9 @@ function initHomePage() {
 
     const blackDbMenu = document.getElementById('black-db-service-item');
     if (blackDbMenu) {
-        blackDbMenu.classList.toggle('hidden', !Auth.isBusinessAccount(Auth.getUser()));
+        const currentUser = Auth.getUser();
+        const canUseBlackDb = Auth.isBusinessAccount(currentUser) || Auth.isAdminAccount(currentUser);
+        blackDbMenu.classList.toggle('hidden', !canUseBlackDb);
     }
     if (typeof initTopAds === 'function') {
         initTopAds({
