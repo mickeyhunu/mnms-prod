@@ -69,15 +69,4 @@ document.addEventListener('selectionchange', (event) => {
   }
 }, true);
 
-const isLocalEnv = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-
-if (!isLocalEnv) {
-  setInterval(() => {
-    const devtoolsOpen = window.outerWidth - window.innerWidth > 100;
-    if (devtoolsOpen) {
-      document.body.innerHTML = '접근이 제한되었습니다';
-    }
-  }, 1000);
-}
-
 createApp(App).use(router).mount('#app');
