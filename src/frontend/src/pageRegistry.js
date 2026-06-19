@@ -1381,26 +1381,12 @@ const pageRegistry = {
         </div>
     </header>
     <main class="main-content">
-        <header class="community-section-header">
+        <header class="community-section-header black-db-section-header">
             <div class="community-header-left">
-                <button type="button" class="board-menu-toggle" id="board-menu-toggle" aria-label="카테고리 열기" aria-expanded="false" aria-controls="board-tabs-panel">
-                    <span aria-hidden="true">☰</span>
-                </button>
-                <nav class="board-tabs hidden" id="board-tabs-panel" aria-label="게시판 카테고리">
-                    <button type="button" class="board-tab active" data-board-type="ALL">전체</button>
-                    <button type="button" class="board-tab" data-board-type="FREE">자유게시판</button>
-                    <button type="button" class="board-tab" data-board-type="ANON">익명게시판</button>
-                    <button type="button" class="board-tab" data-board-type="REVIEW">후기게시판</button>
-                    <button type="button" class="board-tab" data-board-type="STORY">썰게시판</button>
-                    <button type="button" class="board-tab" data-board-type="ATTENDANCE">출석게시판</button>
-                    <button type="button" class="board-tab" data-board-type="QUESTION">질문게시판</button>
-                    <button type="button" class="board-tab" data-board-type="EVENT">이벤트게시판</button>
-                    <button type="button" class="board-tab" data-board-type="PROMOTION">홍보게시판</button>
-                </nav>
-                <span class="community-board-name">커뮤니티 게시글</span>
+                <span class="community-board-name">BLACK DB</span>
             </div>
-            <div class="community-actions" id="community-actions">
-                <a href="/create" class="btn btn-primary btn-sm" style="border-color: #6b7280;">글쓰기</a>
+            <div class="community-actions black-db-header-note" aria-label="BLACK DB 이용 대상">
+                기업회원 전용 번호 코멘트 검색
             </div>
         </header>
         <div class="container black-db-page">
