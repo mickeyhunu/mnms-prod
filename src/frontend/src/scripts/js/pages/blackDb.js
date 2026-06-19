@@ -50,25 +50,6 @@ function extractBlackDbRegion(comment) {
     return match ? match[1].trim() : '';
 }
 
-function buildBlackDbSummary(comments) {
-    const reportWords = ['주의', '신고', '먹튀', '노쇼', '연락 두절', '잠수', '문제', '피해', '차단'];
-    const normalWords = ['정상', '문제 없', '문제없', '좋았', '괜찮', '안전'];
-    const reportCount = comments.filter((item) => reportWords.some((word) => String(item.comment || '').includes(word))).length;
-    const normalCount = comments.filter((item) => normalWords.some((word) => String(item.comment || '').includes(word))).length;
-    const explicitReportCount = comments.filter((item) => String(item.comment || '').includes('신고')).length;
-    let caution = { label: '확인 필요', emoji: '🟡', className: 'is-check' };
-
-    if (comments.length >= 5 && explicitReportCount >= 3) {
-        caution = { label: '신고 누적', emoji: '⚫', className: 'is-reported' };
-    } else if (reportCount >= 3 || (comments.length >= 3 && reportCount > normalCount)) {
-        caution = { label: '주의 제보 많음', emoji: '🔴', className: 'is-warning' };
-    } else if (comments.length >= 2 && normalCount > reportCount) {
-        caution = { label: '정상 의견 많음', emoji: '🟢', className: 'is-normal' };
-    }
-
-    return { caution, reportCount, normalCount };
-}
-
 function renderBlackDbOverview(comments, searchedPhoneNumber) {
     const overview = document.getElementById('black-db-overview');
     if (!overview) return;
@@ -79,7 +60,6 @@ function renderBlackDbOverview(comments, searchedPhoneNumber) {
 
     const regions = [...new Set(comments.map((item) => extractBlackDbRegion(item.comment)).filter(Boolean))];
     const latestDate = comments[0]?.createdAt ? formatBlackDbDate(comments[0].createdAt) : '';
-    const summary = buildBlackDbSummary(comments);
     const regionText = regions.length ? regions.slice(0, 6).join(' / ') : '등록된 활동지역 없음';
     const reportSummary = comments.length
         ? `댓글 ${comments.length}개${latestDate ? ` · 최근 제보 ${latestDate}` : ''}`
@@ -93,8 +73,7 @@ function renderBlackDbOverview(comments, searchedPhoneNumber) {
     grid.className = 'black-db-overview-grid';
     [
         ['활동지역', regionText],
-        ['제보 요약', reportSummary],
-        ['주의도', `${summary.caution.emoji} ${summary.caution.label}`, `black-db-caution ${summary.caution.className}`]
+        ['제보 요약', reportSummary]
     ].forEach(([labelText, valueText, valueClass]) => {
         const item = document.createElement('div');
         const label = document.createElement('span');
