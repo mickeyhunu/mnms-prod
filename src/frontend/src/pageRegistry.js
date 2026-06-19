@@ -1390,7 +1390,7 @@ const pageRegistry = {
             <section class="card black-db-card">
                 <form id="black-db-search-form" class="black-db-search-form">
                     <div class="black-db-search-row">
-                        <input class="form-control" id="black-db-phone-input" type="search" inputmode="numeric" pattern="[0-9]*" maxlength="11" placeholder="숫자만 입력" autocomplete="off" required>
+                        <input class="form-control" id="black-db-phone-input" type="search" inputmode="numeric" pattern="[0-9]*" maxlength="11" placeholder="전화번호 입력" autocomplete="off" required>
                         <button class="btn btn-primary" type="submit">검색</button>
                     </div>
                 </form>
@@ -1401,7 +1401,10 @@ const pageRegistry = {
                     <input type="hidden" id="black-db-comment-phone">
                     <div class="black-db-area-fields">
                         <label class="form-label" for="black-db-comment-region">활동지역</label>
-                        <div class="black-db-area-row">
+                        
+                    </div>
+                    <label class="form-label" for="black-db-comment-input">코멘트 남기기</label>
+                    <div class="black-db-area-row">
                             <select class="form-control" id="black-db-comment-region" required>
                                 <option value="">시/도 선택</option>
                                 <option value="서울">서울</option>
@@ -1426,11 +1429,9 @@ const pageRegistry = {
                                 <option value="">구/군 선택</option>
                             </select>
                         </div>
-                    </div>
-                    <label class="form-label" for="black-db-comment-input">코멘트 남기기</label>
                     <textarea class="form-control" id="black-db-comment-input" rows="5" maxlength="1000" placeholder="예: 예약 문의 후 연락 두절 제보가 있습니다." required></textarea>
+                    <button class="btn btn-primary w-full" type="submit">코멘트 등록</button>
                     <p class="black-db-policy-notice">주의 안내: 실명, 주소, 욕설, 범죄 단정 표현은 금지됩니다.</p>
-                    <button class="btn btn-secondary w-full" type="submit">코멘트 등록</button>
                 </form>
             </section>
         </div>

@@ -778,7 +778,7 @@ header.community-section-header .board-tab.active {
 }
 
 .black-db-card {
-  padding: 24px;
+  padding: 3%;
 }
 
 
@@ -832,8 +832,7 @@ header.community-section-header .board-tab.active {
 }
 
 .black-db-area-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
   gap: 10px;
 }
 
@@ -896,9 +895,5 @@ header.community-section-header .board-tab.active {
 @media (max-width: 640px) {
   .black-db-search-row {
     flex-direction: row;
-  }
-
-  .black-db-area-row {
-    grid-template-columns: 1fr;
   }
 }
