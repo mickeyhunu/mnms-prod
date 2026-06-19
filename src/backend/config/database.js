@@ -1287,6 +1287,18 @@ async function initDatabase() {
     await pool.query('ALTER TABLE support_inquiries ADD COLUMN attachment_urls LONGTEXT NULL AFTER content');
   }
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS black_db_comments (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      phone_number VARCHAR(20) NOT NULL,
+      author_user_id BIGINT NOT NULL,
+      comment TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_black_db_comments_phone_created (phone_number, created_at),
+      CONSTRAINT fk_black_db_comments_author FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
   const [adminRows] = await pool.query('SELECT id, password FROM users WHERE login_id = ?', ['master']);
   if (!adminRows.length) {
     const adminPasswordHash = await hashPassword('admin1234');
