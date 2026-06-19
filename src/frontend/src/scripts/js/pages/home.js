@@ -4,6 +4,11 @@
 function initHomePage() {
     Auth.updateHeaderUI();
     Auth.bindLogoutButton();
+
+    const blackDbMenu = document.getElementById('black-db-service-item');
+    if (blackDbMenu) {
+        blackDbMenu.classList.toggle('hidden', !Auth.isBusinessAccount(Auth.getUser()));
+    }
     if (typeof initTopAds === 'function') {
         initTopAds({
             containerId: 'top-ads-container',

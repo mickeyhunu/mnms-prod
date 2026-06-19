@@ -772,3 +772,61 @@ header.community-section-header .board-tab.active {
 .support-notice-date {
     white-space: nowrap;
 }
+
+.black-db-page {
+  max-width: 760px;
+}
+
+.black-db-card {
+  padding: 24px;
+}
+
+.black-db-eyebrow {
+  margin: 0 0 8px;
+  color: #d946ef;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.black-db-search-row {
+  display: flex;
+  gap: 10px;
+}
+
+.black-db-search-row .form-control {
+  flex: 1;
+}
+
+.black-db-comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  margin: 18px 0;
+  padding: 0;
+}
+
+.black-db-comment-item {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 14px;
+  padding: 14px;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.black-db-comment-meta {
+  color: #64748b;
+  font-size: 0.86rem;
+  margin-bottom: 8px;
+}
+
+.black-db-comment-body {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.black-db-comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 18px;
+}
