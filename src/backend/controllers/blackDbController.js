@@ -23,6 +23,10 @@ const REGION_DISTRICT_MAP = {
   제주: ['서귀포시', '제주시']
 };
 
+function isAdminUser(user) {
+  return String(user?.role || '').toUpperCase() === 'ADMIN';
+}
+
 function isBusinessUser(user) {
   const role = String(user?.role || '').toUpperCase();
   const memberType = String(user?.memberType || user?.member_type || '').toUpperCase();
@@ -30,7 +34,7 @@ function isBusinessUser(user) {
 }
 
 function requireBusinessUser(req, res, next) {
-  if (!isBusinessUser(req.user)) {
+  if (!isBusinessUser(req.user) && !isAdminUser(req.user)) {
     return res.status(403).json({ message: '기업회원만 이용할 수 있습니다.' });
   }
   return next();
@@ -96,12 +100,34 @@ async function recommendBlackDbComment(req, res, next) {
       return res.status(400).json({ message: '유효하지 않은 코멘트 ID입니다.' });
     }
 
-    const recommendationCount = await blackDbModel.recommendComment({
+    const recommendation = await blackDbModel.toggleCommentRecommendation({
       commentId,
       userId: req.user.id
     });
 
-    return res.json({ recommendationCount });
+    return res.json(recommendation);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function deleteBlackDbComment(req, res, next) {
+  try {
+    if (!isAdminUser(req.user)) {
+      return res.status(403).json({ message: '관리자만 삭제할 수 있습니다.' });
+    }
+
+    const commentId = parsePositiveId(req.params.commentId);
+    if (!commentId) {
+      return res.status(400).json({ message: '유효하지 않은 코멘트 ID입니다.' });
+    }
+
+    const deleted = await blackDbModel.deleteComment(commentId);
+    if (!deleted) {
+      return res.status(404).json({ message: '삭제할 코멘트를 찾을 수 없습니다.' });
+    }
+
+    return res.json({ success: true });
   } catch (error) {
     return next(error);
   }
@@ -111,5 +137,6 @@ module.exports = {
   requireBusinessUser,
   searchBlackDbComments,
   createBlackDbComment,
-  recommendBlackDbComment
+  recommendBlackDbComment,
+  deleteBlackDbComment
 };
