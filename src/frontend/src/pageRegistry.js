@@ -36,7 +36,7 @@ const pageRegistry = {
                 </div>
             </header>
 
-            <section class="card business-directory-card">
+            <section class="business-directory-card">
                 <div class="business-directory-filter-v2" aria-label="업체 필터">
                     <div class="business-filter-row business-filter-row--top">
                         <div class="business-filter-left">
@@ -1398,7 +1398,7 @@ const pageRegistry = {
                     </div>
                 </div>
             </section>
-            <section class="card black-db-card">
+            <section class="black-db-card">
                 <form id="black-db-search-form" class="black-db-search-form">
                     <div class="black-db-search-row">
                         <input class="form-control" id="black-db-phone-input" type="search" inputmode="numeric" pattern="[0-9]*" maxlength="11" placeholder="전화번호 입력" autocomplete="off" required>
