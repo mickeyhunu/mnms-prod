@@ -218,7 +218,7 @@ async function searchBlackDbComments(event) {
 
     try {
         if (status) status.textContent = '검색 중입니다...';
-        const response = await APIClient.get('/black-db/comments', { phoneNumber });
+        const response = await APIClient.get('/bamcheat/comments', { phoneNumber });
         renderBlackDbComments(response.comments || [], response.phoneNumber || phoneNumber);
         if (status) status.textContent = response.hasComments ? '검색 결과를 확인하세요.' : '정보가 없습니다. 코멘트를 남길 수 있습니다.';
     } catch (error) {
@@ -232,7 +232,7 @@ async function recommendBlackDbComment(commentId) {
     const status = document.getElementById('black-db-status');
 
     try {
-        const response = await APIClient.post(`/black-db/comments/${encodeURIComponent(commentId)}/recommend`, {});
+        const response = await APIClient.post(`/bamcheat/comments/${encodeURIComponent(commentId)}/recommend`, {});
         const button = document.querySelector(`.black-db-comment-recommend-btn[data-comment-id="${CSS.escape(String(commentId))}"]`);
         if (button) {
             button.textContent = `👍 ${Number(response.recommendationCount || 0)}`;
@@ -249,7 +249,7 @@ async function deleteBlackDbComment(commentId) {
     const status = document.getElementById('black-db-status');
 
     try {
-        await APIClient.delete(`/black-db/comments/${encodeURIComponent(commentId)}`);
+        await APIClient.delete(`/bamcheat/comments/${encodeURIComponent(commentId)}`);
         if (status) status.textContent = '코멘트가 삭제되었습니다.';
         await searchBlackDbComments();
     } catch (error) {
@@ -281,7 +281,7 @@ async function submitBlackDbComment(event) {
     }
 
     try {
-        await APIClient.post('/black-db/comments', { phoneNumber, region, district, comment });
+        await APIClient.post('/bamcheat/comments', { phoneNumber, region, district, comment });
         if (textarea) textarea.value = '';
         if (status) status.textContent = '코멘트가 등록되었습니다.';
         await searchBlackDbComments();

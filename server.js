@@ -530,7 +530,7 @@ app.use('/api/live', liveRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/rbti', rbtiRoutes);
 app.use('/api/rankings', rankingRoutes);
-app.use('/api/black-db', blackDbRoutes);
+app.use('/api/bamcheat', blackDbRoutes);
 
 app.get('/live', (req, res) => {
   res.redirect(301, '/play/live');

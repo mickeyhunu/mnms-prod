@@ -1343,7 +1343,7 @@ const pageRegistry = {
                     <span class="service-icon">🏢</span>
                     <span class="service-label">업체정보</span>
                 </a>
-                <a class="service-item service-item-business-only hidden" href="/black-db" id="black-db-service-item">
+                <a class="service-item service-item-business-only hidden" href="/bamcheat" id="black-db-service-item">
                     <span class="service-icon">🕵️</span>
                     <span class="service-label">밤치트</span>
                 </a>
