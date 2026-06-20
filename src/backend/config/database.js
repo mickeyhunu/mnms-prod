@@ -1288,7 +1288,7 @@ async function initDatabase() {
   }
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS black_db_comments (
+    CREATE TABLE IF NOT EXISTS bamcheat_comments (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       phone_number VARCHAR(20) NOT NULL,
       author_user_id BIGINT NOT NULL,
@@ -1296,34 +1296,34 @@ async function initDatabase() {
       district VARCHAR(50) NOT NULL DEFAULT '',
       comment TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      INDEX idx_black_db_comments_phone_created (phone_number, created_at),
-      CONSTRAINT fk_black_db_comments_author FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE CASCADE
+      INDEX idx_bamcheat_comments_phone_created (phone_number, created_at),
+      CONSTRAINT fk_bamcheat_comments_author FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
   await ensureColumn(
     pool,
-    'black_db_comments',
+    'bamcheat_comments',
     'region',
-    "ALTER TABLE black_db_comments ADD COLUMN region VARCHAR(50) NOT NULL DEFAULT '' AFTER author_user_id"
+    "ALTER TABLE bamcheat_comments ADD COLUMN region VARCHAR(50) NOT NULL DEFAULT '' AFTER author_user_id"
   );
   await ensureColumn(
     pool,
-    'black_db_comments',
+    'bamcheat_comments',
     'district',
-    "ALTER TABLE black_db_comments ADD COLUMN district VARCHAR(50) NOT NULL DEFAULT '' AFTER region"
+    "ALTER TABLE bamcheat_comments ADD COLUMN district VARCHAR(50) NOT NULL DEFAULT '' AFTER region"
   );
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS black_db_comment_recommendations (
+    CREATE TABLE IF NOT EXISTS bamcheat_comment_recommendations (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       comment_id BIGINT NOT NULL,
       user_id BIGINT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE KEY uq_black_db_comment_recommendation (comment_id, user_id),
-      INDEX idx_black_db_comment_recommendations_user (user_id),
-      CONSTRAINT fk_black_db_comment_recommendations_comment FOREIGN KEY (comment_id) REFERENCES black_db_comments(id) ON DELETE CASCADE,
-      CONSTRAINT fk_black_db_comment_recommendations_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      UNIQUE KEY uq_bamcheat_comment_recommendation (comment_id, user_id),
+      INDEX idx_bamcheat_comment_recommendations_user (user_id),
+      CONSTRAINT fk_bamcheat_comment_recommendations_comment FOREIGN KEY (comment_id) REFERENCES bamcheat_comments(id) ON DELETE CASCADE,
+      CONSTRAINT fk_bamcheat_comment_recommendations_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
