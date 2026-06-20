@@ -115,6 +115,14 @@ function renderBlackDbOverview(comments, searchedPhoneNumber) {
         ? `댓글 ${comments.length}개${latestDate ? ` · 최근 제보 ${latestDate}` : ''}`
         : '등록된 댓글이 없습니다.';
 
+    const resultHeadingList = document.createElement('ul');
+    resultHeadingList.className = 'black-db-result-heading-list';
+
+    const resultHeading = document.createElement('li');
+    resultHeading.className = 'black-db-comment-heading';
+    resultHeading.textContent = '🔍 번호조회 결과';
+    resultHeadingList.appendChild(resultHeading);
+
     const phone = document.createElement('div');
     phone.className = 'black-db-phone';
     phone.textContent = `📞 ${maskBlackDbPhoneNumber(searchedPhoneNumber)}`;
@@ -134,7 +142,7 @@ function renderBlackDbOverview(comments, searchedPhoneNumber) {
         item.append(label, value);
         grid.appendChild(item);
     });
-    overview.append(phone, grid);
+    overview.append(resultHeadingList, phone, grid);
 }
 
 function renderBlackDbComments(comments, searchedPhoneNumber) {

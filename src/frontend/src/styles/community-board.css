@@ -777,6 +777,98 @@ header.community-section-header .board-tab.active {
   padding: 3%;
 }
 
+.black-db-hero {
+  border-radius: 24px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  padding: 18px 16px;
+  position: relative;
+}
+
+.black-db-hero-glow {
+  background:
+    radial-gradient(circle at 24% 25%, rgba(220, 38, 38, 0.18), transparent 28%),
+    radial-gradient(circle at 72% 20%, rgba(108, 46, 150, 0.18), transparent 32%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(248, 250, 252, 0.3));
+  inset: 0;
+  opacity: 0.85;
+  pointer-events: none;
+  position: absolute;
+}
+
+.black-db-hero-glow::after {
+  background-image:
+    linear-gradient(rgba(108, 46, 150, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(220, 38, 38, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+  content: "";
+  inset: 0;
+  opacity: 0.45;
+  position: absolute;
+}
+
+.black-db-hero-content {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+.black-db-hero-copy {
+  max-width: 680px;
+  text-align: center;
+}
+
+.black-db-hero-title {
+  color: #111827;
+  font-size: clamp(2rem, 7vw, 3rem);
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 1.12;
+  margin: 0 0 12px;
+}
+
+.black-db-hero-title span {
+  display: block;
+}
+
+.black-db-hero-title strong {
+  color: #dc2626;
+}
+
+.black-db-hero-subtitle {
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.black-db-live-search {
+  align-items: center;
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.58);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 18px;
+}
+
+.black-db-live-search span {
+  color: #8a5c16;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.black-db-live-search strong {
+  color: #111827;
+  font-size: 1.45rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
 
 .black-db-search-row {
   display: flex;
@@ -881,6 +973,12 @@ header.community-section-header .board-tab.active {
   gap: 10px;
 }
 
+.black-db-result-heading-list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+}
+
 .black-db-overview {
   border: 1px solid rgba(108, 46, 150, 0.18);
   border-radius: 18px;
@@ -938,6 +1036,10 @@ header.community-section-header .board-tab.active {
 }
 
 @media (max-width: 640px) {
+  .black-db-hero {
+    padding: 16px 10px;
+  }
+
   .black-db-search-row {
     flex-direction: row;
   }
