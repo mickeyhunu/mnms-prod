@@ -2,6 +2,7 @@
  * 파일 역할: PageRenderer UI 조합 및 페이지 렌더링을 담당하는 프론트엔드 컴포넌트 파일.
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { pageRegistry } from '../pageRegistry.js';
 import { GLOBAL_HEADER_TEMPLATE, stripLegacyHeaderTemplate } from './GLOBAL_HEADER_TEMPLATE.js';
 import { BRAND_ASSETS, createBrandLogoMarkup } from '../brandAssets.js';
@@ -166,11 +167,16 @@ export default {
   },
   setup(props) {
     const injectedNodes = [];
+    const route = useRoute();
 
     const pageConfig = computed(() => pageRegistry[props.page] || { template: '<div>페이지를 찾을 수 없습니다.</div>', styles: [], scripts: [] });
     const pageBodyContent = computed(() => normalizeTemplateLinks(stripTemplateScripts(stripLegacyHeaderTemplate(pageConfig.value.template || ''))));
     const pageShellClass = computed(() => `page-shell page-shell--${props.page || 'unknown'}`);
     const shouldRenderGlobalHeader = computed(() => !PAGES_WITHOUT_GLOBAL_HEADER.has(props.page));
+    const seoHeadingText = computed(() => {
+      const routeTitle = typeof route.meta?.title === 'string' ? route.meta.title.trim() : '';
+      return routeTitle || '미드나잇 맨즈';
+    });
 
     const applyPageMarker = () => {
       document.body.dataset.page = props.page || '';
@@ -261,8 +267,9 @@ export default {
       pageBodyContent,
       globalHeaderTemplate: GLOBAL_HEADER_TEMPLATE,
       pageShellClass,
-      shouldRenderGlobalHeader
+      shouldRenderGlobalHeader,
+      seoHeadingText
     };
   },
-  template: `<div :class="pageShellClass"><div v-if="shouldRenderGlobalHeader" v-html="globalHeaderTemplate"></div><div v-html="pageBodyContent"></div></div>`
+  template: `<div :class="pageShellClass"><div v-if="shouldRenderGlobalHeader" v-html="globalHeaderTemplate"></div><h1 class="sr-only">{{ seoHeadingText }}</h1><div v-html="pageBodyContent"></div></div>`
 };
