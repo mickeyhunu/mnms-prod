@@ -1387,23 +1387,18 @@ const pageRegistry = {
                     <span class="community-board-name">BLACK DB</span>
                 </div>
             </header>
-            <section class="card black-db-card">
-                <section class="black-db-hero" aria-labelledby="black-db-hero-title">
-                    <div class="black-db-hero-glow" aria-hidden="true"></div>
-                    <div class="black-db-hero-content">
-                        <div class="black-db-hero-copy">
-                            <h1 id="black-db-hero-title" class="black-db-hero-title">
-                                <span>모르는 전화번호,</span>
-                                <span><strong>스팸번호 조회</strong></span>
-                            </h1>
-                            <h2 class="black-db-hero-subtitle">사용자가 함께 만드는 스팸전화번호DB</h2>
-                        </div>
-                        <div class="black-db-live-search" aria-label="실시간 조회중 예시 번호">
-                            <span>실시간 조회중</span>
-                            <strong>02-6978-*001</strong>
-                        </div>
+            <section class="black-db-hero" aria-labelledby="black-db-hero-title">
+                <div class="black-db-hero-glow" aria-hidden="true"></div>
+                <div class="black-db-hero-content">
+                    <div class="black-db-hero-copy">
+                        <h1 id="black-db-hero-title" class="black-db-hero-title">
+                            <span>안전한 영업,</span>
+                            <span><strong>블랙번호 조회</strong></span>
+                        </h1>
                     </div>
-                </section>
+                </div>
+            </section>
+            <section class="card black-db-card">
                 <form id="black-db-search-form" class="black-db-search-form">
                     <div class="black-db-search-row">
                         <input class="form-control" id="black-db-phone-input" type="search" inputmode="numeric" pattern="[0-9]*" maxlength="11" placeholder="전화번호 입력" autocomplete="off" required>
