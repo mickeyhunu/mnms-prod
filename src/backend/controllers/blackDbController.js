@@ -1,5 +1,5 @@
 /**
- * 파일 역할: 기업회원 전용 BLACK DB 번호 검색 및 코멘트 작성 API를 처리하는 컨트롤러 파일.
+ * 파일 역할: 기업회원 전용 밤치트 번호 검색 및 코멘트 작성 API를 처리하는 컨트롤러 파일.
  */
 const blackDbModel = require('../models/blackDbModel');
 

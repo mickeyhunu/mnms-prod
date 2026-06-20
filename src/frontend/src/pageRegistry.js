@@ -1345,7 +1345,7 @@ const pageRegistry = {
                 </a>
                 <a class="service-item service-item-business-only hidden" href="/black-db" id="black-db-service-item">
                     <span class="service-icon">🕵️</span>
-                    <span class="service-label">BLACK DB</span>
+                    <span class="service-label">밤치트</span>
                 </a>
             </section>
         </div>
@@ -1384,7 +1384,7 @@ const pageRegistry = {
         <div class="container">
             <header class="community-section-header black-db-section-header">
                 <div class="community-header-left">
-                    <span class="community-board-name">BLACK DB</span>
+                    <span class="community-board-name">밤치트</span>
                 </div>
             </header>
             <section class="black-db-hero" aria-labelledby="black-db-hero-title">
