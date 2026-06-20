@@ -1,5 +1,5 @@
 /**
- * 파일 역할: 기업회원 전용 BLACK DB API 라우트를 정의하는 라우터 파일.
+ * 파일 역할: 기업회원 전용 밤치트 API 라우트를 정의하는 라우터 파일.
  */
 const express = require('express');
 const { authMiddleware } = require('../middlewares/authMiddleware');

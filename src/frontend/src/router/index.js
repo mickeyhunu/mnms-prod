@@ -42,7 +42,7 @@ const routes = [
   { path: '/ad-order-history', component: PageView, meta: { pageKey: 'ad-order-history', title: '스탬프 결제 내역', description: '스탬프 결제완료와 결제취소 내역을 확인하세요.', noindex: true } },
   { path: '/stamp-event-management', component: PageView, meta: { pageKey: 'stamp-event-management', title: '스탬프 이벤트 관리', description: '내 광고에 신청된 방문인증/스탬프사용 신청을 관리하세요.', noindex: true } },
   { path: '/business-info', component: PageView, meta: { pageKey: 'business-info', title: '업체정보', description: '등록된 업체 정보를 지역과 업종별로 확인하세요.' } },
-  { path: '/black-db', component: PageView, meta: { pageKey: 'black-db', title: 'BLACK DB', description: '기업회원 전용 번호 코멘트 검색 페이지입니다.', noindex: true } },
+  { path: '/black-db', component: PageView, meta: { pageKey: 'black-db', title: '밤치트', description: '기업회원 전용 번호 코멘트 검색 페이지입니다.', noindex: true } },
   { path: '/business-info/:slug', component: PageView, meta: { pageKey: 'business-info-detail', title: '업체정보 상세', description: '업체의 상세정보와 전화 연결 버튼을 확인하세요.' } },
   { path: '/business-apply', component: PageView, meta: { pageKey: 'business-apply', title: '기업회원 신청', description: '기업회원 신청 전 안내 사항을 확인하고 필수 동의 후 사업자정보를 제출하세요.', noindex: true } },
   { path: '/ad-profile-management', component: PageView, meta: { pageKey: 'ad-profile-management', title: '광고프로필 관리', description: '광고프로필 기본 정보와 상세 소개를 등록하고 미리보기를 확인하세요.', noindex: true } },
