@@ -115,14 +115,6 @@ function renderBlackDbOverview(comments, searchedPhoneNumber) {
         ? `댓글 ${comments.length}개${latestDate ? ` · 최근 제보 ${latestDate}` : ''}`
         : '등록된 댓글이 없습니다.';
 
-    const resultHeadingList = document.createElement('ul');
-    resultHeadingList.className = 'black-db-result-heading-list';
-
-    const resultHeading = document.createElement('li');
-    resultHeading.className = 'black-db-comment-heading';
-    resultHeading.textContent = '🔍 번호조회 결과';
-    resultHeadingList.appendChild(resultHeading);
-
     const phone = document.createElement('div');
     phone.className = 'black-db-phone';
     phone.textContent = `📞 ${maskBlackDbPhoneNumber(searchedPhoneNumber)}`;
@@ -142,7 +134,7 @@ function renderBlackDbOverview(comments, searchedPhoneNumber) {
         item.append(label, value);
         grid.appendChild(item);
     });
-    overview.append(resultHeadingList, phone, grid);
+    overview.append(phone, grid);
 }
 
 function renderBlackDbComments(comments, searchedPhoneNumber) {
@@ -150,9 +142,13 @@ function renderBlackDbComments(comments, searchedPhoneNumber) {
     const empty = document.getElementById('black-db-empty');
     const form = document.getElementById('black-db-comment-form');
     const phoneInput = document.getElementById('black-db-comment-phone');
+    const resultHeading = document.getElementById('black-db-result-heading');
+    const commentHeading = document.getElementById('black-db-comment-heading');
     if (!list || !empty || !form || !phoneInput) return;
 
     renderBlackDbOverview(comments, searchedPhoneNumber);
+    if (resultHeading) resultHeading.classList.toggle('hidden', !searchedPhoneNumber);
+    if (commentHeading) commentHeading.classList.add('hidden');
     list.innerHTML = '';
     phoneInput.value = searchedPhoneNumber || '';
     form.classList.toggle('hidden', !searchedPhoneNumber);
@@ -166,10 +162,7 @@ function renderBlackDbComments(comments, searchedPhoneNumber) {
     }
 
     empty.classList.add('hidden');
-    const heading = document.createElement('li');
-    heading.className = 'black-db-comment-heading';
-    heading.textContent = '💬 이용자 코멘트';
-    list.appendChild(heading);
+    if (commentHeading) commentHeading.classList.remove('hidden');
 
     const isAdminViewer = isBlackDbAdminViewer();
 

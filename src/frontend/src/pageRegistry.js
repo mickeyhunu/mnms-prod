@@ -1405,7 +1405,9 @@ const pageRegistry = {
                         <button class="btn btn-primary" type="submit">검색</button>
                     </div>
                 </form>
+                <span class="black-db-comment-heading hidden" id="black-db-result-heading">🔍 번호조회 결과</span>
                 <section class="black-db-overview hidden" id="black-db-overview" aria-label="번호 검색 요약"></section>
+                <span class="black-db-comment-heading hidden" id="black-db-comment-heading">💬 이용자 코멘트</span>
                 <ul class="black-db-comment-list" id="black-db-comment-list"></ul>
                 <p class="text-muted black-db-empty" id="black-db-empty"></p>
                 <form id="black-db-comment-form" class="black-db-comment-form hidden">
