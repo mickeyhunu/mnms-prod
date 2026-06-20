@@ -972,17 +972,11 @@ header.community-section-header .board-tab.active {
   gap: 10px;
 }
 
-.black-db-result-heading-list {
-  list-style: none;
-  margin: 0 0 14px;
-  padding: 0;
-}
-
 .black-db-overview {
   border: 1px solid rgba(108, 46, 150, 0.18);
   border-radius: 18px;
   background: linear-gradient(135deg, rgba(108, 46, 150, 0.08), rgba(15, 23, 42, 0.03));
-  margin-top: 18px;
+  margin-top: 10px;
   padding: 18px;
 }
 
@@ -1018,9 +1012,14 @@ header.community-section-header .board-tab.active {
 
 .black-db-comment-heading {
   color: #111827;
+  display: block;
   font-size: 1rem;
   font-weight: 800;
-  margin-top: 4px;
+  margin-top: 18px;
+}
+
+.black-db-overview + .black-db-comment-heading {
+  margin-top: 20px;
 }
 
 .black-db-policy-notice {
