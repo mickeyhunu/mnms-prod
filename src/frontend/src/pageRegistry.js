@@ -1972,8 +1972,17 @@ const pageRegistry = {
           <p class="wiki-panel__eyebrow">ROOMBBANG WIKI</p>
           <h2 id="wiki-title">🍾 화류업계 용어사전</h2>
           <p>자주 쓰이는 업계 용어를 카테고리별로 정리했습니다.</p>
-          <p>원하는 항목을 펼쳐 뜻을 확인해보세요.</p>
+          <p>원하는 용어를 검색하거나 항목을 펼쳐 뜻을 확인해보세요.</p>
         </div>
+        <section class="wiki-search" aria-label="용어사전 검색">
+          <label class="wiki-search__label" for="wiki-search-input">용어 검색</label>
+          <div class="wiki-search__field">
+            <span class="wiki-search__icon" aria-hidden="true">🔎</span>
+            <input id="wiki-search-input" class="wiki-search__input" type="search" placeholder="용어 또는 설명을 입력하세요" autocomplete="off">
+            <button id="wiki-search-clear" class="wiki-search__clear hidden" type="button">초기화</button>
+          </div>
+          <p id="wiki-search-status" class="wiki-search__status" aria-live="polite"></p>
+        </section>
         <div class="wiki-glossary" aria-label="화류업계 용어 카테고리">
         <details class="wiki-glossary-category">
           <summary><span>💰 비용 · 정산</span><strong>10개</strong></summary>
