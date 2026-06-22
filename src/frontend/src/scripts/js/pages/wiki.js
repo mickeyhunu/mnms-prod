@@ -182,8 +182,10 @@
         button.disabled = true;
         if (action === 'added') {
           await APIClient.put(`/wiki/questions/${id}/added`);
+          status.textContent = '위키 추가 완료로 표시되었습니다. 사용자에게 7일 동안 노출된 뒤 자동 삭제됩니다.';
         } else if (action === 'delete') {
           await APIClient.delete(`/wiki/questions/${id}`);
+          status.textContent = '질문이 삭제되었습니다.';
         }
         await loadQuestions();
       } catch (error) {
