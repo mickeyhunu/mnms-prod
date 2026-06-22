@@ -672,6 +672,7 @@
     height: auto;
     display: block;
     pointer-events: none;
+    animation: business-directory-stamp-event-badge-blink 1s ease-in-out infinite;
 }
 
 
