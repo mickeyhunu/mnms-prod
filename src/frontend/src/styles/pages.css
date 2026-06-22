@@ -870,6 +870,7 @@
     padding: 18px;
     border-radius: 16px;
     background: linear-gradient(135deg, #eff6ff 0%, #fff7ed 100%);
+    text-align: center;
 }
 
 .wiki-panel__eyebrow {
@@ -953,6 +954,8 @@
 
 .wiki-glossary-list dt,
 .wiki-glossary-list dd {
+    display: flex;
+    align-items: center;
     margin: 0;
     padding: 14px 16px;
     border-bottom: 1px solid #eef2f7;
@@ -972,19 +975,4 @@
 .wiki-glossary-list dt:nth-last-of-type(1),
 .wiki-glossary-list dd:last-child {
     border-bottom: 0;
-}
-
-@media (max-width: 520px) {
-    .wiki-glossary-list {
-        grid-template-columns: 1fr;
-    }
-
-    .wiki-glossary-list dt {
-        padding-bottom: 4px;
-        border-bottom: 0;
-    }
-
-    .wiki-glossary-list dd {
-        padding-top: 4px;
-    }
 }
