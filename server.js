@@ -25,6 +25,7 @@ const uploadRoutes = require('./src/backend/routes/uploadRoutes');
 const rbtiRoutes = require('./src/backend/routes/rbtiRoutes');
 const rankingRoutes = require('./src/backend/routes/rankingRoutes');
 const blackDbRoutes = require('./src/backend/routes/blackDbRoutes');
+const wikiRoutes = require('./src/backend/routes/wikiRoutes');
 const adminModel = require('./src/backend/models/adminModel');
 const postModel = require('./src/backend/models/postModel');
 const { startLiveHistoryScheduler } = require('./src/backend/utils/liveHistoryScheduler');
@@ -532,6 +533,7 @@ app.use('/api/uploads', uploadRoutes);
 app.use('/api/rbti', rbtiRoutes);
 app.use('/api/rankings', rankingRoutes);
 app.use('/api/bamcheat', blackDbRoutes);
+app.use('/api/wiki', wikiRoutes);
 
 app.get('/live', (req, res) => {
   res.redirect(301, '/play/live');
