@@ -1017,7 +1017,7 @@
 
 .wiki-glossary-list {
     display: grid;
-    grid-template-columns: minmax(110px, 180px) minmax(0, 1fr);
+    grid-template-columns: minmax(20%, 30%) minmax(0, 1fr);
     margin: 0;
 }
 
