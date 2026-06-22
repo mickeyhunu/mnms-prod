@@ -25,6 +25,7 @@ const { STAMP_TYPES, createStampPurchase, getUserStampBalance, getUserStampHisto
 const { createStampEventRequest, listOwnerStampEventRequests, reviewStampEventRequest } = require('../models/stampEventRequestModel');
 const supportModel = require('../models/supportModel');
 const adminModel = require('../models/adminModel');
+const wikiQuestionModel = require('../models/wikiQuestionModel');
 const { deleteS3ObjectsByUrls, parseDataUrl, uploadDataUrlToS3 } = require('../utils/fileUpload');
 const {
   collectBusinessInfoImageUrls,
@@ -654,12 +655,13 @@ async function myNotifications(req, res, next) {
   try {
     const limit = Math.max(1, Math.min(100, Number(req.query.limit) || 50));
     const isAdmin = String(req.user?.role || '').toUpperCase() === 'ADMIN';
-    const [commentNotifications, notices, answeredInquiries, pendingInquiries, pendingBusinessApplications] = await Promise.all([
+    const [commentNotifications, notices, answeredInquiries, pendingInquiries, pendingBusinessApplications, pendingWikiQuestions] = await Promise.all([
       getUserNotifications(req.user.id, { limit }),
       supportModel.listArticles(supportModel.SUPPORT_CATEGORIES.NOTICE, false),
       supportModel.listAnsweredInquiriesByUser(req.user.id, { limit }),
       isAdmin ? supportModel.listRecentPendingInquiries({ limit }) : Promise.resolve([]),
-      isAdmin ? adminModel.listRecentPendingBusinessApplications({ limit }) : Promise.resolve([])
+      isAdmin ? adminModel.listRecentPendingBusinessApplications({ limit }) : Promise.resolve([]),
+      isAdmin ? wikiQuestionModel.listRecentPendingQuestions({ limit }) : Promise.resolve([])
     ]);
 
     const normalizedNotifications = [
@@ -712,6 +714,21 @@ async function myNotifications(req, res, next) {
         message: `새 기업회원 신청/변경 검토가 필요합니다: ${item.companyName || item.businessInfo?.businessName || item.loginId || `회원#${item.userId}`}`,
         createdAt: item.updatedAt || item.createdAt,
         targetUrl: '/admin?tab=business-applications'
+      })),
+      ...pendingWikiQuestions.map((item) => ({
+        notificationKey: `admin-pending-wiki-question-${item.id}`,
+        type: 'admin_pending_wiki_question',
+        sourceId: item.id,
+        postId: null,
+        inquiryId: null,
+        parentId: null,
+        postTitle: null,
+        content: item.content,
+        actorNickname: item.authorNickname || '익명',
+        title: item.term,
+        message: `새 위키 질문이 등록되었습니다: ${item.term}`,
+        createdAt: item.createdAt,
+        targetUrl: '/wiki'
       })),
       ...answeredInquiries.map((item) => ({
         notificationKey: `inquiry-answer-${item.id}`,
@@ -770,12 +787,13 @@ async function markMyNotificationsReadAll(req, res, next) {
   try {
     const limit = Math.max(1, Math.min(100, Number(req.body.limit) || 100));
     const isAdmin = String(req.user?.role || '').toUpperCase() === 'ADMIN';
-    const [commentNotifications, notices, answeredInquiries, pendingInquiries, pendingBusinessApplications] = await Promise.all([
+    const [commentNotifications, notices, answeredInquiries, pendingInquiries, pendingBusinessApplications, pendingWikiQuestions] = await Promise.all([
       getUserNotifications(req.user.id, { limit }),
       supportModel.listArticles(supportModel.SUPPORT_CATEGORIES.NOTICE, false),
       supportModel.listAnsweredInquiriesByUser(req.user.id, { limit }),
       isAdmin ? supportModel.listRecentPendingInquiries({ limit }) : Promise.resolve([]),
-      isAdmin ? adminModel.listRecentPendingBusinessApplications({ limit }) : Promise.resolve([])
+      isAdmin ? adminModel.listRecentPendingBusinessApplications({ limit }) : Promise.resolve([]),
+      isAdmin ? wikiQuestionModel.listRecentPendingQuestions({ limit }) : Promise.resolve([])
     ]);
 
     const allNotificationKeys = [
@@ -783,6 +801,7 @@ async function markMyNotificationsReadAll(req, res, next) {
       ...notices.map((notice) => `admin-notice-${notice.sourceType || 'SUPPORT'}-${notice.sourceId || notice.id}`),
       ...pendingInquiries.map((item) => `admin-pending-inquiry-${item.id}`),
       ...pendingBusinessApplications.map((item) => `admin-pending-business-application-${item.userId}-${item.updatedAt || item.createdAt || ''}`),
+      ...pendingWikiQuestions.map((item) => `admin-pending-wiki-question-${item.id}`),
       ...answeredInquiries.map((item) => `inquiry-answer-${item.id}`)
     ];
 
