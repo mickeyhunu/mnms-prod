@@ -8,13 +8,15 @@ import App from './App.js';
 const INTERACTION_ALLOWED_SELECTOR = 'input, textarea, select, [contenteditable], [role="textbox"], #post-content, #post-content *';
 const ADMIN_INTERACTION_ALLOWED_PATH_PREFIX = '/admin';
 
+const isLocalEnvironment = () => window.MNMS_PUBLIC_CONFIG?.isLocalEnv === true;
+
 const isAdminPage = () => {
   const { pathname } = window.location;
   return pathname === ADMIN_INTERACTION_ALLOWED_PATH_PREFIX || pathname.startsWith(`${ADMIN_INTERACTION_ALLOWED_PATH_PREFIX}/`);
 };
 
 const showDevToolsBlockedScreen = () => {
-  if (isAdminPage() || document.getElementById('devtools-blocked-screen')) {
+  if (isLocalEnvironment() || isAdminPage() || document.getElementById('devtools-blocked-screen')) {
     return;
   }
 
@@ -46,6 +48,10 @@ const showDevToolsBlockedScreen = () => {
 };
 
 const bindDevToolsDetector = () => {
+  if (isLocalEnvironment()) {
+    return;
+  }
+
   const detector = window.devtoolsDetector;
 
   if (!detector || typeof detector.addListener !== 'function' || typeof detector.launch !== 'function') {
@@ -86,7 +92,7 @@ const isSelectionInAllowedTarget = () => {
 };
 
 const preventDefault = (event) => {
-  if (isAdminPage() || isInteractionAllowedTarget(event.target)) {
+  if (isLocalEnvironment() || isAdminPage() || isInteractionAllowedTarget(event.target)) {
     return;
   }
 
@@ -98,7 +104,7 @@ document.addEventListener('dragstart', preventDefault, true);
 document.addEventListener('drop', preventDefault, true);
 document.addEventListener('selectstart', preventDefault, true);
 document.addEventListener('mousedown', (event) => {
-  if (isAdminPage() || isInteractionAllowedTarget(event.target)) {
+  if (isLocalEnvironment() || isAdminPage() || isInteractionAllowedTarget(event.target)) {
     return;
   }
 
@@ -107,7 +113,7 @@ document.addEventListener('mousedown', (event) => {
   }
 }, true);
 document.addEventListener('selectionchange', (event) => {
-  if (isAdminPage() || isInteractionAllowedTarget(document.activeElement) || isSelectionInAllowedTarget()) {
+  if (isLocalEnvironment() || isAdminPage() || isInteractionAllowedTarget(document.activeElement) || isSelectionInAllowedTarget()) {
     return;
   }
 
