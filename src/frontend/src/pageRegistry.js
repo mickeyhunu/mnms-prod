@@ -1971,10 +1971,11 @@ const pageRegistry = {
         <div class="wiki-panel__hero">
           <p class="wiki-panel__eyebrow">ROOMBBANG WIKI</p>
           <h2 id="wiki-title">🍾 화류업계 용어사전</h2>
-          <p>자주 쓰이는 업계 용어를 카테고리별로 정리했습니다. 원하는 항목을 펼쳐 뜻을 확인해보세요.</p>
+          <p>자주 쓰이는 업계 용어를 카테고리별로 정리했습니다.</p>
+          <p>원하는 항목을 펼쳐 뜻을 확인해보세요.</p>
         </div>
         <div class="wiki-glossary" aria-label="화류업계 용어 카테고리">
-        <details class="wiki-glossary-category" open>
+        <details class="wiki-glossary-category">
           <summary><span>💰 비용 · 정산</span><strong>10개</strong></summary>
           <dl class="wiki-glossary-list">
             <dt>TC (티씨)</dt>
@@ -1986,9 +1987,9 @@ const pageRegistry = {
             <dt>반티</dt>
             <dd>TC의 절반 금액.</dd>
             <dt>꽁</dt>
-            <dd>손님을 받지 못하고 퇴근하는 것.</dd>
-            <dt>꽁비</dt>
-            <dd>업소에서 지급하는 기본 보전금.</dd>
+            <dd>손님을 받지 못하고 퇴근하는 것. ex)꽁쳤다</dd>
+            <dt>꽁비 (WT)</dt>
+            <dd>웨이터 또는 종사자에게 업소에서 지급하는 기본 보전금.</dd>
             <dt>찡(뽄찌)</dt>
             <dd>업주·실장·영업진이 가져가는 수수료.</dd>
             <dt>와리</dt>
@@ -2044,7 +2045,7 @@ const pageRegistry = {
             <dt>장타</dt>
             <dd>술자리가 길어지는 것.</dd>
             <dt>캔슬 (캔)</dt>
-            <dd>초이스 실패.</dd>
+            <dd>초이스 실패. 취소하는 행위</dd>
             <dt>밀방</dt>
             <dd>초이스 없이 파트너를 배정하는 방.</dd>
             <dt>올패</dt>
@@ -2060,6 +2061,8 @@ const pageRegistry = {
             <dd>업소 사정을 잘 아는 단골 손님.</dd>
             <dt>진상</dt>
             <dd>업소 또는 종업원에게 피해를 주는 손님.</dd>
+            <dt>술진상</dt>
+            <dd>술을 강요 하는 손님.</dd>
             <dt>손진상</dt>
             <dd>과도한 신체접촉을 하는 손님.</dd>
             <dt>말진상</dt>
@@ -2091,6 +2094,8 @@ const pageRegistry = {
             <dd>최상급 외모.</dd>
             <dt>중띠</dt>
             <dd>평균 수준 외모.</dd>
+            <dt>하띠</dt>
+            <dd>최하위 외모.</dd>
             <dt>아까노끼</dt>
             <dd>성형·피부관리·다이어트 등을 통한 외모 업그레이드.</dd>
           </dl>
@@ -2132,12 +2137,16 @@ const pageRegistry = {
         <details class="wiki-glossary-category">
           <summary><span>🎭 업소 유형</span><strong>8개</strong></summary>
           <dl class="wiki-glossary-list">
-            <dt>가라오케</dt>
+            <dt>가라오케·퍼블릭</dt>
             <dd>노래·술 중심 업소.</dd>
+            <dt>셔츠룸</dt>
+            <dd>셔츠 환복시스템 업소</dd>
             <dt>하드코어</dt>
             <dd>수위 높은 스킨십이 가능한 업소.</dd>
             <dt>오피</dt>
             <dd>오피스텔 기반 업소.</dd>
+            <dt>하퍼·하이퍼블릭</dt>
+            <dd>일반 퍼블릭 등급의 상위업소.</dd>
             <dt>쩜오</dt>
             <dd>텐프로 아래 등급의 하이업소.</dd>
             <dt>텐프로</dt>
