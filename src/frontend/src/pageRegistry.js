@@ -1936,7 +1936,7 @@ const pageRegistry = {
                   <span class="play-tool-card__icon">📚</span>
                   <div class="play-tool-card__text">
                     <p class="play-tool-card__title">룸빵위키</p>
-                    <p class="play-tool-card__description">입력 언어 모아보기</p>
+                    <p class="play-tool-card__description">화류 용어 총정리</p>
                   </div>
                 </div>
               </a>
