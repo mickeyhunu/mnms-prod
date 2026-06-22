@@ -2199,9 +2199,9 @@ const pageRegistry = {
         <section class="wiki-question-board" aria-labelledby="wiki-question-title">
           <div class="wiki-question-board__header">
             <div>
-              <p class="wiki-panel__eyebrow">TERM REQUEST</p>
               <h3 id="wiki-question-title">궁금한 용어 질문하기</h3>
-              <p>뜻이 궁금한 용어를 댓글처럼 남겨주세요. 관리자가 확인해 위키에 추가한 뒤 질문은 삭제할 수 있습니다.</p>
+              <p>뜻이 궁금한 용어를 남겨주시면 관리자가 확인해드립니다.</p>
+              <p>위키에 추가된 뒤 질문은 7일 뒤 삭제됩니다.</p>
             </div>
           </div>
           <form id="wiki-question-form" class="wiki-question-form">
