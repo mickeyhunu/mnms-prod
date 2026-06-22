@@ -864,3 +864,108 @@
 @media (max-width: 700px) {
   .ranking-grid { grid-template-columns: 1fr; }
 }
+.wiki-panel {
+    padding: 22px;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.wiki-panel__hero {
+    margin-bottom: 18px;
+    padding: 18px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #eff6ff 0%, #fff7ed 100%);
+}
+
+.wiki-panel__eyebrow {
+    margin: 0 0 6px;
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+}
+
+.wiki-panel h2 {
+    margin: 0 0 8px;
+    color: #111827;
+    font-size: 22px;
+}
+
+.wiki-panel p {
+    margin: 0;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+.wiki-language-form {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.wiki-language-form__label {
+    color: #374151;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.wiki-language-form__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+}
+
+.wiki-language-form__input {
+    min-height: 42px;
+    padding: 0 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    color: #111827;
+    font-size: 14px;
+}
+
+.wiki-language-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.wiki-language-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 10px 9px 14px;
+    border: 1px solid #bfdbfe;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1e3a8a;
+    font-weight: 800;
+}
+
+.wiki-language-chip__remove {
+    width: 22px;
+    height: 22px;
+    border: 0;
+    border-radius: 999px;
+    background: #dbeafe;
+    color: #1e40af;
+    cursor: pointer;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.wiki-language-empty {
+    padding: 18px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 16px;
+    background: #f8fafc;
+    text-align: center;
+}
+
+@media (max-width: 520px) {
+    .wiki-language-form__row {
+        grid-template-columns: 1fr;
+    }
+}
