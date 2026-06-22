@@ -685,6 +685,17 @@
     display: block;
     object-fit: contain;
     pointer-events: none;
+    animation: business-directory-stamp-event-badge-blink 1s ease-in-out infinite;
+}
+
+@keyframes business-directory-stamp-event-badge-blink {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.25;
+    }
 }
 
 .business-directory-main {
