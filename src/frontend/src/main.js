@@ -13,6 +13,56 @@ const isAdminPage = () => {
   return pathname === ADMIN_INTERACTION_ALLOWED_PATH_PREFIX || pathname.startsWith(`${ADMIN_INTERACTION_ALLOWED_PATH_PREFIX}/`);
 };
 
+const showDevToolsBlockedScreen = () => {
+  if (isAdminPage() || document.getElementById('devtools-blocked-screen')) {
+    return;
+  }
+
+  const blockedScreen = document.createElement('div');
+  blockedScreen.id = 'devtools-blocked-screen';
+  blockedScreen.setAttribute('role', 'alert');
+  blockedScreen.setAttribute('aria-live', 'assertive');
+  blockedScreen.style.cssText = [
+    'position:fixed',
+    'inset:0',
+    'z-index:2147483647',
+    'display:flex',
+    'align-items:center',
+    'justify-content:center',
+    'padding:24px',
+    'background:#0f172a',
+    'color:#ffffff',
+    'font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+    'text-align:center'
+  ].join(';');
+  blockedScreen.innerHTML = `
+    <div style="max-width:420px;line-height:1.6;">
+      <strong style="display:block;font-size:22px;margin-bottom:12px;">접근이 제한되었습니다</strong>
+      <span style="display:block;font-size:15px;color:#cbd5e1;">개발자 도구 사용이 감지되어 화면을 보호합니다.<br>개발자 도구를 닫은 뒤 새로고침해 주세요.</span>
+    </div>
+  `;
+
+  document.documentElement.appendChild(blockedScreen);
+};
+
+const bindDevToolsDetector = () => {
+  const detector = window.devtoolsDetector;
+
+  if (!detector || typeof detector.addListener !== 'function' || typeof detector.launch !== 'function') {
+    return;
+  }
+
+  detector.addListener((isOpen) => {
+    if (isOpen) {
+      showDevToolsBlockedScreen();
+    }
+  });
+
+  detector.launch();
+};
+
+bindDevToolsDetector();
+
 const isInteractionAllowedTarget = (target) => {
   if (!(target instanceof Element)) {
     return false;
