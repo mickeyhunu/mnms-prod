@@ -329,7 +329,10 @@ const pageRegistry = {
                     <div id="ad-profile-preview-content" class="ad-profile-preview-content hidden">
                         <ul class="business-directory-list ad-profile-preview-list">
                             <li class="business-directory-item ad-profile-preview-item">
-                                <img id="ad-profile-preview-image" class="business-directory-thumbnail" src="/src/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
+                                <div class="business-directory-thumbnail-wrap">
+                                    <img id="ad-profile-preview-image" class="business-directory-thumbnail" src="/src/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
+                                    <span id="ad-profile-preview-stamp-badge" class="business-directory-stamp-badge hidden" aria-label="스탬프 이벤트 사용 광고">STAMP</span>
+                                </div>
                                 <div class="business-directory-main">
                                     <div class="business-directory-meta">
                                         <span class="business-directory-manager" id="ad-profile-preview-manager">🌱 <strong class="business-directory-manager-nickname">닉네임</strong> · 0일째 광고중</span>
