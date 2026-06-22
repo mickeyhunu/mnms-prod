@@ -591,6 +591,7 @@
 }
 
 .business-directory-item {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -673,6 +674,19 @@
     pointer-events: none;
 }
 
+
+.business-directory-stamp-event-badge-image {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1;
+    width: 44px;
+    height: 44px;
+    display: block;
+    object-fit: contain;
+    pointer-events: none;
+}
+
 .business-directory-main {
     flex: 1;
     min-width: 0;
@@ -706,6 +720,7 @@
 
 .business-directory-meta {
     display: flex;
+    padding-right: 48px;
     justify-content: space-between;
     align-items: center;
     font-size: 12px;
