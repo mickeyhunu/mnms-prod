@@ -1,78 +1,95 @@
 /**
- * 파일 역할: 룸빵위키에서 사용자가 입력한 언어 목록을 저장하고 렌더링하는 페이지 스크립트.
+ * 파일 역할: 룸빵위키 용어사전 검색 및 카테고리 필터링을 담당하는 페이지 스크립트.
  */
 (function () {
-  const STORAGE_KEY = 'mnms-room-wiki-languages';
+  function normalizeText(value) {
+    return (value || '').toString().trim().toLowerCase();
+  }
 
-  function readLanguages() {
-    try {
-      const parsed = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || '[]');
-      return Array.isArray(parsed) ? parsed.filter((item) => typeof item === 'string') : [];
-    } catch (error) {
-      return [];
+  function getGlossaryRows(category) {
+    const terms = Array.from(category.querySelectorAll('.wiki-glossary-list dt'));
+
+    return terms.map((term) => {
+      const description = term.nextElementSibling && term.nextElementSibling.tagName === 'DD'
+        ? term.nextElementSibling
+        : null;
+      const searchableText = normalizeText(`${term.textContent} ${description ? description.textContent : ''}`);
+
+      return { term, description, searchableText };
+    });
+  }
+
+  function setRowVisibility(row, isVisible) {
+    row.term.classList.toggle('hidden', !isVisible);
+    if (row.description) {
+      row.description.classList.toggle('hidden', !isVisible);
     }
   }
 
-  function writeLanguages(languages) {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(languages));
-  }
+  function initWikiSearch() {
+    const input = document.getElementById('wiki-search-input');
+    const clearButton = document.getElementById('wiki-search-clear');
+    const status = document.getElementById('wiki-search-status');
+    const categories = Array.from(document.querySelectorAll('.wiki-glossary-category'));
 
-  function renderLanguages(languages, listEl, emptyEl) {
-    listEl.innerHTML = '';
-    emptyEl.classList.toggle('hidden', languages.length > 0);
+    if (!input || !clearButton || !status || categories.length === 0) return;
 
-    languages.forEach((language, index) => {
-      const item = document.createElement('div');
-      item.className = 'wiki-language-chip';
+    const categoryRows = categories.map((category) => ({
+      category,
+      rows: getGlossaryRows(category),
+      wasOpenBeforeSearch: category.open,
+    }));
 
-      const name = document.createElement('span');
-      name.className = 'wiki-language-chip__name';
-      name.textContent = language;
+    function applySearch() {
+      const query = normalizeText(input.value);
+      let matchedCount = 0;
 
-      const removeButton = document.createElement('button');
-      removeButton.type = 'button';
-      removeButton.className = 'wiki-language-chip__remove';
-      removeButton.setAttribute('aria-label', `${language} 삭제`);
-      removeButton.textContent = '×';
-      removeButton.addEventListener('click', () => {
-        const nextLanguages = readLanguages().filter((_, languageIndex) => languageIndex !== index);
-        writeLanguages(nextLanguages);
-        renderLanguages(nextLanguages, listEl, emptyEl);
+      clearButton.classList.toggle('hidden', query.length === 0);
+
+      categoryRows.forEach((categoryData) => {
+        const { category, rows } = categoryData;
+        let visibleRows = 0;
+
+        rows.forEach((row) => {
+          const isMatch = !query || row.searchableText.includes(query);
+          setRowVisibility(row, isMatch);
+          if (isMatch) visibleRows += 1;
+        });
+
+        matchedCount += visibleRows;
+        category.classList.toggle('hidden', query.length > 0 && visibleRows === 0);
+
+        if (query) {
+          if (!category.open) categoryData.wasOpenBeforeSearch = false;
+          category.open = visibleRows > 0;
+        } else {
+          category.open = categoryData.wasOpenBeforeSearch;
+        }
       });
 
-      item.append(name, removeButton);
-      listEl.appendChild(item);
-    });
-  }
+      if (!query) {
+        status.textContent = '';
+        return;
+      }
 
-  function initWikiPage() {
-    const form = document.getElementById('wiki-language-form');
-    const input = document.getElementById('wiki-language-input');
-    const listEl = document.getElementById('wiki-language-list');
-    const emptyEl = document.getElementById('wiki-language-empty');
+      status.textContent = matchedCount > 0
+        ? `검색 결과 ${matchedCount}개 용어를 찾았습니다.`
+        : '검색 결과가 없습니다. 다른 단어로 검색해보세요.';
+    }
 
-    if (!form || !input || !listEl || !emptyEl) return;
-
-    renderLanguages(readLanguages(), listEl, emptyEl);
-
-    form.addEventListener('submit', (event) => {
-      event.preventDefault();
-      const language = input.value.trim();
-      if (!language) return;
-
-      const languages = readLanguages();
-      const exists = languages.some((item) => item.toLowerCase() === language.toLowerCase());
-      const nextLanguages = exists ? languages : [...languages, language];
-      writeLanguages(nextLanguages);
-      renderLanguages(nextLanguages, listEl, emptyEl);
+    input.addEventListener('input', applySearch);
+    clearButton.addEventListener('click', () => {
       input.value = '';
       input.focus();
+      applySearch();
     });
+
+    applySearch();
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initWikiPage, { once: true });
+    document.addEventListener('DOMContentLoaded', initWikiSearch, { once: true });
   } else {
-    initWikiPage();
+    initWikiSearch();
   }
 }());

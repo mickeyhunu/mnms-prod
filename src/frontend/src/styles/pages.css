@@ -893,6 +893,75 @@
     line-height: 1.6;
 }
 
+
+.wiki-search {
+    margin: 0 0 16px;
+    padding: 16px;
+    border: 1px solid #dbeafe;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+}
+
+.wiki-search__label {
+    display: block;
+    margin-bottom: 8px;
+    color: #111827;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.wiki-search__field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    background: #f8fafc;
+}
+
+.wiki-search__icon {
+    flex: 0 0 auto;
+    font-size: 16px;
+}
+
+.wiki-search__input {
+    min-width: 0;
+    flex: 1 1 auto;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #111827;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.wiki-search__input::placeholder {
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.wiki-search__clear {
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 999px;
+    padding: 7px 10px;
+    background: #2563eb;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.wiki-search__status {
+    min-height: 20px;
+    margin: 8px 0 0;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 700;
+}
+
 .wiki-glossary {
     display: grid;
     gap: 12px;
