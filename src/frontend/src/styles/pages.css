@@ -864,13 +864,6 @@
 @media (max-width: 700px) {
   .ranking-grid { grid-template-columns: 1fr; }
 }
-.wiki-panel {
-    padding: 22px;
-    border: 1px solid #e5e7eb;
-    border-radius: 18px;
-    background: #ffffff;
-    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-}
 
 .wiki-panel__hero {
     margin-bottom: 18px;
@@ -887,13 +880,13 @@
     letter-spacing: 0.08em;
 }
 
-.wiki-panel h2 {
+.wiki-panel__hero h2 {
     margin: 0 0 8px;
     color: #111827;
     font-size: 22px;
 }
 
-.wiki-panel p {
+.wiki-panel__hero p {
     margin: 0;
     color: #64748b;
     line-height: 1.6;
@@ -982,10 +975,6 @@
 }
 
 @media (max-width: 520px) {
-    .wiki-panel {
-        padding: 14px;
-    }
-
     .wiki-glossary-list {
         grid-template-columns: 1fr;
     }

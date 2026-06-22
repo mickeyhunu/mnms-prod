@@ -1967,7 +1967,7 @@ const pageRegistry = {
     </header>
     <main class="main-content"><div class="container">
       <header class="community-section-header"><div class="community-header-left"><a href="/play" class="community-back-link icon-btn icon-btn-square" aria-label="PLAY로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">룸빵위키</span></div></header>
-      <section class="wiki-panel card-enter" aria-labelledby="wiki-title">
+      <div class="play-tool-content" aria-labelledby="wiki-title">
         <div class="wiki-panel__hero">
           <p class="wiki-panel__eyebrow">ROOMBBANG WIKI</p>
           <h2 id="wiki-title">🍾 화류업계 용어사전</h2>
@@ -2178,7 +2178,7 @@ const pageRegistry = {
           </dl>
         </details>
         </div>
-      </section>
+      </div>
     </div></main>
     <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/api/authAPI.js"></script><script src="scripts/js/components/header.js"></script><script src="scripts/js/pages/wiki.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
