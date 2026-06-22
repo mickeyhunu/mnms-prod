@@ -19,8 +19,7 @@ function normalizeQuestionRow(row = {}) {
 async function deleteExpiredAddedQuestions() {
   const pool = getPool();
   await pool.query(
-    `UPDATE wiki_term_questions
-        SET is_deleted = 1, deleted_at = NOW()
+    `DELETE FROM wiki_term_questions
       WHERE is_deleted = 0
         AND status = 'ADDED'
         AND reviewed_at IS NOT NULL
@@ -80,8 +79,7 @@ async function markQuestionAdded(id, reviewerId) {
 async function deleteQuestion(id) {
   const pool = getPool();
   const [result] = await pool.query(
-    `UPDATE wiki_term_questions
-        SET is_deleted = 1, deleted_at = NOW()
+    `DELETE FROM wiki_term_questions
       WHERE id = ? AND is_deleted = 0`,
     [id]
   );
