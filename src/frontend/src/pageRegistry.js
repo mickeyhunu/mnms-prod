@@ -2196,6 +2196,24 @@ const pageRegistry = {
           </dl>
         </details>
         </div>
+        <section class="wiki-question-board" aria-labelledby="wiki-question-title">
+          <div class="wiki-question-board__header">
+            <div>
+              <p class="wiki-panel__eyebrow">TERM REQUEST</p>
+              <h3 id="wiki-question-title">궁금한 용어 질문하기</h3>
+              <p>뜻이 궁금한 용어를 댓글처럼 남겨주세요. 관리자가 확인해 위키에 추가한 뒤 질문은 삭제할 수 있습니다.</p>
+            </div>
+          </div>
+          <form id="wiki-question-form" class="wiki-question-form">
+            <label for="wiki-question-term">궁금한 용어</label>
+            <input id="wiki-question-term" name="term" type="text" maxlength="80" placeholder="예: 초성/별칭/줄임말" required>
+            <label for="wiki-question-content">질문 내용</label>
+            <textarea id="wiki-question-content" name="content" rows="3" maxlength="500" placeholder="어떤 상황에서 쓰는 말인지 함께 적어주세요." required></textarea>
+            <button class="btn btn-primary" type="submit">질문 등록</button>
+            <p id="wiki-question-form-status" class="wiki-search__status" aria-live="polite"></p>
+          </form>
+          <div id="wiki-question-list" class="wiki-question-list" aria-live="polite"></div>
+        </section>
       </div>
     </div></main>
     <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/api/authAPI.js"></script><script src="scripts/js/components/header.js"></script><script src="scripts/js/pages/wiki.js"></script><script src="scripts/js/components/footerNav.js"></script>`,

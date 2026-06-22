@@ -1327,6 +1327,26 @@ async function initDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS wiki_term_questions (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      user_id BIGINT NULL,
+      author_nickname VARCHAR(255) NOT NULL DEFAULT '익명',
+      term VARCHAR(80) NOT NULL,
+      content VARCHAR(500) NOT NULL,
+      status ENUM('PENDING','ADDED') NOT NULL DEFAULT 'PENDING',
+      reviewed_by BIGINT NULL,
+      reviewed_at DATETIME NULL,
+      is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+      deleted_at DATETIME NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_wiki_term_questions_status (is_deleted, status, created_at),
+      CONSTRAINT fk_wiki_term_questions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+      CONSTRAINT fk_wiki_term_questions_reviewer FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
   const [adminRows] = await pool.query('SELECT id, password FROM users WHERE login_id = ?', ['master']);
   if (!adminRows.length) {
     const adminPasswordHash = await hashPassword('admin1234');
