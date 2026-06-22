@@ -4,6 +4,7 @@
 const BUSINESS_IMAGE_PLACEHOLDER = '등록할 이미지를 선택해주세요.';
 const BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
 const BUSINESS_DIRECTORY_NEW_BADGE_IMAGE_URL = '/src/assets/image/business-directory-new-badge.webp';
+const BUSINESS_DIRECTORY_STAMP_BADGE_LABEL = 'STAMP';
 let businessDirectoryAds = [];
 const REGION_DISTRICT_MAP = {
     서울: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
@@ -364,6 +365,10 @@ function isBusinessDirectoryNewAd(ad) {
     return getBusinessDirectoryCumulativeAdDays(ad) < 30;
 }
 
+function hasBusinessDirectoryStampEvent(ad) {
+    return normalizeBooleanFlag(ad?.useStampEvent) && Number(ad?.stampEventCount || 0) > 0;
+}
+
 function getBusinessDirectoryPlanRank(ad) {
     const planType = normalizeBusinessDirectoryAdPlan(ad?.planType || ad?.adPlan || ad?.plan || ad?.businessAdPlan || ad?.businessPlan);
     if (planType === 'premium') return 0;
@@ -415,6 +420,7 @@ function renderBusinessAds(ads) {
         const title = `[${regionLabel}-${businessName}] ${baseTitle}`;
         const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
         const isNewAd = isBusinessDirectoryNewAd(ad);
+        const hasStampEvent = hasBusinessDirectoryStampEvent(ad);
         const uploadedImageUrl = sanitizeHTML(ad.imageUrl || '');
         const thumbnailImageUrl = uploadedImageUrl || BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL;
         const thumbnailLoading = uploadedImageUrl || index < 6 ? 'eager' : 'lazy';
@@ -431,6 +437,7 @@ function renderBusinessAds(ads) {
                 <div class="business-directory-thumbnail-wrap">
                     <img class="business-directory-thumbnail" src="${thumbnailImageUrl}" alt="${title} 대표이미지" loading="${thumbnailLoading}" fetchpriority="${thumbnailFetchPriority}" decoding="async" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
                     ${isNewAd ? `<img class="business-directory-new-badge-image" src="${BUSINESS_DIRECTORY_NEW_BADGE_IMAGE_URL}" alt="신규 광고" loading="eager" decoding="async">` : ''}
+                    ${hasStampEvent ? `<span class="business-directory-stamp-badge" aria-label="스탬프 이벤트 사용 광고">${BUSINESS_DIRECTORY_STAMP_BADGE_LABEL}</span>` : ''}
                 </div>
                 <div class="business-directory-main">
                     <div class="business-directory-meta">
