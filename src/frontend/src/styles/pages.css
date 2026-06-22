@@ -899,73 +899,103 @@
     line-height: 1.6;
 }
 
-.wiki-language-form {
+.wiki-glossary {
     display: grid;
-    gap: 8px;
-    margin-bottom: 18px;
+    gap: 12px;
 }
 
-.wiki-language-form__label {
-    color: #374151;
-    font-size: 13px;
-    font-weight: 800;
+.wiki-glossary-category {
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #ffffff;
 }
 
-.wiki-language-form__row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 8px;
-}
-
-.wiki-language-form__input {
-    min-height: 42px;
-    padding: 0 14px;
-    border: 1px solid #d1d5db;
-    border-radius: 12px;
-    color: #111827;
-    font-size: 14px;
-}
-
-.wiki-language-list {
+.wiki-glossary-category summary {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.wiki-language-chip {
-    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 9px 10px 9px 14px;
-    border: 1px solid #bfdbfe;
-    border-radius: 999px;
-    background: #eff6ff;
-    color: #1e3a8a;
-    font-weight: 800;
-}
-
-.wiki-language-chip__remove {
-    width: 22px;
-    height: 22px;
-    border: 0;
-    border-radius: 999px;
-    background: #dbeafe;
-    color: #1e40af;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px;
+    color: #111827;
     cursor: pointer;
     font-weight: 900;
-    line-height: 1;
+    list-style: none;
 }
 
-.wiki-language-empty {
-    padding: 18px;
-    border: 1px dashed #cbd5e1;
-    border-radius: 16px;
+.wiki-glossary-category summary::-webkit-details-marker {
+    display: none;
+}
+
+.wiki-glossary-category summary::after {
+    content: '펼치기';
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.wiki-glossary-category[open] summary {
+    border-bottom: 1px solid #e5e7eb;
     background: #f8fafc;
-    text-align: center;
+}
+
+.wiki-glossary-category[open] summary::after {
+    content: '접기';
+}
+
+.wiki-glossary-category summary strong {
+    margin-left: auto;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.wiki-glossary-list {
+    display: grid;
+    grid-template-columns: minmax(110px, 180px) minmax(0, 1fr);
+    margin: 0;
+}
+
+.wiki-glossary-list dt,
+.wiki-glossary-list dd {
+    margin: 0;
+    padding: 14px 16px;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.wiki-glossary-list dt {
+    color: #1e3a8a;
+    background: #f8fbff;
+    font-weight: 900;
+}
+
+.wiki-glossary-list dd {
+    color: #475569;
+    line-height: 1.65;
+}
+
+.wiki-glossary-list dt:nth-last-of-type(1),
+.wiki-glossary-list dd:last-child {
+    border-bottom: 0;
 }
 
 @media (max-width: 520px) {
-    .wiki-language-form__row {
+    .wiki-panel {
+        padding: 14px;
+    }
+
+    .wiki-glossary-list {
         grid-template-columns: 1fr;
+    }
+
+    .wiki-glossary-list dt {
+        padding-bottom: 4px;
+        border-bottom: 0;
+    }
+
+    .wiki-glossary-list dd {
+        padding-top: 4px;
     }
 }
