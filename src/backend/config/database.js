@@ -128,6 +128,38 @@ async function ensureColumn(poolInstance, tableName, columnName, addColumnQuery)
   }
 }
 
+async function dropIndexIfExists(poolInstance, tableName, indexName) {
+  const [rows] = await poolInstance.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.STATISTICS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = ?
+       AND INDEX_NAME = ?
+     LIMIT 1`,
+    [dbConfig.database, tableName, indexName]
+  );
+
+  if (rows.length) {
+    await poolInstance.query(`ALTER TABLE \`${tableName}\` DROP INDEX \`${indexName}\``);
+  }
+}
+
+async function dropColumnIfExists(poolInstance, tableName, columnName) {
+  const [rows] = await poolInstance.query(
+    `SELECT 1
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ?
+       AND TABLE_NAME = ?
+       AND COLUMN_NAME = ?
+     LIMIT 1`,
+    [dbConfig.database, tableName, columnName]
+  );
+
+  if (rows.length) {
+    await poolInstance.query(`ALTER TABLE \`${tableName}\` DROP COLUMN \`${columnName}\``);
+  }
+}
+
 function getChatbotDatabaseCandidates() {
   return [...new Set([
     chatbotDbConfig.database,
@@ -1338,14 +1370,22 @@ async function initDatabase() {
       status ENUM('PENDING','ADDED') NOT NULL DEFAULT 'PENDING',
       reviewed_by BIGINT NULL,
       reviewed_at DATETIME NULL,
-      is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-      deleted_at DATETIME NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      INDEX idx_wiki_term_questions_status (is_deleted, status, created_at),
+      INDEX idx_wiki_term_questions_status (status, created_at),
       CONSTRAINT fk_wiki_term_questions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
       CONSTRAINT fk_wiki_term_questions_reviewer FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  await dropIndexIfExists(pool, 'wiki_term_questions', 'idx_wiki_term_questions_status');
+  await dropColumnIfExists(pool, 'wiki_term_questions', 'deleted_at');
+  await dropColumnIfExists(pool, 'wiki_term_questions', 'is_deleted');
+  await ensureIndex(
+    pool,
+    'wiki_term_questions',
+    'idx_wiki_term_questions_status',
+    'CREATE INDEX idx_wiki_term_questions_status ON wiki_term_questions (status, created_at)'
+  );
 
   const [adminRows] = await pool.query('SELECT id, password FROM users WHERE login_id = ?', ['master']);
   if (!adminRows.length) {

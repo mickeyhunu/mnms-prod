@@ -19,10 +19,8 @@ function normalizeQuestionRow(row = {}) {
 async function deleteExpiredAddedQuestions() {
   const pool = getPool();
   await pool.query(
-    `UPDATE wiki_term_questions
-        SET is_deleted = 1, deleted_at = NOW()
-      WHERE is_deleted = 0
-        AND status = 'ADDED'
+    `DELETE FROM wiki_term_questions
+      WHERE status = 'ADDED'
         AND reviewed_at IS NOT NULL
         AND reviewed_at < DATE_SUB(NOW(), INTERVAL 7 DAY)`
   );
@@ -32,8 +30,8 @@ async function listQuestions({ includeReviewed = false } = {}) {
   const pool = getPool();
   await deleteExpiredAddedQuestions();
   const where = includeReviewed
-    ? 'q.is_deleted = 0'
-    : "q.is_deleted = 0 AND (q.status = 'PENDING' OR (q.status = 'ADDED' AND q.reviewed_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)))";
+    ? '1 = 1'
+    : "q.status = 'PENDING' OR (q.status = 'ADDED' AND q.reviewed_at >= DATE_SUB(NOW(), INTERVAL 7 DAY))";
   const [rows] = await pool.query(
     `SELECT q.id, q.term, q.content, q.status, q.created_at AS createdAt,
             q.reviewed_at AS reviewedAt, q.reviewed_by AS reviewedBy,
@@ -71,7 +69,7 @@ async function markQuestionAdded(id, reviewerId) {
   const [result] = await pool.query(
     `UPDATE wiki_term_questions
         SET status = 'ADDED', reviewed_by = ?, reviewed_at = NOW()
-      WHERE id = ? AND is_deleted = 0`,
+      WHERE id = ?`,
     [reviewerId, id]
   );
   return result.affectedRows > 0;
@@ -80,9 +78,8 @@ async function markQuestionAdded(id, reviewerId) {
 async function deleteQuestion(id) {
   const pool = getPool();
   const [result] = await pool.query(
-    `UPDATE wiki_term_questions
-        SET is_deleted = 1, deleted_at = NOW()
-      WHERE id = ? AND is_deleted = 0`,
+    `DELETE FROM wiki_term_questions
+      WHERE id = ?`,
     [id]
   );
   return result.affectedRows > 0;
