@@ -1970,18 +1970,214 @@ const pageRegistry = {
       <section class="wiki-panel card-enter" aria-labelledby="wiki-title">
         <div class="wiki-panel__hero">
           <p class="wiki-panel__eyebrow">ROOMBBANG WIKI</p>
-          <h2 id="wiki-title">내가 입력한 언어 모음</h2>
-          <p>언어를 입력하면 이 브라우저에 저장되어 룸빵위키에서 바로 확인할 수 있습니다.</p>
+          <h2 id="wiki-title">🍾 화류업계 용어사전</h2>
+          <p>자주 쓰이는 업계 용어를 카테고리별로 정리했습니다. 원하는 항목을 펼쳐 뜻을 확인해보세요.</p>
         </div>
-        <form class="wiki-language-form" id="wiki-language-form">
-          <label class="wiki-language-form__label" for="wiki-language-input">언어 입력</label>
-          <div class="wiki-language-form__row">
-            <input id="wiki-language-input" class="wiki-language-form__input" type="text" maxlength="40" placeholder="예: 한국어, JavaScript, Python" autocomplete="off">
-            <button class="btn btn-primary" type="submit">추가</button>
-          </div>
-        </form>
-        <div class="wiki-language-list" id="wiki-language-list" aria-live="polite"></div>
-        <p class="wiki-language-empty" id="wiki-language-empty">아직 입력된 언어가 없습니다.</p>
+        <div class="wiki-glossary" aria-label="화류업계 용어 카테고리">
+        <details class="wiki-glossary-category" open>
+          <summary><span>💰 비용 · 정산</span><strong>10개</strong></summary>
+          <dl class="wiki-glossary-list">
+            <dt>TC (티씨)</dt>
+            <dd>여성 종업원이 손님을 접대하고 받는 봉사료.</dd>
+            <dt>룸티 (RT)</dt>
+            <dd>룸 사용료. 주대 외 별도 부과되는 기본 이용요금.</dd>
+            <dt>주대</dt>
+            <dd>술값 및 기본 테이블 이용비.</dd>
+            <dt>반티</dt>
+            <dd>TC의 절반 금액.</dd>
+            <dt>꽁</dt>
+            <dd>손님을 받지 못하고 퇴근하는 것.</dd>
+            <dt>꽁비</dt>
+            <dd>업소에서 지급하는 기본 보전금.</dd>
+            <dt>찡(뽄찌)</dt>
+            <dd>업주·실장·영업진이 가져가는 수수료.</dd>
+            <dt>와리</dt>
+            <dd>손님 유치 등에 대한 인센티브.</dd>
+            <dt>싸인</dt>
+            <dd>외상 결제.</dd>
+            <dt>총 맞다</dt>
+            <dd>부당하게 비싼 금액을 지불한 상태.</dd>
+          </dl>
+        </details>
+        <details class="wiki-glossary-category">
+          <summary><span>👩 종사자 관련</span><strong>8개</strong></summary>
+          <dl class="wiki-glossary-list">
+            <dt>지정 (고정)</dt>
+            <dd>특정 업소에 소속되어 정기적으로 근무하는 종업원.</dd>
+            <dt>보도</dt>
+            <dd>콜을 받고 출동하는 프리랜서 종업원. 노도는 노래방 보도, 룸보도는 룸살롱 보도를 뜻합니다.</dd>
+            <dt>깍두기</dt>
+            <dd>분위기 조성을 위해 앉히는 보조 파트너.</dd>
+            <dt>개구리</dt>
+            <dd>업소를 자주 옮겨 다니는 종사자.</dd>
+            <dt>선수</dt>
+            <dd>호스트바 남성 종사자.</dd>
+            <dt>에이스</dt>
+            <dd>가장 인기 많은 종사자.</dd>
+            <dt>마담</dt>
+            <dd>종사자 관리 및 영업을 담당하는 관리자.</dd>
+            <dt>새끼마담</dt>
+            <dd>마담 아래에서 손님 관리 및 인력 관리를 하는 중간 관리자.</dd>
+          </dl>
+        </details>
+        <details class="wiki-glossary-category">
+          <summary><span>🍸 영업 · 운영</span><strong>14개</strong></summary>
+          <dl class="wiki-glossary-list">
+            <dt>초이스</dt>
+            <dd>손님이 파트너를 선택하는 행위.</dd>
+            <dt>룸초이스 (룸초)</dt>
+            <dd>룸 안에서 진행하는 초이스.</dd>
+            <dt>미러초이스 (미러초)</dt>
+            <dd>거울을 통해 진행하는 초이스.</dd>
+            <dt>재초</dt>
+            <dd>한 번 더 초이스를 보는 것.</dd>
+            <dt>지명</dt>
+            <dd>특정 종업원을 고정으로 찾는 것.</dd>
+            <dt>원초</dt>
+            <dd>항상 첫 번째로 선택되는 인기 종사자.</dd>
+            <dt>얼초</dt>
+            <dd>이미 다른 방에 있는 종사자를 잠시 보여주는 초이스.</dd>
+            <dt>떼초</dt>
+            <dd>초이스 인원이 매우 많은 상황.</dd>
+            <dt>더블 (따블)</dt>
+            <dd>여러 테이블을 동시에 담당하는 것.</dd>
+            <dt>장타</dt>
+            <dd>술자리가 길어지는 것.</dd>
+            <dt>캔슬 (캔)</dt>
+            <dd>초이스 실패.</dd>
+            <dt>밀방</dt>
+            <dd>초이스 없이 파트너를 배정하는 방.</dd>
+            <dt>올패</dt>
+            <dd>초이스 후 아무도 선택하지 않는 것.</dd>
+            <dt>오바이트</dt>
+            <dd>초이스 전후 손님이 그냥 돌아가는 것.</dd>
+          </dl>
+        </details>
+        <details class="wiki-glossary-category">
+          <summary><span>👤 손님 관련</span><strong>8개</strong></summary>
+          <dl class="wiki-glossary-list">
+            <dt>빠꼼이</dt>
+            <dd>업소 사정을 잘 아는 단골 손님.</dd>
+            <dt>진상</dt>
+            <dd>업소 또는 종업원에게 피해를 주는 손님.</dd>
+            <dt>손진상</dt>
+            <dd>과도한 신체접촉을 하는 손님.</dd>
+            <dt>말진상</dt>
+            <dd>폭언·무례한 행동을 하는 손님.</dd>
+            <dt>로진</dt>
+            <dd>종업원이 자신을 진심으로 좋아한다고 착각하는 손님.</dd>
+            <dt>업블</dt>
+            <dd>업소 블랙리스트 등록.</dd>
+            <dt>도시락</dt>
+            <dd>여성을 직접 데리고 업소에 방문하는 손님.</dd>
+            <dt>의리초이스</dt>
+            <dd>친분 때문에 선택하는 초이스.</dd>
+          </dl>
+        </details>
+        <details class="wiki-glossary-category">
+          <summary><span>⭐ 외모 관련</span><strong>8개</strong></summary>
+          <dl class="wiki-glossary-list">
+            <dt>사이즈 / 와꾸</dt>
+            <dd>외모 및 몸매 평가.</dd>
+            <dt>민삘</dt>
+            <dd>자연미인 느낌.</dd>
+            <dt>성미</dt>
+            <dd>성형미인.</dd>
+            <dt>룸삘</dt>
+            <dd>화류업 종사자 느낌이 강한 외모.</dd>
+            <dt>수질 / 물</dt>
+            <dd>업소 전체 종사자 수준.</dd>
+            <dt>상띠</dt>
+            <dd>최상급 외모.</dd>
+            <dt>중띠</dt>
+            <dd>평균 수준 외모.</dd>
+            <dt>아까노끼</dt>
+            <dd>성형·피부관리·다이어트 등을 통한 외모 업그레이드.</dd>
+          </dl>
+        </details>
+        <details class="wiki-glossary-category">
+          <summary><span>💼 직책 · 조직</span><strong>6개</strong></summary>
+          <dl class="wiki-glossary-list">
+            <dt>언니 / 삼촌</dt>
+            <dd>업소 관리자 또는 운영자.</dd>
+            <dt>실장</dt>
+            <dd>영업 및 관리 담당.</dd>
+            <dt>애비</dt>
+            <dd>담당 영업진.</dd>
+            <dt>영업진 (박스)</dt>
+            <dd>업소 운영 및 영업 담당자.</dd>
+            <dt>삐끼</dt>
+            <dd>외부에서 손님을 유치하는 사람.</dd>
+            <dt>조판</dt>
+            <dd>하이업소 운영상황을 총괄하는 컨트롤타워.</dd>
+          </dl>
+        </details>
+        <details class="wiki-glossary-category">
+          <summary><span>💸 대출 · 선불</span><strong>6개</strong></summary>
+          <dl class="wiki-glossary-list">
+            <dt>마이킹</dt>
+            <dd>업소 선불금.</dd>
+            <dt>마이킹 사고</dt>
+            <dd>선불금을 받고 잠적하는 것.</dd>
+            <dt>일수</dt>
+            <dd>고금리 단기 대출.</dd>
+            <dt>월변</dt>
+            <dd>월 단위 고금리 대출.</dd>
+            <dt>작대</dt>
+            <dd>서류조작 대출.</dd>
+            <dt>성형대출</dt>
+            <dd>성형을 목적으로 받는 고금리 대출.</dd>
+          </dl>
+        </details>
+        <details class="wiki-glossary-category">
+          <summary><span>🎭 업소 유형</span><strong>8개</strong></summary>
+          <dl class="wiki-glossary-list">
+            <dt>가라오케</dt>
+            <dd>노래·술 중심 업소.</dd>
+            <dt>하드코어</dt>
+            <dd>수위 높은 스킨십이 가능한 업소.</dd>
+            <dt>오피</dt>
+            <dd>오피스텔 기반 업소.</dd>
+            <dt>쩜오</dt>
+            <dd>텐프로 아래 등급의 하이업소.</dd>
+            <dt>텐프로</dt>
+            <dd>최상급 하이업소.</dd>
+            <dt>일프로</dt>
+            <dd>텐프로 이상급으로 분류되는 초고가 업소.</dd>
+            <dt>짭텐</dt>
+            <dd>텐프로를 표방하는 업소.</dd>
+            <dt>짭쩜</dt>
+            <dd>정통 쩜오가 아닌 유사 쩜오 업소.</dd>
+          </dl>
+        </details>
+        <details class="wiki-glossary-category">
+          <summary><span>🗣️ 기타 자주 쓰는 용어</span><strong>11개</strong></summary>
+          <dl class="wiki-glossary-list">
+            <dt>작업</dt>
+            <dd>이성에게 접근하여 금전적 이득을 얻으려는 행위.</dd>
+            <dt>공사</dt>
+            <dd>손님에게 경제적 지원을 받기 위해 접근하는 행위.</dd>
+            <dt>역공사</dt>
+            <dd>손님이 종사자를 역으로 이용하는 행위.</dd>
+            <dt>슈킹</dt>
+            <dd>돈·차·시계 등을 받아내는 행위.</dd>
+            <dt>스킨십 (피아노)</dt>
+            <dd>손님과 종업원 간 신체 접촉.</dd>
+            <dt>스펙</dt>
+            <dd>키·몸무게 등 신체조건.</dd>
+            <dt>셋팅</dt>
+            <dd>테이블 준비 또는 헤어·메이크업·의상 준비.</dd>
+            <dt>엔트리</dt>
+            <dd>당일 출근한 종사자 구성.</dd>
+            <dt>체크</dt>
+            <dd>테이블 종료 시간.</dd>
+            <dt>점프</dt>
+            <dd>다른 업소로 이동 근무.</dd>
+            <dt>탈화류</dt>
+            <dd>업계를 떠나는 것.</dd>
+          </dl>
+        </details>
+        </div>
       </section>
     </div></main>
     <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/api/authAPI.js"></script><script src="scripts/js/components/header.js"></script><script src="scripts/js/pages/wiki.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
