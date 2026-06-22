@@ -359,7 +359,6 @@ function bindAdProfileInteractions() {
         if (previewTitle) previewTitle.textContent = `[${region}-${storeName}] ${title}`;
         if (previewManager) previewManager.innerHTML = `🌱 <strong class="business-directory-manager-nickname">${sanitizeHTML(managerName)}</strong> · 0일째 광고중`;
         if (previewDetail) previewDetail.textContent = `${region} ${district} · ${category} · ${formattedTime}`;
-        document.getElementById('ad-profile-preview-stamp-badge')?.classList.toggle('hidden', !useStampEvent);
         syncAdProfileDetailPreview({
             storeName,
             title,
