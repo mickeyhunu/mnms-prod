@@ -87,9 +87,118 @@
     applySearch();
   }
 
+
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function formatDate(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function isAdminUser() {
+    return typeof Auth !== 'undefined' && Auth.isAdminAccount(Auth.currentUser);
+  }
+
+  function initWikiQuestionBoard() {
+    const form = document.getElementById('wiki-question-form');
+    const termInput = document.getElementById('wiki-question-term');
+    const contentInput = document.getElementById('wiki-question-content');
+    const status = document.getElementById('wiki-question-form-status');
+    const list = document.getElementById('wiki-question-list');
+
+    if (!form || !termInput || !contentInput || !status || !list || typeof APIClient === 'undefined') return;
+
+    function renderQuestions(questions) {
+      if (!questions.length) {
+        list.innerHTML = '<p class="wiki-question-empty">아직 등록된 용어 질문이 없습니다. 첫 질문을 남겨보세요.</p>';
+        return;
+      }
+
+      list.innerHTML = questions.map((question) => {
+        const added = question.status === 'ADDED';
+        const adminActions = isAdminUser()
+          ? `<div class="wiki-question-item__actions">
+              ${added ? '' : `<button class="btn btn-outline btn-sm" type="button" data-wiki-action="added" data-id="${question.id}">위키 추가 완료</button>`}
+              <button class="btn btn-danger btn-sm" type="button" data-wiki-action="delete" data-id="${question.id}">삭제</button>
+            </div>`
+          : '';
+
+        return `<article class="wiki-question-item">
+          <div class="wiki-question-item__meta">
+            <span class="wiki-question-item__term">${escapeHtml(question.term)}</span>
+            <span class="wiki-question-status-badge ${added ? 'wiki-question-status-badge--added' : ''}">${added ? '추가 완료' : '관리자 확인 대기'}</span>
+          </div>
+          <p class="wiki-question-item__content">${escapeHtml(question.content)}</p>
+          <div class="wiki-question-item__meta wiki-question-item__subtle">
+            <span>${escapeHtml(question.authorNickname || '익명')}</span>
+            <span>${escapeHtml(formatDate(question.createdAt))}</span>
+          </div>
+          ${adminActions}
+        </article>`;
+      }).join('');
+    }
+
+    async function loadQuestions() {
+      try {
+        const data = await APIClient.get('/wiki/questions');
+        renderQuestions(data.questions || []);
+      } catch (error) {
+        list.innerHTML = `<p class="wiki-question-empty">${escapeHtml(error.message || '질문을 불러오지 못했습니다.')}</p>`;
+      }
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      status.textContent = '';
+      try {
+        await APIClient.post('/wiki/questions', {
+          term: termInput.value,
+          content: contentInput.value
+        });
+        form.reset();
+        status.textContent = '질문이 등록되었습니다. 관리자가 확인 후 위키에 반영합니다.';
+        await loadQuestions();
+      } catch (error) {
+        status.textContent = error.message || '질문 등록에 실패했습니다.';
+      }
+    });
+
+    list.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-wiki-action]');
+      if (!button) return;
+      const id = button.dataset.id;
+      const action = button.dataset.wikiAction;
+
+      try {
+        button.disabled = true;
+        if (action === 'added') {
+          await APIClient.put(`/wiki/questions/${id}/added`);
+        } else if (action === 'delete') {
+          await APIClient.delete(`/wiki/questions/${id}`);
+        }
+        await loadQuestions();
+      } catch (error) {
+        status.textContent = error.message || '관리자 처리에 실패했습니다.';
+        button.disabled = false;
+      }
+    });
+
+    loadQuestions();
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initWikiSearch, { once: true });
+    document.addEventListener('DOMContentLoaded', () => { initWikiSearch(); initWikiQuestionBoard(); }, { once: true });
   } else {
     initWikiSearch();
+    initWikiQuestionBoard();
   }
 }());
