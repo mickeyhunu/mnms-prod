@@ -1398,9 +1398,10 @@ const pageRegistry = {
                     </div>
                 </div>
             </section>
-            <section class="bamcheat-access-card hidden" id="bamcheat-access-card" aria-labelledby="bamcheat-access-title">
+            <section class="bamcheat-card hidden" id="bamcheat-access-card" aria-labelledby="bamcheat-access-title">
                 <h2 id="bamcheat-access-title">밤치트 접근 코드 입력</h2>
-                <p class="text-muted">기업회원/관리자는 바로 이용할 수 있으며, 그 외 사용자는 접근 코드를 입력하면 이용할 수 있습니다.</p>
+                <p class="text-muted">미드나잇 맨즈 기업회원은 바로 이용할 수 있으며,</p>
+                <p class="text-muted">그 외 사용자는 접근 코드를 입력하면 이용할 수 있습니다.</p>
                 <form id="bamcheat-access-form" class="bamcheat-access-form">
                     <input class="form-control" id="bamcheat-access-code-input" type="password" placeholder="접근 코드 입력" autocomplete="off" required>
                     <button class="btn btn-primary" type="submit">입장</button>
