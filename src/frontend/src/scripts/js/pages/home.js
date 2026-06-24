@@ -5,11 +5,11 @@ function initHomePage() {
     Auth.updateHeaderUI();
     Auth.bindLogoutButton();
 
-    const blackDbMenu = document.getElementById('black-db-service-item');
-    if (blackDbMenu) {
+    const bamcheatMenu = document.getElementById('bamcheat-service-item');
+    if (bamcheatMenu) {
         const currentUser = Auth.getUser();
-        const canUseBlackDb = Auth.isBusinessAccount(currentUser) || Auth.isAdminAccount(currentUser);
-        blackDbMenu.classList.toggle('hidden', !canUseBlackDb);
+        const canUseBamcheat = Auth.isBusinessAccount(currentUser) || Auth.isAdminAccount(currentUser);
+        bamcheatMenu.classList.toggle('hidden', !canUseBamcheat);
     }
     if (typeof initTopAds === 'function') {
         initTopAds({
