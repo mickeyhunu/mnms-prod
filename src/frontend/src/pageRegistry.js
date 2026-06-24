@@ -1343,7 +1343,7 @@ const pageRegistry = {
                     <span class="service-icon">🏢</span>
                     <span class="service-label">업체정보</span>
                 </a>
-                <a class="service-item service-item-business-only hidden" href="/bamcheat" id="black-db-service-item">
+                <a class="service-item service-item-business-only hidden" href="/bamcheat" id="bamcheat-service-item">
                     <span class="service-icon">🕵️</span>
                     <span class="service-label">밤치트</span>
                 </a>
@@ -1364,7 +1364,7 @@ const pageRegistry = {
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/topAds.js", "scripts/js/pages/home.js", "scripts/js/components/footerNav.js"]
   },
 
-  'black-db': {
+  'bamcheat': {
     template: `<header class="header">
         <div class="header-container">
             <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
@@ -1382,39 +1382,49 @@ const pageRegistry = {
     </header>
     <main class="main-content">
         <div class="container">
-            <header class="community-section-header black-db-section-header">
+            <header class="community-section-header bamcheat-section-header">
                 <div class="community-header-left">
                     <span class="community-board-name">밤치트</span>
                 </div>
             </header>
-            <section class="black-db-hero" aria-labelledby="black-db-hero-title">
-                <div class="black-db-hero-glow" aria-hidden="true"></div>
-                <div class="black-db-hero-content">
-                    <div class="black-db-hero-copy">
-                        <h1 id="black-db-hero-title" class="black-db-hero-title">
+            <section class="bamcheat-hero" aria-labelledby="bamcheat-hero-title">
+                <div class="bamcheat-hero-glow" aria-hidden="true"></div>
+                <div class="bamcheat-hero-content">
+                    <div class="bamcheat-hero-copy">
+                        <h1 id="bamcheat-hero-title" class="bamcheat-hero-title">
                             <span>안전한 영업,</span>
                             <span><strong>블랙번호 조회</strong></span>
                         </h1>
                     </div>
                 </div>
             </section>
-            <section class="black-db-card">
-                <form id="black-db-search-form" class="black-db-search-form">
-                    <div class="black-db-search-row">
-                        <input class="form-control" id="black-db-phone-input" type="search" inputmode="numeric" pattern="[0-9]*" maxlength="11" placeholder="전화번호 입력" autocomplete="off" required>
+            <section class="bamcheat-access-card hidden" id="bamcheat-access-card" aria-labelledby="bamcheat-access-title">
+                <h2 id="bamcheat-access-title">밤치트 접근 코드 입력</h2>
+                <p class="text-muted">기업회원/관리자는 바로 이용할 수 있으며, 그 외 사용자는 접근 코드를 입력하면 이용할 수 있습니다.</p>
+                <form id="bamcheat-access-form" class="bamcheat-access-form">
+                    <input class="form-control" id="bamcheat-access-code-input" type="password" placeholder="접근 코드 입력" autocomplete="off" required>
+                    <button class="btn btn-primary" type="submit">입장</button>
+                </form>
+                <p class="text-muted" id="bamcheat-access-status"></p>
+            </section>
+            <section class="bamcheat-card hidden" id="bamcheat-content-card">
+                <form id="bamcheat-search-form" class="bamcheat-search-form">
+                    <div class="bamcheat-search-row">
+                        <input class="form-control" id="bamcheat-phone-input" type="search" inputmode="numeric" pattern="[0-9]*" maxlength="11" placeholder="전화번호 입력" autocomplete="off" required>
                         <button class="btn btn-primary" type="submit">검색</button>
                     </div>
                 </form>
-                <span class="black-db-comment-heading hidden" id="black-db-result-heading">🔍 번호조회 결과</span>
-                <section class="black-db-overview hidden" id="black-db-overview" aria-label="번호 검색 요약"></section>
-                <span class="black-db-comment-heading hidden" id="black-db-comment-heading">💬 이용자 코멘트</span>
-                <ul class="black-db-comment-list" id="black-db-comment-list"></ul>
-                <p class="text-muted black-db-empty" id="black-db-empty"></p>
-                <form id="black-db-comment-form" class="black-db-comment-form hidden">
-                    <input type="hidden" id="black-db-comment-phone">
-                    <label class="form-label" for="black-db-comment-input">코멘트 남기기</label>
-                    <div class="black-db-area-row">
-                            <select class="form-control" id="black-db-comment-region" required>
+                <p class="text-muted" id="bamcheat-status"></p>
+                <span class="bamcheat-comment-heading hidden" id="bamcheat-result-heading">🔍 번호조회 결과</span>
+                <section class="bamcheat-overview hidden" id="bamcheat-overview" aria-label="번호 검색 요약"></section>
+                <span class="bamcheat-comment-heading hidden" id="bamcheat-comment-heading">💬 이용자 코멘트</span>
+                <ul class="bamcheat-comment-list" id="bamcheat-comment-list"></ul>
+                <p class="text-muted bamcheat-empty" id="bamcheat-empty"></p>
+                <form id="bamcheat-comment-form" class="bamcheat-comment-form hidden">
+                    <input type="hidden" id="bamcheat-comment-phone">
+                    <label class="form-label" for="bamcheat-comment-input">코멘트 남기기</label>
+                    <div class="bamcheat-area-row">
+                            <select class="form-control" id="bamcheat-comment-region" required>
                                 <option value="">시/도 선택</option>
                                 <option value="서울">서울</option>
                                 <option value="경기">경기</option>
@@ -1434,19 +1444,19 @@ const pageRegistry = {
                                 <option value="세종">세종</option>
                                 <option value="제주">제주</option>
                             </select>
-                            <select class="form-control" id="black-db-comment-district" required disabled>
+                            <select class="form-control" id="bamcheat-comment-district" required disabled>
                                 <option value="">구/군 선택</option>
                             </select>
                         </div>
-                    <textarea class="form-control" id="black-db-comment-input" rows="5" maxlength="1000" placeholder="예: 예약 문의 후 연락 두절 제보가 있습니다." required></textarea>
+                    <textarea class="form-control" id="bamcheat-comment-input" rows="5" maxlength="1000" placeholder="예: 예약 문의 후 연락 두절 제보가 있습니다." required></textarea>
                     <button class="btn btn-primary w-full" type="submit">코멘트 등록</button>
-                    <p class="black-db-policy-notice">주의 안내: 실명, 주소, 욕설, 범죄 단정 표현은 금지됩니다.</p>
+                    <p class="bamcheat-policy-notice">주의 안내: 실명, 주소, 욕설, 범죄 단정 표현은 금지됩니다.</p>
                 </form>
             </section>
         </div>
     </main>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/sectionHeader.js", "scripts/js/pages/blackDb.js", "scripts/js/components/footerNav.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/sectionHeader.js", "scripts/js/pages/bamcheat.js", "scripts/js/components/footerNav.js"]
   },
   'live': livePageConfig,
   'login': {
