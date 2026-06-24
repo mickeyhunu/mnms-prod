@@ -45,6 +45,24 @@ async function listQuestions({ includeReviewed = false } = {}) {
   return rows.map(normalizeQuestionRow);
 }
 
+async function listRecentPendingQuestions({ limit = 50 } = {}) {
+  const pool = getPool();
+  const normalizedLimit = Math.max(1, Math.min(100, Number(limit) || 50));
+  await deleteExpiredAddedQuestions();
+  const [rows] = await pool.query(
+    `SELECT q.id, q.term, q.content, q.status, q.created_at AS createdAt,
+            q.reviewed_at AS reviewedAt, q.reviewed_by AS reviewedBy,
+            COALESCE(u.nickname, q.author_nickname, '익명') AS authorNickname
+       FROM wiki_term_questions q
+       LEFT JOIN users u ON u.id = q.user_id
+      WHERE q.status = 'PENDING'
+      ORDER BY q.created_at DESC, q.id DESC
+      LIMIT ?`,
+    [normalizedLimit]
+  );
+  return rows.map(normalizeQuestionRow);
+}
+
 async function createQuestion({ userId = null, authorNickname = '익명', term, content }) {
   const pool = getPool();
   const [result] = await pool.query(
@@ -85,4 +103,4 @@ async function deleteQuestion(id) {
   return result.affectedRows > 0;
 }
 
-module.exports = { listQuestions, createQuestion, markQuestionAdded, deleteQuestion, deleteExpiredAddedQuestions };
+module.exports = { listQuestions, listRecentPendingQuestions, createQuestion, markQuestionAdded, deleteQuestion, deleteExpiredAddedQuestions };
