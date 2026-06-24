@@ -2,7 +2,7 @@
  * 파일 역할: 기업회원 전용 밤치트 번호 검색/코멘트 작성 페이지를 초기화하는 스크립트 파일.
  */
 const BAMCHEAT_ACCESS_CODE = 'blackcode';
-const BAMCHEAT_ACCESS_STORAGE_KEY = 'mnmsBamcheatAccessCode';
+let bamcheatAccessCode = '';
 
 const REGION_DISTRICT_MAP = {
     서울: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
@@ -28,12 +28,12 @@ function isBamcheatPrivilegedUser(user = Auth.getUser()) {
     return Auth.isBusinessAccount(user) || Auth.isAdminAccount(user);
 }
 
-function getStoredBamcheatAccessCode() {
-    return window.sessionStorage?.getItem(BAMCHEAT_ACCESS_STORAGE_KEY) || '';
+function getBamcheatAccessCode() {
+    return bamcheatAccessCode;
 }
 
 function hasBamcheatCodeAccess() {
-    return getStoredBamcheatAccessCode() === BAMCHEAT_ACCESS_CODE;
+    return getBamcheatAccessCode() === BAMCHEAT_ACCESS_CODE;
 }
 
 function canAccessBamcheat() {
@@ -42,13 +42,13 @@ function canAccessBamcheat() {
 
 function appendBamcheatAccessCode(params = {}) {
     if (isBamcheatPrivilegedUser()) return params;
-    const accessCode = getStoredBamcheatAccessCode();
+    const accessCode = getBamcheatAccessCode();
     return accessCode ? { ...params, accessCode } : params;
 }
 
 function withBamcheatAccessCode(data = {}) {
     if (isBamcheatPrivilegedUser()) return data;
-    const accessCode = getStoredBamcheatAccessCode();
+    const accessCode = getBamcheatAccessCode();
     return accessCode ? { ...data, accessCode } : data;
 }
 
@@ -70,7 +70,7 @@ function submitBamcheatAccessCode(event) {
         return;
     }
 
-    window.sessionStorage?.setItem(BAMCHEAT_ACCESS_STORAGE_KEY, code);
+    bamcheatAccessCode = code;
     if (status) status.textContent = '';
     updateBamcheatAccessView();
 }
