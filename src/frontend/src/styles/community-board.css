@@ -773,21 +773,8 @@ header.community-section-header .board-tab.active {
     white-space: nowrap;
 }
 
-.bamcheat-card,
-.bamcheat-access-card {
+.bamcheat-card {
   padding: 3%;
-}
-
-.bamcheat-access-card {
-  border: 1px solid rgba(108, 46, 150, 0.14);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 12px 30px rgba(31, 41, 55, 0.08);
-}
-
-.bamcheat-access-card h2 {
-  margin: 0 0 8px;
-  font-size: 1.25rem;
 }
 
 .bamcheat-access-form {
