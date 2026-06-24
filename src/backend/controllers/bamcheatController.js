@@ -1,7 +1,9 @@
 /**
  * 파일 역할: 기업회원 전용 밤치트 번호 검색 및 코멘트 작성 API를 처리하는 컨트롤러 파일.
  */
-const blackDbModel = require('../models/blackDbModel');
+const bamcheatModel = require('../models/bamcheatModel');
+
+const BAMCHEAT_ACCESS_CODE = 'blackcode';
 
 const REGION_DISTRICT_MAP = {
   서울: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
@@ -33,21 +35,38 @@ function isBusinessUser(user) {
   return role === 'BUSINESS' || memberType === 'BUSINESS';
 }
 
-function requireBusinessUser(req, res, next) {
-  if (!isBusinessUser(req.user) && !isAdminUser(req.user)) {
-    return res.status(403).json({ message: '기업회원만 이용할 수 있습니다.' });
+function hasValidBamcheatAccessCode(req) {
+  const code = String(
+    req.headers['x-bamcheat-access-code']
+    || req.query?.accessCode
+    || req.body?.accessCode
+    || ''
+  ).trim();
+  return code === BAMCHEAT_ACCESS_CODE;
+}
+
+function requireBamcheatAccess(req, res, next) {
+  if (isBusinessUser(req.user) || isAdminUser(req.user) || hasValidBamcheatAccessCode(req)) {
+    return next();
+  }
+  return res.status(403).json({ message: '밤치트 접근 코드가 필요합니다.' });
+}
+
+function requireBamcheatAuthenticatedUser(req, res, next) {
+  if (!req.user) {
+    return res.status(401).json({ message: '로그인 후 이용할 수 있습니다.' });
   }
   return next();
 }
 
-async function searchBlackDbComments(req, res, next) {
+async function searchBamcheatComments(req, res, next) {
   try {
-    const phoneNumber = blackDbModel.normalizePhoneNumber(req.query.phoneNumber);
+    const phoneNumber = bamcheatModel.normalizePhoneNumber(req.query.phoneNumber);
     if (!phoneNumber || phoneNumber.length < 7 || phoneNumber.length > 20) {
       return res.status(400).json({ message: '검색할 번호를 7~20자리 숫자로 입력해주세요.' });
     }
 
-    const comments = await blackDbModel.findCommentsByPhoneNumber(phoneNumber, req.user.id);
+    const comments = await bamcheatModel.findCommentsByPhoneNumber(phoneNumber, req.user?.id);
     return res.json({ phoneNumber, comments, hasComments: comments.length > 0 });
   } catch (error) {
     return next(error);
@@ -59,9 +78,9 @@ function parsePositiveId(value) {
   return Number.isInteger(id) && id > 0 ? id : null;
 }
 
-async function createBlackDbComment(req, res, next) {
+async function createBamcheatComment(req, res, next) {
   try {
-    const phoneNumber = blackDbModel.normalizePhoneNumber(req.body?.phoneNumber);
+    const phoneNumber = bamcheatModel.normalizePhoneNumber(req.body?.phoneNumber);
     const region = String(req.body?.region || '').trim();
     const district = String(req.body?.district || '').trim();
     const comment = String(req.body?.comment || '').trim();
@@ -79,7 +98,7 @@ async function createBlackDbComment(req, res, next) {
       return res.status(400).json({ message: '코멘트는 1~1000자 이내로 입력해주세요.' });
     }
 
-    const createdComment = await blackDbModel.createComment({
+    const createdComment = await bamcheatModel.createComment({
       phoneNumber,
       authorUserId: req.user.id,
       region,
@@ -93,14 +112,14 @@ async function createBlackDbComment(req, res, next) {
   }
 }
 
-async function recommendBlackDbComment(req, res, next) {
+async function recommendBamcheatComment(req, res, next) {
   try {
     const commentId = parsePositiveId(req.params.commentId);
     if (!commentId) {
       return res.status(400).json({ message: '유효하지 않은 코멘트 ID입니다.' });
     }
 
-    const recommendation = await blackDbModel.toggleCommentRecommendation({
+    const recommendation = await bamcheatModel.toggleCommentRecommendation({
       commentId,
       userId: req.user.id
     });
@@ -111,7 +130,7 @@ async function recommendBlackDbComment(req, res, next) {
   }
 }
 
-async function deleteBlackDbComment(req, res, next) {
+async function deleteBamcheatComment(req, res, next) {
   try {
     if (!isAdminUser(req.user)) {
       return res.status(403).json({ message: '관리자만 삭제할 수 있습니다.' });
@@ -122,7 +141,7 @@ async function deleteBlackDbComment(req, res, next) {
       return res.status(400).json({ message: '유효하지 않은 코멘트 ID입니다.' });
     }
 
-    const deleted = await blackDbModel.deleteComment(commentId);
+    const deleted = await bamcheatModel.deleteComment(commentId);
     if (!deleted) {
       return res.status(404).json({ message: '삭제할 코멘트를 찾을 수 없습니다.' });
     }
@@ -134,9 +153,10 @@ async function deleteBlackDbComment(req, res, next) {
 }
 
 module.exports = {
-  requireBusinessUser,
-  searchBlackDbComments,
-  createBlackDbComment,
-  recommendBlackDbComment,
-  deleteBlackDbComment
+  requireBamcheatAccess,
+  requireBamcheatAuthenticatedUser,
+  searchBamcheatComments,
+  createBamcheatComment,
+  recommendBamcheatComment,
+  deleteBamcheatComment
 };

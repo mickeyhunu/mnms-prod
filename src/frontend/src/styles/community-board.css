@@ -773,18 +773,41 @@ header.community-section-header .board-tab.active {
     white-space: nowrap;
 }
 
-.black-db-card {
+.bamcheat-card,
+.bamcheat-access-card {
   padding: 3%;
 }
 
-.black-db-hero {
+.bamcheat-access-card {
+  border: 1px solid rgba(108, 46, 150, 0.14);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12px 30px rgba(31, 41, 55, 0.08);
+}
+
+.bamcheat-access-card h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.bamcheat-access-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.bamcheat-access-form .form-control {
+  flex: 1;
+}
+
+.bamcheat-hero {
   border-radius: 24px;
   overflow: hidden;
   padding: 18px 16px;
   position: relative;
 }
 
-.black-db-hero-glow {
+.bamcheat-hero-glow {
   background:
     radial-gradient(circle at 24% 25%, rgba(220, 38, 38, 0.18), transparent 28%),
     radial-gradient(circle at 72% 20%, rgba(108, 46, 150, 0.18), transparent 32%),
@@ -795,7 +818,7 @@ header.community-section-header .board-tab.active {
   position: absolute;
 }
 
-.black-db-hero-glow::after {
+.bamcheat-hero-glow::after {
   background-image:
     linear-gradient(rgba(108, 46, 150, 0.1) 1px, transparent 1px),
     linear-gradient(90deg, rgba(220, 38, 38, 0.08) 1px, transparent 1px);
@@ -806,7 +829,7 @@ header.community-section-header .board-tab.active {
   position: absolute;
 }
 
-.black-db-hero-content {
+.bamcheat-hero-content {
   align-items: center;
   display: flex;
   flex-direction: column;
@@ -815,12 +838,12 @@ header.community-section-header .board-tab.active {
   z-index: 1;
 }
 
-.black-db-hero-copy {
+.bamcheat-hero-copy {
   max-width: 680px;
   text-align: center;
 }
 
-.black-db-hero-title {
+.bamcheat-hero-title {
   color: #111827;
   font-size: clamp(2rem, 7vw, 3rem);
   font-weight: 900;
@@ -829,22 +852,22 @@ header.community-section-header .board-tab.active {
   margin: 0 0 12px;
 }
 
-.black-db-hero-title span {
+.bamcheat-hero-title span {
   display: block;
 }
 
-.black-db-hero-title strong {
+.bamcheat-hero-title strong {
   color: #dc2626;
 }
 
-.black-db-hero-subtitle {
+.bamcheat-hero-subtitle {
   color: #64748b;
   font-size: 0.95rem;
   font-weight: 600;
   margin: 0;
 }
 
-.black-db-live-search {
+.bamcheat-live-search {
   align-items: center;
   backdrop-filter: blur(8px);
   background: rgba(255, 255, 255, 0.58);
@@ -856,29 +879,29 @@ header.community-section-header .board-tab.active {
   padding: 10px 18px;
 }
 
-.black-db-live-search span {
+.bamcheat-live-search span {
   color: #8a5c16;
   font-size: 0.78rem;
   font-weight: 700;
 }
 
-.black-db-live-search strong {
+.bamcheat-live-search strong {
   color: #111827;
   font-size: 1.45rem;
   font-weight: 900;
   letter-spacing: 0.02em;
 }
 
-.black-db-search-row {
+.bamcheat-search-row {
   display: flex;
   gap: 10px;
 }
 
-.black-db-search-row .form-control {
+.bamcheat-search-row .form-control {
   flex: 1;
 }
 
-.black-db-comment-list {
+.bamcheat-comment-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -887,14 +910,14 @@ header.community-section-header .board-tab.active {
   padding: 0;
 }
 
-.black-db-comment-item {
+.bamcheat-comment-item {
   border: 1px solid rgba(148, 163, 184, 0.25);
   border-radius: 14px;
   padding: 14px;
   background: rgba(15, 23, 42, 0.04);
 }
 
-.black-db-comment-header {
+.bamcheat-comment-header {
   align-items: center;
   display: flex;
   gap: 12px;
@@ -902,20 +925,20 @@ header.community-section-header .board-tab.active {
   margin-bottom: 8px;
 }
 
-.black-db-comment-meta {
+.bamcheat-comment-meta {
   color: #64748b;
   font-size: 0.86rem;
 }
 
-.black-db-comment-content {
+.bamcheat-comment-content {
   align-items: flex-start;
   display: flex;
   gap: 12px;
   justify-content: space-between;
 }
 
-.black-db-comment-recommend-btn,
-.black-db-comment-delete-btn {
+.bamcheat-comment-recommend-btn,
+.bamcheat-comment-delete-btn {
   align-items: center;
   border: 1px solid rgba(108, 46, 150, 0.24);
   border-radius: 999px;
@@ -931,35 +954,35 @@ header.community-section-header .board-tab.active {
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-.black-db-comment-recommend-btn:hover,
-.black-db-comment-recommend-btn.active {
+.bamcheat-comment-recommend-btn:hover,
+.bamcheat-comment-recommend-btn.active {
   border-color: rgba(108, 46, 150, 0.42);
   background: rgba(108, 46, 150, 0.08);
 }
 
-.black-db-comment-recommend-btn:active,
-.black-db-comment-delete-btn:active {
+.bamcheat-comment-recommend-btn:active,
+.bamcheat-comment-delete-btn:active {
   transform: scale(0.96);
 }
 
-.black-db-comment-delete-btn {
+.bamcheat-comment-delete-btn {
   border-color: rgba(220, 38, 38, 0.24);
   color: #dc2626;
 }
 
-.black-db-comment-delete-btn:hover {
+.bamcheat-comment-delete-btn:hover {
   border-color: rgba(220, 38, 38, 0.42);
   background: rgba(220, 38, 38, 0.08);
 }
 
-.black-db-comment-body {
+.bamcheat-comment-body {
   flex: 1 1 auto;
   margin: 0;
   min-width: 0;
   white-space: pre-wrap;
 }
 
-.black-db-comment-form {
+.bamcheat-comment-form {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -967,12 +990,12 @@ header.community-section-header .board-tab.active {
 }
 
 
-.black-db-area-row {
+.bamcheat-area-row {
   display: flex;
   gap: 10px;
 }
 
-.black-db-overview {
+.bamcheat-overview {
   border: 1px solid rgba(108, 46, 150, 0.18);
   border-radius: 18px;
   background: linear-gradient(135deg, rgba(108, 46, 150, 0.08), rgba(15, 23, 42, 0.03));
@@ -980,37 +1003,37 @@ header.community-section-header .board-tab.active {
   padding: 18px;
 }
 
-.black-db-phone {
+.bamcheat-phone {
   color: #111827;
   font-size: 1.25rem;
   font-weight: 800;
   margin-bottom: 16px;
 }
 
-.black-db-overview-grid {
+.bamcheat-overview-grid {
   display: grid;
   gap: 14px;
 }
 
-.black-db-overview-grid div {
+.bamcheat-overview-grid div {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.black-db-overview-grid span {
+.bamcheat-overview-grid span {
   color: #64748b;
   font-size: 0.84rem;
   font-weight: 700;
 }
 
-.black-db-overview-grid strong {
+.bamcheat-overview-grid strong {
   color: #111827;
   font-size: 0.98rem;
   line-height: 1.45;
 }
 
-.black-db-comment-heading {
+.bamcheat-comment-heading {
   color: #111827;
   display: block;
   font-size: 1rem;
@@ -1018,11 +1041,11 @@ header.community-section-header .board-tab.active {
   margin-top: 18px;
 }
 
-.black-db-overview + .black-db-comment-heading {
+.bamcheat-overview + .bamcheat-comment-heading {
   margin-top: 20px;
 }
 
-.black-db-policy-notice {
+.bamcheat-policy-notice {
   border-radius: 12px;
   background: rgba(250, 204, 21, 0.16);
   color: #854d0e;
@@ -1034,11 +1057,12 @@ header.community-section-header .board-tab.active {
 }
 
 @media (max-width: 640px) {
-  .black-db-hero {
+  .bamcheat-hero {
     padding: 16px 10px;
   }
 
-  .black-db-search-row {
+  .bamcheat-access-form,
+  .bamcheat-search-row {
     flex-direction: row;
   }
 }
