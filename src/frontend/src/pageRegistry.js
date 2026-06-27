@@ -2075,10 +2075,12 @@ const pageRegistry = {
           </dl>
         </details>
         <details class="wiki-glossary-category">
-          <summary><span>👤 손님 관련</span><strong>8개</strong></summary>
+          <summary><span>👤 손님 관련</span><strong>10개</strong></summary>
           <dl class="wiki-glossary-list">
             <dt>빠꼼이</dt>
             <dd>업소 사정을 잘 아는 단골 손님.</dd>
+            <dt>땁(방)</dt>
+            <dd>손님 1명과 파트너 1명으로 구성된 단독 룸. 단독방에서 단방, 땁방, 땁으로 변형된 은어로 봅니다.</dd>
             <dt>진상</dt>
             <dd>업소 또는 종업원에게 피해를 주는 손님.</dd>
             <dt>술진상</dt>
