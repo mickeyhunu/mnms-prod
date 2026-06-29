@@ -110,7 +110,12 @@ async function listPosts(page = 0, size = 10, options = {}) {
   ];
   const whereParams = [];
 
-  if (boardFilter !== 'ALL') {
+  if (boardFilter === 'ALL') {
+    whereConditions.push(`(
+      p.is_notice = 0
+      OR p.notice_type = 'IMPORTANT'
+    )`);
+  } else {
     whereConditions.push(`(
       p.board_type = ?
       OR (
@@ -190,7 +195,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
   let supportNoticeRows = [];
   if (!keyword && page === 0) {
     const supportBoardCondition = boardFilter === 'ALL'
-      ? "a.board_type <> 'SUPPORT_ONLY'"
+      ? "a.board_type <> 'SUPPORT_ONLY' AND a.notice_type = 'IMPORTANT'"
       : 'a.board_type = ?';
     const supportBoardParams = boardFilter === 'ALL' ? [] : [boardFilter];
     const [supportRows] = await pool.query(
