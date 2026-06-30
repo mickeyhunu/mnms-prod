@@ -2182,7 +2182,7 @@ const pageRegistry = {
           </dl>
         </details>
         <details class="wiki-glossary-category">
-          <summary><span>🗣️ 기타 자주 쓰는 용어</span><strong>11개</strong></summary>
+          <summary><span>🗣️ 기타 자주 쓰는 용어</span><strong>12개</strong></summary>
           <dl class="wiki-glossary-list">
             <dt>작업</dt>
             <dd>이성에게 접근하여 금전적 이득을 얻으려는 행위.</dd>
@@ -2198,6 +2198,8 @@ const pageRegistry = {
             <dd>키·몸무게 등 신체조건.</dd>
             <dt>셋팅</dt>
             <dd>테이블 준비 또는 헤어·메이크업·의상 준비.</dd>
+            <dt>사대</dt>
+            <dd>화류계에서 “사대가 맞는다”는 표현은 궁합이 잘 맞는다, 호흡이 잘 맞는다, 케미가 좋다는 뜻으로 많이 쓰입니다. 종사자나 손님이 “이 가게와 사대가 맞다”처럼 사용합니다.</dd>
             <dt>엔트리</dt>
             <dd>당일 출근한 종사자 구성.</dd>
             <dt>체크</dt>
