@@ -10,6 +10,7 @@ const {
   parseDataUrl,
   uploadDataUrlToS3
 } = require('../utils/fileUpload');
+const { createSeoSlugWithId } = require('../utils/seoSlug');
 
 const BOARD_TYPES = postModel.BOARD_TYPES || {
   FREE: 'FREE',
@@ -364,6 +365,31 @@ function annotateSecretThreadOwnerIds(comments = []) {
 }
 
 
+function getRequestOrigin(req) {
+  const forwardedHost = String(req.get('x-forwarded-host') || '').split(',')[0].trim();
+  const host = forwardedHost || req.get('host');
+  if (!host) return '';
+
+  const forwardedProto = String(req.get('x-forwarded-proto') || '').split(',')[0].trim();
+  const protocol = forwardedProto || req.protocol || 'http';
+  return `${protocol}://${host}`;
+}
+
+function createPostDetailUrl(req, post) {
+  const slug = createSeoSlugWithId(post?.title || '', post?.id, 'post');
+  const path = `/post-detail/${encodeURIComponent(slug)}`;
+  const origin = getRequestOrigin(req);
+  return origin ? `${origin}${path}` : path;
+}
+
+function attachPostDetailUrl(req, post) {
+  if (!post) return post;
+  return {
+    ...post,
+    url: createPostDetailUrl(req, post)
+  };
+}
+
 function formatAnonymousAuthorNickname(nickname, currentUser) {
   const trimmedNickname = String(nickname || '').trim();
   if (!isAdminViewer(currentUser) || !trimmedNickname || trimmedNickname === '익명') {
@@ -477,7 +503,7 @@ async function listPosts(req, res, next) {
     const searchType = typeof req.query.search === 'string' ? req.query.search : 'bbs_title';
     const boardType = parseBoardType(req.query.boardType || 'ALL');
     const { rows, total } = await postModel.listPosts(page, size, { keyword, searchType, boardType });
-    const normalizedRows = rows.map((item) => sanitizePostForViewer(item, req.user));
+    const normalizedRows = rows.map((item) => attachPostDetailUrl(req, sanitizePostForViewer(item, req.user)));
     res.json({ content: normalizedRows, totalElements: total, page, size, totalPages: Math.ceil(total / size) });
   } catch (error) {
     next(error);
@@ -501,7 +527,7 @@ async function searchPostsBySignal(req, res, next) {
       searchType: 'bbs_title',
       boardType
     });
-    const normalizedRows = rows.map((item) => sanitizePostForViewer(item, req.user));
+    const normalizedRows = rows.map((item) => attachPostDetailUrl(req, sanitizePostForViewer(item, req.user)));
 
     return res.json({
       boardType,
