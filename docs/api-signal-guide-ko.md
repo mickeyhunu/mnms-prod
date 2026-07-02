@@ -111,6 +111,8 @@ curl 'https://nightmens.com/api/posts/search-signal?board=후기&keyword=ㄷㅌ&
     {
       "id": 123,
       "title": "ㄷㅌ 후기 예시",
+      "content": "후기 본문 예시입니다.",
+      "url": "http://localhost:8080/post-detail/%E1%84%83%E1%84%90-%ED%9B%84%EA%B8%B0-%EC%98%88%EC%8B%9C-123",
       "boardType": "REVIEW",
       "authorNickname": "작성자",
       "viewCount": 10,
