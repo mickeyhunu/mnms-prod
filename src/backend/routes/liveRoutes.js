@@ -8,6 +8,7 @@ const router = express.Router();
 
 router.get('/filters', liveController.getLiveFilters);
 router.get('/entries', liveController.getLiveEntries);
+router.get('/signal', liveController.getLiveSignal);
 router.get('/ads', liveController.getLiveAds);
 router.get('/top-ads', liveController.getTopAds);
 router.get('/business-ads/areas', liveController.getBusinessAdAreas);
