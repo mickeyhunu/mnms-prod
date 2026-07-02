@@ -12,6 +12,33 @@ const LIVE_DB_CONNECTION_ERROR_CODES = new Set([
   'ENETUNREACH'
 ]);
 const TOP_AD_PLACEMENTS = new Set(['HOME', 'COMMUNITY']);
+const LIVE_CATEGORY_ALIASES = {
+  room: 'waiting',
+  rooms: 'waiting',
+  waiting: 'waiting',
+  wait: 'waiting',
+  룸: 'waiting',
+  방: 'waiting',
+  웨이팅: 'waiting',
+  entry: 'entry',
+  entries: 'entry',
+  엔트리: 'entry',
+  출근부: 'entry',
+  choice: 'choice',
+  choices: 'choice',
+  choiceTalk: 'choice',
+  choicetalk: 'choice',
+  초이스톡: 'choice',
+  초톡: 'choice',
+  chojoong: 'chojoong',
+  초중: 'chojoong'
+};
+
+function normalizeLiveCategory(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  return LIVE_CATEGORY_ALIASES[raw] || LIVE_CATEGORY_ALIASES[raw.toLowerCase()] || raw;
+}
 
 function parsePositiveInt(value) {
   const parsed = Number.parseInt(value, 10);
@@ -45,7 +72,7 @@ async function getLiveFilters(req, res, next) {
 
 async function getLiveEntries(req, res, next) {
   try {
-    const categoryKey = req.query.category;
+    const categoryKey = normalizeLiveCategory(req.query.category || req.query.infoType || req.query.type);
     const storeNo = parsePositiveInt(req.query.storeNo);
     const { limit, offset } = req.query;
     const data = await liveModel.listLiveEntries(categoryKey, { storeNo, limit, offset });
@@ -67,6 +94,48 @@ async function getLiveEntries(req, res, next) {
       offset: data.rowOffset,
       hasMore: data.category.key !== 'entry' && totalCount > (data.rowOffset + data.rows.length),
       nextOffset: data.category.key !== 'entry' ? data.rowOffset + data.rows.length : data.rowOffset
+    });
+  } catch (error) {
+    return handleLiveError(error, next, res);
+  }
+}
+
+
+async function getLiveSignal(req, res, next) {
+  try {
+    const { category, infoType, type, info, storeNo, store_no: storeNoSnake, storeNumber, limit, offset } = req.query;
+    const requestedInfoType = category || infoType || type || info;
+    const categoryKey = normalizeLiveCategory(requestedInfoType);
+    const normalizedStoreNo = parsePositiveInt(storeNo || storeNoSnake || storeNumber);
+
+    if (!categoryKey) {
+      return res.status(400).json({ message: '조회할 LIVE 정보 유형이 필요합니다. 예: room, entry, choiceTalk' });
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(liveModel.LIVE_CATEGORY_MAP, categoryKey)) {
+      return res.status(400).json({ message: '지원하지 않는 LIVE 정보 유형입니다.', allowedTypes: Object.keys(liveModel.LIVE_CATEGORY_MAP) });
+    }
+
+    if (!normalizedStoreNo) {
+      return res.status(400).json({ message: '유효한 스토어넘버가 필요합니다.' });
+    }
+
+    const data = await liveModel.listLiveEntries(categoryKey, { storeNo: normalizedStoreNo, limit, offset });
+    const totalCount = await liveModel.countRows(data.category.tableName, {
+      storeNo: normalizedStoreNo,
+      storeName: data.selectedStore?.storeName || ''
+    });
+
+    return res.json({
+      storeNo: normalizedStoreNo,
+      storeName: data.selectedStore?.storeName || '',
+      requestedInfoType: requestedInfoType || null,
+      selectedCategory: data.category,
+      totalElements: totalCount,
+      columns: data.columns,
+      content: data.rows,
+      limit: data.rowLimit,
+      offset: data.rowOffset
     });
   } catch (error) {
     return handleLiveError(error, next, res);
@@ -203,6 +272,7 @@ async function getBusinessAds(req, res, next) {
 module.exports = {
   getLiveFilters,
   getLiveEntries,
+  getLiveSignal,
   getLiveAds,
   getTopAds,
   getBusinessAdAreas,

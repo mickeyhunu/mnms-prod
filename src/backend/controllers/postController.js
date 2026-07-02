@@ -25,6 +25,24 @@ const BOARD_TYPES = postModel.BOARD_TYPES || {
 const DEFAULT_PAGE = 0;
 const DEFAULT_SIZE = 10;
 const MAX_SIZE = 100;
+const BOARD_LABEL_ALIASES = {
+  전체: 'ALL',
+  all: 'ALL',
+  자유: BOARD_TYPES.FREE,
+  자유게시판: BOARD_TYPES.FREE,
+  익명: BOARD_TYPES.ANON,
+  익명게시판: BOARD_TYPES.ANON,
+  후기: BOARD_TYPES.REVIEW,
+  후기게시판: BOARD_TYPES.REVIEW,
+  썰: BOARD_TYPES.STORY,
+  썰게시판: BOARD_TYPES.STORY,
+  출석: BOARD_TYPES.ATTENDANCE,
+  출석게시판: BOARD_TYPES.ATTENDANCE,
+  질문: BOARD_TYPES.QUESTION,
+  질문게시판: BOARD_TYPES.QUESTION,
+  이벤트: BOARD_TYPES.EVENT,
+  홍보: BOARD_TYPES.PROMOTION
+};
 
 function parsePagination(rawPage, rawSize) {
   const page = Number.parseInt(rawPage, 10);
@@ -39,6 +57,12 @@ function parsePagination(rawPage, rawSize) {
 function parseId(value) {
   const id = Number.parseInt(value, 10);
   return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+function parseBoardTypeOrLabel(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return BOARD_TYPES.FREE;
+  return BOARD_LABEL_ALIASES[raw] || BOARD_LABEL_ALIASES[raw.toLowerCase()] || parseBoardType(raw);
 }
 
 function parseBoardType(value) {
@@ -457,6 +481,39 @@ async function listPosts(req, res, next) {
     res.json({ content: normalizedRows, totalElements: total, page, size, totalPages: Math.ceil(total / size) });
   } catch (error) {
     next(error);
+  }
+}
+
+
+async function searchPostsBySignal(req, res, next) {
+  try {
+    const { page, size, boardType: rawBoardType, board, category, keyword: rawKeyword, title } = req.query;
+    const pagination = parsePagination(page, size);
+    const boardType = parseBoardTypeOrLabel(rawBoardType || board || category);
+    const keyword = String(rawKeyword || title || '').trim();
+
+    if (!keyword) {
+      return res.status(400).json({ message: '게시글 제목 검색어가 필요합니다.' });
+    }
+
+    const { rows, total } = await postModel.listPosts(pagination.page, pagination.size, {
+      keyword,
+      searchType: 'bbs_title',
+      boardType
+    });
+    const normalizedRows = rows.map((item) => sanitizePostForViewer(item, req.user));
+
+    return res.json({
+      boardType,
+      keyword,
+      content: normalizedRows,
+      totalElements: total,
+      page: pagination.page,
+      size: pagination.size,
+      totalPages: Math.ceil(total / pagination.size)
+    });
+  } catch (error) {
+    return next(error);
   }
 }
 
@@ -936,6 +993,7 @@ async function deleteComment(req, res, next) {
 
 module.exports = {
   listPosts,
+  searchPostsBySignal,
   listBestPosts,
   getPost,
   createPost,
