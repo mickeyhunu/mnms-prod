@@ -7,6 +7,7 @@ import App from './App.js';
 
 const INTERACTION_ALLOWED_SELECTOR = 'input, textarea, select, [contenteditable], [role="textbox"], #post-content, #post-content *';
 const ADMIN_INTERACTION_ALLOWED_PATH_PREFIX = '/admin';
+let isDevToolsBlocked = false;
 
 const isLocalEnvironment = () => window.MNMS_PUBLIC_CONFIG?.isLocalEnv === true;
 
@@ -19,6 +20,8 @@ const showDevToolsBlockedScreen = () => {
   if (isLocalEnvironment() || isAdminPage() || document.getElementById('devtools-blocked-screen')) {
     return;
   }
+
+  isDevToolsBlocked = true;
 
   const blockedScreen = document.createElement('div');
   blockedScreen.id = 'devtools-blocked-screen';
@@ -44,7 +47,11 @@ const showDevToolsBlockedScreen = () => {
     </div>
   `;
 
-  document.documentElement.appendChild(blockedScreen);
+  if (document.body) {
+    document.body.replaceChildren(blockedScreen);
+  } else {
+    document.documentElement.replaceChildren(document.head, blockedScreen);
+  }
 };
 
 const bindDevToolsDetector = () => {
@@ -125,4 +132,6 @@ document.addEventListener('selectionchange', (event) => {
   }
 }, true);
 
-createApp(App).use(router).mount('#app');
+if (!isDevToolsBlocked && document.getElementById('app')) {
+  createApp(App).use(router).mount('#app');
+}
