@@ -9,6 +9,7 @@ const router = express.Router();
 
 router.get('/', optionalAuthMiddleware, controller.listPosts);
 router.get('/best', optionalAuthMiddleware, controller.listBestPosts);
+router.get('/search-signal', optionalAuthMiddleware, controller.searchPostsBySignal);
 router.get('/slug/:slug', optionalAuthMiddleware, controller.getPost);
 router.get('/:id', optionalAuthMiddleware, controller.getPost);
 router.post('/', authMiddleware, controller.createPost);
