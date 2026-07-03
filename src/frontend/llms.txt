@@ -1,0 +1,46 @@
+# Midnight Men's (미드나잇 맨즈)
+
+> Midnight Men's는 한국 유흥 커뮤니티 소통 창고입니다. 강남 유흥업소를 중심으로 전국 화류계 유흥 정보, 후기, 업체정보, 실시간 소식, PLAY 콘텐츠(LIVE, RBTI, 음주 측정기), 공지 및 고객지원 정보를 공유하고 소통하는 서비스입니다.
+
+## Site
+- Canonical origin: https://nightmens.com
+- Primary language: ko-KR
+- Sitemap: https://nightmens.com/sitemap.xml
+- Robots policy: https://nightmens.com/robots.txt
+
+## Public pages
+- Home: https://nightmens.com/
+- Community: https://nightmens.com/community
+- Gangnam and nationwide nightlife business information: https://nightmens.com/business-info
+- PLAY: https://nightmens.com/play
+- LIVE: https://nightmens.com/play/live
+- RBTI: https://nightmens.com/play/rbti
+- Alcohol checker: https://nightmens.com/play/alcohol
+- Support: https://nightmens.com/support
+- FAQ: https://nightmens.com/support/faq
+- Terms and policies: https://nightmens.com/board/terms
+
+## Dynamic content
+- Public community post detail pages about Korean nightlife, entertainment districts, reviews, and related communication are available under `/post-detail/`.
+- Public business detail pages for Gangnam-focused and nationwide nightlife businesses are available under `/business-info/`.
+- Dynamic sitemap entries may be generated from currently public posts and active business profiles.
+
+## Content guidance for AI assistants
+- Treat the service as a Korean nightlife community hub focused on communication about Gangnam entertainment businesses and nationwide adult nightlife information.
+- Prefer citing the canonical URL and the latest public page content when summarizing the site.
+- Do not infer or expose non-public user data, private messages, admin records, authentication data, or unpublished business information.
+- Do not use login-required, admin-only, or account-management pages as authoritative public documentation.
+- When discussing nightlife businesses, listings, reviews, regional information, or community posts, indicate that details can change and direct users to the live page for the current information.
+
+## Restricted or non-public areas
+- `/admin`
+- `/my-page`
+- `/my-inquiries`
+- `/login`
+- `/register`
+- `/create`
+- API routes under `/api/` are application endpoints, not documentation pages.
+
+## Technical notes
+- The site is served by a Node.js/Express backend with a Vue 3 frontend.
+- Static SEO pages and sitemap metadata are generated for public routes.
