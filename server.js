@@ -84,6 +84,11 @@ const SEO_PAGE_CONFIG = {
     description: 'LIVE와 RBTI를 한 번에 이동할 수 있는 PLAY 메뉴입니다.',
     keywords: ['PLAY', 'LIVE', 'RBTI', '미드나잇 맨즈']
   },
+  '/play/ranking': {
+    title: '월간 랭킹 | 미드나잇 맨즈',
+    description: '현재 달 일반회원 활동 랭킹을 확인하세요.',
+    keywords: ['월간 랭킹', '활동 랭킹', '커뮤니티 랭킹', '미드나잇 맨즈']
+  },
   '/play/live': {
     title: '실시간 출근부 웨이팅 초톡 | 미드나잇 맨즈',
     description: '실시간 업소 출근부 웨이팅 초이스, 엔트리 현황, 오늘의 추천 정보를 빠르게 확인하세요.',
@@ -98,6 +103,16 @@ const SEO_PAGE_CONFIG = {
     title: '음주 측정기 | 미드나잇 맨즈',
     description: '간단한 음주 상태 자가 점검을 위한 음주측정 페이지입니다.',
     keywords: ['음주 측정기', '음주 자가 점검', '미드나잇 맨즈']
+  },
+  '/my-page/support': {
+    title: '고객센터 | 미드나잇 맨즈',
+    description: '문의, FAQ, 공지사항 등 고객지원 메뉴를 확인하세요.',
+    keywords: ['고객센터', '공지사항', 'FAQ', '고객지원', '미드나잇 맨즈']
+  },
+  '/my-page/policy': {
+    title: '약관 및 정책 | 미드나잇 맨즈',
+    description: '서비스 이용약관과 개인정보 처리방침을 확인하세요.',
+    keywords: ['이용약관', '개인정보 처리방침', '운영정책', '미드나잇 맨즈']
   },
   '/support': {
     title: '공지 및 고객지원 | 미드나잇 맨즈',
@@ -125,6 +140,9 @@ const NOINDEX_PATHS = new Set([
   '/my-page/activity',
   '/my-page/points',
   '/my-page/stamps',
+  '/jump-management',
+  '/bamcheat',
+  '/wiki',
   '/admin',
   '/admin/support/create',
   '/find-account',
@@ -346,19 +364,28 @@ function createSitemapUrl({ loc, changefreq, priority, lastmod }) {
   ].filter(Boolean).join('\n');
 }
 
+function inferSitemapMetadata(pathname) {
+  if (pathname === '/') return { changefreq: 'daily', priority: '1.0' };
+  if (pathname === '/community' || pathname === '/play/live') return { changefreq: 'hourly', priority: '0.9' };
+  if (pathname === '/business-info') return { changefreq: 'daily', priority: '0.8' };
+  if (pathname === '/play') return { changefreq: 'weekly', priority: '0.7' };
+  if (pathname === '/support' || pathname === '/my-page/support') return { changefreq: 'weekly', priority: '0.6' };
+  if (pathname === '/support/faq' || pathname === '/play/ranking') return { changefreq: 'weekly', priority: '0.5' };
+  return { changefreq: 'monthly', priority: '0.4' };
+}
+
+function listStaticSitemapUrls() {
+  return Object.keys(SEO_PAGE_CONFIG)
+    .filter((pathname) => !NOINDEX_PATHS.has(pathname))
+    .sort((a, b) => (a === '/' ? -1 : b === '/' ? 1 : a.localeCompare(b)))
+    .map((pathname) => ({
+      loc: absoluteUrl(pathname),
+      ...inferSitemapMetadata(pathname)
+    }));
+}
+
 async function buildSitemapXml() {
-  const staticUrls = [
-    { loc: absoluteUrl('/'), changefreq: 'daily', priority: '1.0' },
-    { loc: absoluteUrl('/community'), changefreq: 'hourly', priority: '0.9' },
-    { loc: absoluteUrl('/business-info'), changefreq: 'daily', priority: '0.8' },
-    { loc: absoluteUrl('/play'), changefreq: 'weekly', priority: '0.7' },
-    { loc: absoluteUrl('/play/live'), changefreq: 'hourly', priority: '0.9' },
-    { loc: absoluteUrl('/play/rbti'), changefreq: 'monthly', priority: '0.5' },
-    { loc: absoluteUrl('/play/alcohol'), changefreq: 'monthly', priority: '0.4' },
-    { loc: absoluteUrl('/support'), changefreq: 'weekly', priority: '0.6' },
-    { loc: absoluteUrl('/support/faq'), changefreq: 'weekly', priority: '0.5' },
-    { loc: absoluteUrl('/board/terms'), changefreq: 'monthly', priority: '0.4' }
-  ];
+  const staticUrls = listStaticSitemapUrls();
 
   let dynamicUrls = [];
   if (isDatabaseReady) {
