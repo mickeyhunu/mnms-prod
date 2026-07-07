@@ -1996,7 +1996,7 @@ const pageRegistry = {
         </section>
         <div class="wiki-glossary" aria-label="화류업계 용어 카테고리">
         <details class="wiki-glossary-category">
-          <summary><span>💰 비용 · 정산</span><strong>10개</strong></summary>
+          <summary><span>💰 비용 · 정산</span><strong>11개</strong></summary>
           <dl class="wiki-glossary-list">
             <dt>TC (티씨)</dt>
             <dd>여성 종업원이 손님을 접대하고 받는 봉사료.</dd>
@@ -2006,6 +2006,8 @@ const pageRegistry = {
             <dd>술값 및 기본 테이블 이용비.</dd>
             <dt>반티</dt>
             <dd>TC의 절반 금액.</dd>
+            <dt>외티</dt>
+            <dd>외부 TC의 줄임말로, 가게가 아닌 외부에 나가는 비용을 TC로 정산해주는 개념.</dd>
             <dt>꽁</dt>
             <dd>손님을 받지 못하고 퇴근하는 것. ex)꽁쳤다</dd>
             <dt>꽁비 (WT)</dt>
