@@ -10,21 +10,24 @@ const DEFAULT_TITLE = BRAND_NAME;
 const DEFAULT_DESCRIPTION = '남성 유흥 커뮤니티 미드나잇 맨즈에서 최저가 업소 추천, 리얼 후기, 지역별 업소 정보를 빠르게 확인하세요.';
 const DEFAULT_SHARE_IMAGE_PATH = '/src/assets/live-avatars/brand-logo.png';
 
+const HIDDEN_SEARCH_KEYWORD = '강남의밤';
+
 const DEFAULT_KEYWORDS = [
   '남성 유흥 커뮤니티',
   '최저가 업소 추천',
   '업소 리뷰 후기',
   '지역별 업소 정보',
-  '미드나잇 맨즈'
+  '미드나잇 맨즈',
+  HIDDEN_SEARCH_KEYWORD
 ];
 
 const routes = [
-  { path: '/', component: PageView, meta: { pageKey: 'index', title: '남성 유흥 커뮤니티 홈', description: '최저가 업소 추천, 실시간 인기 후기, 지역별 업소 정보를 한 번에 확인하세요.', keywords: ['남성 유흥 커뮤니티', '최저가 업소 추천', '업소 후기', '업소 정보', '실시간 인기글'] } },
+  { path: '/', component: PageView, meta: { pageKey: 'index', title: '남성 유흥 커뮤니티 홈', description: '최저가 업소 추천, 실시간 인기 후기, 지역별 업소 정보를 한 번에 확인하세요.', keywords: ['남성 유흥 커뮤니티', '최저가 업소 추천', '업소 후기', '업소 정보', '실시간 인기글', HIDDEN_SEARCH_KEYWORD] } },
   { path: '/login', component: PageView, meta: { pageKey: 'login', title: '로그인', description: '미드나잇 맨즈 계정으로 로그인하고 커뮤니티 서비스를 이용하세요.', noindex: true } },
   { path: '/register', component: PageView, meta: { pageKey: 'register', title: '회원가입', description: '미드나잇 맨즈 회원가입으로 커뮤니티 활동을 시작하세요.', noindex: true } },
   { path: '/create', component: PageView, meta: { pageKey: 'create-post', title: '게시글 작성', description: '자유게시판, 후기, 질문 게시판에 새 글을 작성해보세요.', noindex: true } },
-  { path: '/post-detail/:slug', component: PageView, meta: { pageKey: 'post-detail', title: '업소 리뷰 상세', description: '회원이 작성한 업소 추천 리뷰, 방문 후기, 가격 정보를 상세하게 확인하세요.', keywords: ['업소 리뷰', '방문 후기', '업소 가격 정보', '추천 업소', '커뮤니티 후기'] } },
-  { path: '/community', component: PageView, meta: { pageKey: 'community', title: '업소 추천 커뮤니티', description: '자유·익명·후기 게시판에서 최저가 업소 추천과 리얼 리뷰 후기를 탐색해보세요.', keywords: ['업소 추천 커뮤니티', '리뷰 후기', '최저가 업소', '익명 게시판', '남성 커뮤니티', '유흥 커뮤니티', '밤문화'] } },
+  { path: '/post-detail/:slug', component: PageView, meta: { pageKey: 'post-detail', title: '업소 리뷰 상세', description: '회원이 작성한 업소 추천 리뷰, 방문 후기, 가격 정보를 상세하게 확인하세요.', keywords: ['업소 리뷰', '방문 후기', '업소 가격 정보', '추천 업소', '커뮤니티 후기', HIDDEN_SEARCH_KEYWORD] } },
+  { path: '/community', component: PageView, meta: { pageKey: 'community', title: '업소 추천 커뮤니티', description: '자유·익명·후기 게시판에서 최저가 업소 추천과 리얼 리뷰 후기를 탐색해보세요.', keywords: ['업소 추천 커뮤니티', '리뷰 후기', '최저가 업소', '익명 게시판', '남성 커뮤니티', '유흥 커뮤니티', '밤문화', HIDDEN_SEARCH_KEYWORD] } },
   { path: '/my-page', component: PageView, meta: { pageKey: 'my-page', title: '마이페이지', description: '내 계정 정보와 활동 내역, 포인트를 확인하세요.', noindex: true } },
   { path: '/my-page/profile', component: PageView, meta: { pageKey: 'my-page-profile', title: '내 프로필', description: '닉네임, 비밀번호 등 내 프로필 정보를 관리하세요.', noindex: true } },
   { path: '/my-page/activity', component: PageView, meta: { pageKey: 'my-page-activity', title: '내 활동', description: '내가 작성한 게시글, 댓글, 활동 기록을 확인하세요.', noindex: true } },
@@ -41,15 +44,15 @@ const routes = [
   { path: '/jump-management', component: PageView, meta: { pageKey: 'jump-management', title: '점프 관리', description: '활성화된 업체 광고의 일일 점프 잔여 횟수와 최근 사용 시간을 확인하고 점프를 사용할 수 있습니다.', noindex: true } },
   { path: '/ad-order-history', component: PageView, meta: { pageKey: 'ad-order-history', title: '스탬프 결제 내역', description: '스탬프 결제완료와 결제취소 내역을 확인하세요.', noindex: true } },
   { path: '/stamp-event-management', component: PageView, meta: { pageKey: 'stamp-event-management', title: '스탬프 이벤트 관리', description: '내 광고에 신청된 방문인증/스탬프사용 신청을 관리하세요.', noindex: true } },
-  { path: '/business-info', component: PageView, meta: { pageKey: 'business-info', title: '업체정보', description: '등록된 업체 정보를 지역과 업종별로 확인하세요.' } },
+  { path: '/business-info', component: PageView, meta: { pageKey: 'business-info', title: '업체정보', description: '등록된 업체 정보를 지역과 업종별로 확인하세요.', keywords: ['업체정보', '지역별 업체', '업종별 업체', '미드나잇 맨즈', HIDDEN_SEARCH_KEYWORD] } },
   { path: '/bamcheat', component: PageView, meta: { pageKey: 'bamcheat', title: '밤치트', description: '기업회원 전용 번호 코멘트 검색 페이지입니다.', noindex: true } },
-  { path: '/business-info/:slug', component: PageView, meta: { pageKey: 'business-info-detail', title: '업체정보 상세', description: '업체의 상세정보와 전화 연결 버튼을 확인하세요.' } },
+  { path: '/business-info/:slug', component: PageView, meta: { pageKey: 'business-info-detail', title: '업체정보 상세', description: '업체의 상세정보와 전화 연결 버튼을 확인하세요.', keywords: ['업체정보', '업체 상세정보', '전화 연결', '미드나잇 맨즈', HIDDEN_SEARCH_KEYWORD] } },
   { path: '/business-apply', component: PageView, meta: { pageKey: 'business-apply', title: '기업회원 신청', description: '기업회원 신청 전 안내 사항을 확인하고 필수 동의 후 사업자정보를 제출하세요.', noindex: true } },
   { path: '/ad-profile-management', component: PageView, meta: { pageKey: 'ad-profile-management', title: '광고프로필 관리', description: '광고프로필 기본 정보와 상세 소개를 등록하고 미리보기를 확인하세요.', noindex: true } },
   { path: '/business-management', component: PageView, meta: { pageKey: 'business-management', title: '사업자정보 관리', description: '사업자등록증, 영업허가증, 사업자 상세정보를 관리하세요.', noindex: true } },
   { path: '/play', component: PageView, meta: { pageKey: 'play', title: 'PLAY', description: 'LIVE와 RBTI를 한 번에 이동할 수 있는 PLAY 메뉴입니다.' } },
   { path: '/play/ranking', component: PageView, meta: { pageKey: 'ranking', title: '월간 랭킹', description: '현재 달 일반회원 활동 랭킹을 확인하세요.' } },
-  { path: '/play/live', component: PageView, meta: { pageKey: 'live', title: '실시간 출근부 웨이팅 초톡', description: '실시간 업소 출근부 웨이팅 초이스, 엔트리 현황, 오늘의 추천 정보를 빠르게 확인하세요.', keywords: ['실시간 업소', '라이브 정보', '오늘의 추천 업소', '엔트리 현황', '지역 업소'] } },
+  { path: '/play/live', component: PageView, meta: { pageKey: 'live', title: '실시간 출근부 웨이팅 초톡', description: '실시간 업소 출근부 웨이팅 초이스, 엔트리 현황, 오늘의 추천 정보를 빠르게 확인하세요.', keywords: ['실시간 업소', '라이브 정보', '오늘의 추천 업소', '엔트리 현황', '지역 업소', HIDDEN_SEARCH_KEYWORD] } },
   { path: '/play/rbti', component: PageView, meta: { pageKey: 'rbti', title: 'RBTI 테스트', description: '유흥 MBTI 성향 테스트 RBTI 검사.' } },
   { path: '/play/alcohol', component: PageView, meta: { pageKey: 'alcohol', title: '음주 측정기', description: '간단한 음주 상태 자가 점검을 위한 음주측정 페이지입니다.' } },
   { path: '/wiki', component: PageView, meta: { pageKey: 'wiki', title: '룸빵위키', description: '화류업계 용어를 카테고리별로 펼쳐볼 수 있는 룸빵위키입니다.', noindex: true } },
