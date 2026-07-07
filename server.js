@@ -63,21 +63,23 @@ app.use(express.urlencoded({ extended: true }));
 app.all('/kcp/callback', authController.handleKcpCallback);
 
 
+const HIDDEN_SEARCH_KEYWORD = '강남의밤';
+
 const SEO_PAGE_CONFIG = {
   '/': {
     title: '남성 유흥 커뮤니티 홈 | 미드나잇 맨즈',
     description: '최저가 업소 추천, 실시간 인기 후기, 지역별 업소 정보를 한 번에 확인하세요.',
-    keywords: ['남성 유흥 커뮤니티', '최저가 업소 추천', '업소 후기', '업소 정보', '실시간 인기글']
+    keywords: ['남성 유흥 커뮤니티', '최저가 업소 추천', '업소 후기', '업소 정보', '실시간 인기글', HIDDEN_SEARCH_KEYWORD]
   },
   '/community': {
     title: '업소 추천 커뮤니티 | 미드나잇 맨즈',
     description: '자유·익명·후기 게시판에서 최저가 업소 추천과 리얼 리뷰 후기를 탐색해보세요.',
-    keywords: ['업소 추천 커뮤니티', '리뷰 후기', '최저가 업소', '익명 게시판', '남성 커뮤니티']
+    keywords: ['업소 추천 커뮤니티', '리뷰 후기', '최저가 업소', '익명 게시판', '남성 커뮤니티', HIDDEN_SEARCH_KEYWORD]
   },
   '/business-info': {
     title: '업체정보 | 미드나잇 맨즈',
     description: '등록된 업체 정보를 지역과 업종별로 확인하세요.',
-    keywords: ['업체정보', '지역별 업체', '업종별 업체', '미드나잇 맨즈']
+    keywords: ['업체정보', '지역별 업체', '업종별 업체', '미드나잇 맨즈', HIDDEN_SEARCH_KEYWORD]
   },
   '/play': {
     title: 'PLAY | 미드나잇 맨즈',
@@ -87,7 +89,7 @@ const SEO_PAGE_CONFIG = {
   '/play/live': {
     title: '실시간 출근부 웨이팅 초톡 | 미드나잇 맨즈',
     description: '실시간 업소 출근부 웨이팅 초이스, 엔트리 현황, 오늘의 추천 정보를 빠르게 확인하세요.',
-    keywords: ['실시간 업소', '라이브 정보', '오늘의 추천 업소', '엔트리 현황', '지역 업소']
+    keywords: ['실시간 업소', '라이브 정보', '오늘의 추천 업소', '엔트리 현황', '지역 업소', HIDDEN_SEARCH_KEYWORD]
   },
   '/play/rbti': {
     title: 'RBTI 테스트 | 미드나잇 맨즈',
@@ -255,7 +257,7 @@ async function createBusinessAdSeo(req) {
     return {
       title: `${titleText} | 미드나잇 맨즈`,
       description,
-      keywords: ['업체정보', titleText, ad.region, ad.district, ad.category, '미드나잇 맨즈'].filter(Boolean),
+      keywords: ['업체정보', titleText, ad.region, ad.district, ad.category, '미드나잇 맨즈', HIDDEN_SEARCH_KEYWORD].filter(Boolean),
       canonicalUrl,
       robots: 'index, follow',
       ogType: 'website',
