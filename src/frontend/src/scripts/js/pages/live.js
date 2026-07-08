@@ -1785,7 +1785,7 @@ function enhanceLiveAvatarImages(root = document) {
 }
 
 function getLiveAvatarImagePath(avatarName) {
-    return `${LIVE_AVATAR_IMAGE_BASE_PATH}/${encodeURIComponent(avatarName)}프로필이미지.png`;
+    return `${LIVE_AVATAR_IMAGE_BASE_PATH}/${encodeURIComponent(avatarName)}프로필이미지.webp`;
 }
 
 function resolveLiveAvatarImageName(title) {
