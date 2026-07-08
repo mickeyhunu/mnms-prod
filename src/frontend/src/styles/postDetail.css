@@ -574,11 +574,13 @@
     line-height: 1.55;
 }
 
-.comment-item.reply,
 .comment-item[data-depth="1"],
-.comment-item[data-depth="2"],
-.comment-item[data-depth="3"] {
+.comment-item[data-depth="2"] {
     margin-left: 20px;
+}
+
+.comment-item[data-depth="3"] {
+    margin-left: 0;
 }
 
 .reply-form-container {
