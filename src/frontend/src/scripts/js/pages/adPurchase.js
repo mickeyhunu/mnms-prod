@@ -78,6 +78,7 @@
     };
 
     const noneBadgeImage = '/src/assets/ad-plan-badges/none-badge.png';
+    const ACTIVATION_REQUIREMENT_MESSAGE = '사업자정보 또는 광고프로필이 등록 상태여야 광고를 활성화할 수 있습니다.';
 
     const state = {
         plan: 'premium',
@@ -235,7 +236,9 @@
         const checked = isSwitchOn();
         const visible = isVisible();
         const businessProfileRegistered = isRegisteredBusinessProfile();
-        const canToggle = Boolean(state.ad?.id) && registered && businessProfileRegistered && !state.isSubmitting;
+        const meetsActivationRequirements = registered && businessProfileRegistered;
+        const canToggle = Boolean(state.ad?.id) && meetsActivationRequirements && !state.isSubmitting;
+        const canClickActivationButton = Boolean(state.ad?.id) && !state.isSubmitting && (!visible || checked);
 
         selectedProduct.textContent = currentPlan.name;
         stampCost.textContent = '스탬프 1개';
@@ -281,7 +284,7 @@
 
 
         if (activationButton) {
-            activationButton.disabled = !canToggle || (visible && !checked);
+            activationButton.disabled = !canClickActivationButton;
             activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '기간 만료 후 중지 예정') : '⚡ 1 스탬프 사용하고 광고 시작하기';
         }
     };
@@ -305,6 +308,11 @@
 
     const updateActivation = async (nextActive, { autoRenew = nextActive } = {}) => {
         if (!state.ad?.id || state.isSubmitting) return;
+        if (nextActive && (!isRegisteredAd() || !isRegisteredBusinessProfile())) {
+            alert(ACTIVATION_REQUIREMENT_MESSAGE);
+            render();
+            return;
+        }
         const currentPlan = plans[state.plan];
         try {
             state.isSubmitting = true;

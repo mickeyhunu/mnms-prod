@@ -1239,7 +1239,7 @@ async function updateMyBusinessAdActivation(req, res, next) {
 
     const businessProfile = await getBusinessProfileByUserId(req.user.id);
     if (!isBusinessProfileRegisteredForAdActivation(businessProfile)) {
-      return res.status(400).json({ message: '광고프로필과 승인 완료된 사업자정보가 모두 등록된 상태에서만 광고를 활성화할 수 있습니다.' });
+      return res.status(400).json({ message: '사업자정보 또는 광고프로필이 등록 상태여야 광고를 활성화할 수 있습니다.' });
     }
 
     const autoRenew = normalizeBooleanPayload(req.body?.autoRenew, true);
