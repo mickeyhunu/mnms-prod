@@ -10,6 +10,8 @@ const ADMIN_INTERACTION_ALLOWED_PATH_PREFIX = '/admin';
 let isDevToolsBlocked = false;
 
 const isLocalEnvironment = () => window.MNMS_PUBLIC_CONFIG?.isLocalEnv === true;
+const isDevToolsBypassAllowed = () => window.MNMS_PUBLIC_CONFIG?.allowDevtools === true;
+const shouldBypassDevToolsProtection = () => isLocalEnvironment() || isDevToolsBypassAllowed();
 
 const isAdminPage = () => {
   const { pathname } = window.location;
@@ -17,7 +19,7 @@ const isAdminPage = () => {
 };
 
 const showDevToolsBlockedScreen = () => {
-  if (isLocalEnvironment() || isAdminPage() || document.getElementById('devtools-blocked-screen')) {
+  if (shouldBypassDevToolsProtection() || isAdminPage() || document.getElementById('devtools-blocked-screen')) {
     return;
   }
 
@@ -55,7 +57,7 @@ const showDevToolsBlockedScreen = () => {
 };
 
 const bindDevToolsDetector = () => {
-  if (isLocalEnvironment()) {
+  if (shouldBypassDevToolsProtection()) {
     return;
   }
 

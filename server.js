@@ -40,6 +40,9 @@ const INDEX_HTML_PATH = path.join(FRONTEND_DIR, 'index.html');
 const SITE_ORIGIN = String(process.env.SITE_ORIGIN || process.env.PUBLIC_SITE_URL || 'https://nightmens.com').replace(/\/$/, '');
 const KAKAO_MAP_APP_KEY = String(process.env.PUBLIC_KAKAO_MAP_APP_KEY || process.env.KAKAO_MAP_JAVASCRIPT_KEY || process.env.KAKAO_MAP_APP_KEY || '').trim();
 const IS_LOCAL_ENV = process.env.MNMS_ENV_LOCAL_LOADED === 'true';
+const ALLOW_DEVTOOLS_DETECTION_BYPASS = ['true', '1', 'yes', 'on'].includes(
+  String(process.env.MNMS_ALLOW_DEVTOOLS || process.env.PUBLIC_ALLOW_DEVTOOLS || '').trim().toLowerCase()
+);
 const DEFAULT_SHARE_IMAGE_URL = absoluteUrl('/src/assets/live-avatars/brand-logo3.png');
 let isDatabaseReady = false;
 const trustProxyValue = String(process.env.TRUST_PROXY || '1').trim();
@@ -328,7 +331,7 @@ function renderSeoHtml(indexHtml, seo) {
     `<meta name="twitter:description" content="${escapeHtml(seo.description)}" />`,
     `<meta name="twitter:image" content="${escapeHtml(seo.imageUrl)}" />`,
     `<script type="application/ld+json" data-seo-jsonld="server">${escapeJsonForHtml(structuredData)}</script>`,
-    `<script>window.MNMS_PUBLIC_CONFIG=${escapeJsonForHtml({ kakaoMapAppKey: KAKAO_MAP_APP_KEY, isLocalEnv: IS_LOCAL_ENV })};</script>`
+    `<script>window.MNMS_PUBLIC_CONFIG=${escapeJsonForHtml({ kakaoMapAppKey: KAKAO_MAP_APP_KEY, isLocalEnv: IS_LOCAL_ENV, allowDevtools: ALLOW_DEVTOOLS_DETECTION_BYPASS })};</script>`
   ].join('\n  ');
 
   return indexHtml
