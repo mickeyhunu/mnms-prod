@@ -42,6 +42,7 @@ const BUSINESS_OCR_STATUS = {
     IDLE: 'idle',
     CHECKING: 'checking',
     VALID: 'valid',
+    REVIEW_REQUESTED: 'review_requested',
     INVALID: 'invalid'
 };
 let kakaoPostcodeLoader = null;
@@ -1619,7 +1620,7 @@ function parseBusinessOcrText(text, { documentLabel = '', fileName = '', confide
 function updateBusinessOcrVisualState(button, state = BUSINESS_OCR_STATUS.IDLE) {
     if (!button) return;
 
-    button.classList.remove('is-ocr-checking', 'is-ocr-valid', 'is-ocr-invalid');
+    button.classList.remove('is-ocr-checking', 'is-ocr-valid', 'is-ocr-invalid', 'is-ocr-review');
     delete button.dataset.ocrStatus;
     delete button.dataset.ocrState;
 
@@ -1631,6 +1632,10 @@ function updateBusinessOcrVisualState(button, state = BUSINESS_OCR_STATUS.IDLE) 
         button.classList.add('is-ocr-valid');
         button.dataset.ocrState = BUSINESS_OCR_STATUS.VALID;
         button.dataset.ocrStatus = '통과';
+    } else if (state === BUSINESS_OCR_STATUS.REVIEW_REQUESTED) {
+        button.classList.add('is-ocr-valid', 'is-ocr-review');
+        button.dataset.ocrState = BUSINESS_OCR_STATUS.REVIEW_REQUESTED;
+        button.dataset.ocrStatus = '관리자검토 요청';
     } else if (state === BUSINESS_OCR_STATUS.INVALID) {
         button.classList.add('is-ocr-invalid');
         button.dataset.ocrState = BUSINESS_OCR_STATUS.INVALID;
@@ -1659,11 +1664,11 @@ async function recognizeBusinessImageFile({ file, imageUrl, documentLabel, uploa
             fileName,
             confidence: recognized?.data?.confidence
         });
-        updateBusinessOcrVisualState(uploadButton, result.isValidDocument ? BUSINESS_OCR_STATUS.VALID : BUSINESS_OCR_STATUS.INVALID);
+        updateBusinessOcrVisualState(uploadButton, result.isValidDocument ? BUSINESS_OCR_STATUS.VALID : BUSINESS_OCR_STATUS.REVIEW_REQUESTED);
         return result;
     } catch (error) {
         if (uploadButton?.dataset.ocrRequestId === requestId) {
-            updateBusinessOcrVisualState(uploadButton, BUSINESS_OCR_STATUS.INVALID);
+            updateBusinessOcrVisualState(uploadButton, BUSINESS_OCR_STATUS.REVIEW_REQUESTED);
         }
         return null;
     }
@@ -1693,7 +1698,7 @@ function hasBusinessImageInspectionPassed(data, imageType = 'license') {
     const hasImage = data[imageNameKey] && data[imageNameKey] !== BUSINESS_IMAGE_PLACEHOLDER;
 
     if (!hasImage) return false;
-    return data[statusKey] === BUSINESS_OCR_STATUS.VALID;
+    return data[statusKey] === BUSINESS_OCR_STATUS.VALID || data[statusKey] === BUSINESS_OCR_STATUS.REVIEW_REQUESTED;
 }
 
 function hasBusinessRegistrationVerificationPassed(data) {
@@ -1754,6 +1759,8 @@ function applyBusinessFormData(savedData) {
     });
     if (savedData.licenseImageOcrStatus === BUSINESS_OCR_STATUS.VALID) {
         updateBusinessOcrVisualState(licenseUploadButton, BUSINESS_OCR_STATUS.VALID);
+    } else if (savedData.licenseImageOcrStatus === BUSINESS_OCR_STATUS.REVIEW_REQUESTED) {
+        updateBusinessOcrVisualState(licenseUploadButton, BUSINESS_OCR_STATUS.REVIEW_REQUESTED);
     }
 
     updateBusinessUploadPreview(permitUploadButton, {
@@ -1762,6 +1769,8 @@ function applyBusinessFormData(savedData) {
     });
     if (savedData.permitImageOcrStatus === BUSINESS_OCR_STATUS.VALID) {
         updateBusinessOcrVisualState(permitUploadButton, BUSINESS_OCR_STATUS.VALID);
+    } else if (savedData.permitImageOcrStatus === BUSINESS_OCR_STATUS.REVIEW_REQUESTED) {
+        updateBusinessOcrVisualState(permitUploadButton, BUSINESS_OCR_STATUS.REVIEW_REQUESTED);
     }
 
     updateBusinessActionButtons();
@@ -1835,7 +1844,7 @@ function bindBusinessManagementEvents() {
         try {
             const formData = collectBusinessManagementFormData();
             if (!isBusinessInfoComplete(formData)) {
-                alert('사업자등록증과 영업허가증 이미지를 모두 첨부하고 이미지 검사 통과 후 필수 항목을 모두 입력해야 신청/저장할 수 있습니다.');
+                alert('사업자등록증과 영업허가증 이미지를 모두 첨부하고 이미지 검사 통과 또는 관리자검토 요청 상태에서 필수 항목을 모두 입력해야 신청/저장할 수 있습니다.');
                 updateBusinessActionButtons();
                 return;
             }
