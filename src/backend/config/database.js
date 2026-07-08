@@ -694,7 +694,9 @@ async function initDatabase() {
     { name: 'daily_jump_remaining', sql: 'ALTER TABLE business_ads ADD COLUMN daily_jump_remaining INT NOT NULL DEFAULT 0 AFTER activated_until' },
     { name: 'jump_reset_date', sql: 'ALTER TABLE business_ads ADD COLUMN jump_reset_date DATE NULL AFTER daily_jump_remaining' },
     { name: 'jumped_at', sql: 'ALTER TABLE business_ads ADD COLUMN jumped_at DATETIME NULL AFTER jump_reset_date' },
-    { name: 'jump_schedule_times', sql: 'ALTER TABLE business_ads ADD COLUMN jump_schedule_times TEXT NULL AFTER jumped_at' },
+    { name: 'display_order', sql: 'ALTER TABLE business_ads ADD COLUMN display_order INT NOT NULL DEFAULT 0 AFTER jumped_at' },
+    { name: 'is_active', sql: 'ALTER TABLE business_ads ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1 AFTER display_order' },
+    { name: 'jump_schedule_times', sql: 'ALTER TABLE business_ads ADD COLUMN jump_schedule_times TEXT NULL AFTER is_active' },
     { name: 'jump_schedule_last_executed_at', sql: 'ALTER TABLE business_ads ADD COLUMN jump_schedule_last_executed_at DATETIME NULL AFTER jump_schedule_times' }
   ];
 
