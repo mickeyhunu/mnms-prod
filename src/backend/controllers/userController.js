@@ -134,6 +134,7 @@ async function verifyBusinessRegistrationNumberWithNts(businessNumber) {
 const AD_REGISTRATION_STATUSES = new Set(['UNREGISTERED', 'DRAFT', 'REGISTERED']);
 const BUSINESS_IMAGE_PLACEHOLDER = '등록할 이미지를 선택해주세요.';
 const BUSINESS_IMAGE_OCR_VALID_STATUS = 'valid';
+const BUSINESS_IMAGE_OCR_REVIEW_REQUESTED_STATUS = 'review_requested';
 const BUSINESS_AD_DEFAULT_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
 
 function isBusinessAdDefaultImageUrl(imageUrl = '') {
@@ -302,7 +303,8 @@ function hasSubmittedBusinessImage(businessInfo = {}, imageNameKey) {
 
 function hasValidBusinessImageInspection(businessInfo = {}, imageNameKey, statusKey) {
   if (!hasSubmittedBusinessImage(businessInfo, imageNameKey)) return false;
-  return String(businessInfo?.[statusKey] || '').trim() === BUSINESS_IMAGE_OCR_VALID_STATUS;
+  const status = String(businessInfo?.[statusKey] || '').trim();
+  return status === BUSINESS_IMAGE_OCR_VALID_STATUS || status === BUSINESS_IMAGE_OCR_REVIEW_REQUESTED_STATUS;
 }
 
 function hasBlockedBusinessImageInspection(businessInfo = {}) {
@@ -1385,7 +1387,7 @@ async function saveMyBusinessProfile(req, res, next) {
     }
 
     if (hasBlockedBusinessImageInspection(businessInfo)) {
-      return res.status(400).json({ message: '이미지 검사 통과 후 사업자정보를 저장할 수 있습니다.' });
+      return res.status(400).json({ message: '이미지 검사 통과 또는 관리자검토 요청 후 사업자정보를 저장할 수 있습니다.' });
     }
 
     let businessRegistrationVerification = null;
@@ -1405,7 +1407,7 @@ async function saveMyBusinessProfile(req, res, next) {
 
       if (!hasValidBusinessImageInspection(businessInfo, 'licenseImageName', 'licenseImageOcrStatus')
         || !hasValidBusinessImageInspection(businessInfo, 'permitImageName', 'permitImageOcrStatus')) {
-        return res.status(400).json({ message: '사업자등록증과 영업허가증 이미지 검사 통과 후 기업회원 신청/사업자정보 저장이 가능합니다.' });
+        return res.status(400).json({ message: '사업자등록증과 영업허가증 이미지 검사 통과 또는 관리자검토 요청 후 기업회원 신청/사업자정보 저장이 가능합니다.' });
       }
 
       businessRegistrationVerification = await verifyBusinessRegistrationNumberWithNts(requiredValues.businessNumber);
