@@ -1029,8 +1029,9 @@ function createCommentItem(comment, depth = 0) {
     currentCommentById.set(String(comment.id), comment);
 
     const div = document.createElement('div');
+    const displayDepth = Math.min(depth, 3);
     div.className = `comment-item ${depth > 0 ? 'reply' : ''}`;
-    div.setAttribute('data-depth', depth);
+    div.setAttribute('data-depth', displayDepth);
     
     const currentUser = Auth.getUser();
     
