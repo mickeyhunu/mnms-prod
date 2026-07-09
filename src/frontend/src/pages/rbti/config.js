@@ -25,6 +25,9 @@ const rbtiTemplate = `
     </header>
 
     <div class="play-tool-content">
+      <div style="margin-top: 18px; border-radius: 18px; text-align: center;">
+        <img src="/src/assets/rbti-avatars/16rbti.png" alt="RBTI 대표 이미지" style="width: 100%; height: auto; margin: 0 auto; border-radius: 18px; display: block;" loading="lazy">
+      </div>
       <div style="margin-top: 18px; border-radius: 18px; padding: 26px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #fff; box-shadow: 0 10px 30px rgba(79,70,229,0.22); text-align: center;">
         <div id="rbti-hero-intro">
           <div style="font-size: 40px; margin-bottom: 8px;">🧠</div>
