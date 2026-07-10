@@ -946,6 +946,8 @@ async function initBusinessProfileDetailPage() {
     const callButton = document.getElementById('business-profile-call-button');
     if (!detail) return;
 
+    if (!requireBusinessInfoDetailAuth()) return;
+
     const adId = window.location.pathname.split('/').filter(Boolean).pop();
     if (!adId || adId === 'business-info') {
         detail.innerHTML = '<p class="text-muted">유효하지 않은 업체정보입니다.</p>';
