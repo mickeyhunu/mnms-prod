@@ -999,11 +999,15 @@ async function initBusinessProfileDetailPage() {
 
 
 function requireBusinessInfoDetailAuth() {
-    if (typeof Auth === 'undefined' || typeof Auth.requireAuth !== 'function') {
+    if (typeof Auth === 'undefined' || typeof Auth.isAuthenticated !== 'function') {
         return true;
     }
 
-    return Auth.requireAuth();
+    if (Auth.isAuthenticated()) return true;
+
+    alert('로그인 후 업체정보를 볼 수 있습니다.');
+    window.location.href = '/login';
+    return false;
 }
 
 function navigateToBusinessInfoDetail(item) {
