@@ -946,6 +946,8 @@ async function initBusinessProfileDetailPage() {
     const callButton = document.getElementById('business-profile-call-button');
     if (!detail) return;
 
+    if (!requireBusinessInfoDetailAuth()) return;
+
     const adId = window.location.pathname.split('/').filter(Boolean).pop();
     if (!adId || adId === 'business-info') {
         detail.innerHTML = '<p class="text-muted">유효하지 않은 업체정보입니다.</p>';
@@ -995,6 +997,21 @@ async function initBusinessProfileDetailPage() {
     }
 }
 
+
+function requireBusinessInfoDetailAuth() {
+    if (typeof Auth === 'undefined' || typeof Auth.requireAuth !== 'function') {
+        return true;
+    }
+
+    return Auth.requireAuth();
+}
+
+function navigateToBusinessInfoDetail(item) {
+    if (!item || !requireBusinessInfoDetailAuth()) return;
+
+    window.location.href = item.dataset.businessAdUrl || createBusinessInfoDetailPath(item.dataset.businessAdId);
+}
+
 function bindBusinessProfileModalEvents() {
     const list = document.getElementById('business-directory-list');
     const modal = document.getElementById('business-profile-modal');
@@ -1002,7 +1019,7 @@ function bindBusinessProfileModalEvents() {
     list?.addEventListener('click', (event) => {
         const item = event.target.closest('[data-business-ad-id]');
         if (!item) return;
-        window.location.href = item.dataset.businessAdUrl || createBusinessInfoDetailPath(item.dataset.businessAdId);
+        navigateToBusinessInfoDetail(item);
     });
 
     list?.addEventListener('keydown', (event) => {
@@ -1010,7 +1027,7 @@ function bindBusinessProfileModalEvents() {
         const item = event.target.closest('[data-business-ad-id]');
         if (!item) return;
         event.preventDefault();
-        window.location.href = item.dataset.businessAdUrl || createBusinessInfoDetailPath(item.dataset.businessAdId);
+        navigateToBusinessInfoDetail(item);
     });
 
     modal?.addEventListener('click', (event) => {
