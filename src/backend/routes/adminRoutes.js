@@ -376,7 +376,7 @@ router.put('/users/:id', async (req, res, next) => {
       return res.status(400).json({ message: '이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.' });
     }
 
-    const effectiveMemberType = businessApprovalStatus === 'APPROVED'
+    const effectiveMemberType = role === 'BUSINESS' || businessApprovalStatus === 'APPROVED'
       ? 'BUSINESS'
       : (businessApprovalStatus === 'REJECTED' ? 'MEMBER' : memberType);
 
@@ -442,7 +442,7 @@ router.patch('/users/:id/role', async (req, res, next) => {
     const id = Number.parseInt(req.params.id, 10);
     const role = String(req.body?.role || '').toUpperCase();
     if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 회원 ID입니다.' });
-    if (!['MEMBER', 'ADMIN'].includes(role)) return res.status(400).json({ message: '유효하지 않은 권한입니다.' });
+    if (!['MEMBER', 'BUSINESS', 'ADMIN'].includes(role)) return res.status(400).json({ message: '유효하지 않은 권한입니다.' });
     if (!isMasterAdminUser(req.user)) {
       return res.status(403).json({ message: '마스터 관리자만 관리자 권한을 변경할 수 있습니다.' });
     }
