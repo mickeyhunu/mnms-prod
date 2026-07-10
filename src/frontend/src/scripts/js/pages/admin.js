@@ -1975,6 +1975,7 @@ function bindUserEditForm() {
     accountStatusEl?.addEventListener('change', syncLoginRestrictionFields);
     loginRestrictionPermanentEl?.addEventListener('change', syncLoginRestrictionFields);
     businessApprovalStatusEl?.addEventListener('change', syncBusinessRejectionReasonField);
+    document.getElementById('admin-user-role')?.addEventListener('change', syncMemberTypeForBusinessRole);
 }
 
 function syncBusinessRejectionReasonField() {
@@ -1988,6 +1989,14 @@ function syncBusinessRejectionReasonField() {
         if (!isRejected) reasonEl.value = '';
     }
     if (reasonField) reasonField.classList.toggle('admin-user-business-rejection-reason-field--disabled', !isRejected);
+}
+
+function syncMemberTypeForBusinessRole() {
+    const roleEl = document.getElementById('admin-user-role');
+    const memberTypeEl = document.getElementById('admin-user-member-type');
+    if (roleEl?.value === 'BUSINESS' && memberTypeEl) {
+        memberTypeEl.value = 'BUSINESS';
+    }
 }
 
 function fillUserEditForm(user) {
@@ -2009,6 +2018,7 @@ function fillUserEditForm(user) {
         roleSelect.disabled = !isMasterAdmin;
     }
     document.getElementById('admin-user-member-type').value = user.memberType || 'MEMBER';
+    syncMemberTypeForBusinessRole();
     const businessProfile = user.businessProfile || null;
     document.getElementById('admin-user-business-approval-status').value = businessProfile?.approvalStatus || '';
     document.getElementById('admin-user-business-rejection-reason').value = businessProfile?.rejectionReason || '';
@@ -2108,7 +2118,9 @@ async function saveUserDetail() {
     const pointAdjustmentAmount = Number.parseInt(document.getElementById('admin-user-point-adjustment-amount')?.value || '0', 10);
     const pointAdjustmentReason = document.getElementById('admin-user-point-adjustment-reason')?.value?.trim() || '';
     const role = document.getElementById('admin-user-role')?.value || 'MEMBER';
-    const memberType = document.getElementById('admin-user-member-type')?.value || 'MEMBER';
+    const memberType = role === 'BUSINESS'
+        ? 'BUSINESS'
+        : (document.getElementById('admin-user-member-type')?.value || 'MEMBER');
     const businessApprovalStatus = document.getElementById('admin-user-business-approval-status')?.value || '';
     const businessRejectionReason = document.getElementById('admin-user-business-rejection-reason')?.value?.trim() || '';
     const smsConsent = document.getElementById('admin-user-sms-consent')?.checked || false;

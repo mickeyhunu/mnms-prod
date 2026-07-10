@@ -655,7 +655,25 @@ async function getUserActivityOverview(userId, { limit = 1000 } = {}) {
 
 async function updateUserRole(userId, role) {
   const pool = getPool();
-  await pool.query('UPDATE users SET role = ? WHERE id = ?', [role, userId]);
+  const normalizedRole = String(role || '').trim().toUpperCase();
+
+  if (normalizedRole !== 'BUSINESS') {
+    await pool.query('UPDATE users SET role = ? WHERE id = ?', [normalizedRole, userId]);
+    return;
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    await freezeUserCommunityAuthorSnapshotsBeforeBusinessConversion(userId, connection);
+    await connection.query('UPDATE users SET role = ?, member_type = ? WHERE id = ?', [normalizedRole, 'BUSINESS', userId]);
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 
 
