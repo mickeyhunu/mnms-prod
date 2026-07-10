@@ -995,6 +995,25 @@ async function initBusinessProfileDetailPage() {
     }
 }
 
+
+function requireBusinessInfoDetailAuth() {
+    if (typeof Auth === 'undefined' || typeof Auth.isAuthenticated !== 'function') {
+        return true;
+    }
+
+    if (Auth.isAuthenticated()) return true;
+
+    alert('로그인 후 업체정보를 볼 수 있습니다.');
+    window.location.href = '/login';
+    return false;
+}
+
+function navigateToBusinessInfoDetail(item) {
+    if (!item || !requireBusinessInfoDetailAuth()) return;
+
+    window.location.href = item.dataset.businessAdUrl || createBusinessInfoDetailPath(item.dataset.businessAdId);
+}
+
 function bindBusinessProfileModalEvents() {
     const list = document.getElementById('business-directory-list');
     const modal = document.getElementById('business-profile-modal');
@@ -1002,7 +1021,7 @@ function bindBusinessProfileModalEvents() {
     list?.addEventListener('click', (event) => {
         const item = event.target.closest('[data-business-ad-id]');
         if (!item) return;
-        window.location.href = item.dataset.businessAdUrl || createBusinessInfoDetailPath(item.dataset.businessAdId);
+        navigateToBusinessInfoDetail(item);
     });
 
     list?.addEventListener('keydown', (event) => {
@@ -1010,7 +1029,7 @@ function bindBusinessProfileModalEvents() {
         const item = event.target.closest('[data-business-ad-id]');
         if (!item) return;
         event.preventDefault();
-        window.location.href = item.dataset.businessAdUrl || createBusinessInfoDetailPath(item.dataset.businessAdId);
+        navigateToBusinessInfoDetail(item);
     });
 
     modal?.addEventListener('click', (event) => {
