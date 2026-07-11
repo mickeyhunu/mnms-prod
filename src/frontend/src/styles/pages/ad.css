@@ -1572,6 +1572,48 @@
     line-height: 1.6;
 }
 
+
+.ad-profile-editor-image-resize {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-top: 1px solid #e9ecef;
+    background: #fff;
+    color: #495057;
+    font-size: 13px;
+}
+
+.ad-profile-editor-image-resize.hidden {
+    display: none;
+}
+
+.ad-profile-editor-image-resize label {
+    flex: 0 0 auto;
+    font-weight: 700;
+}
+
+.ad-profile-editor-image-resize input[type="range"] {
+    flex: 1;
+    min-width: 120px;
+}
+
+.ad-profile-editor-image-resize output {
+    flex: 0 0 44px;
+    text-align: right;
+    font-weight: 700;
+}
+
+.ad-profile-editor--quill .ql-editor img {
+    max-width: 100%;
+    height: auto;
+}
+
+.ad-profile-editor--quill .ql-editor img.ad-profile-editor-image-selected {
+    outline: 2px solid #495057;
+    outline-offset: 2px;
+}
+
 .ad-profile-editor--quill .ql-editor.ql-blank::before {
     color: #9ca3af;
     font-style: normal;
