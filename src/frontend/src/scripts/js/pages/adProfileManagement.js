@@ -509,10 +509,38 @@ function sanitizeAdProfilePreviewRichText(rawValue) {
     const template = document.createElement('template');
     template.innerHTML = value;
 
+    const normalizeSafeStyleValue = (property, value) => {
+        const normalizedValue = String(value || '').trim();
+        if (!normalizedValue || /url\s*\(|expression\s*\(|javascript:/iu.test(normalizedValue)) return '';
+
+        if (['width', 'max-width'].includes(property)) {
+            const percentMatch = normalizedValue.match(/^(\d{1,3})(?:\.\d+)?%$/u);
+            if (!percentMatch) return '';
+            const width = Number(percentMatch[1]);
+            return Number.isFinite(width) && width >= 20 && width <= 100 ? `${width}%` : '';
+        }
+        if (property === 'height') return normalizedValue.toLowerCase() === 'auto' ? 'auto' : '';
+        if (property === 'display') return ['block', 'inline-block'].includes(normalizedValue.toLowerCase()) ? normalizedValue.toLowerCase() : '';
+        if (property === 'text-align') return ['left', 'center', 'right', 'justify'].includes(normalizedValue.toLowerCase()) ? normalizedValue.toLowerCase() : '';
+
+        const isSafeColorValue = /^#[0-9a-f]{3,8}$/iu.test(normalizedValue)
+            || /^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/iu.test(normalizedValue)
+            || /^hsla?\(\s*\d{1,3}(?:deg)?\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/iu.test(normalizedValue)
+            || /^[a-z]+$/iu.test(normalizedValue);
+        return isSafeColorValue ? normalizedValue : '';
+    };
+
     const sanitizeStyle = (styleValue = '') => String(styleValue || '')
         .split(';')
-        .map((rule) => rule.trim())
-        .filter((rule) => /^(color|background-color|text-align|width|max-width|height|display)\s*:/iu.test(rule))
+        .reduce((styles, rule) => {
+            const separatorIndex = rule.indexOf(':');
+            if (separatorIndex === -1) return styles;
+            const property = rule.slice(0, separatorIndex).trim().toLowerCase();
+            if (!['color', 'background-color', 'text-align', 'width', 'max-width', 'height', 'display'].includes(property)) return styles;
+            const safeValue = normalizeSafeStyleValue(property, rule.slice(separatorIndex + 1));
+            if (safeValue) styles.push(`${property}: ${safeValue}`);
+            return styles;
+        }, [])
         .join('; ');
 
     const sanitizeNode = (node) => {

@@ -481,12 +481,20 @@ function sanitizeBusinessRichText(value) {
         'ql-size-large',
         'ql-size-huge'
     ]);
-    const allowedStyleProperties = new Set(['color', 'background-color', 'text-align']);
+    const allowedStyleProperties = new Set(['color', 'background-color', 'text-align', 'width', 'max-width', 'height', 'display']);
 
     const normalizeSafeStyleValue = (property, value) => {
         const normalizedValue = String(value || '').trim();
         if (!normalizedValue || /url\s*\(|expression\s*\(|javascript:/i.test(normalizedValue)) return '';
 
+        if (['width', 'max-width'].includes(property)) {
+            const percentMatch = normalizedValue.match(/^(\d{1,3})(?:\.\d+)?%$/u);
+            if (!percentMatch) return '';
+            const width = Number(percentMatch[1]);
+            return Number.isFinite(width) && width >= 20 && width <= 100 ? `${width}%` : '';
+        }
+        if (property === 'height') return normalizedValue.toLowerCase() === 'auto' ? 'auto' : '';
+        if (property === 'display') return ['block', 'inline-block'].includes(normalizedValue.toLowerCase()) ? normalizedValue.toLowerCase() : '';
         if (property === 'text-align') {
             return ['left', 'center', 'right', 'justify'].includes(normalizedValue.toLowerCase()) ? normalizedValue.toLowerCase() : '';
         }
