@@ -29,7 +29,8 @@ const adProfileState = {
     syncPreview: null,
     descriptionEditor: null,
     currentPlanType: 'BASIC',
-    isCurrentlyVisible: false
+    isCurrentlyVisible: false,
+    selectedEditorImage: null
 };
 const DEFAULT_AD_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
@@ -203,6 +204,23 @@ function syncDescriptionInputFromEditor() {
     return getQuillPlainText(adProfileState.descriptionEditor);
 }
 
+function getEditorImageWidthPercent(imageElement) {
+    const rawWidth = String(imageElement?.style?.width || imageElement?.getAttribute('width') || '100%').trim();
+    const percentMatch = rawWidth.match(/^(\d{1,3})(?:\.\d+)?%$/u);
+    const numericWidth = percentMatch ? Number(percentMatch[1]) : Number.parseInt(rawWidth, 10);
+    if (Number.isFinite(numericWidth)) return Math.min(100, Math.max(20, Math.round(numericWidth / 5) * 5));
+    return 100;
+}
+
+function applyEditorImageWidth(imageElement, widthPercent) {
+    if (!imageElement) return;
+    const normalizedWidth = Math.min(100, Math.max(20, Number.parseInt(widthPercent, 10) || 100));
+    imageElement.style.width = `${normalizedWidth}%`;
+    imageElement.style.maxWidth = '100%';
+    imageElement.style.height = 'auto';
+    imageElement.style.display = normalizedWidth >= 100 ? 'block' : 'inline-block';
+}
+
 function setDescriptionEditorHtml(html) {
     const normalizedHtml = String(html || '').trim();
     const descriptionInput = document.getElementById('ad-profile-description');
@@ -222,6 +240,9 @@ function bindDescriptionEditor({ syncPreview, saveDraftData: saveDraftDataCallba
     const descriptionInput = document.getElementById('ad-profile-description');
     const descriptionEditor = document.getElementById('ad-profile-description-editor');
     const editorImageInput = document.getElementById('ad-profile-editor-image-input');
+    const imageResizeControl = document.getElementById('ad-profile-editor-image-resize');
+    const imageSizeInput = document.getElementById('ad-profile-editor-image-size');
+    const imageSizeValue = document.getElementById('ad-profile-editor-image-size-value');
 
     if (!descriptionInput || !descriptionEditor) return;
 
@@ -229,6 +250,19 @@ function bindDescriptionEditor({ syncPreview, saveDraftData: saveDraftDataCallba
         syncDescriptionInputFromEditor();
         syncPreview();
         saveDraftDataCallback();
+    };
+
+    const setSelectedEditorImage = (imageElement) => {
+        if (adProfileState.selectedEditorImage && adProfileState.selectedEditorImage !== imageElement) {
+            adProfileState.selectedEditorImage.classList.remove('ad-profile-editor-image-selected');
+        }
+        adProfileState.selectedEditorImage = imageElement || null;
+        imageResizeControl?.classList.toggle('hidden', !imageElement);
+        if (!imageElement) return;
+        imageElement.classList.add('ad-profile-editor-image-selected');
+        const widthPercent = getEditorImageWidthPercent(imageElement);
+        if (imageSizeInput) imageSizeInput.value = String(widthPercent);
+        if (imageSizeValue) imageSizeValue.textContent = `${widthPercent}%`;
     };
 
     if (!window.Quill) {
@@ -266,6 +300,19 @@ function bindDescriptionEditor({ syncPreview, saveDraftData: saveDraftDataCallba
         if (!range) saveDraftDataCallback();
     });
 
+    quill.root.addEventListener('click', (event) => {
+        const targetImage = event.target?.closest?.('img');
+        setSelectedEditorImage(targetImage || null);
+    });
+
+    imageSizeInput?.addEventListener('input', () => {
+        const selectedImage = adProfileState.selectedEditorImage;
+        if (!selectedImage || !quill.root.contains(selectedImage)) return setSelectedEditorImage(null);
+        applyEditorImageWidth(selectedImage, imageSizeInput.value);
+        if (imageSizeValue) imageSizeValue.textContent = `${imageSizeInput.value}%`;
+        notifyEditorChanged();
+    });
+
     editorImageInput?.addEventListener('change', async () => {
         const file = editorImageInput.files?.[0];
         if (!file || !file.type.startsWith('image/')) return;
@@ -276,6 +323,9 @@ function bindDescriptionEditor({ syncPreview, saveDraftData: saveDraftDataCallba
             const insertIndex = selection ? selection.index : quill.getLength();
             quill.insertEmbed(insertIndex, 'image', imageUrl, 'user');
             quill.setSelection(insertIndex + 1, 0, 'silent');
+            const insertedImage = quill.root.querySelectorAll('img')[quill.root.querySelectorAll('img').length - 1];
+            applyEditorImageWidth(insertedImage, 100);
+            setSelectedEditorImage(insertedImage);
             notifyEditorChanged();
         } catch (error) {
             showSaveMessage(error.message || '에디터 이미지 첨부에 실패했습니다.');
@@ -459,10 +509,38 @@ function sanitizeAdProfilePreviewRichText(rawValue) {
     const template = document.createElement('template');
     template.innerHTML = value;
 
+    const normalizeSafeStyleValue = (property, value) => {
+        const normalizedValue = String(value || '').trim();
+        if (!normalizedValue || /url\s*\(|expression\s*\(|javascript:/iu.test(normalizedValue)) return '';
+
+        if (['width', 'max-width'].includes(property)) {
+            const percentMatch = normalizedValue.match(/^(\d{1,3})(?:\.\d+)?%$/u);
+            if (!percentMatch) return '';
+            const width = Number(percentMatch[1]);
+            return Number.isFinite(width) && width >= 20 && width <= 100 ? `${width}%` : '';
+        }
+        if (property === 'height') return normalizedValue.toLowerCase() === 'auto' ? 'auto' : '';
+        if (property === 'display') return ['block', 'inline-block'].includes(normalizedValue.toLowerCase()) ? normalizedValue.toLowerCase() : '';
+        if (property === 'text-align') return ['left', 'center', 'right', 'justify'].includes(normalizedValue.toLowerCase()) ? normalizedValue.toLowerCase() : '';
+
+        const isSafeColorValue = /^#[0-9a-f]{3,8}$/iu.test(normalizedValue)
+            || /^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/iu.test(normalizedValue)
+            || /^hsla?\(\s*\d{1,3}(?:deg)?\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/iu.test(normalizedValue)
+            || /^[a-z]+$/iu.test(normalizedValue);
+        return isSafeColorValue ? normalizedValue : '';
+    };
+
     const sanitizeStyle = (styleValue = '') => String(styleValue || '')
         .split(';')
-        .map((rule) => rule.trim())
-        .filter((rule) => /^(color|background-color|text-align)\s*:/iu.test(rule))
+        .reduce((styles, rule) => {
+            const separatorIndex = rule.indexOf(':');
+            if (separatorIndex === -1) return styles;
+            const property = rule.slice(0, separatorIndex).trim().toLowerCase();
+            if (!['color', 'background-color', 'text-align', 'width', 'max-width', 'height', 'display'].includes(property)) return styles;
+            const safeValue = normalizeSafeStyleValue(property, rule.slice(separatorIndex + 1));
+            if (safeValue) styles.push(`${property}: ${safeValue}`);
+            return styles;
+        }, [])
         .join('; ');
 
     const sanitizeNode = (node) => {
