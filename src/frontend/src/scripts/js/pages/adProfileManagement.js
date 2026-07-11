@@ -29,7 +29,8 @@ const adProfileState = {
     syncPreview: null,
     descriptionEditor: null,
     currentPlanType: 'BASIC',
-    isCurrentlyVisible: false
+    isCurrentlyVisible: false,
+    selectedEditorImage: null
 };
 const DEFAULT_AD_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
@@ -203,6 +204,23 @@ function syncDescriptionInputFromEditor() {
     return getQuillPlainText(adProfileState.descriptionEditor);
 }
 
+function getEditorImageWidthPercent(imageElement) {
+    const rawWidth = String(imageElement?.style?.width || imageElement?.getAttribute('width') || '100%').trim();
+    const percentMatch = rawWidth.match(/^(\d{1,3})(?:\.\d+)?%$/u);
+    const numericWidth = percentMatch ? Number(percentMatch[1]) : Number.parseInt(rawWidth, 10);
+    if (Number.isFinite(numericWidth)) return Math.min(100, Math.max(20, Math.round(numericWidth / 5) * 5));
+    return 100;
+}
+
+function applyEditorImageWidth(imageElement, widthPercent) {
+    if (!imageElement) return;
+    const normalizedWidth = Math.min(100, Math.max(20, Number.parseInt(widthPercent, 10) || 100));
+    imageElement.style.width = `${normalizedWidth}%`;
+    imageElement.style.maxWidth = '100%';
+    imageElement.style.height = 'auto';
+    imageElement.style.display = normalizedWidth >= 100 ? 'block' : 'inline-block';
+}
+
 function setDescriptionEditorHtml(html) {
     const normalizedHtml = String(html || '').trim();
     const descriptionInput = document.getElementById('ad-profile-description');
@@ -222,6 +240,9 @@ function bindDescriptionEditor({ syncPreview, saveDraftData: saveDraftDataCallba
     const descriptionInput = document.getElementById('ad-profile-description');
     const descriptionEditor = document.getElementById('ad-profile-description-editor');
     const editorImageInput = document.getElementById('ad-profile-editor-image-input');
+    const imageResizeControl = document.getElementById('ad-profile-editor-image-resize');
+    const imageSizeInput = document.getElementById('ad-profile-editor-image-size');
+    const imageSizeValue = document.getElementById('ad-profile-editor-image-size-value');
 
     if (!descriptionInput || !descriptionEditor) return;
 
@@ -229,6 +250,19 @@ function bindDescriptionEditor({ syncPreview, saveDraftData: saveDraftDataCallba
         syncDescriptionInputFromEditor();
         syncPreview();
         saveDraftDataCallback();
+    };
+
+    const setSelectedEditorImage = (imageElement) => {
+        if (adProfileState.selectedEditorImage && adProfileState.selectedEditorImage !== imageElement) {
+            adProfileState.selectedEditorImage.classList.remove('ad-profile-editor-image-selected');
+        }
+        adProfileState.selectedEditorImage = imageElement || null;
+        imageResizeControl?.classList.toggle('hidden', !imageElement);
+        if (!imageElement) return;
+        imageElement.classList.add('ad-profile-editor-image-selected');
+        const widthPercent = getEditorImageWidthPercent(imageElement);
+        if (imageSizeInput) imageSizeInput.value = String(widthPercent);
+        if (imageSizeValue) imageSizeValue.textContent = `${widthPercent}%`;
     };
 
     if (!window.Quill) {
@@ -266,6 +300,19 @@ function bindDescriptionEditor({ syncPreview, saveDraftData: saveDraftDataCallba
         if (!range) saveDraftDataCallback();
     });
 
+    quill.root.addEventListener('click', (event) => {
+        const targetImage = event.target?.closest?.('img');
+        setSelectedEditorImage(targetImage || null);
+    });
+
+    imageSizeInput?.addEventListener('input', () => {
+        const selectedImage = adProfileState.selectedEditorImage;
+        if (!selectedImage || !quill.root.contains(selectedImage)) return setSelectedEditorImage(null);
+        applyEditorImageWidth(selectedImage, imageSizeInput.value);
+        if (imageSizeValue) imageSizeValue.textContent = `${imageSizeInput.value}%`;
+        notifyEditorChanged();
+    });
+
     editorImageInput?.addEventListener('change', async () => {
         const file = editorImageInput.files?.[0];
         if (!file || !file.type.startsWith('image/')) return;
@@ -276,6 +323,9 @@ function bindDescriptionEditor({ syncPreview, saveDraftData: saveDraftDataCallba
             const insertIndex = selection ? selection.index : quill.getLength();
             quill.insertEmbed(insertIndex, 'image', imageUrl, 'user');
             quill.setSelection(insertIndex + 1, 0, 'silent');
+            const insertedImage = quill.root.querySelectorAll('img')[quill.root.querySelectorAll('img').length - 1];
+            applyEditorImageWidth(insertedImage, 100);
+            setSelectedEditorImage(insertedImage);
             notifyEditorChanged();
         } catch (error) {
             showSaveMessage(error.message || '에디터 이미지 첨부에 실패했습니다.');
@@ -462,7 +512,7 @@ function sanitizeAdProfilePreviewRichText(rawValue) {
     const sanitizeStyle = (styleValue = '') => String(styleValue || '')
         .split(';')
         .map((rule) => rule.trim())
-        .filter((rule) => /^(color|background-color|text-align)\s*:/iu.test(rule))
+        .filter((rule) => /^(color|background-color|text-align|width|max-width|height|display)\s*:/iu.test(rule))
         .join('; ');
 
     const sanitizeNode = (node) => {
