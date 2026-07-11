@@ -318,6 +318,11 @@ const pageRegistry = {
                         </div>
                         <input id="ad-profile-editor-image-input" class="hidden" accept="image/*" type="file">
                         <div id="ad-profile-description-editor" class="ad-profile-editor-content"></div>
+                        <div id="ad-profile-editor-image-resize" class="ad-profile-editor-image-resize hidden" aria-live="polite">
+                            <label for="ad-profile-editor-image-size">이미지 크기</label>
+                            <input id="ad-profile-editor-image-size" type="range" min="20" max="100" step="5" value="100" aria-label="상세정보 이미지 크기 조정">
+                            <output id="ad-profile-editor-image-size-value" for="ad-profile-editor-image-size">100%</output>
+                        </div>
                     </div>
                     <textarea id="ad-profile-description" class="hidden" maxlength="1000" placeholder="내용을 입력해주세요." required></textarea>
                 </div>
