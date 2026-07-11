@@ -1610,8 +1610,7 @@
 }
 
 .ad-profile-editor--quill .ql-editor img.ad-profile-editor-image-selected {
-    outline: 2px solid #495057;
-    outline-offset: 2px;
+    outline: 5px solid #7aff00;
 }
 
 .ad-profile-editor--quill .ql-editor.ql-blank::before {
