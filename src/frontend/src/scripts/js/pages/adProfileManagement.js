@@ -221,6 +221,22 @@ function applyEditorImageWidth(imageElement, widthPercent) {
     imageElement.style.display = normalizedWidth >= 100 ? 'block' : 'inline-block';
 }
 
+function restoreEditorImageWidthsFromHtml(sourceHtml, editorRoot) {
+    if (!sourceHtml || !editorRoot) return;
+
+    const template = document.createElement('template');
+    template.innerHTML = String(sourceHtml || '');
+    const sourceImages = Array.from(template.content.querySelectorAll('img'));
+    if (!sourceImages.length) return;
+
+    Array.from(editorRoot.querySelectorAll('img')).forEach((editorImage, index) => {
+        const sourceImage = sourceImages[index];
+        if (!sourceImage) return;
+        const widthPercent = getEditorImageWidthPercent(sourceImage);
+        applyEditorImageWidth(editorImage, widthPercent);
+    });
+}
+
 function setDescriptionEditorHtml(html) {
     const normalizedHtml = String(html || '').trim();
     const descriptionInput = document.getElementById('ad-profile-description');
@@ -232,6 +248,7 @@ function setDescriptionEditorHtml(html) {
     quill.setContents([], 'silent');
     if (normalizedHtml) {
         quill.clipboard.dangerouslyPasteHTML(normalizedHtml, 'silent');
+        restoreEditorImageWidthsFromHtml(normalizedHtml, quill.root);
     }
     syncDescriptionInputFromEditor();
 }
