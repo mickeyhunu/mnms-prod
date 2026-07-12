@@ -100,9 +100,9 @@ const SEO_PAGE_CONFIG = {
     keywords: ['실시간 업소', '라이브 정보', '오늘의 추천 업소', '엔트리 현황', '지역 업소', HIDDEN_SEARCH_KEYWORD]
   },
   '/play/rbti': {
-    title: '룸MBTI RBTI 룸비티아이 테스트 | 미드나잇 맨즈',
-    description: '룸MBTI, RBTI, 룸비티아이로 알아보는 화류 유형 검사와 룸빵 유형 검사입니다. 유흥주점 이용 행동 성향을 간단히 확인하세요.',
-    keywords: ['룸mbti', 'rbti', '룸비티아이', '화류 유형 검사', '룸빵 유형 검사', '유흥 MBTI', '성향 테스트', '미드나잇 맨즈']
+    title: 'RBTI 룸MBTI 룸비티아이 테스트 | 미드나잇 맨즈',
+    description: 'RBTI, 룸MBTI 룸비티아이로 알아보는 화류 유형 검사 룸빵 유형 검사입니다. 유흥주점 이용 행동 성향을 간단히 확인하세요.',
+    keywords: ['rbti', '룸mbti', '룸비티아이', '화류 유형 검사', '룸빵 유형 검사', '유흥 MBTI', '성향 테스트', '미드나잇 맨즈']
   },
   '/play/alcohol': {
     title: '음주 측정기 | 미드나잇 맨즈',
