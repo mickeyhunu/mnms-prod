@@ -14,7 +14,7 @@
 - Gangnam and nationwide nightlife business information: https://nightmens.com/business-info
 - PLAY: https://nightmens.com/play
 - LIVE: https://nightmens.com/play/live
-- RBTI: https://nightmens.com/play/rbti
+- RBTI / 룸MBTI / 룸비티아이 / 화류 유형 검사 / 룸빵 유형 검사: https://nightmens.com/play/rbti
 - Alcohol checker: https://nightmens.com/play/alcohol
 - Support: https://nightmens.com/support
 - FAQ: https://nightmens.com/support/faq

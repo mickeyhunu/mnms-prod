@@ -31,10 +31,10 @@ const rbtiTemplate = `
       <div style="margin-top: 18px; border-radius: 18px; padding: 26px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #fff; box-shadow: 0 10px 30px rgba(79,70,229,0.22); text-align: center;">
         <div id="rbti-hero-intro">
           <div style="font-size: 40px; margin-bottom: 8px;">🧠</div>
-          <h1 id="rbti-test-title" style="font-size: 30px; margin: 0 0 8px; font-weight: 800;">RBTI</h1>
+          <h1 id="rbti-test-title" style="font-size: 30px; margin: 0 0 8px; font-weight: 800;">룸MBTI RBTI 룸비티아이</h1>
           <p id="rbti-test-description" style="margin: 0; color: rgba(255,255,255,0.92); white-space: pre-line;">Room Behavior Type Indicator
 
-밤문화 성향검사</p>
+화류 유형 검사 · 룸빵 유형 검사</p>
         </div>
         <div id="rbti-hero-result" class="hidden" style="margin-top: 12px;">
           <p class="text-white/70 text-sm mb-2">당신의 RBTI는...</p>
@@ -50,7 +50,7 @@ const rbtiTemplate = `
       <div id="rbti-intro" class="card" style="padding: 22px; margin-top: 16px; border-radius: 16px; border: 1px solid #e5e7eb; text-align: left;">
         <h3 style="margin: 0 0 12px; font-size: 18px; font-weight: 700; color: #1f2937;">검사 안내</h3>
         <ul style="display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 14px; color: #4b5563; line-height: 1.55;">
-          <li>• RBTI는 자신의 유흥주점 이용 행동 검사로 본인 유형을 알아보는 검사입니다.</li>
+          <li>• RBTI는 룸MBTI, 룸비티아이로도 찾을 수 있는 유흥주점 이용 행동 성향 검사입니다.</li>
           <li>• 검사 소요 시간은 약 3~5분입니다</li>
           <li>• 각 질문에 '매우 아니다'부터 '매우 그렇다'까지 중 하나를 선택하세요</li>
           <li>• 너무 고민하지 말고 평소 행동에 가까운 것을 고르세요</li>
@@ -84,7 +84,7 @@ const rbtiTemplate = `
       <section style="margin-top: 40px; display: flex; flex-direction: column; gap: 32px;">
         <div>
           <h2 id="rbti-about-title" class="text-xl font-semibold text-gray-900 mb-4">RBTI 검사란?</h2>
-          <p id="rbti-about-description" class="text-gray-600 leading-relaxed">RBTI는 자신의 유흥주점 이용 행동 성향을 알아보는 검사입니다.</p>
+          <p id="rbti-about-description" class="text-gray-600 leading-relaxed">RBTI는 룸MBTI·룸비티아이 키워드로도 알려진 화류 유형 검사이자 룸빵 유형 검사로, 자신의 유흥주점 이용 행동 성향을 알아보는 재미용 테스트입니다.</p>
         </div>
         <div>
           <h2 class="text-xl font-semibold text-gray-900 mb-4">4가지 선호 지표</h2>
