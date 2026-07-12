@@ -146,8 +146,6 @@ const NOINDEX_PATHS = new Set([
   '/my-page/points',
   '/my-page/stamps',
   '/jump-management',
-  '/bamcheat',
-  '/wiki',
   '/admin',
   '/admin/support/create',
   '/find-account',
