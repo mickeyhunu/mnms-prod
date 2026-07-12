@@ -31,7 +31,7 @@ const rbtiTemplate = `
       <div style="margin-top: 18px; border-radius: 18px; padding: 26px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #fff; box-shadow: 0 10px 30px rgba(79,70,229,0.22); text-align: center;">
         <div id="rbti-hero-intro">
           <div style="font-size: 40px; margin-bottom: 8px;">🧠</div>
-          <h1 id="rbti-test-title" style="font-size: 30px; margin: 0 0 8px; font-weight: 800;">룸MBTI RBTI 룸비티아이</h1>
+          <h1 id="rbti-test-title" style="font-size: 30px; margin: 0 0 8px; font-weight: 800;">RBTI</h1>
           <p id="rbti-test-description" style="margin: 0; color: rgba(255,255,255,0.92); white-space: pre-line;">Room Behavior Type Indicator
 
 화류 유형 검사 · 룸빵 유형 검사</p>
