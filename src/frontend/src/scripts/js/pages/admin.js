@@ -487,7 +487,7 @@ function getAdminFilteredItems(prefix) {
     const matchers = {
         posts: ['id', 'title', 'authorNickname', 'user_id', 'userId'],
         comments: ['id', 'content', 'authorNickname', 'user_id', 'userId', 'postId', 'post_id'],
-        users: ['id', 'loginId', 'login_id', 'userLoginId', 'nickname', 'role', 'memberType', 'member_type', 'phone', 'businessCompanyName', 'businessRegistrationNumber', 'businessManagerName', 'businessContactPhone'],
+        users: ['id', 'loginId', 'login_id', 'userLoginId', 'name', 'nickname', 'role', 'memberType', 'member_type', 'phone', 'businessCompanyName', 'businessRegistrationNumber', 'businessManagerName', 'businessContactPhone'],
         'business-applications': ['userId', 'loginId', 'nickname', 'companyName', 'businessRegistrationNumber', 'managerName', 'contactPhone', 'userPhone', 'approvalStatus', 'registrationStatus', 'applicationType', (item) => toBusinessApplicationTypeText(item.applicationType), (item) => item.businessInfo?.businessAddress, (item) => item.businessInfo?.businessType],
         admins: ['id', 'loginId', 'nickname', 'role'],
         entries: ['workerName', 'entryId'],
