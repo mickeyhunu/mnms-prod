@@ -109,6 +109,11 @@ const SEO_PAGE_CONFIG = {
     description: '간단한 음주 상태 자가 점검을 위한 음주측정 페이지입니다.',
     keywords: ['음주 측정기', '음주 자가 점검', '미드나잇 맨즈']
   },
+  '/play/wiki': {
+    title: '룸빵위키 | 화류업계 용어사전 | 미드나잇 맨즈',
+    description: '룸빵위키에서 화류업계 용어와 은어를 카테고리별로 검색하고 쉽게 확인하세요.',
+    keywords: ['룸빵위키', '화류업계 용어', '화류 용어사전', '유흥 용어', '룸빵 용어', '미드나잇 맨즈']
+  },
   '/my-page/support': {
     title: '고객센터 | 미드나잇 맨즈',
     description: '문의, FAQ, 공지사항 등 고객지원 메뉴를 확인하세요.',
@@ -371,7 +376,7 @@ function inferSitemapMetadata(pathname) {
   if (pathname === '/') return { changefreq: 'daily', priority: '1.0' };
   if (pathname === '/community' || pathname === '/play/live') return { changefreq: 'hourly', priority: '0.9' };
   if (pathname === '/business-info') return { changefreq: 'daily', priority: '0.8' };
-  if (pathname === '/play') return { changefreq: 'weekly', priority: '0.7' };
+  if (pathname === '/play' || pathname === '/play/wiki') return { changefreq: 'weekly', priority: '0.7' };
   if (pathname === '/support' || pathname === '/my-page/support') return { changefreq: 'weekly', priority: '0.6' };
   if (pathname === '/support/faq' || pathname === '/play/ranking') return { changefreq: 'weekly', priority: '0.5' };
   return { changefreq: 'monthly', priority: '0.4' };
