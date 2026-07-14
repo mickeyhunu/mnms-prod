@@ -1949,7 +1949,7 @@ const pageRegistry = {
               </a>
             </div>
             <div class="card-enter" style="animation-delay: 160ms;">
-              <a class="play-tool-card" href="/wiki">
+              <a class="play-tool-card" href="/play/wiki">
                 <div class="play-tool-card__content">
                   <span class="play-tool-card__icon">📚</span>
                   <div class="play-tool-card__text">
