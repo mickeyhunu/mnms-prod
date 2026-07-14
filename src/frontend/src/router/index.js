@@ -55,7 +55,7 @@ const routes = [
   { path: '/play/live', component: PageView, meta: { pageKey: 'live', title: '실시간 출근부 웨이팅 초톡', description: '실시간 업소 출근부 웨이팅 초이스, 엔트리 현황, 오늘의 추천 정보를 빠르게 확인하세요.', keywords: ['실시간 업소', '라이브 정보', '오늘의 추천 업소', '엔트리 현황', '지역 업소', HIDDEN_SEARCH_KEYWORD] } },
   { path: '/play/rbti', component: PageView, meta: { pageKey: 'rbti', title: 'RBTI 룸MBTI 룸비티아이 테스트', description: '룸MBTI, RBTI, 룸비티아이로 알아보는 화류 유형 검사와 룸빵 유형 검사입니다.', keywords: ['룸mbti', 'rbti', '룸비티아이', '화류 유형 검사', '룸빵 유형 검사', '유흥 MBTI', '성향 테스트'] } },
   { path: '/play/alcohol', component: PageView, meta: { pageKey: 'alcohol', title: '음주 측정기', description: '간단한 음주 상태 자가 점검을 위한 음주측정 페이지입니다.' } },
-  { path: '/wiki', component: PageView, meta: { pageKey: 'wiki', title: '룸빵위키', description: '화류업계 용어를 카테고리별로 펼쳐볼 수 있는 룸빵위키입니다.' } },
+  { path: '/play/wiki', component: PageView, meta: { pageKey: 'wiki', title: '룸빵위키 | 화류업계 용어사전', description: '룸빵위키에서 화류업계 용어와 은어를 카테고리별로 검색하고 쉽게 확인하세요.', keywords: ['룸빵위키', '화류업계 용어', '화류 용어사전', '유흥 용어', '룸빵 용어', '미드나잇 맨즈'] } },
   { path: '/support', component: PageView, meta: { pageKey: 'support-board', title: '공지 및 고객지원', description: '커뮤니티 운영 공지, 이용 가이드, 자주 묻는 질문으로 서비스를 안전하게 이용하세요.', keywords: ['커뮤니티 공지', '고객지원', 'FAQ', '이용 가이드', '운영 정책'] } },
   { path: '/support/faq', component: PageView, meta: { pageKey: 'support-board', title: 'FAQ', description: '자주 묻는 질문과 답변을 모아볼 수 있습니다.' } },
   { path: '/customer-service', component: PageView, meta: { pageKey: 'customer-service', title: '1:1 문의', description: '서비스 이용 중 문제를 1:1 문의로 접수하세요.', noindex: true } },
