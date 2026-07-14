@@ -427,6 +427,7 @@ async function buildSitemapXml() {
   ].join('\n');
 }
 
+
 async function sendSeoIndex(req, res, statusCode = 200) {
   const indexHtml = await fs.promises.readFile(INDEX_HTML_PATH, 'utf8');
   const defaultSeo = createDefaultSeo(req.path);
@@ -509,6 +510,7 @@ app.get('/robots.txt', (req, res) => {
     ''
   ].join('\n'));
 });
+
 
 app.get('/sitemap.xml', (req, res, next) => {
   buildSitemapXml()
