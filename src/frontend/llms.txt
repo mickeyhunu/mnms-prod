@@ -6,6 +6,7 @@
 - Canonical origin: https://nightmens.com
 - Primary language: ko-KR
 - Sitemap: https://nightmens.com/sitemap.xml
+- RSS feed: https://nightmens.com/rss.xml
 - Robots policy: https://nightmens.com/robots.txt
 
 ## Public pages

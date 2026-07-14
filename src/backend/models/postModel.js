@@ -442,6 +442,7 @@ async function listSeoSitemapPosts(limit = 300) {
   return rows;
 }
 
+
 async function findAdjacentPosts(id) {
   const pool = getPool();
   const [currentRows] = await pool.query(

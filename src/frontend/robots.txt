@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://nightmens.com/sitemap.xml
+RSS: https://nightmens.com/rss.xml
