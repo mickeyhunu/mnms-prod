@@ -28,6 +28,7 @@ const bamcheatRoutes = require('./src/backend/routes/bamcheatRoutes');
 const wikiRoutes = require('./src/backend/routes/wikiRoutes');
 const adminModel = require('./src/backend/models/adminModel');
 const postModel = require('./src/backend/models/postModel');
+const liveModel = require('./src/backend/models/liveModel');
 const { startLiveHistoryScheduler } = require('./src/backend/utils/liveHistoryScheduler');
 const { startBusinessAdRenewalScheduler, startBusinessAdJumpScheduleScheduler } = adminModel;
 const { createSeoSlug } = require('./src/backend/utils/seoSlug');
@@ -361,6 +362,80 @@ function formatSitemapDate(value) {
   return date.toISOString().slice(0, 10);
 }
 
+function formatRssDate(value) {
+  const date = value ? new Date(value) : new Date();
+  return Number.isNaN(date.getTime()) ? new Date().toUTCString() : date.toUTCString();
+}
+
+function createRssItem(item) {
+  const title = stripHtml(item.title || '게시글');
+  const link = absoluteUrl(item.link || '/play/live');
+  const guid = item.guid || link;
+  const description = truncateText(item.description || item.content, 300) || '미드나잇 맨즈 최신 정보를 확인하세요.';
+  const isPermaLink = item.guid ? 'false' : 'true';
+
+  return [
+    '    <item>',
+    `      <title>${escapeXml(title)}</title>`,
+    `      <link>${escapeXml(link)}</link>`,
+    `      <guid isPermaLink="${isPermaLink}">${escapeXml(guid)}</guid>`,
+    `      <description>${escapeXml(description)}</description>`,
+    `      <pubDate>${escapeXml(formatRssDate(item.createdAt))}</pubDate>`,
+    item.category ? `      <category>${escapeXml(item.category)}</category>` : '',
+    '    </item>'
+  ].filter(Boolean).join('\n');
+}
+
+function createPostRssItem(post) {
+  const title = stripHtml(post.title || '게시글');
+  return {
+    title,
+    link: `/post-detail/${encodeURIComponent(createSeoSlug(title, `post-${post.id}`))}`,
+    description: post.content,
+    createdAt: post.createdAt,
+    category: post.boardType
+  };
+}
+
+async function buildRssXml() {
+  let posts = [];
+  let liveItems = [];
+
+  if (isDatabaseReady) {
+    [posts, liveItems] = await Promise.all([
+      postModel.listSeoRssPosts(50).catch((error) => {
+        console.error('RSS post feed generation failed:', error.message);
+        return [];
+      }),
+      liveModel.listSeoRssLiveItems(20).catch((error) => {
+        console.error('RSS LIVE feed generation failed:', error.message);
+        return [];
+      })
+    ]);
+  }
+
+  const rssItems = [
+    ...posts.map(createPostRssItem),
+    ...liveItems.map((item) => ({ ...item, link: '/play/live' }))
+  ].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  const lastBuildDate = rssItems[0]?.createdAt || new Date();
+
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
+    '  <channel>',
+    '    <title>Midnight Men&apos;s</title>',
+    `    <link>${escapeXml(absoluteUrl('/'))}</link>`,
+    '    <description>미드나잇 맨즈 커뮤니티 게시글과 LIVE 최신 데이터 RSS 피드입니다.</description>',
+    '    <language>ko-KR</language>',
+    `    <lastBuildDate>${escapeXml(formatRssDate(lastBuildDate))}</lastBuildDate>`,
+    `    <atom:link href="${escapeXml(absoluteUrl('/rss.xml'))}" rel="self" type="application/rss+xml" />`,
+    ...rssItems.map(createRssItem),
+    '  </channel>',
+    '</rss>'
+  ].join('\n');
+}
+
 function createSitemapUrl({ loc, changefreq, priority, lastmod }) {
   return [
     '  <url>',
@@ -512,6 +587,7 @@ app.get('/robots.txt', (req, res) => {
     'Disallow: /create',
     '',
     `Sitemap: ${absoluteUrl('/sitemap.xml')}`,
+    `RSS: ${absoluteUrl('/rss.xml')}`,
     ''
   ].join('\n'));
 });
@@ -521,6 +597,14 @@ app.get('/sitemap.xml', (req, res, next) => {
   buildSitemapXml()
     .then((xml) => {
       res.type('application/xml').set('Cache-Control', `public, max-age=${ONE_HOUR_IN_SECONDS}, stale-while-revalidate=${ONE_DAY_IN_SECONDS}`).send(xml);
+    })
+    .catch(next);
+});
+
+app.get('/rss.xml', (req, res, next) => {
+  buildRssXml()
+    .then((xml) => {
+      res.type('application/rss+xml').set('Cache-Control', 'no-cache, no-store, must-revalidate').send(xml);
     })
     .catch(next);
 });
