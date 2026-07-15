@@ -337,6 +337,148 @@ async function listLiveSourceRows(categoryKey, { since = null } = {}) {
   return [];
 }
 
+
+async function listSeoRssLiveItems(limit = 20) {
+  const pool = await getChatbotPool();
+  const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 50);
+  const items = [];
+  const storeLookup = await buildStoreLookupMap();
+
+  async function appendMessageItems(categoryKey) {
+    const category = getCategoryConfig(categoryKey);
+    const sourceTableName = ensureTableName(category.sourceTableName || category.tableName);
+    const columns = await getTableColumns(sourceTableName);
+    const storeNoColumn = findColumn(columns, STORE_NO_CANDIDATES);
+    const storeNameColumn = findColumn(columns, STORE_NAME_CANDIDATES);
+    const orderColumn = findColumn(columns, ORDER_CANDIDATES);
+    const messageColumn = findColumn(columns, category.key === 'chojoong' ? CHOJOONG_MESSAGE_CANDIDATES : CHOICE_MESSAGE_CANDIDATES);
+
+    if (!messageColumn) return;
+
+    const [rows] = await pool.query(
+      `SELECT ${storeNoColumn ? `\`${storeNoColumn}\`` : 'NULL'} AS storeNo,
+              ${storeNameColumn ? `\`${storeNameColumn}\`` : "''"} AS storeName,
+              \`${messageColumn}\` AS message,
+              ${orderColumn ? `DATE_FORMAT(\`${orderColumn}\`, '${MYSQL_DATETIME_FORMAT}')` : 'NULL'} AS createdAt
+         FROM \`${sourceTableName}\`
+        WHERE \`${messageColumn}\` IS NOT NULL
+          AND TRIM(\`${messageColumn}\`) <> ''
+        ${orderColumn ? `ORDER BY \`${orderColumn}\` DESC` : ''}
+        LIMIT ?`,
+      [safeLimit]
+    );
+
+    rows.forEach((row) => {
+      const storeNo = Number.isInteger(Number(row.storeNo)) ? Number(row.storeNo) : null;
+      const storeName = normalizeNullableString(row.storeName) || storeLookup.get(storeNo) || 'LIVE';
+      const message = normalizeNullableString(row.message);
+      items.push({
+        source: 'live',
+        type: category.key,
+        category: category.label,
+        title: `[${category.label}] ${storeName}`,
+        description: message,
+        createdAt: row.createdAt || null,
+        guid: `live-${category.key}-${storeNo || storeName}-${row.createdAt || message}`
+      });
+    });
+  }
+
+  async function appendWaitingItems() {
+    const category = getCategoryConfig('waiting');
+    const sourceTableName = ensureTableName(category.sourceTableName || category.tableName);
+    const columns = await getTableColumns(sourceTableName);
+    const storeNoColumn = findColumn(columns, STORE_NO_CANDIDATES);
+    const storeNameColumn = findColumn(columns, STORE_NAME_CANDIDATES);
+    const orderColumn = findColumn(columns, ORDER_CANDIDATES);
+    const roomInfoColumn = findColumn(columns, ROOM_INFO_CANDIDATES);
+    const waitInfoColumn = findColumn(columns, WAIT_INFO_CANDIDATES);
+    const roomDetailColumn = findColumn(columns, ROOM_DETAIL_CANDIDATES);
+
+    const [rows] = await pool.query(
+      `SELECT ${storeNoColumn ? `\`${storeNoColumn}\`` : 'NULL'} AS storeNo,
+              ${storeNameColumn ? `\`${storeNameColumn}\`` : "''"} AS storeName,
+              ${roomInfoColumn ? `\`${roomInfoColumn}\`` : 'NULL'} AS roomInfo,
+              ${waitInfoColumn ? `\`${waitInfoColumn}\`` : 'NULL'} AS waitInfo,
+              ${roomDetailColumn ? `\`${roomDetailColumn}\`` : 'NULL'} AS roomDetail,
+              ${orderColumn ? `DATE_FORMAT(\`${orderColumn}\`, '${MYSQL_DATETIME_FORMAT}')` : 'NULL'} AS createdAt
+         FROM \`${sourceTableName}\`
+        ${orderColumn ? `ORDER BY \`${orderColumn}\` DESC` : storeNoColumn ? `ORDER BY \`${storeNoColumn}\` ASC` : ''}
+        LIMIT ?`,
+      [safeLimit]
+    );
+
+    rows.forEach((row) => {
+      const storeNo = Number.isInteger(Number(row.storeNo)) ? Number(row.storeNo) : null;
+      const storeName = normalizeNullableString(row.storeName) || storeLookup.get(storeNo) || 'LIVE';
+      const description = [row.roomInfo, row.waitInfo, row.roomDetail]
+        .map((value) => normalizeNullableString(value))
+        .filter(Boolean)
+        .join(' / ');
+      if (!description) return;
+
+      items.push({
+        source: 'live',
+        type: category.key,
+        category: category.label,
+        title: `[${category.label}] ${storeName}`,
+        description,
+        createdAt: row.createdAt || null,
+        guid: `live-${category.key}-${storeNo || storeName}-${row.createdAt || description}`
+      });
+    });
+  }
+
+  async function appendEntryItems() {
+    const columns = await getTableColumns('ENTRY_TODAY');
+    const storeNoColumn = findColumn(columns, STORE_NO_CANDIDATES) || 'storeNo';
+    const workerNameColumn = findColumn(columns, ['workerName', 'worker_name', 'name']);
+    const createdAtColumn = findColumn(columns, ORDER_CANDIDATES) || 'createdAt';
+
+    if (!workerNameColumn || !columns.includes(storeNoColumn) || !columns.includes(createdAtColumn)) return;
+
+    const [rows] = await pool.query(
+      `SELECT \`${storeNoColumn}\` AS storeNo,
+              \`${workerNameColumn}\` AS workerName,
+              ${columns.includes('mentionCount') ? '`mentionCount`' : '0'} AS mentionCount,
+              ${columns.includes('insertCount') ? '`insertCount`' : '0'} AS insertCount,
+              DATE_FORMAT(\`${createdAtColumn}\`, '${MYSQL_DATETIME_FORMAT}') AS createdAt
+         FROM \`ENTRY_TODAY\`
+        WHERE \`${workerNameColumn}\` IS NOT NULL
+          AND TRIM(\`${workerNameColumn}\`) <> ''
+        ORDER BY \`${createdAtColumn}\` DESC
+        LIMIT ?`,
+      [safeLimit]
+    );
+
+    rows.forEach((row) => {
+      const storeNo = Number.isInteger(Number(row.storeNo)) ? Number(row.storeNo) : null;
+      const storeName = storeLookup.get(storeNo) || 'LIVE';
+      const workerName = normalizeNullableString(row.workerName);
+      items.push({
+        source: 'live',
+        type: 'entry',
+        category: LIVE_CATEGORY_MAP.entry.label,
+        title: `[${LIVE_CATEGORY_MAP.entry.label}] ${storeName}`,
+        description: `${workerName} 출근 정보가 업데이트되었습니다.`,
+        createdAt: row.createdAt || null,
+        guid: `live-entry-${storeNo || storeName}-${row.createdAt || workerName}`
+      });
+    });
+  }
+
+  await Promise.all([
+    appendMessageItems('choice'),
+    appendMessageItems('chojoong'),
+    appendWaitingItems(),
+    appendEntryItems()
+  ]);
+
+  return items
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    .slice(0, safeLimit);
+}
+
 async function getLiveFilters() {
   const stores = await listStores();
   const categories = await Promise.all(
@@ -381,6 +523,7 @@ module.exports = {
   getTableColumns,
   listLiveEntries,
   listLiveSourceRows,
+  listSeoRssLiveItems,
   getStoreByNo,
   listStores,
   normalizeLimit,

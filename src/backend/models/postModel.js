@@ -443,6 +443,22 @@ async function listSeoSitemapPosts(limit = 300) {
 }
 
 
+async function listSeoRssPosts(limit = 50) {
+  const pool = getPool();
+  const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 100);
+  const [rows] = await pool.query(
+    `SELECT id, title, content, board_type AS boardType, created_at AS createdAt, updated_at AS updatedAt
+       FROM posts
+      WHERE is_deleted = 0
+        AND is_hidden = 0
+      ORDER BY COALESCE(updated_at, created_at) DESC, id DESC
+      LIMIT ?`,
+    [safeLimit]
+  );
+  return rows;
+}
+
+
 async function findAdjacentPosts(id) {
   const pool = getPool();
   const [currentRows] = await pool.query(
@@ -758,6 +774,7 @@ module.exports = {
   findPostDetailById,
   findPostDetailBySlug,
   listSeoSitemapPosts,
+  listSeoRssPosts,
   findAdjacentPosts,
   findPostByIdIncludingDeleted,
   incrementPostViewCount,
