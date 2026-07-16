@@ -397,12 +397,32 @@ function createPostRssItem(post) {
   };
 }
 
+function createBusinessAdRssItem(ad) {
+  const title = stripHtml(ad.title || ad.businessName || '업체정보');
+  const location = [ad.region, ad.district].filter(Boolean).join(' ');
+  const summaryParts = [
+    location,
+    ad.category,
+    stripHtml(ad.description || '')
+  ].filter(Boolean);
+
+  return {
+    title: `[업체정보] ${title}`,
+    link: `/business-info/${encodeURIComponent(createSeoSlug(title, `business-${ad.id}`))}`,
+    guid: `business-ad-${ad.id}`,
+    description: summaryParts.join(' · ') || '미드나잇 맨즈 업체정보에서 최신 등록 업체를 확인하세요.',
+    createdAt: ad.updatedAt || ad.activatedAt || ad.createdAt,
+    category: '업체정보'
+  };
+}
+
 async function buildRssXml() {
   let posts = [];
   let liveItems = [];
+  let businessAds = [];
 
   if (isDatabaseReady) {
-    [posts, liveItems] = await Promise.all([
+    [posts, liveItems, businessAds] = await Promise.all([
       postModel.listSeoRssPosts(50).catch((error) => {
         console.error('RSS post feed generation failed:', error.message);
         return [];
@@ -410,13 +430,18 @@ async function buildRssXml() {
       liveModel.listSeoRssLiveItems(20).catch((error) => {
         console.error('RSS LIVE feed generation failed:', error.message);
         return [];
+      }),
+      adminModel.listSeoRssBusinessAds(30).catch((error) => {
+        console.error('RSS business feed generation failed:', error.message);
+        return [];
       })
     ]);
   }
 
   const rssItems = [
     ...posts.map(createPostRssItem),
-    ...liveItems.map((item) => ({ ...item, link: '/play/live' }))
+    ...liveItems.map((item) => ({ ...item, link: '/play/live' })),
+    ...businessAds.map(createBusinessAdRssItem)
   ].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
   const lastBuildDate = rssItems[0]?.createdAt || new Date();
 
@@ -426,7 +451,7 @@ async function buildRssXml() {
     '  <channel>',
     '    <title>Midnight Men&apos;s</title>',
     `    <link>${escapeXml(absoluteUrl('/'))}</link>`,
-    '    <description>미드나잇 맨즈 커뮤니티 게시글과 LIVE 최신 데이터 RSS 피드입니다.</description>',
+    '    <description>미드나잇 맨즈 커뮤니티 게시글, LIVE 최신 데이터, 업체정보 RSS 피드입니다.</description>',
     '    <language>ko-KR</language>',
     `    <lastBuildDate>${escapeXml(formatRssDate(lastBuildDate))}</lastBuildDate>`,
     `    <atom:link href="${escapeXml(absoluteUrl('/rss.xml'))}" rel="self" type="application/rss+xml" />`,
