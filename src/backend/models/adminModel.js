@@ -1139,6 +1139,22 @@ async function listSeoSitemapBusinessAds(limit = 300) {
   return rows;
 }
 
+async function listSeoRssBusinessAds(limit = 30) {
+  await renewExpiredBusinessAdsWithStamp();
+  const pool = getPool();
+  const safeLimit = Math.min(Math.max(Number(limit) || 30, 1), 100);
+  const [rows] = await pool.query(
+    `SELECT id, title, business_name AS businessName, region, district, category, description,
+            activated_at AS activatedAt, created_at AS createdAt, updated_at AS updatedAt
+       FROM business_ads
+      WHERE ${getBusinessAdPublicVisibilityCondition('business_ads')}
+      ORDER BY COALESCE(updated_at, activated_at, created_at) DESC, id DESC
+      LIMIT ?`,
+    [safeLimit]
+  );
+  return rows;
+}
+
 async function findBusinessAdById(adId) {
   await renewExpiredBusinessAdsWithStamp();
   await resetBusinessAdDailyJumps();
@@ -2010,6 +2026,7 @@ module.exports = {
   findPublicBusinessAdById,
   findPublicBusinessAdBySlug,
   listSeoSitemapBusinessAds,
+  listSeoRssBusinessAds,
   increaseBusinessAdViewCount,
   createBusinessAd,
   findBusinessAdById,
