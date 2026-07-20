@@ -595,6 +595,39 @@ function updateCommentFormAvailability(post) {
 }
 
 
+function renderPiecePostContent(content) {
+    const rawContent = String(content || '');
+    const startToken = '<!-- PIECE_TEMPLATE_START -->';
+    const endToken = '<!-- PIECE_TEMPLATE_END -->';
+    const startIndex = rawContent.indexOf(startToken);
+    const endIndex = rawContent.indexOf(endToken);
+
+    if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
+        return renderPostContent(rawContent);
+    }
+
+    const templateContent = rawContent.slice(startIndex + startToken.length, endIndex);
+    const bodyContent = `${rawContent.slice(0, startIndex)}${rawContent.slice(endIndex + endToken.length)}`.trim();
+    const rows = templateContent.split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.includes(':'))
+        .map((line) => {
+            const [label, ...valueParts] = line.split(':');
+            return { label: label.trim(), value: valueParts.join(':').trim() };
+        })
+        .filter((row) => row.label && row.value);
+
+    const summaryMarkup = rows.length ? `
+        <section class="piece-summary" aria-label="조각 모집 정보">
+            <p class="piece-summary-title">조각 모집 정보</p>
+            <dl class="piece-summary-list">
+                ${rows.map((row) => `<div><dt>${sanitizeHTML(row.label)}</dt><dd>${sanitizeHTML(row.value)}</dd></div>`).join('')}
+            </dl>
+        </section>` : '';
+
+    return `${summaryMarkup}${bodyContent ? renderPostContent(bodyContent) : ''}`;
+}
+
 function renderPostDetail(post) {
     currentPostDetail = post;
 
@@ -603,8 +636,8 @@ function renderPostDetail(post) {
     const authorElement = document.getElementById('post-author');
     const dateElement = document.getElementById('post-date');
 
-    const boardNameMap = { FREE: '자유게시판', ANON: '익명게시판', REVIEW: '후기게시판', STORY: '썰게시판', ATTENDANCE: '출석게시판', QUESTION: '질문게시판', EVENT: '이벤트게시판', PROMOTION: '홍보게시판' };
-    const boardTagMap = { FREE: '자유', ANON: '익명', REVIEW: '후기', STORY: '썰', ATTENDANCE: '출석', QUESTION: '질문', EVENT: '이벤트', PROMOTION: '홍보' };
+    const boardNameMap = { FREE: '자유게시판', ANON: '익명게시판', REVIEW: '후기게시판', STORY: '썰게시판', PIECE: '조각게시판', ATTENDANCE: '출석게시판', QUESTION: '질문게시판', EVENT: '이벤트게시판', PROMOTION: '홍보게시판' };
+    const boardTagMap = { FREE: '자유', ANON: '익명', REVIEW: '후기', STORY: '썰', PIECE: '조각', ATTENDANCE: '출석', QUESTION: '질문', EVENT: '이벤트', PROMOTION: '홍보' };
     const boardType = String(post.boardType || '').toUpperCase();
     currentPostBoardType = boardType;
     const isCurrentAuthor = post.isAuthor || isCurrentUserPostAuthor(post);
@@ -617,7 +650,7 @@ function renderPostDetail(post) {
 
     if (titleElement) titleElement.textContent = `[${boardTagMap[boardType] || '자유'}] ${post.title || ''}`;
     if (contentElement) {
-        contentElement.innerHTML = renderPostContent(post.content || '');
+        contentElement.innerHTML = boardType === 'PIECE' ? renderPiecePostContent(post.content || '') : renderPostContent(post.content || '');
         contentElement.classList.toggle('admin-restricted-content', isHiddenPost);
     }
     const boardNameEl = document.getElementById('post-board-name');

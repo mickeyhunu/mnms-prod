@@ -1061,6 +1061,41 @@ const pageRegistry = {
                     </select>
                     </div>
 
+                    <div class="form-group hidden" id="piece-fields">
+                        <label class="form-label">조각게시판 기본 작성 양식</label>
+                        <div class="piece-fields-grid">
+                            <div class="piece-field-row">
+                                <label for="piece-location">장소 <span class="required-mark">필수</span></label>
+                                <input type="text" id="piece-location" class="form-control piece-input" data-piece-label="장소" data-piece-required="true" placeholder="ex) 강남, 종로, 송파">
+                            </div>
+                            <div class="piece-field-row">
+                                <label for="piece-datetime">날짜/시간 <span class="required-mark">필수</span></label>
+                                <input type="text" id="piece-datetime" class="form-control piece-input" data-piece-label="날짜/시간" data-piece-required="true" placeholder="ex) 7월 1일 21:00">
+                            </div>
+                            <div class="piece-field-row">
+                                <label for="piece-capacity">모집 인원 <span class="required-mark">필수</span></label>
+                                <input type="text" id="piece-capacity" class="form-control piece-input" data-piece-label="모집 인원" data-piece-required="true" placeholder="현재 2/4명">
+                            </div>
+                            <div class="piece-field-row">
+                                <label for="piece-age-range">모집 연령 <span class="required-mark">필수</span></label>
+                                <input type="text" id="piece-age-range" class="form-control piece-input" data-piece-label="모집 연령" data-piece-required="true" placeholder="ex) 20~35세">
+                            </div>
+                            <div class="piece-field-row">
+                                <label for="piece-cost">예상 비용 <span class="required-mark">필수</span></label>
+                                <input type="text" id="piece-cost" class="form-control piece-input" data-piece-label="예상 비용" data-piece-required="true" placeholder="1/N 예상 금액">
+                            </div>
+                            <div class="piece-field-row">
+                                <label for="piece-drinking">주량 <span class="optional-mark">선택</span></label>
+                                <input type="text" id="piece-drinking" class="form-control piece-input" data-piece-label="주량" placeholder="소주 1병 이상, 상관없음 등">
+                            </div>
+                            <div class="piece-field-row">
+                                <label for="piece-mood">분위기 <span class="optional-mark">선택</span></label>
+                                <input type="text" id="piece-mood" class="form-control piece-input" data-piece-label="분위기" placeholder="조용히, 텐션 높게, 술 위주 등">
+                            </div>
+                        </div>
+                        <small class="text-muted">입력한 항목은 게시글 본문 상단에 고정 양식으로 표시됩니다.</small>
+                    </div>
+
                     <div class="form-group">
                         <label for="title" class="form-label">제목</label>
                         <input type="text" id="title" name="title" class="form-control" placeholder="제목을 입력하세요" maxlength="255" required>
