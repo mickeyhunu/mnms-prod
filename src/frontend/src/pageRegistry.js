@@ -1065,32 +1065,103 @@ const pageRegistry = {
                         <label class="form-label">조각게시판 기본 작성 양식</label>
                         <div class="piece-fields-grid">
                             <div class="piece-field-row">
-                                <label for="piece-location">장소 <span class="required-mark">필수</span></label>
-                                <input type="text" id="piece-location" class="form-control piece-input" data-piece-label="장소" data-piece-required="true" placeholder="ex) 강남, 종로, 송파">
+                                <label for="piece-location-city">장소 <span class="required-mark">필수</span></label>
+                                <div class="piece-inline-controls">
+                                    <select id="piece-location-city" class="form-control piece-input" data-piece-label="시/도" data-piece-required="true">
+                                        <option value="서울" selected>서울</option>
+                                        <option value="경기">경기</option>
+                                        <option value="인천">인천</option>
+                                        <option value="부산">부산</option>
+                                        <option value="대구">대구</option>
+                                        <option value="광주">광주</option>
+                                        <option value="대전">대전</option>
+                                        <option value="울산">울산</option>
+                                        <option value="강원">강원</option>
+                                        <option value="경남">경남</option>
+                                        <option value="경북">경북</option>
+                                        <option value="전남">전남</option>
+                                        <option value="전북">전북</option>
+                                        <option value="충남">충남</option>
+                                        <option value="충북">충북</option>
+                                        <option value="세종">세종</option>
+                                        <option value="제주">제주</option>
+                                    </select>
+                                    <select id="piece-location-district" class="form-control piece-input" data-piece-label="구/군" data-piece-required="true">
+                                        <option value="강남구" selected>강남구</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="piece-field-row">
                                 <label for="piece-datetime">날짜/시간 <span class="required-mark">필수</span></label>
-                                <input type="text" id="piece-datetime" class="form-control piece-input" data-piece-label="날짜/시간" data-piece-required="true" placeholder="ex) 7월 1일 21:00">
+                                <input type="datetime-local" id="piece-datetime" class="form-control piece-input" data-piece-label="날짜/시간" data-piece-required="true">
                             </div>
                             <div class="piece-field-row">
-                                <label for="piece-capacity">모집 인원 <span class="required-mark">필수</span></label>
-                                <input type="text" id="piece-capacity" class="form-control piece-input" data-piece-label="모집 인원" data-piece-required="true" placeholder="현재 2/4명">
+                                <label for="piece-capacity-min">모집 인원 <span class="required-mark">필수</span></label>
+                                <div class="piece-inline-controls">
+                                    <select id="piece-capacity-min" class="form-control piece-input" data-piece-label="최소 인원" data-piece-required="true">
+                                        <option value="1명">최소 1명</option>
+                                        <option value="2명" selected>최소 2명</option>
+                                        <option value="3명">최소 3명</option>
+                                        <option value="4명">최소 4명</option>
+                                        <option value="5명">최소 5명</option>
+                                    </select>
+                                    <select id="piece-capacity-max" class="form-control piece-input" data-piece-label="최대 인원" data-piece-required="true">
+                                        <option value="2명">최대 2명</option>
+                                        <option value="3명">최대 3명</option>
+                                        <option value="4명" selected>최대 4명</option>
+                                        <option value="5명">최대 5명</option>
+                                        <option value="6명">최대 6명</option>
+                                        <option value="7명 이상">최대 7명 이상</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="piece-field-row">
                                 <label for="piece-age-range">모집 연령 <span class="required-mark">필수</span></label>
-                                <input type="text" id="piece-age-range" class="form-control piece-input" data-piece-label="모집 연령" data-piece-required="true" placeholder="ex) 20~35세">
+                                <select id="piece-age-range" class="form-control piece-input" data-piece-label="모집 연령" data-piece-required="true">
+                                    <option value="20대 초반">20대 초반</option>
+                                    <option value="20대 중반">20대 중반</option>
+                                    <option value="20대 후반">20대 후반</option>
+                                    <option value="30대 초반">30대 초반</option>
+                                    <option value="30대 중반">30대 중반</option>
+                                    <option value="30대 후반">30대 후반</option>
+                                    <option value="40대 초반">40대 초반</option>
+                                </select>
                             </div>
                             <div class="piece-field-row">
                                 <label for="piece-cost">예상 비용 <span class="required-mark">필수</span></label>
-                                <input type="text" id="piece-cost" class="form-control piece-input" data-piece-label="예상 비용" data-piece-required="true" placeholder="1/N 예상 금액">
+                                <select id="piece-cost" class="form-control piece-input" data-piece-label="예상 비용" data-piece-required="true">
+                                    <option value="30만원 이하">30만원 이하</option>
+                                    <option value="30~50만원">30~50만원</option>
+                                    <option value="50~70만원">50~70만원</option>
+                                    <option value="70~100만원">70~100만원</option>
+                                    <option value="100~150만원">100~150만원</option>
+                                    <option value="150~200만원">150~200만원</option>
+                                    <option value="200만원 이상">200만원 이상</option>
+                                </select>
                             </div>
                             <div class="piece-field-row">
                                 <label for="piece-drinking">주량 <span class="optional-mark">선택</span></label>
-                                <input type="text" id="piece-drinking" class="form-control piece-input" data-piece-label="주량" placeholder="소주 1병 이상, 상관없음 등">
+                                <select id="piece-drinking" class="form-control piece-input" data-piece-label="주량">
+                                    <option value="">선택 안 함</option>
+                                    <option value="상관없음">상관없음</option>
+                                    <option value="양주 1~3병">양주 1~3병</option>
+                                    <option value="양주 2~4병">양주 2~4병</option>
+                                    <option value="양주 3~5병">양주 3~5병</option>
+                                    <option value="양주 4~6병">양주 4~6병</option>
+                                    <option value="양주 5병 이상">양주 5병 이상</option>
+                                </select>
                             </div>
                             <div class="piece-field-row">
                                 <label for="piece-mood">분위기 <span class="optional-mark">선택</span></label>
-                                <input type="text" id="piece-mood" class="form-control piece-input" data-piece-label="분위기" placeholder="조용히, 텐션 높게, 술 위주 등">
+                                <select id="piece-mood" class="form-control piece-input" data-piece-label="분위기" multiple size="4">
+                                    <option value="조용히">조용히</option>
+                                    <option value="텐션 높게">텐션 높게</option>
+                                    <option value="술 위주">술 위주</option>
+                                    <option value="대화 위주">대화 위주</option>
+                                    <option value="노래/춤">노래/춤</option>
+                                    <option value="게임/이벤트">게임/이벤트</option>
+                                    <option value="편하게">편하게</option>
+                                </select>
                             </div>
                         </div>
                         <small class="text-muted">입력한 항목은 게시글 본문 상단에 고정 양식으로 표시됩니다.</small>
