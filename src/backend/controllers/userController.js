@@ -626,7 +626,18 @@ async function myActivity(req, res, next) {
 
 async function myLiveAccessStatus(req, res, next) {
   try {
-    const isAdmin = req.user?.role === 'ADMIN';
+    const role = String(req.user?.role || '').toUpperCase();
+    const memberType = String(req.user?.member_type || req.user?.memberType || '').toUpperCase();
+    const isAdmin = role === 'ADMIN';
+    const isBusinessMember = role === 'BUSINESS' || memberType === 'BUSINESS' || memberType === 'ADVERTISER';
+    const hasActiveBusinessAd = Boolean(req.user?.has_active_business_ad || req.user?.hasActiveBusinessAd);
+    const cumulativeAdDays = isBusinessMember
+      ? Number(req.user?.cumulative_business_ad_days ?? req.user?.cumulativeBusinessAdDays ?? await getUserCumulativeBusinessAdDays(req.user.id) ?? 0)
+      : 0;
+    const advertiserLevelInfo = resolveAdvertiserAdDayLevel(cumulativeAdDays);
+    const hasGoldAdvertiserLevel = Number(advertiserLevelInfo.level || 0) >= 4;
+    const hasBusinessFullLiveAccess = isBusinessMember && (hasActiveBusinessAd || hasGoldAdvertiserLevel);
+    const shouldLimitInactiveBusinessAd = isBusinessMember && !hasBusinessFullLiveAccess;
     const dailyStats = await getUserDailyActivityStats(req.user.id);
     const todayPostCount = Number(dailyStats.todayPostCount || 0);
     const todayCommentCount = Number(dailyStats.todayCommentCount || 0);
@@ -634,6 +645,17 @@ async function myLiveAccessStatus(req, res, next) {
     const isChojoongUnlockedLevel = Number(levelInfo.level || 0) >= 3;
     const isEntryUnlockedLevel = Number(levelInfo.level || 0) >= 4;
     const hasDailyActivity = todayPostCount >= 1 || todayCommentCount >= 5;
+    const memberAccess = {
+      choice: true,
+      chojoong: isAdmin || isChojoongUnlockedLevel || hasDailyActivity,
+      waiting: isAdmin || isChojoongUnlockedLevel || hasDailyActivity,
+      entry: isAdmin || isEntryUnlockedLevel || (isChojoongUnlockedLevel && hasDailyActivity)
+    };
+    const access = hasBusinessFullLiveAccess || isAdmin
+      ? { choice: true, chojoong: true, waiting: true, entry: true }
+      : shouldLimitInactiveBusinessAd
+        ? { choice: true, chojoong: false, waiting: false, entry: false }
+        : memberAccess;
 
     res.json({
       level: Number(levelInfo.level || 0),
@@ -641,12 +663,12 @@ async function myLiveAccessStatus(req, res, next) {
       todayPostCount,
       todayCommentCount,
       hasDailyActivity,
-      access: {
-        choice: true,
-        chojoong: isAdmin || isChojoongUnlockedLevel || hasDailyActivity,
-        waiting: isAdmin || isChojoongUnlockedLevel || hasDailyActivity,
-        entry: isAdmin || isEntryUnlockedLevel || (isChojoongUnlockedLevel && hasDailyActivity)
-      }
+      isBusinessMember,
+      hasActiveBusinessAd,
+      cumulativeAdDays,
+      advertiserLevel: Number(advertiserLevelInfo.level || 0),
+      advertiserLevelLabel: advertiserLevelInfo.label,
+      access
     });
   } catch (error) {
     next(error);

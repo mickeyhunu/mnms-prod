@@ -166,6 +166,11 @@ async function loadLiveAccessRules() {
             todayPostCount: Number(response?.todayPostCount || 0),
             todayCommentCount: Number(response?.todayCommentCount || 0),
             hasDailyActivity: Boolean(response?.hasDailyActivity),
+            isBusinessMember: Boolean(response?.isBusinessMember),
+            hasActiveBusinessAd: Boolean(response?.hasActiveBusinessAd),
+            cumulativeAdDays: Number(response?.cumulativeAdDays || 0),
+            advertiserLevel: Number(response?.advertiserLevel || 0),
+            advertiserLevelLabel: String(response?.advertiserLevelLabel || ''),
             access: {
                 choice: Boolean(response?.access?.choice ?? true),
                 chojoong: Boolean(response?.access?.chojoong),
@@ -837,6 +842,13 @@ function renderCategoryButtons(categories) {
 
 function getLiveCategoryDeniedReason(categoryKey) {
     const level = Number(liveState.accessRules?.level || 0);
+    const isInactiveBusinessMember = Boolean(liveState.accessRules?.isBusinessMember)
+        && !Boolean(liveState.accessRules?.hasActiveBusinessAd)
+        && Number(liveState.accessRules?.advertiserLevel || 0) < 4;
+
+    if (isInactiveBusinessMember && ['chojoong', 'waiting', 'entry'].includes(categoryKey)) {
+        return '광고자 계정은 광고가 활성화되어 있으면 초중/룸웨이팅/엔트리를 제한 없이 열람할 수 있습니다.\n\n광고가 비활성화된 경우 기본 초이스톡만 볼 수 있으며, 광고등급이 골드 이상이면 광고 비활성 상태에서도 모두 열람할 수 있습니다.';
+    }
 
     if (categoryKey === 'chojoong' || categoryKey === 'waiting') {
         if (level >= 3) return '';
