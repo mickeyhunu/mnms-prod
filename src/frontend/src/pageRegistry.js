@@ -1167,18 +1167,6 @@ const pageRegistry = {
                                     <option value="잘마심">술을 잘 마시는 분</option>
                                 </select>
                             </div>
-                            <div class="piece-field-row">
-                                <label for="piece-mood">분위기 <span class="optional-mark">선택</span></label>
-                                <select id="piece-mood" class="form-control piece-input" data-piece-label="분위기" multiple size="4">
-                                    <option value="조용히">조용히</option>
-                                    <option value="텐션 높게">텐션 높게</option>
-                                    <option value="술 위주">술 위주</option>
-                                    <option value="대화 위주">대화 위주</option>
-                                    <option value="노래/춤">노래/춤</option>
-                                    <option value="게임/이벤트">게임/이벤트</option>
-                                    <option value="편하게">편하게</option>
-                                </select>
-                            </div>
                         </div>
                         <small class="text-muted">입력한 항목은 게시글 본문 상단에 고정 양식으로 표시됩니다.</small>
                     </div>
