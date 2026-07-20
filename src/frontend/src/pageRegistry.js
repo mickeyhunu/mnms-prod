@@ -1161,11 +1161,10 @@ const pageRegistry = {
                                 <select id="piece-drinking" class="form-control piece-input" data-piece-label="주량">
                                     <option value="">선택 안 함</option>
                                     <option value="상관없음">상관없음</option>
-                                    <option value="양주 1~3병">양주 1~3병</option>
-                                    <option value="양주 2~4병">양주 2~4병</option>
-                                    <option value="양주 3~5병">양주 3~5병</option>
-                                    <option value="양주 4~6병">양주 4~6병</option>
-                                    <option value="양주 5병 이상">양주 5병 이상</option>
+                                    <option value="비음주 가능">술을 못 마셔도 가능</option>
+                                    <option value="가볍게">가볍게 마시는 분</option>
+                                    <option value="보통">보통</option>
+                                    <option value="잘마심">술을 잘 마시는 분</option>
                                 </select>
                             </div>
                             <div class="piece-field-row">
