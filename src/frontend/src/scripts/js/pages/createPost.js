@@ -16,6 +16,9 @@ const DIRECT_UPLOAD_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'imag
 const PIECE_TEMPLATE_START = '<!-- PIECE_TEMPLATE_START -->';
 const PIECE_TEMPLATE_END = '<!-- PIECE_TEMPLATE_END -->';
 
+const PIECE_LOCATION_FALLBACK_CITY = '서울';
+const PIECE_LOCATION_FALLBACK_DISTRICT = '강남구';
+
 const REGION_DISTRICT_MAP = {
     서울: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
     경기: ['가평군', '고양시', '과천시', '광명시', '광주시', '구리시', '군포시', '김포시', '남양주시', '동두천시', '부천시', '성남시', '수원시', '시흥시', '안산시', '안성시', '안양시', '양주시', '양평군', '여주시', '연천군', '오산시', '용인시', '의왕시', '의정부시', '이천시', '파주시', '평택시', '포천시', '하남시', '화성시'],
@@ -36,32 +39,98 @@ const REGION_DISTRICT_MAP = {
     제주: ['서귀포시', '제주시']
 };
 
+let pieceAdAreaAvailability = {
+    regions: Object.keys(REGION_DISTRICT_MAP),
+    districtsByRegion: { ...REGION_DISTRICT_MAP }
+};
+
 function isPieceBoardSelected() {
     const boardTypeSelect = document.getElementById('board-type');
     return String(boardTypeSelect?.value || '').toUpperCase() === 'PIECE';
 }
 
 
+function sortPieceAreasByDefinedOrder(values, definedOrder = []) {
+    const order = new Map(definedOrder.map((value, index) => [value, index]));
+
+    return [...new Set(values.map((value) => String(value || '').trim()).filter(Boolean))]
+        .sort((left, right) => {
+            const leftOrder = order.has(left) ? order.get(left) : Number.MAX_SAFE_INTEGER;
+            const rightOrder = order.has(right) ? order.get(right) : Number.MAX_SAFE_INTEGER;
+            if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+            return left.localeCompare(right, 'ko-KR');
+        });
+}
+
+function normalizePieceAdAreaAvailability(response) {
+    const content = Array.isArray(response?.content) ? response.content : [];
+    const districtsByRegion = {};
+
+    content.forEach((item) => {
+        const region = String(item?.region || '').trim();
+        if (!region) return;
+
+        const knownDistricts = REGION_DISTRICT_MAP[region] || [];
+        const districts = Array.isArray(item?.districts)
+            ? item.districts.map((district) => String(district || '').trim()).filter(Boolean)
+            : [];
+        districtsByRegion[region] = sortPieceAreasByDefinedOrder(districts, knownDistricts);
+    });
+
+    const regions = sortPieceAreasByDefinedOrder(Object.keys(districtsByRegion), Object.keys(REGION_DISTRICT_MAP));
+    return { regions, districtsByRegion };
+}
+
+async function loadPieceAdAreaAvailability() {
+    try {
+        const response = await APIClient.get('/live/business-ads/areas');
+        pieceAdAreaAvailability = normalizePieceAdAreaAvailability(response);
+    } catch (error) {
+        pieceAdAreaAvailability = {
+            regions: Object.keys(REGION_DISTRICT_MAP),
+            districtsByRegion: { ...REGION_DISTRICT_MAP }
+        };
+    }
+}
+
+function populatePieceCityOptions(selectedCity = '') {
+    const citySelect = document.getElementById('piece-location-city');
+    if (!citySelect) return;
+
+    const cities = pieceAdAreaAvailability.regions;
+    const fallbackCity = cities.includes(PIECE_LOCATION_FALLBACK_CITY) ? PIECE_LOCATION_FALLBACK_CITY : (cities[0] || '');
+    const cityValue = cities.includes(selectedCity) ? selectedCity : fallbackCity;
+
+    citySelect.innerHTML = cities
+        .map((city) => `<option value="${sanitizeHTML(city)}">${sanitizeHTML(city)}</option>`)
+        .join('');
+    citySelect.value = cityValue;
+}
+
 function populatePieceDistrictOptions(selectedDistrict = '') {
     const citySelect = document.getElementById('piece-location-city');
     const districtSelect = document.getElementById('piece-location-district');
     if (!citySelect || !districtSelect) return;
 
-    const districts = REGION_DISTRICT_MAP[citySelect.value] || [];
-    const fallbackDistrict = districts[0] || '';
+    const districts = pieceAdAreaAvailability.districtsByRegion[citySelect.value] || [];
+    const fallbackDistrict = districts.includes(PIECE_LOCATION_FALLBACK_DISTRICT) ? PIECE_LOCATION_FALLBACK_DISTRICT : (districts[0] || '');
     const districtValue = districts.includes(selectedDistrict) ? selectedDistrict : fallbackDistrict;
 
     districtSelect.innerHTML = districts
-        .map((district) => `<option value="${district}">${district}</option>`)
+        .map((district) => `<option value="${sanitizeHTML(district)}">${sanitizeHTML(district)}</option>`)
         .join('');
     districtSelect.value = districtValue;
 }
 
-function setupPieceLocationOptions() {
+async function setupPieceLocationOptions() {
     const citySelect = document.getElementById('piece-location-city');
     if (!citySelect) return;
 
-    populatePieceDistrictOptions(document.getElementById('piece-location-district')?.value || '강남구');
+    const initialCity = citySelect.value || PIECE_LOCATION_FALLBACK_CITY;
+    const initialDistrict = document.getElementById('piece-location-district')?.value || PIECE_LOCATION_FALLBACK_DISTRICT;
+    await loadPieceAdAreaAvailability();
+    populatePieceCityOptions(initialCity);
+    populatePieceDistrictOptions(initialDistrict);
     citySelect.addEventListener('change', () => {
         populatePieceDistrictOptions();
         validateForm();
@@ -152,8 +221,8 @@ function hydratePieceFieldsFromContent(content) {
         if (!line) return;
         const value = line.replace(`${label}:`, '').trim();
         if (input.id === 'piece-location-city') {
-            input.value = REGION_DISTRICT_MAP[value] ? value : '서울';
-            populatePieceDistrictOptions(document.getElementById('piece-location-district')?.value || '강남구');
+            input.value = pieceAdAreaAvailability.districtsByRegion[value] ? value : (pieceAdAreaAvailability.regions[0] || '');
+            populatePieceDistrictOptions(document.getElementById('piece-location-district')?.value || PIECE_LOCATION_FALLBACK_DISTRICT);
             return;
         }
         if (input.id === 'piece-location-district') {
@@ -354,7 +423,7 @@ function getModeFromQuery() {
 async function initCreatePost() {
     getModeFromQuery();
     setMinimumPieceDateTime();
-    setupPieceLocationOptions();
+    await setupPieceLocationOptions();
     setupEventListeners();
     setupImageUpload();
     await setupBoardOptions();
