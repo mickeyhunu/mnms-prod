@@ -1099,8 +1099,8 @@ const pageRegistry = {
                                 <label for="piece-capacity-min">모집 인원 <span class="required-mark">필수</span></label>
                                 <div class="piece-inline-controls">
                                     <select id="piece-capacity-min" class="form-control piece-input" data-piece-label="최소 인원" data-piece-required="true">
-                                        <option value="1명">최소 1명</option>
-                                        <option value="2명" selected>최소 2명</option>
+                                        <option value="1명" selected>최소 1명</option>
+                                        <option value="2명">최소 2명</option>
                                         <option value="3명">최소 3명</option>
                                         <option value="4명">최소 4명</option>
                                         <option value="5명">최소 5명</option>
@@ -1118,13 +1118,18 @@ const pageRegistry = {
                             <div class="piece-field-row">
                                 <label for="piece-age-range">모집 연령 <span class="required-mark">필수</span></label>
                                 <select id="piece-age-range" class="form-control piece-input" data-piece-label="모집 연령" data-piece-required="true">
-                                    <option value="20대 초반">20대 초반</option>
-                                    <option value="20대 중반">20대 중반</option>
-                                    <option value="20대 후반">20대 후반</option>
-                                    <option value="30대 초반">30대 초반</option>
-                                    <option value="30대 중반">30대 중반</option>
-                                    <option value="30대 후반">30대 후반</option>
-                                    <option value="40대 초반">40대 초반</option>
+                                    <option value="20대 초반 이상 20대 중반 미만">20대 초반 이상 20대 중반 미만</option>
+                                    <option value="20대 중반 이상 20대 후반 미만">20대 중반 이상 20대 후반 미만</option>
+                                    <option value="20대 후반 이상 30대 초반 미만">20대 후반 이상 30대 초반 미만</option>
+                                    <option value="30대 초반 이상 30대 중반 미만">30대 초반 이상 30대 중반 미만</option>
+                                    <option value="30대 중반 이상 30대 후반 미만">30대 중반 이상 30대 후반 미만</option>
+                                    <option value="30대 후반 이상 40대 초반 미만">30대 후반 이상 40대 초반 미만</option>
+                                    <option value="40대 초반 이상 40대 중반 미만">40대 초반 이상 40대 중반 미만</option>
+                                    <option value="40대 중반 이상 40대 후반 미만">40대 중반 이상 40대 후반 미만</option>
+                                    <option value="40대 후반 이상 50대 초반 미만">40대 후반 이상 50대 초반 미만</option>
+                                    <option value="50대 초반 이상 50대 중반 미만">50대 초반 이상 50대 중반 미만</option>
+                                    <option value="50대 중반 이상 50대 후반 미만">50대 중반 이상 50대 후반 미만</option>
+                                    <option value="50대 후반 이상">50대 후반 이상</option>
                                 </select>
                             </div>
                             <div class="piece-field-row">
