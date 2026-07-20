@@ -427,6 +427,16 @@ body,
     color: var(--text-color);
 }
 
+.piece-inline-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.piece-field-row select[multiple] {
+    min-height: 108px;
+}
+
 .required-mark,
 .optional-mark {
     font-size: 11px;
