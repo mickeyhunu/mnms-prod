@@ -16,13 +16,80 @@ const DIRECT_UPLOAD_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'imag
 const PIECE_TEMPLATE_START = '<!-- PIECE_TEMPLATE_START -->';
 const PIECE_TEMPLATE_END = '<!-- PIECE_TEMPLATE_END -->';
 
+const REGION_DISTRICT_MAP = {
+    서울: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
+    경기: ['가평군', '고양시', '과천시', '광명시', '광주시', '구리시', '군포시', '김포시', '남양주시', '동두천시', '부천시', '성남시', '수원시', '시흥시', '안산시', '안성시', '안양시', '양주시', '양평군', '여주시', '연천군', '오산시', '용인시', '의왕시', '의정부시', '이천시', '파주시', '평택시', '포천시', '하남시', '화성시'],
+    인천: ['강화군', '계양구', '남동구', '동구', '미추홀구', '부평구', '서구', '연수구', '옹진군', '중구'],
+    부산: ['강서구', '금정구', '기장군', '남구', '동구', '동래구', '부산진구', '북구', '사상구', '사하구', '서구', '수영구', '연제구', '영도구', '중구', '해운대구'],
+    대구: ['남구', '달서구', '달성군', '동구', '북구', '서구', '수성구', '중구'],
+    광주: ['광산구', '남구', '동구', '북구', '서구'],
+    대전: ['대덕구', '동구', '서구', '유성구', '중구'],
+    울산: ['남구', '동구', '북구', '울주군', '중구'],
+    강원: ['강릉시', '고성군', '동해시', '삼척시', '속초시', '양구군', '양양군', '영월군', '원주시', '인제군', '정선군', '철원군', '춘천시', '태백시', '평창군', '홍천군', '화천군', '횡성군'],
+    경남: ['거제시', '거창군', '고성군', '김해시', '남해군', '밀양시', '사천시', '산청군', '양산시', '의령군', '진주시', '창녕군', '창원시', '통영시', '하동군', '함안군', '함양군', '합천군'],
+    경북: ['경산시', '경주시', '고령군', '구미시', '군위군', '김천시', '문경시', '봉화군', '상주시', '성주군', '안동시', '영덕군', '영양군', '영주시', '영천시', '예천군', '울릉군', '울진군', '의성군', '청도군', '청송군', '칠곡군', '포항시'],
+    전남: ['강진군', '고흥군', '곡성군', '광양시', '구례군', '나주시', '담양군', '목포시', '무안군', '보성군', '순천시', '신안군', '여수시', '영광군', '영암군', '완도군', '장성군', '장흥군', '진도군', '함평군', '해남군', '화순군'],
+    전북: ['고창군', '군산시', '김제시', '남원시', '무주군', '부안군', '순창군', '완주군', '익산시', '임실군', '장수군', '전주시', '정읍시', '진안군'],
+    충남: ['계룡시', '공주시', '금산군', '논산시', '당진시', '보령시', '부여군', '서산시', '서천군', '아산시', '예산군', '천안시', '청양군', '태안군', '홍성군'],
+    충북: ['괴산군', '단양군', '보은군', '영동군', '옥천군', '음성군', '제천시', '증평군', '진천군', '청원군', '청주시', '충주시'],
+    세종: ['세종시'],
+    제주: ['서귀포시', '제주시']
+};
+
 function isPieceBoardSelected() {
     const boardTypeSelect = document.getElementById('board-type');
     return String(boardTypeSelect?.value || '').toUpperCase() === 'PIECE';
 }
 
+
+function populatePieceDistrictOptions(selectedDistrict = '') {
+    const citySelect = document.getElementById('piece-location-city');
+    const districtSelect = document.getElementById('piece-location-district');
+    if (!citySelect || !districtSelect) return;
+
+    const districts = REGION_DISTRICT_MAP[citySelect.value] || [];
+    const fallbackDistrict = districts[0] || '';
+    const districtValue = districts.includes(selectedDistrict) ? selectedDistrict : fallbackDistrict;
+
+    districtSelect.innerHTML = districts
+        .map((district) => `<option value="${district}">${district}</option>`)
+        .join('');
+    districtSelect.value = districtValue;
+}
+
+function setupPieceLocationOptions() {
+    const citySelect = document.getElementById('piece-location-city');
+    if (!citySelect) return;
+
+    populatePieceDistrictOptions(document.getElementById('piece-location-district')?.value || '강남구');
+    citySelect.addEventListener('change', () => {
+        populatePieceDistrictOptions();
+        validateForm();
+    });
+}
+
 function getPieceInputs() {
     return Array.from(document.querySelectorAll('.piece-input'));
+}
+
+function getPieceInputValue(input) {
+    if (input?.tagName === 'SELECT' && input.multiple) {
+        return Array.from(input.selectedOptions)
+            .map((option) => option.value.trim())
+            .filter(Boolean)
+            .join(', ');
+    }
+
+    return String(input?.value || '').trim();
+}
+
+function setMinimumPieceDateTime() {
+    const dateTimeInput = document.getElementById('piece-datetime');
+    if (!dateTimeInput) return;
+
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    dateTimeInput.min = now.toISOString().slice(0, 16);
 }
 
 function togglePieceFields() {
@@ -35,11 +102,17 @@ function togglePieceFields() {
     });
 }
 
+function isPieceDateTimeValid() {
+    const dateTimeInput = document.getElementById('piece-datetime');
+    if (!dateTimeInput || !dateTimeInput.value) return true;
+    return !dateTimeInput.min || dateTimeInput.value >= dateTimeInput.min;
+}
+
 function areRequiredPieceFieldsFilled() {
     if (!isPieceBoardSelected()) return true;
     return getPieceInputs()
         .filter((input) => input.dataset.pieceRequired === 'true')
-        .every((input) => input.value.trim().length > 0);
+        .every((input) => getPieceInputValue(input).length > 0) && isPieceDateTimeValid();
 }
 
 function stripPieceTemplate(content) {
@@ -58,7 +131,7 @@ function buildPieceTemplateContent(content) {
     if (!isPieceBoardSelected()) return stripPieceTemplate(content);
 
     const rows = getPieceInputs()
-        .map((input) => ({ label: input.dataset.pieceLabel || '', value: input.value.trim() }))
+        .map((input) => ({ label: input.dataset.pieceLabel || '', value: getPieceInputValue(input) }))
         .filter((item) => item.label && item.value);
     const templateLines = rows.map((item) => `${item.label}: ${item.value}`).join('\n');
     const cleanContent = stripPieceTemplate(content);
@@ -76,7 +149,25 @@ function hydratePieceFieldsFromContent(content) {
     getPieceInputs().forEach((input) => {
         const label = input.dataset.pieceLabel;
         const line = templateContent.split('\n').find((item) => item.trim().startsWith(`${label}:`));
-        if (line) input.value = line.replace(`${label}:`, '').trim();
+        if (!line) return;
+        const value = line.replace(`${label}:`, '').trim();
+        if (input.id === 'piece-location-city') {
+            input.value = REGION_DISTRICT_MAP[value] ? value : '서울';
+            populatePieceDistrictOptions(document.getElementById('piece-location-district')?.value || '강남구');
+            return;
+        }
+        if (input.id === 'piece-location-district') {
+            populatePieceDistrictOptions(value);
+            return;
+        }
+        if (input.tagName === 'SELECT' && input.multiple) {
+            const values = value.split(',').map((item) => item.trim());
+            Array.from(input.options).forEach((option) => {
+                option.selected = values.includes(option.value);
+            });
+            return;
+        }
+        input.value = value;
     });
 
     return stripPieceTemplate(rawContent);
@@ -262,6 +353,8 @@ function getModeFromQuery() {
 
 async function initCreatePost() {
     getModeFromQuery();
+    setMinimumPieceDateTime();
+    setupPieceLocationOptions();
     setupEventListeners();
     setupImageUpload();
     await setupBoardOptions();
@@ -368,6 +461,7 @@ function setupEventListeners() {
 
     getPieceInputs().forEach((input) => {
         input.addEventListener('input', validateForm);
+        input.addEventListener('change', validateForm);
     });
     togglePieceFields();
 }
