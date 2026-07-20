@@ -13,6 +13,74 @@ const IMAGE_COMPRESSION_TARGET_BYTES = 3 * 1024 * 1024;
 const IMAGE_RESIZE_MAX_DIMENSION = 1920;
 const COMPRESSIBLE_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 const DIRECT_UPLOAD_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
+const PIECE_TEMPLATE_START = '<!-- PIECE_TEMPLATE_START -->';
+const PIECE_TEMPLATE_END = '<!-- PIECE_TEMPLATE_END -->';
+
+function isPieceBoardSelected() {
+    const boardTypeSelect = document.getElementById('board-type');
+    return String(boardTypeSelect?.value || '').toUpperCase() === 'PIECE';
+}
+
+function getPieceInputs() {
+    return Array.from(document.querySelectorAll('.piece-input'));
+}
+
+function togglePieceFields() {
+    const pieceFields = document.getElementById('piece-fields');
+    if (!pieceFields) return;
+    const isPiece = isPieceBoardSelected();
+    pieceFields.classList.toggle('hidden', !isPiece);
+    getPieceInputs().forEach((input) => {
+        input.required = isPiece && input.dataset.pieceRequired === 'true';
+    });
+}
+
+function areRequiredPieceFieldsFilled() {
+    if (!isPieceBoardSelected()) return true;
+    return getPieceInputs()
+        .filter((input) => input.dataset.pieceRequired === 'true')
+        .every((input) => input.value.trim().length > 0);
+}
+
+function stripPieceTemplate(content) {
+    const rawContent = String(content || '');
+    const startIndex = rawContent.indexOf(PIECE_TEMPLATE_START);
+    const endIndex = rawContent.indexOf(PIECE_TEMPLATE_END);
+
+    if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
+        return rawContent.trim();
+    }
+
+    return `${rawContent.slice(0, startIndex)}${rawContent.slice(endIndex + PIECE_TEMPLATE_END.length)}`.trim();
+}
+
+function buildPieceTemplateContent(content) {
+    if (!isPieceBoardSelected()) return stripPieceTemplate(content);
+
+    const rows = getPieceInputs()
+        .map((input) => ({ label: input.dataset.pieceLabel || '', value: input.value.trim() }))
+        .filter((item) => item.label && item.value);
+    const templateLines = rows.map((item) => `${item.label}: ${item.value}`).join('\n');
+    const cleanContent = stripPieceTemplate(content);
+
+    return `${PIECE_TEMPLATE_START}\n[조각 모집 정보]\n${templateLines}\n${PIECE_TEMPLATE_END}${cleanContent ? `\n\n${cleanContent}` : ''}`;
+}
+
+function hydratePieceFieldsFromContent(content) {
+    const rawContent = String(content || '');
+    const startIndex = rawContent.indexOf(PIECE_TEMPLATE_START);
+    const endIndex = rawContent.indexOf(PIECE_TEMPLATE_END);
+    if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) return rawContent;
+
+    const templateContent = rawContent.slice(startIndex + PIECE_TEMPLATE_START.length, endIndex);
+    getPieceInputs().forEach((input) => {
+        const label = input.dataset.pieceLabel;
+        const line = templateContent.split('\n').find((item) => item.trim().startsWith(`${label}:`));
+        if (line) input.value = line.replace(`${label}:`, '').trim();
+    });
+
+    return stripPieceTemplate(rawContent);
+}
 
 function getFileMimeType(file) {
     const type = String(file?.type || '').toLowerCase();
@@ -292,9 +360,16 @@ function setupEventListeners() {
     }
 
     if (boardTypeSelect) {
-        boardTypeSelect.addEventListener('change', validateForm);
+        boardTypeSelect.addEventListener('change', function() {
+            togglePieceFields();
+            validateForm();
+        });
     }
 
+    getPieceInputs().forEach((input) => {
+        input.addEventListener('input', validateForm);
+    });
+    togglePieceFields();
 }
 
 function setupImageUpload() {
@@ -408,7 +483,8 @@ function validateForm() {
         title.value.trim().length > 0 &&
         content.value.trim().length >= 6 &&
         title.value.length <= 255 &&
-        content.value.length <= 1000;
+        buildPieceTemplateContent(content.value.trim()).length <= 1000 &&
+        areRequiredPieceFieldsFilled();
 
     submitBtn.disabled = !isValid || isSubmitting;
 }
@@ -435,11 +511,12 @@ async function loadPostForEdit() {
         const contentInput = document.getElementById('content');
 
         if (titleInput) titleInput.value = post.title || '';
-        if (contentInput) contentInput.value = post.content || '';
+        if (contentInput) contentInput.value = hydratePieceFieldsFromContent(post.content || '');
 
         const boardTypeSelect = document.getElementById('board-type');
         if (boardTypeSelect && post.boardType) {
             boardTypeSelect.value = String(post.boardType).toUpperCase();
+            togglePieceFields();
         }
 
         const normalizedImageUrls = Array.isArray(post.imageUrls)
@@ -471,7 +548,8 @@ async function handleSubmit(event) {
     if (isSubmitting) return;
 
     const titleValue = document.getElementById('title')?.value.trim() || '';
-    const contentValue = document.getElementById('content')?.value.trim() || '';
+    const rawContentValue = document.getElementById('content')?.value.trim() || '';
+    const contentValue = buildPieceTemplateContent(rawContentValue);
     const submitBtn = document.getElementById('submit-btn');
     const boardTypeSelect = document.getElementById('board-type');
     const boardType = isBusinessUser
@@ -486,17 +564,28 @@ async function handleSubmit(event) {
         return;
     }
 
-    if (!titleValue || !contentValue) {
+    if (!titleValue || !rawContentValue) {
         alert('제목과 내용을 모두 입력해주세요.');
         return;
     }
 
-    if (contentValue.length < 6) {
+    if (rawContentValue.length < 6) {
         alert('내용은 최소 6자 이상 입력해주세요.');
         return;
     }
 
+    if (contentValue.length > 1000) {
+        alert('조각게시판 작성 양식을 포함해 내용은 1000자 이하로 입력해주세요.');
+        return;
+    }
+
     if (!validateNoBlockedExpression(titleValue, '게시글 제목')) {
+        return;
+    }
+
+    if (!areRequiredPieceFieldsFilled()) {
+        alert('조각게시판 필수 작성 양식을 모두 입력해주세요.');
+        getPieceInputs().find((input) => input.dataset.pieceRequired === 'true' && !input.value.trim())?.focus();
         return;
     }
 
