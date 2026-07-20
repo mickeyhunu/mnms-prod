@@ -1145,8 +1145,8 @@ const pageRegistry = {
                                 </div>
                             </div>
                             <div class="piece-field-row">
-                                <label for="piece-cost">예상 비용 <span class="required-mark">필수</span></label>
-                                <select id="piece-cost" class="form-control piece-input" data-piece-label="예상 비용" data-piece-required="true">
+                                <label for="piece-cost">1인 예상 비용 <span class="required-mark">필수</span></label>
+                                <select id="piece-cost" class="form-control piece-input" data-piece-label="1인 예상 비용" data-piece-required="true">
                                     <option value="30만원 이하">30만원 이하</option>
                                     <option value="30~50만원">30~50만원</option>
                                     <option value="50~70만원">50~70만원</option>
