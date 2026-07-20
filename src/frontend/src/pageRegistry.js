@@ -1116,21 +1116,33 @@ const pageRegistry = {
                                 </div>
                             </div>
                             <div class="piece-field-row">
-                                <label for="piece-age-range">모집 연령 <span class="required-mark">필수</span></label>
-                                <select id="piece-age-range" class="form-control piece-input" data-piece-label="모집 연령" data-piece-required="true">
-                                    <option value="20대 초반 이상 20대 중반 미만">20대 초반 이상 20대 중반 미만</option>
-                                    <option value="20대 중반 이상 20대 후반 미만">20대 중반 이상 20대 후반 미만</option>
-                                    <option value="20대 후반 이상 30대 초반 미만">20대 후반 이상 30대 초반 미만</option>
-                                    <option value="30대 초반 이상 30대 중반 미만">30대 초반 이상 30대 중반 미만</option>
-                                    <option value="30대 중반 이상 30대 후반 미만">30대 중반 이상 30대 후반 미만</option>
-                                    <option value="30대 후반 이상 40대 초반 미만">30대 후반 이상 40대 초반 미만</option>
-                                    <option value="40대 초반 이상 40대 중반 미만">40대 초반 이상 40대 중반 미만</option>
-                                    <option value="40대 중반 이상 40대 후반 미만">40대 중반 이상 40대 후반 미만</option>
-                                    <option value="40대 후반 이상 50대 초반 미만">40대 후반 이상 50대 초반 미만</option>
-                                    <option value="50대 초반 이상 50대 중반 미만">50대 초반 이상 50대 중반 미만</option>
-                                    <option value="50대 중반 이상 50대 후반 미만">50대 중반 이상 50대 후반 미만</option>
-                                    <option value="50대 후반 이상">50대 후반 이상</option>
-                                </select>
+                                <label for="piece-age-min">모집 연령 <span class="required-mark">필수</span></label>
+                                <div class="piece-inline-controls">
+                                    <select id="piece-age-min" class="form-control piece-input" data-piece-label="최소 연령" data-piece-required="true">
+                                        <option value="20대 초반 이상" selected>20대 초반 이상</option>
+                                        <option value="20대 중반 이상">20대 중반 이상</option>
+                                        <option value="20대 후반 이상">20대 후반 이상</option>
+                                        <option value="30대 초반 이상">30대 초반 이상</option>
+                                        <option value="30대 중반 이상">30대 중반 이상</option>
+                                        <option value="30대 후반 이상">30대 후반 이상</option>
+                                        <option value="40대 초반 이상">40대 초반 이상</option>
+                                        <option value="40대 중반 이상">40대 중반 이상</option>
+                                        <option value="40대 후반 이상">40대 후반 이상</option>
+                                    </select>
+                                    <select id="piece-age-max" class="form-control piece-input" data-piece-label="최대 연령" data-piece-required="true">
+                                        <option value="20대 중반 이하">20대 중반 이하</option>
+                                        <option value="20대 후반 이하">20대 후반 이하</option>
+                                        <option value="30대 초반 이하">30대 초반 이하</option>
+                                        <option value="30대 중반 이하">30대 중반 이하</option>
+                                        <option value="30대 후반 이하">30대 후반 이하</option>
+                                        <option value="40대 초반 이하">40대 초반 이하</option>
+                                        <option value="40대 중반 이하">40대 중반 이하</option>
+                                        <option value="40대 후반 이하" selected>40대 후반 이하</option>
+                                        <option value="50대 초반 이하">50대 초반 이하</option>
+                                        <option value="50대 중반 이하">50대 중반 이하</option>
+                                        <option value="50대 후반 이하">50대 후반 이하</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="piece-field-row">
                                 <label for="piece-cost">예상 비용 <span class="required-mark">필수</span></label>
