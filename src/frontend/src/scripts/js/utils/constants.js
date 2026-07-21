@@ -58,7 +58,7 @@ const VALIDATION = {
     PASSWORD_REGEX: /^(?=.*[A-Za-z])(?=.*\d)[^\s]{8,}$/,
     MIN_PASSWORD_LENGTH: 8,
     NICKNAME_MIN_LENGTH: 2,
-    NICKNAME_MAX_LENGTH: 8
+    NICKNAME_MAX_LENGTH: 20
 };
 
 const DEPARTMENTS = [
