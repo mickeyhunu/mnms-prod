@@ -347,12 +347,6 @@
     line-height: 0;
 }
 
-.piece-participant-avatar-link:hover .piece-participant-avatar,
-.piece-participant-avatar-link:focus-visible .piece-participant-avatar {
-    border-color: #9aa5b1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.16);
-}
-
 .piece-participant-nickname {
     color: #1f2630;
     font-size: 14px;
