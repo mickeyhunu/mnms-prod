@@ -432,9 +432,12 @@ async function updateMyProfile(req, res, next) {
     const password = String(req.body.password || '').trim();
     const smsConsent = Boolean(req.body.smsConsent);
     const profileImageUrl = String(req.body.profileImageUrl || '').trim();
-    const profileIntroduction = String(req.body.profileIntroduction || '').trim();
+    const hasProfileIntroduction = Object.prototype.hasOwnProperty.call(req.body, 'profileIntroduction');
+    const profileIntroduction = hasProfileIntroduction
+      ? String(req.body.profileIntroduction || '').trim()
+      : String(req.user.profile_introduction || '').trim();
 
-    if (Array.from(profileIntroduction).length > 200) {
+    if (hasProfileIntroduction && Array.from(profileIntroduction).length > 200) {
       return res.status(400).json({ message: '자기소개는 200자 이하로 입력해 주세요.' });
     }
 
@@ -445,9 +448,11 @@ async function updateMyProfile(req, res, next) {
 
     const updates = {
       phone,
-      sms_consent: smsConsent,
-      profile_introduction: profileIntroduction
+      sms_consent: smsConsent
     };
+    if (hasProfileIntroduction) {
+      updates.profile_introduction = profileIntroduction;
+    }
     if (Object.prototype.hasOwnProperty.call(req.body, 'profileImageUrl')) {
       if (profileImageUrl && isDataUrlImage(profileImageUrl)) {
         await assertStillProfileImageDataUrl(profileImageUrl);
