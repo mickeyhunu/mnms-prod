@@ -1809,6 +1809,18 @@ const pageRegistry = {
         <section class="mypage-card">
           <h3>회원정보수정</h3>
           <form id="profile-form">
+            <div class="profile-image-editor">
+              <img id="profile-image-preview" class="profile-image-preview" src="/src/assets/image/img_profile.png" alt="프로필 이미지 미리보기" loading="lazy">
+              <div class="profile-image-controls">
+                <strong>프로필 이미지</strong>
+                <input type="file" id="profile-image-input" name="profileImage" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" hidden>
+                <div class="profile-image-actions">
+                  <button type="button" class="btn btn-outline btn-sm" id="profile-image-upload-btn">이미지 선택</button>
+                  <button type="button" class="btn btn-outline btn-sm" id="profile-image-remove-btn">삭제</button>
+                </div>
+                <small id="profile-image-result" class="help-text">JPG, PNG, WebP 정지 이미지만 등록할 수 있습니다.</small>
+              </div>
+            </div>
             <div class="profile-form-grid">
               <label>아이디
                 <input type="text" id="profile-login-id" name="loginId" readonly>
