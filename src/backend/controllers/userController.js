@@ -603,6 +603,9 @@ async function publicProfile(req, res, next) {
     const cumulativeAdDays = isBusinessMember ? await getUserCumulativeBusinessAdDays(profile.id) : 0;
     const advertiserLevel = resolveAdvertiserAdDayLevel(cumulativeAdDays);
 
+    const activityLimit = Math.max(1, Math.min(50, Number(req.query.limit) || 50));
+    const { posts, comments, likedPosts, participatedPieces } = await getUserActivityDetails(profile.id, { limit: activityLimit });
+
     res.json({
       nickname: profile.nickname,
       profileImageUrl: profile.profileImageUrl || '',
@@ -617,7 +620,51 @@ async function publicProfile(req, res, next) {
       joinedAt: profile.joinedAt,
       postCount: Number(profile.postCount || 0),
       commentCount: Number(profile.commentCount || 0),
-      reviewCount: Number(profile.reviewCount || 0)
+      reviewCount: Number(profile.reviewCount || 0),
+      activity: {
+        posts: posts.map((post) => ({
+          id: Number(post.id),
+          title: post.title,
+          content: post.content,
+          boardType: post.boardType,
+          createdAt: post.createdAt,
+          viewCount: normalizeCountValue(post.viewCount, post.view_count),
+          likeCount: Number(post.likeCount || 0),
+          commentCount: Number(post.commentCount || 0)
+        })),
+        comments: comments.map((comment) => ({
+          id: Number(comment.id),
+          postId: Number(comment.postId),
+          postTitle: comment.postTitle,
+          postBoardType: comment.postBoardType,
+          content: comment.content,
+          createdAt: comment.createdAt
+        })),
+        likedPosts: likedPosts.map((post) => ({
+          id: Number(post.id),
+          title: post.title,
+          content: post.content,
+          boardType: post.boardType,
+          createdAt: post.createdAt,
+          likedAt: post.likedAt,
+          viewCount: normalizeCountValue(post.viewCount, post.view_count),
+          likeCount: Number(post.likeCount || 0),
+          commentCount: Number(post.commentCount || 0)
+        })),
+        participatedPieces: (participatedPieces || []).map((post) => ({
+          id: Number(post.id),
+          title: post.title,
+          content: post.content,
+          boardType: post.boardType,
+          createdAt: post.createdAt,
+          joinedAt: post.joinedAt,
+          attendedAt: post.attendedAt,
+          viewCount: normalizeCountValue(post.viewCount, post.view_count),
+          likeCount: Number(post.likeCount || 0),
+          commentCount: Number(post.commentCount || 0),
+          participantCount: Number(post.participantCount || 0)
+        }))
+      }
     });
   } catch (error) {
     next(error);
