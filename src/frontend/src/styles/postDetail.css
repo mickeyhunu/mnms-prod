@@ -303,28 +303,25 @@
 
 .piece-participants-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - 50px) / 6);
     gap: 10px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
 }
 
 .piece-participant-chip {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 0;
-    gap: 5px;
-    padding: 12px 10px;
-    border-radius: 16px;
-    background: #f8fafc;
-    border: 1px solid #e6e8eb;
     color: #55606d;
     font-size: 13px;
     text-align: center;
 }
 
 .piece-participant-avatar {
-    width: 48px;
-    height: 48px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     object-fit: cover;
     background: #eceff3;
