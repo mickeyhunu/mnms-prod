@@ -582,7 +582,8 @@ async function publicProfile(req, res, next) {
     if (!nickname) return res.status(400).json({ message: '닉네임을 입력해주세요.' });
 
     const profile = await findPublicProfileByNickname(nickname);
-    if (!profile) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
+    const isAdminProfile = String(profile?.role || '').toUpperCase() === 'ADMIN';
+    if (!profile || isAdminProfile) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
 
     const totalPoints = Number(profile.totalPoints || 0);
     const memberLevel = resolveMemberLevel(totalPoints);
