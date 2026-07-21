@@ -773,6 +773,7 @@ function getBoardLabel(boardType) {
         ANON: '익명',
         REVIEW: '후기',
         STORY: '썰',
+        PIECE: '조각',
         ATTENDANCE: '출석',
         QUESTION: '질문',
         PROMOTION: '홍보'
