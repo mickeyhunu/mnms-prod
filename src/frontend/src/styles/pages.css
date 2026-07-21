@@ -1226,9 +1226,24 @@
   overflow-wrap: anywhere;
 }
 
+.member-profile-joined-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.member-profile-joined-date time {
+  color: #0f172a;
+  font-weight: 800;
+}
+
 .member-profile-stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin: 24px 0 0;
 }
