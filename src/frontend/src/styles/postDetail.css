@@ -292,26 +292,62 @@
 }
 
 .piece-participants-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+    gap: 10px;
 }
 
 .piece-participant-chip {
-    display: inline-flex;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    border-radius: 999px;
+    min-width: 0;
+    gap: 5px;
+    padding: 12px 10px;
+    border-radius: 16px;
     background: #f8fafc;
     border: 1px solid #e6e8eb;
     color: #55606d;
+    font-size: 13px;
+    text-align: center;
+}
+
+.piece-participant-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #eceff3;
+    border: 1px solid #e1e5ea;
+}
+
+.piece-participant-nickname {
+    width: 100%;
+    color: #1f2630;
     font-size: 14px;
+    font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .piece-participant-role {
     font-weight: 800;
-    color: #1f2630;
+    color: #eb4c5f;
+}
+
+.piece-participant-introduction {
+    display: -webkit-box;
+    width: 100%;
+    overflow: hidden;
+    color: #707b88;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.piece-participant-attendance {
+    margin-top: 2px;
 }
 
 .post-actions {

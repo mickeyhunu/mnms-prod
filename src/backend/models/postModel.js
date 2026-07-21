@@ -366,6 +366,7 @@ async function findPostDetailById(id) {
             COALESCE(p.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
             COALESCE(p.author_member_type_snapshot, u.member_type, 'MEMBER') AS authorMemberType,
             u.profile_image_url AS authorProfileImageUrl,
+            u.profile_introduction AS authorProfileIntroduction,
             p.author_role_snapshot AS authorRoleSnapshot,
             p.author_member_type_snapshot AS authorMemberTypeSnapshot,
             (
@@ -676,7 +677,9 @@ async function listPieceParticipants(postId) {
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT pp.post_id AS postId, pp.user_id AS userId, pp.attended_at AS attendedAt, pp.created_at AS joinedAt,
-            COALESCE(u.nickname, '회원') AS nickname
+            COALESCE(u.nickname, '회원') AS nickname,
+            u.profile_image_url AS profileImageUrl,
+            u.profile_introduction AS profileIntroduction
        FROM piece_participants pp
        LEFT JOIN users u ON u.id = pp.user_id
       WHERE pp.post_id = ?
