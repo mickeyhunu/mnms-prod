@@ -862,7 +862,6 @@ async function loadActivityHistory() {
                                 <div>
                                     <strong>${formatActivityTitle(post.title, post.boardType || 'PIECE')}</strong>
                                     <p>참여일 ${sanitizeHTML(formatDate(post.joinedAt || post.createdAt))} · 댓글 ${Number(post.commentCount || 0)} · 조회수 ${Number(post.viewCount || 0)} · 추천수 ${Number(post.likeCount || 0)}</p>
-                                    <p>참여자 ${Number(post.participantCount || 0)}명${post.attendedAt ? ` · 출석 ${sanitizeHTML(formatDate(post.attendedAt))}` : ''}</p>
                                 </div>
                             </a>
                         `).join('')}
