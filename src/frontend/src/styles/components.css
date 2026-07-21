@@ -8,6 +8,10 @@
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.card.create-post-card {
+    border-radius: 0;
+}
+
 
 .post-card {
     background: var(--surface-color);
