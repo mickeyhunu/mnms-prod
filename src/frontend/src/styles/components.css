@@ -868,3 +868,13 @@
     border-color: var(--primary-color);
     color: var(--primary-color);
 }
+
+.member-profile-author-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.member-profile-author-link:hover,
+.member-profile-author-link:focus-visible {
+    text-decoration: underline;
+}

@@ -38,6 +38,22 @@ function renderPostList(posts, container) {
     container.innerHTML = normalPosts.map((post, index) => createBoardRow(post, false, index)).join('');
 }
 
+
+function createMemberProfileHref(nickname) {
+    const normalizedNickname = String(nickname || '').trim();
+    if (!normalizedNickname || normalizedNickname === '익명') return '';
+
+    return `/@${encodeURIComponent(normalizedNickname)}`;
+}
+
+function createAuthorProfileLink(post, content) {
+    const authorName = getDisplayAuthorName(post);
+    const href = createMemberProfileHref(authorName);
+    if (!href) return content;
+
+    return `<a class="member-profile-author-link" href="${href}" aria-label="${sanitizeHTML(authorName)} 프로필 보기">${content}</a>`;
+}
+
 function createBoardRow(post, isNotice = false, index = 0) {
     const noticeType = String(post.noticeType || 'NOTICE').toUpperCase();
     const noticeText = noticeType === 'IMPORTANT' ? '필독' : '공지';
@@ -64,7 +80,7 @@ function createBoardRow(post, isNotice = false, index = 0) {
                 ${newBadge}
                 ${post.commentCount > 0 ? `<small>[${post.commentCount}]</small>` : ''}
             </td>
-            <td class="col-author">${sanitizeHTML(authorName || `작성자 #${post.authorId || ''}`)}${authorBadgeMarkup}${ownBadgeMarkup}</td>
+            <td class="col-author">${createAuthorProfileLink(post, `${sanitizeHTML(authorName || `작성자 #${post.authorId || ''}`)}${authorBadgeMarkup}`)}${ownBadgeMarkup}</td>
             <td class="col-date">${formatDate(post.createdAt)}</td>
             <td class="col-like">${post.likeCount || 0}</td>
             <td class="col-view">${post.viewCount || 0}</td>
@@ -107,7 +123,7 @@ function createPostCard(post) {
                         <a href="${createPostDetailPath(post)}">${titlePrefix}${sanitizeHTML(post.title)}</a>
                     </h3>
                     <div class="post-meta">
-                        <span class="post-author">${sanitizeHTML(authorName || '작성자 #' + post.authorId)}${authorBadgeMarkup}${ownBadgeMarkup}</span>
+                        <span class="post-author">${createAuthorProfileLink(post, `${sanitizeHTML(authorName || '작성자 #' + post.authorId)}${authorBadgeMarkup}`)}${ownBadgeMarkup}</span>
                         <span class="post-date">${formatDate(post.createdAt)}</span>
                         <span class="post-stats">
                             <span class="like-count">👍 ${post.likeCount || 0}</span>
