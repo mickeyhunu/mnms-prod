@@ -22,6 +22,59 @@ function renderMemberProfileError(message) {
     root.innerHTML = `<section class="member-profile-card member-profile-empty"><p>${sanitizeHTML(message)}</p><a class="btn btn-primary" href="/community">커뮤니티로 이동</a></section>`;
 }
 
+
+function parseMemberProfileLevelLabel(rawLabel = '') {
+    const label = String(rawLabel || '')
+        .replace(/<\/?strong>/gi, '')
+        .replace(/\*\*/g, '')
+        .trim();
+
+    if (!label) return { image: '', emoji: '', title: '' };
+
+    const imageMatch = label.match(/^((?:[a-z]:\\workspace\\mnms-prod\\)?(?:\/?src)?\/?assets\/lv-badges\/lv\d+\.png)\s*(.*)$/i);
+    if (imageMatch) {
+        const filenameMatch = String(imageMatch[1]).replace(/\\/g, '/').match(/(lv\d+\.png)$/i);
+        const filename = (filenameMatch?.[1] || '').toLowerCase();
+
+        if (filename) {
+            return {
+                image: `/src/assets/lv-badges/${filename}`,
+                emoji: '',
+                title: String(imageMatch[2] || '').trim()
+            };
+        }
+    }
+
+    const emojiMatch = label.match(/^(\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?(?:\s*\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?)*)\s*(.*)$/u);
+    if (emojiMatch) {
+        return {
+            image: '',
+            emoji: emojiMatch[1].trim(),
+            title: String(emojiMatch[2] || '').trim()
+        };
+    }
+
+    return { image: '', emoji: '', title: label };
+}
+
+function renderMemberProfileLevelLabel(rawLabel = '') {
+    const parsed = parseMemberProfileLevelLabel(rawLabel);
+    const title = parsed.title || (!parsed.image && !parsed.emoji ? '-' : '');
+    const titleMarkup = title
+        ? `<span class="member-profile-level-title">${sanitizeHTML(title)}</span>`
+        : '';
+
+    if (parsed.image) {
+        return `<span class="member-profile-level-label"><img class="member-profile-level-badge" src="${sanitizeHTML(parsed.image)}" alt="회원 등급 배지" loading="lazy">${titleMarkup}</span>`;
+    }
+
+    if (parsed.emoji) {
+        return `<span class="member-profile-level-label"><span class="member-profile-level-emoji" aria-hidden="true">${sanitizeHTML(parsed.emoji)}</span>${titleMarkup}</span>`;
+    }
+
+    return sanitizeHTML(title);
+}
+
 function renderMemberProfile(profile) {
     const root = document.getElementById('member-profile-root');
     if (!root) return;
@@ -37,7 +90,7 @@ function renderMemberProfile(profile) {
                 <div class="member-profile-title">
                     <span class="member-profile-label">/@${sanitizeHTML(profile.nickname || '')}</span>
                     <h2>${sanitizeHTML(profile.nickname || '회원')}</h2>
-                    <p>${sanitizeHTML(levelCaption)} · ${sanitizeHTML(levelLabel || '-')}</p>
+                    <p>${sanitizeHTML(levelCaption)} · ${renderMemberProfileLevelLabel(levelLabel || '-')}</p>
                 </div>
             </div>
             <dl class="member-profile-stats">

@@ -1184,6 +1184,24 @@
   font-weight: 700;
 }
 
+.member-profile-level-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  vertical-align: middle;
+}
+
+.member-profile-level-badge {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.member-profile-level-emoji {
+  line-height: 1;
+}
+
 .member-profile-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
