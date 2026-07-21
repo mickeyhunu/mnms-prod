@@ -626,6 +626,15 @@ function normalizePieceSummaryRows(rows) {
     return [...summaryRows, ...rows.filter((row) => !consumedLabels.has(row.label))];
 }
 
+function getPieceMaximumParticipantCount(content) {
+    const rawContent = String(content || '');
+    const maxMatch = rawContent.match(/^\s*최대 인원\s*:\s*(\d+)/m);
+    if (maxMatch) return Math.max(1, Number(maxMatch[1]) || 1);
+
+    const summaryMaxMatch = rawContent.match(/최대\s*(\d+)명/);
+    return summaryMaxMatch ? Math.max(1, Number(summaryMaxMatch[1]) || 1) : 1;
+}
+
 function renderPiecePostContent(content) {
     const rawContent = String(content || '');
     const startToken = '<!-- PIECE_TEMPLATE_START -->';
@@ -654,6 +663,7 @@ function renderPiecePostContent(content) {
             <dl class="piece-summary-list">
                 ${rows.map((row) => `<div><dt>${sanitizeHTML(row.label)}</dt><dd>${sanitizeHTML(row.value)}</dd></div>`).join('')}
             </dl>
+            <button type="button" class="btn btn-primary piece-join-btn" id="piece-join-btn">참여하기</button>
         </section>` : '';
 
     return `${summaryMarkup}${bodyContent ? renderPostContent(bodyContent) : ''}`;
@@ -747,6 +757,20 @@ function renderPostDetail(post) {
         renderPostImages(post.imageUrls);
     } else {
         renderPostImages([]);
+    }
+
+    const participantsElement = document.getElementById('piece-participants');
+    const participantsCountElement = document.getElementById('piece-participants-count');
+    const participantsListElement = document.getElementById('piece-participants-list');
+
+    if (participantsElement && participantsCountElement && participantsListElement) {
+        const maxParticipants = boardType === 'PIECE' ? getPieceMaximumParticipantCount(post.content || '') : 0;
+        const currentParticipants = boardType === 'PIECE' && !isHiddenPost ? 1 : 0;
+        participantsElement.classList.toggle('hidden', boardType !== 'PIECE' || isHiddenPost);
+        participantsCountElement.textContent = `${currentParticipants} / ${maxParticipants || 1}`;
+        participantsListElement.innerHTML = boardType === 'PIECE' && !isHiddenPost
+            ? `<span class="piece-participant-chip"><span class="piece-participant-role">조각장</span>${sanitizeHTML(post.authorNickname || '글쓴이')}</span>`
+            : '';
     }
 
     const likeBtn = document.getElementById('like-btn');
