@@ -109,27 +109,12 @@ function parsePieceDateTime(value) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function buildPieceDateTimeDebugPayload(dateTime = null) {
-  const serverNow = new Date();
-  return {
-    serverTime: serverNow.toISOString(),
-    serverTimestamp: serverNow.getTime(),
-    selectedTime: dateTime instanceof Date && !Number.isNaN(dateTime.getTime()) ? dateTime.toISOString() : null,
-    selectedTimestamp: dateTime instanceof Date && !Number.isNaN(dateTime.getTime()) ? dateTime.getTime() : null,
-    serverTimezoneOffsetMinutes: serverNow.getTimezoneOffset()
-  };
-}
-
 function validatePiecePostContent(content) {
   const rows = parsePieceTemplateRows(content);
   if (!rows.size) return '조각게시판 작성 양식을 확인해주세요.';
 
   const dateTime = parsePieceDateTime(rows.get('시간') || rows.get('날짜/시간'));
-  const dateTimeDebug = buildPieceDateTimeDebugPayload(dateTime);
-  console.log('[PieceDateTime] 서버 시간 비교', dateTimeDebug);
-  if (!dateTime || dateTime.getTime() < Date.now()) {
-    return { message: '조각 날짜/시간은 현재 이후로 선택해주세요.', ...dateTimeDebug };
-  }
+  if (!dateTime || dateTime.getTime() < Date.now()) return '조각 날짜/시간은 현재 이후로 선택해주세요.';
 
   const capacity = rows.get('인원') || '';
   const [capacityMinText, capacityMaxText] = capacity.split('/');
@@ -912,12 +897,7 @@ async function createPost(req, res, next) {
     }
     if (boardType === BOARD_TYPES.PIECE) {
       const pieceValidationError = validatePiecePostContent(content);
-      if (pieceValidationError) {
-        if (typeof pieceValidationError === 'string') {
-          return res.status(400).json({ message: pieceValidationError });
-        }
-        return res.status(400).json(pieceValidationError);
-      }
+      if (pieceValidationError) return res.status(400).json({ message: pieceValidationError });
     }
     if (boardType === BOARD_TYPES.ATTENDANCE) {
       const existingAttendancePost = await postModel.findUserAttendancePostForCurrentDbDay(req.user.id);
@@ -991,12 +971,7 @@ async function updatePost(req, res, next) {
     const nextContent = req.body.content ?? post.content;
     if (targetBoardType === BOARD_TYPES.PIECE) {
       const pieceValidationError = validatePiecePostContent(nextContent);
-      if (pieceValidationError) {
-        if (typeof pieceValidationError === 'string') {
-          return res.status(400).json({ message: pieceValidationError });
-        }
-        return res.status(400).json(pieceValidationError);
-      }
+      if (pieceValidationError) return res.status(400).json({ message: pieceValidationError });
     }
     const hasPostBodyChanged = String(nextTitle) !== String(post.title)
       || String(nextContent) !== String(post.content);

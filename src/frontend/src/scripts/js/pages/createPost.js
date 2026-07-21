@@ -170,25 +170,6 @@ function parsePieceDateTimeInputValue(value) {
     return Number.isNaN(date.getTime()) ? null : date;
 }
 
-
-function logPieceDateTimeComparison(context, selectedDateTime = null, serverTime = null) {
-    const localNow = new Date();
-    const serverDate = serverTime ? new Date(serverTime) : null;
-    console.log('[PieceDateTime] 서버/로컬 시간 비교', {
-        context,
-        inputValue: document.getElementById('piece-datetime')?.value || '',
-        selectedDateTime: selectedDateTime instanceof Date && !Number.isNaN(selectedDateTime.getTime())
-            ? selectedDateTime.toISOString()
-            : null,
-        localNow: localNow.toISOString(),
-        localTimezoneOffsetMinutes: localNow.getTimezoneOffset(),
-        serverNow: serverDate && !Number.isNaN(serverDate.getTime()) ? serverDate.toISOString() : serverTime,
-        serverLocalDiffMs: serverDate && !Number.isNaN(serverDate.getTime())
-            ? serverDate.getTime() - localNow.getTime()
-            : null
-    });
-}
-
 function formatPieceDateTimeValue(value) {
     if (!value) return '';
     const date = parsePieceDateTimeInputValue(value);
@@ -306,11 +287,9 @@ function getPieceValidationError() {
     if (dateTimeInput?.value) {
         const selectedDateTime = parsePieceDateTimeInputValue(dateTimeInput.value);
         if (!selectedDateTime || selectedDateTime.getTime() <= Date.now()) {
-            logPieceDateTimeComparison('client-validation-failed', selectedDateTime);
             setMinimumPieceDateTime();
             return '조각 날짜/시간은 현재 이후로 선택해주세요.';
         }
-        logPieceDateTimeComparison('client-validation-passed', selectedDateTime);
         setMinimumPieceDateTime();
     }
 
@@ -941,9 +920,6 @@ async function handleSubmit(event) {
         handlePostSubmitSuccess();
     } catch (error) {
         console.error('글 작성 에러:', error);
-        if (boardType === 'PIECE') {
-            logPieceDateTimeComparison('submit-error', parsePieceDateTimeInputValue(document.getElementById('piece-datetime')?.value), error.data?.serverTime);
-        }
         if (error.status === 401) {
             alert('로그인이 필요합니다. 다시 로그인해주세요.');
             window.location.href = '/login';
