@@ -1820,8 +1820,8 @@ const pageRegistry = {
                 </div>
               </div>
             </div>
-            <label class="profile-introduction-field">자기소개 (200자 제한)
-              <textarea id="profile-introduction" name="profileIntroduction" maxlength="200" rows="4" placeholder="자기소개를 200자 이내로 입력해주세요."></textarea>
+            <label class="profile-introduction-field">자기소개
+              <textarea id="profile-introduction" name="profileIntroduction" maxlength="200" rows="4" placeholder="자기소개를 입력해주세요."></textarea>
             </label>
             <div class="profile-form-grid">
               <label>아이디
