@@ -696,7 +696,10 @@ function renderPieceJoinButton(post, isCurrentAuthor, isHiddenPost) {
     if (!isPiecePost) return;
 
     joinBtn.disabled = false;
-    joinBtn.dataset.pieceAction = isCurrentAuthor ? 'attendance' : (post.isPieceParticipant ? 'cancel' : 'join');
+    const pieceAction = isCurrentAuthor ? 'attendance' : (post.isPieceParticipant ? 'cancel' : 'join');
+    joinBtn.dataset.pieceAction = pieceAction;
+    joinBtn.classList.toggle('btn-primary', pieceAction !== 'cancel');
+    joinBtn.classList.toggle('btn-danger', pieceAction === 'cancel');
     joinBtn.textContent = isCurrentAuthor ? '출석 체크' : (post.isPieceParticipant ? '참여 취소' : '참여하기');
 }
 
