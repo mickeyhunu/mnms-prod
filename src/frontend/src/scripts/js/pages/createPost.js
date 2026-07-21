@@ -143,6 +143,52 @@ async function setupPieceLocationOptions() {
     });
 }
 
+
+function formatPieceLocationValue(city, district) {
+    const normalizedCity = String(city || '').trim();
+    const normalizedDistrict = String(district || '').trim();
+    const displayCity = normalizedCity && !/[시도]$/.test(normalizedCity) ? `${normalizedCity}시` : normalizedCity;
+    return [displayCity, normalizedDistrict].filter(Boolean).join(' ');
+}
+
+function formatPieceDateTimeValue(value) {
+    if (!value) return '';
+    const [datePart, timePart = ''] = String(value).split('T');
+    const [year, month, day] = datePart.split('-').map((item) => Number(item));
+    if (!year || !month || !day) return String(value);
+    return `${year}년 ${month}월 ${day}일${timePart ? ` ${timePart}` : ''}`;
+}
+
+function formatPieceRangeValue(minValue, maxValue, prefixLabel, separator = ' / ') {
+    const minText = String(minValue || '').trim();
+    const maxText = String(maxValue || '').trim();
+    if (minText && maxText) return `${prefixLabel} ${minText}${separator}최대 ${maxText}`;
+    if (minText) return `${prefixLabel} ${minText}`;
+    if (maxText) return `최대 ${maxText}`;
+    return '';
+}
+
+function buildPieceTemplateRows() {
+    const city = getPieceInputValue(document.getElementById('piece-location-city'));
+    const district = getPieceInputValue(document.getElementById('piece-location-district'));
+    const dateTime = getPieceInputValue(document.getElementById('piece-datetime'));
+    const capacityMin = getPieceInputValue(document.getElementById('piece-capacity-min'));
+    const capacityMax = getPieceInputValue(document.getElementById('piece-capacity-max'));
+    const ageMin = getPieceInputValue(document.getElementById('piece-age-min'));
+    const ageMax = getPieceInputValue(document.getElementById('piece-age-max'));
+    const cost = getPieceInputValue(document.getElementById('piece-cost'));
+    const drinking = getPieceInputValue(document.getElementById('piece-drinking'));
+
+    return [
+        { label: '📍 장소', value: formatPieceLocationValue(city, district) },
+        { label: '🕘 시간', value: formatPieceDateTimeValue(dateTime) },
+        { label: '👥 인원', value: formatPieceRangeValue(capacityMin, capacityMax, '최소') },
+        { label: '🎂 연령대', value: ageMin && ageMax ? `${ageMin}~${ageMax}` : (ageMin || ageMax) },
+        { label: '💰 1인 예상 비용', value: cost },
+        { label: '🍻 주량', value: drinking }
+    ].filter((item) => item.value);
+}
+
 function getPieceInputs() {
     return Array.from(document.querySelectorAll('.piece-input'));
 }
@@ -205,10 +251,7 @@ function stripPieceTemplate(content) {
 function buildPieceTemplateContent(content) {
     if (!isPieceBoardSelected()) return stripPieceTemplate(content);
 
-    const rows = getPieceInputs()
-        .map((input) => ({ label: input.dataset.pieceLabel || '', value: getPieceInputValue(input) }))
-        .filter((item) => item.label && item.value);
-    const templateLines = rows.map((item) => `${item.label}: ${item.value}`).join('\n');
+    const templateLines = buildPieceTemplateRows().map((item) => `${item.label}: ${item.value}`).join('\n');
     const cleanContent = stripPieceTemplate(content);
 
     return `${PIECE_TEMPLATE_START}\n[조각 모집 정보]\n${templateLines}\n${PIECE_TEMPLATE_END}${cleanContent ? `\n\n${cleanContent}` : ''}`;

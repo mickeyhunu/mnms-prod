@@ -595,6 +595,37 @@ function updateCommentFormAvailability(post) {
 }
 
 
+
+function formatPieceDisplayCity(city) {
+    const normalizedCity = String(city || '').trim();
+    return normalizedCity && !/[시도]$/.test(normalizedCity) ? `${normalizedCity}시` : normalizedCity;
+}
+
+function formatPieceDisplayDateTime(value) {
+    const rawValue = String(value || '').trim();
+    if (!rawValue) return '';
+    const match = rawValue.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2})/);
+    if (!match) return rawValue;
+    return `${match[1]}년 ${Number(match[2])}월 ${Number(match[3])}일 ${match[4]}`;
+}
+
+function normalizePieceSummaryRows(rows) {
+    const rowMap = new Map(rows.map((row) => [row.label, row.value]));
+    if (!rowMap.has('시/도') && !rowMap.has('구/군') && !rowMap.has('날짜/시간')) return rows;
+
+    const summaryRows = [
+        { label: '📍 장소', value: [formatPieceDisplayCity(rowMap.get('시/도')), rowMap.get('구/군')].filter(Boolean).join(' ') },
+        { label: '🕘 시간', value: formatPieceDisplayDateTime(rowMap.get('날짜/시간')) },
+        { label: '👥 인원', value: [rowMap.get('최소 인원') ? `최소 ${rowMap.get('최소 인원')}` : '', rowMap.get('최대 인원') ? `최대 ${rowMap.get('최대 인원')}` : ''].filter(Boolean).join(' / ') },
+        { label: '🎂 연령대', value: [rowMap.get('최소 연령'), rowMap.get('최대 연령')].filter(Boolean).join('~') },
+        { label: '💰 1인 예상 비용', value: rowMap.get('1인 예상 비용') },
+        { label: '🍻 주량', value: rowMap.get('주량') }
+    ].filter((row) => row.value);
+
+    const consumedLabels = new Set(['시/도', '구/군', '날짜/시간', '최소 인원', '최대 인원', '최소 연령', '최대 연령', '1인 예상 비용', '주량']);
+    return [...summaryRows, ...rows.filter((row) => !consumedLabels.has(row.label))];
+}
+
 function renderPiecePostContent(content) {
     const rawContent = String(content || '');
     const startToken = '<!-- PIECE_TEMPLATE_START -->';
@@ -608,14 +639,14 @@ function renderPiecePostContent(content) {
 
     const templateContent = rawContent.slice(startIndex + startToken.length, endIndex);
     const bodyContent = `${rawContent.slice(0, startIndex)}${rawContent.slice(endIndex + endToken.length)}`.trim();
-    const rows = templateContent.split('\n')
+    const rows = normalizePieceSummaryRows(templateContent.split('\n')
         .map((line) => line.trim())
         .filter((line) => line.includes(':'))
         .map((line) => {
             const [label, ...valueParts] = line.split(':');
             return { label: label.trim(), value: valueParts.join(':').trim() };
         })
-        .filter((row) => row.label && row.value);
+        .filter((row) => row.label && row.value));
 
     const summaryMarkup = rows.length ? `
         <section class="piece-summary" aria-label="조각 모집 정보">
