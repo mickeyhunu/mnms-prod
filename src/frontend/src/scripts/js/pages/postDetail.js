@@ -740,7 +740,7 @@ function renderPieceParticipantCard(participant = {}, { isLeader = false, isCurr
             : (attended ? '<span class="piece-participant-role">출석 완료</span>' : '');
     const secondaryContent = isLeader
         ? '<span class="piece-participant-role">조각장</span>'
-        : `<span class="piece-participant-introduction">${sanitizeHTML(introduction || '자기소개가 없습니다.')}</span>`;
+        : `<span class="piece-participant-introduction">${sanitizeHTML(introduction || '-')}</span>`;
 
     return `
         <span class="piece-participant-chip">
