@@ -26,6 +26,35 @@ const postDetailTemplate = `
 
     <main class="main-content">
         <div class="container post-detail-page">
+            <header class="post-detail-header">
+                <div class="post-header-left">
+                    <button type="button" class="icon-btn icon-btn-square" id="back-btn" aria-label="뒤로가기">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="m15 18-6-6 6-6"></path>
+                        </svg>
+                    </button>
+                    <span class="post-board-name" id="post-board-name">게시판</span>
+                </div>
+                <div class="post-header-right">
+                    <button type="button" class="icon-btn icon-btn-square" id="share-btn" aria-label="공유하기">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                            <polyline points="16 6 12 2 8 6"></polyline>
+                            <line x1="12" x2="12" y1="2" y2="15"></line>
+                        </svg>
+                    </button>
+                    <div class="post-more-wrapper">
+                        <button type="button" class="icon-btn" id="post-more-btn" aria-label="더보기"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="12" cy="19" r="1.4"></circle></svg></button>
+                        <div class="post-more-menu hidden" id="post-more-menu">
+                            <button type="button" class="menu-item" id="report-btn">신고하기</button>
+                            <button type="button" class="menu-item hidden" id="edit-btn">수정</button>
+                            <button type="button" class="menu-item danger hidden" id="delete-btn">삭제</button>
+                            <span class="menu-empty hidden" id="post-more-empty">없음</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
             <div class="loading" id="loading">
                 <div class="spinner"></div>
                 <p>게시글을 불러오는 중...</p>
@@ -37,35 +66,6 @@ const postDetailTemplate = `
             </div>
 
             <div class="bbs-view max-contents post-detail hidden" id="post-detail">
-                <header class="post-detail-header">
-                    <div class="post-header-left">
-                        <button type="button" class="icon-btn icon-btn-square" id="back-btn" aria-label="뒤로가기">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="m15 18-6-6 6-6"></path>
-                            </svg>
-                        </button>
-                        <span class="post-board-name" id="post-board-name">게시판</span>
-                    </div>
-                    <div class="post-header-right">
-                        <button type="button" class="icon-btn icon-btn-square" id="share-btn" aria-label="공유하기">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-                                <polyline points="16 6 12 2 8 6"></polyline>
-                                <line x1="12" x2="12" y1="2" y2="15"></line>
-                            </svg>
-                        </button>
-                        <div class="post-more-wrapper">
-                            <button type="button" class="icon-btn" id="post-more-btn" aria-label="더보기"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="12" cy="19" r="1.4"></circle></svg></button>
-                            <div class="post-more-menu hidden" id="post-more-menu">
-                                <button type="button" class="menu-item" id="report-btn">신고하기</button>
-                                <button type="button" class="menu-item hidden" id="edit-btn">수정</button>
-                                <button type="button" class="menu-item danger hidden" id="delete-btn">삭제</button>
-                                <span class="menu-empty hidden" id="post-more-empty">없음</span>
-                            </div>
-                        </div>
-                    </div>
-                </header>
-
                 <div class="top">
                     <div class="tit">
                         <h1 id="post-title"></h1>

@@ -12,9 +12,7 @@
 .post-card {
     background: var(--surface-color);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
     padding: 3%;
-    box-shadow: var(--shadow-sm);
     cursor: pointer;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
