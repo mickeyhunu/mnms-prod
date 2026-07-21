@@ -1839,8 +1839,10 @@ const pageRegistry = {
                 </div>
               </div>
             </div>
-            <label class="profile-introduction-field">자기소개
+            <label class="profile-introduction-field">
+              <span class="profile-field-title">자기소개</span>
               <textarea id="profile-introduction" name="profileIntroduction" maxlength="200" rows="4" placeholder="자기소개를 입력해주세요."></textarea>
+              <small class="profile-char-counter" id="profile-introduction-counter" aria-live="polite">0/200</small>
             </label>
             <div class="profile-form-grid">
               <label>아이디
@@ -1859,10 +1861,11 @@ const pageRegistry = {
               <label>
                 <span class="profile-field-title">닉네임</span>
                 <span class="profile-nickname-inline">
-                  <input type="text" id="profile-nickname" name="nickname" minlength="2" maxlength="8" required>
+                  <input type="text" id="profile-nickname" name="nickname" minlength="2" maxlength="20" required>
                   <button type="button" class="btn btn-outline btn-sm hidden" id="nickname-check-btn">중복 확인</button>
                 </span>
                 <small id="nickname-check-result" class="help-text"></small>
+                <small class="profile-char-counter profile-char-counter--nickname" id="profile-nickname-counter" aria-live="polite">0/20</small>
                 
               </label>
               <label>생년월일
@@ -2656,7 +2659,7 @@ const pageRegistry = {
                         <div class="form-group">
                             <label for="nickname" class="form-label">닉네임</label>
                             <div class="grid grid-2 register-nickname-inline">
-                                <input type="text" id="nickname" name="nickname" class="form-control" placeholder="사용할 닉네임을 입력하세요" minlength="2" maxlength="8" required>
+                                <input type="text" id="nickname" name="nickname" class="form-control" placeholder="사용할 닉네임을 입력하세요" minlength="2" maxlength="20" required>
                                 <button type="button" class="btn btn-outline btn-sm" id="check-nickname-btn">중복 확인</button>
                             </div>
                             <small class="text-muted" id="nickname-status">닉네임 중복 확인이 필요합니다.</small>
