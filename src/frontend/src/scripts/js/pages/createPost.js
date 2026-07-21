@@ -15,6 +15,7 @@ const COMPRESSIBLE_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'imag
 const DIRECT_UPLOAD_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
 const PIECE_TEMPLATE_START = '<!-- PIECE_TEMPLATE_START -->';
 const PIECE_TEMPLATE_END = '<!-- PIECE_TEMPLATE_END -->';
+const WRITABLE_BOARD_TYPES = new Set(['FREE', 'ANON', 'REVIEW', 'STORY', 'PIECE', 'ATTENDANCE', 'QUESTION', 'EVENT', 'PROMOTION']);
 
 const PIECE_LOCATION_FALLBACK_CITY = '서울';
 const PIECE_LOCATION_FALLBACK_DISTRICT = '강남구';
@@ -44,9 +45,14 @@ let pieceAdAreaAvailability = {
     districtsByRegion: { ...REGION_DISTRICT_MAP }
 };
 
-function isPieceBoardSelected() {
+function getSelectedBoardType() {
     const boardTypeSelect = document.getElementById('board-type');
-    return String(boardTypeSelect?.value || '').toUpperCase() === 'PIECE';
+    const selectedValue = String(boardTypeSelect?.selectedOptions?.[0]?.value || boardTypeSelect?.value || '').trim().toUpperCase();
+    return WRITABLE_BOARD_TYPES.has(selectedValue) ? selectedValue : '';
+}
+
+function isPieceBoardSelected() {
+    return getSelectedBoardType() === 'PIECE';
 }
 
 
@@ -638,10 +644,9 @@ function validateForm() {
     const title = document.getElementById('title');
     const content = document.getElementById('content');
     const submitBtn = document.getElementById('submit-btn');
-    const boardTypeSelect = document.getElementById('board-type');
     if (!title || !content || !submitBtn) return;
 
-    const hasSelectedBoard = isBusinessUser || Boolean(boardTypeSelect?.value);
+    const hasSelectedBoard = isBusinessUser || Boolean(getSelectedBoardType());
     const isValid = hasSelectedBoard &&
         title.value.trim().length > 0 &&
         content.value.trim().length >= 6 &&
@@ -717,7 +722,7 @@ async function handleSubmit(event) {
     const boardTypeSelect = document.getElementById('board-type');
     const boardType = isBusinessUser
         ? 'PROMOTION'
-        : (boardTypeSelect?.value || '');
+        : getSelectedBoardType();
     const isNotice = false;
     const noticeTargetBoards = [];
 

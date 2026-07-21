@@ -66,14 +66,28 @@ function parseId(value) {
 function parseBoardTypeOrLabel(value) {
   const raw = String(value || '').trim();
   if (!raw) return BOARD_TYPES.FREE;
-  return BOARD_LABEL_ALIASES[raw] || BOARD_LABEL_ALIASES[raw.toLowerCase()] || parseBoardType(raw);
+  return parseBoardTypeValue(raw);
 }
 
 function parseBoardType(value) {
-  const normalized = String(value || '').toUpperCase();
-  if (normalized === 'ALL') return 'ALL';
+  return parseBoardTypeValue(value, { fallback: BOARD_TYPES.FREE });
+}
+
+function parseBoardTypeValue(value, { allowAll = true, fallback = BOARD_TYPES.FREE } = {}) {
+  const raw = String(value || '').trim();
+  const normalized = raw.toUpperCase();
+  if (allowAll && normalized === 'ALL') return 'ALL';
   if (Object.values(BOARD_TYPES).includes(normalized)) return normalized;
-  return BOARD_TYPES.FREE;
+  const aliased = BOARD_LABEL_ALIASES[raw] || BOARD_LABEL_ALIASES[raw.toLowerCase()];
+  if (aliased && (allowAll || aliased !== 'ALL')) return aliased;
+  return fallback;
+}
+
+function parseWritableBoardType(payload = {}) {
+  return parseBoardTypeValue(
+    payload.boardType ?? payload.board_type ?? payload.category ?? payload.board,
+    { allowAll: false, fallback: null }
+  );
 }
 
 function isBusinessUser(user) {
@@ -652,11 +666,10 @@ async function createPost(req, res, next) {
 
     const { title, content } = req.body;
     if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
-    if (!String(req.body.boardType || '').trim()) {
+    const boardType = parseWritableBoardType(req.body);
+    if (!boardType) {
       return res.status(400).json({ message: '게시판을 선택해주세요.' });
     }
-
-    const boardType = parseBoardType(req.body.boardType);
     const isAdmin = req.user.role === 'ADMIN';
     if (!isAdmin && boardType === BOARD_TYPES.EVENT) {
       return res.status(403).json({ message: '이벤트게시판은 관리자만 글을 작성할 수 있습니다.' });
