@@ -1263,3 +1263,66 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.member-profile-activity {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    margin-top: 16px;
+    overflow: hidden;
+}
+
+.member-profile-activity .mypage-activity-tab-header {
+    display: flex;
+}
+
+.member-profile-activity .mypage-activity-tab {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 12px 6px 10px;
+    border-bottom: 2px solid transparent;
+}
+
+.member-profile-activity .mypage-activity-tab.is-active {
+    color: #111827;
+    border-bottom-color: #111827;
+}
+
+.member-profile-activity .mypage-activity-tab-panel {
+    display: none;
+}
+
+.member-profile-activity .mypage-activity-tab-panel.is-active {
+    display: block;
+}
+
+.member-profile-activity .mypage-point-history-list {
+    border-top: 1px solid #f1f5f9;
+}
+
+.member-profile-activity .mypage-point-history-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.member-profile-activity .mypage-point-history-row strong {
+    display: block;
+    font-size: 14px;
+    color: #0f172a;
+}
+
+.member-profile-activity .mypage-point-history-row p {
+    margin: 4px 0 0;
+    color: #94a3b8;
+    font-size: 12px;
+}
