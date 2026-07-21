@@ -4,6 +4,9 @@
 let currentUser = null;
 let nicknameCheckState = { checked: false, available: false, value: '' };
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
+const DEFAULT_PROFILE_IMAGE_URL = '/src/assets/image/img_profile.png';
+const PROFILE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+const PROFILE_IMAGE_ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']);
 function formatPhoneNumber(value) {
     const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
     if (digits.length <= 3) return digits;
@@ -15,6 +18,10 @@ function formatBirthDate(value) {
     const text = String(value || '').trim();
     if (!text) return '';
     return text.slice(0, 10);
+}
+
+function getProfileImageUrl(user = {}) {
+    return String(user.profileImageUrl || '').trim() || DEFAULT_PROFILE_IMAGE_URL;
 }
 
 function setHelpMessage(element, message, color) {
@@ -358,6 +365,8 @@ function renderProfileForm(user) {
     const nameField = document.getElementById('profile-name');
     const birthField = document.getElementById('profile-birth');
     const smsConsent = document.getElementById('sms-consent');
+    const profilePreview = document.getElementById('profile-image-preview');
+    const profileRemoveButton = document.getElementById('profile-image-remove-btn');
 
     if (loginIdField) loginIdField.value = user.loginId || '';
     if (nicknameInput) nicknameInput.value = user.nickname || '';
@@ -370,6 +379,11 @@ function renderProfileForm(user) {
     if (nameField) nameField.value = user.name || user.nickname || '';
     if (birthField) birthField.value = formatBirthDate(user.birthDate || user.birth || '');
     if (smsConsent) smsConsent.checked = Boolean(user.smsConsent);
+    if (profilePreview) {
+        profilePreview.src = getProfileImageUrl(user);
+        profilePreview.dataset.profileImageUrl = String(user.profileImageUrl || '').trim();
+    }
+    if (profileRemoveButton) profileRemoveButton.disabled = !String(user.profileImageUrl || '').trim();
 
     nicknameCheckState = { checked: true, available: true, value: user.nickname || '' };
 }
@@ -387,6 +401,11 @@ function bindProfileForm() {
     const phoneInput = form.querySelector('#profile-phone');
     const phoneVerifyButton = form.querySelector('#phone-verify-btn');
     const phoneVerifyResult = form.querySelector('#phone-verify-result');
+    const profileImageInput = form.querySelector('#profile-image-input');
+    const profileImageUploadButton = form.querySelector('#profile-image-upload-btn');
+    const profileImageRemoveButton = form.querySelector('#profile-image-remove-btn');
+    const profileImagePreview = form.querySelector('#profile-image-preview');
+    const profileImageResult = form.querySelector('#profile-image-result');
     const withdrawOpenButton = document.getElementById('withdraw-open-btn');
     const withdrawFormSection = document.getElementById('withdraw-form-section');
     const withdrawCancelButton = document.getElementById('withdraw-cancel-btn');
@@ -395,6 +414,40 @@ function bindProfileForm() {
     const withdrawResult = document.getElementById('withdraw-result');
 
     if (phoneInput) phoneInput.readOnly = true;
+
+    profileImageUploadButton?.addEventListener('click', () => profileImageInput?.click());
+    profileImageRemoveButton?.addEventListener('click', () => {
+        if (!profileImagePreview) return;
+        profileImagePreview.src = DEFAULT_PROFILE_IMAGE_URL;
+        profileImagePreview.dataset.profileImageUrl = '';
+        if (profileImageInput) profileImageInput.value = '';
+        profileImageRemoveButton.disabled = true;
+        setHelpMessage(profileImageResult, '저장하면 기존 프로필 이미지가 삭제됩니다.', '#6c757d');
+    });
+    profileImageInput?.addEventListener('change', () => {
+        const file = profileImageInput.files?.[0];
+        if (!file) return;
+        if (!PROFILE_IMAGE_ALLOWED_MIME_TYPES.has(file.type)) {
+            setHelpMessage(profileImageResult, 'JPG, PNG, WebP 정지 이미지만 선택해 주세요.', '#dc3545');
+            profileImageInput.value = '';
+            return;
+        }
+        if (file.size > PROFILE_IMAGE_MAX_BYTES) {
+            setHelpMessage(profileImageResult, '프로필 이미지는 5MB 이하만 등록할 수 있습니다.', '#dc3545');
+            profileImageInput.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            const dataUrl = String(reader.result || '');
+            if (!profileImagePreview || !dataUrl) return;
+            profileImagePreview.src = dataUrl;
+            profileImagePreview.dataset.profileImageUrl = dataUrl;
+            if (profileImageRemoveButton) profileImageRemoveButton.disabled = false;
+            setHelpMessage(profileImageResult, '저장하면 선택한 이미지로 변경됩니다.', '#198754');
+        };
+        reader.readAsDataURL(file);
+    });
 
     const updatePasswordMatchMessage = () => {
         if (!passwordMatchResult || !passwordConfirmInput) return;
@@ -647,7 +700,8 @@ function bindProfileForm() {
         const payload = {
             nickname,
             phone,
-            smsConsent: form.smsConsent.checked
+            smsConsent: form.smsConsent.checked,
+            profileImageUrl: String(profileImagePreview?.dataset.profileImageUrl || '').trim()
         };
 
         if (password) {
@@ -1349,6 +1403,9 @@ async function loadStats() {
                 <div class="mypage-summary-head">
                     <h3 class="mypage-summary-title">기본 정보</h3>
                     <a class="mypage-summary-action" href="/my-page/profile">정보 수정</a>
+                </div>
+                <div class="mypage-profile-image-wrap">
+                    <img class="mypage-profile-image" src="${sanitizeHTML(getProfileImageUrl(response))}" alt="프로필 이미지" loading="lazy">
                 </div>
                 <div class="mypage-summary-list">
                     <div class="mypage-summary-row"><span>아이디</span><strong>@${sanitizeHTML(response.loginId || '')}</strong></div>

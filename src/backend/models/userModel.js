@@ -507,6 +507,11 @@ async function updateUserProfile(userId, payload) {
     values.push(payload.sms_consent ? 1 : 0);
   }
 
+  if (Object.prototype.hasOwnProperty.call(payload, 'profile_image_url')) {
+    fields.push('profile_image_url = ?');
+    values.push(payload.profile_image_url || null);
+  }
+
   if (!fields.length) return;
 
   if (!hasNicknameUpdate) {

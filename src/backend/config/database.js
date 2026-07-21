@@ -335,6 +335,7 @@ async function initDatabase() {
     { name: 'marketing_consent', query: "ALTER TABLE users ADD COLUMN marketing_consent TINYINT(1) NOT NULL DEFAULT 0 AFTER privacy_consent" },
     { name: 'sms_consent', query: "ALTER TABLE users ADD COLUMN sms_consent TINYINT(1) NOT NULL DEFAULT 0 AFTER marketing_consent" },
     { name: 'last_nickname_changed_at', query: "ALTER TABLE users ADD COLUMN last_nickname_changed_at DATETIME NULL AFTER sms_consent" },
+    { name: 'profile_image_url', query: "ALTER TABLE users ADD COLUMN profile_image_url VARCHAR(1024) NULL AFTER last_nickname_changed_at" },
     { name: 'account_status', query: "ALTER TABLE users ADD COLUMN account_status ENUM('ACTIVE','SUSPENDED') NOT NULL DEFAULT 'ACTIVE' AFTER member_type" },
     { name: 'login_restricted_until', query: "ALTER TABLE users ADD COLUMN login_restricted_until DATETIME NULL AFTER account_status" },
     { name: 'is_login_restriction_permanent', query: "ALTER TABLE users ADD COLUMN is_login_restriction_permanent TINYINT(1) NOT NULL DEFAULT 0 AFTER login_restricted_until" },
