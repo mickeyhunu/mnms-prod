@@ -668,6 +668,57 @@ function normalizePieceSummaryRows(rows) {
     return [...summaryRows, ...rows.filter((row) => !consumedLabels.has(row.label))];
 }
 
+
+function parsePieceDateTime(value) {
+    const rawValue = String(value || '').trim();
+    if (!rawValue) return null;
+    const normalizedValue = rawValue
+        .replace(/(년|\.)\s*/g, '-')
+        .replace(/월\s*/g, '-')
+        .replace(/일\s*/g, ' ')
+        .replace(/시\s*/g, ':')
+        .replace(/분\s*/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    const date = new Date(normalizedValue.includes('T') ? normalizedValue : normalizedValue.replace(' ', 'T'));
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function getPieceTemplateRows(content) {
+    const rawContent = String(content || '');
+    const startToken = '<!-- PIECE_TEMPLATE_START -->';
+    const endToken = '<!-- PIECE_TEMPLATE_END -->';
+    const startIndex = rawContent.indexOf(startToken);
+    const endIndex = rawContent.indexOf(endToken);
+    if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) return new Map();
+
+    return rawContent.slice(startIndex + startToken.length, endIndex).split(/\r?\n/).reduce((rows, line) => {
+        const trimmedLine = line.trim();
+        if (!trimmedLine.includes(':')) return rows;
+        const [label, ...valueParts] = trimmedLine.split(':');
+        const normalizedLabel = label.replace(/^[^\w가-힣]+\s*/, '').trim();
+        const value = valueParts.join(':').trim();
+        if (normalizedLabel && value) rows.set(normalizedLabel, value);
+        return rows;
+    }, new Map());
+}
+
+function resolvePieceStatus(post) {
+    if (String(post?.boardType || '').toUpperCase() !== 'PIECE') return '';
+    if (post?.isPieceEnded || post?.pieceClosedAt) return '종료';
+    if (post?.pieceStatus) return post.pieceStatus;
+
+    const rows = getPieceTemplateRows(post?.content || '');
+    const startsAt = parsePieceDateTime(rows.get('시간') || rows.get('날짜/시간') || rows.get('일정') || rows.get('만남 시간'));
+    if (startsAt && startsAt.getTime() + (9 * 60 * 60 * 1000) <= Date.now()) return '종료';
+    if (startsAt && startsAt.getTime() <= Date.now()) return '진행중';
+    return '모집중';
+}
+
+function isPieceEnded(post) {
+    return resolvePieceStatus(post) === '종료';
+}
+
 function getPieceMaximumParticipantCount(content) {
     const rawContent = String(content || '');
     const maxMatch = rawContent.match(/^\s*최대 인원\s*:\s*(\d+)/m);
@@ -758,13 +809,14 @@ function renderPieceJoinButton(post, isCurrentAuthor, isHiddenPost) {
     joinBtn.classList.toggle('hidden', !isPiecePost);
     if (!isPiecePost) return;
 
-    joinBtn.disabled = false;
-    const pieceAction = isCurrentAuthor ? 'attendance' : (post.isPieceParticipant ? 'cancel' : 'join');
+    const ended = isPieceEnded(post);
+    joinBtn.disabled = ended;
+    const pieceAction = ended ? 'ended' : (isCurrentAuthor ? 'close' : (post.isPieceParticipant ? 'cancel' : 'join'));
     joinBtn.dataset.pieceAction = pieceAction;
     joinBtn.classList.toggle('btn-primary', pieceAction !== 'cancel');
     joinBtn.classList.toggle('btn-secondary', pieceAction === 'cancel');
     joinBtn.classList.remove('btn-danger');
-    joinBtn.textContent = isCurrentAuthor ? '출석 체크' : (post.isPieceParticipant ? '참여 취소' : '참여하기');
+    joinBtn.textContent = ended ? '종료' : (isCurrentAuthor ? '조각 종료' : (post.isPieceParticipant ? '참여 취소' : '참여하기'));
 }
 
 function renderPieceParticipants(post, isHiddenPost) {
@@ -800,14 +852,18 @@ async function handlePieceJoinAction() {
 
     const joinBtn = document.getElementById('piece-join-btn');
     const action = joinBtn?.dataset.pieceAction;
-    if (!joinBtn || !currentPostDetail || action === 'attendance') return;
+    if (!joinBtn || !currentPostDetail || action === 'ended') return;
+
+    if (action === 'close' && !confirm('이 조각을 종료하시겠습니까? 종료 후에는 참여할 수 없습니다.')) return;
 
     try {
         joinBtn.disabled = true;
-        joinBtn.textContent = action === 'cancel' ? '취소중...' : '참여중...';
-        const response = action === 'cancel'
-            ? await PostAPI.cancelPieceJoin(currentPostDetail.id)
-            : await PostAPI.joinPiece(currentPostDetail.id);
+        joinBtn.textContent = action === 'close' ? '종료중...' : (action === 'cancel' ? '취소중...' : '참여중...');
+        const response = action === 'close'
+            ? await PostAPI.closePiece(currentPostDetail.id)
+            : (action === 'cancel'
+                ? await PostAPI.cancelPieceJoin(currentPostDetail.id)
+                : await PostAPI.joinPiece(currentPostDetail.id));
         currentPostDetail = { ...currentPostDetail, ...response };
         renderPieceJoinButton(currentPostDetail, currentPostDetail.isAuthor || isCurrentUserPostAuthor(currentPostDetail), Boolean(currentPostDetail.isHidden));
         renderPieceParticipants(currentPostDetail, Boolean(currentPostDetail.isHidden));

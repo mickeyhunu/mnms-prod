@@ -135,6 +135,28 @@ function validatePiecePostContent(content) {
   return '';
 }
 
+
+function resolvePieceLifecycle(post) {
+  if (String(post?.boardType || post?.board_type || '').toUpperCase() !== BOARD_TYPES.PIECE) {
+    return { isEnded: false, status: '' };
+  }
+
+  const rows = parsePieceTemplateRows(post.content || '');
+  const startsAt = parsePieceDateTime(rows.get('시간') || rows.get('날짜/시간') || rows.get('일정') || rows.get('만남 시간'));
+  const closedAt = post.pieceClosedAt || post.piece_closed_at || null;
+  const autoEndsAt = startsAt ? new Date(startsAt.getTime() + (9 * 60 * 60 * 1000)) : null;
+  const isClosedByLeader = Boolean(closedAt);
+  const isAutoEnded = Boolean(autoEndsAt && autoEndsAt.getTime() <= Date.now());
+
+  return {
+    isEnded: isClosedByLeader || isAutoEnded,
+    status: isClosedByLeader || isAutoEnded ? '종료' : (startsAt && startsAt.getTime() <= Date.now() ? '진행중' : '모집중'),
+    startsAt: startsAt ? startsAt.toISOString() : null,
+    autoEndsAt: autoEndsAt ? autoEndsAt.toISOString() : null,
+    closedAt
+  };
+}
+
 function parsePagination(rawPage, rawSize) {
   const page = Number.parseInt(rawPage, 10);
   const size = Number.parseInt(rawSize, 10);
@@ -704,6 +726,7 @@ async function getPost(req, res, next) {
     const pieceParticipants = String(postDetail?.boardType || '').toUpperCase() === BOARD_TYPES.PIECE
       ? await postModel.listPieceParticipants(postId)
       : [];
+    const pieceLifecycle = resolvePieceLifecycle(postDetail);
 
     const isLiked = req.user
       ? await postModel.isPostLikedByUser(postId, req.user.id)
@@ -722,6 +745,11 @@ async function getPost(req, res, next) {
         attendedAt: participant.attendedAt
       })),
       isPieceParticipant: req.user ? pieceParticipants.some((participant) => Number(participant.userId) === Number(req.user.id)) : false,
+      pieceStatus: pieceLifecycle.status,
+      isPieceEnded: pieceLifecycle.isEnded,
+      pieceStartsAt: pieceLifecycle.startsAt,
+      pieceAutoEndsAt: pieceLifecycle.autoEndsAt,
+      pieceClosedAt: pieceLifecycle.closedAt,
       previousPost: adjacentPosts.previous,
       nextPost: adjacentPosts.next
     });
@@ -763,6 +791,11 @@ async function resolveJoinablePiecePost(req, res) {
 
   if (post.is_hidden) {
     res.status(403).json({ message: '관리자에 의해 제한된 조각은 참여할 수 없습니다.' });
+    return null;
+  }
+
+  if (resolvePieceLifecycle(post).isEnded) {
+    res.status(400).json({ message: '종료된 조각입니다.' });
     return null;
   }
 
@@ -817,6 +850,33 @@ async function checkPieceAttendance(req, res, next) {
 
     const participants = await postModel.checkPieceAttendance(post.id, participantUserId);
     res.json({ pieceParticipants: serializePieceParticipants(participants, req.user) });
+  } catch (error) {
+    next(error);
+  }
+}
+
+
+async function closePiece(req, res, next) {
+  try {
+    if (!req.user) return res.status(401).json({ message: '인증이 필요합니다.' });
+    const post = await resolveJoinablePiecePost(req, res);
+    if (!post) return;
+    if (Number(post.user_id) !== Number(req.user.id)) {
+      return res.status(403).json({ message: '조각장만 조각을 종료할 수 있습니다.' });
+    }
+
+    const updatedPost = await postModel.closePiecePost(post.id);
+    const participants = await postModel.listPieceParticipants(post.id);
+    const pieceLifecycle = resolvePieceLifecycle(updatedPost);
+    res.json({
+      ...updatedPost,
+      pieceParticipants: serializePieceParticipants(participants, req.user),
+      pieceStatus: pieceLifecycle.status,
+      isPieceEnded: pieceLifecycle.isEnded,
+      pieceStartsAt: pieceLifecycle.startsAt,
+      pieceAutoEndsAt: pieceLifecycle.autoEndsAt,
+      pieceClosedAt: pieceLifecycle.closedAt
+    });
   } catch (error) {
     next(error);
   }
@@ -1032,6 +1092,12 @@ async function deletePost(req, res, next) {
     }
     if (isSameUserId(post.user_id, req.user.id) && isBusinessUserManagingPreBusinessContent(req.user, post)) {
       return res.status(403).json({ message: getPreBusinessContentRestrictionMessage('게시글', '삭제') });
+    }
+    if (String(post.board_type || '').toUpperCase() === BOARD_TYPES.PIECE) {
+      const pieceParticipantCount = await postModel.countPieceParticipants(postId);
+      if (pieceParticipantCount > 0) {
+        return res.status(409).json({ message: '참여자가 있는 조각글은 삭제할 수 없습니다.' });
+      }
     }
 
     const likes = await postModel.listPointAwardedLikesByPostId(postId);
@@ -1257,6 +1323,7 @@ module.exports = {
   joinPiece,
   cancelPieceJoin,
   checkPieceAttendance,
+  closePiece,
   listComments,
   createComment,
   updateComment,
