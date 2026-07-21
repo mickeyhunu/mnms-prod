@@ -736,7 +736,7 @@ span.mypage-level-badge {
     justify-content: space-between;
     align-items: center;
     gap: 12px;
-    padding: 12px 12px;
+    padding: 12px;
     border-bottom: 1px solid #f1f5f9;
 }
 
