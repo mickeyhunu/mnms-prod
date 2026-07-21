@@ -373,11 +373,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
-.piece-participant-attendance {
-    margin-top: 2px;
-}
-
 .post-actions {
     border-top: 1px solid #eef1f4;
     background: #fafbfd;
