@@ -1818,7 +1818,6 @@ const pageRegistry = {
                   <button type="button" class="btn btn-outline btn-sm" id="profile-image-upload-btn">이미지 선택</button>
                   <button type="button" class="btn btn-outline btn-sm" id="profile-image-remove-btn">삭제</button>
                 </div>
-                <small id="profile-image-result" class="help-text">JPG, PNG, WebP 정지 이미지만 등록할 수 있습니다.</small>
               </div>
             </div>
             <div class="profile-form-grid">

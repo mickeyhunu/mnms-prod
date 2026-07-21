@@ -405,7 +405,6 @@ function bindProfileForm() {
     const profileImageUploadButton = form.querySelector('#profile-image-upload-btn');
     const profileImageRemoveButton = form.querySelector('#profile-image-remove-btn');
     const profileImagePreview = form.querySelector('#profile-image-preview');
-    const profileImageResult = form.querySelector('#profile-image-result');
     const withdrawOpenButton = document.getElementById('withdraw-open-btn');
     const withdrawFormSection = document.getElementById('withdraw-form-section');
     const withdrawCancelButton = document.getElementById('withdraw-cancel-btn');
@@ -422,18 +421,17 @@ function bindProfileForm() {
         profileImagePreview.dataset.profileImageUrl = '';
         if (profileImageInput) profileImageInput.value = '';
         profileImageRemoveButton.disabled = true;
-        setHelpMessage(profileImageResult, '저장하면 기존 프로필 이미지가 삭제됩니다.', '#6c757d');
     });
     profileImageInput?.addEventListener('change', () => {
         const file = profileImageInput.files?.[0];
         if (!file) return;
         if (!PROFILE_IMAGE_ALLOWED_MIME_TYPES.has(file.type)) {
-            setHelpMessage(profileImageResult, 'JPG, PNG, WebP 정지 이미지만 선택해 주세요.', '#dc3545');
+            alert('JPG, PNG, WebP 정지 이미지만 선택해 주세요.');
             profileImageInput.value = '';
             return;
         }
         if (file.size > PROFILE_IMAGE_MAX_BYTES) {
-            setHelpMessage(profileImageResult, '프로필 이미지는 5MB 이하만 등록할 수 있습니다.', '#dc3545');
+            alert('프로필 이미지는 5MB 이하만 등록할 수 있습니다.');
             profileImageInput.value = '';
             return;
         }
@@ -444,7 +442,6 @@ function bindProfileForm() {
             profileImagePreview.src = dataUrl;
             profileImagePreview.dataset.profileImageUrl = dataUrl;
             if (profileImageRemoveButton) profileImageRemoveButton.disabled = false;
-            setHelpMessage(profileImageResult, '저장하면 선택한 이미지로 변경됩니다.', '#198754');
         };
         reader.readAsDataURL(file);
     });
