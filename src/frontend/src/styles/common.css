@@ -458,10 +458,42 @@ body,
     background: #f8fafc;
 }
 
+.piece-summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
 .piece-summary-title {
-    margin: 0 0 10px;
+    margin: 0;
     font-weight: 800;
     color: var(--text-color);
+}
+
+.piece-status-badge {
+    flex: 0 0 auto;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.piece-status-badge.is-recruiting {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.piece-status-badge.is-progress {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.piece-status-badge.is-ended {
+    background: #e5e7eb;
+    color: #4b5563;
 }
 
 .piece-summary-list {
