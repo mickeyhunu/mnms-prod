@@ -830,8 +830,7 @@ async function loadActivityHistory() {
                             <a class="mypage-point-history-row" href="${createPostDetailPath(comment.postId, comment.postTitle)}">
                                 <div>
                                     <strong>${formatActivityTitle(comment.postTitle || '원문 보기', comment.postBoardType)}</strong>
-                                    <p>${sanitizeHTML(formatDate(comment.createdAt))}</p>
-                                    <p>${sanitizeHTML(comment.content || '')}</p>
+                                    <p>${sanitizeHTML(formatDate(comment.createdAt))} · 댓글 : ${sanitizeHTML(comment.content || '')}</p>
                                 </div>
                             </a>
                         `).join('')}
