@@ -137,7 +137,7 @@ function setupEventListeners() {
                 window.history.back();
                 return;
             }
-            window.location.href = '/';
+            window.location.href = '/community';
         });
     }
 
@@ -319,7 +319,7 @@ function navigateBackFromRestrictedPost() {
         return;
     }
 
-    window.location.href = '/';
+    window.location.href = '/community';
 }
 
 function handleRestrictedPostAccess(error) {
@@ -1829,7 +1829,7 @@ async function handleDeletePost() {
         showNotification('게시글이 삭제되었습니다.', 'success');
         
         setTimeout(() => {
-            window.location.href = '/';
+            window.location.href = '/community';
         }, 1000);
         
     } catch (error) {
