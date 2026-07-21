@@ -611,6 +611,28 @@ function resolvePieceStatus(post) {
     return '모집중';
 }
 
+function getPieceMaximumParticipantCount(content) {
+    const rawContent = String(content || '');
+    const maxMatch = rawContent.match(/^\s*최대 인원\s*:\s*(\d+)/m);
+    if (maxMatch) return Math.max(1, Number(maxMatch[1]) || 1);
+
+    const summaryMaxMatch = rawContent.match(/최대\s*(\d+)명/);
+    return summaryMaxMatch ? Math.max(1, Number(summaryMaxMatch[1]) || 1) : 1;
+}
+
+function getPieceCurrentParticipantCount(post) {
+    if (String(post?.boardType || '').toUpperCase() !== 'PIECE') return 0;
+
+    const additionalParticipants = Number(
+        post?.pieceParticipantCount
+        || post?.piece_participant_count
+        || post?.participantCount
+        || post?.participant_count
+        || 0
+    );
+    return 1 + Math.max(0, Number.isFinite(additionalParticipants) ? Math.floor(additionalParticipants) : 0);
+}
+
 function getPieceStatusBadgeMarkup(post) {
     const status = resolvePieceStatus(post);
     if (!status) return '';
@@ -621,7 +643,10 @@ function getPieceStatusBadgeMarkup(post) {
         종료: 'article-piece-status-ended'
     };
     const statusClass = statusClassMap[status] || 'article-piece-status-recruiting';
-    return `<span class="article-piece-status ${statusClass}">${sanitizeHTML(status)}</span>`;
+    const currentParticipants = getPieceCurrentParticipantCount(post);
+    const maxParticipants = getPieceMaximumParticipantCount(post?.content || post?.body || '');
+    const participantText = `${currentParticipants} / ${maxParticipants}`;
+    return `<span class="article-piece-status ${statusClass}">${sanitizeHTML(participantText)} ${sanitizeHTML(status)}</span>`;
 }
 
 function updatePagination() {
