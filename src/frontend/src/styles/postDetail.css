@@ -281,7 +281,7 @@
 .piece-participants {
     border-top: 1px solid #eef1f4;
     background: #fff;
-    padding: 14px 20px;
+    padding: 14px 0;
 }
 
 .piece-participants-header {
@@ -290,6 +290,7 @@
     justify-content: space-between;
     gap: 12px;
     margin-bottom: 10px;
+    padding: 0 20px;
 }
 
 .piece-participants-title {
@@ -313,14 +314,17 @@
 .piece-participants-list {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: calc((100% - 50px) / 6);
+    grid-auto-columns: clamp(48px, calc((100vw - 90px) / 6), 56px);
     gap: 10px;
     overflow-x: auto;
     overscroll-behavior-inline: contain;
+    padding: 0 20px;
+    scroll-padding-inline: 20px;
 }
 
 .piece-participant-chip {
     display: flex;
+    min-width: 0;
     flex-direction: column;
     align-items: center;
     color: #55606d;
