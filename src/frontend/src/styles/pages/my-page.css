@@ -168,6 +168,10 @@
     color: #212529;
 }
 
+.no-data {
+    padding: 12px;
+}
+
 .profile-form-grid {
     display: grid;
     grid-template-columns:1fr;
