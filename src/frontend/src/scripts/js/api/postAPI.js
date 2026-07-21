@@ -71,5 +71,29 @@ const PostAPI = {
             throw error;
         }
     },
+
+    async joinPiece(postId) {
+        try {
+            return await APIClient.post(`/api/posts/${postId}/piece-participants`);
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    async cancelPieceJoin(postId) {
+        try {
+            return await APIClient.delete(`/api/posts/${postId}/piece-participants/me`);
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    async checkPieceAttendance(postId, userId) {
+        try {
+            return await APIClient.post(`/api/posts/${postId}/piece-participants/${userId}/attendance`);
+        } catch (error) {
+            throw error;
+        }
+    },
 };
 
