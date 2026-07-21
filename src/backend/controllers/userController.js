@@ -144,6 +144,8 @@ function isBusinessAdDefaultImageUrl(imageUrl = '') {
 const BUSINESS_AD_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
 const BUSINESS_AD_IMAGE_MAX_BYTES = 8 * 1024 * 1024;
 const BUSINESS_AD_DESCRIPTION_IMAGE_LIMIT = 20;
+const USER_PROFILE_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
+const USER_PROFILE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
 function isDataUrlImage(value = '') {
   return Boolean(parseDataUrl(value)?.mimeType?.startsWith('image/'));
@@ -410,11 +412,13 @@ function getNicknameChangeAvailableAt(lastChangedAt) {
 }
 
 async function updateMyProfile(req, res, next) {
+  const uploadedProfileImageUrls = [];
   try {
     const nickname = String(req.body.nickname || '').trim();
     const phone = String(req.body.phone || '').trim();
     const password = String(req.body.password || '').trim();
     const smsConsent = Boolean(req.body.smsConsent);
+    const profileImageUrl = String(req.body.profileImageUrl || '').trim();
 
     const nicknameValidation = validateNickname(nickname);
     if (!nicknameValidation.valid) {
@@ -425,6 +429,22 @@ async function updateMyProfile(req, res, next) {
       phone,
       sms_consent: smsConsent
     };
+    if (Object.prototype.hasOwnProperty.call(req.body, 'profileImageUrl')) {
+      if (profileImageUrl && isDataUrlImage(profileImageUrl)) {
+        const uploaded = await uploadDataUrlToS3({
+          dataUrl: profileImageUrl,
+          fileName: `profile-image.${getImageExtensionFromDataUrl(profileImageUrl)}`,
+          folder: 'user-profiles',
+          allowedMimeTypes: USER_PROFILE_IMAGE_MIME_TYPES,
+          maxBytes: USER_PROFILE_IMAGE_MAX_BYTES
+        });
+        uploadedProfileImageUrls.push(uploaded.url);
+        updates.profile_image_url = uploaded.url;
+      } else {
+        const currentProfileImageUrl = String(req.user.profile_image_url || '').trim();
+        updates.profile_image_url = profileImageUrl === currentProfileImageUrl ? currentProfileImageUrl : null;
+      }
+    }
 
     if (password) {
       const passwordValidation = validatePassword(password);
@@ -451,6 +471,15 @@ async function updateMyProfile(req, res, next) {
     }
 
     await updateUserProfile(req.user.id, updates);
+
+    if (Object.prototype.hasOwnProperty.call(updates, 'profile_image_url')) {
+      const previousProfileImageUrl = String(req.user.profile_image_url || '').trim();
+      const nextProfileImageUrl = String(updates.profile_image_url || '').trim();
+      if (previousProfileImageUrl && previousProfileImageUrl !== nextProfileImageUrl) {
+        await deleteS3ObjectsByUrls([previousProfileImageUrl]);
+      }
+    }
+
     const updatedUser = await findById(req.user.id);
 
     res.json({
@@ -464,10 +493,14 @@ async function updateMyProfile(req, res, next) {
         name: updatedUser.name || '',
         birthDate: updatedUser.birth_date || null,
         smsConsent: Boolean(updatedUser.sms_consent),
+        profileImageUrl: updatedUser.profile_image_url || '',
         nicknameChangeAvailableAt: getNicknameChangeAvailableAt(updatedUser.last_nickname_changed_at)
       }
     });
   } catch (error) {
+    if (uploadedProfileImageUrls.length) {
+      await deleteS3ObjectsByUrls(uploadedProfileImageUrls);
+    }
     next(error);
   }
 }
