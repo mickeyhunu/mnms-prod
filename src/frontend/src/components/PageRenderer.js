@@ -33,7 +33,8 @@ const GLOBAL_SCRIPTS = [
   'scripts/js/utils/auth.js',
   'scripts/js/api/apiClient.js',
   'scripts/js/api/authAPI.js',
-  'scripts/js/components/header.js'
+  'scripts/js/components/header.js',
+  'scripts/js/components/sectionHeader.js'
 ];
 
 const PAGES_WITHOUT_GLOBAL_HEADER = new Set(['live']);
@@ -232,6 +233,10 @@ export default {
     const runPersistentInitializers = () => {
       if (typeof window.initHeader === 'function') {
         window.initHeader();
+      }
+
+      if (typeof window.initSectionHeader === 'function') {
+        window.initSectionHeader();
       }
     };
 
