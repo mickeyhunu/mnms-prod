@@ -155,7 +155,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
       `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
               p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
               p.notice_target_boards AS noticeTargetBoards,
-              p.is_hidden AS isHidden,
+              p.is_hidden AS isHidden, p.piece_closed_at AS pieceClosedAt,
               p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
               COALESCE(p.author_nickname_snapshot, u.nickname, '비회원') AS authorNickname,
               COALESCE(p.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
@@ -373,7 +373,7 @@ async function findPostDetailById(id) {
     `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
             p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
             p.notice_target_boards AS noticeTargetBoards,
-            p.is_hidden AS isHidden,
+            p.is_hidden AS isHidden, p.piece_closed_at AS pieceClosedAt,
             p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(p.author_nickname_snapshot, u.nickname, '비회원') AS authorNickname,
             COALESCE(p.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
@@ -686,6 +686,22 @@ async function updatePostLikePointAwards(postId, userId, { likerPointAwarded, au
 }
 
 
+
+async function countPieceParticipants(postId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    'SELECT COUNT(DISTINCT user_id) AS participantCount FROM piece_participants WHERE post_id = ?',
+    [postId]
+  );
+  return Number(rows[0]?.participantCount || 0);
+}
+
+async function closePiecePost(postId) {
+  const pool = getPool();
+  await pool.query('UPDATE posts SET piece_closed_at = COALESCE(piece_closed_at, NOW()) WHERE id = ?', [postId]);
+  return findPostDetailById(postId);
+}
+
 async function listPieceParticipants(postId) {
   const pool = getPool();
   const [rows] = await pool.query(
@@ -769,7 +785,7 @@ async function listBestPosts() {
   const pool = getPool();
 
   const selectQuery = `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
-            p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
+            p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned, p.piece_closed_at AS pieceClosedAt,
             p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(p.author_nickname_snapshot, u.nickname, '비회원') AS authorNickname,
             COALESCE(p.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
@@ -866,6 +882,8 @@ module.exports = {
   listPointAwardedLikesByPostId,
   deletePostLikesByPostId,
   markCommentsDeletedByPostId,
+  countPieceParticipants,
+  closePiecePost,
   listPieceParticipants,
   isPieceParticipant,
   joinPiece,

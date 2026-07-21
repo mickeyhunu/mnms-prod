@@ -95,5 +95,13 @@ const PostAPI = {
             throw error;
         }
     },
+
+    async closePiece(postId) {
+        try {
+            return await APIClient.post(`/api/posts/${postId}/piece-close`);
+        } catch (error) {
+            throw error;
+        }
+    },
 };
 

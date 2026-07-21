@@ -595,6 +595,7 @@ function resolvePieceStatus(post) {
         || post?.recruitmentStatus
         || post?.recruitment_status
     );
+    if (post?.isPieceEnded || post?.pieceClosedAt || post?.piece_closed_at) return '종료';
     if (explicitStatus) return explicitStatus;
 
     const pieceRows = parsePieceTemplateRows(post.content || post.body || '');
@@ -611,6 +612,7 @@ function resolvePieceStatus(post) {
         || pieceRows.get('일정')
         || pieceRows.get('만남 시간')
     );
+    if (dateTime && dateTime.getTime() + (9 * 60 * 60 * 1000) <= Date.now()) return '종료';
     if (dateTime && dateTime.getTime() <= Date.now()) return '진행중';
 
     return '모집중';

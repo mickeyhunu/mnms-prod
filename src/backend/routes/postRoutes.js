@@ -19,6 +19,7 @@ router.post('/:id/like', authMiddleware, controller.toggleLike);
 router.post('/:id/piece-participants', authMiddleware, controller.joinPiece);
 router.delete('/:id/piece-participants/me', authMiddleware, controller.cancelPieceJoin);
 router.post('/:id/piece-participants/:userId/attendance', authMiddleware, controller.checkPieceAttendance);
+router.post('/:id/piece-close', authMiddleware, controller.closePiece);
 router.get('/:postId/comments', optionalAuthMiddleware, controller.listComments);
 router.post('/:postId/comments', authMiddleware, controller.createComment);
 router.put('/comments/:commentId', authMiddleware, controller.updateComment);
