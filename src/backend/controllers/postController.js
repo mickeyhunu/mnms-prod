@@ -91,10 +91,21 @@ function parsePieceDateTime(value) {
     .replace(/일/g, '')
     .replace(/\s+/g, ' ')
     .trim();
-  const match = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?/);
+  const match = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?.*?(?:UTC|GMT)([+-]\d{2}):(\d{2})/i)
+    || normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?/);
   if (!match) return null;
-  const [, year, month, day, hour = '0', minute = '0'] = match;
-  const date = new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute));
+  const [, year, month, day, hour = '0', minute = '0', offsetHour, offsetMinute] = match;
+  const numericValues = [year, month, day, hour, minute].map((item) => Number(item));
+  if (numericValues.some((item) => !Number.isInteger(item))) return null;
+
+  const [dateYear, dateMonth, dateDay, dateHour, dateMinute] = numericValues;
+  if (offsetHour && offsetMinute) {
+    const offsetSign = offsetHour.startsWith('-') ? -1 : 1;
+    const offsetMinutes = offsetSign * ((Math.abs(Number(offsetHour)) * 60) + Number(offsetMinute));
+    return new Date(Date.UTC(dateYear, dateMonth - 1, dateDay, dateHour, dateMinute) - (offsetMinutes * 60 * 1000));
+  }
+
+  const date = new Date(dateYear, dateMonth - 1, dateDay, dateHour, dateMinute);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 

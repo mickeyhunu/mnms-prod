@@ -151,12 +151,33 @@ function formatPieceLocationValue(city, district) {
     return [displayCity, normalizedDistrict].filter(Boolean).join(' ');
 }
 
+function formatPieceDateTimeOffset(date) {
+    const offsetMinutes = -date.getTimezoneOffset();
+    const sign = offsetMinutes >= 0 ? '+' : '-';
+    const absoluteMinutes = Math.abs(offsetMinutes);
+    const hours = String(Math.floor(absoluteMinutes / 60)).padStart(2, '0');
+    const minutes = String(absoluteMinutes % 60).padStart(2, '0');
+    return `UTC${sign}${hours}:${minutes}`;
+}
+
+function parsePieceDateTimeInputValue(value) {
+    const [datePart, timePart = '00:00'] = String(value || '').split('T');
+    const [year, month, day] = datePart.split('-').map((item) => Number(item));
+    const [hour = 0, minute = 0] = timePart.split(':').map((item) => Number(item));
+    if (!year || !month || !day || Number.isNaN(hour) || Number.isNaN(minute)) return null;
+
+    const date = new Date(year, month - 1, day, hour, minute);
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function formatPieceDateTimeValue(value) {
     if (!value) return '';
+    const date = parsePieceDateTimeInputValue(value);
     const [datePart, timePart = ''] = String(value).split('T');
     const [year, month, day] = datePart.split('-').map((item) => Number(item));
     if (!year || !month || !day) return String(value);
-    return `${year}년 ${month}월 ${day}일${timePart ? ` ${timePart}` : ''}`;
+    const displayValue = `${year}년 ${month}월 ${day}일${timePart ? ` ${timePart}` : ''}`;
+    return date ? `${displayValue} (${formatPieceDateTimeOffset(date)})` : displayValue;
 }
 
 function formatPieceRangeValue(minValue, maxValue, prefixLabel, separator = ' / ') {
@@ -264,10 +285,12 @@ function getPieceValidationError() {
 
     const dateTimeInput = document.getElementById('piece-datetime');
     if (dateTimeInput?.value) {
-        setMinimumPieceDateTime();
-        if (dateTimeInput.min && dateTimeInput.value < dateTimeInput.min) {
+        const selectedDateTime = parsePieceDateTimeInputValue(dateTimeInput.value);
+        if (!selectedDateTime || selectedDateTime.getTime() <= Date.now()) {
+            setMinimumPieceDateTime();
             return '조각 날짜/시간은 현재 이후로 선택해주세요.';
         }
+        setMinimumPieceDateTime();
     }
 
     const capacityMin = parsePieceOrderedNumber(document.getElementById('piece-capacity-min')?.value);
