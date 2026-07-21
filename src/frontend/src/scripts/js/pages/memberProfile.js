@@ -84,6 +84,123 @@ function getMemberProfileIntroduction(profile = {}) {
     ).trim();
 }
 
+function getMemberProfileBoardLabel(boardType) {
+    const boardMap = {
+        FREE: '자유',
+        ANON: '익명',
+        REVIEW: '후기',
+        STORY: '썰',
+        PIECE: '조각',
+        ATTENDANCE: '출석',
+        QUESTION: '질문',
+        PROMOTION: '홍보'
+    };
+
+    return boardMap[String(boardType || '').toUpperCase()] || '자유';
+}
+
+function formatMemberProfileActivityTitle(title, boardType) {
+    return `[${sanitizeHTML(getMemberProfileBoardLabel(boardType))}] ${sanitizeHTML(title || '제목 없음')}`;
+}
+
+function renderMemberProfileActivityList(items, emptyMessage, renderRow) {
+    if (!items.length) return `<div class="no-data">${sanitizeHTML(emptyMessage)}</div>`;
+
+    return `
+        <div class="mypage-point-history-list">
+            ${items.map(renderRow).join('')}
+        </div>
+    `;
+}
+
+function renderMemberProfileActivity(profile = {}) {
+    const activity = profile.activity || {};
+    const posts = activity.posts || [];
+    const comments = activity.comments || [];
+    const likedPosts = activity.likedPosts || [];
+    const participatedPieces = activity.participatedPieces || [];
+
+    return `
+        <section class="member-profile-activity" aria-label="회원 활동 내역">
+            <div class="mypage-activity-tab-header" role="tablist" aria-label="활동 내역 탭">
+                <button type="button" class="mypage-activity-tab is-active" role="tab" aria-selected="true" data-activity-tab="posts">작성글 ${posts.length}</button>
+                <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="comments">작성댓글 ${comments.length}</button>
+                <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="liked-posts">추천한 글 ${likedPosts.length}</button>
+                <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="participated-pieces">참여한 조각 ${participatedPieces.length}</button>
+            </div>
+
+            <div class="mypage-activity-tab-panel is-active" role="tabpanel" data-activity-panel="posts">
+                ${renderMemberProfileActivityList(posts, '작성한 게시글이 없습니다.', (post) => `
+                    <a class="mypage-point-history-row" href="${createPostDetailPath(post)}">
+                        <div>
+                            <strong>${formatMemberProfileActivityTitle(post.title, post.boardType)}</strong>
+                            <p>${sanitizeHTML(formatDate(post.createdAt))} · 댓글 ${Number(post.commentCount || 0)} · 조회수 ${Number(post.viewCount || 0)} · 추천수 ${Number(post.likeCount || 0)}</p>
+                        </div>
+                    </a>
+                `)}
+            </div>
+
+            <div class="mypage-activity-tab-panel" role="tabpanel" data-activity-panel="comments" hidden>
+                ${renderMemberProfileActivityList(comments, '작성한 댓글이 없습니다.', (comment) => `
+                    <a class="mypage-point-history-row" href="${createPostDetailPath(comment.postId, comment.postTitle)}">
+                        <div>
+                            <strong>${formatMemberProfileActivityTitle(comment.postTitle || '원문 보기', comment.postBoardType)}</strong>
+                            <p>${sanitizeHTML(formatDate(comment.createdAt))} · 댓글 : ${sanitizeHTML(comment.content || '')}</p>
+                        </div>
+                    </a>
+                `)}
+            </div>
+
+            <div class="mypage-activity-tab-panel" role="tabpanel" data-activity-panel="liked-posts" hidden>
+                ${renderMemberProfileActivityList(likedPosts, '추천한 게시글이 없습니다.', (post) => `
+                    <a class="mypage-point-history-row" href="${createPostDetailPath(post)}">
+                        <div>
+                            <strong>${formatMemberProfileActivityTitle(post.title, post.boardType)}</strong>
+                            <p>추천일 ${sanitizeHTML(formatDate(post.likedAt || post.createdAt))} · 댓글 ${Number(post.commentCount || 0)} · 조회수 ${Number(post.viewCount || 0)} · 추천수 ${Number(post.likeCount || 0)}</p>
+                        </div>
+                    </a>
+                `)}
+            </div>
+
+            <div class="mypage-activity-tab-panel" role="tabpanel" data-activity-panel="participated-pieces" hidden>
+                ${renderMemberProfileActivityList(participatedPieces, '참여한 조각이 없습니다.', (post) => `
+                    <a class="mypage-point-history-row" href="${createPostDetailPath(post)}">
+                        <div>
+                            <strong>${formatMemberProfileActivityTitle(post.title, post.boardType || 'PIECE')}</strong>
+                            <p>참여일 ${sanitizeHTML(formatDate(post.joinedAt || post.createdAt))} · 댓글 ${Number(post.commentCount || 0)} · 조회수 ${Number(post.viewCount || 0)} · 추천수 ${Number(post.likeCount || 0)}</p>
+                            <p>참여자 ${Number(post.participantCount || 0)}명</p>
+                        </div>
+                    </a>
+                `)}
+            </div>
+        </section>
+    `;
+}
+
+function bindMemberProfileActivityTabs(container) {
+    const tabs = container.querySelectorAll('[data-activity-tab]');
+    const panels = container.querySelectorAll('[data-activity-panel]');
+    if (!tabs.length || !panels.length) return;
+
+    tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            const target = tab.dataset.activityTab;
+
+            tabs.forEach((item) => {
+                const isActive = item === tab;
+                item.classList.toggle('is-active', isActive);
+                item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+
+            panels.forEach((panel) => {
+                const isActive = panel.dataset.activityPanel === target;
+                panel.classList.toggle('is-active', isActive);
+                panel.hidden = !isActive;
+            });
+        });
+    });
+}
+
 function renderMemberProfile(profile) {
     const root = document.getElementById('member-profile-root');
     if (!root) return;
@@ -115,7 +232,10 @@ function renderMemberProfile(profile) {
                 <div><dt>후기</dt><dd>${Number(profile.reviewCount || 0).toLocaleString()}</dd></div>
             </dl>
         </section>
+        ${renderMemberProfileActivity(profile)}
     `;
+
+    bindMemberProfileActivityTabs(root);
 }
 
 async function initMemberProfilePage() {
