@@ -594,6 +594,7 @@ async function publicProfile(req, res, next) {
     res.json({
       nickname: profile.nickname,
       profileImageUrl: profile.profileImageUrl || '',
+      profileIntroduction: profile.profileIntroduction || '',
       totalPoints,
       level: memberLevel.level,
       levelLabel: memberLevel.label,
