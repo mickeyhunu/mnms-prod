@@ -2,7 +2,7 @@
  * 파일 역할: 닉네임 길이/금지어 정책을 서버 공통으로 검증하는 유틸리티 파일.
  */
 const NICKNAME_MIN_LENGTH = 2;
-const NICKNAME_MAX_LENGTH = 8;
+const NICKNAME_MAX_LENGTH = 20;
 const BLOCKED_NICKNAME_TERMS = [
   '시발',
   '씨발',

@@ -209,6 +209,18 @@
     line-height: 1.5;
 }
 
+.profile-char-counter {
+    align-self: flex-end;
+    color: #868e96;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.profile-char-counter--nickname {
+    margin-top: -2px;
+}
+
 .mypage-summary-row--introduction {
     align-items: flex-start;
     gap: 16px;
