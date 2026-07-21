@@ -802,10 +802,10 @@ async function loadActivityHistory() {
         container.innerHTML = `
             <section>
                 <div class="mypage-activity-tab-header" role="tablist" aria-label="활동 내역 탭">
-                    <button type="button" class="mypage-activity-tab is-active" role="tab" aria-selected="true" data-activity-tab="posts">작성글</button>
-                    <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="comments">작성댓글</button>
-                    <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="liked-posts">추천한 글</button>
-                    <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="participated-pieces">참여한 조각</button>
+                    <button type="button" class="mypage-activity-tab is-active" role="tab" aria-selected="true" data-activity-tab="posts">작성글 ${myPosts.length}</button>
+                    <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="comments">작성댓글 ${myComments.length}</button>
+                    <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="liked-posts">추천한 글 ${likedPosts.length}</button>
+                    <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="participated-pieces">참여한 조각 ${participatedPieces.length}</button>
                 </div>
 
                 <div class="mypage-activity-tab-panel is-active" role="tabpanel" data-activity-panel="posts">
