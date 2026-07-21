@@ -314,8 +314,8 @@
 .piece-participants-list {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(190px, 220px);
-    gap: 12px;
+    grid-auto-columns: clamp(48px, calc((100vw - 90px) / 6), 56px);
+    gap: 10px;
     overflow-x: auto;
     overscroll-behavior-inline: contain;
     padding: 0 20px;
@@ -325,15 +325,11 @@
 .piece-participant-chip {
     display: flex;
     min-width: 0;
+    flex-direction: column;
     align-items: center;
-    gap: 10px;
-    border: 1px solid #eef1f4;
-    border-radius: 14px;
-    background: #fafbfd;
     color: #55606d;
     font-size: 13px;
-    padding: 10px;
-    text-align: left;
+    text-align: center;
 }
 
 .piece-participant-avatar {
@@ -351,27 +347,10 @@
     line-height: 0;
 }
 
-.piece-participant-meta {
-    display: flex;
-    min-width: 0;
-    flex: 1;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.piece-participant-name-row {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    gap: 6px;
-}
-
 .piece-participant-nickname {
-    min-width: 0;
-    overflow: hidden;
     color: #1f2630;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 500;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -380,7 +359,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex: 0 0 auto;
+    align-self: center;
     padding: 3px 8px;
     border-radius: 999px;
     background: var(--secondary-color);
