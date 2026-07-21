@@ -48,6 +48,82 @@ const BOARD_LABEL_ALIASES = {
   홍보: BOARD_TYPES.PROMOTION
 };
 
+
+const PIECE_TEMPLATE_START = '<!-- PIECE_TEMPLATE_START -->';
+const PIECE_TEMPLATE_END = '<!-- PIECE_TEMPLATE_END -->';
+
+function parsePieceTemplateRows(content) {
+  const rawContent = String(content || '');
+  const startIndex = rawContent.indexOf(PIECE_TEMPLATE_START);
+  const endIndex = rawContent.indexOf(PIECE_TEMPLATE_END);
+  if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) return new Map();
+
+  return rawContent
+    .slice(startIndex + PIECE_TEMPLATE_START.length, endIndex)
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line && line !== '[조각 모집 정보]')
+    .reduce((rows, line) => {
+      const separatorIndex = line.indexOf(':');
+      if (separatorIndex === -1) return rows;
+      rows.set(line.slice(0, separatorIndex).replace(/^[^\w가-힣]+\s*/, '').trim(), line.slice(separatorIndex + 1).trim());
+      return rows;
+    }, new Map());
+}
+
+function parsePieceOrderedNumber(value) {
+  const match = String(value || '').match(/\d+/);
+  return match ? Number(match[0]) : null;
+}
+
+function parsePieceAgeOrder(value) {
+  const rawValue = String(value || '');
+  const decadeMatch = rawValue.match(/(\d+)대/);
+  if (!decadeMatch) return null;
+  const phaseOffsetMap = { 초반: 0, 중반: 1, 후반: 2 };
+  const phaseMatch = rawValue.match(/(초반|중반|후반)/);
+  return Number(decadeMatch[1]) * 10 + (phaseOffsetMap[phaseMatch?.[1]] ?? 0);
+}
+
+function parsePieceDateTime(value) {
+  const normalized = String(value || '')
+    .replace(/년|월/g, '-')
+    .replace(/일/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const match = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?/);
+  if (!match) return null;
+  const [, year, month, day, hour = '0', minute = '0'] = match;
+  const date = new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute));
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function validatePiecePostContent(content) {
+  const rows = parsePieceTemplateRows(content);
+  if (!rows.size) return '조각게시판 작성 양식을 확인해주세요.';
+
+  const dateTime = parsePieceDateTime(rows.get('시간') || rows.get('날짜/시간'));
+  if (!dateTime || dateTime.getTime() < Date.now()) return '조각 날짜/시간은 현재 이후로 선택해주세요.';
+
+  const capacity = rows.get('인원') || '';
+  const [capacityMinText, capacityMaxText] = capacity.split('/');
+  const capacityMin = parsePieceOrderedNumber(capacityMinText);
+  const capacityMax = parsePieceOrderedNumber(capacityMaxText);
+  if (capacityMin === null || capacityMax === null || capacityMin > capacityMax) {
+    return '모집 인원은 최소 인원이 최대 인원보다 많을 수 없습니다.';
+  }
+
+  const age = rows.get('연령대') || '';
+  const [ageMinText, ageMaxText] = age.split('~');
+  const ageMin = parsePieceAgeOrder(ageMinText);
+  const ageMax = parsePieceAgeOrder(ageMaxText);
+  if (ageMin === null || ageMax === null || ageMin > ageMax) {
+    return '모집 연령은 최소 연령이 최대 연령보다 높을 수 없습니다.';
+  }
+
+  return '';
+}
+
 function parsePagination(rawPage, rawSize) {
   const page = Number.parseInt(rawPage, 10);
   const size = Number.parseInt(rawSize, 10);
@@ -800,6 +876,10 @@ async function createPost(req, res, next) {
         return res.status(409).json({ message: '홍보게시글은 활성화 기간동안 하루에 한 번만 작성할 수 있습니다.' });
       }
     }
+    if (boardType === BOARD_TYPES.PIECE) {
+      const pieceValidationError = validatePiecePostContent(content);
+      if (pieceValidationError) return res.status(400).json({ message: pieceValidationError });
+    }
     if (boardType === BOARD_TYPES.ATTENDANCE) {
       const existingAttendancePost = await postModel.findUserAttendancePostForCurrentDbDay(req.user.id);
       if (existingAttendancePost) {
@@ -870,6 +950,10 @@ async function updatePost(req, res, next) {
     const nextImageUrls = await resolveImageUrls(req.body);
     const nextTitle = req.body.title ?? post.title;
     const nextContent = req.body.content ?? post.content;
+    if (targetBoardType === BOARD_TYPES.PIECE) {
+      const pieceValidationError = validatePiecePostContent(nextContent);
+      if (pieceValidationError) return res.status(400).json({ message: pieceValidationError });
+    }
     const hasPostBodyChanged = String(nextTitle) !== String(post.title)
       || String(nextContent) !== String(post.content);
 
