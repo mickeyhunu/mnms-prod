@@ -12,6 +12,7 @@ let activeCommentActionId = null;
 let currentCommentById = new Map();
 let shareSheetOpen = false;
 const POST_DETAIL_DEFAULT_DESCRIPTION = '미드나잇 맨즈 커뮤니티 게시글 상세 페이지입니다.';
+const DEFAULT_PROFILE_IMAGE_URL = '/src/assets/image/img_profile.png';
 
 function isBusinessUser(user) {
     const role = String(user?.role || '').toUpperCase();
@@ -716,6 +717,40 @@ function renderPiecePostContent(content) {
 }
 
 
+
+function getPieceParticipantProfileImageUrl(participant = {}) {
+    return String(participant.profileImageUrl || participant.profile_image_url || '').trim() || DEFAULT_PROFILE_IMAGE_URL;
+}
+
+function getPieceParticipantIntroduction(participant = {}) {
+    return String(participant.profileIntroduction || participant.profile_introduction || '').trim();
+}
+
+function renderPieceParticipantCard(participant = {}, { isLeader = false, isCurrentAuthor = false } = {}) {
+    const nickname = isLeader ? (participant.authorNickname || '글쓴이') : (participant.nickname || '회원');
+    const imageUrl = isLeader
+        ? (getAuthorProfileImageUrl(participant) || DEFAULT_PROFILE_IMAGE_URL)
+        : getPieceParticipantProfileImageUrl(participant);
+    const introduction = isLeader ? '' : getPieceParticipantIntroduction(participant);
+    const attended = Boolean(participant.attendedAt);
+    const attendanceControl = isLeader
+        ? '<span class="piece-participant-role">조각장</span>'
+        : isCurrentAuthor
+            ? `<button type="button" class="btn btn-outline btn-sm piece-attendance-btn" data-user-id="${sanitizeHTML(participant.userId)}" ${attended ? 'disabled' : ''}>${attended ? '출석 완료' : '출석 체크'}</button>`
+            : (attended ? '<span class="piece-participant-role">출석 완료</span>' : '');
+    const secondaryContent = isLeader
+        ? '<span class="piece-participant-role">조각장</span>'
+        : `<span class="piece-participant-introduction">${sanitizeHTML(introduction || '자기소개가 없습니다.')}</span>`;
+
+    return `
+        <span class="piece-participant-chip">
+            <img class="piece-participant-avatar" src="${sanitizeHTML(imageUrl)}" alt="${sanitizeHTML(nickname)} 프로필 이미지" loading="lazy" decoding="async" onerror="this.src='${DEFAULT_PROFILE_IMAGE_URL}'">
+            <span class="piece-participant-nickname">${sanitizeHTML(nickname)}</span>
+            ${secondaryContent}
+            ${!isLeader && attendanceControl ? `<span class="piece-participant-attendance">${attendanceControl}</span>` : ''}
+        </span>`;
+}
+
 function getPieceParticipants(post = currentPostDetail) {
     return Array.isArray(post?.pieceParticipants) ? post.pieceParticipants : [];
 }
@@ -753,14 +788,8 @@ function renderPieceParticipants(post, isCurrentAuthor, isHiddenPost) {
     participantsCountElement.textContent = `${currentParticipants} / ${maxParticipants || 1}`;
     participantsListElement.innerHTML = isPiecePost
         ? [
-            `<span class="piece-participant-chip"><span class="piece-participant-role">조각장</span>${sanitizeHTML(post.authorNickname || '글쓴이')}</span>`,
-            ...participants.map((participant) => {
-                const attended = Boolean(participant.attendedAt);
-                const attendanceControl = isCurrentAuthor
-                    ? `<button type="button" class="btn btn-outline btn-sm piece-attendance-btn" data-user-id="${sanitizeHTML(participant.userId)}" ${attended ? 'disabled' : ''}>${attended ? '출석 완료' : '출석 체크'}</button>`
-                    : (attended ? '<span class="piece-participant-role">출석 완료</span>' : '');
-                return `<span class="piece-participant-chip">${sanitizeHTML(participant.nickname || '회원')}${attendanceControl}</span>`;
-            })
+            renderPieceParticipantCard(post, { isLeader: true }),
+            ...participants.map((participant) => renderPieceParticipantCard(participant, { isCurrentAuthor }))
         ].join('')
         : '';
 }

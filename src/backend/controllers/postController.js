@@ -621,6 +621,8 @@ async function getPost(req, res, next) {
       pieceParticipants: pieceParticipants.map((participant) => ({
         userId: participant.userId,
         nickname: participant.nickname,
+        profileImageUrl: participant.profileImageUrl || '',
+        profileIntroduction: participant.profileIntroduction || '',
         joinedAt: participant.joinedAt,
         attendedAt: participant.attendedAt
       })),
@@ -638,6 +640,8 @@ function serializePieceParticipants(participants = [], currentUser = null) {
   return participants.map((participant) => ({
     userId: participant.userId,
     nickname: participant.nickname,
+    profileImageUrl: participant.profileImageUrl || '',
+    profileIntroduction: participant.profileIntroduction || '',
     joinedAt: participant.joinedAt,
     attendedAt: participant.attendedAt,
     isCurrentUser: currentUser ? Number(participant.userId) === Number(currentUser.id) : false
