@@ -1811,7 +1811,11 @@ async function handleDeletePost() {
         
     } catch (error) {
         console.error('게시글 삭제 실패:', error);
-        Auth.handleAuthError(error);
+        if (error?.status === 401 || error?.status === 403) {
+            Auth.handleAuthError(error);
+        } else {
+            showNotification(error?.message || '게시글 삭제 중 오류가 발생했습니다.', 'error');
+        }
     }
 }
 

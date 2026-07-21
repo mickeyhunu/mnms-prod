@@ -365,7 +365,7 @@ async function handlePostDelete(postId) {
         
     } catch (error) {
         console.error('Post delete error:', error);
-        showNotification('게시글 삭제 중 오류가 발생했습니다.', 'error');
+        showNotification(error?.message || '게시글 삭제 중 오류가 발생했습니다.', 'error');
     }
 }
 
