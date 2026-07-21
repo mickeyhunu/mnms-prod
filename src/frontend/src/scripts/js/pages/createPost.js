@@ -495,30 +495,15 @@ function hydratePieceFieldsFromContent(content) {
     const pieceTemplateValues = parsePieceTemplateContent(templateContent);
 
     hydratePieceLocationFields(pieceTemplateValues['📍 장소']);
+
+    const dateTimeInput = document.getElementById('piece-datetime');
+    const dateTimeValue = normalizePieceDateTimeForInput(pieceTemplateValues['🕘 시간']);
+    if (dateTimeInput && dateTimeValue) dateTimeInput.value = dateTimeValue;
+
     hydratePieceCapacityFields(pieceTemplateValues['👥 인원']);
     hydratePieceRangeFields(pieceTemplateValues['🎂 연령대'], 'piece-age-min', 'piece-age-max');
-
-    getPieceInputs().forEach((input) => {
-        const label = input.dataset.pieceLabel;
-        const templateLabel = input.id === 'piece-datetime' ? '🕘 시간' : label;
-        const value = pieceTemplateValues[templateLabel];
-        if (!value) return;
-
-        if (input.id === 'piece-location-city' || input.id === 'piece-location-district') return;
-        if (input.id === 'piece-capacity-min' || input.id === 'piece-capacity-max') return;
-        if (input.id === 'piece-age-min' || input.id === 'piece-age-max') return;
-        if (input.tagName === 'SELECT' && input.multiple) {
-            const values = value.split(',').map((item) => item.trim());
-            Array.from(input.options).forEach((option) => {
-                option.selected = values.includes(option.value);
-            });
-            return;
-        }
-        if (input.tagName === 'SELECT' && !setPieceSelectValue(input, value)) return;
-        if (input.tagName !== 'SELECT') {
-            input.value = input.type === 'datetime-local' ? normalizePieceDateTimeForInput(value) : value;
-        }
-    });
+    setPieceSelectValue(document.getElementById('piece-cost'), pieceTemplateValues['💰 1인 예상 비용']);
+    setPieceSelectValue(document.getElementById('piece-drinking'), pieceTemplateValues['🍻 주량']);
 
     updatePieceRangeOptions();
     return stripPieceTemplate(rawContent);
@@ -970,13 +955,14 @@ async function loadPostForEdit() {
         }
 
         if (editingBoardType === 'PIECE') {
-            applyPieceFieldDefaults({ includeDateTime: true, replacePastDateTime: true });
+            applyPieceFieldDefaults({ includeDateTime: false, replacePastDateTime: false });
         }
 
         if (contentInput) contentInput.value = hydratePieceFieldsFromContent(post.content || '');
 
         if (editingBoardType === 'PIECE') {
-            applyPieceFieldDefaults({ includeDateTime: true, replacePastDateTime: true });
+            const hasExistingPieceDateTime = Boolean(document.getElementById('piece-datetime')?.value);
+            applyPieceFieldDefaults({ includeDateTime: !hasExistingPieceDateTime, replacePastDateTime: false });
         }
 
         const normalizedImageUrls = Array.isArray(post.imageUrls)
