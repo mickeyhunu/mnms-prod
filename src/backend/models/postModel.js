@@ -668,6 +668,54 @@ async function updatePostLikePointAwards(postId, userId, { likerPointAwarded, au
   );
 }
 
+
+async function listPieceParticipants(postId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT pp.post_id AS postId, pp.user_id AS userId, pp.attended_at AS attendedAt, pp.created_at AS joinedAt,
+            COALESCE(u.nickname, '회원') AS nickname
+       FROM piece_participants pp
+       LEFT JOIN users u ON u.id = pp.user_id
+      WHERE pp.post_id = ?
+      ORDER BY pp.created_at ASC`,
+    [postId]
+  );
+  return rows;
+}
+
+async function isPieceParticipant(postId, userId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    'SELECT 1 FROM piece_participants WHERE post_id = ? AND user_id = ? LIMIT 1',
+    [postId, userId]
+  );
+  return rows.length > 0;
+}
+
+async function joinPiece(postId, userId) {
+  const pool = getPool();
+  await pool.query(
+    'INSERT IGNORE INTO piece_participants (post_id, user_id) VALUES (?, ?)',
+    [postId, userId]
+  );
+  return listPieceParticipants(postId);
+}
+
+async function cancelPieceJoin(postId, userId) {
+  const pool = getPool();
+  await pool.query('DELETE FROM piece_participants WHERE post_id = ? AND user_id = ?', [postId, userId]);
+  return listPieceParticipants(postId);
+}
+
+async function checkPieceAttendance(postId, userId) {
+  const pool = getPool();
+  await pool.query(
+    'UPDATE piece_participants SET attended_at = COALESCE(attended_at, NOW()) WHERE post_id = ? AND user_id = ?',
+    [postId, userId]
+  );
+  return listPieceParticipants(postId);
+}
+
 async function listPointAwardedCommentsByPostId(postId) {
   const pool = getPool();
   const [rows] = await pool.query(
@@ -797,5 +845,10 @@ module.exports = {
   listPointAwardedLikesByPostId,
   deletePostLikesByPostId,
   markCommentsDeletedByPostId,
+  listPieceParticipants,
+  isPieceParticipant,
+  joinPiece,
+  cancelPieceJoin,
+  checkPieceAttendance,
   listBestPosts
 };
