@@ -718,7 +718,13 @@ function getPieceParticipantProfileImageUrl(participant = {}) {
 }
 
 function getPieceParticipantIntroduction(participant = {}) {
-    return String(participant.profileIntroduction || participant.profile_introduction || '').trim();
+    return String(
+        participant.profileIntroduction
+        || participant.profile_introduction
+        || participant.authorProfileIntroduction
+        || participant.author_profile_introduction
+        || ''
+    ).trim();
 }
 
 function renderPieceParticipantCard(participant = {}, { isLeader = false } = {}) {
@@ -732,16 +738,15 @@ function renderPieceParticipantCard(participant = {}, { isLeader = false } = {})
         content: `<img class="piece-participant-avatar" src="${sanitizeHTML(imageUrl)}" alt="${sanitizeHTML(nickname)} 프로필 이미지" loading="lazy" decoding="async" onerror="this.src='${DEFAULT_PROFILE_IMAGE_URL}'">`,
         ariaLabel: `${nickname} 프로필 보기`
     });
-    const introduction = isLeader ? '' : getPieceParticipantIntroduction(participant);
-    const secondaryContent = isLeader
-        ? '<span class="piece-participant-role">조각장</span>'
-        : `<span class="piece-participant-introduction">${sanitizeHTML(introduction || '-')}</span>`;
+    const introduction = getPieceParticipantIntroduction(participant);
+    const roleMarkup = isLeader ? '<span class="piece-participant-role">조각장</span>' : '';
 
     return `
         <span class="piece-participant-chip">
             ${avatarMarkup}
             <span class="piece-participant-nickname">${sanitizeHTML(nickname)}</span>
-            ${secondaryContent}
+            ${roleMarkup}
+            <span class="piece-participant-introduction">${sanitizeHTML(introduction || '-')}</span>
         </span>`;
 }
 
