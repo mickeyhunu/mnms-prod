@@ -176,6 +176,7 @@
 }
 
 .profile-form-grid label,
+.profile-introduction-field,
 .support-form label {
     display: flex;
     flex-direction: column;
@@ -184,6 +185,7 @@
 }
 
 .profile-form-grid input,
+.profile-introduction-field textarea,
 .support-form select,
 .support-form textarea {
     border: 1px solid #dee2e6;
@@ -195,6 +197,28 @@
 .profile-form-grid input[readonly] {
     background: #f8f9fa;
     color: #6c757d;
+}
+
+.profile-introduction-field {
+    margin-top: 12px;
+}
+
+.profile-introduction-field textarea {
+    min-height: 96px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.mypage-summary-row--introduction {
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.mypage-summary-row--introduction strong {
+    max-width: 70%;
+    white-space: pre-wrap;
+    text-align: right;
+    line-height: 1.5;
 }
 
 .mypage-rank-badge {
