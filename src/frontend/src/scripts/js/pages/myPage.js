@@ -1351,7 +1351,7 @@ async function loadStats() {
                     <a class="mypage-summary-action" href="/my-page/profile">정보 수정</a>
                 </div>
                 <div class="mypage-summary-list">
-                    <div class="mypage-summary-row"><span>아이디</span><strong>${sanitizeHTML(response.loginId || '')}</strong></div>
+                    <div class="mypage-summary-row"><span>아이디</span><strong>@${sanitizeHTML(response.loginId || '')}</strong></div>
                     <div class="mypage-summary-row"><span>닉네임</span><strong>${sanitizeHTML(response.nickname || '')}</strong></div>
                     <div class="mypage-summary-row"><span>랭크</span>${rankMarkup}</div>
                     <div class="mypage-summary-row"><span>가입일</span><strong>${sanitizeHTML(joinedAt)}</strong></div>
@@ -1368,7 +1368,6 @@ async function loadStats() {
                 </div>
                 <div class="mypage-activity-grid">
                     <div class="mypage-activity-item"><span>출석</span><strong>${Number(response.attendanceCount || 0)}</strong></div>
-                    <div class="mypage-activity-item"><span>후기</span><strong>${Number(response.reviewCount || 0)}</strong></div>
                     <div class="mypage-activity-item"><span>게시글</span><strong>${Number(response.postCount || 0)}</strong></div>
                     <div class="mypage-activity-item"><span>댓글</span><strong>${Number(response.commentCount || 0)}</strong></div>
                     <div class="mypage-activity-item"><span>추천</span><strong>${Number(response.recommendCount || 0)}</strong></div>
