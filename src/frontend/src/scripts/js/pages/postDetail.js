@@ -20,6 +20,12 @@ function isBusinessUser(user) {
     return Boolean(user?.isBusiness || user?.isAdvertiser || role === 'BUSINESS' || memberType === 'BUSINESS');
 }
 
+function isRegularMember(user) {
+    const role = String(user?.role || '').toUpperCase();
+    const memberType = String(user?.memberType || user?.member_type || '').toUpperCase();
+    return role !== 'ADMIN' && role !== 'BUSINESS' && memberType !== 'BUSINESS';
+}
+
 function syncSecretCommentOptionByUser() {
     const secretCheckbox = document.getElementById('comment-secret');
     if (!secretCheckbox) return;
@@ -853,7 +859,9 @@ function renderPieceJoinButton(post, isCurrentAuthor, isHiddenPost) {
     const maxParticipants = getPieceMaximumParticipantCount(post.content || '');
     const currentParticipants = 1 + getPieceParticipants(post).length;
     const isFull = currentParticipants >= maxParticipants;
-    const canJoin = isRecruiting && (!isFull || post.isPieceParticipant || isCurrentAuthor);
+    const currentUser = Auth.getUser();
+    const isRegularMemberViewer = isRegularMember(currentUser);
+    const canJoin = isRecruiting && (isCurrentAuthor || post.isPieceParticipant || (isRegularMemberViewer && !isFull));
 
     joinBtn.disabled = !canJoin;
     const pieceAction = !canJoin ? 'unavailable' : (isCurrentAuthor ? 'close' : (post.isPieceParticipant ? 'cancel' : 'join'));
