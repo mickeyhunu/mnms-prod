@@ -679,7 +679,9 @@ async function listPieceParticipants(postId) {
     `SELECT pp.post_id AS postId, pp.user_id AS userId, pp.attended_at AS attendedAt, pp.created_at AS joinedAt,
             COALESCE(u.nickname, '회원') AS nickname,
             u.profile_image_url AS profileImageUrl,
-            u.profile_introduction AS profileIntroduction
+            u.profile_image_url AS profile_image_url,
+            u.profile_introduction AS profileIntroduction,
+            u.profile_introduction AS profile_introduction
        FROM piece_participants pp
        LEFT JOIN users u ON u.id = pp.user_id
       WHERE pp.post_id = ?
