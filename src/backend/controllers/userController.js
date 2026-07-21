@@ -691,7 +691,7 @@ async function myStats(req, res, next) {
 async function myActivity(req, res, next) {
   try {
     const limit = Math.max(1, Math.min(50, Number(req.query.limit) || 20));
-    const { posts, comments, likedPosts } = await getUserActivityDetails(req.user.id, { limit });
+    const { posts, comments, likedPosts, participatedPieces } = await getUserActivityDetails(req.user.id, { limit });
 
     res.json({
       posts: posts.map((post) => ({
@@ -700,6 +700,7 @@ async function myActivity(req, res, next) {
         content: post.content,
         boardType: post.boardType,
         createdAt: post.createdAt,
+        viewCount: Number(post.viewCount || 0),
         likeCount: Number(post.likeCount || 0),
         commentCount: Number(post.commentCount || 0)
       })),
@@ -718,8 +719,22 @@ async function myActivity(req, res, next) {
         boardType: post.boardType,
         createdAt: post.createdAt,
         likedAt: post.likedAt,
+        viewCount: Number(post.viewCount || 0),
         likeCount: Number(post.likeCount || 0),
         commentCount: Number(post.commentCount || 0)
+      })),
+      participatedPieces: (participatedPieces || []).map((post) => ({
+        id: Number(post.id),
+        title: post.title,
+        content: post.content,
+        boardType: post.boardType,
+        createdAt: post.createdAt,
+        joinedAt: post.joinedAt,
+        attendedAt: post.attendedAt,
+        viewCount: Number(post.viewCount || 0),
+        likeCount: Number(post.likeCount || 0),
+        commentCount: Number(post.commentCount || 0),
+        participantCount: Number(post.participantCount || 0)
       }))
     });
   } catch (error) {
