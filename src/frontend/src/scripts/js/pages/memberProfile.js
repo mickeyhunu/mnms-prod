@@ -82,6 +82,7 @@ function renderMemberProfile(profile) {
     const profileImageUrl = String(profile.profileImageUrl || '').trim() || MEMBER_PROFILE_DEFAULT_IMAGE_URL;
     const levelLabel = profile.isBusinessMember ? profile.advertiserLevelLabel : profile.levelLabel;
     const levelCaption = profile.isBusinessMember ? '광고 활동 등급' : '회원 활동 등급';
+    const profileIntroduction = String(profile.profileIntroduction || '').trim();
 
     root.innerHTML = `
         <section class="member-profile-card" aria-label="회원 프로필">
@@ -92,6 +93,10 @@ function renderMemberProfile(profile) {
                     <h2>${sanitizeHTML(profile.nickname || '회원')}</h2>
                     <p>${sanitizeHTML(levelCaption)} · ${renderMemberProfileLevelLabel(levelLabel || '-')}</p>
                 </div>
+            </div>
+            <div class="member-profile-introduction" aria-label="자기소개">
+                <span class="member-profile-introduction-label">자기소개</span>
+                <p>${profileIntroduction ? sanitizeHTML(profileIntroduction) : '등록된 자기소개가 없습니다.'}</p>
             </div>
             <dl class="member-profile-stats">
                 <div><dt>게시글</dt><dd>${Number(profile.postCount || 0).toLocaleString()}</dd></div>
