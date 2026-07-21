@@ -432,9 +432,11 @@ async function updateMyProfile(req, res, next) {
     const password = String(req.body.password || '').trim();
     const smsConsent = Boolean(req.body.smsConsent);
     const profileImageUrl = String(req.body.profileImageUrl || '').trim();
-    const hasProfileIntroduction = Object.prototype.hasOwnProperty.call(req.body, 'profileIntroduction');
+    const hasProfileIntroduction = Object.prototype.hasOwnProperty.call(req.body, 'profileIntroduction')
+      || Object.prototype.hasOwnProperty.call(req.body, 'profile_introduction')
+      || Object.prototype.hasOwnProperty.call(req.body, 'introduction');
     const profileIntroduction = hasProfileIntroduction
-      ? String(req.body.profileIntroduction || '').trim()
+      ? getProfileIntroductionValue(req.body)
       : String(req.user.profile_introduction || '').trim();
 
     if (hasProfileIntroduction && Array.from(profileIntroduction).length > 200) {
