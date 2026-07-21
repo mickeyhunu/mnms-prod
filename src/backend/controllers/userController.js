@@ -607,7 +607,6 @@ async function publicProfile(req, res, next) {
       nickname: profile.nickname,
       profileImageUrl: profile.profileImageUrl || '',
       profileIntroduction: getProfileIntroductionValue(profile),
-      introduction: getProfileIntroductionValue(profile),
       totalPoints,
       level: memberLevel.level,
       levelLabel: memberLevel.label,

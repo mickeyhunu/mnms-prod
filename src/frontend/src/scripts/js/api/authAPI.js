@@ -28,7 +28,6 @@ const AuthAPI = {
             advertiserLevelLabel: payload.advertiserLevelLabel,
             profileImageUrl: payload.profileImageUrl,
             profileIntroduction: payload.profileIntroduction || payload.profile_introduction || payload.introduction || '',
-            introduction: payload.profileIntroduction || payload.profile_introduction || payload.introduction || '',
             accountStatus: payload.accountStatus,
             isLoginRestricted: payload.isLoginRestricted,
             loginRestrictedUntil: payload.loginRestrictedUntil,
