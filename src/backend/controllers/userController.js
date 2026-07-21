@@ -688,6 +688,17 @@ async function myStats(req, res, next) {
 
 
 
+
+function normalizeCountValue(...values) {
+  for (const value of values) {
+    if (value !== undefined && value !== null && value !== '') {
+      return Number(value || 0);
+    }
+  }
+
+  return 0;
+}
+
 async function myActivity(req, res, next) {
   try {
     const limit = Math.max(1, Math.min(50, Number(req.query.limit) || 20));
@@ -700,7 +711,7 @@ async function myActivity(req, res, next) {
         content: post.content,
         boardType: post.boardType,
         createdAt: post.createdAt,
-        viewCount: Number(post.viewCount || 0),
+        viewCount: normalizeCountValue(post.viewCount, post.view_count),
         likeCount: Number(post.likeCount || 0),
         commentCount: Number(post.commentCount || 0)
       })),
@@ -719,7 +730,7 @@ async function myActivity(req, res, next) {
         boardType: post.boardType,
         createdAt: post.createdAt,
         likedAt: post.likedAt,
-        viewCount: Number(post.viewCount || 0),
+        viewCount: normalizeCountValue(post.viewCount, post.view_count),
         likeCount: Number(post.likeCount || 0),
         commentCount: Number(post.commentCount || 0)
       })),
@@ -731,7 +742,7 @@ async function myActivity(req, res, next) {
         createdAt: post.createdAt,
         joinedAt: post.joinedAt,
         attendedAt: post.attendedAt,
-        viewCount: Number(post.viewCount || 0),
+        viewCount: normalizeCountValue(post.viewCount, post.view_count),
         likeCount: Number(post.likeCount || 0),
         commentCount: Number(post.commentCount || 0),
         participantCount: Number(post.participantCount || 0)
