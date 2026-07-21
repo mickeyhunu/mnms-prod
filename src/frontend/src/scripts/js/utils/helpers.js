@@ -279,6 +279,27 @@ function renderExternalTextLink(rawUrl) {
    return `<a class="post-content-link" href="${safeHref}" target="_blank" rel="noopener noreferrer">${safeDisplayUrl}</a>`;
 }
 
+function renderMemberProfileMentions(rawText = '') {
+   const mentionPattern = /(^|[^\w가-힣])@([A-Za-z0-9가-힣_]{2,20})/g;
+   let rendered = '';
+   let lastIndex = 0;
+   let match;
+
+   while ((match = mentionPattern.exec(rawText)) !== null) {
+      const prefix = match[1] || '';
+      const nickname = match[2] || '';
+      const mentionStart = match.index + prefix.length;
+
+      rendered += sanitizeHTML(rawText.slice(lastIndex, mentionStart));
+      const safeNickname = sanitizeHTML(nickname);
+      rendered += `<a class="post-content-link member-profile-mention" href="/@${encodeURIComponent(nickname)}">@${safeNickname}</a>`;
+      lastIndex = mentionStart + nickname.length + 1;
+   }
+
+   rendered += sanitizeHTML(rawText.slice(lastIndex));
+   return rendered;
+}
+
 function renderLinkedText(value) {
    const rawText = String(value || '');
    const urlPattern = /(?:https?:\/\/|www\.)[^\s<>"']+/gi;
@@ -291,13 +312,13 @@ function renderLinkedText(value) {
       const leadingText = rawText.slice(lastIndex, match.index);
       const { url, trailingText } = splitTrailingUrlPunctuation(rawUrl);
 
-      rendered += sanitizeHTML(leadingText);
+      rendered += renderMemberProfileMentions(leadingText);
       rendered += renderExternalTextLink(url);
-      rendered += sanitizeHTML(trailingText);
+      rendered += renderMemberProfileMentions(trailingText);
       lastIndex = match.index + rawUrl.length;
    }
 
-   rendered += sanitizeHTML(rawText.slice(lastIndex));
+   rendered += renderMemberProfileMentions(rawText.slice(lastIndex));
    return rendered.replace(/\n/g, '<br>');
 }
 

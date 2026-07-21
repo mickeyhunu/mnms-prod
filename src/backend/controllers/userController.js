@@ -16,6 +16,7 @@ const {
   updateUserProfile,
   withdrawUserById,
   findById,
+  findPublicProfileByNickname,
   getBusinessProfileByUserId,
   upsertBusinessProfileByUserId
 } = require('../models/userModel');
@@ -566,6 +567,41 @@ function getNextLevelInfo(level) {
 
 function getNextAdvertiserLevelInfo(level) {
   return ADVERTISER_AD_DAY_LEVELS.find((item) => item.level === level + 1) || null;
+}
+
+async function publicProfile(req, res, next) {
+  try {
+    const nickname = String(req.params.nickname || '').trim();
+    if (!nickname) return res.status(400).json({ message: '닉네임을 입력해주세요.' });
+
+    const profile = await findPublicProfileByNickname(nickname);
+    if (!profile) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
+
+    const totalPoints = Number(profile.totalPoints || 0);
+    const memberLevel = resolveMemberLevel(totalPoints);
+    const isBusinessMember = String(profile.memberType || '').toUpperCase() === 'BUSINESS'
+      || String(profile.role || '').toUpperCase() === 'BUSINESS';
+    const cumulativeAdDays = isBusinessMember ? await getUserCumulativeBusinessAdDays(profile.id) : 0;
+    const advertiserLevel = resolveAdvertiserAdDayLevel(cumulativeAdDays);
+
+    res.json({
+      nickname: profile.nickname,
+      profileImageUrl: profile.profileImageUrl || '',
+      totalPoints,
+      level: memberLevel.level,
+      levelLabel: memberLevel.label,
+      isBusinessMember,
+      cumulativeAdDays,
+      advertiserLevel: advertiserLevel.level,
+      advertiserLevelLabel: advertiserLevel.label,
+      joinedAt: profile.joinedAt,
+      postCount: Number(profile.postCount || 0),
+      commentCount: Number(profile.commentCount || 0),
+      reviewCount: Number(profile.reviewCount || 0)
+    });
+  } catch (error) {
+    next(error);
+  }
 }
 
 async function myStats(req, res, next) {
@@ -1598,6 +1634,7 @@ async function withdrawMyAccount(req, res, next) {
 }
 
 module.exports = {
+  publicProfile,
   myStats,
   myPointHistories,
   myStampHistories,
