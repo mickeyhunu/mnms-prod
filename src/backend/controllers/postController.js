@@ -439,6 +439,7 @@ function sanitizePostForViewer(post, currentUser = null) {
     normalized.authorIsBusiness = isAdvertiserAuthor(normalized);
     if (!normalized.authorIsBusiness) {
       normalized.authorNickname = formatAnonymousAuthorNickname(normalized.authorNickname, currentUser);
+      normalized.authorProfileImageUrl = '';
     }
   } else {
     normalized.authorIsBusiness = isAdvertiserAuthor(normalized);
@@ -485,20 +486,23 @@ function sanitizeCommentForViewer(comment, post, currentUser) {
 
   if ((post.board_type === BOARD_TYPES.ANON || post.boardType === BOARD_TYPES.ANON) && !normalized.authorIsBusiness) {
     normalized.authorNickname = formatAnonymousAuthorNickname(normalized.authorNickname, currentUser);
+    normalized.authorProfileImageUrl = '';
   }
 
   if (normalized.isDeleted && !isAdminUser) {
     return stripSecretThreadMetadata({
       ...normalized,
       content: '삭제된 댓글입니다.',
-      authorNickname: '알 수 없음'
+      authorNickname: '알 수 없음',
+      authorProfileImageUrl: ''
     });
   }
 
   if (normalized.isHidden) {
     return stripSecretThreadMetadata({
       ...normalized,
-      content: '관리자에 의해 제한된 댓글입니다.'
+      content: '관리자에 의해 제한된 댓글입니다.',
+      authorProfileImageUrl: ''
     });
   }
 
@@ -509,7 +513,8 @@ function sanitizeCommentForViewer(comment, post, currentUser) {
   return stripSecretThreadMetadata({
     ...normalized,
     content: '비밀댓글입니다.',
-    authorNickname: '비공개'
+    authorNickname: '비공개',
+    authorProfileImageUrl: ''
   });
 }
 

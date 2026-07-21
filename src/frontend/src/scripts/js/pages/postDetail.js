@@ -407,6 +407,22 @@ function normalizePostDetailResponse(post) {
 }
 
 
+
+function getAuthorProfileImageUrl(source = {}) {
+    return String(source?.authorProfileImageUrl || source?.profileImageUrl || source?.profile_image_url || '').trim();
+}
+
+function escapeCssUrl(value = '') {
+    return String(value).replace(/[\\']/g, '\\$&').replace(/[\r\n]/g, '');
+}
+
+function buildAvatarStyle(source = {}) {
+    const imageUrl = getAuthorProfileImageUrl(source);
+    if (!imageUrl) return '';
+
+    return ` style="background-image: url('${sanitizeHTML(escapeCssUrl(imageUrl))}')"`;
+}
+
 function resolveLevelBadgeImage(level) {
     const numericLevel = Number(level);
     if (!Number.isFinite(numericLevel) || numericLevel <= 0) {
@@ -774,6 +790,7 @@ function renderPostDetail(post) {
     const titleElement = document.getElementById('post-title');
     const contentElement = document.getElementById('post-content');
     const authorElement = document.getElementById('post-author');
+    const avatarElement = document.querySelector('.author-avatar');
     const dateElement = document.getElementById('post-date');
 
     const boardNameMap = { FREE: '자유게시판', ANON: '익명게시판', REVIEW: '후기게시판', STORY: '썰게시판', PIECE: '조각게시판', ATTENDANCE: '출석게시판', QUESTION: '질문게시판', EVENT: '이벤트게시판', PROMOTION: '홍보게시판' };
@@ -799,6 +816,10 @@ function renderPostDetail(post) {
 
     if (authorElement) {
         authorElement.innerHTML = `${sanitizeHTML(postAuthorLabel)}${authorBadgeMarkup ? ` ${authorBadgeMarkup}` : ''}${isCurrentAuthor ? ' <span class="own-content-badge">본인</span>' : ''}`;
+    }
+    if (avatarElement) {
+        const profileImageUrl = getAuthorProfileImageUrl(post);
+        avatarElement.style.backgroundImage = profileImageUrl ? `url('${escapeCssUrl(profileImageUrl)}')` : '';
     }
     if (dateElement) dateElement.textContent = formatDateTime(post.createdAt) || '';
 
@@ -1251,7 +1272,7 @@ function createCommentItem(comment, depth = 0) {
     div.innerHTML = `
         <div class="comment-layout">
             ${replyMarker}
-            <span class="comment-avatar" aria-hidden="true"></span>
+            <span class="comment-avatar" aria-hidden="true"${buildAvatarStyle(comment)}></span>
             <div class="comment-body">
                 <div class="comment-meta">
                     <div class="comment-meta-main">
