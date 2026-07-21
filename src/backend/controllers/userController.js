@@ -581,6 +581,10 @@ function getNextAdvertiserLevelInfo(level) {
   return ADVERTISER_AD_DAY_LEVELS.find((item) => item.level === level + 1) || null;
 }
 
+function getProfileIntroductionValue(profile = {}) {
+  return String(profile.profileIntroduction || profile.profile_introduction || profile.introduction || '').trim();
+}
+
 async function publicProfile(req, res, next) {
   try {
     const nickname = String(req.params.nickname || '').trim();
@@ -600,7 +604,7 @@ async function publicProfile(req, res, next) {
     res.json({
       nickname: profile.nickname,
       profileImageUrl: profile.profileImageUrl || '',
-      profileIntroduction: profile.profileIntroduction || '',
+      profileIntroduction: getProfileIntroductionValue(profile),
       totalPoints,
       level: memberLevel.level,
       levelLabel: memberLevel.label,
