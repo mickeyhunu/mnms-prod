@@ -491,6 +491,7 @@ async function initDatabase() {
       title VARCHAR(255) NOT NULL,
       content TEXT NOT NULL,
       image_urls LONGTEXT NULL,
+      piece_closed_at TIMESTAMP NULL,
       is_hidden TINYINT(1) NOT NULL DEFAULT 0,
       is_deleted TINYINT(1) NOT NULL DEFAULT 0,
       view_count BIGINT NOT NULL DEFAULT 0,
@@ -555,6 +556,13 @@ async function initDatabase() {
   if (!postImageUrlsColumn.length) {
     await pool.query('ALTER TABLE posts ADD COLUMN image_urls LONGTEXT NULL AFTER content');
   }
+
+  await ensureColumn(
+    pool,
+    'posts',
+    'piece_closed_at',
+    'ALTER TABLE posts ADD COLUMN piece_closed_at TIMESTAMP NULL AFTER image_urls'
+  );
 
   const [postIsHiddenColumn] = await pool.query(
     `SELECT 1
