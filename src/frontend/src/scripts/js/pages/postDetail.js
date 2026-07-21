@@ -165,6 +165,18 @@ function setupEventListeners() {
         hideActiveCommentActionMenu();
     });
 
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('#piece-join-btn')) {
+            handlePieceJoinAction();
+            return;
+        }
+
+        const attendanceBtn = e.target.closest('.piece-attendance-btn');
+        if (attendanceBtn) {
+            handlePieceAttendanceCheck(attendanceBtn.dataset.userId);
+        }
+    });
+
     setupMessageModal();
     setupShareSheet();
 }
@@ -669,6 +681,90 @@ function renderPiecePostContent(content) {
     return `${summaryMarkup}${bodyContent ? renderPostContent(bodyContent) : ''}`;
 }
 
+
+function getPieceParticipants(post = currentPostDetail) {
+    return Array.isArray(post?.pieceParticipants) ? post.pieceParticipants : [];
+}
+
+function renderPieceJoinButton(post, isCurrentAuthor, isHiddenPost) {
+    const joinBtn = document.getElementById('piece-join-btn');
+    if (!joinBtn) return;
+
+    const boardType = String(post?.boardType || '').toUpperCase();
+    const isPiecePost = boardType === 'PIECE' && !isHiddenPost;
+    joinBtn.classList.toggle('hidden', !isPiecePost);
+    if (!isPiecePost) return;
+
+    joinBtn.disabled = false;
+    joinBtn.dataset.pieceAction = isCurrentAuthor ? 'attendance' : (post.isPieceParticipant ? 'cancel' : 'join');
+    joinBtn.textContent = isCurrentAuthor ? '출석 체크' : (post.isPieceParticipant ? '참여 취소' : '참여하기');
+}
+
+function renderPieceParticipants(post, isCurrentAuthor, isHiddenPost) {
+    const participantsElement = document.getElementById('piece-participants');
+    const participantsCountElement = document.getElementById('piece-participants-count');
+    const participantsListElement = document.getElementById('piece-participants-list');
+    if (!participantsElement || !participantsCountElement || !participantsListElement) return;
+
+    const boardType = String(post?.boardType || '').toUpperCase();
+    const isPiecePost = boardType === 'PIECE' && !isHiddenPost;
+    const maxParticipants = isPiecePost ? getPieceMaximumParticipantCount(post.content || '') : 0;
+    const participants = getPieceParticipants(post);
+    const currentParticipants = isPiecePost ? 1 + participants.length : 0;
+
+    participantsElement.classList.toggle('hidden', !isPiecePost);
+    participantsCountElement.textContent = `${currentParticipants} / ${maxParticipants || 1}`;
+    participantsListElement.innerHTML = isPiecePost
+        ? [
+            `<span class="piece-participant-chip"><span class="piece-participant-role">조각장</span>${sanitizeHTML(post.authorNickname || '글쓴이')}</span>`,
+            ...participants.map((participant) => {
+                const attended = Boolean(participant.attendedAt);
+                const attendanceControl = isCurrentAuthor
+                    ? `<button type="button" class="btn btn-outline btn-sm piece-attendance-btn" data-user-id="${sanitizeHTML(participant.userId)}" ${attended ? 'disabled' : ''}>${attended ? '출석 완료' : '출석 체크'}</button>`
+                    : (attended ? '<span class="piece-participant-role">출석 완료</span>' : '');
+                return `<span class="piece-participant-chip">${sanitizeHTML(participant.nickname || '회원')}${attendanceControl}</span>`;
+            })
+        ].join('')
+        : '';
+}
+
+async function handlePieceJoinAction() {
+    if (!Auth.isAuthenticated()) {
+        alert('로그인이 필요합니다.');
+        return;
+    }
+
+    const joinBtn = document.getElementById('piece-join-btn');
+    const action = joinBtn?.dataset.pieceAction;
+    if (!joinBtn || !currentPostDetail || action === 'attendance') return;
+
+    try {
+        joinBtn.disabled = true;
+        joinBtn.textContent = action === 'cancel' ? '취소중...' : '참여중...';
+        const response = action === 'cancel'
+            ? await PostAPI.cancelPieceJoin(currentPostDetail.id)
+            : await PostAPI.joinPiece(currentPostDetail.id);
+        currentPostDetail = { ...currentPostDetail, ...response };
+        renderPieceJoinButton(currentPostDetail, currentPostDetail.isAuthor || isCurrentUserPostAuthor(currentPostDetail), Boolean(currentPostDetail.isHidden));
+        renderPieceParticipants(currentPostDetail, currentPostDetail.isAuthor || isCurrentUserPostAuthor(currentPostDetail), Boolean(currentPostDetail.isHidden));
+    } catch (error) {
+        alert(error?.message || '조각 참여 처리 중 오류가 발생했습니다.');
+        renderPieceJoinButton(currentPostDetail, currentPostDetail.isAuthor || isCurrentUserPostAuthor(currentPostDetail), Boolean(currentPostDetail.isHidden));
+    }
+}
+
+async function handlePieceAttendanceCheck(userId) {
+    if (!currentPostDetail || !userId) return;
+
+    try {
+        const response = await PostAPI.checkPieceAttendance(currentPostDetail.id, userId);
+        currentPostDetail = { ...currentPostDetail, ...response };
+        renderPieceParticipants(currentPostDetail, true, Boolean(currentPostDetail.isHidden));
+    } catch (error) {
+        alert(error?.message || '출석 체크 중 오류가 발생했습니다.');
+    }
+}
+
 function renderPostDetail(post) {
     currentPostDetail = post;
 
@@ -759,19 +855,8 @@ function renderPostDetail(post) {
         renderPostImages([]);
     }
 
-    const participantsElement = document.getElementById('piece-participants');
-    const participantsCountElement = document.getElementById('piece-participants-count');
-    const participantsListElement = document.getElementById('piece-participants-list');
-
-    if (participantsElement && participantsCountElement && participantsListElement) {
-        const maxParticipants = boardType === 'PIECE' ? getPieceMaximumParticipantCount(post.content || '') : 0;
-        const currentParticipants = boardType === 'PIECE' && !isHiddenPost ? 1 : 0;
-        participantsElement.classList.toggle('hidden', boardType !== 'PIECE' || isHiddenPost);
-        participantsCountElement.textContent = `${currentParticipants} / ${maxParticipants || 1}`;
-        participantsListElement.innerHTML = boardType === 'PIECE' && !isHiddenPost
-            ? `<span class="piece-participant-chip"><span class="piece-participant-role">조각장</span>${sanitizeHTML(post.authorNickname || '글쓴이')}</span>`
-            : '';
-    }
+    renderPieceJoinButton(post, isCurrentAuthor, isHiddenPost);
+    renderPieceParticipants(post, isCurrentAuthor, isHiddenPost);
 
     const likeBtn = document.getElementById('like-btn');
     const likeIcon = document.getElementById('like-icon');

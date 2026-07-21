@@ -601,6 +601,9 @@ async function getPost(req, res, next) {
     const comments = annotateSecretThreadOwnerIds(await postModel.listComments(postId));
     const visibleComments = comments.map((comment) => sanitizeCommentForViewer(comment, post, req.user));
     const adjacentPosts = await postModel.findAdjacentPosts(postId);
+    const pieceParticipants = String(postDetail?.boardType || '').toUpperCase() === BOARD_TYPES.PIECE
+      ? await postModel.listPieceParticipants(postId)
+      : [];
 
     const isLiked = req.user
       ? await postModel.isPostLikedByUser(postId, req.user.id)
@@ -610,9 +613,106 @@ async function getPost(req, res, next) {
       ...sanitizePostForViewer(postDetail, req.user),
       isLiked,
       comments: visibleComments,
+      pieceParticipants: pieceParticipants.map((participant) => ({
+        userId: participant.userId,
+        nickname: participant.nickname,
+        joinedAt: participant.joinedAt,
+        attendedAt: participant.attendedAt
+      })),
+      isPieceParticipant: req.user ? pieceParticipants.some((participant) => Number(participant.userId) === Number(req.user.id)) : false,
       previousPost: adjacentPosts.previous,
       nextPost: adjacentPosts.next
     });
+  } catch (error) {
+    next(error);
+  }
+}
+
+
+function serializePieceParticipants(participants = [], currentUser = null) {
+  return participants.map((participant) => ({
+    userId: participant.userId,
+    nickname: participant.nickname,
+    joinedAt: participant.joinedAt,
+    attendedAt: participant.attendedAt,
+    isCurrentUser: currentUser ? Number(participant.userId) === Number(currentUser.id) : false
+  }));
+}
+
+async function resolveJoinablePiecePost(req, res) {
+  const postId = parseId(req.params.id);
+  if (!postId) {
+    res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' });
+    return null;
+  }
+
+  const post = await postModel.findPostById(postId);
+  if (!post) {
+    res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
+    return null;
+  }
+
+  if (String(post.board_type || '').toUpperCase() !== BOARD_TYPES.PIECE) {
+    res.status(400).json({ message: '조각게시판 게시글만 참여할 수 있습니다.' });
+    return null;
+  }
+
+  if (post.is_hidden) {
+    res.status(403).json({ message: '관리자에 의해 제한된 조각은 참여할 수 없습니다.' });
+    return null;
+  }
+
+  return post;
+}
+
+async function joinPiece(req, res, next) {
+  try {
+    if (!req.user) return res.status(401).json({ message: '인증이 필요합니다.' });
+    const post = await resolveJoinablePiecePost(req, res);
+    if (!post) return;
+    if (Number(post.user_id) === Number(req.user.id)) {
+      return res.status(400).json({ message: '조각장은 이미 참여중입니다.' });
+    }
+
+    const participants = await postModel.joinPiece(post.id, req.user.id);
+    res.json({ pieceParticipants: serializePieceParticipants(participants, req.user), isPieceParticipant: true });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function cancelPieceJoin(req, res, next) {
+  try {
+    if (!req.user) return res.status(401).json({ message: '인증이 필요합니다.' });
+    const post = await resolveJoinablePiecePost(req, res);
+    if (!post) return;
+    if (Number(post.user_id) === Number(req.user.id)) {
+      return res.status(400).json({ message: '조각장은 참여를 취소할 수 없습니다.' });
+    }
+
+    const participants = await postModel.cancelPieceJoin(post.id, req.user.id);
+    res.json({ pieceParticipants: serializePieceParticipants(participants, req.user), isPieceParticipant: false });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function checkPieceAttendance(req, res, next) {
+  try {
+    if (!req.user) return res.status(401).json({ message: '인증이 필요합니다.' });
+    const post = await resolveJoinablePiecePost(req, res);
+    if (!post) return;
+    if (Number(post.user_id) !== Number(req.user.id)) {
+      return res.status(403).json({ message: '조각장만 출석 체크를 할 수 있습니다.' });
+    }
+
+    const participantUserId = parseId(req.params.userId);
+    if (!participantUserId) return res.status(400).json({ message: '유효하지 않은 참여자 ID입니다.' });
+    const isParticipant = await postModel.isPieceParticipant(post.id, participantUserId);
+    if (!isParticipant) return res.status(404).json({ message: '참여자를 찾을 수 없습니다.' });
+
+    const participants = await postModel.checkPieceAttendance(post.id, participantUserId);
+    res.json({ pieceParticipants: serializePieceParticipants(participants, req.user) });
   } catch (error) {
     next(error);
   }
@@ -1042,6 +1142,9 @@ module.exports = {
   updatePost,
   deletePost,
   toggleLike,
+  joinPiece,
+  cancelPieceJoin,
+  checkPieceAttendance,
   listComments,
   createComment,
   updateComment,
