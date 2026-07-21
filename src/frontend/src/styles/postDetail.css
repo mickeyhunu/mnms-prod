@@ -341,6 +341,12 @@
     border: 1px solid #e1e5ea;
 }
 
+.piece-participant-avatar-link {
+    display: inline-flex;
+    border-radius: 50%;
+    line-height: 0;
+}
+
 .piece-participant-nickname {
     color: #1f2630;
     font-size: 14px;
