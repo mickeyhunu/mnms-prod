@@ -80,9 +80,6 @@ function getMemberProfileIntroduction(profile = {}) {
         profile.profileIntroduction
         || profile.profile_introduction
         || profile.introduction
-        || profile.bio
-        || profile.about
-        || profile.aboutMe
         || ''
     ).trim();
 }
