@@ -700,22 +700,28 @@ function initBoardTabs() {
         toggleButton.setAttribute('aria-expanded', 'false');
     };
 
-    toggleButton.addEventListener('click', () => {
-        const isOpen = !tabsPanel.classList.contains('hidden');
-        if (isOpen) {
+    if (typeof window.initSectionHeader === 'function') {
+        window.initSectionHeader();
+    }
+
+    if (toggleButton.dataset.sectionHeaderBound !== 'true') {
+        toggleButton.addEventListener('click', () => {
+            const isOpen = !tabsPanel.classList.contains('hidden');
+            if (isOpen) {
+                closeTabsPanel();
+                return;
+            }
+
+            showElement(tabsPanel);
+            toggleButton.setAttribute('aria-expanded', 'true');
+        });
+
+        document.addEventListener('click', (event) => {
+            if (tabsPanel.classList.contains('hidden')) return;
+            if (tabsPanel.contains(event.target) || toggleButton.contains(event.target)) return;
             closeTabsPanel();
-            return;
-        }
-
-        showElement(tabsPanel);
-        toggleButton.setAttribute('aria-expanded', 'true');
-    });
-
-    document.addEventListener('click', (event) => {
-        if (tabsPanel.classList.contains('hidden')) return;
-        if (tabsPanel.contains(event.target) || toggleButton.contains(event.target)) return;
-        closeTabsPanel();
-    });
+        });
+    }
 
     tabs.forEach((tab) => {
         tab.addEventListener('click', () => {
