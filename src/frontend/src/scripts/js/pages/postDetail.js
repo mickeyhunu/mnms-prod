@@ -768,7 +768,8 @@ function renderPieceJoinButton(post, isCurrentAuthor, isHiddenPost) {
     const pieceAction = isCurrentAuthor ? 'attendance' : (post.isPieceParticipant ? 'cancel' : 'join');
     joinBtn.dataset.pieceAction = pieceAction;
     joinBtn.classList.toggle('btn-primary', pieceAction !== 'cancel');
-    joinBtn.classList.toggle('btn-danger', pieceAction === 'cancel');
+    joinBtn.classList.toggle('btn-secondary', pieceAction === 'cancel');
+    joinBtn.classList.remove('btn-danger');
     joinBtn.textContent = isCurrentAuthor ? '출석 체크' : (post.isPieceParticipant ? '참여 취소' : '참여하기');
 }
 
@@ -785,7 +786,10 @@ function renderPieceParticipants(post, isCurrentAuthor, isHiddenPost) {
     const currentParticipants = isPiecePost ? 1 + participants.length : 0;
 
     participantsElement.classList.toggle('hidden', !isPiecePost);
-    participantsCountElement.textContent = `${currentParticipants} / ${maxParticipants || 1}`;
+    participantsCountElement.innerHTML = `
+        <span class="piece-participants-count-current">${currentParticipants}</span>
+        <span class="piece-participants-count-divider"> / </span>
+        <span class="piece-participants-count-max">${maxParticipants || 1}</span>`;
     participantsListElement.innerHTML = isPiecePost
         ? [
             renderPieceParticipantCard(post, { isLeader: true }),
