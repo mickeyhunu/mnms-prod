@@ -552,7 +552,7 @@ function parsePieceTemplateRows(content) {
         if (!trimmedLine.includes(':')) return rows;
 
         const [label, ...valueParts] = trimmedLine.split(':');
-        const normalizedLabel = label.trim();
+        const normalizedLabel = label.replace(/^[^\w가-힣]+\s*/, '').trim();
         const value = valueParts.join(':').trim();
         if (normalizedLabel && value) rows.set(normalizedLabel, value);
         return rows;
@@ -605,8 +605,13 @@ function resolvePieceStatus(post) {
     );
     if (templateStatus) return templateStatus;
 
-    const dateTime = parsePieceDateTime(pieceRows.get('날짜/시간') || pieceRows.get('일정') || pieceRows.get('만남 시간'));
-    if (dateTime && dateTime.getTime() <= Date.now()) return '종료';
+    const dateTime = parsePieceDateTime(
+        pieceRows.get('시간')
+        || pieceRows.get('날짜/시간')
+        || pieceRows.get('일정')
+        || pieceRows.get('만남 시간')
+    );
+    if (dateTime && dateTime.getTime() <= Date.now()) return '진행중';
 
     return '모집중';
 }
