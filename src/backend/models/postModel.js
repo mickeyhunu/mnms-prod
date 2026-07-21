@@ -238,9 +238,10 @@ async function listPosts(page = 0, size = 10, options = {}) {
   const postIds = rows.map((row) => row.id);
   const commentCountMap = new Map();
   const likeCountMap = new Map();
+  const pieceParticipantCountMap = new Map();
 
   if (postIds.length) {
-    const [commentCountRows, likeCountRows] = await Promise.all([
+    const [commentCountRows, likeCountRows, pieceParticipantCountRows] = await Promise.all([
       pool.query(
         `SELECT c.post_id AS postId, COUNT(*) AS commentCount
          FROM comments c
@@ -255,6 +256,13 @@ async function listPosts(page = 0, size = 10, options = {}) {
          WHERE pl.post_id IN (?)
          GROUP BY pl.post_id`,
         [postIds]
+      ),
+      pool.query(
+        `SELECT pp.post_id AS postId, COUNT(DISTINCT pp.user_id) AS pieceParticipantCount
+         FROM piece_participants pp
+         WHERE pp.post_id IN (?)
+         GROUP BY pp.post_id`,
+        [postIds]
       )
     ]);
 
@@ -265,6 +273,10 @@ async function listPosts(page = 0, size = 10, options = {}) {
     likeCountRows[0].forEach((row) => {
       likeCountMap.set(Number(row.postId), Number(row.likeCount || 0));
     });
+
+    pieceParticipantCountRows[0].forEach((row) => {
+      pieceParticipantCountMap.set(Number(row.postId), Number(row.pieceParticipantCount || 0));
+    });
   }
 
   return {
@@ -272,7 +284,8 @@ async function listPosts(page = 0, size = 10, options = {}) {
       ...row,
       noticeTargetBoards: parseNoticeTargetBoards(row.noticeTargetBoards),
       commentCount: commentCountMap.get(Number(row.id)) || 0,
-      likeCount: likeCountMap.get(Number(row.id)) || 0
+      likeCount: likeCountMap.get(Number(row.id)) || 0,
+      pieceParticipantCount: pieceParticipantCountMap.get(Number(row.id)) || 0
     })),
     total: Number(countRows[0].total)
   };
