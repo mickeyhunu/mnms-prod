@@ -773,6 +773,7 @@ async function handleSubmit(event) {
             title: titleValue,
             content: contentValue,
             boardType,
+            board_type: boardType,
             isNotice,
             noticeType: isNotice ? 'IMPORTANT' : null,
             noticeTargetBoards,
