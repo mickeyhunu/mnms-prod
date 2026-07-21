@@ -75,6 +75,10 @@ function renderMemberProfileLevelLabel(rawLabel = '') {
     return sanitizeHTML(title);
 }
 
+function getMemberProfileIntroduction(profile = {}) {
+    return String(profile.profileIntroduction || profile.profile_introduction || profile.introduction || '').trim();
+}
+
 function renderMemberProfile(profile) {
     const root = document.getElementById('member-profile-root');
     if (!root) return;
@@ -82,7 +86,7 @@ function renderMemberProfile(profile) {
     const profileImageUrl = String(profile.profileImageUrl || '').trim() || MEMBER_PROFILE_DEFAULT_IMAGE_URL;
     const levelLabel = profile.isBusinessMember ? profile.advertiserLevelLabel : profile.levelLabel;
     const levelCaption = profile.isBusinessMember ? '광고 활동 등급' : '회원 활동 등급';
-    const profileIntroduction = String(profile.profileIntroduction || '').trim();
+    const profileIntroduction = getMemberProfileIntroduction(profile);
 
     root.innerHTML = `
         <section class="member-profile-card" aria-label="회원 프로필">
