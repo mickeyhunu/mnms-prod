@@ -812,7 +812,7 @@ async function loadActivityHistory() {
         );
 
         container.innerHTML = `
-            <section class="mypage-summary-section mypage-activity-tab-wrap">
+            <section>
                 <div class="mypage-activity-tab-header" role="tablist" aria-label="활동 내역 탭">
                     <button type="button" class="mypage-activity-tab is-active" role="tab" aria-selected="true" data-activity-tab="posts">작성글</button>
                     <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="comments">작성댓글</button>
