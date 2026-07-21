@@ -268,6 +268,52 @@
 
 .image-overlay { display: none; }
 
+.piece-participants {
+    border-top: 1px solid #eef1f4;
+    background: #fff;
+    padding: 14px 20px;
+}
+
+.piece-participants-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.piece-participants-title {
+    font-weight: 800;
+    color: #1f2630;
+}
+
+.piece-participants-count {
+    color: #eb4c5f;
+}
+
+.piece-participants-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.piece-participant-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #f8fafc;
+    border: 1px solid #e6e8eb;
+    color: #55606d;
+    font-size: 14px;
+}
+
+.piece-participant-role {
+    font-weight: 800;
+    color: #1f2630;
+}
+
 .post-actions {
     border-top: 1px solid #eef1f4;
     background: #fafbfd;
