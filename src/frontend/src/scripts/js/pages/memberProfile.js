@@ -76,7 +76,15 @@ function renderMemberProfileLevelLabel(rawLabel = '') {
 }
 
 function getMemberProfileIntroduction(profile = {}) {
-    return String(profile.profileIntroduction || profile.profile_introduction || profile.introduction || '').trim();
+    return String(
+        profile.profileIntroduction
+        || profile.profile_introduction
+        || profile.introduction
+        || profile.bio
+        || profile.about
+        || profile.aboutMe
+        || ''
+    ).trim();
 }
 
 function renderMemberProfile(profile) {
