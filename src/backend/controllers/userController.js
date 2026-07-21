@@ -431,6 +431,11 @@ async function updateMyProfile(req, res, next) {
     const password = String(req.body.password || '').trim();
     const smsConsent = Boolean(req.body.smsConsent);
     const profileImageUrl = String(req.body.profileImageUrl || '').trim();
+    const profileIntroduction = String(req.body.profileIntroduction || '').trim();
+
+    if (Array.from(profileIntroduction).length > 200) {
+      return res.status(400).json({ message: '자기소개는 200자 이하로 입력해 주세요.' });
+    }
 
     const nicknameValidation = validateNickname(nickname);
     if (!nicknameValidation.valid) {
@@ -439,7 +444,8 @@ async function updateMyProfile(req, res, next) {
 
     const updates = {
       phone,
-      sms_consent: smsConsent
+      sms_consent: smsConsent,
+      profile_introduction: profileIntroduction
     };
     if (Object.prototype.hasOwnProperty.call(req.body, 'profileImageUrl')) {
       if (profileImageUrl && isDataUrlImage(profileImageUrl)) {
@@ -507,6 +513,7 @@ async function updateMyProfile(req, res, next) {
         birthDate: updatedUser.birth_date || null,
         smsConsent: Boolean(updatedUser.sms_consent),
         profileImageUrl: updatedUser.profile_image_url || '',
+        profileIntroduction: updatedUser.profile_introduction || '',
         nicknameChangeAvailableAt: getNicknameChangeAvailableAt(updatedUser.last_nickname_changed_at)
       }
     });
@@ -598,6 +605,7 @@ async function myStats(req, res, next) {
     res.json({
       loginId: req.user.login_id,
       nickname: req.user.nickname,
+      profileIntroduction: req.user.profile_introduction || '',
       totalPoints,
       totalStamps,
       stampType,

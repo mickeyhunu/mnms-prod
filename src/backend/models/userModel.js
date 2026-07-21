@@ -512,6 +512,11 @@ async function updateUserProfile(userId, payload) {
     values.push(payload.profile_image_url || null);
   }
 
+  if (Object.prototype.hasOwnProperty.call(payload, 'profile_introduction')) {
+    fields.push('profile_introduction = ?');
+    values.push(payload.profile_introduction || null);
+  }
+
   if (!fields.length) return;
 
   if (!hasNicknameUpdate) {
