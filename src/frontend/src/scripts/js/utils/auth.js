@@ -256,7 +256,6 @@ const Auth = {
             advertiserLevelLabel: user.advertiserLevelLabel,
             profileImageUrl: user.profileImageUrl,
             profileIntroduction: user.profileIntroduction || user.profile_introduction || user.introduction || '',
-            introduction: user.profileIntroduction || user.profile_introduction || user.introduction || '',
             accountStatus: user.accountStatus,
             isLoginRestricted: user.isLoginRestricted,
             loginRestrictedUntil: user.loginRestrictedUntil,
