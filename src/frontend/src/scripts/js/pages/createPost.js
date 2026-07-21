@@ -19,6 +19,12 @@ const WRITABLE_BOARD_TYPES = new Set(['FREE', 'ANON', 'REVIEW', 'STORY', 'PIECE'
 
 const PIECE_LOCATION_FALLBACK_CITY = '서울';
 const PIECE_LOCATION_FALLBACK_DISTRICT = '강남구';
+const PIECE_DEFAULT_CAPACITY_MIN = '1명';
+const PIECE_DEFAULT_CAPACITY_MAX = '4명';
+const PIECE_DEFAULT_AGE_MIN = '20대 초반 이상';
+const PIECE_DEFAULT_AGE_MAX = '40대 후반 이하';
+const PIECE_DEFAULT_DRINKING = '상관없음';
+
 
 const REGION_DISTRICT_MAP = {
     서울: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
@@ -170,6 +176,18 @@ function parsePieceDateTimeInputValue(value) {
     return Number.isNaN(date.getTime()) ? null : date;
 }
 
+
+function getDefaultPieceDateTimeInputValue() {
+    const date = new Date(Date.now() + 60 * 60 * 1000);
+    date.setMinutes(0, 0, 0);
+    return formatPieceDateTimeInputValue(
+        date.getFullYear(),
+        date.getMonth() + 1,
+        date.getDate(),
+        date.getHours(),
+        date.getMinutes()
+    );
+}
 
 function formatPieceDateTimeInputValue(year, month, day, hour = 0, minute = 0) {
     return [
@@ -396,6 +414,31 @@ function setPieceSelectValue(input, value) {
 
     input.value = normalizedValue;
     return true;
+}
+
+
+function setPieceSelectDefaultValue(input, value) {
+    if (!input || String(input.value || '').trim()) return false;
+    return setPieceSelectValue(input, value);
+}
+
+function applyPieceFieldDefaults({ includeDateTime = false, replacePastDateTime = false } = {}) {
+    setPieceSelectDefaultValue(document.getElementById('piece-capacity-min'), PIECE_DEFAULT_CAPACITY_MIN);
+    setPieceSelectDefaultValue(document.getElementById('piece-capacity-max'), PIECE_DEFAULT_CAPACITY_MAX);
+    setPieceSelectDefaultValue(document.getElementById('piece-age-min'), PIECE_DEFAULT_AGE_MIN);
+    setPieceSelectDefaultValue(document.getElementById('piece-age-max'), PIECE_DEFAULT_AGE_MAX);
+    setPieceSelectDefaultValue(document.getElementById('piece-cost'), '30만원 이하');
+    setPieceSelectDefaultValue(document.getElementById('piece-drinking'), PIECE_DEFAULT_DRINKING);
+
+    const dateTimeInput = document.getElementById('piece-datetime');
+    if (dateTimeInput && includeDateTime) {
+        const selectedDateTime = parsePieceDateTimeInputValue(dateTimeInput.value);
+        if (!dateTimeInput.value || (replacePastDateTime && (!selectedDateTime || selectedDateTime.getTime() <= Date.now()))) {
+            dateTimeInput.value = getDefaultPieceDateTimeInputValue();
+        }
+    }
+
+    updatePieceRangeOptions();
 }
 
 function hydratePieceLocationFields(locationValue) {
@@ -918,12 +961,22 @@ async function loadPostForEdit() {
         const contentInput = document.getElementById('content');
 
         if (titleInput) titleInput.value = post.title || '';
-        if (contentInput) contentInput.value = hydratePieceFieldsFromContent(post.content || '');
 
         const boardTypeSelect = document.getElementById('board-type');
-        if (boardTypeSelect && post.boardType) {
-            boardTypeSelect.value = String(post.boardType).toUpperCase();
+        const editingBoardType = String(post.boardType || post.board_type || '').toUpperCase();
+        if (boardTypeSelect && editingBoardType) {
+            boardTypeSelect.value = editingBoardType;
             togglePieceFields();
+        }
+
+        if (editingBoardType === 'PIECE') {
+            applyPieceFieldDefaults({ includeDateTime: true, replacePastDateTime: true });
+        }
+
+        if (contentInput) contentInput.value = hydratePieceFieldsFromContent(post.content || '');
+
+        if (editingBoardType === 'PIECE') {
+            applyPieceFieldDefaults({ includeDateTime: true, replacePastDateTime: true });
         }
 
         const normalizedImageUrls = Array.isArray(post.imageUrls)
