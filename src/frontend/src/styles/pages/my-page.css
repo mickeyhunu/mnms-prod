@@ -653,10 +653,6 @@ span.mypage-level-badge {
     text-decoration: underline;
 }
 
-.mypage-summary-list {
-    border-top: 1px solid #f1f5f9;
-}
-
 .mypage-summary-row {
     display: flex;
     justify-content: space-between;

@@ -303,7 +303,7 @@
 }
 
 .piece-participants-count-current {
-    color: var(--secondary-color);
+    color: var(--danger-color);
 }
 
 .piece-participants-count-divider,
@@ -342,11 +342,9 @@
 }
 
 .piece-participant-nickname {
-    width: 100%;
     color: #1f2630;
     font-size: 14px;
-    font-weight: 800;
-    overflow: hidden;
+    font-weight: 500;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -355,14 +353,15 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    align-self: flex-start;
+    align-self: center;
     padding: 3px 8px;
     border-radius: 999px;
     background: var(--secondary-color);
     color: #fff;
-    font-size: 12px;
-    font-weight: 800;
+    font-size: 10px;
+    font-weight: 500;
     line-height: 1.2;
+    white-space: nowrap;
 }
 
 .piece-participant-introduction {
