@@ -287,8 +287,7 @@ a:hover {
     display: block;
 }
 
-.auth-container { max-width: 500px; }
-.auth-container.auth-login { max-width: 420px; }
+.auth-container { max-width: 500px; padding: 3%; }
 
 .age-notice-banner {
     display: flex;

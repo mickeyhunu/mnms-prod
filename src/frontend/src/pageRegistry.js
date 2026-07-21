@@ -1387,7 +1387,7 @@ const pageRegistry = {
 </header>
 
 <main class="main-content">
-    <div class="container auth-container auth-login">
+    <div class="container auth-container">
         <div class="community-section-header">
             <h1>계정 찾기</h1>
             <p>본인인증 후 가입된 아이디를 확인하고 비밀번호를 재설정할 수 있습니다.</p>
@@ -1605,7 +1605,7 @@ const pageRegistry = {
             </div>
         </div>
 
-        <div class="container auth-container auth-login">
+        <div class="container auth-container">
             <div class="community-section-header">
                 <h1>로그인</h1>
                 <p>미드나잇 맨즈에 로그인하여 다양한 사람들과 소통하세요</p>
@@ -1954,9 +1954,8 @@ const pageRegistry = {
 
   'support-board': {
     template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
-    <main class="main-content"><div class="container mypage-linked-container"><div class="loading" id="support-public-loading"><div class="spinner"></div><p>불러오는 중...</p></div>
+    <main class="main-content"><div class="container mypage-linked-container"> <header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link icon-btn icon-btn-square" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">공지사항</span></div></header><div class="loading" id="support-public-loading"><div class="spinner"></div><p>불러오는 중...</p></div>
     <div class="error-banner hidden" id="support-public-error"><p id="support-public-error-message"></p></div>
-    <header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link icon-btn icon-btn-square" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">공지사항</span></div></header>
     <div id="support-public-list" class="hidden"></div><div class="mypage-linked-content">
     </div></div></main>
     <script src="scripts/js/utils/constants.js"></script><script src="scripts/js/utils/helpers.js"></script><script src="scripts/js/utils/auth.js"></script><script src="scripts/js/api/apiClient.js"></script><script src="scripts/js/pages/supportBoard.js"></script><script src="scripts/js/components/sectionHeader.js"></script><script src="scripts/js/components/footerNav.js"></script>`,
