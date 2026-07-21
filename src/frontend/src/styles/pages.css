@@ -1202,6 +1202,30 @@
   line-height: 1;
 }
 
+.member-profile-introduction {
+  margin-top: 22px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: #f8fafc;
+}
+
+.member-profile-introduction-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.member-profile-introduction p {
+  margin: 0;
+  color: #1e293b;
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .member-profile-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
