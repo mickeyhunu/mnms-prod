@@ -139,6 +139,12 @@ router.delete('/posts/:id', async (req, res, next) => {
     const post = await postModel.findPostByIdIncludingDeleted(id);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
     if (post.is_deleted) return res.status(400).json({ message: '이미 삭제된 게시글입니다.' });
+    if (String(post.board_type || post.boardType || '').toUpperCase() === 'PIECE') {
+      const pieceParticipantCount = await postModel.countPieceParticipants(id);
+      if (pieceParticipantCount > 0) {
+        return res.status(409).json({ message: '참여자가 있는 조각글은 삭제할 수 없습니다.' });
+      }
+    }
 
     await postModel.deletePost(id);
     res.json({ success: true });
