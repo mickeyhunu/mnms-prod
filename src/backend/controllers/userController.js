@@ -598,6 +598,7 @@ async function myStats(req, res, next) {
     res.json({
       loginId: req.user.login_id,
       nickname: req.user.nickname,
+      profileImageUrl: req.user.profile_image_url || '',
       totalPoints,
       totalStamps,
       stampType,
