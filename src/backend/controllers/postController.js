@@ -216,6 +216,12 @@ function isBusinessUser(user) {
   return role === 'BUSINESS' || memberType === 'BUSINESS';
 }
 
+function isRegularMember(user) {
+  const role = String(user?.role || '').toUpperCase();
+  const memberType = String(user?.member_type || user?.memberType || '').toUpperCase();
+  return role !== 'ADMIN' && role !== 'BUSINESS' && memberType !== 'BUSINESS';
+}
+
 function isBusinessAuthorSnapshot(record) {
   const role = String(record?.author_role_snapshot || record?.authorRoleSnapshot || '').toUpperCase();
   const memberType = String(record?.author_member_type_snapshot || record?.authorMemberTypeSnapshot || '').toUpperCase();
@@ -818,6 +824,9 @@ async function joinPiece(req, res, next) {
     if (!req.user) return res.status(401).json({ message: '인증이 필요합니다.' });
     const post = await resolveJoinablePiecePost(req, res);
     if (!post) return;
+    if (!isRegularMember(req.user)) {
+      return res.status(403).json({ message: '조각은 일반회원만 참여할 수 있습니다.' });
+    }
     if (Number(post.user_id) === Number(req.user.id)) {
       return res.status(400).json({ message: '조각장은 이미 참여중입니다.' });
     }
