@@ -1215,32 +1215,6 @@
   font-weight: 700;
 }
 
-.member-profile-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin: 24px 0 0;
-}
-
-.member-profile-stats div {
-  padding: 16px;
-  border-radius: 16px;
-  background: #f8fafc;
-  text-align: center;
-}
-
-.member-profile-stats dt {
-  margin-bottom: 6px;
-  color: #64748b;
-  font-size: 13px;
-}
-
-.member-profile-stats dd {
-  margin: 0;
-  font-weight: 800;
-  color: #0f172a;
-}
-
 .member-profile-mention {
   font-weight: 700;
 }
@@ -1257,10 +1231,6 @@
   .member-profile-avatar {
     width: 72px;
     height: 72px;
-  }
-
-  .member-profile-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
