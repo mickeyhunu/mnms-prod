@@ -345,7 +345,7 @@
       return;
     }
 
-    window.location.href = '/';
+    window.location.href = '/play';
   });
 
   shareButtonEl?.addEventListener('click', handleSharePost);
