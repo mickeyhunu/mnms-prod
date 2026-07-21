@@ -1,6 +1,12 @@
 (function initSectionHeaderMenu() {
-    const tabsPanel = document.getElementById('board-tabs-panel');
-    const toggleButton = document.getElementById('board-menu-toggle');
+    const handleBackNavigation = (backLink) => {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+
+        window.location.href = backLink.getAttribute('href') || '/';
+    };
 
     if (!window.__communityBackLinkBound) {
         document.addEventListener('click', (event) => {
@@ -10,58 +16,59 @@
             }
 
             event.preventDefault();
-
-            if (window.history.length > 1) {
-                window.history.back();
-                return;
-            }
-
-            window.location.href = backLink.getAttribute('href') || '/';
+            handleBackNavigation(backLink);
         });
         window.__communityBackLinkBound = true;
     }
 
-    if (!tabsPanel || !toggleButton) {
-        return;
-    }
+    window.initSectionHeader = function initSectionHeader() {
+        const tabsPanel = document.getElementById('board-tabs-panel');
+        const toggleButton = document.getElementById('board-menu-toggle');
 
-    const closeTabsPanel = () => {
-        tabsPanel.classList.add('hidden');
-        toggleButton.setAttribute('aria-expanded', 'false');
-    };
+        if (!window.__sectionHeaderOutsideClickBound) {
+            document.addEventListener('click', (event) => {
+                if (event.target.closest('.community-back-link')) {
+                    return;
+                }
 
-    toggleButton.addEventListener('click', () => {
-        const isOpen = !tabsPanel.classList.contains('hidden');
-        if (isOpen) {
-            closeTabsPanel();
+                const currentTabsPanel = document.getElementById('board-tabs-panel');
+                const currentToggleButton = document.getElementById('board-menu-toggle');
+
+                if (!currentTabsPanel || !currentToggleButton || currentTabsPanel.classList.contains('hidden')) {
+                    return;
+                }
+
+                if (currentTabsPanel.contains(event.target) || currentToggleButton.contains(event.target)) {
+                    return;
+                }
+
+                currentTabsPanel.classList.add('hidden');
+                currentToggleButton.setAttribute('aria-expanded', 'false');
+            });
+            window.__sectionHeaderOutsideClickBound = true;
+        }
+
+        if (!tabsPanel || !toggleButton || toggleButton.dataset.sectionHeaderBound === 'true') {
             return;
         }
 
-        tabsPanel.classList.remove('hidden');
-        toggleButton.setAttribute('aria-expanded', 'true');
-    });
+        const closeTabsPanel = () => {
+            tabsPanel.classList.add('hidden');
+            toggleButton.setAttribute('aria-expanded', 'false');
+        };
 
-    document.addEventListener('click', (event) => {
-        const backLink = event.target.closest('.community-back-link');
-        if (backLink) {
-            event.preventDefault();
-
-            if (window.history.length > 1) {
-                window.history.back();
+        toggleButton.addEventListener('click', () => {
+            const isOpen = !tabsPanel.classList.contains('hidden');
+            if (isOpen) {
+                closeTabsPanel();
                 return;
             }
 
-            window.location.href = backLink.getAttribute('href') || '/';
-            return;
-        }
+            tabsPanel.classList.remove('hidden');
+            toggleButton.setAttribute('aria-expanded', 'true');
+        });
+        toggleButton.dataset.sectionHeaderBound = 'true';
+    };
 
-        if (tabsPanel.classList.contains('hidden')) {
-            return;
-        }
-        if (tabsPanel.contains(event.target) || toggleButton.contains(event.target)) {
-            return;
-        }
-
-        closeTabsPanel();
-    });
+    window.initSectionHeader();
 })();
