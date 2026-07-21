@@ -24,10 +24,6 @@ function getProfileImageUrl(user = {}) {
     return String(user.profileImageUrl || '').trim() || DEFAULT_PROFILE_IMAGE_URL;
 }
 
-function getProfileImageFallbackAttribute() {
-    return `this.onerror=null;this.src='${DEFAULT_PROFILE_IMAGE_URL}';`;
-}
-
 function setHelpMessage(element, message, color) {
     if (!element) return;
     element.textContent = message;
@@ -1433,7 +1429,7 @@ async function loadStats() {
                     <a class="mypage-summary-action" href="/my-page/profile">정보 수정</a>
                 </div>
                 <div class="mypage-profile-image-wrap">
-                    <img class="mypage-profile-image" src="${sanitizeHTML(getProfileImageUrl(response))}" alt="프로필 이미지" loading="lazy" onerror="${getProfileImageFallbackAttribute()}">
+                    <img class="mypage-profile-image" src="${sanitizeHTML(getProfileImageUrl(response))}" alt="프로필 이미지" loading="lazy">
                 </div>
                 <div class="mypage-summary-list">
                     <div class="mypage-summary-row mypage-summary-row--introduction"><span>자기소개</span><strong>${sanitizeHTML(response.profileIntroduction || '-')}</strong></div>
