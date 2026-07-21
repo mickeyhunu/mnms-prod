@@ -161,11 +161,17 @@ function resolvePieceLifecycle(post) {
 
   return {
     isEnded: isClosedByLeader || isAutoEnded,
+    isInProgress: Boolean(startsAt && startsAt.getTime() <= Date.now() && !isClosedByLeader && !isAutoEnded),
     status: isClosedByLeader || isAutoEnded ? '종료' : (startsAt && startsAt.getTime() <= Date.now() ? '진행중' : '모집중'),
     startsAt: startsAt ? startsAt.toISOString() : null,
     autoEndsAt: autoEndsAt ? autoEndsAt.toISOString() : null,
     closedAt
   };
+}
+
+function isPiecePostLocked(post) {
+  const pieceLifecycle = resolvePieceLifecycle(post);
+  return pieceLifecycle.isInProgress || pieceLifecycle.isEnded;
 }
 
 function parsePagination(rawPage, rawSize) {
@@ -1044,6 +1050,9 @@ async function updatePost(req, res, next) {
       return res.status(403).json({ message: '공지글/필독글은 관리자 페이지에서만 수정할 수 있습니다.' });
     }
     const targetBoardType = parseBoardType(post.board_type || post.boardType);
+    if (targetBoardType === BOARD_TYPES.PIECE && isPiecePostLocked(post)) {
+      return res.status(409).json({ message: '진행중이거나 종료된 조각글은 수정할 수 없습니다.' });
+    }
     if (isBusinessUser(req.user) && targetBoardType !== BOARD_TYPES.PROMOTION) {
       return res.status(403).json({ message: '광고자 계정은 홍보게시판 글만 수정할 수 있습니다.' });
     }
@@ -1118,6 +1127,9 @@ async function deletePost(req, res, next) {
       return res.status(403).json({ message: getPreBusinessContentRestrictionMessage('게시글', '삭제') });
     }
     if (String(post.board_type || '').toUpperCase() === BOARD_TYPES.PIECE) {
+      if (isPiecePostLocked(post)) {
+        return res.status(409).json({ message: '진행중이거나 종료된 조각글은 삭제할 수 없습니다.' });
+      }
       const pieceParticipantCount = await postModel.countPieceParticipants(postId);
       if (pieceParticipantCount > 0) {
         return res.status(409).json({ message: '참여자가 있는 조각글은 삭제할 수 없습니다.' });
