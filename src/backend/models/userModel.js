@@ -227,7 +227,7 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
   const safeLimit = Math.max(1, Math.min(1000, Number(limit) || 20));
 
   const [posts] = await pool.query(
-    `SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt,
+    `SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt, p.view_count AS viewCount,
             (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) AS commentCount,
             (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
@@ -250,7 +250,7 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
   );
 
   const [likedPosts] = await pool.query(
-    `SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt,
+    `SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt, p.view_count AS viewCount,
             pl.created_at AS likedAt,
             (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) AS commentCount,
             (SELECT COUNT(DISTINCT pl2.user_id) FROM post_likes pl2 WHERE pl2.post_id = p.id) AS likeCount
@@ -262,7 +262,21 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
     [userId, safeLimit]
   );
 
-  return { posts, comments, likedPosts };
+  const [participatedPieces] = await pool.query(
+    `SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt,
+            p.view_count AS viewCount, pp.created_at AS joinedAt, pp.attended_at AS attendedAt,
+            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) AS commentCount,
+            (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount,
+            (SELECT COUNT(DISTINCT pp2.user_id) FROM piece_participants pp2 WHERE pp2.post_id = p.id) AS participantCount
+     FROM piece_participants pp
+     INNER JOIN posts p ON p.id = pp.post_id
+     WHERE pp.user_id = ? AND p.is_deleted = 0 AND p.board_type = 'PIECE'
+     ORDER BY pp.created_at DESC, p.id DESC
+     LIMIT ?`,
+    [userId, safeLimit]
+  );
+
+  return { posts, comments, likedPosts, participatedPieces };
 }
 
 

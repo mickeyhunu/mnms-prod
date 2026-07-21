@@ -796,28 +796,15 @@ async function loadActivityHistory() {
         const myPosts = response.posts || [];
         const myComments = response.comments || [];
         const likedPosts = response.likedPosts || [];
-        const commentedPosts = Array.from(
-            myComments.reduce((map, comment) => {
-                if (!comment.postId || map.has(comment.postId)) return map;
-
-                map.set(comment.postId, {
-                    postId: comment.postId,
-                    postTitle: comment.postTitle || '원문 보기',
-                    postBoardType: comment.postBoardType,
-                    commentedAt: comment.createdAt
-                });
-
-                return map;
-            }, new Map()).values()
-        );
+        const participatedPieces = response.participatedPieces || [];
 
         container.innerHTML = `
             <section>
                 <div class="mypage-activity-tab-header" role="tablist" aria-label="활동 내역 탭">
                     <button type="button" class="mypage-activity-tab is-active" role="tab" aria-selected="true" data-activity-tab="posts">작성글</button>
                     <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="comments">작성댓글</button>
-                    <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="commented-posts">댓글단 글</button>
-                    <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="liked-posts">좋아요한 글</button>
+                    <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="liked-posts">추천한 글</button>
+                    <button type="button" class="mypage-activity-tab" role="tab" aria-selected="false" data-activity-tab="participated-pieces">참여한 조각</button>
                 </div>
 
                 <div class="mypage-activity-tab-panel is-active" role="tabpanel" data-activity-panel="posts">
@@ -827,7 +814,7 @@ async function loadActivityHistory() {
                             <a class="mypage-point-history-row" href="${createPostDetailPath(post)}">
                                 <div>
                                     <strong>${formatActivityTitle(post.title, post.boardType)}</strong>
-                                    <p>${sanitizeHTML(formatDate(post.createdAt))} · 좋아요 ${Number(post.likeCount || 0)} · 댓글 ${Number(post.commentCount || 0)}</p>
+                                    <p>${sanitizeHTML(formatDate(post.createdAt))} · 댓글 ${Number(post.commentCount || 0)} · 조회수 ${Number(post.viewCount || 0)} · 추천수 ${Number(post.likeCount || 0)}</p>
                                 </div>
                             </a>
                         `).join('')}
@@ -851,20 +838,6 @@ async function loadActivityHistory() {
                     ` : '<div class="no-data">작성한 댓글이 없습니다.</div>'}
                 </div>
 
-                <div class="mypage-activity-tab-panel" role="tabpanel" data-activity-panel="commented-posts" hidden>
-                    ${commentedPosts.length ? `
-                    <div class="mypage-point-history-list">
-                        ${commentedPosts.map((post) => `
-                            <a class="mypage-point-history-row" href="${createPostDetailPath(post.postId, post.title || post.postTitle)}">
-                                <div>
-                                    <strong>${formatActivityTitle(post.postTitle, post.postBoardType)}</strong>
-                                    <p>최근 댓글 ${sanitizeHTML(formatDate(post.commentedAt))}</p>
-                                </div>
-                            </a>
-                        `).join('')}
-                    </div>
-                    ` : '<div class="no-data">댓글을 작성한 게시글이 없습니다.</div>'}
-                </div>
 
                 <div class="mypage-activity-tab-panel" role="tabpanel" data-activity-panel="liked-posts" hidden>
                     ${likedPosts.length ? `
@@ -873,12 +846,28 @@ async function loadActivityHistory() {
                             <a class="mypage-point-history-row" href="${createPostDetailPath(post)}">
                                 <div>
                                     <strong>${formatActivityTitle(post.title, post.boardType)}</strong>
-                                    <p>추천일 ${sanitizeHTML(formatDate(post.likedAt || post.createdAt))} · 좋아요 ${Number(post.likeCount || 0)} · 댓글 ${Number(post.commentCount || 0)}</p>
+                                    <p>추천일 ${sanitizeHTML(formatDate(post.likedAt || post.createdAt))} · 댓글 ${Number(post.commentCount || 0)} · 조회수 ${Number(post.viewCount || 0)} · 추천수 ${Number(post.likeCount || 0)}</p>
                                 </div>
                             </a>
                         `).join('')}
                     </div>
-                    ` : '<div class="no-data">좋아요한 게시글이 없습니다.</div>'}
+                    ` : '<div class="no-data">추천한 게시글이 없습니다.</div>'}
+                </div>
+
+                <div class="mypage-activity-tab-panel" role="tabpanel" data-activity-panel="participated-pieces" hidden>
+                    ${participatedPieces.length ? `
+                    <div class="mypage-point-history-list">
+                        ${participatedPieces.map((post) => `
+                            <a class="mypage-point-history-row" href="${createPostDetailPath(post)}">
+                                <div>
+                                    <strong>${formatActivityTitle(post.title, post.boardType || 'PIECE')}</strong>
+                                    <p>참여일 ${sanitizeHTML(formatDate(post.joinedAt || post.createdAt))} · 댓글 ${Number(post.commentCount || 0)} · 조회수 ${Number(post.viewCount || 0)} · 추천수 ${Number(post.likeCount || 0)}</p>
+                                    <p>참여자 ${Number(post.participantCount || 0)}명${post.attendedAt ? ` · 출석 ${sanitizeHTML(formatDate(post.attendedAt))}` : ''}</p>
+                                </div>
+                            </a>
+                        `).join('')}
+                    </div>
+                    ` : '<div class="no-data">참여한 조각이 없습니다.</div>'}
                 </div>
             </section>
         `;
