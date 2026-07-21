@@ -6,6 +6,8 @@ let totalPages = 0;
 let isLoading = false;
 const pageSize = 20;
 const VIEWED_POST_IDS_STORAGE_KEY = 'communityViewedPostIds';
+const PIECE_TEMPLATE_START = '<!-- PIECE_TEMPLATE_START -->';
+const PIECE_TEMPLATE_END = '<!-- PIECE_TEMPLATE_END -->';
 let viewedPostIdSetCache = null;
 let viewedPostSyncPromise = null;
 const pendingViewedPostIds = new Set();
@@ -317,6 +319,7 @@ function createArticleItem(post) {
     const recommendMarkup = isNoticePost
         ? ''
         : `<span class="article-recommend">추천수 : ${Number(post.likeCount || post.recommendCount || 0)}</span>`;
+    const pieceStatusMarkup = getPieceStatusBadgeMarkup(post);
 
     return `
         <li class="article-item ${isViewedPost ? 'article-item-viewed' : 'article-item-unviewed'} ${isNoticePost ? 'article-item-notice' : ''} ${isNoticePost && noticeType === 'IMPORTANT' ? 'article-item-important' : ''}">
@@ -326,6 +329,7 @@ function createArticleItem(post) {
                     <h3 class="article-title"><span class="${boardLabelClass}">[${boardLabel}]</span> ${sanitizeHTML(post.title || '제목 없음')} ${photoBadge}</h3>
                     ${commentInlineMarkup}
                     ${shouldShowNewBadge ? '<span class="article-new-badge">NEW</span>' : ''}
+                    ${pieceStatusMarkup}
                 </div>
                 <p class="article-preview">${previewText}</p>
                 <div class="article-meta">
@@ -515,13 +519,109 @@ function isWithin12Hours(dateValue) {
 }
 
 function getPreviewText(post) {
-    const source = post.preview || post.content || post.body || '';
+    const source = stripPieceTemplateFromPreview(post.preview || post.content || post.body || '');
     const firstLine = String(source)
         .split(/\r?\n/)
         .map((line) => line.replace(/\s+/g, ' ').trim())
         .find(Boolean);
 
     return firstLine?.slice(0, 140) || '내용 미리보기가 없습니다.';
+}
+
+function stripPieceTemplateFromPreview(content) {
+    const rawContent = String(content || '');
+    const startIndex = rawContent.indexOf(PIECE_TEMPLATE_START);
+    const endIndex = rawContent.indexOf(PIECE_TEMPLATE_END);
+
+    if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
+        return rawContent.trim();
+    }
+
+    return `${rawContent.slice(0, startIndex)}${rawContent.slice(endIndex + PIECE_TEMPLATE_END.length)}`.trim();
+}
+
+function parsePieceTemplateRows(content) {
+    const rawContent = String(content || '');
+    const startIndex = rawContent.indexOf(PIECE_TEMPLATE_START);
+    const endIndex = rawContent.indexOf(PIECE_TEMPLATE_END);
+    if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) return new Map();
+
+    const templateContent = rawContent.slice(startIndex + PIECE_TEMPLATE_START.length, endIndex);
+    return templateContent.split(/\r?\n/).reduce((rows, line) => {
+        const trimmedLine = line.trim();
+        if (!trimmedLine.includes(':')) return rows;
+
+        const [label, ...valueParts] = trimmedLine.split(':');
+        const normalizedLabel = label.trim();
+        const value = valueParts.join(':').trim();
+        if (normalizedLabel && value) rows.set(normalizedLabel, value);
+        return rows;
+    }, new Map());
+}
+
+function parsePieceDateTime(value) {
+    const rawValue = String(value || '').trim();
+    if (!rawValue) return null;
+
+    const normalizedValue = rawValue
+        .replace(/(년|\.)\s*/g, '-')
+        .replace(/월\s*/g, '-')
+        .replace(/일\s*/g, ' ')
+        .replace(/시\s*/g, ':')
+        .replace(/분\s*/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    const date = new Date(normalizedValue.includes('T') ? normalizedValue : normalizedValue.replace(' ', 'T'));
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function normalizePieceStatusValue(value) {
+    const normalizedValue = String(value || '').trim().toUpperCase();
+    if (!normalizedValue) return '';
+    if (['모집완료', '모집 완료', '진행', 'ONGOING', 'IN_PROGRESS'].some((token) => normalizedValue.includes(token))) return '진행중';
+    if (['종료', '마감', '완료', 'ENDED', 'CLOSED', 'DONE'].some((token) => normalizedValue.includes(token))) return '종료';
+    if (['모집', 'RECRUITING', 'OPEN'].some((token) => normalizedValue.includes(token))) return '모집중';
+    return '';
+}
+
+function resolvePieceStatus(post) {
+    if (String(post?.boardType || '').toUpperCase() !== 'PIECE') return '';
+
+    const explicitStatus = normalizePieceStatusValue(
+        post?.pieceStatus
+        || post?.piece_status
+        || post?.meetingStatus
+        || post?.meeting_status
+        || post?.recruitmentStatus
+        || post?.recruitment_status
+    );
+    if (explicitStatus) return explicitStatus;
+
+    const pieceRows = parsePieceTemplateRows(post.content || post.body || '');
+    const templateStatus = normalizePieceStatusValue(
+        pieceRows.get('상태')
+        || pieceRows.get('모집 상태')
+        || pieceRows.get('진행 상태')
+    );
+    if (templateStatus) return templateStatus;
+
+    const dateTime = parsePieceDateTime(pieceRows.get('날짜/시간') || pieceRows.get('일정') || pieceRows.get('만남 시간'));
+    if (dateTime && dateTime.getTime() <= Date.now()) return '종료';
+
+    return '모집중';
+}
+
+function getPieceStatusBadgeMarkup(post) {
+    const status = resolvePieceStatus(post);
+    if (!status) return '';
+
+    const statusClassMap = {
+        모집중: 'article-piece-status-recruiting',
+        진행중: 'article-piece-status-ongoing',
+        종료: 'article-piece-status-ended'
+    };
+    const statusClass = statusClassMap[status] || 'article-piece-status-recruiting';
+    return `<span class="article-piece-status ${statusClass}">${sanitizeHTML(status)}</span>`;
 }
 
 function updatePagination() {
