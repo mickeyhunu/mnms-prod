@@ -850,14 +850,19 @@ function renderPieceJoinButton(post, isCurrentAuthor, isHiddenPost) {
         statusBadge.classList.add(pieceStatus === '종료' ? 'is-ended' : (pieceStatus === '진행중' ? 'is-progress' : 'is-recruiting'));
     }
 
-    joinBtn.disabled = !isRecruiting;
-    const pieceAction = !isRecruiting ? 'unavailable' : (isCurrentAuthor ? 'close' : (post.isPieceParticipant ? 'cancel' : 'join'));
+    const maxParticipants = getPieceMaximumParticipantCount(post.content || '');
+    const currentParticipants = 1 + getPieceParticipants(post).length;
+    const isFull = currentParticipants >= maxParticipants;
+    const canJoin = isRecruiting && (!isFull || post.isPieceParticipant || isCurrentAuthor);
+
+    joinBtn.disabled = !canJoin;
+    const pieceAction = !canJoin ? 'unavailable' : (isCurrentAuthor ? 'close' : (post.isPieceParticipant ? 'cancel' : 'join'));
     joinBtn.dataset.pieceAction = pieceAction;
     joinBtn.classList.toggle('btn-primary', pieceAction !== 'cancel');
     joinBtn.classList.toggle('btn-secondary', pieceAction === 'cancel');
     joinBtn.classList.remove('btn-danger');
     joinBtn.textContent = isRecruiting
-        ? (isCurrentAuthor ? '조각 종료' : (post.isPieceParticipant ? '참여 취소' : '참여하기'))
+        ? (isCurrentAuthor ? '조각 종료' : (post.isPieceParticipant ? '참여 취소' : (isFull ? '자리 없음' : '참여하기')))
         : pieceStatus;
 }
 
