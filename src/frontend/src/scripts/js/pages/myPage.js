@@ -365,6 +365,7 @@ function renderProfileForm(user) {
     const nameField = document.getElementById('profile-name');
     const birthField = document.getElementById('profile-birth');
     const smsConsent = document.getElementById('sms-consent');
+    const profileIntroduction = document.getElementById('profile-introduction');
     const profilePreview = document.getElementById('profile-image-preview');
     const profileRemoveButton = document.getElementById('profile-image-remove-btn');
 
@@ -379,6 +380,7 @@ function renderProfileForm(user) {
     if (nameField) nameField.value = user.name || user.nickname || '';
     if (birthField) birthField.value = formatBirthDate(user.birthDate || user.birth || '');
     if (smsConsent) smsConsent.checked = Boolean(user.smsConsent);
+    if (profileIntroduction) profileIntroduction.value = user.profileIntroduction || '';
     if (profilePreview) {
         profilePreview.src = getProfileImageUrl(user);
         profilePreview.dataset.profileImageUrl = String(user.profileImageUrl || '').trim();
@@ -401,6 +403,7 @@ function bindProfileForm() {
     const phoneInput = form.querySelector('#profile-phone');
     const phoneVerifyButton = form.querySelector('#phone-verify-btn');
     const phoneVerifyResult = form.querySelector('#phone-verify-result');
+    const profileIntroductionInput = form.querySelector('#profile-introduction');
     const profileImageInput = form.querySelector('#profile-image-input');
     const profileImageUploadButton = form.querySelector('#profile-image-upload-btn');
     const profileImageRemoveButton = form.querySelector('#profile-image-remove-btn');
@@ -644,6 +647,7 @@ function bindProfileForm() {
         const password = form.password.value.trim();
         const passwordConfirm = form.passwordConfirm.value.trim();
         const phone = formatPhoneNumber(form.phone.value.trim());
+        const profileIntroduction = (profileIntroductionInput?.value || '').trim();
 
         if (form.phone) form.phone.value = phone;
 
@@ -694,10 +698,16 @@ function bindProfileForm() {
             return;
         }
 
+        if (Array.from(profileIntroduction).length > 200) {
+            setHelpMessage(result, '자기소개는 200자 이하로 입력해 주세요.', '#dc3545');
+            return;
+        }
+
         const payload = {
             nickname,
             phone,
             smsConsent: form.smsConsent.checked,
+            profileIntroduction,
             profileImageUrl: String(profileImagePreview?.dataset.profileImageUrl || '').trim()
         };
 
@@ -1405,6 +1415,7 @@ async function loadStats() {
                     <img class="mypage-profile-image" src="${sanitizeHTML(getProfileImageUrl(response))}" alt="프로필 이미지" loading="lazy">
                 </div>
                 <div class="mypage-summary-list">
+                    <div class="mypage-summary-row mypage-summary-row--introduction"><span>자기소개</span><strong>${sanitizeHTML(response.profileIntroduction || '-')}</strong></div>
                     <div class="mypage-summary-row"><span>아이디</span><strong>@${sanitizeHTML(response.loginId || '')}</strong></div>
                     <div class="mypage-summary-row"><span>닉네임</span><strong>${sanitizeHTML(response.nickname || '')}</strong></div>
                     <div class="mypage-summary-row"><span>랭크</span>${rankMarkup}</div>
