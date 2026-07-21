@@ -8,6 +8,25 @@ import { postDetailPageConfig } from './pages/post-detail/config.js';
 import { rbtiPageConfig } from './pages/rbti/config.js';
 
 const pageRegistry = {
+  'member-profile': {
+    template: `<main class="main-content">
+        <div class="container">
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <a href="/community" class="community-back-link icon-btn icon-btn-square" aria-label="커뮤니티로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
+                    <span class="community-board-name">회원 프로필</span>
+                </div>
+            </header>
+            <div id="member-profile-root" aria-live="polite">
+                <section class="member-profile-card member-profile-empty"><p>회원 프로필을 불러오는 중입니다.</p></section>
+            </div>
+        </div>
+    </main>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/memberProfile.js", "scripts/js/components/footerNav.js"]
+  },
   'admin': adminPageConfig,
   'rbti': rbtiPageConfig,
   'business-info': {

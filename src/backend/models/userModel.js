@@ -441,6 +441,22 @@ async function findByNickname(nickname) {
   return rows[0] || null;
 }
 
+async function findPublicProfileByNickname(nickname) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT u.id, u.nickname, u.profile_image_url AS profileImageUrl, u.total_points AS totalPoints,
+            u.role, u.member_type AS memberType, u.created_at AS joinedAt,
+            (SELECT COUNT(*) FROM posts p WHERE p.user_id = u.id AND p.is_deleted = 0) AS postCount,
+            (SELECT COUNT(*) FROM comments c WHERE c.user_id = u.id AND c.is_deleted = 0) AS commentCount,
+            (SELECT COUNT(*) FROM posts p2 WHERE p2.user_id = u.id AND p2.board_type = 'REVIEW' AND p2.is_deleted = 0) AS reviewCount
+       FROM users u
+      WHERE u.nickname = ?
+      LIMIT 1`,
+    [nickname]
+  );
+  return rows[0] || null;
+}
+
 async function findByNicknameExceptUser(nickname, userId) {
   const pool = getPool();
   const [rows] = await pool.query('SELECT id FROM users WHERE nickname = ? AND id <> ?', [nickname, userId]);
@@ -769,6 +785,7 @@ module.exports = {
   findByLoginId,
   findById,
   findByNickname,
+  findPublicProfileByNickname,
   findByNicknameExceptUser,
   updateUserProfile,
   updateBusinessAuthorNicknameSnapshots,
