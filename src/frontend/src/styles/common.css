@@ -467,7 +467,7 @@ body,
 
 .piece-summary-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: 1fr;
     gap: 8px 14px;
     margin: 0;
 }
@@ -487,4 +487,5 @@ body,
 .piece-summary-list dd {
     margin: 0;
     color: var(--text-subtle);
+    white-space: nowrap;
 }
