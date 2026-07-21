@@ -6,6 +6,7 @@ let nicknameCheckState = { checked: false, available: false, value: '' };
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const DEFAULT_PROFILE_IMAGE_URL = '/src/assets/image/img_profile.png';
 const PROFILE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+const PROFILE_IMAGE_ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']);
 function formatPhoneNumber(value) {
     const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
     if (digits.length <= 3) return digits;
@@ -426,8 +427,8 @@ function bindProfileForm() {
     profileImageInput?.addEventListener('change', () => {
         const file = profileImageInput.files?.[0];
         if (!file) return;
-        if (!file.type.startsWith('image/')) {
-            setHelpMessage(profileImageResult, '이미지 파일만 선택해 주세요.', '#dc3545');
+        if (!PROFILE_IMAGE_ALLOWED_MIME_TYPES.has(file.type)) {
+            setHelpMessage(profileImageResult, 'JPG, PNG, WebP 정지 이미지만 선택해 주세요.', '#dc3545');
             profileImageInput.value = '';
             return;
         }

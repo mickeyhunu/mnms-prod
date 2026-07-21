@@ -38,6 +38,7 @@ const { createSeoSlugWithId } = require('../utils/seoSlug');
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validatePassword } = require('../utils/authPolicy');
 const { hashPassword } = require('../utils/passwordHasher');
+const sharp = require('sharp');
 
 
 const NTS_BUSINESS_STATUS_API_URL = 'https://api.odcloud.kr/api/nts-businessman/v1/status';
@@ -144,7 +145,7 @@ function isBusinessAdDefaultImageUrl(imageUrl = '') {
 const BUSINESS_AD_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
 const BUSINESS_AD_IMAGE_MAX_BYTES = 8 * 1024 * 1024;
 const BUSINESS_AD_DESCRIPTION_IMAGE_LIMIT = 20;
-const USER_PROFILE_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
+const USER_PROFILE_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 const USER_PROFILE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
 function isDataUrlImage(value = '') {
@@ -156,12 +157,23 @@ function getImageExtensionFromDataUrl(dataUrl = '') {
   const extensionByMimeType = {
     'image/jpeg': 'jpg',
     'image/png': 'png',
-    'image/gif': 'gif',
     'image/webp': 'webp',
     'image/heic': 'heic',
     'image/heif': 'heif'
   };
   return extensionByMimeType[mimeType] || 'jpg';
+}
+
+
+async function assertStillProfileImageDataUrl(dataUrl = '') {
+  const parsed = parseDataUrl(dataUrl);
+  if (!parsed) throw new Error('지원하지 않는 프로필 이미지 형식입니다.');
+  if (parsed.mimeType === 'image/gif') throw new Error('움직이는 프로필 이미지는 등록할 수 없습니다.');
+
+  const imageBuffer = Buffer.from(parsed.base64Body || '', 'base64');
+  const metadata = await sharp(imageBuffer, { animated: true }).metadata();
+  const frameCount = Number(metadata.pages || 1);
+  if (frameCount > 1) throw new Error('움직이는 프로필 이미지는 등록할 수 없습니다.');
 }
 
 function extractImageSrcsFromHtml(html = '') {
@@ -431,6 +443,7 @@ async function updateMyProfile(req, res, next) {
     };
     if (Object.prototype.hasOwnProperty.call(req.body, 'profileImageUrl')) {
       if (profileImageUrl && isDataUrlImage(profileImageUrl)) {
+        await assertStillProfileImageDataUrl(profileImageUrl);
         const uploaded = await uploadDataUrlToS3({
           dataUrl: profileImageUrl,
           fileName: `profile-image.${getImageExtensionFromDataUrl(profileImageUrl)}`,
