@@ -362,6 +362,12 @@ async function renderBusinessProfileStatuses() {
     });
 }
 
+function updateProfileCharCounter(input, counter, maxLength) {
+    if (!input || !counter) return;
+    const length = Array.from(String(input.value || '')).length;
+    counter.textContent = `${length}/${maxLength}`;
+}
+
 function renderProfileForm(user) {
     const loginIdField = document.getElementById('profile-login-id');
     const nicknameInput = document.getElementById('profile-nickname');
@@ -370,6 +376,8 @@ function renderProfileForm(user) {
     const birthField = document.getElementById('profile-birth');
     const smsConsent = document.getElementById('sms-consent');
     const profileIntroduction = document.getElementById('profile-introduction');
+    const profileIntroductionCounter = document.getElementById('profile-introduction-counter');
+    const nicknameCounter = document.getElementById('profile-nickname-counter');
     const profilePreview = document.getElementById('profile-image-preview');
     const profileRemoveButton = document.getElementById('profile-image-remove-btn');
 
@@ -385,6 +393,8 @@ function renderProfileForm(user) {
     if (birthField) birthField.value = formatBirthDate(user.birthDate || user.birth || '');
     if (smsConsent) smsConsent.checked = Boolean(user.smsConsent);
     if (profileIntroduction) profileIntroduction.value = user.profileIntroduction || '';
+    updateProfileCharCounter(profileIntroduction, profileIntroductionCounter, 200);
+    updateProfileCharCounter(nicknameInput, nicknameCounter, VALIDATION.NICKNAME_MAX_LENGTH);
     if (profilePreview) {
         profilePreview.src = getProfileImageUrl(user);
         profilePreview.dataset.profileImageUrl = String(user.profileImageUrl || '').trim();
@@ -408,6 +418,8 @@ function bindProfileForm() {
     const phoneVerifyButton = form.querySelector('#phone-verify-btn');
     const phoneVerifyResult = form.querySelector('#phone-verify-result');
     const profileIntroductionInput = form.querySelector('#profile-introduction');
+    const profileIntroductionCounter = form.querySelector('#profile-introduction-counter');
+    const nicknameCounter = form.querySelector('#profile-nickname-counter');
     const profileImageInput = form.querySelector('#profile-image-input');
     const profileImageUploadButton = form.querySelector('#profile-image-upload-btn');
     const profileImageRemoveButton = form.querySelector('#profile-image-remove-btn');
@@ -420,6 +432,11 @@ function bindProfileForm() {
     const withdrawResult = document.getElementById('withdraw-result');
 
     if (phoneInput) phoneInput.readOnly = true;
+
+    updateProfileCharCounter(nicknameInput, nicknameCounter, VALIDATION.NICKNAME_MAX_LENGTH);
+    updateProfileCharCounter(profileIntroductionInput, profileIntroductionCounter, 200);
+    nicknameInput?.addEventListener('input', () => updateProfileCharCounter(nicknameInput, nicknameCounter, VALIDATION.NICKNAME_MAX_LENGTH));
+    profileIntroductionInput?.addEventListener('input', () => updateProfileCharCounter(profileIntroductionInput, profileIntroductionCounter, 200));
 
     profileImageUploadButton?.addEventListener('click', () => profileImageInput?.click());
     profileImageRemoveButton?.addEventListener('click', () => {
