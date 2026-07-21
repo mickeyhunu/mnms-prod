@@ -1828,23 +1828,23 @@ const pageRegistry = {
         <section class="mypage-card">
           <h3>회원정보수정</h3>
           <form id="profile-form">
-            <div class="profile-image-editor">
-              <img id="profile-image-preview" class="profile-image-preview" src="/src/assets/image/img_profile.png" alt="프로필 이미지 미리보기" loading="lazy">
-              <div class="profile-image-controls">
-                <strong>프로필 이미지</strong>
-                <input type="file" id="profile-image-input" name="profileImage" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" hidden>
-                <div class="profile-image-actions">
-                  <button type="button" class="btn btn-outline btn-sm" id="profile-image-upload-btn">이미지 선택</button>
-                  <button type="button" class="btn btn-outline btn-sm" id="profile-image-remove-btn">삭제</button>
+            <div class="profile-form-grid">
+              <div class="profile-image-editor">
+                <img id="profile-image-preview" class="profile-image-preview" src="/src/assets/image/img_profile.png" alt="프로필 이미지 미리보기" loading="lazy">
+                <div class="profile-image-controls">
+                  <strong>프로필 이미지</strong>
+                  <input type="file" id="profile-image-input" name="profileImage" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" hidden>
+                  <div class="profile-image-actions">
+                    <button type="button" class="btn btn-outline btn-sm" id="profile-image-upload-btn">이미지 선택</button>
+                    <button type="button" class="btn btn-outline btn-sm" id="profile-image-remove-btn">삭제</button>
+                  </div>
                 </div>
               </div>
-            </div>
-            <label class="profile-introduction-field">
-              <span class="profile-field-title">자기소개</span>
-              <textarea id="profile-introduction" name="profileIntroduction" maxlength="200" rows="4" placeholder="자기소개를 입력해주세요."></textarea>
-              <small class="profile-char-counter" id="profile-introduction-counter" aria-live="polite">0/200</small>
-            </label>
-            <div class="profile-form-grid">
+              <label>
+                <span class="profile-field-title">자기소개</span>
+                <textarea id="profile-introduction" name="profileIntroduction" maxlength="200" rows="4" placeholder="자기소개를 입력해주세요."></textarea>
+                <small class="profile-char-counter" id="profile-introduction-counter" aria-live="polite">0/200</small>
+              </label>
               <label>아이디
                 <input type="text" id="profile-login-id" name="loginId" readonly>
               </label>
