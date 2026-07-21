@@ -226,11 +226,6 @@ function renderMemberProfile(profile) {
                 <span>가입일</span>
                 <time datetime="${sanitizeHTML(profile.joinedAt || '')}">${sanitizeHTML(formatMemberProfileDate(profile.joinedAt))}</time>
             </div>
-            <dl class="member-profile-stats">
-                <div><dt>게시글</dt><dd>${Number(profile.postCount || 0).toLocaleString()}</dd></div>
-                <div><dt>댓글</dt><dd>${Number(profile.commentCount || 0).toLocaleString()}</dd></div>
-                <div><dt>후기</dt><dd>${Number(profile.reviewCount || 0).toLocaleString()}</dd></div>
-            </dl>
         </section>
         ${renderMemberProfileActivity(profile)}
     `;
