@@ -1431,10 +1431,10 @@ async function loadStats() {
                 <div class="mypage-profile-image-wrap">
                     <img class="mypage-profile-image" src="${sanitizeHTML(getProfileImageUrl(response))}" alt="프로필 이미지" loading="lazy">
                 </div>
-                <div class="mypage-summary-list">
+                <div>
                     <div class="mypage-summary-row mypage-summary-row--introduction"><span>자기소개</span><strong>${sanitizeHTML(response.profileIntroduction || '-')}</strong></div>
-                    <div class="mypage-summary-row"><span>아이디</span><strong>@${sanitizeHTML(response.loginId || '')}</strong></div>
-                    <div class="mypage-summary-row"><span>닉네임</span><strong>${sanitizeHTML(response.nickname || '')}</strong></div>
+                    <div class="mypage-summary-row"><span>아이디</span><strong>${sanitizeHTML(response.loginId || '')}</strong></div>
+                    <div class="mypage-summary-row"><span>닉네임</span><strong>@${sanitizeHTML(response.nickname || '')}</strong></div>
                     <div class="mypage-summary-row"><span>랭크</span>${rankMarkup}</div>
                     <div class="mypage-summary-row"><span>가입일</span><strong>${sanitizeHTML(joinedAt)}</strong></div>
                 </div>
