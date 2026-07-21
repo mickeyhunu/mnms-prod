@@ -263,33 +263,20 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
   );
 
   const [participatedPieces] = await pool.query(
-    `SELECT pieceActivity.id, pieceActivity.title, pieceActivity.content, pieceActivity.boardType, pieceActivity.createdAt,
-            pieceActivity.viewCount, pieceActivity.view_count, pieceActivity.joinedAt, pieceActivity.attendedAt,
-            pieceActivity.commentCount, pieceActivity.likeCount, pieceActivity.participantCount
-     FROM (
-       SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt,
-              p.view_count AS viewCount, p.view_count AS view_count, pp.created_at AS joinedAt, pp.attended_at AS attendedAt,
-              (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) AS commentCount,
-              (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount,
-              (SELECT COUNT(DISTINCT pp2.user_id) FROM piece_participants pp2 WHERE pp2.post_id = p.id) AS participantCount
-       FROM piece_participants pp
-       INNER JOIN posts p ON p.id = pp.post_id
-       WHERE pp.user_id = ? AND p.is_deleted = 0 AND p.board_type = 'PIECE'
-
-       UNION ALL
-
-       SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt,
-              p.view_count AS viewCount, p.view_count AS view_count, p.created_at AS joinedAt, NULL AS attendedAt,
-              (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) AS commentCount,
-              (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount,
-              (SELECT COUNT(DISTINCT pp2.user_id) FROM piece_participants pp2 WHERE pp2.post_id = p.id) AS participantCount
-       FROM posts p
-       WHERE p.user_id = ? AND p.is_deleted = 0 AND p.board_type = 'PIECE'
-         AND NOT EXISTS (SELECT 1 FROM piece_participants pp WHERE pp.post_id = p.id AND pp.user_id = ?)
-     ) pieceActivity
-     ORDER BY pieceActivity.joinedAt DESC, pieceActivity.id DESC
+    `SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt,
+            p.view_count AS viewCount, p.view_count AS view_count,
+            COALESCE(pp.created_at, p.created_at) AS joinedAt, pp.attended_at AS attendedAt,
+            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) AS commentCount,
+            (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount,
+            (1 + (SELECT COUNT(DISTINCT pp2.user_id) FROM piece_participants pp2 WHERE pp2.post_id = p.id AND pp2.user_id <> p.user_id)) AS participantCount
+     FROM posts p
+     LEFT JOIN piece_participants pp ON pp.post_id = p.id AND pp.user_id = ?
+     WHERE p.is_deleted = 0
+       AND UPPER(p.board_type) = 'PIECE'
+       AND (p.user_id = ? OR pp.user_id IS NOT NULL)
+     ORDER BY COALESCE(pp.created_at, p.created_at) DESC, p.id DESC
      LIMIT ?`,
-    [userId, userId, userId, safeLimit]
+    [userId, userId, safeLimit]
   );
 
   return { posts, comments, likedPosts, participatedPieces };
