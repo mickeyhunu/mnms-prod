@@ -731,6 +731,12 @@ function renderPieceParticipantCard(participant = {}, { isLeader = false, isCurr
     const imageUrl = isLeader
         ? (getAuthorProfileImageUrl(participant) || DEFAULT_PROFILE_IMAGE_URL)
         : getPieceParticipantProfileImageUrl(participant);
+    const avatarMarkup = createMemberProfileLink({
+        nickname,
+        className: 'piece-participant-avatar-link',
+        content: `<img class="piece-participant-avatar" src="${sanitizeHTML(imageUrl)}" alt="${sanitizeHTML(nickname)} 프로필 이미지" loading="lazy" decoding="async" onerror="this.src='${DEFAULT_PROFILE_IMAGE_URL}'">`,
+        ariaLabel: `${nickname} 프로필 보기`
+    });
     const introduction = isLeader ? '' : getPieceParticipantIntroduction(participant);
     const attended = Boolean(participant.attendedAt);
     const attendanceControl = isLeader
@@ -744,7 +750,7 @@ function renderPieceParticipantCard(participant = {}, { isLeader = false, isCurr
 
     return `
         <span class="piece-participant-chip">
-            <img class="piece-participant-avatar" src="${sanitizeHTML(imageUrl)}" alt="${sanitizeHTML(nickname)} 프로필 이미지" loading="lazy" decoding="async" onerror="this.src='${DEFAULT_PROFILE_IMAGE_URL}'">
+            ${avatarMarkup}
             <span class="piece-participant-nickname">${sanitizeHTML(nickname)}</span>
             ${secondaryContent}
             ${!isLeader && attendanceControl ? `<span class="piece-participant-attendance">${attendanceControl}</span>` : ''}
