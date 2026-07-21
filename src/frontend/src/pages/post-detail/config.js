@@ -93,6 +93,14 @@ const postDetailTemplate = `
                     </div>
                 </div>
 
+                <div class="piece-participants hidden" id="piece-participants" aria-label="조각 참여 현황">
+                    <div class="piece-participants-header">
+                        <span class="piece-participants-title">참여중</span>
+                        <strong class="piece-participants-count" id="piece-participants-count">1 / 1</strong>
+                    </div>
+                    <div class="piece-participants-list" id="piece-participants-list"></div>
+                </div>
+
                 <div class="post-actions">
                     <button class="like-btn" id="like-btn">
                         <span id="like-icon">🤍</span>
