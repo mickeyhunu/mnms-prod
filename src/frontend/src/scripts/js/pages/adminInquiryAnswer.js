@@ -187,7 +187,7 @@ async function loadInquiryDetail() {
     const inquiryId = getInquiryIdFromPath();
     if (!inquiryId) {
         alert('문의 번호를 확인할 수 없습니다.');
-        window.location.href = '/admin';
+        window.location.href = '/admin?tab=inquiries';
         return;
     }
 
@@ -201,7 +201,7 @@ async function loadInquiryDetail() {
         const target = (response.content || []).find((item) => Number(item.id) === inquiryId);
         if (!target) {
             alert('문의를 찾을 수 없습니다.');
-            window.location.href = '/admin';
+            window.location.href = '/admin?tab=inquiries';
             return;
         }
 
@@ -212,7 +212,7 @@ async function loadInquiryDetail() {
         if (formEl) formEl.classList.remove('hidden');
     } catch (error) {
         alert(error.message || '문의 정보를 불러오지 못했습니다.');
-        window.location.href = '/admin';
+        window.location.href = '/admin?tab=inquiries';
     }
 }
 
@@ -235,7 +235,7 @@ async function submitAnswer(event) {
 
         await APIClient.put(`/admin/support/inquiries/${inquiryTarget.id}/answer`, { answerContent });
         alert('답변이 저장되었습니다.');
-        window.location.href = '/admin';
+        window.location.href = '/admin?tab=inquiries';
     } catch (error) {
         alert(error.message || '답변 저장에 실패했습니다.');
     } finally {

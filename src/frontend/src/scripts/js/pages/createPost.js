@@ -874,8 +874,12 @@ function renderImagePreview() {
     });
 }
 
-function handlePostSubmitSuccess() {
-    window.location.href = '/community';
+function navigateToPostDetail(postOrId, fallbackTitle = '') {
+    window.location.href = createPostDetailPath(postOrId, fallbackTitle);
+}
+
+function handlePostSubmitSuccess(post) {
+    navigateToPostDetail(post || editingPostId, document.getElementById('title')?.value.trim() || '');
 }
 
 function removeImage(index) {
@@ -984,7 +988,7 @@ async function loadPostForEdit() {
     } catch (error) {
         console.error('수정할 게시글 로드 실패:', error);
         alert('수정할 게시글을 불러오지 못했습니다.');
-        window.location.href = '/';
+        navigateToPostDetail(editingPostId);
     }
 }
 
@@ -1063,14 +1067,12 @@ async function handleSubmit(event) {
             imageUrls: [...existingImageUrls, ...imageUrls].slice(0, MAX_POST_IMAGE_COUNT)
         };
 
-        if (isEditMode) {
-            await APIClient.put(`/posts/${editingPostId}`, payload);
-        } else {
-            await APIClient.post('/posts', payload);
-        }
+        const response = isEditMode
+            ? await APIClient.put(`/posts/${editingPostId}`, payload)
+            : await APIClient.post('/posts', payload);
 
         alert(isEditMode ? '글이 수정되었습니다!' : '글이 작성되었습니다!');
-        handlePostSubmitSuccess();
+        handlePostSubmitSuccess(response?.post || { id: editingPostId, title: titleValue });
     } catch (error) {
         console.error('글 작성 에러:', error);
         if (error.status === 401) {

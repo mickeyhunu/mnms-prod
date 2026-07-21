@@ -148,7 +148,7 @@ async function loadEditTargetIfNeeded() {
         validateSupportForm();
     } catch (error) {
         alert(error.message || '수정할 글 정보를 불러오지 못했습니다.');
-        window.location.href = '/admin';
+        window.location.href = '/admin?tab=support';
     }
 }
 
@@ -250,7 +250,7 @@ async function submitSupportPost(event) {
             alert('공지/FAQ 글이 등록되었습니다.');
         }
 
-        window.location.href = '/admin';
+        window.location.href = '/admin?tab=support';
     } catch (error) {
         alert(error.message || (editingTarget ? '공지/FAQ 수정에 실패했습니다.' : '공지/FAQ 등록에 실패했습니다.'));
     } finally {

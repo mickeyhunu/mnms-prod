@@ -205,7 +205,7 @@ function bindLiveEvents() {
             return;
         }
 
-        window.location.href = '/';
+        window.location.href = '/play';
     });
     shareButton?.addEventListener('click', handleSharePost);
 
