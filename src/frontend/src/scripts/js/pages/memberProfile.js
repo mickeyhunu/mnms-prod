@@ -93,13 +93,11 @@ function renderMemberProfile(profile) {
             <div class="member-profile-hero">
                 <img class="member-profile-avatar" src="${sanitizeHTML(profileImageUrl)}" alt="${sanitizeHTML(profile.nickname || '회원')} 프로필 이미지">
                 <div class="member-profile-title">
-                    <span class="member-profile-label">/@${sanitizeHTML(profile.nickname || '')}</span>
                     <h2>${sanitizeHTML(profile.nickname || '회원')}</h2>
                     <p>${sanitizeHTML(levelCaption)} · ${renderMemberProfileLevelLabel(levelLabel || '-')}</p>
                 </div>
             </div>
             <div class="member-profile-introduction" aria-label="자기소개">
-                <span class="member-profile-introduction-label">자기소개</span>
                 <p>${profileIntroduction ? sanitizeHTML(profileIntroduction) : '등록된 자기소개가 없습니다.'}</p>
             </div>
             <div class="member-profile-joined-date" aria-label="가입일">

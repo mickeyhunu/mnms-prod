@@ -1145,10 +1145,6 @@
   max-width: 720px;
   margin: 0 auto;
   padding: 28px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 22px;
-  background: #fff;
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
 }
 
 .member-profile-empty {
@@ -1171,17 +1167,7 @@
 }
 
 .member-profile-title h2 {
-  margin: 4px 0 8px;
   font-size: 28px;
-}
-
-.member-profile-title p,
-.member-profile-label {
-  color: #64748b;
-}
-
-.member-profile-label {
-  font-weight: 700;
 }
 
 .member-profile-level-label {
@@ -1203,18 +1189,7 @@
 }
 
 .member-profile-introduction {
-  margin-top: 22px;
-  padding: 18px 20px;
-  border-radius: 18px;
-  background: #f8fafc;
-}
-
-.member-profile-introduction-label {
-  display: block;
-  margin-bottom: 8px;
-  color: #64748b;
-  font-size: 13px;
-  font-weight: 800;
+  padding: 18px 0;
 }
 
 .member-profile-introduction p {
@@ -1230,7 +1205,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 12px;
   color: #64748b;
   font-size: 13px;
   font-weight: 700;
@@ -1238,7 +1212,7 @@
 
 .member-profile-joined-date time {
   color: #0f172a;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .member-profile-stats {

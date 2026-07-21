@@ -351,6 +351,8 @@
     color: #1f2630;
     font-size: 14px;
     font-weight: 500;
+    overflow: hidden;
+    width: 120%;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
