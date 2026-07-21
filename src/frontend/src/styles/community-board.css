@@ -489,18 +489,18 @@
 }
 
 .article-piece-status-recruiting {
-    background: #f0f7ff;
-    color: #2474c6;
+    background: #dcfce7;
+    color: #166534;
 }
 
 .article-piece-status-ongoing {
-    background: #fff6e7;
-    color: #c56b00;
+    background: #dbeafe;
+    color: #1d4ed8;
 }
 
 .article-piece-status-ended {
-    background: #f2f2f2;
-    color: #777;
+    background: #e5e7eb;
+    color: #4b5563;
 }
 
 
