@@ -485,6 +485,16 @@ function hydratePieceCapacityFields(value) {
     if (maxValue) setPieceSelectValue(document.getElementById('piece-capacity-max'), maxValue);
 }
 
+function getPieceTemplateLabelForInput(input) {
+    const inputLabelMap = {
+        'piece-datetime': '🕘 시간',
+        'piece-cost': '💰 1인 예상 비용',
+        'piece-drinking': '🍻 주량'
+    };
+
+    return inputLabelMap[input?.id] || input?.dataset?.pieceLabel || '';
+}
+
 function hydratePieceFieldsFromContent(content) {
     const rawContent = String(content || '');
     const startIndex = rawContent.indexOf(PIECE_TEMPLATE_START);
@@ -499,8 +509,7 @@ function hydratePieceFieldsFromContent(content) {
     hydratePieceRangeFields(pieceTemplateValues['🎂 연령대'], 'piece-age-min', 'piece-age-max');
 
     getPieceInputs().forEach((input) => {
-        const label = input.dataset.pieceLabel;
-        const templateLabel = input.id === 'piece-datetime' ? '🕘 시간' : label;
+        const templateLabel = getPieceTemplateLabelForInput(input);
         const value = pieceTemplateValues[templateLabel];
         if (!value) return;
 
@@ -970,13 +979,14 @@ async function loadPostForEdit() {
         }
 
         if (editingBoardType === 'PIECE') {
-            applyPieceFieldDefaults({ includeDateTime: true, replacePastDateTime: true });
+            applyPieceFieldDefaults({ includeDateTime: false, replacePastDateTime: false });
         }
 
         if (contentInput) contentInput.value = hydratePieceFieldsFromContent(post.content || '');
 
         if (editingBoardType === 'PIECE') {
-            applyPieceFieldDefaults({ includeDateTime: true, replacePastDateTime: true });
+            const hasExistingPieceDateTime = Boolean(document.getElementById('piece-datetime')?.value);
+            applyPieceFieldDefaults({ includeDateTime: !hasExistingPieceDateTime, replacePastDateTime: false });
         }
 
         const normalizedImageUrls = Array.isArray(post.imageUrls)
