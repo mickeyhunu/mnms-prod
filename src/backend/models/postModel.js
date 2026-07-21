@@ -729,13 +729,45 @@ async function isPieceParticipant(postId, userId) {
   return rows.length > 0;
 }
 
-async function joinPiece(postId, userId) {
+async function joinPiece(postId, userId, maxParticipants = 1) {
   const pool = getPool();
-  await pool.query(
-    'INSERT IGNORE INTO piece_participants (post_id, user_id) VALUES (?, ?)',
-    [postId, userId]
-  );
-  return listPieceParticipants(postId);
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    await connection.query('SELECT id FROM posts WHERE id = ? FOR UPDATE', [postId]);
+
+    const [existingRows] = await connection.query(
+      'SELECT 1 FROM piece_participants WHERE post_id = ? AND user_id = ? LIMIT 1',
+      [postId, userId]
+    );
+
+    if (!existingRows.length) {
+      const maxJoinableParticipants = Math.max(0, Number(maxParticipants || 1) - 1);
+      const [participantRows] = await connection.query(
+        'SELECT user_id FROM piece_participants WHERE post_id = ? FOR UPDATE',
+        [postId]
+      );
+      const participantCount = new Set(participantRows.map((row) => Number(row.user_id))).size;
+      if (participantCount >= maxJoinableParticipants) {
+        const error = new Error('조각 참여 가능 인원이 모두 찼습니다.');
+        error.code = 'PIECE_FULL';
+        throw error;
+      }
+
+      await connection.query(
+        'INSERT INTO piece_participants (post_id, user_id) VALUES (?, ?)',
+        [postId, userId]
+      );
+    }
+
+    await connection.commit();
+    return listPieceParticipants(postId);
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 
 async function cancelPieceJoin(postId, userId) {

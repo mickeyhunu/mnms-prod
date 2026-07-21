@@ -76,6 +76,17 @@ function parsePieceOrderedNumber(value) {
   return match ? Number(match[0]) : null;
 }
 
+function getPieceMaximumParticipantCount(content) {
+  const rows = parsePieceTemplateRows(content);
+  const capacity = rows.get('인원') || '';
+  const [, capacityMaxText = ''] = capacity.split('/');
+  const capacityMax = parsePieceOrderedNumber(capacityMaxText);
+  if (capacityMax !== null) return Math.max(1, capacityMax);
+
+  const maxMatch = String(content || '').match(/최대\s*(\d+)명/);
+  return maxMatch ? Math.max(1, Number(maxMatch[1]) || 1) : 1;
+}
+
 function parsePieceAgeOrder(value) {
   const rawValue = String(value || '');
   const decadeMatch = rawValue.match(/(\d+)대/);
@@ -811,9 +822,13 @@ async function joinPiece(req, res, next) {
       return res.status(400).json({ message: '조각장은 이미 참여중입니다.' });
     }
 
-    const participants = await postModel.joinPiece(post.id, req.user.id);
+    const maxParticipants = getPieceMaximumParticipantCount(post.content || '');
+    const participants = await postModel.joinPiece(post.id, req.user.id, maxParticipants);
     res.json({ pieceParticipants: serializePieceParticipants(participants, req.user), isPieceParticipant: true });
   } catch (error) {
+    if (error?.code === 'PIECE_FULL') {
+      return res.status(409).json({ message: '조각 참여 가능 인원이 모두 찼습니다.' });
+    }
     next(error);
   }
 }
