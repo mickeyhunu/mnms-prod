@@ -73,7 +73,7 @@ const postDetailTemplate = `
 
                     <div class="grid">
                         <div class="picture">
-                            <span class="author-avatar" aria-hidden="true"></span>
+                            <a class="author-avatar" aria-label="회원 프로필 보기"></a>
                         </div>
                         <div class="user">
                             <span class="lv hidden" id="post-author-level" data-text=""></span>

@@ -423,6 +423,24 @@ function buildAvatarStyle(source = {}) {
     return ` style="background-image: url('${sanitizeHTML(escapeCssUrl(imageUrl))}')"`;
 }
 
+function createMemberProfileHref(nickname) {
+    const normalizedNickname = String(nickname || '').trim();
+    if (!normalizedNickname || normalizedNickname === '익명') return '';
+
+    return `/@${encodeURIComponent(normalizedNickname)}`;
+}
+
+function createMemberProfileLink({ nickname, className = '', content = '', ariaLabel = '' } = {}) {
+    const href = createMemberProfileHref(nickname);
+    if (!href) {
+        return content;
+    }
+
+    const classAttribute = className ? ` class="${sanitizeHTML(className)}"` : '';
+    const ariaLabelAttribute = ariaLabel ? ` aria-label="${sanitizeHTML(ariaLabel)}"` : '';
+    return `<a href="${href}"${classAttribute}${ariaLabelAttribute}>${content}</a>`;
+}
+
 function resolveLevelBadgeImage(level) {
     const numericLevel = Number(level);
     if (!Number.isFinite(numericLevel) || numericLevel <= 0) {
@@ -815,11 +833,25 @@ function renderPostDetail(post) {
     updatePostSeo(post, boardNameMap[boardType]);
 
     if (authorElement) {
-        authorElement.innerHTML = `${sanitizeHTML(postAuthorLabel)}${authorBadgeMarkup ? ` ${authorBadgeMarkup}` : ''}${isCurrentAuthor ? ' <span class="own-content-badge">본인</span>' : ''}`;
+        const authorContent = `${sanitizeHTML(postAuthorLabel)}${authorBadgeMarkup ? ` ${authorBadgeMarkup}` : ''}`;
+        authorElement.innerHTML = `${createMemberProfileLink({
+            nickname: postAuthorLabel,
+            className: 'member-profile-author-link',
+            content: authorContent,
+            ariaLabel: `${postAuthorLabel} 프로필 보기`
+        })}${isCurrentAuthor ? ' <span class="own-content-badge">본인</span>' : ''}`;
     }
     if (avatarElement) {
         const profileImageUrl = getAuthorProfileImageUrl(post);
         avatarElement.style.backgroundImage = profileImageUrl ? `url('${escapeCssUrl(profileImageUrl)}')` : '';
+        const profileHref = createMemberProfileHref(postAuthorLabel);
+        if (profileHref) {
+            avatarElement.setAttribute('href', profileHref);
+            avatarElement.setAttribute('aria-label', `${postAuthorLabel} 프로필 보기`);
+        } else {
+            avatarElement.removeAttribute('href');
+            avatarElement.removeAttribute('aria-label');
+        }
     }
     if (dateElement) dateElement.textContent = formatDateTime(post.createdAt) || '';
 
@@ -1267,16 +1299,25 @@ function createCommentItem(comment, depth = 0) {
     const canReport = isOtherUser && canReportCommentByServer;
     const hasActionMenu = !isDeletedComment && !isHiddenComment && (isAuthor || canGuestEdit || canReport);
     const replyMarker = depth > 0 ? '<span class="comment-reply-marker" aria-hidden="true"></span>' : '';
+    const commentProfileHref = createMemberProfileHref(isAnonymousComment ? '' : comment.authorNickname);
+    const commentAvatarMarkup = commentProfileHref
+        ? `<a class="comment-avatar comment-avatar-link" href="${commentProfileHref}" aria-label="${sanitizeHTML(comment.authorNickname || '회원')} 프로필 보기"${buildAvatarStyle(comment)}></a>`
+        : `<span class="comment-avatar" aria-hidden="true"${buildAvatarStyle(comment)}></span>`;
     
     
     div.innerHTML = `
         <div class="comment-layout">
             ${replyMarker}
-            <span class="comment-avatar" aria-hidden="true"${buildAvatarStyle(comment)}></span>
+            ${commentAvatarMarkup}
             <div class="comment-body">
                 <div class="comment-meta">
                     <div class="comment-meta-main">
-                        <span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${authorName}${commentBadgeMarkup ? ` ${commentBadgeMarkup}` : ''}</span>
+                        ${createMemberProfileLink({
+                            nickname: isAnonymousComment ? '' : comment.authorNickname,
+                            className: `comment-author ${isAdminComment ? 'admin-comment-author' : ''}`.trim(),
+                            content: `${authorName}${commentBadgeMarkup ? ` ${commentBadgeMarkup}` : ''}`,
+                            ariaLabel: `${comment.authorNickname || '회원'} 프로필 보기`
+                        }) || `<span class="comment-author ${isAdminComment ? 'admin-comment-author' : ''}">${authorName}${commentBadgeMarkup ? ` ${commentBadgeMarkup}` : ''}</span>`}
                         ${showOwnBadge ? '<span class="own-content-badge">본인</span>' : ''}
                         ${isSecretComment ? '<span style="margin-left:6px;font-size:12px;color:#7a5;">🔒 비밀댓글</span>' : ''}
                         ${isHiddenComment ? '<span style="margin-left:6px;font-size:12px;color:#9a6700;">관리자 제한</span>' : ''}
