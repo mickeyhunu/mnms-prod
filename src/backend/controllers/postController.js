@@ -667,6 +667,14 @@ async function resolvePostIdForDetail(req) {
   return post?.id || null;
 }
 
+function getParticipantProfileImageUrl(participant = {}) {
+  return participant.profileImageUrl || participant.profile_image_url || '';
+}
+
+function getParticipantProfileIntroduction(participant = {}) {
+  return participant.profileIntroduction || participant.profile_introduction || '';
+}
+
 async function getPost(req, res, next) {
   try {
     const postId = await resolvePostIdForDetail(req);
@@ -697,8 +705,8 @@ async function getPost(req, res, next) {
       pieceParticipants: pieceParticipants.map((participant) => ({
         userId: participant.userId,
         nickname: participant.nickname,
-        profileImageUrl: participant.profileImageUrl || '',
-        profileIntroduction: participant.profileIntroduction || '',
+        profileImageUrl: getParticipantProfileImageUrl(participant),
+        profileIntroduction: getParticipantProfileIntroduction(participant),
         joinedAt: participant.joinedAt,
         attendedAt: participant.attendedAt
       })),
@@ -716,8 +724,8 @@ function serializePieceParticipants(participants = [], currentUser = null) {
   return participants.map((participant) => ({
     userId: participant.userId,
     nickname: participant.nickname,
-    profileImageUrl: participant.profileImageUrl || '',
-    profileIntroduction: participant.profileIntroduction || '',
+    profileImageUrl: getParticipantProfileImageUrl(participant),
+    profileIntroduction: getParticipantProfileIntroduction(participant),
     joinedAt: participant.joinedAt,
     attendedAt: participant.attendedAt,
     isCurrentUser: currentUser ? Number(participant.userId) === Number(currentUser.id) : false
