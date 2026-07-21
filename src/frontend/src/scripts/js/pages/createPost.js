@@ -170,6 +170,49 @@ function parsePieceDateTimeInputValue(value) {
     return Number.isNaN(date.getTime()) ? null : date;
 }
 
+
+function formatPieceDateTimeInputValue(year, month, day, hour = 0, minute = 0) {
+    return [
+        String(year).padStart(4, '0'),
+        String(month).padStart(2, '0'),
+        String(day).padStart(2, '0')
+    ].join('-') + `T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+function normalizePieceDateTimeForInput(value) {
+    const normalizedValue = String(value || '').trim();
+    if (!normalizedValue) return '';
+
+    const inputValueMatch = normalizedValue.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+    if (inputValueMatch) {
+        return `${inputValueMatch[1]}-${inputValueMatch[2]}-${inputValueMatch[3]}T${inputValueMatch[4]}:${inputValueMatch[5]}`;
+    }
+
+    const displayValueMatch = normalizedValue.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일(?:\s+(\d{1,2}):(\d{1,2}))?/);
+    if (displayValueMatch) {
+        return formatPieceDateTimeInputValue(
+            Number(displayValueMatch[1]),
+            Number(displayValueMatch[2]),
+            Number(displayValueMatch[3]),
+            Number(displayValueMatch[4] || 0),
+            Number(displayValueMatch[5] || 0)
+        );
+    }
+
+    const parsedDate = new Date(normalizedValue);
+    if (!Number.isNaN(parsedDate.getTime())) {
+        return formatPieceDateTimeInputValue(
+            parsedDate.getFullYear(),
+            parsedDate.getMonth() + 1,
+            parsedDate.getDate(),
+            parsedDate.getHours(),
+            parsedDate.getMinutes()
+        );
+    }
+
+    return '';
+}
+
 function formatPieceDateTimeValue(value) {
     if (!value) return '';
     const date = parsePieceDateTimeInputValue(value);
@@ -342,9 +385,10 @@ function hydratePieceFieldsFromContent(content) {
     const templateContent = rawContent.slice(startIndex + PIECE_TEMPLATE_START.length, endIndex);
     getPieceInputs().forEach((input) => {
         const label = input.dataset.pieceLabel;
-        const line = templateContent.split('\n').find((item) => item.trim().startsWith(`${label}:`));
+        const templateLabel = input.id === 'piece-datetime' ? '🕘 시간' : label;
+        const line = templateContent.split('\n').find((item) => item.trim().startsWith(`${templateLabel}:`));
         if (!line) return;
-        const value = line.replace(`${label}:`, '').trim();
+        const value = line.replace(`${templateLabel}:`, '').trim();
         if (input.id === 'piece-location-city') {
             input.value = pieceAdAreaAvailability.districtsByRegion[value] ? value : (pieceAdAreaAvailability.regions[0] || '');
             populatePieceDistrictOptions(document.getElementById('piece-location-district')?.value || PIECE_LOCATION_FALLBACK_DISTRICT);
@@ -361,7 +405,7 @@ function hydratePieceFieldsFromContent(content) {
             });
             return;
         }
-        input.value = value;
+        input.value = input.type === 'datetime-local' ? normalizePieceDateTimeForInput(value) : value;
     });
 
     return stripPieceTemplate(rawContent);
