@@ -61,6 +61,7 @@ function pickUserRow(user) {
     genderDigit: user.gender_digit || null,
     smsConsent: Boolean(user.sms_consent),
     profileImageUrl: user.profile_image_url || user.profileImageUrl || '',
+    profileIntroduction: user.profile_introduction || user.profileIntroduction || '',
     createdAt: user.created_at || user.createdAt || null,
     nicknameChangeAvailableAt: resolveNicknameChangeAvailableAt(user.last_nickname_changed_at)
   };
