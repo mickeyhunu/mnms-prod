@@ -232,6 +232,7 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
             (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
      WHERE p.user_id = ? AND p.is_deleted = 0
+       AND UPPER(COALESCE(p.board_type, '')) <> 'ANON'
      ORDER BY p.created_at DESC, p.id DESC
      LIMIT ?`,
     [userId, safeLimit]
@@ -244,6 +245,7 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
      FROM comments c
      INNER JOIN posts p ON p.id = c.post_id
      WHERE c.user_id = ? AND c.is_deleted = 0 AND p.is_deleted = 0
+       AND UPPER(COALESCE(p.board_type, '')) <> 'ANON'
      ORDER BY c.created_at DESC, c.id DESC
      LIMIT ?`,
     [userId, safeLimit]
