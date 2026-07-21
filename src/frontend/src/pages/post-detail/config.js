@@ -96,7 +96,7 @@ const postDetailTemplate = `
                 <div class="piece-participants hidden" id="piece-participants" aria-label="조각 참여 현황">
                     <div class="piece-participants-header">
                         <span class="piece-participants-title">참여중</span>
-                        <strong class="piece-participants-count" id="piece-participants-count">1 / 1</strong>
+                        <strong class="piece-participants-count" id="piece-participants-count"><span class="piece-participants-count-current">1</span><span class="piece-participants-count-divider"> / </span><span class="piece-participants-count-max">1</span></strong>
                     </div>
                     <div class="piece-participants-list" id="piece-participants-list"></div>
                 </div>

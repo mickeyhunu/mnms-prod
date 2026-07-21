@@ -298,7 +298,16 @@
 }
 
 .piece-participants-count {
-    color: #eb4c5f;
+    color: var(--text-color);
+}
+
+.piece-participants-count-current {
+    color: var(--secondary-color);
+}
+
+.piece-participants-count-divider,
+.piece-participants-count-max {
+    color: #000000;
 }
 
 .piece-participants-list {
