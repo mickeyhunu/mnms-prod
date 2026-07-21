@@ -13,7 +13,7 @@ function formatMemberProfileDate(value) {
     if (!value) return '-';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '-';
-    return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+    return `${String(date.getFullYear()).slice(-2)}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
 }
 
 function renderMemberProfileError(message) {
@@ -98,11 +98,14 @@ function renderMemberProfile(profile) {
                 <span class="member-profile-introduction-label">자기소개</span>
                 <p>${profileIntroduction ? sanitizeHTML(profileIntroduction) : '등록된 자기소개가 없습니다.'}</p>
             </div>
+            <div class="member-profile-joined-date" aria-label="가입일">
+                <span>가입일</span>
+                <time datetime="${sanitizeHTML(profile.joinedAt || '')}">${sanitizeHTML(formatMemberProfileDate(profile.joinedAt))}</time>
+            </div>
             <dl class="member-profile-stats">
                 <div><dt>게시글</dt><dd>${Number(profile.postCount || 0).toLocaleString()}</dd></div>
                 <div><dt>댓글</dt><dd>${Number(profile.commentCount || 0).toLocaleString()}</dd></div>
                 <div><dt>후기</dt><dd>${Number(profile.reviewCount || 0).toLocaleString()}</dd></div>
-                <div><dt>가입일</dt><dd>${sanitizeHTML(formatMemberProfileDate(profile.joinedAt))}</dd></div>
             </dl>
         </section>
     `;
