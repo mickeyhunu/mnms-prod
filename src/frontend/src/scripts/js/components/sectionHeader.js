@@ -21,6 +21,14 @@
         window.__communityBackLinkBound = true;
     }
 
+    const getBoundToggleButtons = () => {
+        if (!window.__sectionHeaderBoundToggleButtons) {
+            window.__sectionHeaderBoundToggleButtons = new WeakSet();
+        }
+
+        return window.__sectionHeaderBoundToggleButtons;
+    };
+
     window.initSectionHeader = function initSectionHeader() {
         const tabsPanel = document.getElementById('board-tabs-panel');
         const toggleButton = document.getElementById('board-menu-toggle');
@@ -48,7 +56,12 @@
             window.__sectionHeaderOutsideClickBound = true;
         }
 
-        if (!tabsPanel || !toggleButton || toggleButton.dataset.sectionHeaderBound === 'true') {
+        if (!tabsPanel || !toggleButton) {
+            return;
+        }
+
+        const boundToggleButtons = getBoundToggleButtons();
+        if (boundToggleButtons.has(toggleButton)) {
             return;
         }
 
@@ -67,6 +80,7 @@
             tabsPanel.classList.remove('hidden');
             toggleButton.setAttribute('aria-expanded', 'true');
         });
+        boundToggleButtons.add(toggleButton);
         toggleButton.dataset.sectionHeaderBound = 'true';
     };
 
