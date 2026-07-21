@@ -31,7 +31,7 @@ const postModel = require('./src/backend/models/postModel');
 const liveModel = require('./src/backend/models/liveModel');
 const { startLiveHistoryScheduler } = require('./src/backend/utils/liveHistoryScheduler');
 const { startBusinessAdRenewalScheduler, startBusinessAdJumpScheduleScheduler } = adminModel;
-const { createSeoSlug } = require('./src/backend/utils/seoSlug');
+const { createSeoSlugWithId } = require('./src/backend/utils/seoSlug');
 const { ensureS3BucketExists, isS3UploadEnabled, s3BucketName } = require('./src/backend/config/s3');
 
 const app = express();
@@ -235,7 +235,7 @@ async function createPostSeo(req) {
     const titleText = stripHtml(post.title || '게시글 상세');
     const description = truncateText(post.content, 150) || '미드나잇 맨즈 커뮤니티 게시글 상세 내용을 확인하세요.';
     const imageUrl = parsePostImageUrls(post).find(Boolean);
-    const canonicalUrl = absoluteUrl(`/post-detail/${encodeURIComponent(createSeoSlug(titleText, `post-${post.id}`))}`);
+    const canonicalUrl = absoluteUrl(`/post-detail/${encodeURIComponent(createSeoSlugWithId(titleText, post.id, 'post'))}`);
 
     return {
       title: `${titleText} | 미드나잇 맨즈`,
@@ -267,7 +267,7 @@ async function createBusinessAdSeo(req) {
     const titleText = stripHtml(ad.title || ad.businessName || '업체정보 상세');
     const locationText = [ad.region, ad.district, ad.category].map((item) => stripHtml(item)).filter(Boolean).join(' ');
     const description = truncateText(ad.description, 150) || `${locationText ? `${locationText} ` : ''}${titleText} 업체정보를 확인하세요.`;
-    const canonicalUrl = absoluteUrl(`/business-info/${encodeURIComponent(createSeoSlug(titleText, `business-${ad.id}`))}`);
+    const canonicalUrl = absoluteUrl(`/business-info/${encodeURIComponent(createSeoSlugWithId(titleText, ad.id, 'business'))}`);
 
     return {
       title: `${titleText} | 미드나잇 맨즈`,
@@ -380,7 +380,7 @@ function createPostRssItem(post) {
   const title = stripHtml(post.title || '게시글');
   return {
     title,
-    link: `/post-detail/${encodeURIComponent(createSeoSlug(title, `post-${post.id}`))}`,
+    link: `/post-detail/${encodeURIComponent(createSeoSlugWithId(title, post.id, 'post'))}`,
     description: post.content,
     createdAt: post.createdAt,
     category: post.boardType
@@ -398,7 +398,7 @@ function createBusinessAdRssItem(ad) {
 
   return {
     title: `[업체정보] ${title}`,
-    link: `/business-info/${encodeURIComponent(createSeoSlug(title, `business-${ad.id}`))}`,
+    link: `/business-info/${encodeURIComponent(createSeoSlugWithId(title, ad.id, 'business'))}`,
     guid: `business-ad-${ad.id}`,
     description: summaryParts.join(' · ') || '미드나잇 맨즈 업체정보에서 최신 등록 업체를 확인하세요.',
     createdAt: ad.updatedAt || ad.activatedAt || ad.createdAt,
@@ -500,13 +500,13 @@ async function buildSitemapXml() {
 
     dynamicUrls = [
       ...posts.map((post) => ({
-        loc: absoluteUrl(`/post-detail/${encodeURIComponent(createSeoSlug(post.title, `post-${post.id}`))}`),
+        loc: absoluteUrl(`/post-detail/${encodeURIComponent(createSeoSlugWithId(post.title, post.id, 'post'))}`),
         changefreq: 'weekly',
         priority: '0.6',
         lastmod: post.updatedAt || post.createdAt
       })),
       ...businessAds.map((ad) => ({
-        loc: absoluteUrl(`/business-info/${encodeURIComponent(createSeoSlug(ad.title || ad.businessName, `business-${ad.id}`))}`),
+        loc: absoluteUrl(`/business-info/${encodeURIComponent(createSeoSlugWithId(ad.title || ad.businessName, ad.id, 'business'))}`),
         changefreq: 'daily',
         priority: '0.7',
         lastmod: ad.updatedAt || ad.activatedAt || ad.createdAt
