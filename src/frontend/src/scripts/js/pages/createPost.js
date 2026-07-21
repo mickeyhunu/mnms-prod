@@ -376,6 +376,72 @@ function buildPieceTemplateContent(content) {
     return `${PIECE_TEMPLATE_START}\n[조각 모집 정보]\n${templateLines}\n${PIECE_TEMPLATE_END}${cleanContent ? `\n\n${cleanContent}` : ''}`;
 }
 
+function parsePieceTemplateContent(templateContent) {
+    return String(templateContent || '').split('\n').reduce((result, line) => {
+        const separatorIndex = line.indexOf(':');
+        if (separatorIndex === -1) return result;
+
+        const label = line.slice(0, separatorIndex).trim();
+        const value = line.slice(separatorIndex + 1).trim();
+        if (label && value) result[label] = value;
+        return result;
+    }, {});
+}
+
+function setPieceSelectValue(input, value) {
+    if (!input) return false;
+    const normalizedValue = String(value || '').trim();
+    const option = Array.from(input.options || []).find((item) => item.value === normalizedValue);
+    if (!option) return false;
+
+    input.value = normalizedValue;
+    return true;
+}
+
+function hydratePieceLocationFields(locationValue) {
+    const citySelect = document.getElementById('piece-location-city');
+    const districtSelect = document.getElementById('piece-location-district');
+    if (!citySelect || !districtSelect) return;
+
+    const normalizedLocation = String(locationValue || '').trim();
+    const city = pieceAdAreaAvailability.regions.find((region) => {
+        const cityLabel = region.endsWith('시') || region.endsWith('도') ? region : `${region}시`;
+        return normalizedLocation === region
+            || normalizedLocation === cityLabel
+            || normalizedLocation.startsWith(`${region} `)
+            || normalizedLocation.startsWith(`${cityLabel} `);
+    });
+
+    if (city) {
+        citySelect.value = city;
+    }
+
+    const districts = pieceAdAreaAvailability.districtsByRegion[citySelect.value] || [];
+    const district = districts.find((item) => normalizedLocation.endsWith(item))
+        || normalizedLocation.split(/\s+/).find((item) => districts.includes(item));
+    populatePieceDistrictOptions(district || districtSelect.value || PIECE_LOCATION_FALLBACK_DISTRICT);
+}
+
+function hydratePieceRangeFields(value, minInputId, maxInputId) {
+    const minInput = document.getElementById(minInputId);
+    const maxInput = document.getElementById(maxInputId);
+    const normalizedValue = String(value || '').trim();
+    if (!normalizedValue || !minInput || !maxInput) return;
+
+    const [minValue = '', maxValue = ''] = normalizedValue.split('~').map((item) => item.trim());
+    if (minValue) setPieceSelectValue(minInput, minValue);
+    if (maxValue) setPieceSelectValue(maxInput, maxValue);
+}
+
+function hydratePieceCapacityFields(value) {
+    const normalizedValue = String(value || '').trim();
+    const minValue = normalizedValue.match(/최소\s*([^/]+)/)?.[1]?.trim();
+    const maxValue = normalizedValue.match(/최대\s*(.+)$/)?.[1]?.trim();
+
+    if (minValue) setPieceSelectValue(document.getElementById('piece-capacity-min'), minValue);
+    if (maxValue) setPieceSelectValue(document.getElementById('piece-capacity-max'), maxValue);
+}
+
 function hydratePieceFieldsFromContent(content) {
     const rawContent = String(content || '');
     const startIndex = rawContent.indexOf(PIECE_TEMPLATE_START);
@@ -383,21 +449,21 @@ function hydratePieceFieldsFromContent(content) {
     if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) return rawContent;
 
     const templateContent = rawContent.slice(startIndex + PIECE_TEMPLATE_START.length, endIndex);
+    const pieceTemplateValues = parsePieceTemplateContent(templateContent);
+
+    hydratePieceLocationFields(pieceTemplateValues['📍 장소']);
+    hydratePieceCapacityFields(pieceTemplateValues['👥 인원']);
+    hydratePieceRangeFields(pieceTemplateValues['🎂 연령대'], 'piece-age-min', 'piece-age-max');
+
     getPieceInputs().forEach((input) => {
         const label = input.dataset.pieceLabel;
         const templateLabel = input.id === 'piece-datetime' ? '🕘 시간' : label;
-        const line = templateContent.split('\n').find((item) => item.trim().startsWith(`${templateLabel}:`));
-        if (!line) return;
-        const value = line.replace(`${templateLabel}:`, '').trim();
-        if (input.id === 'piece-location-city') {
-            input.value = pieceAdAreaAvailability.districtsByRegion[value] ? value : (pieceAdAreaAvailability.regions[0] || '');
-            populatePieceDistrictOptions(document.getElementById('piece-location-district')?.value || PIECE_LOCATION_FALLBACK_DISTRICT);
-            return;
-        }
-        if (input.id === 'piece-location-district') {
-            populatePieceDistrictOptions(value);
-            return;
-        }
+        const value = pieceTemplateValues[templateLabel];
+        if (!value) return;
+
+        if (input.id === 'piece-location-city' || input.id === 'piece-location-district') return;
+        if (input.id === 'piece-capacity-min' || input.id === 'piece-capacity-max') return;
+        if (input.id === 'piece-age-min' || input.id === 'piece-age-max') return;
         if (input.tagName === 'SELECT' && input.multiple) {
             const values = value.split(',').map((item) => item.trim());
             Array.from(input.options).forEach((option) => {
@@ -405,9 +471,13 @@ function hydratePieceFieldsFromContent(content) {
             });
             return;
         }
-        input.value = input.type === 'datetime-local' ? normalizePieceDateTimeForInput(value) : value;
+        if (input.tagName === 'SELECT' && !setPieceSelectValue(input, value)) return;
+        if (input.tagName !== 'SELECT') {
+            input.value = input.type === 'datetime-local' ? normalizePieceDateTimeForInput(value) : value;
+        }
     });
 
+    updatePieceRangeOptions();
     return stripPieceTemplate(rawContent);
 }
 
