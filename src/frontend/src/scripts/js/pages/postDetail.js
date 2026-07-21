@@ -171,11 +171,6 @@ function setupEventListeners() {
             handlePieceJoinAction();
             return;
         }
-
-        const attendanceBtn = e.target.closest('.piece-attendance-btn');
-        if (attendanceBtn) {
-            handlePieceAttendanceCheck(attendanceBtn.dataset.userId);
-        }
     });
 
     setupMessageModal();
@@ -726,18 +721,12 @@ function getPieceParticipantIntroduction(participant = {}) {
     return String(participant.profileIntroduction || participant.profile_introduction || '').trim();
 }
 
-function renderPieceParticipantCard(participant = {}, { isLeader = false, isCurrentAuthor = false } = {}) {
+function renderPieceParticipantCard(participant = {}, { isLeader = false } = {}) {
     const nickname = isLeader ? (participant.authorNickname || '글쓴이') : (participant.nickname || '회원');
     const imageUrl = isLeader
         ? (getAuthorProfileImageUrl(participant) || DEFAULT_PROFILE_IMAGE_URL)
         : getPieceParticipantProfileImageUrl(participant);
     const introduction = isLeader ? '' : getPieceParticipantIntroduction(participant);
-    const attended = Boolean(participant.attendedAt);
-    const attendanceControl = isLeader
-        ? '<span class="piece-participant-role">조각장</span>'
-        : isCurrentAuthor
-            ? `<button type="button" class="btn btn-outline btn-sm piece-attendance-btn" data-user-id="${sanitizeHTML(participant.userId)}" ${attended ? 'disabled' : ''}>${attended ? '출석 완료' : '출석 체크'}</button>`
-            : (attended ? '<span class="piece-participant-role">출석 완료</span>' : '');
     const secondaryContent = isLeader
         ? '<span class="piece-participant-role">조각장</span>'
         : `<span class="piece-participant-introduction">${sanitizeHTML(introduction || '-')}</span>`;
@@ -747,7 +736,6 @@ function renderPieceParticipantCard(participant = {}, { isLeader = false, isCurr
             <img class="piece-participant-avatar" src="${sanitizeHTML(imageUrl)}" alt="${sanitizeHTML(nickname)} 프로필 이미지" loading="lazy" decoding="async" onerror="this.src='${DEFAULT_PROFILE_IMAGE_URL}'">
             <span class="piece-participant-nickname">${sanitizeHTML(nickname)}</span>
             ${secondaryContent}
-            ${!isLeader && attendanceControl ? `<span class="piece-participant-attendance">${attendanceControl}</span>` : ''}
         </span>`;
 }
 
@@ -773,7 +761,7 @@ function renderPieceJoinButton(post, isCurrentAuthor, isHiddenPost) {
     joinBtn.textContent = isCurrentAuthor ? '출석 체크' : (post.isPieceParticipant ? '참여 취소' : '참여하기');
 }
 
-function renderPieceParticipants(post, isCurrentAuthor, isHiddenPost) {
+function renderPieceParticipants(post, isHiddenPost) {
     const participantsElement = document.getElementById('piece-participants');
     const participantsCountElement = document.getElementById('piece-participants-count');
     const participantsListElement = document.getElementById('piece-participants-list');
@@ -793,7 +781,7 @@ function renderPieceParticipants(post, isCurrentAuthor, isHiddenPost) {
     participantsListElement.innerHTML = isPiecePost
         ? [
             renderPieceParticipantCard(post, { isLeader: true }),
-            ...participants.map((participant) => renderPieceParticipantCard(participant, { isCurrentAuthor }))
+            ...participants.map((participant) => renderPieceParticipantCard(participant))
         ].join('')
         : '';
 }
@@ -816,25 +804,12 @@ async function handlePieceJoinAction() {
             : await PostAPI.joinPiece(currentPostDetail.id);
         currentPostDetail = { ...currentPostDetail, ...response };
         renderPieceJoinButton(currentPostDetail, currentPostDetail.isAuthor || isCurrentUserPostAuthor(currentPostDetail), Boolean(currentPostDetail.isHidden));
-        renderPieceParticipants(currentPostDetail, currentPostDetail.isAuthor || isCurrentUserPostAuthor(currentPostDetail), Boolean(currentPostDetail.isHidden));
+        renderPieceParticipants(currentPostDetail, Boolean(currentPostDetail.isHidden));
     } catch (error) {
         alert(error?.message || '조각 참여 처리 중 오류가 발생했습니다.');
         renderPieceJoinButton(currentPostDetail, currentPostDetail.isAuthor || isCurrentUserPostAuthor(currentPostDetail), Boolean(currentPostDetail.isHidden));
     }
 }
-
-async function handlePieceAttendanceCheck(userId) {
-    if (!currentPostDetail || !userId) return;
-
-    try {
-        const response = await PostAPI.checkPieceAttendance(currentPostDetail.id, userId);
-        currentPostDetail = { ...currentPostDetail, ...response };
-        renderPieceParticipants(currentPostDetail, true, Boolean(currentPostDetail.isHidden));
-    } catch (error) {
-        alert(error?.message || '출석 체크 중 오류가 발생했습니다.');
-    }
-}
-
 function renderPostDetail(post) {
     currentPostDetail = post;
 
@@ -945,7 +920,7 @@ function renderPostDetail(post) {
     }
 
     renderPieceJoinButton(post, isCurrentAuthor, isHiddenPost);
-    renderPieceParticipants(post, isCurrentAuthor, isHiddenPost);
+    renderPieceParticipants(post, isHiddenPost);
 
     const likeBtn = document.getElementById('like-btn');
     const likeIcon = document.getElementById('like-icon');
