@@ -91,8 +91,8 @@ function parsePieceDateTime(value) {
     .replace(/일/g, '')
     .replace(/\s+/g, ' ')
     .trim();
-  const match = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?.*?(?:UTC|GMT)([+-]\d{2}):(\d{2})/i)
-    || normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?/);
+  const match = normalized.match(/^(\d{4})\s*-\s*(\d{1,2})\s*-\s*(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?.*?(?:UTC|GMT)([+-]\d{2}):(\d{2})/i)
+    || normalized.match(/^(\d{4})\s*-\s*(\d{1,2})\s*-\s*(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?/);
   if (!match) return null;
   const [, year, month, day, hour = '0', minute = '0', offsetHour, offsetMinute] = match;
   const numericValues = [year, month, day, hour, minute].map((item) => Number(item));
