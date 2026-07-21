@@ -1038,7 +1038,7 @@ const pageRegistry = {
                 </div>
             </header>
             
-            <div class="card">
+            <div class="card create-post-card">
                 <p class="text-muted" style="margin: 12px 0 24px;">미드나잇 맨즈에 새로운 이야기를 공유해보세요</p>
                 <form id="post-form" enctype="multipart/form-data">
                     <div class="error-banner hidden" id="error-banner">
