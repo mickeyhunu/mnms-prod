@@ -4,7 +4,8 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 20px;
-    transition: border-color 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 
@@ -13,12 +14,14 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 3%;
+    box-shadow: var(--shadow-sm);
     cursor: pointer;
-    transition: border-color 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .post-card:hover {
     border-color: var(--primary-color);
+    box-shadow: var(--shadow-md);
 }
 
 .post-header {
@@ -89,6 +92,7 @@
     width: 90%;
     max-height: 90vh;
     overflow-y: auto;
+    box-shadow: var(--shadow-md);
 }
 
 .modal-header {
