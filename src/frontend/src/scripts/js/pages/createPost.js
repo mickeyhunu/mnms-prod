@@ -223,17 +223,70 @@ function togglePieceFields() {
     });
 }
 
-function isPieceDateTimeValid() {
+function parsePieceOrderedNumber(value) {
+    const match = String(value || '').match(/\d+/);
+    return match ? Number(match[0]) : null;
+}
+
+function parsePieceAgeOrder(value) {
+    const rawValue = String(value || '');
+    const decadeMatch = rawValue.match(/(\d+)대/);
+    if (!decadeMatch) return null;
+
+    const phaseOffsetMap = { 초반: 0, 중반: 1, 후반: 2 };
+    const phaseMatch = rawValue.match(/(초반|중반|후반)/);
+    const phaseOffset = phaseOffsetMap[phaseMatch?.[1]] ?? 0;
+    return Number(decadeMatch[1]) * 10 + phaseOffset;
+}
+
+function updatePieceRangeOptions() {
+    const capacityMin = parsePieceOrderedNumber(document.getElementById('piece-capacity-min')?.value);
+    const ageMin = parsePieceAgeOrder(document.getElementById('piece-age-min')?.value);
+
+    document.querySelectorAll('#piece-capacity-max option').forEach((option) => {
+        const optionValue = parsePieceOrderedNumber(option.value);
+        option.disabled = capacityMin !== null && optionValue !== null && optionValue < capacityMin;
+    });
+
+    document.querySelectorAll('#piece-age-max option').forEach((option) => {
+        const optionValue = parsePieceAgeOrder(option.value);
+        option.disabled = ageMin !== null && optionValue !== null && optionValue < ageMin;
+    });
+}
+
+function getPieceValidationError() {
+    if (!isPieceBoardSelected()) return '';
+
+    const requiredEmptyInput = getPieceInputs()
+        .filter((input) => input.dataset.pieceRequired === 'true')
+        .find((input) => getPieceInputValue(input).length === 0);
+    if (requiredEmptyInput) return '조각게시판 필수 작성 양식을 모두 입력해주세요.';
+
     const dateTimeInput = document.getElementById('piece-datetime');
-    if (!dateTimeInput || !dateTimeInput.value) return true;
-    return !dateTimeInput.min || dateTimeInput.value >= dateTimeInput.min;
+    if (dateTimeInput?.value) {
+        setMinimumPieceDateTime();
+        if (dateTimeInput.min && dateTimeInput.value < dateTimeInput.min) {
+            return '조각 날짜/시간은 현재 이후로 선택해주세요.';
+        }
+    }
+
+    const capacityMin = parsePieceOrderedNumber(document.getElementById('piece-capacity-min')?.value);
+    const capacityMax = parsePieceOrderedNumber(document.getElementById('piece-capacity-max')?.value);
+    if (capacityMin !== null && capacityMax !== null && capacityMin > capacityMax) {
+        return '모집 인원은 최소 인원이 최대 인원보다 많을 수 없습니다.';
+    }
+
+    const ageMin = parsePieceAgeOrder(document.getElementById('piece-age-min')?.value);
+    const ageMax = parsePieceAgeOrder(document.getElementById('piece-age-max')?.value);
+    if (ageMin !== null && ageMax !== null && ageMin > ageMax) {
+        return '모집 연령은 최소 연령이 최대 연령보다 높을 수 없습니다.';
+    }
+
+    return '';
 }
 
 function areRequiredPieceFieldsFilled() {
-    if (!isPieceBoardSelected()) return true;
-    return getPieceInputs()
-        .filter((input) => input.dataset.pieceRequired === 'true')
-        .every((input) => getPieceInputValue(input).length > 0) && isPieceDateTimeValid();
+    return !getPieceValidationError();
 }
 
 function stripPieceTemplate(content) {
@@ -578,9 +631,15 @@ function setupEventListeners() {
     }
 
     getPieceInputs().forEach((input) => {
-        input.addEventListener('input', validateForm);
-        input.addEventListener('change', validateForm);
+        const handlePieceInputChange = () => {
+            setMinimumPieceDateTime();
+            updatePieceRangeOptions();
+            validateForm();
+        };
+        input.addEventListener('input', handlePieceInputChange);
+        input.addEventListener('change', handlePieceInputChange);
     });
+    updatePieceRangeOptions();
     togglePieceFields();
 }
 
@@ -794,9 +853,14 @@ async function handleSubmit(event) {
         return;
     }
 
-    if (!areRequiredPieceFieldsFilled()) {
-        alert('조각게시판 필수 작성 양식을 모두 입력해주세요.');
-        getPieceInputs().find((input) => input.dataset.pieceRequired === 'true' && !input.value.trim())?.focus();
+    const pieceValidationError = getPieceValidationError();
+    if (pieceValidationError) {
+        alert(pieceValidationError);
+        const invalidPieceInput = getPieceInputs().find((input) => input.dataset.pieceRequired === 'true' && !input.value.trim())
+            || document.getElementById('piece-datetime')
+            || document.getElementById('piece-capacity-min')
+            || document.getElementById('piece-age-min');
+        invalidPieceInput?.focus();
         return;
     }
 
