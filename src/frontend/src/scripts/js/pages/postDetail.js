@@ -754,6 +754,21 @@ function isPieceRecruiting(post) {
     return resolvePieceStatus(post) === '모집중';
 }
 
+function isPiecePostLockedForEditing(post) {
+    return String(post?.boardType || post?.board_type || '').toUpperCase() === 'PIECE'
+        && ['진행중', '종료'].includes(resolvePieceStatus(post));
+}
+
+function alertLockedPiecePostActionIfNeeded(actionLabel) {
+    if (!isPiecePostLockedForEditing(currentPostDetail)) return false;
+    alert(`진행중이거나 종료된 조각글은 ${actionLabel}할 수 없습니다.`);
+    const menu = document.getElementById('post-more-menu');
+    if (menu) {
+        menu.classList.add('hidden');
+    }
+    return true;
+}
+
 function getPieceMaximumParticipantCount(content) {
     const rawContent = String(content || '');
     const maxMatch = rawContent.match(/^\s*최대 인원\s*:\s*(\d+)/m);
@@ -1784,6 +1799,10 @@ async function handleCreateComment(e) {
 async function handleEditPost(e) {
     e.preventDefault();
 
+    if (alertLockedPiecePostActionIfNeeded('수정')) {
+        return;
+    }
+
     if (alertPreBusinessEditRestrictionIfNeeded(currentPostDetail, '게시글')) {
         const menu = document.getElementById('post-more-menu');
         if (menu) {
@@ -1796,6 +1815,10 @@ async function handleEditPost(e) {
 }
 
 async function handleDeletePost() {
+    if (alertLockedPiecePostActionIfNeeded('삭제')) {
+        return;
+    }
+
     if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
         return;
     }
