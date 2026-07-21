@@ -703,12 +703,37 @@ function getPieceTemplateRows(content) {
     }, new Map());
 }
 
+function normalizePieceStatusValue(value) {
+    const normalizedValue = String(value || '').trim().toUpperCase();
+    if (!normalizedValue) return '';
+    if (['모집완료', '모집 완료', '진행', 'ONGOING', 'IN_PROGRESS'].some((token) => normalizedValue.includes(token))) return '진행중';
+    if (['종료', '마감', '완료', 'ENDED', 'CLOSED', 'DONE'].some((token) => normalizedValue.includes(token))) return '종료';
+    if (['모집', 'RECRUITING', 'OPEN'].some((token) => normalizedValue.includes(token))) return '모집중';
+    return '';
+}
+
 function resolvePieceStatus(post) {
     if (String(post?.boardType || '').toUpperCase() !== 'PIECE') return '';
-    if (post?.isPieceEnded || post?.pieceClosedAt) return '종료';
-    if (post?.pieceStatus) return post.pieceStatus;
 
-    const rows = getPieceTemplateRows(post?.content || '');
+    const explicitStatus = normalizePieceStatusValue(
+        post?.pieceStatus
+        || post?.piece_status
+        || post?.meetingStatus
+        || post?.meeting_status
+        || post?.recruitmentStatus
+        || post?.recruitment_status
+    );
+    if (post?.isPieceEnded || post?.pieceClosedAt || post?.piece_closed_at) return '종료';
+    if (explicitStatus) return explicitStatus;
+
+    const rows = getPieceTemplateRows(post?.content || post?.body || '');
+    const templateStatus = normalizePieceStatusValue(
+        rows.get('상태')
+        || rows.get('모집 상태')
+        || rows.get('진행 상태')
+    );
+    if (templateStatus) return templateStatus;
+
     const startsAt = parsePieceDateTime(rows.get('시간') || rows.get('날짜/시간') || rows.get('일정') || rows.get('만남 시간'));
     if (startsAt && startsAt.getTime() + (9 * 60 * 60 * 1000) <= Date.now()) return '종료';
     if (startsAt && startsAt.getTime() <= Date.now()) return '진행중';
@@ -717,6 +742,10 @@ function resolvePieceStatus(post) {
 
 function isPieceEnded(post) {
     return resolvePieceStatus(post) === '종료';
+}
+
+function isPieceRecruiting(post) {
+    return resolvePieceStatus(post) === '모집중';
 }
 
 function getPieceMaximumParticipantCount(content) {
@@ -752,7 +781,10 @@ function renderPiecePostContent(content) {
 
     const summaryMarkup = rows.length ? `
         <section class="piece-summary" aria-label="조각 모집 정보">
-            <p class="piece-summary-title">조각 모집 정보</p>
+            <div class="piece-summary-header">
+                <p class="piece-summary-title">조각 모집 정보</p>
+                <span class="piece-status-badge" id="piece-status-badge">모집중</span>
+            </div>
             <dl class="piece-summary-list">
                 ${rows.map((row) => `<div><dt>${sanitizeHTML(row.label)}</dt><dd>${sanitizeHTML(row.value)}</dd></div>`).join('')}
             </dl>
@@ -809,14 +841,24 @@ function renderPieceJoinButton(post, isCurrentAuthor, isHiddenPost) {
     joinBtn.classList.toggle('hidden', !isPiecePost);
     if (!isPiecePost) return;
 
-    const ended = isPieceEnded(post);
-    joinBtn.disabled = ended;
-    const pieceAction = ended ? 'ended' : (isCurrentAuthor ? 'close' : (post.isPieceParticipant ? 'cancel' : 'join'));
+    const pieceStatus = resolvePieceStatus(post);
+    const isRecruiting = pieceStatus === '모집중';
+    const statusBadge = document.getElementById('piece-status-badge');
+    if (statusBadge) {
+        statusBadge.textContent = pieceStatus || '모집중';
+        statusBadge.classList.remove('is-recruiting', 'is-progress', 'is-ended');
+        statusBadge.classList.add(pieceStatus === '종료' ? 'is-ended' : (pieceStatus === '진행중' ? 'is-progress' : 'is-recruiting'));
+    }
+
+    joinBtn.disabled = !isRecruiting;
+    const pieceAction = !isRecruiting ? 'unavailable' : (isCurrentAuthor ? 'close' : (post.isPieceParticipant ? 'cancel' : 'join'));
     joinBtn.dataset.pieceAction = pieceAction;
     joinBtn.classList.toggle('btn-primary', pieceAction !== 'cancel');
     joinBtn.classList.toggle('btn-secondary', pieceAction === 'cancel');
     joinBtn.classList.remove('btn-danger');
-    joinBtn.textContent = ended ? '종료' : (isCurrentAuthor ? '조각 종료' : (post.isPieceParticipant ? '참여 취소' : '참여하기'));
+    joinBtn.textContent = isRecruiting
+        ? (isCurrentAuthor ? '조각 종료' : (post.isPieceParticipant ? '참여 취소' : '참여하기'))
+        : pieceStatus;
 }
 
 function renderPieceParticipants(post, isHiddenPost) {
@@ -852,7 +894,7 @@ async function handlePieceJoinAction() {
 
     const joinBtn = document.getElementById('piece-join-btn');
     const action = joinBtn?.dataset.pieceAction;
-    if (!joinBtn || !currentPostDetail || action === 'ended') return;
+    if (!joinBtn || !currentPostDetail || action === 'unavailable' || !isPieceRecruiting(currentPostDetail)) return;
 
     if (action === 'close' && !confirm('이 조각을 종료하시겠습니까? 종료 후에는 참여할 수 없습니다.')) return;
 
