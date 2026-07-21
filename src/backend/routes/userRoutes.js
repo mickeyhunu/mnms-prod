@@ -4,6 +4,7 @@
 const express = require('express');
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const {
+  publicProfile,
   myStats,
   myPointHistories,
   myStampHistories,
@@ -36,6 +37,8 @@ const {
 } = require('../controllers/userController');
 
 const router = express.Router();
+
+router.get('/profiles/:nickname', publicProfile);
 
 router.get('/me/stats', authMiddleware, myStats);
 router.get('/me/points', authMiddleware, myPointHistories);
