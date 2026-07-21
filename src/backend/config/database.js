@@ -827,10 +827,11 @@ async function initDatabase() {
   );
 
   if (!boardTypeColumn.length) {
-    await pool.query("ALTER TABLE posts ADD COLUMN board_type ENUM('FREE','ANON','REVIEW','STORY','PIECE','ATTENDANCE','QUESTION','EVENT','PROMOTION') NOT NULL DEFAULT 'FREE' AFTER user_id");
+    await pool.query("ALTER TABLE posts ADD COLUMN board_type VARCHAR(20) NOT NULL DEFAULT 'FREE' AFTER user_id");
   }
 
-  await pool.query("ALTER TABLE posts MODIFY COLUMN board_type ENUM('FREE','ANON','REVIEW','STORY','PIECE','ATTENDANCE','QUESTION','EVENT','PROMOTION') NOT NULL DEFAULT 'FREE'");
+  await pool.query("UPDATE posts SET board_type = 'FREE' WHERE board_type IS NULL OR TRIM(board_type) = ''");
+  await pool.query("ALTER TABLE posts MODIFY COLUMN board_type VARCHAR(20) NOT NULL DEFAULT 'FREE'");
 
   const [isNoticeColumn] = await pool.query(
     `SELECT 1
