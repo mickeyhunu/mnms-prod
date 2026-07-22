@@ -43,6 +43,7 @@ const STAMP_ACTION_LABELS = {
   BUSINESS_AD_BASIC: '베이직 광고 활성화',
   BUSINESS_AD_PLUS: '플러스 광고 활성화',
   BUSINESS_AD_PREMIUM: '프리미엄 광고 활성화',
+  BUSINESS_AD_PIECE: '조각제휴 광고 활성화',
   ADMIN_ADJUST_ADD: '관리자 수동 적립',
   ADMIN_ADJUST_DEDUCT: '관리자 수동 차감',
   EXPIRED: '유효기간 만료'
