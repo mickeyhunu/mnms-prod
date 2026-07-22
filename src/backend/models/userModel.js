@@ -348,10 +348,33 @@ async function getUserNotifications(userId, { limit = 50 } = {}) {
          AND parent.is_deleted = 0
          AND p.is_deleted = 0
          AND p.is_hidden = 0
+
+       UNION ALL
+
+       SELECT
+         CONCAT('piece-join-', pp.post_id, '-', pp.user_id) AS notificationKey,
+         'piece_join' AS type,
+         pp.user_id AS sourceId,
+         pp.post_id AS postId,
+         p.title AS postTitle,
+         NULL AS inquiryId,
+         NULL AS parentId,
+         NULL AS content,
+         pp.created_at AS createdAt,
+         COALESCE(u.nickname, '회원') AS actorNickname,
+         CONCAT('내 조각글 "', p.title, '"에 ', COALESCE(u.nickname, '회원'), '님이 참여했습니다.') AS message
+       FROM piece_participants pp
+       INNER JOIN posts p ON p.id = pp.post_id
+       LEFT JOIN users u ON u.id = pp.user_id
+       WHERE p.user_id = ?
+         AND pp.user_id <> ?
+         AND UPPER(COALESCE(p.board_type, '')) = 'PIECE'
+         AND p.is_deleted = 0
+         AND p.is_hidden = 0
      ) notifications
      ORDER BY createdAt DESC, sourceId DESC
      LIMIT ?`,
-    [userId, userId, userId, userId, safeLimit]
+    [userId, userId, userId, userId, userId, userId, safeLimit]
   );
 
   return rows.map((row) => ({
