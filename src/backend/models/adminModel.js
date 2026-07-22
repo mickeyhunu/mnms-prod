@@ -26,10 +26,10 @@ const BUSINESS_AD_PLAN_DURATIONS = isLocalEnvLoaded
       PLUS: 2,
       PREMIUM: 1
     };
-const PIECE_AD_PLAN_TYPE = 'PIECE';
-const PIECE_AD_DURATION = 2;
-const PIECE_AD_DURATION_UNIT_SQL = isLocalEnvLoaded ? 'MINUTE' : 'DAY';
-const PIECE_AD_DURATION_UNIT_LABEL = isLocalEnvLoaded ? '분' : '일';
+const BUSINESS_AD_PIECE_PLAN_TYPE = 'PIECE';
+const BUSINESS_AD_PIECE_DURATION = 2;
+const BUSINESS_AD_PIECE_DURATION_UNIT_SQL = isLocalEnvLoaded ? 'MINUTE' : 'DAY';
+const BUSINESS_AD_PIECE_DURATION_UNIT_LABEL = isLocalEnvLoaded ? '분' : '일';
 
 const BUSINESS_AD_PLAN_JUMP_COUNTS = {
   BASIC: 6,
@@ -77,14 +77,14 @@ function getBusinessAdPlanDurationConfig() {
 }
 
 function getPieceAdDurationLabel() {
-  return `${PIECE_AD_DURATION}${PIECE_AD_DURATION_UNIT_LABEL}`;
+  return `${BUSINESS_AD_PIECE_DURATION}${BUSINESS_AD_PIECE_DURATION_UNIT_LABEL}`;
 }
 
 function getPieceAdPlanDurationConfig() {
   return {
     PIECE: {
-      duration: PIECE_AD_DURATION,
-      durationUnit: PIECE_AD_DURATION_UNIT_LABEL === '분' ? 'minute' : 'day',
+      duration: BUSINESS_AD_PIECE_DURATION,
+      durationUnit: BUSINESS_AD_PIECE_DURATION_UNIT_LABEL === '분' ? 'minute' : 'day',
       durationLabel: getPieceAdDurationLabel()
     }
   };
@@ -223,14 +223,14 @@ async function renewExpiredPieceAdsWithStamp() {
       await connection.query(
         `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
          VALUES (?, 'BUSINESS', ?, -1, ?, ?)`,
-        [ad.ownerUserId, 'PIECE_AD', `조각제휴 광고 ${getPieceAdDurationLabel()} 자동연장`, `PIECE_AD-AUTO-${ad.id}-${Date.now()}`]
+        [ad.ownerUserId, 'BUSINESS_AD_PIECE', `조각제휴 광고 ${getPieceAdDurationLabel()} 자동연장`, `BUSINESS_AD_PIECE-AUTO-${ad.id}-${Date.now()}`]
       );
       await connection.query(
         `UPDATE business_ads
             SET piece_activated_at = ${BUSINESS_AD_CURRENT_MINUTE_SQL},
-                piece_activated_until = DATE_ADD(${BUSINESS_AD_CURRENT_MINUTE_SQL}, INTERVAL ? ${PIECE_AD_DURATION_UNIT_SQL})
+                piece_activated_until = DATE_ADD(${BUSINESS_AD_CURRENT_MINUTE_SQL}, INTERVAL ? ${BUSINESS_AD_PIECE_DURATION_UNIT_SQL})
           WHERE id = ?`,
-        [PIECE_AD_DURATION, ad.id]
+        [BUSINESS_AD_PIECE_DURATION, ad.id]
       );
       await connection.commit();
     } catch (error) {
@@ -1480,21 +1480,21 @@ async function activatePieceAdWithStamp({ adId, ownerUserId, autoRenew = true })
     if (Number(activeRows[0]?.isActivePeriod || 0) === 1) {
       await connection.query('UPDATE business_ads SET piece_is_active = ? WHERE id = ?', [autoRenew ? 1 : 0, adId]);
       await connection.commit();
-      return { consumedStampCount: 0, planType: PIECE_AD_PLAN_TYPE, durationDays: PIECE_AD_DURATION, durationLabel: getPieceAdDurationLabel(), activatedAt: ad.pieceActivatedAt || null, activatedUntil: ad.pieceActivatedUntil, isCurrentlyVisible: true };
+      return { consumedStampCount: 0, planType: BUSINESS_AD_PIECE_PLAN_TYPE, durationDays: BUSINESS_AD_PIECE_DURATION, durationLabel: getPieceAdDurationLabel(), activatedAt: ad.pieceActivatedAt || null, activatedUntil: ad.pieceActivatedUntil, isCurrentlyVisible: true };
     }
 
     await connection.query('SELECT id FROM users WHERE id = ? FOR UPDATE', [ownerUserId]);
     const [balanceRows] = await connection.query(`SELECT COALESCE(SUM(amount), 0) AS totalStamps FROM stamp_histories WHERE user_id = ? AND stamp_type = 'BUSINESS' FOR UPDATE`, [ownerUserId]);
     if (Number(balanceRows[0]?.totalStamps || 0) < 1) { const error = new Error('조각제휴 광고 활성화에 필요한 비즈니스 스탬프가 부족합니다.'); error.status = 400; throw error; }
 
-    await connection.query(`INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label) VALUES (?, 'BUSINESS', 'PIECE_AD', -1, ?, ?)`, [ownerUserId, `조각제휴 광고 ${getPieceAdDurationLabel()} 활성화`, `PIECE_AD-${adId}`]);
+    await connection.query(`INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label) VALUES (?, 'BUSINESS', 'BUSINESS_AD_PIECE', -1, ?, ?)`, [ownerUserId, `조각제휴 광고 ${getPieceAdDurationLabel()} 활성화`, `BUSINESS_AD_PIECE-${adId}`]);
     await connection.query(
-      `UPDATE business_ads SET piece_is_active = ?, piece_activated_at = ${BUSINESS_AD_CURRENT_MINUTE_SQL}, piece_activated_until = DATE_ADD(${BUSINESS_AD_CURRENT_MINUTE_SQL}, INTERVAL ? ${PIECE_AD_DURATION_UNIT_SQL}) WHERE id = ?`,
-      [autoRenew ? 1 : 0, PIECE_AD_DURATION, adId]
+      `UPDATE business_ads SET piece_is_active = ?, piece_activated_at = ${BUSINESS_AD_CURRENT_MINUTE_SQL}, piece_activated_until = DATE_ADD(${BUSINESS_AD_CURRENT_MINUTE_SQL}, INTERVAL ? ${BUSINESS_AD_PIECE_DURATION_UNIT_SQL}) WHERE id = ?`,
+      [autoRenew ? 1 : 0, BUSINESS_AD_PIECE_DURATION, adId]
     );
     const [[updatedAd]] = await connection.query('SELECT piece_activated_at AS activatedAt, piece_activated_until AS activatedUntil FROM business_ads WHERE id = ?', [adId]);
     await connection.commit();
-    return { consumedStampCount: 1, planType: PIECE_AD_PLAN_TYPE, durationDays: PIECE_AD_DURATION, durationLabel: getPieceAdDurationLabel(), activatedAt: updatedAd?.activatedAt || null, activatedUntil: updatedAd?.activatedUntil || null, isCurrentlyVisible: true };
+    return { consumedStampCount: 1, planType: BUSINESS_AD_PIECE_PLAN_TYPE, durationDays: BUSINESS_AD_PIECE_DURATION, durationLabel: getPieceAdDurationLabel(), activatedAt: updatedAd?.activatedAt || null, activatedUntil: updatedAd?.activatedUntil || null, isCurrentlyVisible: true };
   } catch (error) {
     await connection.rollback();
     throw error;
