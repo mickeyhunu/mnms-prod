@@ -1449,6 +1449,16 @@ async function activatePieceAdWithStamp({ adId, ownerUserId, autoRenew = true })
     if (!ad) { const error = new Error('광고를 찾을 수 없습니다.'); error.status = 404; throw error; }
     if (ad.registrationStatus !== 'REGISTERED') { const error = new Error('등록 완료된 광고만 활성화할 수 있습니다.'); error.status = 400; throw error; }
 
+    const [businessActiveRows] = await connection.query(
+      'SELECT (activated_until IS NOT NULL AND activated_until > NOW()) AS isBusinessActivePeriod FROM business_ads WHERE id = ? AND owner_user_id = ?',
+      [adId, ownerUserId]
+    );
+    if (Number(businessActiveRows[0]?.isBusinessActivePeriod || 0) !== 1) {
+      const error = new Error('업체광고가 활성화중인 경우에만 조각제휴 광고를 시작할 수 있습니다.');
+      error.status = 400;
+      throw error;
+    }
+
     const [activeRows] = await connection.query('SELECT (? IS NOT NULL AND ? > NOW()) AS isActivePeriod', [ad.pieceActivatedUntil, ad.pieceActivatedUntil]);
     if (Number(activeRows[0]?.isActivePeriod || 0) === 1) {
       await connection.query('UPDATE business_ads SET piece_is_active = ? WHERE id = ?', [autoRenew ? 1 : 0, adId]);
