@@ -13,6 +13,8 @@ let currentCommentById = new Map();
 let shareSheetOpen = false;
 const POST_DETAIL_DEFAULT_DESCRIPTION = '미드나잇 맨즈 커뮤니티 게시글 상세 페이지입니다.';
 const DEFAULT_PROFILE_IMAGE_URL = '/src/assets/image/img_profile.png';
+const PIECE_MINIMUM_MEMBER_LEVEL = 3;
+const PIECE_MINIMUM_TOTAL_POINTS = 400;
 
 function isBusinessUser(user) {
     const role = String(user?.role || '').toUpperCase();
@@ -24,6 +26,12 @@ function isRegularMember(user) {
     const role = String(user?.role || '').toUpperCase();
     const memberType = String(user?.memberType || user?.member_type || '').toUpperCase();
     return role !== 'ADMIN' && role !== 'BUSINESS' && memberType !== 'BUSINESS';
+}
+
+function canUsePieceBoard(user) {
+    const totalPoints = Number(user?.totalPoints ?? user?.total_points ?? 0);
+    const level = Number(user?.level || 0);
+    return totalPoints >= PIECE_MINIMUM_TOTAL_POINTS || level >= PIECE_MINIMUM_MEMBER_LEVEL;
 }
 
 function syncSecretCommentOptionByUser() {
@@ -876,7 +884,8 @@ function renderPieceJoinButton(post, isCurrentAuthor, isHiddenPost) {
     const isFull = currentParticipants >= maxParticipants;
     const currentUser = Auth.getUser();
     const isRegularMemberViewer = isRegularMember(currentUser);
-    const canJoin = isRecruiting && (isCurrentAuthor || post.isPieceParticipant || (isRegularMemberViewer && !isFull));
+    const hasPiecePermission = canUsePieceBoard(currentUser);
+    const canJoin = isRecruiting && (isCurrentAuthor || post.isPieceParticipant || (isRegularMemberViewer && hasPiecePermission && !isFull));
 
     joinBtn.disabled = !canJoin;
     const pieceAction = !canJoin ? 'unavailable' : (isCurrentAuthor ? 'close' : (post.isPieceParticipant ? 'cancel' : 'join'));
@@ -885,7 +894,7 @@ function renderPieceJoinButton(post, isCurrentAuthor, isHiddenPost) {
     joinBtn.classList.toggle('btn-secondary', pieceAction === 'cancel');
     joinBtn.classList.remove('btn-danger');
     joinBtn.textContent = isRecruiting
-        ? (isCurrentAuthor ? '조각 종료' : (post.isPieceParticipant ? '참여 취소' : (isFull ? '자리 없음' : '참여하기')))
+        ? (isCurrentAuthor ? '조각 종료' : (post.isPieceParticipant ? '참여 취소' : (isFull ? '자리 없음' : (!hasPiecePermission ? '3레벨 이상 참여 가능' : '참여하기'))))
         : pieceStatus;
 }
 
