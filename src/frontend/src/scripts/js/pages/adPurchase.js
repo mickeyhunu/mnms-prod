@@ -12,6 +12,9 @@
     const activationPanel = document.getElementById('ad-management-activation-panel');
     const activationToggle = document.getElementById('ad-purchase-activation-toggle');
     const activationToggleLabel = document.getElementById('ad-purchase-activation-toggle-label');
+    const activationTitle = document.getElementById('ad-management-activation-title');
+    const activationNoteTitle = document.getElementById('ad-activation-note-title');
+    const activationNoteDescription = document.getElementById('ad-activation-note-description');
     const activationButton = document.getElementById('ad-purchase-submit');
     const statusTitle = document.getElementById('ad-management-status-title');
     const statusBadge = document.getElementById('ad-management-status-badge');
@@ -185,6 +188,15 @@
         if (state.category === 'banner') return '배너광고';
         return '업체광고';
     };
+    const getActivationScopeText = () => {
+        const productName = getActivationProductName();
+        return {
+            title: `${productName} 자동연장 활성화`,
+            noteTitle: `${productName} 자동연장`,
+            noteDescription: `자동연장 ON 시 ${productName}가 계속 노출되도록 기간 종료마다 스탬프 1개가 자동 소모됩니다.`,
+            toggleLabelPrefix: `${productName} 자동연장`
+        };
+    };
     const getActivationButtonLabel = (plan, { visible, checked }) => {
         if (visible) return checked ? '자동연장 끄기' : '기간 만료 후 중지 예정';
         return `⚡ ${getPlanStampCount(plan).toLocaleString('ko-KR')} 스탬프 사용하고 ${getActivationProductName()} 시작하기`;
@@ -305,6 +317,7 @@
             </button>`;
         }
 
+        const activationScopeText = getActivationScopeText();
         const registered = isRegisteredAd();
         const checked = isSwitchOn();
         const visible = isVisible();
@@ -346,6 +359,9 @@
         if (startDate) startDate.textContent = visible ? formatDateOnly(isPiecePlan() ? state.ad?.pieceActivatedAt : getActivationStartValue(state.ad, visiblePlan)) : '-';
         if (expireDate) expireDate.textContent = visible ? formatDateOnly(visibleActivatedUntil) : '-';
         if (remainingTime) remainingTime.textContent = visible ? formatRemainingTime(visibleActivatedUntil, visibleRemainingSeconds) : '활성화 대기 중';
+        if (activationTitle) activationTitle.textContent = activationScopeText.title;
+        if (activationNoteTitle) activationNoteTitle.textContent = activationScopeText.noteTitle;
+        if (activationNoteDescription) activationNoteDescription.textContent = activationScopeText.noteDescription;
         if (activationPanel) {
             activationPanel.classList.toggle('hidden', !visible);
         }
@@ -354,7 +370,7 @@
             activationToggle.checked = checked;
         }
         if (activationToggleLabel) {
-            activationToggleLabel.textContent = `자동연장 ${checked ? 'ON' : 'OFF'}`;
+            activationToggleLabel.textContent = `${activationScopeText.toggleLabelPrefix} ${checked ? 'ON' : 'OFF'}`;
         }
 
 

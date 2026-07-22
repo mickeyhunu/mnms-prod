@@ -771,7 +771,7 @@ const pageRegistry = {
 
                 <section class="ad-management-panel ad-activation-panel hidden" aria-labelledby="ad-management-activation-title" id="ad-management-activation-panel">
                     <div class="ad-activation-copy">
-                        <h2 id="ad-management-activation-title">자동연장 활성화</h2>
+                        <h2 id="ad-management-activation-title">업체광고 자동연장 활성화</h2>
                     </div>
                     <label class="ad-activation-switch" for="ad-purchase-activation-toggle">
                         <span class="ad-activation-switch-text">OFF</span>
@@ -780,7 +780,7 @@ const pageRegistry = {
                         <span class="ad-activation-switch-text">ON</span>
                         <span class="sr-only" id="ad-purchase-activation-toggle-label">자동연장 OFF</span>
                     </label>
-                    <p class="ad-management-safe-note"><span aria-hidden="true">🔒</span><b>안심하고 이용하세요</b><br>자동연장 ON 시 선택한 광고가 계속 노출되도록 기간 종료마다 스탬프 1개가 자동 소모됩니다.</p>
+                    <p class="ad-management-safe-note"><span aria-hidden="true">🔒</span><b id="ad-activation-note-title">업체광고 자동연장</b><br><span id="ad-activation-note-description">자동연장 ON 시 업체광고가 계속 노출되도록 기간 종료마다 스탬프 1개가 자동 소모됩니다.</span></p>
                 </section>
 
                 <section class="ad-management-panel" aria-labelledby="ad-management-product-title">
