@@ -181,7 +181,7 @@ async function renewExpiredPieceAdsWithStamp() {
     try {
       await connection.beginTransaction();
       const [adRows] = await connection.query(
-        `SELECT id, owner_user_id AS ownerUserId
+        `SELECT id, owner_user_id AS ownerUserId, activated_until AS activatedUntil
            FROM business_ads
           WHERE id = ?
             AND registration_status = 'REGISTERED'
@@ -194,6 +194,13 @@ async function renewExpiredPieceAdsWithStamp() {
       const ad = adRows[0];
       if (!ad) {
         await connection.rollback();
+        continue;
+      }
+
+      const [businessActiveRows] = await connection.query('SELECT (? IS NOT NULL AND ? > NOW()) AS isBusinessActivePeriod', [ad.activatedUntil, ad.activatedUntil]);
+      if (Number(businessActiveRows[0]?.isBusinessActivePeriod || 0) !== 1) {
+        await connection.query('UPDATE business_ads SET piece_is_active = 0 WHERE id = ?', [ad.id]);
+        await connection.commit();
         continue;
       }
 
@@ -236,7 +243,6 @@ async function renewExpiredPieceAdsWithStamp() {
 }
 
 async function renewExpiredBusinessAdsWithStamp() {
-  await renewExpiredPieceAdsWithStamp();
   const pool = getPool();
   const [expiredAds] = await pool.query(
     `SELECT id
@@ -281,7 +287,7 @@ async function renewExpiredBusinessAdsWithStamp() {
       );
       const balance = Number(balanceRows[0]?.totalStamps || 0);
       if (balance < 1) {
-        await connection.query('UPDATE business_ads SET is_active = 0 WHERE id = ?', [ad.id]);
+        await connection.query('UPDATE business_ads SET is_active = 0, piece_is_active = 0 WHERE id = ?', [ad.id]);
         await connection.commit();
         continue;
       }
@@ -312,6 +318,17 @@ async function renewExpiredBusinessAdsWithStamp() {
       connection.release();
     }
   }
+
+  await pool.query(
+    `UPDATE business_ads
+        SET piece_is_active = 0
+      WHERE registration_status = 'REGISTERED'
+        AND piece_is_active = 1
+        AND activated_until IS NOT NULL
+        AND activated_until <= NOW()`
+  );
+
+  await renewExpiredPieceAdsWithStamp();
 }
 
 
