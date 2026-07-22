@@ -494,6 +494,8 @@ async function initDatabase() {
       piece_closed_at TIMESTAMP NULL,
       is_hidden TINYINT(1) NOT NULL DEFAULT 0,
       is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+      deleted_at TIMESTAMP NULL,
+      deleted_by BIGINT NULL,
       view_count BIGINT NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -542,6 +544,20 @@ async function initDatabase() {
   if (!postIsDeletedColumn.length) {
     await pool.query('ALTER TABLE posts ADD COLUMN is_deleted TINYINT(1) NOT NULL DEFAULT 0 AFTER content');
   }
+
+  await ensureColumn(
+    pool,
+    'posts',
+    'deleted_at',
+    'ALTER TABLE posts ADD COLUMN deleted_at TIMESTAMP NULL AFTER is_deleted'
+  );
+
+  await ensureColumn(
+    pool,
+    'posts',
+    'deleted_by',
+    'ALTER TABLE posts ADD COLUMN deleted_by BIGINT NULL AFTER deleted_at'
+  );
 
   const [postImageUrlsColumn] = await pool.query(
     `SELECT 1
