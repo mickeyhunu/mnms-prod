@@ -778,7 +778,7 @@ const pageRegistry = {
                             업체광고
                         </button>
                         <button type="button" class="ad-category-tab" role="tab" aria-selected="false">
-                            조각광고
+                            조각제휴
                         </button>
                         <button type="button" class="ad-category-tab" role="tab" aria-selected="false">
                             배너광고
@@ -812,6 +812,13 @@ const pageRegistry = {
                             <span class="ad-product-divider"></span>
                             <span class="ad-product-radio" aria-hidden="true"></span>
                             <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 1일</b></span>
+                        </button>
+                        <button type="button" class="ad-product-card" data-plan="piece" role="tab" aria-selected="false">
+                            <img src="/src/assets/ad-plan-badges/piece-badge.png" alt="PIECE" class="ad-product-badge">
+                            <strong>조각제휴 업체정보 노출</strong>
+                            <span class="ad-product-divider"></span>
+                            <span class="ad-product-radio" aria-hidden="true"></span>
+                            <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 2일</b></span>
                         </button>
                     </div>
                     <div class="ad-activation-benefits">
