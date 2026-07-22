@@ -241,7 +241,7 @@ function canUsePieceBoard(user) {
 }
 
 function getPieceBoardRestrictionMessage(actionLabel) {
-  return `조각 ${actionLabel}은 3레벨(단골) 이상 또는 400포인트 이상 회원만 이용할 수 있습니다.`;
+  return `조각 ${actionLabel}은 3레벨(단골) 이상 회원만 이용할 수 있습니다.`;
 }
 
 function isBusinessAuthorSnapshot(record) {
