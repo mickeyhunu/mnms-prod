@@ -735,7 +735,7 @@ const pageRegistry = {
                         업체광고
                     </button>
                     <button type="button" class="ad-category-tab" data-category="piece" role="tab" aria-selected="false" aria-controls="ad-business-product-panel">
-                        조각제휴
+                        조각제휴광고
                     </button>
                     <button type="button" class="ad-category-tab" data-category="banner" role="tab" aria-selected="false" aria-controls="ad-business-product-panel">
                         배너광고
