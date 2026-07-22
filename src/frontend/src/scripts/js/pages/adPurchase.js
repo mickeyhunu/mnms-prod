@@ -160,11 +160,16 @@
         }
     };
     const isPiecePlan = () => state.plan === 'piece';
-    const isSwitchOn = () => isPiecePlan() ? Boolean(Number(state.ad?.isPieceActive || 0)) : Boolean(Number(state.ad?.isActive || 0));
-    const isVisible = () => isPiecePlan() ? Boolean(Number(state.ad?.isPieceCurrentlyVisible || 0)) : Boolean(Number(state.ad?.isCurrentlyVisible || 0));
-    const activePlanKey = () => (isSwitchOn() ? (isPiecePlan() ? 'piece' : normalizePlanKey(state.ad?.planType)) : null);
+    const isBusinessSwitchOn = () => Boolean(Number(state.ad?.isActive || 0));
+    const isBusinessVisible = () => Boolean(Number(state.ad?.isCurrentlyVisible || 0));
+    const isPieceSwitchOn = () => Boolean(Number(state.ad?.isPieceActive || 0));
+    const isPieceVisible = () => Boolean(Number(state.ad?.isPieceCurrentlyVisible || 0));
+    const isSwitchOn = () => isPiecePlan() ? isPieceSwitchOn() : isBusinessSwitchOn();
+    const isVisible = () => isPiecePlan() ? isPieceVisible() : isBusinessVisible();
+    const activeBusinessPlanKey = () => (isBusinessSwitchOn() ? normalizePlanKey(state.ad?.planType) : null);
+    const exposedBusinessPlanKey = () => (isBusinessVisible() ? normalizePlanKey(state.ad?.planType) : null);
+    const lockedBusinessPlanKey = () => activeBusinessPlanKey() || exposedBusinessPlanKey();
     const exposedPlanKey = () => (isVisible() ? (isPiecePlan() ? 'piece' : normalizePlanKey(state.ad?.planType)) : null);
-    const lockedPlanKey = () => activePlanKey() || exposedPlanKey();
 
     const formatRemainingTime = (value, remainingSeconds) => {
         const serverRemainingSeconds = Number(remainingSeconds);
@@ -231,22 +236,19 @@
     };
 
     const render = () => {
-        const lockedPlan = lockedPlanKey();
-        if (lockedPlan) {
-            state.plan = lockedPlan;
+        const lockedBusinessPlan = lockedBusinessPlanKey();
+        if (state.category === 'business' && lockedBusinessPlan) {
+            state.plan = lockedBusinessPlan;
         }
         const currentPlan = plans[state.plan];
         if (!currentPlan) return;
-        if (lockedPlan) {
-            state.category = getPlanCategory(lockedPlan);
-        }
 
         tabs.forEach((tab) => {
             const planKey = normalizePlanKey(tab.dataset.plan || 'basic');
             const tabCategory = normalizeCategoryKey(tab.dataset.category || getPlanCategory(planKey));
             const isInSelectedCategory = tabCategory === state.category;
             const isActive = isInSelectedCategory && planKey === state.plan;
-            const isDisabled = Boolean(lockedPlan && planKey !== lockedPlan);
+            const isDisabled = tabCategory === 'business' && Boolean(lockedBusinessPlan && planKey !== lockedBusinessPlan);
             tab.classList.toggle('hidden', !isInSelectedCategory);
             tab.classList.toggle('is-active', isActive);
             tab.classList.toggle('is-disabled', isDisabled);
@@ -384,8 +386,8 @@
         tab.addEventListener('click', () => {
             if (tab.disabled) return;
             const nextPlan = normalizePlanKey(tab.dataset.plan || 'basic');
-            const lockedPlan = lockedPlanKey();
-            if (lockedPlan && nextPlan !== lockedPlan) return;
+            const lockedBusinessPlan = lockedBusinessPlanKey();
+            if (getPlanCategory(nextPlan) === 'business' && lockedBusinessPlan && nextPlan !== lockedBusinessPlan) return;
             state.plan = nextPlan;
             state.category = getPlanCategory(nextPlan);
             render();
@@ -395,7 +397,6 @@
     categoryTabs.forEach((tab) => {
         tab.addEventListener('click', () => {
             const nextCategory = normalizeCategoryKey(tab.dataset.category);
-            if (lockedPlanKey() && nextCategory !== getPlanCategory(lockedPlanKey())) return;
             selectCategory(nextCategory);
             render();
         });
@@ -406,6 +407,10 @@
     });
 
     activationButton?.addEventListener('click', () => {
+        if (isPiecePlan() && !isBusinessVisible()) {
+            alert('업체광고가 활성화중인 경우에만 조각제휴 광고를 시작할 수 있습니다.');
+            return;
+        }
         updateActivation(!isVisible(), { autoRenew: false });
     });
 
