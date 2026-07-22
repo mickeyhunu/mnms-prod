@@ -26,6 +26,11 @@ const BUSINESS_AD_PLAN_DURATIONS = isLocalEnvLoaded
       PLUS: 2,
       PREMIUM: 1
     };
+const PIECE_AD_PLAN_TYPE = 'PIECE';
+const PIECE_AD_DURATION = 2;
+const PIECE_AD_DURATION_UNIT_SQL = isLocalEnvLoaded ? 'MINUTE' : 'DAY';
+const PIECE_AD_DURATION_UNIT_LABEL = isLocalEnvLoaded ? '분' : '일';
+
 const BUSINESS_AD_PLAN_JUMP_COUNTS = {
   BASIC: 6,
   PLUS: 9,
@@ -69,6 +74,20 @@ function getBusinessAdPlanDurationConfig() {
     };
     return acc;
   }, {});
+}
+
+function getPieceAdDurationLabel() {
+  return `${PIECE_AD_DURATION}${PIECE_AD_DURATION_UNIT_LABEL}`;
+}
+
+function getPieceAdPlanDurationConfig() {
+  return {
+    PIECE: {
+      duration: PIECE_AD_DURATION,
+      durationUnit: PIECE_AD_DURATION_UNIT_LABEL === '분' ? 'minute' : 'day',
+      durationLabel: getPieceAdDurationLabel()
+    }
+  };
 }
 
 function getBusinessAdPlanJumpCount(planType) {
@@ -128,7 +147,7 @@ function validateJumpScheduleTimes(times, planType = 'BASIC') {
 }
 
 function getBusinessAdPublicVisibilityCondition(alias = 'ba') {
-  return `${alias}.registration_status = 'REGISTERED' AND ${alias}.activated_until IS NOT NULL AND ${alias}.activated_until > NOW()`;
+  return `${alias}.registration_status = 'REGISTERED' AND ((${alias}.activated_until IS NOT NULL AND ${alias}.activated_until > NOW()) OR (${alias}.piece_activated_until IS NOT NULL AND ${alias}.piece_activated_until > NOW()))`;
 }
 
 async function resetBusinessAdDailyJumps(connectionOrPool = getPool()) {
@@ -144,7 +163,80 @@ async function resetBusinessAdDailyJumps(connectionOrPool = getPool()) {
   );
 }
 
+async function renewExpiredPieceAdsWithStamp() {
+  const pool = getPool();
+  const [expiredAds] = await pool.query(
+    `SELECT id
+       FROM business_ads
+      WHERE registration_status = 'REGISTERED'
+        AND piece_is_active = 1
+        AND piece_activated_until IS NOT NULL
+        AND piece_activated_until <= NOW()
+      ORDER BY piece_activated_until ASC, id ASC
+      LIMIT 100`
+  );
+
+  for (const row of expiredAds) {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      const [adRows] = await connection.query(
+        `SELECT id, owner_user_id AS ownerUserId
+           FROM business_ads
+          WHERE id = ?
+            AND registration_status = 'REGISTERED'
+            AND piece_is_active = 1
+            AND piece_activated_until IS NOT NULL
+            AND piece_activated_until <= NOW()
+          FOR UPDATE`,
+        [row.id]
+      );
+      const ad = adRows[0];
+      if (!ad) {
+        await connection.rollback();
+        continue;
+      }
+
+      await connection.query('SELECT id FROM users WHERE id = ? FOR UPDATE', [ad.ownerUserId]);
+      const [balanceRows] = await connection.query(
+        `SELECT COALESCE(SUM(amount), 0) AS totalStamps
+           FROM stamp_histories
+          WHERE user_id = ?
+            AND stamp_type = 'BUSINESS'
+          FOR UPDATE`,
+        [ad.ownerUserId]
+      );
+      const balance = Number(balanceRows[0]?.totalStamps || 0);
+      if (balance < 1) {
+        await connection.query('UPDATE business_ads SET piece_is_active = 0 WHERE id = ?', [ad.id]);
+        await connection.commit();
+        continue;
+      }
+
+      await connection.query(
+        `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
+         VALUES (?, 'BUSINESS', ?, -1, ?, ?)`,
+        [ad.ownerUserId, 'PIECE_AD', `조각제휴 광고 ${getPieceAdDurationLabel()} 자동연장`, `PIECE_AD-AUTO-${ad.id}-${Date.now()}`]
+      );
+      await connection.query(
+        `UPDATE business_ads
+            SET piece_activated_at = ${BUSINESS_AD_CURRENT_MINUTE_SQL},
+                piece_activated_until = DATE_ADD(${BUSINESS_AD_CURRENT_MINUTE_SQL}, INTERVAL ? ${PIECE_AD_DURATION_UNIT_SQL})
+          WHERE id = ?`,
+        [PIECE_AD_DURATION, ad.id]
+      );
+      await connection.commit();
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  }
+}
+
 async function renewExpiredBusinessAdsWithStamp() {
+  await renewExpiredPieceAdsWithStamp();
   const pool = getPool();
   const [expiredAds] = await pool.query(
     `SELECT id
@@ -922,7 +1014,7 @@ async function listBusinessAdsByOwner(ownerUserId) {
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
             kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
             description, plan_type AS planType, view_count AS viewCount, daily_jump_remaining AS dailyJumpRemaining, jump_reset_date AS jumpResetDate, jumped_at AS jumpedAt,
-            registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), activated_until), 0) AS remainingSeconds, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), DATE_ADD(jumped_at, INTERVAL 10 MINUTE)), 0) AS jumpCooldownSeconds, created_at AS createdAt, updated_at AS updatedAt
+            registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, piece_activated_at AS pieceActivatedAt, piece_activated_until AS pieceActivatedUntil, (piece_is_active = 1 AND piece_activated_until IS NOT NULL AND piece_activated_until > NOW()) AS isPieceActive, (piece_activated_until IS NOT NULL AND piece_activated_until > NOW()) AS isPieceCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), piece_activated_until), 0) AS pieceRemainingSeconds, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), activated_until), 0) AS remainingSeconds, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), DATE_ADD(jumped_at, INTERVAL 10 MINUTE)), 0) AS jumpCooldownSeconds, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
       WHERE owner_user_id = ?
       ORDER BY display_order ASC, id DESC`,
@@ -979,7 +1071,7 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
             ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl,
             ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
             ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification, ba.use_stamp_event AS useStampEvent, ba.stamp_event_description AS stampEventDescription, ba.stamp_event_count AS stampEventCount,
-            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.daily_jump_remaining AS dailyJumpRemaining, ba.jump_reset_date AS jumpResetDate, ba.jumped_at AS jumpedAt, ba.activated_at AS activatedAt, ba.activated_until AS activatedUntil, ba.created_at AS createdAt,
+            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.daily_jump_remaining AS dailyJumpRemaining, ba.jump_reset_date AS jumpResetDate, ba.jumped_at AS jumpedAt, ba.activated_at AS activatedAt, ba.activated_until AS activatedUntil, ba.piece_activated_at AS pieceActivatedAt, ba.piece_activated_until AS pieceActivatedUntil, ba.created_at AS createdAt,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, COALESCE(u.nickname, '업체') AS ownerNickname,
             COALESCE(ad_days.cumulativeAdDays, 0) AS cumulativeAdDays,
             COALESCE(bp.company_name, '') AS companyName, COALESCE(bp.manager_name, '') AS profileManagerName,
@@ -1024,7 +1116,7 @@ async function listBusinessAdsForAdmin() {
             ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification,
             ba.use_stamp_event AS useStampEvent, ba.stamp_event_description AS stampEventDescription, ba.stamp_event_count AS stampEventCount, ba.description, ba.plan_type AS planType,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, ba.activated_at AS activatedAt, ba.activated_until AS activatedUntil, ba.display_order AS displayOrder,
-            (ba.is_active = 1) AS isActive, (ba.activated_until IS NOT NULL AND ba.activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), ba.activated_until), 0) AS remainingSeconds, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
+            (ba.is_active = 1) AS isActive, (ba.piece_is_active = 1 AND ba.piece_activated_until IS NOT NULL AND ba.piece_activated_until > NOW()) AS isPieceActive, (ba.piece_activated_until IS NOT NULL AND ba.piece_activated_until > NOW()) AS isPieceCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), ba.piece_activated_until), 0) AS pieceRemainingSeconds, (ba.activated_until IS NOT NULL AND ba.activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), ba.activated_until), 0) AS remainingSeconds, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
             COALESCE(u.login_id, '') AS ownerLoginId, COALESCE(u.nickname, '') AS ownerNickname, COALESCE(bp.company_name, '') AS ownerCompanyName
        FROM business_ads ba
        LEFT JOIN users u ON u.id = ba.owner_user_id
@@ -1080,7 +1172,7 @@ async function findPublicBusinessAdById(adId) {
             ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl,
             ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
             ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification, ba.use_stamp_event AS useStampEvent, ba.stamp_event_description AS stampEventDescription, ba.stamp_event_count AS stampEventCount,
-            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.daily_jump_remaining AS dailyJumpRemaining, ba.jump_reset_date AS jumpResetDate, ba.jumped_at AS jumpedAt, ba.activated_at AS activatedAt, ba.activated_until AS activatedUntil, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
+            ba.description, ba.plan_type AS planType, ba.display_order AS displayOrder, ba.daily_jump_remaining AS dailyJumpRemaining, ba.jump_reset_date AS jumpResetDate, ba.jumped_at AS jumpedAt, ba.activated_at AS activatedAt, ba.activated_until AS activatedUntil, ba.piece_activated_at AS pieceActivatedAt, ba.piece_activated_until AS pieceActivatedUntil, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, COALESCE(u.nickname, '업체') AS ownerNickname,
             COALESCE(bp.company_name, '') AS companyName, COALESCE(bp.manager_name, '') AS profileManagerName,
             COALESCE(JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessName')), COALESCE(bp.company_name, '')) AS businessDisclosureName,
@@ -1165,7 +1257,7 @@ async function findBusinessAdById(adId) {
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
             kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
             description, plan_type AS planType, view_count AS viewCount, daily_jump_remaining AS dailyJumpRemaining, jump_reset_date AS jumpResetDate, jumped_at AS jumpedAt,
-            registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), activated_until), 0) AS remainingSeconds, created_at AS createdAt, updated_at AS updatedAt
+            registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, piece_activated_at AS pieceActivatedAt, piece_activated_until AS pieceActivatedUntil, (piece_is_active = 1 AND piece_activated_until IS NOT NULL AND piece_activated_until > NOW()) AS isPieceActive, (piece_activated_until IS NOT NULL AND piece_activated_until > NOW()) AS isPieceCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), piece_activated_until), 0) AS pieceRemainingSeconds, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), activated_until), 0) AS remainingSeconds, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
       WHERE id = ?`,
     [adId]
@@ -1217,14 +1309,23 @@ async function increaseBusinessAdViewCount(adId) {
     `UPDATE business_ads
         SET view_count = view_count + 1
       WHERE id = ?
-        AND activated_until IS NOT NULL
-        AND activated_until > NOW()
+        AND ((activated_until IS NOT NULL AND activated_until > NOW()) OR (piece_activated_until IS NOT NULL AND piece_activated_until > NOW()))
         AND registration_status = 'REGISTERED'`,
     [normalizedAdId]
   );
   return result.affectedRows > 0;
 }
 
+
+async function setPieceAdActivationOff(adId) {
+  const pool = getPool();
+  await pool.query(
+    `UPDATE business_ads
+        SET piece_is_active = 0
+      WHERE id = ?`,
+    [adId]
+  );
+}
 
 async function setBusinessAdActivationOff(adId) {
   const pool = getPool();
@@ -1329,6 +1430,51 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
   }
 }
 
+
+async function activatePieceAdWithStamp({ adId, ownerUserId, autoRenew = true }) {
+  const pool = getPool();
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    const [adRows] = await connection.query(
+      `SELECT id, owner_user_id AS ownerUserId, registration_status AS registrationStatus, piece_activated_at AS pieceActivatedAt, piece_activated_until AS pieceActivatedUntil
+         FROM business_ads
+        WHERE id = ?
+          AND owner_user_id = ?
+        FOR UPDATE`,
+      [adId, ownerUserId]
+    );
+    const ad = adRows[0];
+    if (!ad) { const error = new Error('광고를 찾을 수 없습니다.'); error.status = 404; throw error; }
+    if (ad.registrationStatus !== 'REGISTERED') { const error = new Error('등록 완료된 광고만 활성화할 수 있습니다.'); error.status = 400; throw error; }
+
+    const [activeRows] = await connection.query('SELECT (? IS NOT NULL AND ? > NOW()) AS isActivePeriod', [ad.pieceActivatedUntil, ad.pieceActivatedUntil]);
+    if (Number(activeRows[0]?.isActivePeriod || 0) === 1) {
+      await connection.query('UPDATE business_ads SET piece_is_active = ? WHERE id = ?', [autoRenew ? 1 : 0, adId]);
+      await connection.commit();
+      return { consumedStampCount: 0, planType: PIECE_AD_PLAN_TYPE, durationDays: PIECE_AD_DURATION, durationLabel: getPieceAdDurationLabel(), activatedAt: ad.pieceActivatedAt || null, activatedUntil: ad.pieceActivatedUntil, isCurrentlyVisible: true };
+    }
+
+    await connection.query('SELECT id FROM users WHERE id = ? FOR UPDATE', [ownerUserId]);
+    const [balanceRows] = await connection.query(`SELECT COALESCE(SUM(amount), 0) AS totalStamps FROM stamp_histories WHERE user_id = ? AND stamp_type = 'BUSINESS' FOR UPDATE`, [ownerUserId]);
+    if (Number(balanceRows[0]?.totalStamps || 0) < 1) { const error = new Error('조각제휴 광고 활성화에 필요한 비즈니스 스탬프가 부족합니다.'); error.status = 400; throw error; }
+
+    await connection.query(`INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label) VALUES (?, 'BUSINESS', 'PIECE_AD', -1, ?, ?)`, [ownerUserId, `조각제휴 광고 ${getPieceAdDurationLabel()} 활성화`, `PIECE_AD-${adId}`]);
+    await connection.query(
+      `UPDATE business_ads SET piece_is_active = ?, piece_activated_at = ${BUSINESS_AD_CURRENT_MINUTE_SQL}, piece_activated_until = DATE_ADD(${BUSINESS_AD_CURRENT_MINUTE_SQL}, INTERVAL ? ${PIECE_AD_DURATION_UNIT_SQL}) WHERE id = ?`,
+      [autoRenew ? 1 : 0, PIECE_AD_DURATION, adId]
+    );
+    const [[updatedAd]] = await connection.query('SELECT piece_activated_at AS activatedAt, piece_activated_until AS activatedUntil FROM business_ads WHERE id = ?', [adId]);
+    await connection.commit();
+    return { consumedStampCount: 1, planType: PIECE_AD_PLAN_TYPE, durationDays: PIECE_AD_DURATION, durationLabel: getPieceAdDurationLabel(), activatedAt: updatedAd?.activatedAt || null, activatedUntil: updatedAd?.activatedUntil || null, isCurrentlyVisible: true };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
 
 async function jumpBusinessAd({ adId, ownerUserId }) {
   const pool = getPool();
@@ -2015,6 +2161,7 @@ module.exports = {
   getBusinessAdPlanDurationLabel,
   getBusinessAdPlanDurationUnit,
   getBusinessAdPlanDurationConfig,
+  getPieceAdPlanDurationConfig,
   renewExpiredBusinessAdsWithStamp,
   startBusinessAdRenewalScheduler,
   stopBusinessAdRenewalScheduler,
@@ -2032,8 +2179,10 @@ module.exports = {
   findBusinessAdById,
   updateBusinessAd,
   activateBusinessAdWithStamp,
+  activatePieceAdWithStamp,
   jumpBusinessAd,
   setBusinessAdActivationOff,
+  setPieceAdActivationOff,
   deleteBusinessAd,
   updateEntry,
   recordSiteVisit,
