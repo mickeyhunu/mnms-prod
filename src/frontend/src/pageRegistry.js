@@ -777,17 +777,12 @@ const pageRegistry = {
                         <button type="button" class="ad-category-tab is-active" role="tab" aria-selected="true" aria-controls="ad-business-product-panel" id="ad-business-tab">
                             업체광고
                         </button>
-                        <button type="button" class="ad-category-tab is-coming-soon" role="tab" aria-selected="false" aria-disabled="true" disabled>
-                            <span>조각광고</span>
-                            <small>준비중</small>
+                        <button type="button" class="ad-category-tab" role="tab" aria-selected="false">
+                            조각광고
                         </button>
-                        <button type="button" class="ad-category-tab is-coming-soon" role="tab" aria-selected="false" aria-disabled="true" disabled>
-                            <span>배너광고</span>
-                            <small>준비중</small>
+                        <button type="button" class="ad-category-tab" role="tab" aria-selected="false">
+                            배너광고
                         </button>
-                    </div>
-                    <div class="ad-category-coming-soon-note" aria-live="polite">
-                        조각광고와 배너광고 상품은 준비중입니다.
                     </div>
                     <div id="ad-business-product-panel" role="tabpanel" aria-labelledby="ad-business-tab">
                     <div class="ad-management-section-title-row">
