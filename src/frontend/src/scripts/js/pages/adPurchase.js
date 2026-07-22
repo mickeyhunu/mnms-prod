@@ -3,6 +3,7 @@
  */
 (() => {
     const tabs = Array.from(document.querySelectorAll('.ad-product-card, .ad-plan-tab'));
+    const categoryTabs = Array.from(document.querySelectorAll('.ad-category-tab'));
     const featureList = document.getElementById('ad-plan-features');
     const priceOptions = document.getElementById('ad-price-options');
     const selectedProduct = document.getElementById('ad-selected-product');
@@ -59,6 +60,21 @@
                 { text: '베이직보다 높은 광고 등급으로 표시', enabled: true },
             ]
         },
+        piece: {
+            code: 'PIECE',
+            name: '조각제휴 광고',
+            headline: '조각제휴 업체정보 노출',
+            durationDays: 2,
+            durationUnit: 'day',
+            durationLabel: '2일',
+            badgeImage: '/src/assets/ad-plan-badges/piece-badge.png',
+            badgeAlt: 'PIECE',
+            features: [
+                { text: '스탬프 1개로 조각 제휴업체에 업체정보 2일 노출', enabled: true },
+                { text: '조각제휴 자동연장을 광고별로 별도 관리', enabled: true },
+                { text: '기간 만료 시 스탬프 1개로 자동연장 가능', enabled: true },
+            ]
+        },
         premium: {
             code: 'PREMIUM',
             name: '프리미엄 광고',
@@ -111,7 +127,7 @@
             if (Number.isFinite(duration) && duration > 0) plan.durationDays = duration;
             plan.durationUnit = planConfig.durationUnit === 'minute' ? 'minute' : 'day';
             plan.durationLabel = planConfig.durationLabel || `${plan.durationDays}${getPlanDurationUnitLabel(plan)}`;
-            if (plan.features?.[0]) plan.features[0].text = `스탬프 1개로 업체정보 ${plan.durationLabel} 노출`;
+            if (plan.features?.[0]) plan.features[0].text = plan.code === 'PIECE' ? `스탬프 1개로 조각 제휴업체에 업체정보 ${plan.durationLabel} 노출` : `스탬프 1개로 업체정보 ${plan.durationLabel} 노출`;
         });
         updatePlanCostLabels();
     };
@@ -132,10 +148,11 @@
         const approvalStatus = String(state.businessProfile?.approvalStatus || '').toUpperCase();
         return registrationStatus === 'REGISTERED' && approvalStatus === 'APPROVED';
     };
-    const isSwitchOn = () => Boolean(Number(state.ad?.isActive || 0));
-    const isVisible = () => Boolean(Number(state.ad?.isCurrentlyVisible || 0));
-    const activePlanKey = () => (isSwitchOn() ? normalizePlanKey(state.ad?.planType) : null);
-    const exposedPlanKey = () => (isVisible() ? normalizePlanKey(state.ad?.planType) : null);
+    const isPiecePlan = () => state.plan === 'piece';
+    const isSwitchOn = () => isPiecePlan() ? Boolean(Number(state.ad?.isPieceActive || 0)) : Boolean(Number(state.ad?.isActive || 0));
+    const isVisible = () => isPiecePlan() ? Boolean(Number(state.ad?.isPieceCurrentlyVisible || 0)) : Boolean(Number(state.ad?.isCurrentlyVisible || 0));
+    const activePlanKey = () => (isSwitchOn() ? (isPiecePlan() ? 'piece' : normalizePlanKey(state.ad?.planType)) : null);
+    const exposedPlanKey = () => (isVisible() ? (isPiecePlan() ? 'piece' : normalizePlanKey(state.ad?.planType)) : null);
     const lockedPlanKey = () => activePlanKey() || exposedPlanKey();
 
     const formatRemainingTime = (value, remainingSeconds) => {
@@ -221,6 +238,13 @@
             tab.setAttribute('aria-disabled', String(isDisabled));
         });
 
+        categoryTabs.forEach((tab) => {
+            const isPieceCategory = tab.textContent.includes('조각');
+            const isActiveCategory = isPieceCategory ? state.plan === 'piece' : state.plan !== 'piece';
+            tab.classList.toggle('is-active', isActiveCategory);
+            tab.setAttribute('aria-selected', String(isActiveCategory));
+        });
+
         featureList.innerHTML = currentPlan.features
             .map((item) => `<li class="${item.enabled ? 'is-enabled' : 'is-disabled'}">${item.text}</li>`)
             .join('');
@@ -260,7 +284,7 @@
         if (estimatedRunUntil) estimatedRunUntil.textContent = estimatedUntilText;
         if (activationStampBalance) activationStampBalance.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         if (activationBenefitTitle) activationBenefitTitle.textContent = `${currentPlan.name}를 활성화하면`;
-        if (activationButton) activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '기간 만료 후 중지 예정') : `⚡ 1 스탬프 사용하고 광고 시작하기`;
+        if (activationButton) activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '기간 만료 후 중지 예정') : `⚡ 1 스탬프 사용하고 ${isPiecePlan() ? '조각제휴 광고' : '광고'} 시작하기`;
 
         const visiblePlan = plans[exposedPlanKey()] || currentPlan;
         if (statusBadge) {
@@ -268,9 +292,11 @@
             statusBadge.alt = visible ? visiblePlan.badgeAlt : '미광고';
         }
         if (statusTitle) statusTitle.textContent = visible ? `${visiblePlan.name}가 노출 중입니다` : '노출 중인 광고가 없습니다';
-        if (startDate) startDate.textContent = visible ? formatDateOnly(getActivationStartValue(state.ad, visiblePlan)) : '-';
-        if (expireDate) expireDate.textContent = visible ? formatDateOnly(state.ad?.activatedUntil) : '-';
-        if (remainingTime) remainingTime.textContent = visible ? formatRemainingTime(state.ad?.activatedUntil, state.ad?.remainingSeconds) : '활성화 대기 중';
+        const visibleActivatedUntil = isPiecePlan() ? state.ad?.pieceActivatedUntil : state.ad?.activatedUntil;
+        const visibleRemainingSeconds = isPiecePlan() ? state.ad?.pieceRemainingSeconds : state.ad?.remainingSeconds;
+        if (startDate) startDate.textContent = visible ? formatDateOnly(isPiecePlan() ? state.ad?.pieceActivatedAt : getActivationStartValue(state.ad, visiblePlan)) : '-';
+        if (expireDate) expireDate.textContent = visible ? formatDateOnly(visibleActivatedUntil) : '-';
+        if (remainingTime) remainingTime.textContent = visible ? formatRemainingTime(visibleActivatedUntil, visibleRemainingSeconds) : '활성화 대기 중';
         if (activationPanel) {
             activationPanel.classList.toggle('hidden', !visible);
         }
@@ -285,7 +311,7 @@
 
         if (activationButton) {
             activationButton.disabled = !canClickActivationButton;
-            activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '기간 만료 후 중지 예정') : '⚡ 1 스탬프 사용하고 광고 시작하기';
+            activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '기간 만료 후 중지 예정') : `⚡ 1 스탬프 사용하고 ${isPiecePlan() ? '조각제휴 광고' : '광고'} 시작하기`;
         }
     };
 
@@ -300,7 +326,9 @@
         state.ad = Array.isArray(adsResponse?.content) ? adsResponse.content[0] : null;
         state.businessProfile = businessProfileResponse || null;
         state.totalStamps = Number(stampResponse?.totalStamps || 0);
-        if (state.ad?.planType) {
+        if (state.ad?.isPieceCurrentlyVisible || state.ad?.isPieceActive) {
+            state.plan = 'piece';
+        } else if (state.ad?.planType) {
             state.plan = normalizePlanKey(state.ad.planType);
         }
         render();
@@ -340,6 +368,13 @@
             const lockedPlan = lockedPlanKey();
             if (lockedPlan && nextPlan !== lockedPlan) return;
             state.plan = nextPlan;
+            render();
+        });
+    });
+
+    categoryTabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            state.plan = tab.textContent.includes('조각') ? 'piece' : 'premium';
             render();
         });
     });
