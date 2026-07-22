@@ -730,6 +730,17 @@ const pageRegistry = {
             </header>
 
             <div class="container ad-management-container">
+                <div class="ad-category-tabs" role="tablist" aria-label="광고 유형 선택">
+                    <button type="button" class="ad-category-tab is-active" data-category="business" role="tab" aria-selected="true" aria-controls="ad-business-product-panel" id="ad-business-tab">
+                        업체광고
+                    </button>
+                    <button type="button" class="ad-category-tab" data-category="piece" role="tab" aria-selected="false" aria-controls="ad-business-product-panel">
+                        조각제휴
+                    </button>
+                    <button type="button" class="ad-category-tab" data-category="banner" role="tab" aria-selected="false" aria-controls="ad-business-product-panel">
+                        배너광고
+                    </button>
+                </div>
                 <section class="ad-management-status-card" aria-labelledby="ad-management-status-title">
                     <div class="ad-management-status-copy">
                         <img src="/src/assets/ad-plan-badges/none-badge.png" alt="미광고" class="ad-management-status-badge" id="ad-management-status-badge">
@@ -773,17 +784,6 @@ const pageRegistry = {
                 </section>
 
                 <section class="ad-management-panel" aria-labelledby="ad-management-product-title">
-                    <div class="ad-category-tabs" role="tablist" aria-label="광고 유형 선택">
-                        <button type="button" class="ad-category-tab is-active" data-category="business" role="tab" aria-selected="true" aria-controls="ad-business-product-panel" id="ad-business-tab">
-                            업체광고
-                        </button>
-                        <button type="button" class="ad-category-tab" data-category="piece" role="tab" aria-selected="false" aria-controls="ad-business-product-panel">
-                            조각제휴
-                        </button>
-                        <button type="button" class="ad-category-tab" data-category="banner" role="tab" aria-selected="false" aria-controls="ad-business-product-panel">
-                            배너광고
-                        </button>
-                    </div>
                     <div id="ad-business-product-panel" role="tabpanel" aria-labelledby="ad-business-tab">
                     <div class="ad-management-section-title-row">
                         <div>
