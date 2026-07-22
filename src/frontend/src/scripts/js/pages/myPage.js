@@ -1140,9 +1140,19 @@ function renderStampSummary(totalStamps = 0, options = {}) {
     `;
 }
 
+function resolveStampHistoryActionLabel(item = {}) {
+    if (item.actionLabel && item.actionLabel !== item.actionType) return item.actionLabel;
+    return formatStampActionLabel(item.actionType || '');
+}
+
 function formatStampHistoryReason(item = {}) {
-    if (item.actionType === 'BUSINESS_AD_PIECE') return '조각제휴 광고 활성화';
-    return item.reason || '';
+    if (item.actionType !== 'BUSINESS_AD_PIECE') return item.reason || '';
+
+    const reason = item.reason || '';
+    const sourceLabel = String(item.sourceLabel || '');
+    if (sourceLabel.includes('-AUTO-') || reason.includes('자동연장')) return reason;
+
+    return '조각제휴 광고 활성화';
 }
 
 function renderStampHistoryList(stampHistories = []) {
@@ -1161,7 +1171,7 @@ function renderStampHistoryList(stampHistories = []) {
                 return `
                     <div class="mypage-point-history-row">
                         <div>
-                            <strong>${sanitizeHTML(item.actionLabel || formatStampActionLabel(item.actionType || ''))}</strong>
+                            <strong>${sanitizeHTML(resolveStampHistoryActionLabel(item))}</strong>
                             ${sourceText}
                             ${reasonText ? `<p>${sanitizeHTML(reasonText)}</p>` : ''}
                             <p>${sanitizeHTML(formatDate(item.createdAt))}</p>
