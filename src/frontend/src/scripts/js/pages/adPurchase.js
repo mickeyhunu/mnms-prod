@@ -203,16 +203,32 @@
         return `⚡ ${getPlanStampCount(plan).toLocaleString('ko-KR')} 스탬프 사용하고 ${getActivationProductName()} 시작하기`;
     };
     const isPiecePlan = () => state.plan === 'piece';
+    const isBannerPlan = () => state.plan === 'banner';
     const isBusinessSwitchOn = () => Boolean(Number(state.ad?.isActive || 0));
     const isBusinessVisible = () => Boolean(Number(state.ad?.isCurrentlyVisible || 0));
     const isPieceSwitchOn = () => Boolean(Number(state.ad?.isPieceActive || 0));
     const isPieceVisible = () => Boolean(Number(state.ad?.isPieceCurrentlyVisible || 0));
-    const isSwitchOn = () => isPiecePlan() ? isPieceSwitchOn() : isBusinessSwitchOn();
-    const isVisible = () => isPiecePlan() ? isPieceVisible() : isBusinessVisible();
+    const isBannerSwitchOn = () => false;
+    const isBannerVisible = () => false;
+    const isSwitchOn = () => {
+        if (isPiecePlan()) return isPieceSwitchOn();
+        if (isBannerPlan()) return isBannerSwitchOn();
+        return isBusinessSwitchOn();
+    };
+    const isVisible = () => {
+        if (isPiecePlan()) return isPieceVisible();
+        if (isBannerPlan()) return isBannerVisible();
+        return isBusinessVisible();
+    };
     const activeBusinessPlanKey = () => (isBusinessSwitchOn() ? normalizePlanKey(state.ad?.planType) : null);
     const exposedBusinessPlanKey = () => (isBusinessVisible() ? normalizePlanKey(state.ad?.planType) : null);
     const lockedBusinessPlanKey = () => activeBusinessPlanKey() || exposedBusinessPlanKey();
-    const exposedPlanKey = () => (isVisible() ? (isPiecePlan() ? 'piece' : normalizePlanKey(state.ad?.planType)) : null);
+    const exposedPlanKey = () => {
+        if (!isVisible()) return null;
+        if (isPiecePlan()) return 'piece';
+        if (isBannerPlan()) return 'banner';
+        return normalizePlanKey(state.ad?.planType);
+    };
 
     const formatRemainingTime = (value, remainingSeconds) => {
         const serverRemainingSeconds = Number(remainingSeconds);
@@ -355,16 +371,17 @@
             statusBadge.alt = visible ? visiblePlan.badgeAlt : '미광고';
         }
         if (statusTitle) statusTitle.textContent = visible ? `${visiblePlan.name}가 노출 중입니다` : '노출 중인 광고가 없습니다';
-        const visibleActivatedUntil = isPiecePlan() ? state.ad?.pieceActivatedUntil : state.ad?.activatedUntil;
-        const visibleRemainingSeconds = isPiecePlan() ? state.ad?.pieceRemainingSeconds : state.ad?.remainingSeconds;
-        if (startDate) startDate.textContent = visible ? formatDateOnly(isPiecePlan() ? state.ad?.pieceActivatedAt : getActivationStartValue(state.ad, visiblePlan)) : '-';
+        const visibleActivatedUntil = isPiecePlan() ? state.ad?.pieceActivatedUntil : (isBannerPlan() ? null : state.ad?.activatedUntil);
+        const visibleRemainingSeconds = isPiecePlan() ? state.ad?.pieceRemainingSeconds : (isBannerPlan() ? null : state.ad?.remainingSeconds);
+        const visibleActivatedAt = isPiecePlan() ? state.ad?.pieceActivatedAt : (isBannerPlan() ? null : getActivationStartValue(state.ad, visiblePlan));
+        if (startDate) startDate.textContent = visible ? formatDateOnly(visibleActivatedAt) : '-';
         if (expireDate) expireDate.textContent = visible ? formatDateOnly(visibleActivatedUntil) : '-';
         if (remainingTime) remainingTime.textContent = visible ? formatRemainingTime(visibleActivatedUntil, visibleRemainingSeconds) : '활성화 대기 중';
         if (activationTitle) activationTitle.textContent = activationScopeText.title;
         if (activationNoteTitle) activationNoteTitle.textContent = activationScopeText.noteTitle;
         if (activationNoteDescription) activationNoteDescription.textContent = activationScopeText.noteDescription;
         if (activationPanel) {
-            activationPanel.classList.toggle('hidden', !visible);
+            activationPanel.classList.toggle('hidden', !visible || state.category === 'banner');
         }
         if (activationToggle) {
             activationToggle.disabled = !canToggle;
