@@ -117,6 +117,8 @@
     const noneBadgeImage = '/src/assets/ad-plan-badges/none-badge.png';
     const ACTIVATION_REQUIREMENT_MESSAGE = '사업자정보 또는 광고프로필이 등록 상태여야 광고를 활성화할 수 있습니다.';
 
+    const normalizeCategoryKey = (value) => ['business', 'piece', 'banner'].includes(value) ? value : 'business';
+
     const state = {
         category: 'business',
         plan: 'premium',
@@ -171,7 +173,6 @@
         return registrationStatus === 'REGISTERED' && approvalStatus === 'APPROVED';
     };
     const getPlanCategory = (planKey) => planKey === 'piece' || planKey === 'banner' ? planKey : 'business';
-    const normalizeCategoryKey = (value) => ['business', 'piece', 'banner'].includes(value) ? value : 'business';
     const selectCategory = (category) => {
         state.category = normalizeCategoryKey(category);
         if (state.category === 'piece') {
@@ -391,12 +392,10 @@
         state.ad = Array.isArray(adsResponse?.content) ? adsResponse.content[0] : null;
         state.businessProfile = businessProfileResponse || null;
         state.totalStamps = Number(stampResponse?.totalStamps || 0);
-        if (state.ad?.isPieceCurrentlyVisible || state.ad?.isPieceActive) {
-            state.plan = 'piece';
-            state.category = 'piece';
-        } else if (state.ad?.planType) {
+        if (state.category === 'business' && state.ad?.planType) {
             state.plan = normalizePlanKey(state.ad.planType);
-            state.category = getPlanCategory(state.plan);
+        } else {
+            selectCategory(state.category);
         }
         render();
     };
