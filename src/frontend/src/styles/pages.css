@@ -676,7 +676,8 @@
 }
 
 
-.business-directory-stamp-event-badge-image {
+.business-directory-stamp-event-badge-image,
+.business-directory-piece-badge-image {
     position: absolute;
     top: -6px;
     right: -4px;
@@ -687,6 +688,11 @@
     object-fit: contain;
     pointer-events: none;
     animation: business-directory-stamp-event-badge-blink 1s ease-in-out infinite;
+}
+
+.business-directory-piece-badge-image--left {
+    right: auto;
+    left: -4px;
 }
 
 @keyframes business-directory-stamp-event-badge-blink {
