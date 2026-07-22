@@ -774,13 +774,13 @@ const pageRegistry = {
 
                 <section class="ad-management-panel" aria-labelledby="ad-management-product-title">
                     <div class="ad-category-tabs" role="tablist" aria-label="광고 유형 선택">
-                        <button type="button" class="ad-category-tab is-active" role="tab" aria-selected="true" aria-controls="ad-business-product-panel" id="ad-business-tab">
+                        <button type="button" class="ad-category-tab is-active" data-category="business" role="tab" aria-selected="true" aria-controls="ad-business-product-panel" id="ad-business-tab">
                             업체광고
                         </button>
-                        <button type="button" class="ad-category-tab" role="tab" aria-selected="false">
+                        <button type="button" class="ad-category-tab" data-category="piece" role="tab" aria-selected="false" aria-controls="ad-business-product-panel">
                             조각제휴
                         </button>
-                        <button type="button" class="ad-category-tab" role="tab" aria-selected="false">
+                        <button type="button" class="ad-category-tab" data-category="banner" role="tab" aria-selected="false" aria-controls="ad-business-product-panel">
                             배너광고
                         </button>
                     </div>
@@ -792,28 +792,28 @@ const pageRegistry = {
                         </div>
                     </div>
                     <div class="ad-product-grid" role="tablist" aria-label="광고 상품 선택">
-                        <button type="button" class="ad-product-card is-active" data-plan="basic" role="tab" aria-selected="true">
+                        <button type="button" class="ad-product-card is-active" data-plan="basic" data-category="business" role="tab" aria-selected="true">
                             <img src="/src/assets/ad-plan-badges/basic-badge.png" alt="BASIC" class="ad-product-badge">
                             <strong>지역 목록 일반 노출</strong>
                             <span class="ad-product-divider"></span>
                             <span class="ad-product-radio" aria-hidden="true"></span>
                             <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 3일</b></span>
                         </button>
-                        <button type="button" class="ad-product-card" data-plan="plus" role="tab" aria-selected="false">
+                        <button type="button" class="ad-product-card" data-plan="plus" data-category="business" role="tab" aria-selected="false">
                             <img src="/src/assets/ad-plan-badges/plus-badge.png" alt="PLUS" class="ad-product-badge">
                             <strong>지역 상단 우선 노출</strong>
                             <span class="ad-product-divider"></span>
                             <span class="ad-product-radio" aria-hidden="true"></span>
                             <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 2일</b></span>
                         </button>
-                        <button type="button" class="ad-product-card" data-plan="premium" role="tab" aria-selected="false">
+                        <button type="button" class="ad-product-card" data-plan="premium" data-category="business" role="tab" aria-selected="false">
                             <img src="/src/assets/ad-plan-badges/premium-badge.png" alt="PREMIUM" class="ad-product-badge">
                             <strong>지역 상단 최우선 노출</strong>
                             <span class="ad-product-divider"></span>
                             <span class="ad-product-radio" aria-hidden="true"></span>
                             <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 1일</b></span>
                         </button>
-                        <button type="button" class="ad-product-card" data-plan="piece" role="tab" aria-selected="false">
+                        <button type="button" class="ad-product-card" data-plan="piece" data-category="piece" role="tab" aria-selected="false">
                             <img src="/src/assets/ad-plan-badges/piece-badge.png" alt="PIECE" class="ad-product-badge">
                             <strong>조각제휴 업체정보 노출</strong>
                             <span class="ad-product-divider"></span>
