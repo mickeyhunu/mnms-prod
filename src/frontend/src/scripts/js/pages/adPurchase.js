@@ -97,6 +97,7 @@
     const ACTIVATION_REQUIREMENT_MESSAGE = '사업자정보 또는 광고프로필이 등록 상태여야 광고를 활성화할 수 있습니다.';
 
     const state = {
+        category: 'business',
         plan: 'premium',
         ad: null,
         businessProfile: null,
@@ -147,6 +148,16 @@
         const registrationStatus = String(state.businessProfile?.registrationStatus || '').toUpperCase();
         const approvalStatus = String(state.businessProfile?.approvalStatus || '').toUpperCase();
         return registrationStatus === 'REGISTERED' && approvalStatus === 'APPROVED';
+    };
+    const getPlanCategory = (planKey) => planKey === 'piece' ? 'piece' : 'business';
+    const normalizeCategoryKey = (value) => ['business', 'piece', 'banner'].includes(value) ? value : 'business';
+    const selectCategory = (category) => {
+        state.category = normalizeCategoryKey(category);
+        if (state.category === 'piece') {
+            state.plan = 'piece';
+        } else if (state.category === 'business' && getPlanCategory(state.plan) !== 'business') {
+            state.plan = 'premium';
+        }
     };
     const isPiecePlan = () => state.plan === 'piece';
     const isSwitchOn = () => isPiecePlan() ? Boolean(Number(state.ad?.isPieceActive || 0)) : Boolean(Number(state.ad?.isActive || 0));
@@ -226,21 +237,27 @@
         }
         const currentPlan = plans[state.plan];
         if (!currentPlan) return;
+        if (lockedPlan) {
+            state.category = getPlanCategory(lockedPlan);
+        }
 
         tabs.forEach((tab) => {
             const planKey = normalizePlanKey(tab.dataset.plan || 'basic');
-            const isActive = planKey === state.plan;
+            const tabCategory = normalizeCategoryKey(tab.dataset.category || getPlanCategory(planKey));
+            const isInSelectedCategory = tabCategory === state.category;
+            const isActive = isInSelectedCategory && planKey === state.plan;
             const isDisabled = Boolean(lockedPlan && planKey !== lockedPlan);
+            tab.classList.toggle('hidden', !isInSelectedCategory);
             tab.classList.toggle('is-active', isActive);
             tab.classList.toggle('is-disabled', isDisabled);
-            tab.disabled = isDisabled;
+            tab.disabled = !isInSelectedCategory || isDisabled;
             tab.setAttribute('aria-selected', String(isActive));
-            tab.setAttribute('aria-disabled', String(isDisabled));
+            tab.setAttribute('aria-disabled', String(!isInSelectedCategory || isDisabled));
         });
 
         categoryTabs.forEach((tab) => {
-            const isPieceCategory = tab.textContent.includes('조각');
-            const isActiveCategory = isPieceCategory ? state.plan === 'piece' : state.plan !== 'piece';
+            const tabCategory = normalizeCategoryKey(tab.dataset.category);
+            const isActiveCategory = tabCategory === state.category;
             tab.classList.toggle('is-active', isActiveCategory);
             tab.setAttribute('aria-selected', String(isActiveCategory));
         });
@@ -262,7 +279,7 @@
         const businessProfileRegistered = isRegisteredBusinessProfile();
         const meetsActivationRequirements = registered && businessProfileRegistered;
         const canToggle = Boolean(state.ad?.id) && meetsActivationRequirements && !state.isSubmitting;
-        const canClickActivationButton = Boolean(state.ad?.id) && !state.isSubmitting && (!visible || checked);
+        const canClickActivationButton = state.category !== 'banner' && Boolean(state.ad?.id) && !state.isSubmitting && (!visible || checked);
 
         selectedProduct.textContent = currentPlan.name;
         stampCost.textContent = '스탬프 1개';
@@ -328,8 +345,10 @@
         state.totalStamps = Number(stampResponse?.totalStamps || 0);
         if (state.ad?.isPieceCurrentlyVisible || state.ad?.isPieceActive) {
             state.plan = 'piece';
+            state.category = 'piece';
         } else if (state.ad?.planType) {
             state.plan = normalizePlanKey(state.ad.planType);
+            state.category = getPlanCategory(state.plan);
         }
         render();
     };
@@ -368,13 +387,16 @@
             const lockedPlan = lockedPlanKey();
             if (lockedPlan && nextPlan !== lockedPlan) return;
             state.plan = nextPlan;
+            state.category = getPlanCategory(nextPlan);
             render();
         });
     });
 
     categoryTabs.forEach((tab) => {
         tab.addEventListener('click', () => {
-            state.plan = tab.textContent.includes('조각') ? 'piece' : 'premium';
+            const nextCategory = normalizeCategoryKey(tab.dataset.category);
+            if (lockedPlanKey() && nextCategory !== getPlanCategory(lockedPlanKey())) return;
+            selectCategory(nextCategory);
             render();
         });
     });
