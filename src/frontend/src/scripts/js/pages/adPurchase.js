@@ -37,6 +37,7 @@
             durationDays: 3,
             durationUnit: 'day',
             durationLabel: '3일',
+            stampCount: 1,
             badgeImage: '/src/assets/ad-plan-badges/basic-badge.png',
             badgeAlt: 'BASIC',
             features: [
@@ -52,27 +53,13 @@
             durationDays: 2,
             durationUnit: 'day',
             durationLabel: '2일',
+            stampCount: 1,
             badgeImage: '/src/assets/ad-plan-badges/plus-badge.png',
             badgeAlt: 'PLUS',
             features: [
                 { text: '스탬프 1개로 업체정보 2일 노출', enabled: true },
                 { text: '1일 점프 9개', enabled: true },
                 { text: '베이직보다 높은 광고 등급으로 표시', enabled: true },
-            ]
-        },
-        piece: {
-            code: 'PIECE',
-            name: '조각제휴 광고',
-            headline: '조각제휴 업체정보 노출',
-            durationDays: 2,
-            durationUnit: 'day',
-            durationLabel: '2일',
-            badgeImage: '/src/assets/ad-plan-badges/piece-badge.png',
-            badgeAlt: 'PIECE',
-            features: [
-                { text: '스탬프 1개로 조각 제휴업체에 업체정보 2일 노출', enabled: true },
-                { text: '조각제휴 자동연장을 광고별로 별도 관리', enabled: true },
-                { text: '기간 만료 시 스탬프 1개로 자동연장 가능', enabled: true },
             ]
         },
         premium: {
@@ -82,6 +69,7 @@
             durationDays: 1,
             durationUnit: 'day',
             durationLabel: '1일',
+            stampCount: 1,
             badgeImage: '/src/assets/ad-plan-badges/premium-badge.png',
             badgeAlt: 'PREMIUM',
             features: [
@@ -89,6 +77,36 @@
                 { text: '1일 점프 12개', enabled: true },
                 { text: '활성화 기간동안 1일 1회 홍보게시글 작성 가능', enabled: true },
                 { text: '지역 상단 우선 노출 대상', enabled: true },
+            ]
+        },
+        piece: {
+            code: 'PIECE',
+            name: '조각제휴 광고',
+            headline: '조각제휴 업체정보 노출',
+            durationDays: 2,
+            durationUnit: 'day',
+            durationLabel: '2일',
+            stampCount: 1,
+            badgeImage: '/src/assets/ad-plan-badges/piece-badge.png',
+            badgeAlt: 'PIECE',
+            features: [
+                { text: '스탬프 1개로 조각 제휴업체에 업체정보 2일 노출', enabled: true },
+                { text: '조각제휴 자동연장을 광고별로 별도 관리', enabled: true },
+                { text: '기간 만료 시 스탬프 1개로 자동연장 가능', enabled: true },
+            ]
+        },
+        banner: {
+            code: 'BANNER',
+            name: '배너 광고',
+            headline: '배너광고 노출',
+            durationDays: 1,
+            durationUnit: 'day',
+            durationLabel: '1일',
+            stampCount: 1,
+            badgeImage: '/src/assets/ad-plan-badges/none-badge.png',
+            badgeAlt: 'BANNER',
+            features: [
+                { text: '플랜별 스탬프 갯수로 배너광고 노출', enabled: true },
             ]
         }
     };
@@ -149,15 +167,27 @@
         const approvalStatus = String(state.businessProfile?.approvalStatus || '').toUpperCase();
         return registrationStatus === 'REGISTERED' && approvalStatus === 'APPROVED';
     };
-    const getPlanCategory = (planKey) => planKey === 'piece' ? 'piece' : 'business';
+    const getPlanCategory = (planKey) => planKey === 'piece' || planKey === 'banner' ? planKey : 'business';
     const normalizeCategoryKey = (value) => ['business', 'piece', 'banner'].includes(value) ? value : 'business';
     const selectCategory = (category) => {
         state.category = normalizeCategoryKey(category);
         if (state.category === 'piece') {
             state.plan = 'piece';
+        } else if (state.category === 'banner') {
+            state.plan = 'banner';
         } else if (state.category === 'business' && getPlanCategory(state.plan) !== 'business') {
             state.plan = 'premium';
         }
+    };
+    const getPlanStampCount = (plan) => Math.max(1, Number(plan?.stampCount || 1));
+    const getActivationProductName = () => {
+        if (state.category === 'piece') return '조각제휴광고';
+        if (state.category === 'banner') return '배너광고';
+        return '업체광고';
+    };
+    const getActivationButtonLabel = (plan, { visible, checked }) => {
+        if (visible) return checked ? '자동연장 끄기' : '기간 만료 후 중지 예정';
+        return `⚡ ${getPlanStampCount(plan).toLocaleString('ko-KR')} 스탬프 사용하고 ${getActivationProductName()} 시작하기`;
     };
     const isPiecePlan = () => state.plan === 'piece';
     const isBusinessSwitchOn = () => Boolean(Number(state.ad?.isActive || 0));
@@ -303,7 +333,7 @@
         if (estimatedRunUntil) estimatedRunUntil.textContent = estimatedUntilText;
         if (activationStampBalance) activationStampBalance.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         if (activationBenefitTitle) activationBenefitTitle.textContent = `${currentPlan.name}를 활성화하면`;
-        if (activationButton) activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '기간 만료 후 중지 예정') : `⚡ 1 스탬프 사용하고 ${isPiecePlan() ? '조각제휴 광고' : '광고'} 시작하기`;
+        if (activationButton) activationButton.textContent = getActivationButtonLabel(currentPlan, { visible, checked });
 
         const visiblePlan = plans[exposedPlanKey()] || currentPlan;
         if (statusBadge) {
@@ -330,7 +360,7 @@
 
         if (activationButton) {
             activationButton.disabled = !canClickActivationButton;
-            activationButton.textContent = visible ? (checked ? '자동연장 끄기' : '기간 만료 후 중지 예정') : `⚡ 1 스탬프 사용하고 ${isPiecePlan() ? '조각제휴 광고' : '광고'} 시작하기`;
+            activationButton.textContent = getActivationButtonLabel(currentPlan, { visible, checked });
         }
     };
 
