@@ -773,6 +773,23 @@ const pageRegistry = {
                 </section>
 
                 <section class="ad-management-panel" aria-labelledby="ad-management-product-title">
+                    <div class="ad-category-tabs" role="tablist" aria-label="광고 유형 선택">
+                        <button type="button" class="ad-category-tab is-active" role="tab" aria-selected="true" aria-controls="ad-business-product-panel" id="ad-business-tab">
+                            업체광고
+                        </button>
+                        <button type="button" class="ad-category-tab is-coming-soon" role="tab" aria-selected="false" aria-disabled="true" disabled>
+                            <span>조각광고</span>
+                            <small>준비중</small>
+                        </button>
+                        <button type="button" class="ad-category-tab is-coming-soon" role="tab" aria-selected="false" aria-disabled="true" disabled>
+                            <span>배너광고</span>
+                            <small>준비중</small>
+                        </button>
+                    </div>
+                    <div class="ad-category-coming-soon-note" aria-live="polite">
+                        조각광고와 배너광고 상품은 준비중입니다.
+                    </div>
+                    <div id="ad-business-product-panel" role="tabpanel" aria-labelledby="ad-business-tab">
                     <div class="ad-management-section-title-row">
                         <div>
                             <h2 id="ad-management-product-title">상품 선택</h2>
@@ -811,6 +828,7 @@ const pageRegistry = {
                     </div>
                     <div class="ad-activation-action">
                         <button type="button" class="ad-management-start-btn" id="ad-purchase-submit" disabled>⚡ 1 스탬프 사용하고 광고 시작하기</button>
+                    </div>
                     </div>
                 </section>
 
