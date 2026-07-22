@@ -2258,27 +2258,6 @@
     font-weight: 800;
 }
 
-.ad-management-notice {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 24px 0 0;
-    padding: 15px 20px;
-    border: 1px solid #fde68a;
-    border-radius: 10px;
-    background: #fffbeb;
-    color: #92400e;
-}
-
-.ad-management-notice > span[aria-hidden],
-.ad-management-notice b {
-    align-self: center;
-}
-
-.ad-management-notice b {
-    flex-shrink: 0;
-    white-space: nowrap;
-}
 
 .ad-activation-panel {
     display: grid;
@@ -2560,14 +2539,6 @@
     font-size: 13px;
 }
 
-.ad-management-notice {
-    align-items: flex-start;
-    gap: 8px;
-    margin-top: 12px;
-    padding: 10px 12px;
-    font-size: 12px;
-    line-height: 1.45;
-}
 
 .ad-activation-panel {
     padding-bottom: 0;
