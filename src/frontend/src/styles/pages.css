@@ -690,9 +690,9 @@
     animation: business-directory-stamp-event-badge-blink 1s ease-in-out infinite;
 }
 
-.business-directory-piece-badge-image--left {
+.business-directory-piece-badge-image--right {
     right: auto;
-    left: -4px;
+    right: 54px;
 }
 
 @keyframes business-directory-stamp-event-badge-blink {
