@@ -573,6 +573,7 @@ function sanitizePostForViewer(post, currentUser = null) {
     isNotice: Boolean(post.isNotice),
     isPinned: Boolean(post.isPinned),
     isHidden: Boolean(post.isHidden),
+    isDeleted: Boolean(post.isDeleted || post.is_deleted),
     noticeType: parseNoticeType(post.noticeType),
     noticeTargetBoards: Array.isArray(post.noticeTargetBoards) ? post.noticeTargetBoards.map((board) => parseBoardType(board)) : []
   };
@@ -672,7 +673,7 @@ async function listPosts(req, res, next) {
     const keyword = typeof req.query.keyword === 'string' ? req.query.keyword.trim() : '';
     const searchType = typeof req.query.search === 'string' ? req.query.search : 'bbs_title';
     const boardType = parseBoardType(req.query.boardType || 'ALL');
-    const { rows, total } = await postModel.listPosts(page, size, { keyword, searchType, boardType });
+    const { rows, total } = await postModel.listPosts(page, size, { keyword, searchType, boardType, includeDeleted: isAdminViewer(req.user) });
     const normalizedRows = rows.map((item) => attachPostDetailUrl(req, sanitizePostForViewer(item, req.user)));
     res.json({ content: normalizedRows, totalElements: total, page, size, totalPages: Math.ceil(total / size) });
   } catch (error) {
@@ -695,7 +696,8 @@ async function searchPostsBySignal(req, res, next) {
     const { rows, total } = await postModel.listPosts(pagination.page, pagination.size, {
       keyword,
       searchType: 'bbs_title',
-      boardType
+      boardType,
+      includeDeleted: isAdminViewer(req.user)
     });
     const normalizedRows = rows.map((item) => attachPostDetailUrl(req, sanitizePostForViewer(item, req.user)));
 
@@ -735,7 +737,7 @@ async function resolvePostIdForDetail(req) {
   const slug = String(req.params.slug || '').trim();
   if (!slug) return null;
 
-  const post = await postModel.findPostDetailBySlug(slug);
+  const post = await postModel.findPostDetailBySlug(slug, { includeDeleted: isAdminViewer(req.user) });
   return post?.id || null;
 }
 
@@ -752,13 +754,13 @@ async function getPost(req, res, next) {
     const postId = await resolvePostIdForDetail(req);
     if (!postId) return res.status(400).json({ message: '유효하지 않은 게시글 주소입니다.' });
 
-    const post = await postModel.findPostById(postId);
+    const post = await postModel.findPostById(postId, { includeDeleted: isAdminViewer(req.user) });
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
     if (!ensurePostAccessible(post, res)) return;
 
     await postModel.incrementPostViewCount(postId);
 
-    const postDetail = await postModel.findPostDetailById(postId);
+    const postDetail = await postModel.findPostDetailById(postId, { includeDeleted: isAdminViewer(req.user) });
     const comments = annotateSecretThreadOwnerIds(await postModel.listComments(postId));
     const visibleComments = comments.map((comment) => sanitizeCommentForViewer(comment, post, req.user));
     const adjacentPosts = await postModel.findAdjacentPosts(postId);
@@ -1183,13 +1185,9 @@ async function deletePost(req, res, next) {
       await revokePointByAction(post.user_id, 'CREATE_REVIEW_BONUS');
     }
 
-    const imageUrls = extractImageUrlsFromPost(post);
-
-    await postModel.deletePostLikesByPostId(postId);
+    await postModel.clearPostLikePointAwardsByPostId(postId);
     await postModel.markCommentsDeletedByPostId(postId);
-    await postModel.deletePost(postId);
-
-    await deleteS3ObjectsByUrls(imageUrls);
+    await postModel.deletePost(postId, req.user.id);
 
     res.json({ success: true });
   } catch (error) {
