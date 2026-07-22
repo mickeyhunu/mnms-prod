@@ -2345,8 +2345,8 @@
 
 .ad-management-safe-note {
     grid-column: 1 / -1;
-    margin: 22px -26px 0;
-    padding: 22px 30px;
+    margin: 10px -14px 0;
+    padding: 14px;
     border-top: 1px solid #e2e8f0;
     background: #f8fafc;
     color: #64748b;
@@ -2600,11 +2600,6 @@
     padding: 12px 14px;
     border-radius: 12px;
     font-size: 15px;
-}
-
-.ad-management-safe-note {
-    margin: 10px -14px 0;
-    padding: 14px;
 }
 
 .ad-activation-panel .ad-profile-map-toggle-help {
