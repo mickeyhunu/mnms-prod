@@ -780,7 +780,7 @@ const pageRegistry = {
                         <span class="ad-activation-switch-text">ON</span>
                         <span class="sr-only" id="ad-purchase-activation-toggle-label">자동연장 OFF</span>
                     </label>
-                    <p class="ad-management-safe-note"><span aria-hidden="true">🔒</span><b id="ad-activation-note-title">업체광고 자동연장</b><br><span id="ad-activation-note-description">자동연장 ON 시 업체광고가 계속 노출되도록 기간 종료마다 스탬프 1개가 자동 소모됩니다.</span></p>
+                    <p class="ad-management-safe-note"><span aria-hidden="true">🔒</span><b id="ad-activation-note-title">업체광고 자동연장</b><br><span id="ad-activation-note-description">자동연장 ON 시 업체광고가 계속 노출되도록 기간 종료마다 스탬프 1개가 자동 소모됩니다.</span><br><span id="ad-activation-note-description">자동연장 ON 상태에서 보유 스탬프가 0개이면 자동연장이 OFF되고 현재 활성화된 광고 기간 종료 후 노출이 중지됩니다.</span></p>
                 </section>
 
                 <section class="ad-management-panel" aria-labelledby="ad-management-product-title">
