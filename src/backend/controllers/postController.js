@@ -11,6 +11,7 @@ const {
   uploadDataUrlToS3
 } = require('../utils/fileUpload');
 const { createSeoSlugWithId } = require('../utils/seoSlug');
+const { resolveMemberLevel } = require('../utils/memberLevel');
 
 const BOARD_TYPES = postModel.BOARD_TYPES || {
   FREE: 'FREE',
@@ -27,6 +28,8 @@ const BOARD_TYPES = postModel.BOARD_TYPES || {
 const DEFAULT_PAGE = 0;
 const DEFAULT_SIZE = 10;
 const MAX_SIZE = 100;
+const PIECE_MINIMUM_MEMBER_LEVEL = 3;
+const PIECE_MINIMUM_TOTAL_POINTS = 400;
 const BOARD_LABEL_ALIASES = {
   전체: 'ALL',
   all: 'ALL',
@@ -226,6 +229,19 @@ function isRegularMember(user) {
   const role = String(user?.role || '').toUpperCase();
   const memberType = String(user?.member_type || user?.memberType || '').toUpperCase();
   return role !== 'ADMIN' && role !== 'BUSINESS' && memberType !== 'BUSINESS';
+}
+
+function canUsePieceBoard(user) {
+  if (!user) return false;
+  if (String(user.role || '').toUpperCase() === 'ADMIN') return true;
+
+  const totalPoints = Number(user.total_points ?? user.totalPoints ?? 0);
+  const memberLevel = resolveMemberLevel(totalPoints);
+  return totalPoints >= PIECE_MINIMUM_TOTAL_POINTS || memberLevel.level >= PIECE_MINIMUM_MEMBER_LEVEL;
+}
+
+function getPieceBoardRestrictionMessage(actionLabel) {
+  return `조각 ${actionLabel}은 3레벨(단골) 이상 또는 400포인트 이상 회원만 이용할 수 있습니다.`;
 }
 
 function isBusinessAuthorSnapshot(record) {
@@ -833,6 +849,9 @@ async function joinPiece(req, res, next) {
     if (!isRegularMember(req.user)) {
       return res.status(403).json({ message: '조각은 일반회원만 참여할 수 있습니다.' });
     }
+    if (!canUsePieceBoard(req.user)) {
+      return res.status(403).json({ message: getPieceBoardRestrictionMessage('참여') });
+    }
     if (Number(post.user_id) === Number(req.user.id)) {
       return res.status(400).json({ message: '조각장은 이미 참여중입니다.' });
     }
@@ -986,6 +1005,10 @@ async function createPost(req, res, next) {
       }
     }
     if (boardType === BOARD_TYPES.PIECE) {
+      if (!canUsePieceBoard(req.user)) {
+        return res.status(403).json({ message: getPieceBoardRestrictionMessage('게시글 작성') });
+      }
+
       const pieceValidationError = validatePiecePostContent(content);
       if (pieceValidationError) return res.status(400).json({ message: pieceValidationError });
     }
