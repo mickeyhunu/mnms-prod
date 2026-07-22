@@ -106,9 +106,11 @@ async function listPosts(page = 0, size = 10, options = {}) {
   const searchType = options.searchType || 'bbs_title';
   const boardFilter = normalizeBoardFilter(options.boardType);
 
-  const whereConditions = [
-    'p.is_deleted = 0'
-  ];
+  const includeDeleted = Boolean(options.includeDeleted);
+  const whereConditions = [];
+  if (!includeDeleted) {
+    whereConditions.push('p.is_deleted = 0');
+  }
   const whereParams = [];
 
   if (boardFilter === 'ALL') {
@@ -142,7 +144,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
     }
   }
 
-  const whereClause = `WHERE ${whereConditions.join(' AND ')}`;
+  const whereClause = whereConditions.length ? `WHERE ${whereConditions.join(' AND ')}` : "";
 
   const [[countRows], [rows]] = await Promise.all([
     pool.query(
@@ -155,7 +157,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
       `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
               p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
               p.notice_target_boards AS noticeTargetBoards,
-              p.is_hidden AS isHidden, p.piece_closed_at AS pieceClosedAt,
+              p.is_hidden AS isHidden, p.is_deleted AS isDeleted, p.deleted_at AS deletedAt, p.deleted_by AS deletedBy, p.piece_closed_at AS pieceClosedAt,
               p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
               COALESCE(p.author_nickname_snapshot, u.nickname, '비회원') AS authorNickname,
               COALESCE(p.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
@@ -354,9 +356,13 @@ async function createPost({ userId, title, content, imageUrls = [], boardType = 
   return result.insertId;
 }
 
-async function findPostById(id) {
+async function findPostById(id, options = {}) {
   const pool = getPool();
-  const [rows] = await pool.query('SELECT * FROM posts WHERE id = ? AND is_deleted = 0', [id]);
+  const includeDeleted = Boolean(options.includeDeleted);
+  const [rows] = await pool.query(
+    `SELECT * FROM posts WHERE id = ?${includeDeleted ? '' : ' AND is_deleted = 0'}`,
+    [id]
+  );
   return rows[0] || null;
 }
 
@@ -367,13 +373,14 @@ async function findPostByIdIncludingDeleted(id) {
 }
 
 
-async function findPostDetailById(id) {
+async function findPostDetailById(id, options = {}) {
   const pool = getPool();
+  const includeDeleted = Boolean(options.includeDeleted);
   const [rows] = await pool.query(
     `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
             p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned,
             p.notice_target_boards AS noticeTargetBoards,
-            p.is_hidden AS isHidden, p.piece_closed_at AS pieceClosedAt,
+            p.is_hidden AS isHidden, p.is_deleted AS isDeleted, p.deleted_at AS deletedAt, p.deleted_by AS deletedBy, p.piece_closed_at AS pieceClosedAt,
             p.view_count AS viewCount, p.image_urls AS imageUrls, p.created_at AS createdAt, p.updated_at AS updatedAt,
             COALESCE(p.author_nickname_snapshot, u.nickname, '비회원') AS authorNickname,
             COALESCE(p.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
@@ -406,7 +413,7 @@ async function findPostDetailById(id) {
             (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
      LEFT JOIN users u ON u.id = p.user_id
-     WHERE p.id = ? AND p.is_deleted = 0`,
+     WHERE p.id = ?${includeDeleted ? '' : ' AND p.is_deleted = 0'}`,
     [id]
   );
   return rows[0]
@@ -418,13 +425,14 @@ async function findPostDetailById(id) {
 }
 
 
-async function findPostDetailBySlug(slug) {
+async function findPostDetailBySlug(slug, options = {}) {
   const normalizedSlug = normalizeSeoSlug(slug);
   if (!normalizedSlug) return null;
+  const includeDeleted = Boolean(options.includeDeleted);
 
   const slugId = extractTrailingSlugId(normalizedSlug);
   if (slugId) {
-    const postById = await findPostDetailById(slugId);
+    const postById = await findPostDetailById(slugId, { includeDeleted });
     if (postById) {
       return postById;
     }
@@ -434,12 +442,12 @@ async function findPostDetailBySlug(slug) {
   const [rows] = await pool.query(
     `SELECT id, title
        FROM posts
-      WHERE is_deleted = 0
+      WHERE ${includeDeleted ? '1 = 1' : 'is_deleted = 0'}
       ORDER BY id DESC
       LIMIT 5000`
   );
   const match = rows.find((row) => normalizeSeoSlug(row.title) === normalizedSlug);
-  return match ? findPostDetailById(match.id) : null;
+  return match ? findPostDetailById(match.id, { includeDeleted }) : null;
 }
 
 
@@ -540,9 +548,18 @@ async function setPostHidden(id, isHidden) {
   await pool.query('UPDATE posts SET is_hidden = ? WHERE id = ?', [isHidden ? 1 : 0, id]);
 }
 
-async function deletePost(id) {
+async function deletePost(id, deletedBy = null) {
   const pool = getPool();
-  await pool.query("UPDATE posts SET is_deleted = 1, title = '[삭제된 게시글]', content = '삭제된 게시글입니다.' WHERE id = ?", [id]);
+  await pool.query(
+    `UPDATE posts
+        SET is_deleted = 1,
+            deleted_at = COALESCE(deleted_at, NOW()),
+            deleted_by = COALESCE(deleted_by, ?),
+            create_point_awarded = 0,
+            review_bonus_point_awarded = 0
+      WHERE id = ?`,
+    [deletedBy || null, id]
+  );
 }
 
 async function updatePostPointAwards(id, { createPointAwarded, reviewBonusPointAwarded }) {
@@ -803,9 +820,9 @@ async function listPointAwardedLikesByPostId(postId) {
   return rows;
 }
 
-async function deletePostLikesByPostId(postId) {
+async function clearPostLikePointAwardsByPostId(postId) {
   const pool = getPool();
-  await pool.query('DELETE FROM post_likes WHERE post_id = ?', [postId]);
+  await pool.query('UPDATE post_likes SET liker_point_awarded = 0, author_point_awarded = 0 WHERE post_id = ?', [postId]);
 }
 
 async function markCommentsDeletedByPostId(postId) {
@@ -912,7 +929,7 @@ module.exports = {
   updatePostLikePointAwards,
   listPointAwardedCommentsByPostId,
   listPointAwardedLikesByPostId,
-  deletePostLikesByPostId,
+  clearPostLikePointAwardsByPostId,
   markCommentsDeletedByPostId,
   countPieceParticipants,
   closePiecePost,

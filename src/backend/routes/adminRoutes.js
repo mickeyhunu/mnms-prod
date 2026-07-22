@@ -95,7 +95,7 @@ router.get('/stats/dashboard', async (req, res, next) => {
 
 router.get('/posts', async (req, res, next) => {
   try {
-    const { rows, total } = await postModel.listPosts(0, 10000, { boardType: 'ALL' });
+    const { rows, total } = await postModel.listPosts(0, 10000, { boardType: 'ALL', includeDeleted: true });
     const content = rows.map((post) => revealAnonymousAuthorForAdmin(post));
     res.json({ content, totalElements: total });
   } catch (error) {
@@ -146,7 +146,7 @@ router.delete('/posts/:id', async (req, res, next) => {
       }
     }
 
-    await postModel.deletePost(id);
+    await postModel.deletePost(id, req.user?.id || null);
     res.json({ success: true });
   } catch (error) {
     next(error);
