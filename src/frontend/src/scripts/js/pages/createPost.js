@@ -1024,7 +1024,7 @@ async function handleSubmit(event) {
     }
 
     if (boardType === 'PIECE' && !canCurrentUserUsePieceBoard()) {
-        alert('조각 게시글 작성은 3레벨(단골) 이상 또는 400포인트 이상 회원만 이용할 수 있습니다.');
+        alert('조각 게시글 작성은 3레벨(단골) 이상 회원만 이용할 수 있습니다.');
         return;
     }
 

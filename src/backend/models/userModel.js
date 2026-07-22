@@ -362,7 +362,7 @@ async function getUserNotifications(userId, { limit = 50 } = {}) {
          NULL AS content,
          pp.created_at AS createdAt,
          COALESCE(u.nickname, '회원') AS actorNickname,
-         CONCAT('내 조각글 "', p.title, '"에 ', COALESCE(u.nickname, '회원'), '님이 참여했습니다.') AS message
+         CONCAT('내 조각글 "', p.title, '"에 @', COALESCE(u.nickname, '회원'), '님이 참여했습니다.') AS message
        FROM piece_participants pp
        INNER JOIN posts p ON p.id = pp.post_id
        LEFT JOIN users u ON u.id = pp.user_id
