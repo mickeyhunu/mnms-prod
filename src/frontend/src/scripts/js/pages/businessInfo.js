@@ -438,7 +438,7 @@ function renderBusinessAds(ads) {
                     ${isNewAd ? `<img class="business-directory-new-badge-image" src="${BUSINESS_DIRECTORY_NEW_BADGE_IMAGE_URL}" alt="신규 광고" loading="eager" decoding="async">` : ''}
                 </div>
                 ${hasStampEvent ? `<img class="business-directory-stamp-event-badge-image" src="${BUSINESS_DIRECTORY_STAMP_EVENT_BADGE_IMAGE_URL}" alt="스탬프 이벤트 진행중" loading="eager" decoding="async">` : ''}
-                ${hasPieceAd ? `<img class="business-directory-piece-badge-image${hasStampEvent ? ' business-directory-piece-badge-image--left' : ''}" src="${BUSINESS_DIRECTORY_PIECE_BADGE_IMAGE_URL}" alt="조각제휴 활성화" loading="eager" decoding="async">` : ''}
+                ${hasPieceAd ? `<img class="business-directory-piece-badge-image${hasStampEvent ? ' business-directory-piece-badge-image--right' : ''}" src="${BUSINESS_DIRECTORY_PIECE_BADGE_IMAGE_URL}" alt="조각제휴 활성화" loading="eager" decoding="async">` : ''}
                 <div class="business-directory-main">
                     <div class="business-directory-meta">
                         <span class="business-directory-manager">${advertiserMeta}</span>
