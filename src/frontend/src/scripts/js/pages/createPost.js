@@ -16,6 +16,8 @@ const DIRECT_UPLOAD_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'imag
 const PIECE_TEMPLATE_START = '<!-- PIECE_TEMPLATE_START -->';
 const PIECE_TEMPLATE_END = '<!-- PIECE_TEMPLATE_END -->';
 const WRITABLE_BOARD_TYPES = new Set(['FREE', 'ANON', 'REVIEW', 'STORY', 'PIECE', 'ATTENDANCE', 'QUESTION', 'EVENT', 'PROMOTION']);
+const PIECE_MINIMUM_MEMBER_LEVEL = 3;
+const PIECE_MINIMUM_TOTAL_POINTS = 400;
 
 const PIECE_LOCATION_FALLBACK_CITY = '서울';
 const PIECE_LOCATION_FALLBACK_DISTRICT = '강남구';
@@ -59,6 +61,13 @@ function getSelectedBoardType() {
 
 function isPieceBoardSelected() {
     return getSelectedBoardType() === 'PIECE';
+}
+
+function canCurrentUserUsePieceBoard() {
+    const currentUser = Auth.getUser();
+    const totalPoints = Number(currentUser?.totalPoints ?? currentUser?.total_points ?? 0);
+    const level = Number(currentUser?.level || 0);
+    return totalPoints >= PIECE_MINIMUM_TOTAL_POINTS || level >= PIECE_MINIMUM_MEMBER_LEVEL;
 }
 
 
@@ -1011,6 +1020,11 @@ async function handleSubmit(event) {
     if (!boardType) {
         alert('게시판을 선택해주세요.');
         boardTypeSelect?.focus();
+        return;
+    }
+
+    if (boardType === 'PIECE' && !canCurrentUserUsePieceBoard()) {
+        alert('조각 게시글 작성은 3레벨(단골) 이상 또는 400포인트 이상 회원만 이용할 수 있습니다.');
         return;
     }
 
