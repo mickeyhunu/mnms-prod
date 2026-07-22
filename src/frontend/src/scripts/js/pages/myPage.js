@@ -1037,6 +1037,7 @@ function formatStampActionLabel(actionType) {
         BUSINESS_AD_BASIC: '베이직 광고 활성화',
         BUSINESS_AD_PLUS: '플러스 광고 활성화',
         BUSINESS_AD_PREMIUM: '프리미엄 광고 활성화',
+        BUSINESS_AD_PIECE: '조각제휴 광고 활성화',
         ADMIN_ADJUST_ADD: '관리자 수동 적립',
         ADMIN_ADJUST_DEDUCT: '관리자 수동 차감',
         EXPIRED: '유효기간 만료'
@@ -1139,6 +1140,11 @@ function renderStampSummary(totalStamps = 0, options = {}) {
     `;
 }
 
+function formatStampHistoryReason(item = {}) {
+    if (item.actionType === 'BUSINESS_AD_PIECE') return '조각제휴 광고 활성화';
+    return item.reason || '';
+}
+
 function renderStampHistoryList(stampHistories = []) {
     if (!stampHistories.length) {
         return '<div class="no-data">스탬프 내역이 없습니다.</div>';
@@ -1151,12 +1157,13 @@ function renderStampHistoryList(stampHistories = []) {
                 const amountClass = amountValue >= 0 ? 'plus' : 'minus';
                 const amountText = `${amountValue >= 0 ? '+' : ''}${amountValue.toLocaleString()}개`;
                 const sourceText = item.sourceLabel ? `<p>${sanitizeHTML(item.sourceLabel)}</p>` : '';
+                const reasonText = formatStampHistoryReason(item);
                 return `
                     <div class="mypage-point-history-row">
                         <div>
                             <strong>${sanitizeHTML(item.actionLabel || formatStampActionLabel(item.actionType || ''))}</strong>
                             ${sourceText}
-                            ${item.reason ? `<p>${sanitizeHTML(item.reason)}</p>` : ''}
+                            ${reasonText ? `<p>${sanitizeHTML(reasonText)}</p>` : ''}
                             <p>${sanitizeHTML(formatDate(item.createdAt))}</p>
                         </div>
                         <span class="point-change ${amountClass}">${amountText}</span>
