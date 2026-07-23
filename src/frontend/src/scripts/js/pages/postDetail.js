@@ -13,6 +13,8 @@ let currentCommentById = new Map();
 let shareSheetOpen = false;
 const POST_DETAIL_DEFAULT_DESCRIPTION = '미드나잇 맨즈 커뮤니티 게시글 상세 페이지입니다.';
 const DEFAULT_PROFILE_IMAGE_URL = '/src/assets/image/img_profile.png';
+const COMMUNITY_KAKAO_SHARE_TITLE = '미드나잇 맨즈 커뮤니티';
+const COMMUNITY_KAKAO_SHARE_IMAGE_URL = 'https://nightmens.com/src/assets/live-avatars/brand-logo3.png';
 const PIECE_MINIMUM_MEMBER_LEVEL = 3;
 const PIECE_MINIMUM_TOTAL_POINTS = 400;
 
@@ -1130,22 +1132,32 @@ function getShareData() {
 }
 
 function createPostKakaoShareTemplate({ title, url }) {
-    const imageUrl = document.querySelector('meta[property="og:image"]')?.content || undefined;
+    const attachedImageUrl = Array.isArray(currentPostDetail?.imageUrls)
+        ? currentPostDetail.imageUrls.find((image) => String(image || '').trim())
+        : currentPostDetail?.imageUrl;
+    const imageUrl = attachedImageUrl || COMMUNITY_KAKAO_SHARE_IMAGE_URL;
 
     return {
         objectType: 'feed',
         content: {
-            title,
-            description: '게시글을 공유합니다.',
+            title: COMMUNITY_KAKAO_SHARE_TITLE,
+            description: `${title} - 보러가기\n${url}`,
             imageUrl,
+            imageWidth: 1200,
+            imageHeight: 630,
             link: {
                 mobileWebUrl: url,
                 webUrl: url
             }
         },
+        social: {
+            commentCount: Number(currentPostDetail?.commentCount || document.getElementById('comment-count')?.textContent || 0),
+            viewCount: Number(currentPostDetail?.viewCount || 0),
+            likeCount: Number(currentPostDetail?.likeCount || 0)
+        },
         buttons: [
             {
-                title: '게시글 보기',
+                title: '게시글 보러가기',
                 link: {
                     mobileWebUrl: url,
                     webUrl: url
@@ -1191,7 +1203,7 @@ async function handleKakaoShare() {
             title: shareData.title,
             description: shareData.text,
             url: shareData.url,
-            buttonTitle: '게시글 보기',
+            buttonTitle: '게시글 보러가기',
             templateObject: shareData.kakaoTemplateObject
         });
         closeShareSheet();

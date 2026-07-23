@@ -1,4 +1,6 @@
 (function () {
+  const RBTI_KAKAO_SHARE_TITLE = '미드나잇 맨즈 커뮤니티';
+  const RBTI_KAKAO_SHARE_IMAGE_URL = 'https://nightmens.com/src/assets/rbti-avatars/16rbti.png';
   let shareSheetOpen = false;
   const state = {
     questions: [],
@@ -403,14 +405,14 @@
   }
 
   function createRbtiKakaoShareTemplate({ title, url }) {
-    const imageUrl = document.querySelector('meta[property="og:image"]')?.content || undefined;
-
     return {
       objectType: 'feed',
       content: {
-        title,
-        description: 'RBTI 페이지를 공유합니다.',
-        imageUrl,
+        title: RBTI_KAKAO_SHARE_TITLE,
+        description: `RBTI 룸MBTI 테스트 - 검사하러가기\n${url}`,
+        imageUrl: RBTI_KAKAO_SHARE_IMAGE_URL,
+        imageWidth: 1200,
+        imageHeight: 630,
         link: {
           mobileWebUrl: url,
           webUrl: url
@@ -418,7 +420,7 @@
       },
       buttons: [
         {
-          title: 'RBTI 보기',
+          title: '테스트 하러가기',
           link: {
             mobileWebUrl: url,
             webUrl: url
@@ -460,7 +462,7 @@
         title: shareData.title,
         description: shareData.text,
         url: shareData.url,
-        buttonTitle: 'RBTI 보기',
+        buttonTitle: '테스트 하러가기',
         templateObject: shareData.kakaoTemplateObject
       });
       closeShareSheet();
