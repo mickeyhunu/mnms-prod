@@ -15,6 +15,8 @@ const LIVE_REFRESH_INTERVAL_MS = 30000;
 const LIVE_HISTORY_TOP_THRESHOLD_PX = 160;
 const LIVE_BOTTOM_BUTTON_THRESHOLD_PX = 220;
 const LIVE_AVATAR_IMAGE_BASE_PATH = '/src/assets/live-avatars';
+const LIVE_KAKAO_SHARE_TITLE = '미드나잇 맨즈 커뮤니티';
+const LIVE_KAKAO_SHARE_IMAGE_URL = 'https://nightmens.com/src/assets/live-avatars/brand-logo3.png';
 const LIVE_AD_AUTOPLAY_INTERVAL_MS = 5000;
 const LIVE_LEVEL_BADGE_TOKEN_PATTERN = /\{\{LIVE_LEVEL_BADGE:(\d+)\}\}/g;
 const LIVE_LEVEL_BADGE_ALT_TEXT = {
@@ -2184,14 +2186,14 @@ function getShareData() {
 }
 
 function createLiveKakaoShareTemplate({ title, url }) {
-    const imageUrl = document.querySelector('meta[property="og:image"]')?.content || undefined;
-
     return {
         objectType: 'feed',
         content: {
-            title,
-            description: '라이브 페이지를 공유합니다.',
-            imageUrl,
+            title: LIVE_KAKAO_SHARE_TITLE,
+            description: `실시간 출근부 웨이팅 초톡 확인하기\n${url}`,
+            imageUrl: LIVE_KAKAO_SHARE_IMAGE_URL,
+            imageWidth: 1200,
+            imageHeight: 630,
             link: {
                 mobileWebUrl: url,
                 webUrl: url
@@ -2199,7 +2201,7 @@ function createLiveKakaoShareTemplate({ title, url }) {
         },
         buttons: [
             {
-                title: '라이브 보기',
+                title: '출근부 보러가기',
                 link: {
                     mobileWebUrl: url,
                     webUrl: url
@@ -2245,7 +2247,7 @@ async function handleKakaoShare() {
             title: shareData.title,
             description: shareData.text,
             url: shareData.url,
-            buttonTitle: '라이브 보기',
+            buttonTitle: '출근부 보러가기',
             templateObject: shareData.kakaoTemplateObject
         });
         closeShareSheet();
