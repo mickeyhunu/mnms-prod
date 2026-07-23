@@ -292,6 +292,7 @@ module.exports = {
   getLiveAds,
   getTopAds,
   getBusinessAdAreas,
+  getPieceBusinessAdAreas,
   recordBusinessAdView,
   getBusinessAd,
   getBusinessAds

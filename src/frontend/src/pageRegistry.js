@@ -1103,6 +1103,15 @@ const pageRegistry = {
                         <label class="form-label">조각게시판 기본 작성 양식</label>
                         <div class="piece-fields-grid">
                             <div class="piece-field-row">
+                                <label for="piece-ad-selector-list">제휴광고 선택 <span class="optional-mark">선택</span></label>
+                                <div class="piece-ad-selector" id="piece-ad-selector" aria-live="polite">
+                                    <p class="piece-ad-selector-help">조각제휴가 활성화된 광고를 선택하면 장소가 자동으로 입력됩니다.</p>
+                                    <div class="piece-ad-selector-loading" id="piece-ad-selector-loading">제휴광고를 불러오는 중...</div>
+                                    <p class="piece-ad-selector-empty hidden" id="piece-ad-selector-empty">선택 가능한 조각제휴 광고가 없습니다.</p>
+                                    <ul class="business-directory-list piece-ad-selector-list" id="piece-ad-selector-list"></ul>
+                                </div>
+                            </div>
+                            <div class="piece-field-row">
                                 <label for="piece-location-city">장소 <span class="required-mark">필수</span></label>
                                 <div class="piece-inline-controls">
                                     <select id="piece-location-city" class="form-control piece-input" data-piece-label="시/도" data-piece-required="true">
