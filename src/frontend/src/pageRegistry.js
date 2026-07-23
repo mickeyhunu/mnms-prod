@@ -1105,39 +1105,17 @@ const pageRegistry = {
                         <label class="form-label">조각게시판 기본 작성 양식</label>
                         <div class="piece-fields-grid">
                             <div class="piece-field-row">
-                                <label for="piece-ad-selector-list">제휴광고 선택 <span class="optional-mark">선택</span></label>
-                                <div class="piece-ad-selector" id="piece-ad-selector" aria-live="polite">
-                                    <p class="piece-ad-selector-help">조각제휴가 활성화된 광고를 선택하면 장소가 자동으로 입력됩니다.</p>
-                                    <div class="piece-ad-selector-loading" id="piece-ad-selector-loading">제휴광고를 불러오는 중...</div>
-                                    <p class="piece-ad-selector-empty hidden" id="piece-ad-selector-empty">선택 가능한 조각제휴 광고가 없습니다.</p>
-                                    <ul class="business-directory-list piece-ad-selector-list" id="piece-ad-selector-list"></ul>
-                                </div>
-                            </div>
-                            <div class="piece-field-row">
                                 <label for="piece-location-city">장소 <span class="required-mark">필수</span></label>
-                                <div class="piece-inline-controls">
-                                    <select id="piece-location-city" class="form-control piece-input" data-piece-label="시/도" data-piece-required="true">
-                                        <option value="서울" selected>서울</option>
-                                        <option value="경기">경기</option>
-                                        <option value="인천">인천</option>
-                                        <option value="부산">부산</option>
-                                        <option value="대구">대구</option>
-                                        <option value="광주">광주</option>
-                                        <option value="대전">대전</option>
-                                        <option value="울산">울산</option>
-                                        <option value="강원">강원</option>
-                                        <option value="경남">경남</option>
-                                        <option value="경북">경북</option>
-                                        <option value="전남">전남</option>
-                                        <option value="전북">전북</option>
-                                        <option value="충남">충남</option>
-                                        <option value="충북">충북</option>
-                                        <option value="세종">세종</option>
-                                        <option value="제주">제주</option>
+                                <div class="piece-location-selector-wrap">
+                                    <select id="piece-location-city" class="form-control piece-input" data-piece-label="장소" data-piece-required="true">
+                                        <option value="서울|강남구" selected>서울 강남구</option>
                                     </select>
-                                    <select id="piece-location-district" class="form-control piece-input" data-piece-label="구/군" data-piece-required="true">
-                                        <option value="강남구" selected>강남구</option>
-                                    </select>
+                                    <div class="piece-ad-selector hidden" id="piece-ad-selector" aria-live="polite">
+                                        <p class="piece-ad-selector-help">조각제휴가 활성화된 광고를 선택하면 장소가 자동으로 입력됩니다.</p>
+                                        <div class="piece-ad-selector-loading" id="piece-ad-selector-loading">제휴광고를 불러오는 중...</div>
+                                        <p class="piece-ad-selector-empty hidden" id="piece-ad-selector-empty">선택 가능한 조각제휴 광고가 없습니다.</p>
+                                        <ul class="business-directory-list piece-ad-selector-list" id="piece-ad-selector-list"></ul>
+                                    </div>
                                 </div>
                             </div>
                             <div class="piece-field-row">
