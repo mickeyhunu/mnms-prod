@@ -2175,7 +2175,7 @@ function handleShareSheetKeydown(event) {
 
 function getShareData() {
     const title = '미드나인 맨즈 커뮤니티';
-    const url = window.location.href;
+    const url = resolveShareUrl();
 
     return {
         title,

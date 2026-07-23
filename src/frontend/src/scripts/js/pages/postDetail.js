@@ -1121,7 +1121,7 @@ function handleShareSheetKeydown(event) {
 
 function getShareData() {
     const title = document.getElementById('post-title')?.textContent?.trim() || '게시글';
-    const url = window.location.href;
+    const url = resolveShareUrl();
 
     return {
         title,
