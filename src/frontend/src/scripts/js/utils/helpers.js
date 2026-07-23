@@ -772,6 +772,7 @@ window.KcpIdentity = {
 };
 
 const KAKAO_SHARE_SDK_URL = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.5/kakao.min.js';
+const DEFAULT_KAKAO_SHARE_IMAGE_URL = 'https://nightmens.com/src/assets/live-avatars/brand-logo3.png';
 let kakaoShareSdkLoader = null;
 
 function getKakaoJavascriptKey() {
@@ -781,15 +782,34 @@ function getKakaoJavascriptKey() {
    return String(document.querySelector('meta[name="kakao-javascript-key"]')?.content || '').trim();
 }
 
+function findKakaoShareSdkScript() {
+   return document.querySelector('script[data-kakao-share-sdk="true"]')
+      || [...document.scripts].find((script) => String(script.src || '').startsWith(KAKAO_SHARE_SDK_URL));
+}
+
+function resolveKakaoShareSdk(resolve, reject) {
+   if (window.Kakao) {
+      resolve(window.Kakao);
+      return;
+   }
+
+   kakaoShareSdkLoader = null;
+   reject(new Error('카카오 SDK를 불러오지 못했습니다.'));
+}
+
 function loadKakaoShareSdk() {
    if (window.Kakao) return Promise.resolve(window.Kakao);
    if (kakaoShareSdkLoader) return kakaoShareSdkLoader;
 
    kakaoShareSdkLoader = new Promise((resolve, reject) => {
-      const existingScript = document.querySelector('script[data-kakao-share-sdk="true"]');
+      const existingScript = findKakaoShareSdkScript();
       if (existingScript) {
-         existingScript.addEventListener('load', () => resolve(window.Kakao));
-         existingScript.addEventListener('error', () => reject(new Error('카카오 SDK를 불러오지 못했습니다.')));
+         existingScript.dataset.kakaoShareSdk = 'true';
+         existingScript.addEventListener('load', () => resolveKakaoShareSdk(resolve, reject), { once: true });
+         existingScript.addEventListener('error', () => {
+            kakaoShareSdkLoader = null;
+            reject(new Error('카카오 SDK를 불러오지 못했습니다.'));
+         }, { once: true });
          return;
       }
 
@@ -797,15 +817,18 @@ function loadKakaoShareSdk() {
       script.src = KAKAO_SHARE_SDK_URL;
       script.async = true;
       script.dataset.kakaoShareSdk = 'true';
-      script.addEventListener('load', () => resolve(window.Kakao));
-      script.addEventListener('error', () => reject(new Error('카카오 SDK를 불러오지 못했습니다.')));
+      script.addEventListener('load', () => resolveKakaoShareSdk(resolve, reject), { once: true });
+      script.addEventListener('error', () => {
+         kakaoShareSdkLoader = null;
+         reject(new Error('카카오 SDK를 불러오지 못했습니다.'));
+      }, { once: true });
       document.head.appendChild(script);
    });
 
    return kakaoShareSdkLoader;
 }
 
-async function sendKakaoDefaultShare({ title, description, url, buttonTitle = '바로가기', imageUrl } = {}) {
+async function sendKakaoDefaultShare({ title, description, url, buttonTitle = '사이트 바로가기', imageUrl } = {}) {
    const javascriptKey = getKakaoJavascriptKey();
    if (!javascriptKey) {
       throw new Error('KAKAO_JAVASCRIPT_KEY가 설정되지 않았습니다.');
@@ -820,22 +843,24 @@ async function sendKakaoDefaultShare({ title, description, url, buttonTitle = '�
       kakao.init(javascriptKey);
    }
 
-   const shareUrl = String(url || window.location.href);
-   const content = {
-      title: String(title || document.title || '미드나잇 맨즈'),
-      description: String(description || '미드나잇 맨즈를 공유합니다.'),
-      link: {
-         mobileWebUrl: shareUrl,
-         webUrl: shareUrl
-      }
-   };
+   if (typeof kakao.isInitialized === 'function' && !kakao.isInitialized()) {
+      throw new Error('카카오 SDK 초기화에 실패했습니다. JavaScript 키와 Web 플랫폼 도메인을 확인해주세요.');
+   }
 
-   const resolvedImageUrl = String(imageUrl || document.querySelector('meta[property="og:image"]')?.content || '').trim();
-   if (resolvedImageUrl) content.imageUrl = resolvedImageUrl;
+   const shareUrl = String(url || window.location.href);
+   const resolvedImageUrl = String(imageUrl || document.querySelector('meta[property="og:image"]')?.content || DEFAULT_KAKAO_SHARE_IMAGE_URL).trim();
 
    kakao.Share.sendDefault({
       objectType: 'feed',
-      content,
+      content: {
+         title: String(title || document.title || '미드나잇 맨즈'),
+         description: String(description || '대한민국 최대 유흥 커뮤니티'),
+         imageUrl: resolvedImageUrl,
+         link: {
+            mobileWebUrl: shareUrl,
+            webUrl: shareUrl
+         }
+      },
       buttons: [
          {
             title: buttonTitle,
