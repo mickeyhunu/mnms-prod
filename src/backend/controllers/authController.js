@@ -42,8 +42,14 @@ function resolveRoleByAccountType(accountType) {
   return accountType === 'BUSINESS' ? 'BUSINESS' : 'MEMBER';
 }
 
+function normalizeClientIp(ipAddress) {
+  const value = String(ipAddress || '').trim();
+  if (!value) return '';
+  return value.startsWith('::ffff:') ? value.slice('::ffff:'.length) : value;
+}
+
 function getClientIp(req) {
-  return req.ip || req.socket?.remoteAddress || 'unknown';
+  return normalizeClientIp(req.ip || req.socket?.remoteAddress || 'unknown') || 'unknown';
 }
 
 const IDENTITY_REUSE_WINDOW_MS = 3 * 60 * 1000;
