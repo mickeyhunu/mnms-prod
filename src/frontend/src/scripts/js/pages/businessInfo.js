@@ -168,12 +168,11 @@ function loadKakaoPostcodeScript() {
     return kakaoPostcodeLoader;
 }
 
-function getKakaoMapAppKey() {
-    const configKey = String(window.MNMS_PUBLIC_CONFIG?.kakaoMapAppKey || '').trim();
+function getKakaoJavascriptKey() {
+    const configKey = String(window.MNMS_PUBLIC_CONFIG?.kakaoJavascriptKey || '').trim();
     if (configKey) return configKey;
 
-    const metaKey = String(document.querySelector('meta[name="kakao-map-app-key"]')?.content || '').trim();
-    return metaKey;
+    return String(document.querySelector('meta[name="kakao-javascript-key"]')?.content || '').trim();
 }
 
 function buildKakaoMapSearchUrl(address) {
@@ -192,9 +191,9 @@ function buildKakaoMapFallbackMarkup(address, message = '카카오맵에서 위�
 }
 
 function loadKakaoMapScript() {
-    const appKey = getKakaoMapAppKey();
+    const appKey = getKakaoJavascriptKey();
     if (!appKey) {
-        return Promise.reject(new Error('카카오맵 앱 키가 설정되지 않았습니다.'));
+        return Promise.reject(new Error('KAKAO_JAVASCRIPT_KEY가 설정되지 않았습니다.'));
     }
 
     if (window.kakao?.maps?.services) {
