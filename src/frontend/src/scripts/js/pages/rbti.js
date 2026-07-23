@@ -449,14 +449,26 @@
   }
 
   async function handleCopyShareLink() {
+    const shareData = getShareData();
+
     try {
-      await copyTextToClipboard(getShareData().url);
+      if (navigator.share) {
+        await navigator.share(shareData);
+        closeShareSheet();
+        return;
+      }
+
+      await copyTextToClipboard(shareData.url);
       closeShareSheet();
       alert('RBTI 페이지 링크가 복사되었습니다.');
     } catch (error) {
+      if (error?.name === 'AbortError') {
+        return;
+      }
+
       console.error('링크 복사 실패:', error);
       closeShareSheet();
-      prompt('아래 링크를 복사하세요.', getShareData().url);
+      prompt('아래 링크를 복사하세요.', shareData.url);
     }
   }
 
