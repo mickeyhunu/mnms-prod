@@ -150,6 +150,10 @@ function getBusinessAdPublicVisibilityCondition(alias = 'ba') {
   return `${alias}.registration_status = 'REGISTERED' AND ((${alias}.activated_until IS NOT NULL AND ${alias}.activated_until > NOW()) OR (${alias}.piece_activated_until IS NOT NULL AND ${alias}.piece_activated_until > NOW()))`;
 }
 
+function getPieceBusinessAdPublicVisibilityCondition(alias = 'ba') {
+  return `${alias}.registration_status = 'REGISTERED' AND ${alias}.is_active = 1 AND ${alias}.activated_until IS NOT NULL AND ${alias}.activated_until > NOW() AND ${alias}.piece_is_active = 1 AND ${alias}.piece_activated_until IS NOT NULL AND ${alias}.piece_activated_until > NOW()`;
+}
+
 async function resetBusinessAdDailyJumps(connectionOrPool = getPool()) {
   await connectionOrPool.query(
     `UPDATE business_ads
@@ -1048,6 +1052,23 @@ async function listPublicBusinessAdAreas() {
     `SELECT TRIM(ba.region) AS region, TRIM(COALESCE(ba.district, '')) AS district, COUNT(*) AS adCount
        FROM business_ads ba
       WHERE ${getBusinessAdPublicVisibilityCondition('ba')}
+        AND TRIM(COALESCE(ba.region, '')) <> ''
+      GROUP BY TRIM(ba.region), TRIM(COALESCE(ba.district, ''))
+      ORDER BY MIN(ba.display_order) ASC, TRIM(ba.region) ASC, TRIM(COALESCE(ba.district, '')) ASC`
+  );
+
+  return rows;
+}
+
+
+async function listPublicPieceBusinessAdAreas() {
+  await renewExpiredBusinessAdsWithStamp();
+  await resetBusinessAdDailyJumps();
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT TRIM(ba.region) AS region, TRIM(COALESCE(ba.district, '')) AS district, COUNT(*) AS adCount
+       FROM business_ads ba
+      WHERE ${getPieceBusinessAdPublicVisibilityCondition('ba')}
         AND TRIM(COALESCE(ba.region, '')) <> ''
       GROUP BY TRIM(ba.region), TRIM(COALESCE(ba.district, ''))
       ORDER BY MIN(ba.display_order) ASC, TRIM(ba.region) ASC, TRIM(COALESCE(ba.district, '')) ASC`
@@ -2193,9 +2214,11 @@ module.exports = {
   startBusinessAdRenewalScheduler,
   stopBusinessAdRenewalScheduler,
   getBusinessAdPublicVisibilityCondition,
+  getPieceBusinessAdPublicVisibilityCondition,
   listBusinessAdsByOwner,
   listBusinessAdsForAdmin,
   listPublicBusinessAdAreas,
+  listPublicPieceBusinessAdAreas,
   listPublicBusinessAds,
   findPublicBusinessAdById,
   findPublicBusinessAdBySlug,
