@@ -116,48 +116,47 @@ async function loadPieceAdAreaAvailability() {
     }
 }
 
-function populatePieceCityOptions(selectedCity = '') {
-    const citySelect = document.getElementById('piece-location-city');
-    if (!citySelect) return;
+function getPieceLocationOptionValue(city, district) {
+    return `${String(city || '').trim()}|${String(district || '').trim()}`;
+}
+
+function parsePieceLocationOptionValue(value) {
+    const [city = '', district = ''] = String(value || '').split('|');
+    return { city: city.trim(), district: district.trim() };
+}
+
+function populatePieceLocationOptions(selectedCity = '', selectedDistrict = '') {
+    const locationSelect = document.getElementById('piece-location-city');
+    if (!locationSelect) return;
 
     const cities = pieceAdAreaAvailability.regions;
     const fallbackCity = cities.includes(PIECE_LOCATION_FALLBACK_CITY) ? PIECE_LOCATION_FALLBACK_CITY : (cities[0] || '');
     const cityValue = cities.includes(selectedCity) ? selectedCity : fallbackCity;
-
-    citySelect.innerHTML = cities
-        .map((city) => `<option value="${sanitizeHTML(city)}">${sanitizeHTML(city)}</option>`)
-        .join('');
-    citySelect.value = cityValue;
-}
-
-function populatePieceDistrictOptions(selectedDistrict = '') {
-    const citySelect = document.getElementById('piece-location-city');
-    const districtSelect = document.getElementById('piece-location-district');
-    if (!citySelect || !districtSelect) return;
-
-    const districts = pieceAdAreaAvailability.districtsByRegion[citySelect.value] || [];
+    const districts = pieceAdAreaAvailability.districtsByRegion[cityValue] || [];
     const fallbackDistrict = districts.includes(PIECE_LOCATION_FALLBACK_DISTRICT) ? PIECE_LOCATION_FALLBACK_DISTRICT : (districts[0] || '');
     const districtValue = districts.includes(selectedDistrict) ? selectedDistrict : fallbackDistrict;
+    const selectedValue = getPieceLocationOptionValue(cityValue, districtValue);
 
-    districtSelect.innerHTML = districts
-        .map((district) => `<option value="${sanitizeHTML(district)}">${sanitizeHTML(district)}</option>`)
-        .join('');
-    districtSelect.value = districtValue;
+    locationSelect.innerHTML = cities.flatMap((city) => {
+        const cityDistricts = pieceAdAreaAvailability.districtsByRegion[city] || [];
+        return cityDistricts.map((district) => {
+            const value = getPieceLocationOptionValue(city, district);
+            return `<option value="${sanitizeHTML(value)}">${sanitizeHTML(formatPieceLocationValue(city, district))}</option>`;
+        });
+    }).join('');
+    locationSelect.value = selectedValue;
 }
 
 async function setupPieceLocationOptions() {
-    const citySelect = document.getElementById('piece-location-city');
-    if (!citySelect) return;
+    const locationSelect = document.getElementById('piece-location-city');
+    if (!locationSelect) return;
 
-    const initialCity = citySelect.value || PIECE_LOCATION_FALLBACK_CITY;
-    const initialDistrict = document.getElementById('piece-location-district')?.value || PIECE_LOCATION_FALLBACK_DISTRICT;
+    const initialLocation = parsePieceLocationOptionValue(locationSelect.value || getPieceLocationOptionValue(PIECE_LOCATION_FALLBACK_CITY, PIECE_LOCATION_FALLBACK_DISTRICT));
     await loadPieceAdAreaAvailability();
-    populatePieceCityOptions(initialCity);
-    populatePieceDistrictOptions(initialDistrict);
-    citySelect.addEventListener('change', () => {
-        populatePieceDistrictOptions();
-        validateForm();
-    });
+    populatePieceLocationOptions(initialLocation.city, initialLocation.district);
+    locationSelect.addEventListener('focus', () => document.getElementById('piece-ad-selector')?.classList.remove('hidden'));
+    locationSelect.addEventListener('click', () => document.getElementById('piece-ad-selector')?.classList.remove('hidden'));
+    locationSelect.addEventListener('change', validateForm);
 }
 
 function normalizePieceBooleanFlag(value) {
@@ -195,10 +194,8 @@ function selectPieceBusinessAd(adId) {
     if (!ad) return;
 
     selectedPieceBusinessAdId = String(ad.id || '');
-    const citySelect = document.getElementById('piece-location-city');
-    if (citySelect && setPieceSelectValue(citySelect, ad.region)) {
-        populatePieceDistrictOptions(ad.district || PIECE_LOCATION_FALLBACK_DISTRICT);
-    }
+    populatePieceLocationOptions(ad.region || PIECE_LOCATION_FALLBACK_CITY, ad.district || PIECE_LOCATION_FALLBACK_DISTRICT);
+    document.getElementById('piece-ad-selector')?.classList.add('hidden');
     validateForm();
     renderPieceBusinessAdSelector();
 }
@@ -330,8 +327,9 @@ function formatPieceRangeValue(minValue, maxValue, prefixLabel, separator = ' / 
 }
 
 function buildPieceTemplateRows() {
-    const city = getPieceInputValue(document.getElementById('piece-location-city'));
-    const district = getPieceInputValue(document.getElementById('piece-location-district'));
+    const selectedLocation = parsePieceLocationOptionValue(getPieceInputValue(document.getElementById('piece-location-city')));
+    const city = selectedLocation.city;
+    const district = selectedLocation.district;
     const dateTime = getPieceInputValue(document.getElementById('piece-datetime'));
     const capacityMin = getPieceInputValue(document.getElementById('piece-capacity-min'));
     const capacityMax = getPieceInputValue(document.getElementById('piece-capacity-max'));
@@ -521,9 +519,8 @@ function applyPieceFieldDefaults({ includeDateTime = false, replacePastDateTime 
 }
 
 function hydratePieceLocationFields(locationValue) {
-    const citySelect = document.getElementById('piece-location-city');
-    const districtSelect = document.getElementById('piece-location-district');
-    if (!citySelect || !districtSelect) return;
+    const locationSelect = document.getElementById('piece-location-city');
+    if (!locationSelect) return;
 
     const normalizedLocation = String(locationValue || '').trim();
     const city = pieceAdAreaAvailability.regions.find((region) => {
@@ -533,15 +530,11 @@ function hydratePieceLocationFields(locationValue) {
             || normalizedLocation.startsWith(`${region} `)
             || normalizedLocation.startsWith(`${cityLabel} `);
     });
-
-    if (city) {
-        citySelect.value = city;
-    }
-
-    const districts = pieceAdAreaAvailability.districtsByRegion[citySelect.value] || [];
+    const districts = pieceAdAreaAvailability.districtsByRegion[city || PIECE_LOCATION_FALLBACK_CITY] || [];
     const district = districts.find((item) => normalizedLocation.endsWith(item))
         || normalizedLocation.split(/\s+/).find((item) => districts.includes(item));
-    populatePieceDistrictOptions(district || districtSelect.value || PIECE_LOCATION_FALLBACK_DISTRICT);
+
+    populatePieceLocationOptions(city || PIECE_LOCATION_FALLBACK_CITY, district || PIECE_LOCATION_FALLBACK_DISTRICT);
 }
 
 function hydratePieceRangeFields(value, minInputId, maxInputId) {
