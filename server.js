@@ -76,7 +76,7 @@ const SEO_PAGE_CONFIG = {
     keywords: ['남성 유흥 커뮤니티', '최저가 업소 추천', '업소 후기', '업소 정보', '실시간 인기글', HIDDEN_SEARCH_KEYWORD]
   },
   '/community': {
-    title: '업소 추천 커뮤니티 | 미드나잇 맨즈',
+    title: '유흥 소통 커뮤니티 | 미드나잇 맨즈',
     description: '자유·익명·후기 게시판에서 최저가 업소 추천과 리얼 리뷰 후기를 탐색해보세요.',
     keywords: ['업소 추천 커뮤니티', '리뷰 후기', '최저가 업소', '익명 게시판', '남성 커뮤니티', HIDDEN_SEARCH_KEYWORD]
   },
