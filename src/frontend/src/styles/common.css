@@ -432,6 +432,11 @@ body,
     gap: 8px;
 }
 
+.piece-location-selector-wrap {
+    display: grid;
+    gap: 8px;
+}
+
 .piece-field-row select[multiple] {
     min-height: 108px;
 }
