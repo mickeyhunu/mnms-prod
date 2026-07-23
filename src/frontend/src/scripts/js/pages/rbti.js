@@ -411,8 +411,8 @@
         title: RBTI_KAKAO_SHARE_TITLE,
         description: `RBTI 룸MBTI 테스트 - 검사하러가기\n${url}`,
         imageUrl: RBTI_KAKAO_SHARE_IMAGE_URL,
-        imageWidth: 1200,
-        imageHeight: 630,
+        imageWidth: 1024,
+        imageHeight: 1536,
         link: {
           mobileWebUrl: url,
           webUrl: url

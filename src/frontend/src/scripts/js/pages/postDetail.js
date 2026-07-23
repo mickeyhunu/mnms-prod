@@ -1143,8 +1143,8 @@ function createPostKakaoShareTemplate({ title, url }) {
             title: COMMUNITY_KAKAO_SHARE_TITLE,
             description: `${title} - 보러가기\n${url}`,
             imageUrl,
-            imageWidth: 1200,
-            imageHeight: 630,
+            imageWidth: 1254,
+            imageHeight: 1254,
             link: {
                 mobileWebUrl: url,
                 webUrl: url
