@@ -2190,7 +2190,7 @@ function createLiveKakaoShareTemplate({ title, url }) {
         objectType: 'feed',
         content: {
             title: LIVE_KAKAO_SHARE_TITLE,
-            description: `실시간 출근부 웨이팅 초톡 확인하기\n${url}`,
+            description: `실시간 출근부 웨이팅 초톡 확인하기`,
             imageUrl: LIVE_KAKAO_SHARE_IMAGE_URL,
             imageWidth: 1254,
             imageHeight: 1254,

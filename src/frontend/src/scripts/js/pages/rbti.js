@@ -409,7 +409,7 @@
       objectType: 'feed',
       content: {
         title: RBTI_KAKAO_SHARE_TITLE,
-        description: `RBTI 룸MBTI 테스트 - 검사하러가기\n${url}`,
+        description: `RBTI 룸MBTI 테스트 - 검사하러가기`,
         imageUrl: RBTI_KAKAO_SHARE_IMAGE_URL,
         imageWidth: 1024,
         imageHeight: 1536,
