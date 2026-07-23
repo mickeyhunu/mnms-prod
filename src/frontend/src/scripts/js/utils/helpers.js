@@ -770,3 +770,80 @@ window.KcpIdentity = {
    maskValue: kcpIdentityMaskValue,
    isMobileViewport: isKcpMobileViewport
 };
+
+const KAKAO_SHARE_SDK_URL = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.5/kakao.min.js';
+let kakaoShareSdkLoader = null;
+
+function getKakaoJavascriptKey() {
+   const configKey = String(window.MNMS_PUBLIC_CONFIG?.kakaoJavascriptKey || '').trim();
+   if (configKey) return configKey;
+
+   return String(document.querySelector('meta[name="kakao-javascript-key"]')?.content || '').trim();
+}
+
+function loadKakaoShareSdk() {
+   if (window.Kakao) return Promise.resolve(window.Kakao);
+   if (kakaoShareSdkLoader) return kakaoShareSdkLoader;
+
+   kakaoShareSdkLoader = new Promise((resolve, reject) => {
+      const existingScript = document.querySelector('script[data-kakao-share-sdk="true"]');
+      if (existingScript) {
+         existingScript.addEventListener('load', () => resolve(window.Kakao));
+         existingScript.addEventListener('error', () => reject(new Error('카카오 SDK를 불러오지 못했습니다.')));
+         return;
+      }
+
+      const script = document.createElement('script');
+      script.src = KAKAO_SHARE_SDK_URL;
+      script.async = true;
+      script.dataset.kakaoShareSdk = 'true';
+      script.addEventListener('load', () => resolve(window.Kakao));
+      script.addEventListener('error', () => reject(new Error('카카오 SDK를 불러오지 못했습니다.')));
+      document.head.appendChild(script);
+   });
+
+   return kakaoShareSdkLoader;
+}
+
+async function sendKakaoDefaultShare({ title, description, url, buttonTitle = '바로가기', imageUrl } = {}) {
+   const javascriptKey = getKakaoJavascriptKey();
+   if (!javascriptKey) {
+      throw new Error('KAKAO_JAVASCRIPT_KEY가 설정되지 않았습니다.');
+   }
+
+   const kakao = await loadKakaoShareSdk();
+   if (!kakao || !kakao.Share || typeof kakao.Share.sendDefault !== 'function') {
+      throw new Error('카카오 공유 기능을 사용할 수 없습니다.');
+   }
+
+   if (typeof kakao.isInitialized !== 'function' || !kakao.isInitialized()) {
+      kakao.init(javascriptKey);
+   }
+
+   const shareUrl = String(url || window.location.href);
+   const content = {
+      title: String(title || document.title || '미드나잇 맨즈'),
+      description: String(description || '미드나잇 맨즈를 공유합니다.'),
+      link: {
+         mobileWebUrl: shareUrl,
+         webUrl: shareUrl
+      }
+   };
+
+   const resolvedImageUrl = String(imageUrl || document.querySelector('meta[property="og:image"]')?.content || '').trim();
+   if (resolvedImageUrl) content.imageUrl = resolvedImageUrl;
+
+   kakao.Share.sendDefault({
+      objectType: 'feed',
+      content,
+      buttons: [
+         {
+            title: buttonTitle,
+            link: {
+               mobileWebUrl: shareUrl,
+               webUrl: shareUrl
+            }
+         }
+      ]
+   });
+}
