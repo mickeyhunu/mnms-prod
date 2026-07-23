@@ -104,7 +104,7 @@ function normalizePieceAdAreaAvailability(response) {
 
 async function loadPieceAdAreaAvailability() {
     try {
-        const response = await APIClient.get('/live/business-ads/areas');
+        const response = await APIClient.get('/live/business-ads/piece-areas');
         pieceAdAreaAvailability = normalizePieceAdAreaAvailability(response);
     } catch (error) {
         pieceAdAreaAvailability = {
