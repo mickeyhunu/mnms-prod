@@ -1118,10 +1118,40 @@ function handleShareSheetKeydown(event) {
 }
 
 function getShareData() {
+    const title = document.getElementById('post-title')?.textContent?.trim() || '게시글';
+    const url = window.location.href;
+
     return {
-        title: document.getElementById('post-title')?.textContent?.trim() || '게시글',
+        title,
         text: '게시글을 공유합니다.',
-        url: window.location.href
+        url,
+        kakaoTemplateObject: createPostKakaoShareTemplate({ title, url })
+    };
+}
+
+function createPostKakaoShareTemplate({ title, url }) {
+    const imageUrl = document.querySelector('meta[property="og:image"]')?.content || undefined;
+
+    return {
+        objectType: 'feed',
+        content: {
+            title,
+            description: '게시글을 공유합니다.',
+            imageUrl,
+            link: {
+                mobileWebUrl: url,
+                webUrl: url
+            }
+        },
+        buttons: [
+            {
+                title: '게시글 보기',
+                link: {
+                    mobileWebUrl: url,
+                    webUrl: url
+                }
+            }
+        ]
     };
 }
 
@@ -1161,7 +1191,8 @@ async function handleKakaoShare() {
             title: shareData.title,
             description: shareData.text,
             url: shareData.url,
-            buttonTitle: '게시글 보기'
+            buttonTitle: '게시글 보기',
+            templateObject: shareData.kakaoTemplateObject
         });
         closeShareSheet();
     } catch (error) {
