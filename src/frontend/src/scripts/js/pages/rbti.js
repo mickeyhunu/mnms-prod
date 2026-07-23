@@ -426,44 +426,16 @@
     const shareData = getShareData();
 
     try {
-      if (window.Kakao && window.Kakao.Share && typeof window.Kakao.Share.sendDefault === 'function') {
-        window.Kakao.Share.sendDefault({
-          objectType: 'feed',
-          content: {
-            title: shareData.title,
-            description: shareData.text,
-            link: {
-              mobileWebUrl: shareData.url,
-              webUrl: shareData.url
-            }
-          },
-          buttons: [{
-            title: 'RBTI 보기',
-            link: {
-              mobileWebUrl: shareData.url,
-              webUrl: shareData.url
-            }
-          }]
-        });
-        closeShareSheet();
-        return;
-      }
-
-      if (navigator.share) {
-        await navigator.share(shareData);
-        closeShareSheet();
-        return;
-      }
-
-      await copyTextToClipboard(shareData.url);
+      await sendKakaoDefaultShare({
+        title: shareData.title,
+        description: shareData.text,
+        url: shareData.url,
+        buttonTitle: 'RBTI 보기'
+      });
       closeShareSheet();
-      alert('카카오톡 공유를 직접 열 수 없어 링크를 복사했습니다. 카카오톡에 붙여넣어 공유해주세요.');
     } catch (error) {
-      if (error?.name === 'AbortError') {
-        return;
-      }
       console.error('카카오톡 공유 실패:', error);
-      alert('카카오톡 공유에 실패했습니다.');
+      alert(error?.message || '카카오톡 공유에 실패했습니다.');
     }
   }
 
