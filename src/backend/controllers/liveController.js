@@ -178,28 +178,44 @@ async function getTopAds(req, res, next) {
   }
 }
 
+function formatBusinessAdAreaRows(rows) {
+  const districtMap = new Map();
+
+  for (const row of rows) {
+    const region = String(row.region || '').trim();
+    const district = String(row.district || '').trim();
+    if (!region) continue;
+
+    if (!districtMap.has(region)) {
+      districtMap.set(region, new Set());
+    }
+    if (district) {
+      districtMap.get(region).add(district);
+    }
+  }
+
+  return Array.from(districtMap.entries()).map(([region, districts]) => ({
+    region,
+    districts: Array.from(districts)
+  }));
+}
+
 async function getBusinessAdAreas(req, res, next) {
   try {
-    const rows = await adminModel.listPublicBusinessAdAreas();
-    const districtMap = new Map();
+    const content = formatBusinessAdAreaRows(await adminModel.listPublicBusinessAdAreas());
 
-    for (const row of rows) {
-      const region = String(row.region || '').trim();
-      const district = String(row.district || '').trim();
-      if (!region) continue;
+    return res.json({
+      content,
+      totalElements: content.length
+    });
+  } catch (error) {
+    return handleLiveError(error, next, res);
+  }
+}
 
-      if (!districtMap.has(region)) {
-        districtMap.set(region, new Set());
-      }
-      if (district) {
-        districtMap.get(region).add(district);
-      }
-    }
-
-    const content = Array.from(districtMap.entries()).map(([region, districts]) => ({
-      region,
-      districts: Array.from(districts)
-    }));
+async function getPieceBusinessAdAreas(req, res, next) {
+  try {
+    const content = formatBusinessAdAreaRows(await adminModel.listPublicPieceBusinessAdAreas());
 
     return res.json({
       content,
