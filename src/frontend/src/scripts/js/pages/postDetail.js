@@ -1119,19 +1119,37 @@ function handleShareSheetKeydown(event) {
     }
 }
 
+function getPostShareContentPreview(post = currentPostDetail) {
+    const firstContentLine = String(post?.content || '')
+        .replace(/<[^>]*>/g, ' ')
+        .split(/\r?\n/)
+        .map((line) => line.replace(/\s+/g, ' ').trim())
+        .find(Boolean) || '';
+
+    return firstContentLine
+        ? `${firstContentLine.slice(0, 80)}${firstContentLine.length > 80 ? '...' : ''}`
+        : '게시글 내용을 확인해보세요.';
+}
+
+function createPostKakaoShareDescription(title) {
+    return `제목 : ${title} - 보러가기\n${getPostShareContentPreview()}`;
+}
+
 function getShareData() {
-    const title = document.getElementById('post-title')?.textContent?.trim() || '게시글';
+    const title = currentPostDetail?.title?.trim?.() || document.getElementById('post-title')?.textContent?.trim() || '게시글';
     const url = resolveShareUrl();
+    const kakaoDescription = createPostKakaoShareDescription(title);
 
     return {
         title,
         text: '게시글을 공유합니다.',
+        kakaoDescription,
         url,
-        kakaoTemplateObject: createPostKakaoShareTemplate({ title, url })
+        kakaoTemplateObject: createPostKakaoShareTemplate({ title, description: kakaoDescription, url })
     };
 }
 
-function createPostKakaoShareTemplate({ title, url }) {
+function createPostKakaoShareTemplate({ title, description, url }) {
     const attachedImageUrl = Array.isArray(currentPostDetail?.imageUrls)
         ? currentPostDetail.imageUrls.find((image) => String(image || '').trim())
         : currentPostDetail?.imageUrl;
@@ -1141,7 +1159,7 @@ function createPostKakaoShareTemplate({ title, url }) {
         objectType: 'feed',
         content: {
             title: COMMUNITY_KAKAO_SHARE_TITLE,
-            description: `${title} - 보러가기`,
+            description,
             imageUrl,
             imageWidth: 1254,
             imageHeight: 1254,
@@ -1201,7 +1219,7 @@ async function handleKakaoShare() {
     try {
         await sendKakaoDefaultShare({
             title: shareData.title,
-            description: shareData.text,
+            description: shareData.kakaoDescription,
             url: shareData.url,
             buttonTitle: '게시글 보러가기',
             templateObject: shareData.kakaoTemplateObject
