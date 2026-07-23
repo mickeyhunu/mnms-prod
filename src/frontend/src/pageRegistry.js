@@ -107,10 +107,11 @@ const pageRegistry = {
     <script src="scripts/js/api/apiClient.js"></script>
     <script src="scripts/js/api/authAPI.js"></script>
     <script src="scripts/js/components/header.js"></script>
+    <script src="scripts/js/components/businessDirectoryItem.js"></script>
     <script src="scripts/js/pages/businessInfo.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/businessInfo.js", "scripts/js/components/footerNav.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/businessDirectoryItem.js", "scripts/js/pages/businessInfo.js", "scripts/js/components/footerNav.js"]
   },
   'business-info-detail': {
     template: `<header class="header">
@@ -171,10 +172,11 @@ const pageRegistry = {
     <script src="scripts/js/api/apiClient.js"></script>
     <script src="scripts/js/api/authAPI.js"></script>
     <script src="scripts/js/components/header.js"></script>
+    <script src="scripts/js/components/businessDirectoryItem.js"></script>
     <script src="scripts/js/pages/businessInfo.js"></script>
 `,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/businessInfo.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/businessDirectoryItem.js", "scripts/js/pages/businessInfo.js"]
   },
   'ad-profile-management': {
     template: `<header class="header">
@@ -617,7 +619,7 @@ const pageRegistry = {
         </div>
     </main>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/pages/businessInfo.js", "scripts/js/components/footerNav.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/businessDirectoryItem.js", "scripts/js/pages/businessInfo.js", "scripts/js/components/footerNav.js"]
   },
   'stamp-purchase': {
     template: `<header class="header">
@@ -1254,10 +1256,11 @@ const pageRegistry = {
     <script src="scripts/js/utils/helpers.js"></script>
     <script src="scripts/js/utils/auth.js"></script>
     <script src="scripts/js/api/apiClient.js"></script>
+    <script src="scripts/js/components/businessDirectoryItem.js"></script>
     <script src="scripts/js/pages/createPost.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/libs/koProfanityFilter.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/pages/createPost.js", "scripts/js/components/footerNav.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/libs/koProfanityFilter.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/components/businessDirectoryItem.js", "scripts/js/pages/createPost.js", "scripts/js/components/footerNav.js"]
   },
   'support-create': {
     template: `<header class="header">

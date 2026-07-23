@@ -406,48 +406,11 @@ function renderBusinessAds(ads) {
 
     empty.classList.add('hidden');
     list.innerHTML = businessDirectoryAds.map((ad, index) => {
-        const regionLabel = sanitizeHTML(ad.region || '지역미지정');
-        const businessName = sanitizeHTML(ad.businessName || ad.companyName || ad.ownerNickname || '업소');
-        const advertiserMeta = buildBusinessDirectoryAdvertiserMeta(ad);
-        const district = sanitizeHTML(ad.district || '선택');
-        const category = sanitizeHTML(ad.category || '선택');
-        const openHour = sanitizeHTML(ad.openHour || '시간선택');
-        const closeHour = sanitizeHTML(ad.closeHour || '시간선택');
-        const baseTitle = sanitizeHTML(ad.title || '업체정보');
-        const title = `[${regionLabel}-${businessName}] ${baseTitle}`;
-        const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
-        const isNewAd = isBusinessDirectoryNewAd(ad);
-        const hasStampEvent = hasBusinessProfileStampEvent(ad);
-        const hasPieceAd = hasBusinessDirectoryPieceAd(ad);
-        const uploadedImageUrl = sanitizeHTML(ad.imageUrl || '');
-        const thumbnailImageUrl = uploadedImageUrl || BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL;
-        const thumbnailLoading = uploadedImageUrl || index < 6 ? 'eager' : 'lazy';
-        const thumbnailFetchPriority = uploadedImageUrl && index < 6 ? 'high' : 'auto';
-        const formattedTime = (openHour !== '시간선택' && closeHour !== '시간선택')
-            ? `${openHour} ~ ${closeHour}`
-            : '시간선택 ~ 시간선택';
-        const detail = `${regionLabel} ${district} · ${category} · ${formattedTime}`;
         const detailUrl = sanitizeHTML(createBusinessInfoDetailPath(ad));
-        const planType = normalizeBusinessDirectoryAdPlan(ad.planType || ad.adPlan || ad.plan || ad.businessAdPlan || ad.businessPlan);
-        const planClassName = planType ? ` business-directory-item--${planType}` : '';
-        return `
-            <li class="business-directory-item business-directory-item--clickable${planClassName}" data-business-ad-id="${sanitizeHTML(ad.id || '')}" data-business-ad-url="${detailUrl}" data-business-ad-view-count="${Number(ad.viewCount || 0)}" role="link" tabindex="0" aria-label="${title} 상세 페이지 보기">
-                <div class="business-directory-thumbnail-wrap">
-                    <img class="business-directory-thumbnail" src="${thumbnailImageUrl}" alt="${title} 대표이미지" loading="${thumbnailLoading}" fetchpriority="${thumbnailFetchPriority}" decoding="async" onerror="this.onerror=null;this.src='${BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL}';">
-                    ${isNewAd ? `<img class="business-directory-new-badge-image" src="${BUSINESS_DIRECTORY_NEW_BADGE_IMAGE_URL}" alt="신규 광고" loading="eager" decoding="async">` : ''}
-                </div>
-                ${hasStampEvent ? `<img class="business-directory-stamp-event-badge-image" src="${BUSINESS_DIRECTORY_STAMP_EVENT_BADGE_IMAGE_URL}" alt="스탬프 이벤트 진행중" loading="eager" decoding="async">` : ''}
-                ${hasPieceAd ? `<img class="business-directory-piece-badge-image${hasStampEvent ? ' business-directory-piece-badge-image--right' : ''}" src="${BUSINESS_DIRECTORY_PIECE_BADGE_IMAGE_URL}" alt="조각제휴 활성화" loading="eager" decoding="async">` : ''}
-                <div class="business-directory-main">
-                    <div class="business-directory-meta">
-                        <span class="business-directory-manager">${advertiserMeta}</span>
-                        <span class="business-directory-views" data-business-ad-view-count>조회수 ${viewCount}</span>
-                    </div>
-                    <h4>${title}</h4>
-                    <p class="business-directory-region-detail">${detail}</p>
-                </div>
-            </li>
-        `;
+        return BusinessDirectoryItem.render(ad, {
+            index,
+            attributes: (item) => `data-business-ad-id="${sanitizeHTML(item.id || '')}" data-business-ad-url="${detailUrl}" data-business-ad-view-count="${Number(item.viewCount || 0)}"`
+        });
     }).join('');
 }
 
