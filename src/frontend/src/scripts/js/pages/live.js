@@ -2259,6 +2259,7 @@ async function handleKakaoShare() {
 
 function handleSmsShare() {
     const shareData = getShareData();
+    const message = `${shareData.title}\n\n${document.title}\n\n${shareData.url}`;
     const message = `${shareData.title}
 제목 ${document.title}
 주소 ${shareData.url}`;
