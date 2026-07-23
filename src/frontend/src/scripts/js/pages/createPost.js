@@ -26,8 +26,6 @@ const PIECE_DEFAULT_CAPACITY_MAX = '4명';
 const PIECE_DEFAULT_AGE_MIN = '20대 초반 이상';
 const PIECE_DEFAULT_AGE_MAX = '40대 후반 이하';
 const PIECE_DEFAULT_DRINKING = '상관없음';
-const PIECE_AD_DEFAULT_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
-const PIECE_AD_BADGE_IMAGE_URL = '/src/assets/image/business-directory-piece-badge.webp';
 
 let pieceBusinessAds = [];
 let selectedPieceBusinessAdId = '';
@@ -166,25 +164,6 @@ function normalizePieceBooleanFlag(value) {
     return value === true || value === 1 || value === '1' || String(value || '').toLowerCase() === 'true';
 }
 
-function getPieceAdTitle(ad) {
-    const regionLabel = String(ad?.region || '지역미지정').trim();
-    const businessName = String(ad?.businessName || ad?.companyName || ad?.ownerNickname || '업소').trim();
-    const title = String(ad?.title || '업체정보').trim();
-    return `[${regionLabel}-${businessName}] ${title}`;
-}
-
-function getPieceAdPlanClassName(ad) {
-    const planType = String(ad?.planType || ad?.adPlan || ad?.plan || '').trim().toLowerCase();
-    return ['basic', 'plus', 'premium'].includes(planType) ? ` business-directory-item--${planType}` : '';
-}
-
-function getPieceAdManagerMeta(ad) {
-    const nickname = sanitizeHTML(ad?.ownerNickname || ad?.managerName || '업체');
-    const cumulativeDays = Number(ad?.cumulativeAdDays || 0);
-    const daysText = cumulativeDays > 0 ? ` · ${cumulativeDays.toLocaleString('ko-KR')}일째 광고중` : '';
-    return `💠 <strong class="business-directory-manager-nickname">${nickname}</strong>${daysText}`;
-}
-
 function renderPieceBusinessAdSelector() {
     const list = document.getElementById('piece-ad-selector-list');
     const empty = document.getElementById('piece-ad-selector-empty');
@@ -200,30 +179,14 @@ function renderPieceBusinessAdSelector() {
 
     empty?.classList.add('hidden');
     list.innerHTML = pieceBusinessAds.map((ad, index) => {
-        const title = sanitizeHTML(getPieceAdTitle(ad));
-        const region = sanitizeHTML(ad.region || '지역미지정');
-        const district = sanitizeHTML(ad.district || '선택');
-        const category = sanitizeHTML(ad.category || '선택');
-        const openHour = sanitizeHTML(ad.openHour || '시간선택');
-        const closeHour = sanitizeHTML(ad.closeHour || '시간선택');
-        const imageUrl = sanitizeHTML(ad.imageUrl || PIECE_AD_DEFAULT_IMAGE_URL);
-        const viewCount = Number(ad.viewCount || 0).toLocaleString('ko-KR');
         const selectedClassName = String(ad.id || '') === String(selectedPieceBusinessAdId) ? ' is-selected' : '';
-        return `
-            <li class="business-directory-item business-directory-item--clickable${getPieceAdPlanClassName(ad)} piece-ad-selector-item${selectedClassName}" data-piece-business-ad-id="${sanitizeHTML(ad.id || '')}" role="button" tabindex="0" aria-pressed="${selectedClassName ? 'true' : 'false'}" aria-label="${title} 선택">
-                <div class="business-directory-thumbnail-wrap">
-                    <img class="business-directory-thumbnail" src="${imageUrl}" alt="${title} 대표이미지" loading="${index < 4 ? 'eager' : 'lazy'}" decoding="async" onerror="this.onerror=null;this.src='${PIECE_AD_DEFAULT_IMAGE_URL}';">
-                </div>
-                <img class="business-directory-piece-badge-image" src="${PIECE_AD_BADGE_IMAGE_URL}" alt="조각제휴 활성화" loading="eager" decoding="async">
-                <div class="business-directory-main">
-                    <div class="business-directory-meta">
-                        <span class="business-directory-manager">${getPieceAdManagerMeta(ad)}</span>
-                        <span class="business-directory-views" data-business-ad-view-count>조회수 ${viewCount}</span>
-                    </div>
-                    <h4>${title}</h4>
-                    <p class="business-directory-region-detail">${region} ${district} · ${category} · ${openHour} ~ ${closeHour}</p>
-                </div>
-            </li>`;
+        return BusinessDirectoryItem.render(ad, {
+            index,
+            role: 'button',
+            ariaLabel: `${String(ad?.title || '업체정보')} 선택`,
+            extraClassName: `piece-ad-selector-item${selectedClassName}`,
+            attributes: (item) => `data-piece-business-ad-id="${sanitizeHTML(item.id || '')}" aria-pressed="${selectedClassName ? 'true' : 'false'}"`
+        });
     }).join('');
 }
 
