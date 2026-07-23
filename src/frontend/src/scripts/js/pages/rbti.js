@@ -391,10 +391,40 @@
   }
 
   function getShareData() {
+    const title = '미드나인 맨즈 커뮤니티';
+    const url = window.location.href;
+
     return {
-      title: '미드나인 맨즈 커뮤니티',
+      title,
       text: 'RBTI 페이지를 공유합니다.',
-      url: window.location.href
+      url,
+      kakaoTemplateObject: createRbtiKakaoShareTemplate({ title, url })
+    };
+  }
+
+  function createRbtiKakaoShareTemplate({ title, url }) {
+    const imageUrl = document.querySelector('meta[property="og:image"]')?.content || undefined;
+
+    return {
+      objectType: 'feed',
+      content: {
+        title,
+        description: 'RBTI 페이지를 공유합니다.',
+        imageUrl,
+        link: {
+          mobileWebUrl: url,
+          webUrl: url
+        }
+      },
+      buttons: [
+        {
+          title: 'RBTI 보기',
+          link: {
+            mobileWebUrl: url,
+            webUrl: url
+          }
+        }
+      ]
     };
   }
 
@@ -430,7 +460,8 @@
         title: shareData.title,
         description: shareData.text,
         url: shareData.url,
-        buttonTitle: 'RBTI 보기'
+        buttonTitle: 'RBTI 보기',
+        templateObject: shareData.kakaoTemplateObject
       });
       closeShareSheet();
     } catch (error) {
