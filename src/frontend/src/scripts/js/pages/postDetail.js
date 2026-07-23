@@ -1141,7 +1141,7 @@ function createPostKakaoShareTemplate({ title, url }) {
         objectType: 'feed',
         content: {
             title: COMMUNITY_KAKAO_SHARE_TITLE,
-            description: `${title} - 보러가기\n${url}`,
+            description: `${title} - 보러가기`,
             imageUrl,
             imageWidth: 1254,
             imageHeight: 1254,
