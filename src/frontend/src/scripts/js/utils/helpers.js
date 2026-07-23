@@ -840,6 +840,68 @@ function loadKakaoShareSdk() {
    return kakaoShareSdkLoader;
 }
 
+function resolveShareUrl(url) {
+   const rawUrl = String(url || document.querySelector('link[rel="canonical"]')?.href || window.location.href || '').trim();
+
+   try {
+      return new URL(rawUrl || '/', window.location.href).toString();
+   } catch (error) {
+      return window.location.href;
+   }
+}
+
+function ensureKakaoShareLink(target = {}, shareUrl) {
+   return {
+      ...target,
+      mobileWebUrl: target.mobileWebUrl || target.webUrl || shareUrl,
+      webUrl: target.webUrl || target.mobileWebUrl || shareUrl
+   };
+}
+
+function normalizeKakaoShareTemplate(templateObject, { title, description, imageUrl, buttonTitle, shareUrl }) {
+   const resolvedImageUrl = String(imageUrl || document.querySelector('meta[property="og:image"]')?.content || DEFAULT_KAKAO_SHARE_IMAGE_URL).trim();
+   const fallbackTemplate = {
+      objectType: 'feed',
+      content: {
+         title: String(title || document.title || '미드나잇 맨즈'),
+         description: String(description || '대한민국 최대 유흥 커뮤니티'),
+         imageUrl: resolvedImageUrl,
+         link: {
+            mobileWebUrl: shareUrl,
+            webUrl: shareUrl
+         }
+      },
+      buttons: [
+         {
+            title: buttonTitle,
+            link: {
+               mobileWebUrl: shareUrl,
+               webUrl: shareUrl
+            }
+         }
+      ]
+   };
+
+   const normalizedTemplate = templateObject ? { ...templateObject } : fallbackTemplate;
+   normalizedTemplate.objectType = normalizedTemplate.objectType || fallbackTemplate.objectType;
+   normalizedTemplate.content = { ...(normalizedTemplate.content || fallbackTemplate.content) };
+   normalizedTemplate.content.title = normalizedTemplate.content.title || fallbackTemplate.content.title;
+   normalizedTemplate.content.description = normalizedTemplate.content.description || fallbackTemplate.content.description;
+   normalizedTemplate.content.imageUrl = normalizedTemplate.content.imageUrl || fallbackTemplate.content.imageUrl;
+   normalizedTemplate.content.link = ensureKakaoShareLink(normalizedTemplate.content.link || {}, shareUrl);
+
+   const buttons = Array.isArray(normalizedTemplate.buttons) ? normalizedTemplate.buttons : [];
+   normalizedTemplate.buttons = buttons.length > 0
+      ? buttons.map((button) => ({
+         ...button,
+         title: button.title || buttonTitle,
+         link: ensureKakaoShareLink(button.link || {}, shareUrl)
+      }))
+      : fallbackTemplate.buttons;
+
+   return normalizedTemplate;
+}
+
 async function sendKakaoDefaultShare({ title, description, url, buttonTitle = '사이트 바로가기', imageUrl, templateObject } = {}) {
    const javascriptKey = getKakaoJavascriptKey();
    if (!javascriptKey) {
@@ -864,29 +926,14 @@ async function sendKakaoDefaultShare({ title, description, url, buttonTitle = '�
       throw new Error('카카오 공유 모듈을 찾지 못했습니다. Kakao JavaScript SDK가 정상 로드됐는지 확인해주세요.');
    }
 
-   const shareUrl = String(url || window.location.href);
-   const resolvedImageUrl = String(imageUrl || document.querySelector('meta[property="og:image"]')?.content || DEFAULT_KAKAO_SHARE_IMAGE_URL).trim();
-   const shareTemplateObject = templateObject || {
-      objectType: 'feed',
-      content: {
-         title: String(title || document.title || '미드나잇 맨즈'),
-         description: String(description || '대한민국 최대 유흥 커뮤니티'),
-         imageUrl: resolvedImageUrl,
-         link: {
-            mobileWebUrl: shareUrl,
-            webUrl: shareUrl
-         }
-      },
-      buttons: [
-         {
-            title: buttonTitle,
-            link: {
-               mobileWebUrl: shareUrl,
-               webUrl: shareUrl
-            }
-         }
-      ]
-   };
+   const shareUrl = resolveShareUrl(url);
+   const shareTemplateObject = normalizeKakaoShareTemplate(templateObject, {
+      title,
+      description,
+      imageUrl,
+      buttonTitle,
+      shareUrl
+   });
 
    sendDefault.call(kakao.Share || kakao.Link, shareTemplateObject);
 }
