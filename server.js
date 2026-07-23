@@ -46,9 +46,21 @@ const ALLOW_DEVTOOLS_DETECTION_BYPASS = ['true', '1', 'yes', 'on'].includes(
 );
 const DEFAULT_SHARE_IMAGE_URL = absoluteUrl('/src/assets/live-avatars/brand-logo3.png');
 let isDatabaseReady = false;
-const trustProxyValue = String(process.env.TRUST_PROXY || '1').trim();
+const trustProxyValue = parseTrustProxyValue(process.env.TRUST_PROXY || '1');
 
 app.set('trust proxy', trustProxyValue);
+
+function parseTrustProxyValue(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (!normalized) return 1;
+  if (['true', 'yes', 'on'].includes(normalized)) return true;
+  if (['false', 'no', 'off'].includes(normalized)) return false;
+
+  const numericValue = Number(normalized);
+  if (Number.isInteger(numericValue) && numericValue >= 0) return numericValue;
+
+  return value;
+}
 
 function setSeoSecurityHeaders(req, res, next) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
