@@ -506,6 +506,7 @@ body,
     grid-template-columns: 1fr;
     gap: 8px 14px;
     margin: 0;
+    margin-top: 10px;
 }
 
 .piece-summary-list div {
