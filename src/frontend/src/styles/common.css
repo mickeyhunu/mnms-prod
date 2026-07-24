@@ -645,16 +645,6 @@ body.piece-ad-selector-modal-open {
     overflow-y: visible;
 }
 
-.piece-ad-selector-item {
-    margin-bottom: 0;
-    background: #fff;
-}
-
-.piece-ad-selector-item.is-selected {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.16), inset 4px 0 0 var(--primary-color);
-}
-
 .piece-selected-ad-preview {
     display: grid;
     gap: 8px;
