@@ -162,12 +162,13 @@ const postDetailTemplate = `
     <script src="scripts/js/api/authAPI.js"></script>
     <script src="scripts/js/api/postAPI.js"></script>
     <script src="scripts/js/api/commentAPI.js"></script>
+    <script src="scripts/js/components/businessDirectoryItem.js"></script>
     <script src="scripts/js/pages/postDetail.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>
 `;
 
 export const postDetailPageConfig = createPageConfig({
   template: postDetailTemplate,
-  styles: ['styles/common.css', 'styles/layout.css', 'styles/components.css', 'styles/postDetail.css'],
-  scripts: ['scripts/js/utils/constants.js', 'scripts/js/libs/koProfanityFilter.js', 'scripts/js/utils/helpers.js', 'scripts/js/utils/auth.js', 'scripts/js/api/apiClient.js', 'scripts/js/api/authAPI.js', 'scripts/js/api/postAPI.js', 'scripts/js/api/commentAPI.js', 'scripts/js/pages/postDetail.js', 'scripts/js/components/footerNav.js']
+  styles: ['styles/common.css', 'styles/layout.css', 'styles/components.css', 'styles/pages.css', 'styles/postDetail.css'],
+  scripts: ['scripts/js/utils/constants.js', 'scripts/js/libs/koProfanityFilter.js', 'scripts/js/utils/helpers.js', 'scripts/js/utils/auth.js', 'scripts/js/api/apiClient.js', 'scripts/js/api/authAPI.js', 'scripts/js/api/postAPI.js', 'scripts/js/api/commentAPI.js', 'scripts/js/components/businessDirectoryItem.js', 'scripts/js/pages/postDetail.js', 'scripts/js/components/footerNav.js']
 });

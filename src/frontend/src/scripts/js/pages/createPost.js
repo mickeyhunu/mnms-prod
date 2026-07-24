@@ -518,6 +518,24 @@ function formatPieceRangeValue(minValue, maxValue, prefixLabel, separator = ' / 
     return '';
 }
 
+function getSelectedPieceBusinessAd() {
+    return pieceBusinessAds.find((item) => String(item.id || '') === String(selectedPieceBusinessAdId || '')) || null;
+}
+
+function formatSelectedPieceBusinessAdValue(ad) {
+    if (!ad) return '';
+
+    const title = String(ad.title || ad.businessName || '선택한 광고').trim();
+    const area = [ad.region, ad.district].map((value) => String(value || '').trim()).filter(Boolean).join(' ');
+    const category = String(ad.category || '').trim();
+    const detailPath = typeof createBusinessInfoDetailPath === 'function'
+        ? createBusinessInfoDetailPath(ad)
+        : `/business-info/${encodeURIComponent(String(ad.id || ''))}`;
+    const metadata = [area, category].filter(Boolean).join(' · ');
+
+    return `${title}${metadata ? ` (${metadata})` : ''} - ${detailPath}`;
+}
+
 function buildPieceTemplateRows() {
     const selectedLocation = parsePieceLocationOptionValue(getPieceInputValue(document.getElementById('piece-location-city')));
     const city = selectedLocation.city;
@@ -529,8 +547,10 @@ function buildPieceTemplateRows() {
     const ageMax = getPieceInputValue(document.getElementById('piece-age-max'));
     const cost = getPieceInputValue(document.getElementById('piece-cost'));
     const drinking = getPieceInputValue(document.getElementById('piece-drinking'));
+    const selectedAd = getSelectedPieceBusinessAd();
 
     return [
+        { label: '🏷️ 선택 광고', value: formatSelectedPieceBusinessAdValue(selectedAd) },
         { label: '📍 장소', value: formatPieceLocationValue(city, district) },
         { label: '🕘 시간', value: formatPieceDateTimeValue(dateTime) },
         { label: '👥 인원', value: formatPieceRangeValue(capacityMin, capacityMax, '최소') },
