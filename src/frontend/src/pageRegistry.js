@@ -1150,9 +1150,8 @@ const pageRegistry = {
                                             </section>
                                         </div>
                                     </div>
-                                    <div class="piece-selected-ad-preview hidden" id="piece-selected-ad-preview" aria-live="polite">
-                                        <p class="piece-ad-selector-help">선택된 조각제휴 광고</p>
-                                        <ul class="business-directory-list piece-selected-ad-preview-list" id="piece-selected-ad-preview-list"></ul>
+                                    <div class="hidden" id="piece-selected-ad-preview" aria-live="polite">
+                                        <ul class="business-directory-list" id="piece-selected-ad-preview-list"></ul>
                                     </div>
                                 </div>
                             </div>
