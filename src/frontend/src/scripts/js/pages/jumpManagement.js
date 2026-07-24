@@ -29,6 +29,7 @@
     const noneBadge = { image: '/src/assets/ad-plan-badges/none-badge.png', alt: '미광고', name: '미광고' };
 
     const state = { ad: null, isSubmitting: false, schedules: [], maxScheduleCount: 0, autoOpen: false };
+    let cooldownTimerId = null;
     const isVisible = () => Boolean(Number(state.ad?.isCurrentlyVisible || 0));
     const getRemainingCount = () => Number(state.ad?.dailyJumpRemaining || 0);
 
@@ -92,12 +93,24 @@
         });
     };
 
+    const ensureCooldownTimer = (cooldownSeconds) => {
+        if (cooldownSeconds > 0 && !cooldownTimerId) {
+            cooldownTimerId = window.setInterval(render, 1000);
+        }
+        if (cooldownSeconds <= 0 && cooldownTimerId) {
+            window.clearInterval(cooldownTimerId);
+            cooldownTimerId = null;
+        }
+    };
+
     const render = () => {
         const visible = isVisible();
         const dailyJumpRemaining = getRemainingCount();
         const cooldownSeconds = getCooldownSeconds();
         const canJump = visible && !state.isSubmitting && dailyJumpRemaining > 0 && cooldownSeconds <= 0;
         const badge = visible ? (planBadges[String(state.ad?.planType || '').toUpperCase()] || noneBadge) : noneBadge;
+
+        ensureCooldownTimer(cooldownSeconds);
 
         if (statusBadge) { statusBadge.src = badge.image; statusBadge.alt = badge.alt; }
         if (statusTitle) statusTitle.textContent = visible ? `${badge.name} 점프를 사용할 수 있습니다` : '노출 중인 광고가 없습니다';
