@@ -217,7 +217,7 @@ async function setupPieceBusinessAdSelector() {
     try {
         const response = await APIClient.get('/live/business-ads');
         const content = Array.isArray(response?.content) ? response.content : [];
-        pieceBusinessAds = content.filter((ad) => normalizePieceBooleanFlag(ad?.isPieceActive || ad?.pieceIsActive || ad?.piece_is_active));
+        pieceBusinessAds = content.filter((ad) => normalizePieceBooleanFlag(ad?.isPieceCurrentlyVisible || ad?.pieceIsCurrentlyVisible || ad?.piece_is_currently_visible || ad?.isPieceActive || ad?.pieceIsActive || ad?.piece_is_active));
     } catch (error) {
         pieceBusinessAds = [];
         document.getElementById('piece-ad-selector-empty')?.classList.remove('hidden');

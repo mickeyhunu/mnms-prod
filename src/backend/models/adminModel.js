@@ -151,7 +151,7 @@ function getBusinessAdPublicVisibilityCondition(alias = 'ba') {
 }
 
 function getPieceBusinessAdPublicVisibilityCondition(alias = 'ba') {
-  return `${alias}.registration_status = 'REGISTERED' AND ${alias}.is_active = 1 AND ${alias}.activated_until IS NOT NULL AND ${alias}.activated_until > NOW() AND ${alias}.piece_is_active = 1 AND ${alias}.piece_activated_until IS NOT NULL AND ${alias}.piece_activated_until > NOW()`;
+  return `${alias}.registration_status = 'REGISTERED' AND ${alias}.activated_until IS NOT NULL AND ${alias}.activated_until > NOW() AND ${alias}.piece_activated_until IS NOT NULL AND ${alias}.piece_activated_until > NOW()`;
 }
 
 async function resetBusinessAdDailyJumps(connectionOrPool = getPool()) {
