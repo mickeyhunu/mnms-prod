@@ -561,3 +561,35 @@ body,
     border-color: var(--primary-color);
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.16), inset 4px 0 0 var(--primary-color);
 }
+
+.piece-ad-selector-filter {
+    margin-bottom: 0;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: #fff;
+}
+
+.piece-ad-selector-filter .business-filter-row {
+    align-items: flex-start;
+}
+
+.piece-ad-selector-filter .business-filter-left {
+    padding-top: 3px;
+}
+
+.piece-ad-selector-filter .business-search-btn {
+    border: 0;
+    background: transparent;
+}
+
+.piece-selected-ad-preview {
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.piece-selected-ad-preview-list {
+    display: grid;
+    gap: 8px;
+}

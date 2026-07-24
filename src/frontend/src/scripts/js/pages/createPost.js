@@ -26,9 +26,11 @@ const PIECE_DEFAULT_CAPACITY_MAX = '4명';
 const PIECE_DEFAULT_AGE_MIN = '20대 초반 이상';
 const PIECE_DEFAULT_AGE_MAX = '40대 후반 이하';
 const PIECE_DEFAULT_DRINKING = '상관없음';
+const PIECE_AD_CATEGORIES = ['룸', '바', '클럽', '기타'];
 
 let pieceBusinessAds = [];
 let selectedPieceBusinessAdId = '';
+let pieceAdKeywordDebounceTimer = null;
 
 const REGION_DISTRICT_MAP = {
     서울: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
@@ -116,6 +118,49 @@ async function loadPieceAdAreaAvailability() {
     }
 }
 
+
+function normalizePieceAreaLabel(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if ([...raw].length <= 2) return raw;
+    return raw.replace(/(특별시|광역시|자치시|자치도|도|시|군|구)$/u, '').trim() || raw;
+}
+
+function readPieceAdFilters() {
+    return {
+        region: String(document.getElementById('piece-ad-region-filter')?.value || '').trim(),
+        district: String(document.getElementById('piece-ad-district-filter')?.value || '').trim(),
+        category: String(document.getElementById('piece-ad-category-filter')?.value || '').trim(),
+        keyword: String(document.getElementById('piece-ad-keyword-filter')?.value || '').trim()
+    };
+}
+
+function syncPieceAdFilterBadgeLabels() {
+    const { region, district, category } = readPieceAdFilters();
+    const regionBadge = document.getElementById('piece-ad-region-badge-label');
+    const districtBadge = document.getElementById('piece-ad-district-badge-label');
+    const districtTrigger = document.getElementById('piece-ad-district-trigger');
+    const categoryBadge = document.getElementById('piece-ad-category-badge-label');
+
+    if (regionBadge) regionBadge.textContent = region ? normalizePieceAreaLabel(region) : '지역 전체';
+    if (districtBadge) districtBadge.textContent = district ? normalizePieceAreaLabel(district) : '세부 지역';
+    if (districtTrigger) districtTrigger.classList.toggle('hidden', !region);
+    if (categoryBadge) categoryBadge.textContent = category || '업종 전체';
+}
+
+function closePieceAdFilterPanels() {
+    document.querySelectorAll('.piece-filter-menu').forEach((menu) => menu.classList.remove('is-open'));
+}
+
+function renderPieceAdFilterButtonList(container, options, selectedValue, onSelect, allLabel = '전체') {
+    if (!container) return;
+    container.innerHTML = [
+        `<button type="button" class="business-filter-option ${selectedValue ? '' : 'is-active'}" data-value="">${allLabel}</button>`,
+        ...options.map((option) => `<button type="button" class="business-filter-option ${String(selectedValue) === String(option.value) ? 'is-active' : ''}" data-value="${sanitizeHTML(option.value)}">${sanitizeHTML(option.label)}</button>`)
+    ].join('');
+    container.querySelectorAll('.business-filter-option').forEach((button) => button.addEventListener('click', () => onSelect(button.dataset.value || '')));
+}
+
 function getPieceLocationOptionValue(city, district) {
     return `${String(city || '').trim()}|${String(district || '').trim()}`;
 }
@@ -154,13 +199,52 @@ async function setupPieceLocationOptions() {
     const initialLocation = parsePieceLocationOptionValue(locationSelect.value || getPieceLocationOptionValue(PIECE_LOCATION_FALLBACK_CITY, PIECE_LOCATION_FALLBACK_DISTRICT));
     await loadPieceAdAreaAvailability();
     populatePieceLocationOptions(initialLocation.city, initialLocation.district);
-    locationSelect.addEventListener('focus', () => document.getElementById('piece-ad-selector')?.classList.remove('hidden'));
-    locationSelect.addEventListener('click', () => document.getElementById('piece-ad-selector')?.classList.remove('hidden'));
+    const openPieceAdSelector = () => document.getElementById('piece-ad-selector')?.classList.remove('hidden');
+    locationSelect.addEventListener('focus', openPieceAdSelector);
+    locationSelect.addEventListener('click', openPieceAdSelector);
     locationSelect.addEventListener('change', validateForm);
 }
 
 function normalizePieceBooleanFlag(value) {
     return value === true || value === 1 || value === '1' || String(value || '').toLowerCase() === 'true';
+}
+
+function getFilteredPieceBusinessAds() {
+    const { region, district, category, keyword } = readPieceAdFilters();
+    const normalizedKeyword = keyword.toLowerCase();
+
+    return pieceBusinessAds.filter((ad) => {
+        const matchesRegion = !region || String(ad?.region || '').trim() === region;
+        const matchesDistrict = !district || String(ad?.district || '').trim() === district;
+        const matchesCategory = !category || String(ad?.category || '').trim() === category;
+        const searchableText = [ad?.title, ad?.ownerNickname, ad?.authorNickname, ad?.nickname, ad?.managerName, ad?.profileManagerName]
+            .map((value) => String(value || '').toLowerCase())
+            .join(' ');
+        const matchesKeyword = !normalizedKeyword || searchableText.includes(normalizedKeyword);
+        return matchesRegion && matchesDistrict && matchesCategory && matchesKeyword;
+    });
+}
+
+function renderSelectedPieceBusinessAdPreview() {
+    const preview = document.getElementById('piece-selected-ad-preview');
+    const list = document.getElementById('piece-selected-ad-preview-list');
+    const ad = pieceBusinessAds.find((item) => String(item.id || '') === String(selectedPieceBusinessAdId || ''));
+    if (!preview || !list) return;
+
+    if (!ad) {
+        preview.classList.add('hidden');
+        list.innerHTML = '';
+        return;
+    }
+
+    preview.classList.remove('hidden');
+    list.innerHTML = BusinessDirectoryItem.render(ad, {
+        index: 0,
+        role: 'button',
+        ariaLabel: `${String(ad?.title || '업체정보')} 선택됨`,
+        extraClassName: 'piece-ad-selector-item is-selected',
+        attributes: (item) => `data-piece-selected-business-ad-id="${sanitizeHTML(item.id || '')}" aria-pressed="true"`
+    });
 }
 
 function renderPieceBusinessAdSelector() {
@@ -170,14 +254,16 @@ function renderPieceBusinessAdSelector() {
     if (!list) return;
 
     loading?.classList.add('hidden');
-    if (!pieceBusinessAds.length) {
+    const filteredAds = getFilteredPieceBusinessAds();
+    if (!filteredAds.length) {
         list.innerHTML = '';
         empty?.classList.remove('hidden');
+        renderSelectedPieceBusinessAdPreview();
         return;
     }
 
     empty?.classList.add('hidden');
-    list.innerHTML = pieceBusinessAds.map((ad, index) => {
+    list.innerHTML = filteredAds.map((ad, index) => {
         const selectedClassName = String(ad.id || '') === String(selectedPieceBusinessAdId) ? ' is-selected' : '';
         return BusinessDirectoryItem.render(ad, {
             index,
@@ -187,6 +273,7 @@ function renderPieceBusinessAdSelector() {
             attributes: (item) => `data-piece-business-ad-id="${sanitizeHTML(item.id || '')}" aria-pressed="${selectedClassName ? 'true' : 'false'}"`
         });
     }).join('');
+    renderSelectedPieceBusinessAdPreview();
 }
 
 function selectPieceBusinessAd(adId) {
@@ -198,6 +285,69 @@ function selectPieceBusinessAd(adId) {
     document.getElementById('piece-ad-selector')?.classList.add('hidden');
     validateForm();
     renderPieceBusinessAdSelector();
+    renderSelectedPieceBusinessAdPreview();
+}
+
+function setupPieceAdSelectorFilters() {
+    const regionInput = document.getElementById('piece-ad-region-filter');
+    const districtInput = document.getElementById('piece-ad-district-filter');
+    const categoryInput = document.getElementById('piece-ad-category-filter');
+    const keywordInput = document.getElementById('piece-ad-keyword-filter');
+    const searchButton = document.getElementById('piece-ad-search-btn');
+
+    const rerenderDistrictMenu = () => {
+        const districts = pieceAdAreaAvailability.districtsByRegion[regionInput?.value || ''] || [];
+        renderPieceAdFilterButtonList(document.getElementById('piece-ad-menu-district-items'), districts.map((district) => ({ value: district, label: normalizePieceAreaLabel(district) })), districtInput?.value || '', (selected) => {
+            districtInput.value = selected;
+            closePieceAdFilterPanels();
+            syncPieceAdFilterBadgeLabels();
+            renderPieceBusinessAdSelector();
+        });
+    };
+
+    renderPieceAdFilterButtonList(document.getElementById('piece-ad-menu-region-items'), pieceAdAreaAvailability.regions.map((region) => ({ value: region, label: normalizePieceAreaLabel(region) })), regionInput?.value || '', (selected) => {
+        regionInput.value = selected;
+        districtInput.value = '';
+        rerenderDistrictMenu();
+        closePieceAdFilterPanels();
+        syncPieceAdFilterBadgeLabels();
+        renderPieceBusinessAdSelector();
+    });
+    rerenderDistrictMenu();
+    renderPieceAdFilterButtonList(document.getElementById('piece-ad-menu-category-items'), PIECE_AD_CATEGORIES.map((category) => ({ value: category, label: category })), categoryInput?.value || '', (selected) => {
+        categoryInput.value = selected;
+        closePieceAdFilterPanels();
+        syncPieceAdFilterBadgeLabels();
+        renderPieceBusinessAdSelector();
+    }, '업종 전체');
+
+    document.querySelectorAll('[data-piece-filter-toggle]').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            const target = button.getAttribute('data-piece-filter-toggle');
+            if (target === 'district' && !String(regionInput?.value || '').trim()) return;
+            const menu = document.getElementById(`piece-ad-menu-${target}`);
+            const willOpen = menu && !menu.classList.contains('is-open');
+            closePieceAdFilterPanels();
+            if (willOpen) menu.classList.add('is-open');
+        });
+    });
+
+    keywordInput?.addEventListener('input', () => {
+        if (pieceAdKeywordDebounceTimer) window.clearTimeout(pieceAdKeywordDebounceTimer);
+        pieceAdKeywordDebounceTimer = window.setTimeout(() => renderPieceBusinessAdSelector(), 300);
+    });
+    keywordInput?.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            renderPieceBusinessAdSelector();
+        }
+    });
+    searchButton?.addEventListener('click', renderPieceBusinessAdSelector);
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.piece-ad-selector-filter')) closePieceAdFilterPanels();
+    });
+    syncPieceAdFilterBadgeLabels();
 }
 
 async function setupPieceBusinessAdSelector() {
@@ -213,6 +363,8 @@ async function setupPieceBusinessAdSelector() {
         event.preventDefault();
         selectPieceBusinessAd(item.dataset.pieceBusinessAdId);
     });
+
+    setupPieceAdSelectorFilters();
 
     try {
         const response = await APIClient.get('/live/business-ads');
