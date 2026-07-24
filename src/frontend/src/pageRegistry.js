@@ -1108,10 +1108,9 @@ const pageRegistry = {
                                 <label for="piece-location-city">장소 <span class="required-mark">필수</span></label>
                                 <div class="piece-location-selector-wrap">
                                     <div class="piece-location-control-row">
-                                        <select id="piece-location-city" class="form-control piece-input" data-piece-label="장소" data-piece-required="true">
+                                        <select id="piece-location-city" class="form-control piece-input" data-piece-label="장소" data-piece-required="true" aria-haspopup="dialog" aria-controls="piece-ad-selector">
                                             <option value="서울|강남구" selected>서울 강남구</option>
                                         </select>
-                                        <button type="button" class="btn btn-secondary piece-ad-selector-open-btn" id="piece-ad-selector-open-btn" aria-haspopup="dialog" aria-controls="piece-ad-selector">제휴광고 선택</button>
                                     </div>
                                     <div class="piece-ad-selector-modal hidden" id="piece-ad-selector" role="dialog" aria-modal="true" aria-labelledby="piece-ad-selector-title" aria-live="polite">
                                         <div class="piece-ad-selector-backdrop" data-piece-ad-selector-close></div>
