@@ -526,6 +526,13 @@ body,
     white-space: nowrap;
 }
 
+.piece-summary-ad-link {
+    color: var(--primary-color);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
 .piece-join-btn {
     width: 100%;
     margin-top: 14px;

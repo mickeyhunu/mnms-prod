@@ -788,6 +788,19 @@ function getPieceMaximumParticipantCount(content) {
     return summaryMaxMatch ? Math.max(1, Number(summaryMaxMatch[1]) || 1) : 1;
 }
 
+function renderPieceSummaryValue(row) {
+    const value = String(row?.value || '').trim();
+    const label = String(row?.label || '');
+    if (!label.includes('선택 광고')) return sanitizeHTML(value);
+
+    const businessInfoPathMatch = value.match(/(?:^|\s-\s)(\/business-info\/[^\s]+)\s*$/);
+    if (!businessInfoPathMatch) return sanitizeHTML(value);
+
+    const path = businessInfoPathMatch[1];
+    const title = value.slice(0, businessInfoPathMatch.index).replace(/\s-\s$/, '').trim() || '선택한 광고 보기';
+    return `<a href="${sanitizeHTML(path)}" class="piece-summary-ad-link">${sanitizeHTML(title)}</a>`;
+}
+
 function renderPiecePostContent(content) {
     const rawContent = String(content || '');
     const startToken = '<!-- PIECE_TEMPLATE_START -->';
@@ -817,7 +830,7 @@ function renderPiecePostContent(content) {
                 <span class="piece-status-badge" id="piece-status-badge">모집중</span>
             </div>
             <dl class="piece-summary-list">
-                ${rows.map((row) => `<div><dt>${sanitizeHTML(row.label)}</dt><dd>${sanitizeHTML(row.value)}</dd></div>`).join('')}
+                ${rows.map((row) => `<div><dt>${sanitizeHTML(row.label)}</dt><dd>${renderPieceSummaryValue(row)}</dd></div>`).join('')}
             </dl>
             <button type="button" class="btn btn-primary piece-join-btn" id="piece-join-btn">참여하기</button>
         </section>` : '';
