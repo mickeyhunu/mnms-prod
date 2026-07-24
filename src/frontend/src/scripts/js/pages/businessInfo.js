@@ -330,8 +330,15 @@ function normalizeBusinessDirectoryAdPlan(plan) {
 
 
 function getBusinessDirectoryCumulativeAdDays(ad) {
-    const days = Number(ad?.cumulativeAdDays ?? ad?.cumulative_ad_days ?? ad?.authorAdvertiserAdDays ?? 0);
-    return Number.isFinite(days) && days > 0 ? Math.floor(days) : 0;
+    const explicitDays = Number(ad?.cumulativeAdDays ?? ad?.cumulative_ad_days ?? ad?.authorAdvertiserAdDays ?? 0);
+    if (Number.isFinite(explicitDays) && explicitDays > 0) return Math.floor(explicitDays);
+
+    const activatedAt = new Date(ad?.activatedAt || ad?.activated_at || 0).getTime();
+    const isActive = Boolean(ad?.isCurrentlyVisible || ad?.isActive || ad?.activatedUntil || ad?.activated_until);
+    if (!isActive || !Number.isFinite(activatedAt) || activatedAt <= 0) return 0;
+
+    const elapsedDays = Math.floor((Date.now() - activatedAt) / (24 * 60 * 60 * 1000)) + 1;
+    return Number.isFinite(elapsedDays) && elapsedDays > 0 ? elapsedDays : 1;
 }
 
 
@@ -354,11 +361,15 @@ function resolveBusinessDirectoryAdvertiserRankLabel(ad = {}) {
     return levels.reduce((current, level) => (cumulativeAdDays >= level.minDays ? level : current), levels[0]).emoji;
 }
 
+function getBusinessDirectoryManagerDisplayName(ad = {}) {
+    return String(ad.managerName || ad.profileManagerName || ad.ownerNickname || ad.authorNickname || ad.nickname || '담당자').trim() || '담당자';
+}
+
 function buildBusinessDirectoryAdvertiserMeta(ad = {}) {
     const rankLabel = resolveBusinessDirectoryAdvertiserRankLabel(ad);
-    const nickname = sanitizeHTML(ad.ownerNickname || ad.authorNickname || ad.nickname || ad.managerName || ad.profileManagerName || '닉네임');
+    const managerName = sanitizeHTML(getBusinessDirectoryManagerDisplayName(ad));
     const cumulativeAdDays = getBusinessDirectoryCumulativeAdDays(ad).toLocaleString('ko-KR');
-    return `${rankLabel} <strong class="business-directory-manager-nickname">${nickname}</strong> · ${cumulativeAdDays}일째 광고중`;
+    return `${rankLabel} <strong class="business-directory-manager-nickname">${managerName}</strong> · ${cumulativeAdDays}일째 광고중`;
 }
 
 function isBusinessDirectoryNewAd(ad) {
