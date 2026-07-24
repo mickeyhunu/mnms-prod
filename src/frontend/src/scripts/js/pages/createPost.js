@@ -254,7 +254,6 @@ function renderSelectedPieceBusinessAdPreview() {
         index: 0,
         role: 'button',
         ariaLabel: `${String(ad?.title || '업체정보')} 선택됨`,
-        extraClassName: 'piece-ad-selector-item is-selected',
         attributes: (item) => `data-piece-selected-business-ad-id="${sanitizeHTML(item.id || '')}" aria-pressed="true"`
     });
 }
@@ -275,16 +274,12 @@ function renderPieceBusinessAdSelector() {
     }
 
     empty?.classList.add('hidden');
-    list.innerHTML = filteredAds.map((ad, index) => {
-        const selectedClassName = String(ad.id || '') === String(selectedPieceBusinessAdId) ? ' is-selected' : '';
-        return BusinessDirectoryItem.render(ad, {
-            index,
-            role: 'button',
-            ariaLabel: `${String(ad?.title || '업체정보')} 선택`,
-            extraClassName: `piece-ad-selector-item${selectedClassName}`,
-            attributes: (item) => `data-piece-business-ad-id="${sanitizeHTML(item.id || '')}" aria-pressed="${selectedClassName ? 'true' : 'false'}"`
-        });
-    }).join('');
+    list.innerHTML = filteredAds.map((ad, index) => BusinessDirectoryItem.render(ad, {
+        index,
+        role: 'button',
+        ariaLabel: `${String(ad?.title || '업체정보')} 선택`,
+        attributes: (item) => `data-piece-business-ad-id="${sanitizeHTML(item.id || '')}" aria-pressed="${String(item.id || '') === String(selectedPieceBusinessAdId) ? 'true' : 'false'}"`
+    })).join('');
     renderSelectedPieceBusinessAdPreview();
 }
 
