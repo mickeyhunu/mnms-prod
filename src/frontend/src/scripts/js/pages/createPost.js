@@ -152,6 +152,21 @@ function closePieceAdFilterPanels() {
     document.querySelectorAll('.piece-filter-menu').forEach((menu) => menu.classList.remove('is-open'));
 }
 
+function openPieceAdSelector() {
+    const selector = document.getElementById('piece-ad-selector');
+    if (!selector) return;
+
+    selector.classList.remove('hidden');
+    document.body.classList.add('piece-ad-selector-modal-open');
+    window.setTimeout(() => document.getElementById('piece-ad-keyword-filter')?.focus(), 0);
+}
+
+function closePieceAdSelector() {
+    document.getElementById('piece-ad-selector')?.classList.add('hidden');
+    document.body.classList.remove('piece-ad-selector-modal-open');
+    closePieceAdFilterPanels();
+}
+
 function renderPieceAdFilterButtonList(container, options, selectedValue, onSelect, allLabel = '전체') {
     if (!container) return;
     container.innerHTML = [
@@ -199,9 +214,6 @@ async function setupPieceLocationOptions() {
     const initialLocation = parsePieceLocationOptionValue(locationSelect.value || getPieceLocationOptionValue(PIECE_LOCATION_FALLBACK_CITY, PIECE_LOCATION_FALLBACK_DISTRICT));
     await loadPieceAdAreaAvailability();
     populatePieceLocationOptions(initialLocation.city, initialLocation.district);
-    const openPieceAdSelector = () => document.getElementById('piece-ad-selector')?.classList.remove('hidden');
-    locationSelect.addEventListener('focus', openPieceAdSelector);
-    locationSelect.addEventListener('click', openPieceAdSelector);
     locationSelect.addEventListener('change', validateForm);
 }
 
@@ -282,7 +294,7 @@ function selectPieceBusinessAd(adId) {
 
     selectedPieceBusinessAdId = String(ad.id || '');
     populatePieceLocationOptions(ad.region || PIECE_LOCATION_FALLBACK_CITY, ad.district || PIECE_LOCATION_FALLBACK_DISTRICT);
-    document.getElementById('piece-ad-selector')?.classList.add('hidden');
+    closePieceAdSelector();
     validateForm();
     renderPieceBusinessAdSelector();
     renderSelectedPieceBusinessAdPreview();
@@ -353,7 +365,14 @@ function setupPieceAdSelectorFilters() {
 async function setupPieceBusinessAdSelector() {
     const selector = document.getElementById('piece-ad-selector');
     const list = document.getElementById('piece-ad-selector-list');
+    const openButton = document.getElementById('piece-ad-selector-open-btn');
     if (!selector || !list) return;
+
+    openButton?.addEventListener('click', openPieceAdSelector);
+    selector.querySelectorAll('[data-piece-ad-selector-close]').forEach((button) => button.addEventListener('click', closePieceAdSelector));
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !selector.classList.contains('hidden')) closePieceAdSelector();
+    });
 
     list.addEventListener('click', (event) => selectPieceBusinessAd(event.target.closest('[data-piece-business-ad-id]')?.dataset.pieceBusinessAdId));
     list.addEventListener('keydown', (event) => {
