@@ -365,10 +365,21 @@ function setupPieceAdSelectorFilters() {
 async function setupPieceBusinessAdSelector() {
     const selector = document.getElementById('piece-ad-selector');
     const list = document.getElementById('piece-ad-selector-list');
-    const openButton = document.getElementById('piece-ad-selector-open-btn');
+    const locationSelect = document.getElementById('piece-location-city');
     if (!selector || !list) return;
 
-    openButton?.addEventListener('click', openPieceAdSelector);
+    const openSelectorFromLocation = (event) => {
+        event.preventDefault();
+        locationSelect?.blur();
+        openPieceAdSelector();
+    };
+
+    locationSelect?.addEventListener('pointerdown', openSelectorFromLocation);
+    locationSelect?.addEventListener('click', openSelectorFromLocation);
+    locationSelect?.addEventListener('keydown', (event) => {
+        if (!['Enter', ' '].includes(event.key)) return;
+        openSelectorFromLocation(event);
+    });
     selector.querySelectorAll('[data-piece-ad-selector-close]').forEach((button) => button.addEventListener('click', closePieceAdSelector));
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && !selector.classList.contains('hidden')) closePieceAdSelector();
