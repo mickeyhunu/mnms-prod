@@ -526,14 +526,8 @@ body,
     white-space: nowrap;
 }
 
-.piece-selected-ad {
-    margin: 0 0 18px;
-}
-
-.piece-selected-ad-title {
-    margin: 0 0 8px;
-    font-weight: 800;
-    color: var(--text-color);
+.piece-selected-ad-list {
+    margin-bottom: 14px;
 }
 
 .piece-selected-ad-list .business-directory-item {

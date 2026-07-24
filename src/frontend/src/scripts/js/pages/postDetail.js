@@ -811,16 +811,13 @@ function getPieceSelectedAdPath(row) {
     return businessInfoPathMatch ? businessInfoPathMatch[1] : '';
 }
 
-function renderPieceSelectedAdCardPlaceholder(selectedAdPath) {
+function renderPieceSelectedAdListPlaceholder(selectedAdPath) {
     if (!selectedAdPath) return '';
 
     return `
-        <section class="piece-selected-ad" aria-label="선택한 조각 제휴 광고">
-            <p class="piece-selected-ad-title">선택 광고</p>
             <ul class="business-directory-list piece-selected-ad-list" data-piece-selected-ad-path="${sanitizeHTML(selectedAdPath)}">
                 <li class="business-directory-item piece-selected-ad-loading" aria-live="polite">선택한 광고를 불러오는 중...</li>
-            </ul>
-        </section>`;
+            </ul>`;
 }
 
 async function hydratePieceSelectedAdCards() {
@@ -871,20 +868,21 @@ function renderPiecePostContent(content) {
     const selectedAdPath = rows.map(getPieceSelectedAdPath).find(Boolean) || '';
     const summaryRows = rows.filter((row) => !getPieceSelectedAdPath(row));
 
-    const selectedAdMarkup = renderPieceSelectedAdCardPlaceholder(selectedAdPath);
+    const selectedAdMarkup = renderPieceSelectedAdListPlaceholder(selectedAdPath);
     const summaryMarkup = summaryRows.length ? `
         <section class="piece-summary" aria-label="조각 모집 정보">
             <div class="piece-summary-header">
                 <p class="piece-summary-title">조각 모집 정보</p>
                 <span class="piece-status-badge" id="piece-status-badge">모집중</span>
             </div>
+            ${selectedAdMarkup}
             <dl class="piece-summary-list">
                 ${summaryRows.map((row) => `<div><dt>${sanitizeHTML(row.label)}</dt><dd>${sanitizeHTML(row.value)}</dd></div>`).join('')}
             </dl>
             <button type="button" class="btn btn-primary piece-join-btn" id="piece-join-btn">참여하기</button>
         </section>` : '';
 
-    return `${selectedAdMarkup}${summaryMarkup}${bodyContent ? renderPostContent(bodyContent) : ''}`;
+    return `${summaryMarkup}${bodyContent ? renderPostContent(bodyContent) : ''}`;
 }
 
 
