@@ -221,6 +221,21 @@ function normalizePieceBooleanFlag(value) {
     return value === true || value === 1 || value === '1' || String(value || '').toLowerCase() === 'true';
 }
 
+function hasOwnPieceValue(object, key) {
+    return Object.prototype.hasOwnProperty.call(object || {}, key) && object[key] !== null && object[key] !== undefined;
+}
+
+function isPieceBusinessAdVisible(ad) {
+    const currentVisibilityKeys = ['isPieceCurrentlyVisible', 'pieceIsCurrentlyVisible', 'piece_is_currently_visible'];
+    const currentVisibilityKey = currentVisibilityKeys.find((key) => hasOwnPieceValue(ad, key));
+
+    if (currentVisibilityKey) {
+        return normalizePieceBooleanFlag(ad[currentVisibilityKey]);
+    }
+
+    return normalizePieceBooleanFlag(ad?.isPieceActive || ad?.pieceIsActive || ad?.piece_is_active);
+}
+
 function getFilteredPieceBusinessAds() {
     const { region, district, category, keyword } = readPieceAdFilters();
     const normalizedKeyword = keyword.toLowerCase();
@@ -399,7 +414,7 @@ async function setupPieceBusinessAdSelector() {
     try {
         const response = await APIClient.get('/live/business-ads');
         const content = Array.isArray(response?.content) ? response.content : [];
-        pieceBusinessAds = content.filter((ad) => normalizePieceBooleanFlag(ad?.isPieceCurrentlyVisible || ad?.pieceIsCurrentlyVisible || ad?.piece_is_currently_visible || ad?.isPieceActive || ad?.pieceIsActive || ad?.piece_is_active));
+        pieceBusinessAds = content.filter(isPieceBusinessAdVisible);
     } catch (error) {
         pieceBusinessAds = [];
         document.getElementById('piece-ad-selector-empty')?.classList.remove('hidden');

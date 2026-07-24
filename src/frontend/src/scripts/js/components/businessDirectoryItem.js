@@ -57,7 +57,18 @@
         return `${rankLabel} <strong class="business-directory-manager-nickname">${nickname}</strong> · ${cumulativeAdDays}일째 광고중`;
     }
 
+    function hasOwnValue(object, key) {
+        return Object.prototype.hasOwnProperty.call(object || {}, key) && object[key] !== null && object[key] !== undefined;
+    }
+
     function hasPieceAd(ad) {
+        const currentVisibilityKeys = ['isPieceCurrentlyVisible', 'pieceIsCurrentlyVisible', 'piece_is_currently_visible'];
+        const currentVisibilityKey = currentVisibilityKeys.find((key) => hasOwnValue(ad, key));
+
+        if (currentVisibilityKey) {
+            return normalizeBooleanFlag(ad[currentVisibilityKey]);
+        }
+
         return normalizeBooleanFlag(ad?.isPieceActive || ad?.pieceIsActive || ad?.piece_is_active);
     }
 

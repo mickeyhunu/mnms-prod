@@ -5,7 +5,6 @@ const BUSINESS_IMAGE_PLACEHOLDER = '등록할 이미지를 선택해주세요.';
 const BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL = '/src/assets/image/ad-profile-default.webp';
 const BUSINESS_DIRECTORY_NEW_BADGE_IMAGE_URL = '/src/assets/image/business-directory-new-badge.webp';
 const BUSINESS_DIRECTORY_STAMP_EVENT_BADGE_IMAGE_URL = '/src/assets/image/business-directory-stamp-event-badge.webp';
-const BUSINESS_DIRECTORY_PIECE_BADGE_IMAGE_URL = '/src/assets/image/business-directory-piece-badge.webp';
 let businessDirectoryAds = [];
 const REGION_DISTRICT_MAP = {
     서울: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
@@ -617,10 +616,6 @@ function buildBusinessProfileMapMarkup(ad) {
 
 function hasBusinessProfileVisitVerification(ad) {
     return normalizeBooleanFlag(ad?.useVisitVerification);
-}
-
-function hasBusinessDirectoryPieceAd(ad) {
-    return normalizeBooleanFlag(ad?.isPieceActive || ad?.pieceIsActive || ad?.piece_is_active);
 }
 
 function hasBusinessProfileStampUseEvent(ad) {
