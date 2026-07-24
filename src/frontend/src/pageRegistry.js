@@ -1117,7 +1117,7 @@ const pageRegistry = {
                                         <div class="piece-ad-selector-panel">
                                             <button type="button" class="piece-ad-selector-close" data-piece-ad-selector-close aria-label="조각제휴 광고 선택 창 닫기">×</button>
                                             <h3 id="piece-ad-selector-title">조각제휴 광고 선택</h3>
-                                            <p class="piece-ad-selector-help">조각제휴가 활성화된 광고를 지역 또는 키워드로 검색한 뒤 선택하면 장소가 자동으로 입력됩니다.</p>
+                                            <section class="business-directory-card piece-ad-selector-card">
                                         <div class="business-directory-filter-v2 piece-ad-selector-filter" aria-label="조각제휴 업체 필터">
                                             <div class="business-filter-row business-filter-row--top">
                                                 <div class="business-filter-left">
@@ -1147,6 +1147,7 @@ const pageRegistry = {
                                         <div class="piece-ad-selector-loading" id="piece-ad-selector-loading">제휴광고를 불러오는 중...</div>
                                         <p class="piece-ad-selector-empty hidden" id="piece-ad-selector-empty">선택 가능한 조각제휴 광고가 없습니다.</p>
                                         <ul class="business-directory-list piece-ad-selector-list" id="piece-ad-selector-list"></ul>
+                                            </section>
                                         </div>
                                     </div>
                                     <div class="piece-selected-ad-preview hidden" id="piece-selected-ad-preview" aria-live="polite">
