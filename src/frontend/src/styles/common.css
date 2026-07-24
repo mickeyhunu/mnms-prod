@@ -573,8 +573,6 @@ body,
     overflow-y: auto;
     border-radius: 0;
     background: #fff;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
-    padding: 22px;
 }
 
 .piece-ad-selector-panel h3 {
@@ -618,7 +616,6 @@ body.piece-ad-selector-modal-open {
         height: 100%;
         max-height: 100vh;
         border-radius: 0;
-        padding: 20px 16px;
     }
 }
 
