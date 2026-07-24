@@ -1111,10 +1111,40 @@ const pageRegistry = {
                                         <option value="서울|강남구" selected>서울 강남구</option>
                                     </select>
                                     <div class="piece-ad-selector hidden" id="piece-ad-selector" aria-live="polite">
-                                        <p class="piece-ad-selector-help">조각제휴가 활성화된 광고를 선택하면 장소가 자동으로 입력됩니다.</p>
+                                        <p class="piece-ad-selector-help">조각제휴가 활성화된 광고를 지역 또는 키워드로 검색한 뒤 선택하면 장소가 자동으로 입력됩니다.</p>
+                                        <div class="business-directory-filter-v2 piece-ad-selector-filter" aria-label="조각제휴 업체 필터">
+                                            <div class="business-filter-row business-filter-row--top">
+                                                <div class="business-filter-left">
+                                                    <div class="business-geo" title="GPS" aria-label="위치">
+                                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.686 2 6 4.686 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.314-2.686-6-6-6Zm0 8.5A2.5 2.5 0 1 1 12 5.5a2.5 2.5 0 0 1 0 5Z"></path></svg>
+                                                    </div>
+                                                    <a href="#" class="business-badge" data-piece-filter-toggle="region"><span id="piece-ad-region-badge-label">지역 전체</span><i class="business-chevron" aria-hidden="true"></i></a>
+                                                    <a href="#" class="business-badge hidden" id="piece-ad-district-trigger" data-piece-filter-toggle="district"><span id="piece-ad-district-badge-label">세부 지역</span><i class="business-chevron" aria-hidden="true"></i></a>
+                                                    <a href="#" class="business-badge" data-piece-filter-toggle="category"><span id="piece-ad-category-badge-label">업종 전체</span><i class="business-chevron" aria-hidden="true"></i></a>
+                                                </div>
+                                                <div class="business-filter-right">
+                                                    <button type="button" class="business-search-btn" id="piece-ad-search-btn" aria-label="조각제휴 업체 검색">
+                                                        <svg viewBox="0 0 512 512" aria-hidden="true"><path d="m495,466.1l-119.2-119.2c29.1-35.5 46.5-80.8 46.5-130.3 0-113.5-92.1-205.6-205.6-205.6-113.6,0-205.7,92.1-205.7,205.7s92.1,205.7 205.7,205.7c49.4,0 94.8-17.4 130.3-46.5l119.1,119.1c8,8 20.9,8 28.9,0 8-8 8-20.9 0-28.9zm-443.2-249.4c-1.42109e-14-91 73.8-164.8 164.8-164.8 91,0 164.8,73.8 164.8,164.8s-73.8,164.8-164.8,164.8c-91,0-164.8-73.8-164.8-164.8z"></path></svg>
+                                                    </button>
+                                                    <div class="business-filter-search">
+                                                        <input type="search" id="piece-ad-keyword-filter" placeholder="제목/작성자 검색">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <input type="hidden" id="piece-ad-region-filter" value="">
+                                            <input type="hidden" id="piece-ad-district-filter" value="">
+                                            <input type="hidden" id="piece-ad-category-filter" value="">
+                                            <div class="business-filter-menu piece-filter-menu" id="piece-ad-menu-region"><div class="business-filter-menu__content" id="piece-ad-menu-region-items"></div></div>
+                                            <div class="business-filter-menu piece-filter-menu" id="piece-ad-menu-district"><div class="business-filter-menu__content" id="piece-ad-menu-district-items"></div></div>
+                                            <div class="business-filter-menu piece-filter-menu" id="piece-ad-menu-category"><div class="business-filter-menu__content" id="piece-ad-menu-category-items"></div></div>
+                                        </div>
                                         <div class="piece-ad-selector-loading" id="piece-ad-selector-loading">제휴광고를 불러오는 중...</div>
                                         <p class="piece-ad-selector-empty hidden" id="piece-ad-selector-empty">선택 가능한 조각제휴 광고가 없습니다.</p>
                                         <ul class="business-directory-list piece-ad-selector-list" id="piece-ad-selector-list"></ul>
+                                    </div>
+                                    <div class="piece-selected-ad-preview hidden" id="piece-selected-ad-preview" aria-live="polite">
+                                        <p class="piece-ad-selector-help">선택된 조각제휴 광고</p>
+                                        <ul class="business-directory-list piece-selected-ad-preview-list" id="piece-selected-ad-preview-list"></ul>
                                     </div>
                                 </div>
                             </div>
