@@ -187,6 +187,20 @@ function setupEventListeners() {
             handlePieceJoinAction();
             return;
         }
+
+        const selectedAdItem = e.target.closest('.piece-selected-ad-list .business-directory-item[data-business-ad-url]');
+        if (selectedAdItem) {
+            window.location.href = selectedAdItem.dataset.businessAdUrl;
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (!['Enter', ' '].includes(e.key)) return;
+        const selectedAdItem = e.target.closest('.piece-selected-ad-list .business-directory-item[data-business-ad-url]');
+        if (!selectedAdItem) return;
+
+        e.preventDefault();
+        window.location.href = selectedAdItem.dataset.businessAdUrl;
     });
 
     setupMessageModal();
@@ -788,17 +802,49 @@ function getPieceMaximumParticipantCount(content) {
     return summaryMaxMatch ? Math.max(1, Number(summaryMaxMatch[1]) || 1) : 1;
 }
 
-function renderPieceSummaryValue(row) {
+function getPieceSelectedAdPath(row) {
     const value = String(row?.value || '').trim();
     const label = String(row?.label || '');
-    if (!label.includes('선택 광고')) return sanitizeHTML(value);
+    if (!label.includes('선택 광고')) return '';
 
     const businessInfoPathMatch = value.match(/(?:^|\s-\s)(\/business-info\/[^\s]+)\s*$/);
-    if (!businessInfoPathMatch) return sanitizeHTML(value);
+    return businessInfoPathMatch ? businessInfoPathMatch[1] : '';
+}
 
-    const path = businessInfoPathMatch[1];
-    const title = value.slice(0, businessInfoPathMatch.index).replace(/\s-\s$/, '').trim() || '선택한 광고 보기';
-    return `<a href="${sanitizeHTML(path)}" class="piece-summary-ad-link">${sanitizeHTML(title)}</a>`;
+function renderPieceSelectedAdCardPlaceholder(selectedAdPath) {
+    if (!selectedAdPath) return '';
+
+    return `
+        <section class="piece-selected-ad" aria-label="선택한 조각 제휴 광고">
+            <p class="piece-selected-ad-title">선택 광고</p>
+            <ul class="business-directory-list piece-selected-ad-list" data-piece-selected-ad-path="${sanitizeHTML(selectedAdPath)}">
+                <li class="business-directory-item piece-selected-ad-loading" aria-live="polite">선택한 광고를 불러오는 중...</li>
+            </ul>
+        </section>`;
+}
+
+async function hydratePieceSelectedAdCards() {
+    const lists = Array.from(document.querySelectorAll('[data-piece-selected-ad-path]'));
+    if (!lists.length || !window.BusinessDirectoryItem || typeof APIClient === 'undefined') return;
+
+    await Promise.all(lists.map(async (list) => {
+        const selectedAdPath = String(list.dataset.pieceSelectedAdPath || '').trim();
+        const slug = selectedAdPath.split('/').filter(Boolean).pop();
+        if (!slug) return;
+
+        try {
+            const response = await APIClient.get(`/live/business-ads/${encodeURIComponent(slug)}`);
+            const ad = response?.content || response;
+            const detailUrl = typeof createBusinessInfoDetailPath === 'function' ? createBusinessInfoDetailPath(ad) : selectedAdPath;
+            list.innerHTML = BusinessDirectoryItem.render(ad, {
+                index: 0,
+                attributes: (item) => `data-business-ad-id="${sanitizeHTML(item.id || '')}" data-business-ad-url="${sanitizeHTML(detailUrl)}" data-business-ad-view-count="${Number(item.viewCount || 0)}"`
+            });
+        } catch (error) {
+            console.error('선택 광고 로드 실패:', error);
+            list.innerHTML = '<li class="business-directory-item piece-selected-ad-loading">선택한 광고를 불러오지 못했습니다.</li>';
+        }
+    }));
 }
 
 function renderPiecePostContent(content) {
@@ -822,20 +868,23 @@ function renderPiecePostContent(content) {
             return { label: label.trim(), value: valueParts.join(':').trim() };
         })
         .filter((row) => row.label && row.value));
+    const selectedAdPath = rows.map(getPieceSelectedAdPath).find(Boolean) || '';
+    const summaryRows = rows.filter((row) => !getPieceSelectedAdPath(row));
 
-    const summaryMarkup = rows.length ? `
+    const selectedAdMarkup = renderPieceSelectedAdCardPlaceholder(selectedAdPath);
+    const summaryMarkup = summaryRows.length ? `
         <section class="piece-summary" aria-label="조각 모집 정보">
             <div class="piece-summary-header">
                 <p class="piece-summary-title">조각 모집 정보</p>
                 <span class="piece-status-badge" id="piece-status-badge">모집중</span>
             </div>
             <dl class="piece-summary-list">
-                ${rows.map((row) => `<div><dt>${sanitizeHTML(row.label)}</dt><dd>${renderPieceSummaryValue(row)}</dd></div>`).join('')}
+                ${summaryRows.map((row) => `<div><dt>${sanitizeHTML(row.label)}</dt><dd>${sanitizeHTML(row.value)}</dd></div>`).join('')}
             </dl>
             <button type="button" class="btn btn-primary piece-join-btn" id="piece-join-btn">참여하기</button>
         </section>` : '';
 
-    return `${summaryMarkup}${bodyContent ? renderPostContent(bodyContent) : ''}`;
+    return `${selectedAdMarkup}${summaryMarkup}${bodyContent ? renderPostContent(bodyContent) : ''}`;
 }
 
 
@@ -991,6 +1040,7 @@ function renderPostDetail(post) {
     if (contentElement) {
         contentElement.innerHTML = boardType === 'PIECE' ? renderPiecePostContent(post.content || '') : renderPostContent(post.content || '');
         contentElement.classList.toggle('admin-restricted-content', isHiddenPost);
+        if (boardType === 'PIECE') hydratePieceSelectedAdCards();
     }
     const boardNameEl = document.getElementById('post-board-name');
     if (boardNameEl) boardNameEl.textContent = boardNameMap[boardType] || '게시판';

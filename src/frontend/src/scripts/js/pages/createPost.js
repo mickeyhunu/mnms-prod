@@ -528,7 +528,9 @@ function formatSelectedPieceBusinessAdValue(ad) {
     const title = String(ad.title || ad.businessName || '선택한 광고').trim();
     const area = [ad.region, ad.district].map((value) => String(value || '').trim()).filter(Boolean).join(' ');
     const category = String(ad.category || '').trim();
-    const detailPath = `/business-info/${encodeURIComponent(String(ad.id || ''))}`;
+    const detailPath = typeof createBusinessInfoDetailPath === 'function'
+        ? createBusinessInfoDetailPath(ad)
+        : `/business-info/${encodeURIComponent(String(ad.id || ''))}`;
     const metadata = [area, category].filter(Boolean).join(' · ');
 
     return `${title}${metadata ? ` (${metadata})` : ''} - ${detailPath}`;

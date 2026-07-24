@@ -526,11 +526,22 @@ body,
     white-space: nowrap;
 }
 
-.piece-summary-ad-link {
-    color: var(--primary-color);
-    font-weight: 700;
-    text-decoration: underline;
-    text-underline-offset: 3px;
+.piece-selected-ad {
+    margin: 0 0 18px;
+}
+
+.piece-selected-ad-title {
+    margin: 0 0 8px;
+    font-weight: 800;
+    color: var(--text-color);
+}
+
+.piece-selected-ad-list .business-directory-item {
+    margin-bottom: 0;
+}
+
+.piece-selected-ad-loading {
+    color: var(--text-subtle);
 }
 
 .piece-join-btn {
