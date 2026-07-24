@@ -1107,11 +1107,18 @@ const pageRegistry = {
                             <div class="piece-field-row">
                                 <label for="piece-location-city">장소 <span class="required-mark">필수</span></label>
                                 <div class="piece-location-selector-wrap">
-                                    <select id="piece-location-city" class="form-control piece-input" data-piece-label="장소" data-piece-required="true">
-                                        <option value="서울|강남구" selected>서울 강남구</option>
-                                    </select>
-                                    <div class="piece-ad-selector hidden" id="piece-ad-selector" aria-live="polite">
-                                        <p class="piece-ad-selector-help">조각제휴가 활성화된 광고를 지역 또는 키워드로 검색한 뒤 선택하면 장소가 자동으로 입력됩니다.</p>
+                                    <div class="piece-location-control-row">
+                                        <select id="piece-location-city" class="form-control piece-input" data-piece-label="장소" data-piece-required="true">
+                                            <option value="서울|강남구" selected>서울 강남구</option>
+                                        </select>
+                                        <button type="button" class="btn btn-secondary piece-ad-selector-open-btn" id="piece-ad-selector-open-btn" aria-haspopup="dialog" aria-controls="piece-ad-selector">제휴광고 선택</button>
+                                    </div>
+                                    <div class="piece-ad-selector-modal hidden" id="piece-ad-selector" role="dialog" aria-modal="true" aria-labelledby="piece-ad-selector-title" aria-live="polite">
+                                        <div class="piece-ad-selector-backdrop" data-piece-ad-selector-close></div>
+                                        <div class="piece-ad-selector-panel">
+                                            <button type="button" class="piece-ad-selector-close" data-piece-ad-selector-close aria-label="조각제휴 광고 선택 창 닫기">×</button>
+                                            <h3 id="piece-ad-selector-title">조각제휴 광고 선택</h3>
+                                            <p class="piece-ad-selector-help">조각제휴가 활성화된 광고를 지역 또는 키워드로 검색한 뒤 선택하면 장소가 자동으로 입력됩니다.</p>
                                         <div class="business-directory-filter-v2 piece-ad-selector-filter" aria-label="조각제휴 업체 필터">
                                             <div class="business-filter-row business-filter-row--top">
                                                 <div class="business-filter-left">
@@ -1141,6 +1148,7 @@ const pageRegistry = {
                                         <div class="piece-ad-selector-loading" id="piece-ad-selector-loading">제휴광고를 불러오는 중...</div>
                                         <p class="piece-ad-selector-empty hidden" id="piece-ad-selector-empty">선택 가능한 조각제휴 광고가 없습니다.</p>
                                         <ul class="business-directory-list piece-ad-selector-list" id="piece-ad-selector-list"></ul>
+                                        </div>
                                     </div>
                                     <div class="piece-selected-ad-preview hidden" id="piece-selected-ad-preview" aria-live="polite">
                                         <p class="piece-ad-selector-help">선택된 조각제휴 광고</p>
