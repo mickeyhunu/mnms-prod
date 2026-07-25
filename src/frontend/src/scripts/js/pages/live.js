@@ -23,7 +23,7 @@ const LIVE_LEVEL_BADGE_ALT_TEXT = {
     3: 'LV3 계급 배지',
     4: 'LV4 계급 배지'
 };
-let shareSheetOpen = false;
+let shareSheetController = null;
 
 function removeLivePageSharedChrome() {
     document.querySelectorAll('body > .bottom-nav-footer, .page-shell--live > .bottom-nav-footer, .page-shell--live > .header').forEach((element) => {
@@ -116,13 +116,15 @@ async function initLivePage() {
     removeLivePageSharedChrome();
     Auth.updateHeaderUI();
     liveState.canDeleteChojoong = Boolean(Auth.getUser()?.isAdmin);
+    bindLiveEvents();
+    setupShareSheet();
+
     await loadLiveAccessRules();
 
     if (typeof initHeader === 'function') {
         initHeader();
     }
 
-    bindLiveEvents();
     hydrateLiveFiltersCache();
     startLiveAutoRefresh();
 
@@ -287,9 +289,6 @@ function bindLiveEvents() {
     scrollMessageButton?.addEventListener('click', () => {
         scrollLiveToLatest();
     });
-
-    setupShareSheet();
-    document.addEventListener('keydown', handleShareSheetKeydown);
 
     liveState.hasBoundEvents = true;
     updateLiveScrollBottomButton();
@@ -2155,22 +2154,11 @@ function wrapBlurMarker(text) {
 }
 
 function setupShareSheet() {
-    const shareSheet = document.getElementById('share-sheet');
-    if (!shareSheet) {
-        return;
-    }
-
-    document.getElementById('share-sheet-overlay')?.addEventListener('click', closeShareSheet);
-    document.getElementById('share-sheet-close')?.addEventListener('click', closeShareSheet);
-    document.getElementById('share-kakao-btn')?.addEventListener('click', handleKakaoShare);
-    document.getElementById('share-sms-btn')?.addEventListener('click', handleSmsShare);
-    document.getElementById('share-copy-btn')?.addEventListener('click', handleCopyShareLink);
-}
-
-function handleShareSheetKeydown(event) {
-    if (event.key === 'Escape' && shareSheetOpen) {
-        closeShareSheet();
-    }
+    shareSheetController = createShareSheetController({
+        onKakaoShare: handleKakaoShare,
+        onSmsShare: handleSmsShare,
+        onCopyShare: handleCopyShareLink
+    });
 }
 
 function getShareData() {
@@ -2211,34 +2199,13 @@ function createLiveKakaoShareTemplate({ title, url }) {
     };
 }
 
-function openShareSheet() {
-    const shareSheet = document.getElementById('share-sheet');
-    if (!shareSheet) {
-        return;
-    }
-
-    shareSheet.classList.remove('hidden');
-    shareSheet.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('share-sheet-open');
-    shareSheetOpen = true;
-}
-
 function closeShareSheet() {
-    const shareSheet = document.getElementById('share-sheet');
-    if (!shareSheet) {
-        return;
-    }
-
-    shareSheet.classList.add('hidden');
-    shareSheet.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('share-sheet-open');
-    shareSheetOpen = false;
+    shareSheetController?.close();
 }
 
 function handleSharePost() {
-    openShareSheet();
+    shareSheetController?.open();
 }
-
 async function handleKakaoShare() {
     const shareData = getShareData();
 

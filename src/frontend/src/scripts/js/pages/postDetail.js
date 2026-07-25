@@ -10,8 +10,7 @@ let selectedMessageRecipient = null;
 let replyingTo = null;
 let activeCommentActionId = null;
 let currentCommentById = new Map();
-let shareSheetOpen = false;
-let shareSheetTransitionTimer = null;
+let shareSheetController = null;
 const POST_DETAIL_DEFAULT_DESCRIPTION = '미드나잇 맨즈 커뮤니티 게시글 상세 페이지입니다.';
 const DEFAULT_PROFILE_IMAGE_URL = '/src/assets/image/img_profile.png';
 const COMMUNITY_KAKAO_SHARE_TITLE = '미드나잇 맨즈 커뮤니티';
@@ -1174,24 +1173,11 @@ function updatePostMoreMenuEmptyState() {
 }
 
 function setupShareSheet() {
-    const shareSheet = document.getElementById('share-sheet');
-    if (!shareSheet) {
-        return;
-    }
-
-    document.getElementById('share-sheet-overlay')?.addEventListener('click', closeShareSheet);
-    document.getElementById('share-sheet-close')?.addEventListener('click', closeShareSheet);
-    document.getElementById('share-kakao-btn')?.addEventListener('click', handleKakaoShare);
-    document.getElementById('share-sms-btn')?.addEventListener('click', handleSmsShare);
-    document.getElementById('share-copy-btn')?.addEventListener('click', handleCopyShareLink);
-
-    document.addEventListener('keydown', handleShareSheetKeydown);
-}
-
-function handleShareSheetKeydown(event) {
-    if (event.key === 'Escape' && shareSheetOpen) {
-        closeShareSheet();
-    }
+    shareSheetController = createShareSheetController({
+        onKakaoShare: handleKakaoShare,
+        onSmsShare: handleSmsShare,
+        onCopyShare: handleCopyShareLink
+    });
 }
 
 function getPostShareContentPreview(post = currentPostDetail) {
@@ -1260,50 +1246,13 @@ function createPostKakaoShareTemplate({ title, description, url }) {
     };
 }
 
-function openShareSheet() {
-    const shareSheet = document.getElementById('share-sheet');
-    if (!shareSheet) {
-        return;
-    }
-
-    window.clearTimeout(shareSheetTransitionTimer);
-    shareSheet.classList.remove('hidden', 'is-open');
-    shareSheet.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('share-sheet-open');
-    shareSheetOpen = true;
-
-    window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-            if (shareSheetOpen) {
-                shareSheet.classList.add('is-open');
-            }
-        });
-    });
-}
-
 function closeShareSheet() {
-    const shareSheet = document.getElementById('share-sheet');
-    if (!shareSheet) {
-        return;
-    }
-
-    window.clearTimeout(shareSheetTransitionTimer);
-    shareSheet.classList.remove('is-open');
-    shareSheet.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('share-sheet-open');
-    shareSheetOpen = false;
-
-    shareSheetTransitionTimer = window.setTimeout(() => {
-        if (!shareSheetOpen) {
-            shareSheet.classList.add('hidden');
-        }
-    }, 300);
+    shareSheetController?.close();
 }
 
-async function handleSharePost() {
-    openShareSheet();
+function handleSharePost() {
+    shareSheetController?.open();
 }
-
 async function handleKakaoShare() {
     const shareData = getShareData();
 
