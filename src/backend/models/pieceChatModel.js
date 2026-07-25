@@ -9,7 +9,7 @@ function extractSelectedAdId(content = '') {
 async function getRoomContext(postId, userId) {
   const pool = getPool();
   const [postResult, adminResult, participantResult] = await Promise.all([
-    pool.query(`SELECT p.id, p.title, p.content, p.user_id AS leaderId, u.nickname AS leaderNickname,
+    pool.query(`SELECT p.id, p.title, p.content, p.created_at AS createdAt, p.user_id AS leaderId, u.nickname AS leaderNickname,
                        u.profile_image_url AS leaderProfileImageUrl
                   FROM posts p LEFT JOIN users u ON u.id = p.user_id
                  WHERE p.id = ? AND p.board_type = 'PIECE' AND p.is_deleted = 0`, [postId]),

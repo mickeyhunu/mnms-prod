@@ -1,5 +1,19 @@
 const model = require('../models/pieceChatModel');
 
+const PIECE_GUIDE_MESSAGE = Object.freeze({
+  id: 0,
+  userId: null,
+  nickname: '조각안내',
+  profileImageUrl: '/src/assets/live-avatars/favicon.png',
+  messageType: 'CHAT',
+  content: `안녕하세요! 미드나잇맨즈입니다.
+조각장은 출석자 출석체크 필수입니다!
+조각원은 미출석시 미리 참여취소하셔야 패널티 없으십니다!
+만남 전까지는 해당 채팅방에서 연락처 공유 금지입니다!
+
+안전하고 즐거운 조각되세요!`
+});
+
 function parseId(value) { const id = Number(value); return Number.isInteger(id) && id > 0 ? id : null; }
 async function context(req, res) {
   const postId = parseId(req.params.id);
@@ -19,7 +33,8 @@ function serializeMembers(room, currentUserId) {
   return { viewerRole: room.viewerRole, canManage: room.canManage, currentUserId, members, participants: room.participants };
 }
 function serializeRoom(room, messages, currentUserId) {
-  return { post: room.post, ...serializeMembers(room, currentUserId), messages };
+  const guideMessage = { ...PIECE_GUIDE_MESSAGE, createdAt: room.post.createdAt };
+  return { post: room.post, ...serializeMembers(room, currentUserId), messages: [guideMessage, ...messages] };
 }
 async function getRoom(req, res, next) { try { const value = await context(req, res); if (!value) return; res.json(serializeRoom(value.room, await model.listMessages(value.postId), req.user.id)); } catch (e) { next(e); } }
 async function getMembers(req, res, next) { try { const value = await context(req, res); if (!value) return; res.json(serializeMembers(value.room, req.user.id)); } catch (e) { next(e); } }
