@@ -3,6 +3,7 @@ const controller = require('../controllers/pieceChatController');
 const { authMiddleware } = require('../middlewares/authMiddleware');
 router.use(authMiddleware);
 router.get('/:id', controller.getRoom);
+router.get('/:id/members', controller.getMembers);
 router.get('/:id/messages', controller.getMessages);
 router.post('/:id/messages', controller.sendMessage);
 router.patch('/:id/participants/:userId/attendance', controller.attendance);
