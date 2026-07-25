@@ -1083,6 +1083,7 @@ async function initDatabase() {
       post_id BIGINT NOT NULL,
       user_id BIGINT NOT NULL,
       content VARCHAR(1000) NOT NULL,
+      message_type ENUM('CHAT','SYSTEM') NOT NULL DEFAULT 'CHAT',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       INDEX idx_piece_chat_post_created (post_id, created_at),
@@ -1090,6 +1091,13 @@ async function initDatabase() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  await ensureColumn(
+    pool,
+    'piece_chat_messages',
+    'message_type',
+    "ALTER TABLE piece_chat_messages ADD COLUMN message_type ENUM('CHAT','SYSTEM') NOT NULL DEFAULT 'CHAT' AFTER content"
+  );
 
   const [likerPointAwardedColumn] = await pool.query(
     `SELECT 1
