@@ -45,25 +45,22 @@ function appendMessages() {
     renderMessages();
 }
 function renderMembers() {
-    document.getElementById('chat-member-count').textContent = `참여자 ${pieceChatRoom.members.length}명`;
-    document.getElementById('chat-member-list').innerHTML = pieceChatRoom.members.map((member) => {
+    const visibleMembers = pieceChatRoom.members.filter((member) => member.roomRole !== 'ADMIN');
+    const participants = new Map((pieceChatRoom.participants || []).map((member) => [Number(member.userId), member]));
+    document.getElementById('chat-member-count').textContent = `참여자 ${visibleMembers.length}명`;
+    document.getElementById('chat-member-list').innerHTML = visibleMembers.map((member) => {
         const mine = Number(member.userId) === Number(pieceChatRoom.currentUserId);
         const canRemove = pieceChatRoom.canManage && member.roomRole === 'MEMBER' && !mine;
-        const menu = mine ? '' : `<div class="piece-chat-member-menu"><button class="piece-chat-member-more" type="button" data-member-menu aria-label="${chatEscape(member.nickname)} 메뉴" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="12" cy="19" r="1.4"></circle></svg></button><div class="piece-chat-member-actions hidden"><button type="button" data-report-member="${member.userId}" data-member-nickname="${chatEscape(member.nickname)}">신고</button>${canRemove ? `<button type="button" class="danger" data-remove-member="${member.userId}">내보내기</button>` : ''}</div></div>`;
+        const participant = participants.get(Number(member.userId));
+        const attendance = pieceChatRoom.canManage && participant ? `<button type="button" class="piece-chat-attendance ${participant.attendanceStatus === 'PRESENT' ? 'is-done' : ''}" data-attendance-member="${member.userId}">${participant.attendanceStatus === 'PRESENT' ? '✓ 출석 완료' : '출석'}</button>` : '';
+        const menu = mine ? '' : `<div class="piece-chat-member-menu">${attendance}<button class="piece-chat-member-more" type="button" data-member-menu aria-label="${chatEscape(member.nickname)} 메뉴" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="12" cy="19" r="1.4"></circle></svg></button><div class="piece-chat-member-actions hidden"><button type="button" data-report-member="${member.userId}" data-member-nickname="${chatEscape(member.nickname)}">신고</button>${canRemove ? `<button type="button" class="danger" data-remove-member="${member.userId}">내보내기</button>` : ''}</div></div>`;
         return `<div class="piece-chat-member"><div class="piece-chat-member-avatar">${avatar(member)}</div><div class="piece-chat-member-info"><strong>${mine ? '<span class="piece-chat-member-me">나</span>' : ''}${chatEscape(member.nickname)}</strong><span>${chatRoleLabel(member.roomRole)}</span></div>${menu}</div>`;
     }).join('');
     document.getElementById('chat-cancel-participation').classList.toggle('hidden', pieceChatRoom.viewerRole !== 'MEMBER');
-    document.getElementById('chat-manager-actions').innerHTML = pieceChatRoom.canManage ? '<button id="open-attendance" class="piece-chat-manage">✓ <span>출석 체크</span></button>' : '';
-    document.getElementById('open-attendance')?.addEventListener('click', openAttendance);
 }
 function renderRoom() {
     document.getElementById('chat-title').textContent = pieceChatRoom.post.title || '조각 채팅방';
     renderMessages(); renderMembers();
-}
-function openAttendance() {
-    const list = document.getElementById('attendance-list');
-    list.innerHTML = pieceChatRoom.participants.map((member) => `<div class="attendance-member"><div class="piece-chat-member-avatar">${avatar(member)}</div><strong>${chatEscape(member.nickname)}</strong><div class="attendance-controls"><button data-attendance="PRESENT" data-user-id="${member.userId}" class="${member.attendanceStatus === 'PRESENT' ? 'is-done' : ''}">${member.attendanceStatus === 'PRESENT' ? '✓ 완료' : '출석'}</button><button data-attendance="ABSENT" data-user-id="${member.userId}" class="absent ${member.attendanceStatus === 'ABSENT' ? 'is-done' : ''}">${member.attendanceStatus === 'ABSENT' ? '✓ 미출석' : '미출석'}</button>${pieceChatRoom.canManage ? `<button data-remove="${member.userId}" class="remove">내보내기</button>` : ''}</div></div>`).join('') || '<p>참여한 조각원이 없습니다.</p>';
-    document.getElementById('attendance-modal').classList.remove('hidden');
 }
 async function loadPieceChat() {
     try { pieceChatRoom = await PieceChatAPI.getRoom(pieceChatId); renderRoom(); }
@@ -86,7 +83,6 @@ function updateMembers(memberState) {
     if (memberStateKey(pieceChatRoom) === memberStateKey(memberState)) return;
     Object.assign(pieceChatRoom, memberState);
     renderMembers();
-    if (!document.getElementById('attendance-modal').classList.contains('hidden')) openAttendance();
 }
 async function pollPieceChatUpdates() {
     if (pieceChatPolling || !pieceChatRoom || document.hidden) return;
@@ -121,17 +117,20 @@ function initPieceChatPage() {
     document.getElementById('chat-back').onclick = () => history.length > 1 ? history.back() : window.location.assign('/community');
     document.getElementById('chat-members').onclick = () => document.getElementById('chat-drawer').classList.remove('hidden');
     document.querySelectorAll('[data-close-drawer]').forEach((button) => button.onclick = () => document.getElementById('chat-drawer').classList.add('hidden'));
-    document.querySelector('[data-close-attendance]').onclick = () => document.getElementById('attendance-modal').classList.add('hidden');
     document.getElementById('chat-cancel-participation').onclick = async () => {
         if (!confirm('이 조각 참여를 취소할까요?')) return;
         try { await PostAPI.cancelPieceJoin(pieceChatId); window.location.href = `/post-detail/${pieceChatId}`; }
         catch (error) { alert(error.message || '참여 취소 중 오류가 발생했습니다.'); }
     };
     document.getElementById('chat-member-list').onclick = async (event) => {
+        const attendanceButton = event.target.closest('[data-attendance-member]');
         const menuButton = event.target.closest('[data-member-menu]');
         const reportButton = event.target.closest('[data-report-member]');
         const removeButton = event.target.closest('[data-remove-member]');
-        if (menuButton) {
+        if (attendanceButton) {
+            try { pieceChatRoom = await PieceChatAPI.attendance(pieceChatId, attendanceButton.dataset.attendanceMember, 'PRESENT'); renderRoom(); }
+            catch (error) { alert(error.message || '출석 처리 중 오류가 발생했습니다.'); }
+        } else if (menuButton) {
             const actions = menuButton.nextElementSibling;
             const opening = actions.classList.contains('hidden');
             document.querySelectorAll('.piece-chat-member-actions').forEach((item) => item.classList.add('hidden'));
@@ -152,7 +151,6 @@ function initPieceChatPage() {
         event.preventDefault();
         chatForm.requestSubmit();
     };
-    document.getElementById('attendance-list').onclick = async (event) => { const attendance = event.target.closest('[data-attendance]'); const remove = event.target.closest('[data-remove]'); try { if (attendance) { pieceChatRoom = await PieceChatAPI.attendance(pieceChatId, attendance.dataset.userId, attendance.dataset.attendance); renderRoom(); openAttendance(); } else if (remove && confirm('이 조각원을 채팅방과 조각에서 내보낼까요?')) { await PieceChatAPI.remove(pieceChatId, remove.dataset.remove); await loadPieceChat(); openAttendance(); } } catch (error) { alert(error.message); } };
     loadPieceChat().then(startPieceChatPolling);
 }
 window.initPieceChatPage = initPieceChatPage;
