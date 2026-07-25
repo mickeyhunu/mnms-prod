@@ -1065,6 +1065,32 @@ async function initDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
+  const pieceParticipantColumns = [
+    { name: 'attendance_status', sql: "ALTER TABLE piece_participants ADD COLUMN attendance_status ENUM('PRESENT','ABSENT') NULL AFTER attended_at" },
+    { name: 'removed_at', sql: 'ALTER TABLE piece_participants ADD COLUMN removed_at TIMESTAMP NULL AFTER attendance_status' }
+  ];
+  for (const column of pieceParticipantColumns) {
+    const [rows] = await pool.query(
+      `SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'piece_participants' AND COLUMN_NAME = ? LIMIT 1`,
+      [dbConfig.database, column.name]
+    );
+    if (!rows.length) await pool.query(column.sql);
+  }
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS piece_chat_messages (
+      id BIGINT NOT NULL AUTO_INCREMENT,
+      post_id BIGINT NOT NULL,
+      user_id BIGINT NOT NULL,
+      content VARCHAR(1000) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      INDEX idx_piece_chat_post_created (post_id, created_at),
+      FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
   const [likerPointAwardedColumn] = await pool.query(
     `SELECT 1
      FROM INFORMATION_SCHEMA.COLUMNS

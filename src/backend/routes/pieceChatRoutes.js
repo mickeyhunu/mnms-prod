@@ -1,0 +1,9 @@
+const router = require('express').Router();
+const controller = require('../controllers/pieceChatController');
+const { authMiddleware } = require('../middlewares/authMiddleware');
+router.use(authMiddleware);
+router.get('/:id', controller.getRoom);
+router.post('/:id/messages', controller.sendMessage);
+router.patch('/:id/participants/:userId/attendance', controller.attendance);
+router.delete('/:id/participants/:userId', controller.remove);
+module.exports = router;

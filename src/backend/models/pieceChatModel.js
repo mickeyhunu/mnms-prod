@@ -1,0 +1,66 @@
+const { getPool } = require('../config/database');
+
+function extractSelectedAdId(content = '') {
+  const selectedAdLine = String(content).split('\n').find((line) => line.includes('선택 광고')) || '';
+  const match = selectedAdLine.match(/\/business-info\/[^\s)]*-(\d+)(?:\s|$|\))/);
+  return match ? Number(match[1]) : null;
+}
+
+async function getRoomContext(postId, userId) {
+  const pool = getPool();
+  const [postResult, adminResult, participantResult] = await Promise.all([
+    pool.query(`SELECT p.id, p.title, p.content, p.user_id AS leaderId, u.nickname AS leaderNickname
+                  FROM posts p LEFT JOIN users u ON u.id = p.user_id
+                 WHERE p.id = ? AND p.board_type = 'PIECE' AND p.is_deleted = 0`, [postId]),
+    pool.query("SELECT id, nickname, profile_image_url AS profileImageUrl FROM users WHERE role = 'ADMIN' AND account_status = 'ACTIVE' ORDER BY id"),
+    pool.query(`SELECT pp.user_id AS userId, u.nickname, u.profile_image_url AS profileImageUrl,
+                       pp.attended_at AS attendedAt, pp.attendance_status AS attendanceStatus, pp.created_at AS joinedAt
+                  FROM piece_participants pp JOIN users u ON u.id = pp.user_id
+                 WHERE pp.post_id = ? AND pp.removed_at IS NULL ORDER BY pp.created_at`, [postId])
+  ]);
+  const post = postResult[0][0];
+  const admins = adminResult[0];
+  const participants = participantResult[0];
+  if (!post) return null;
+  const adId = extractSelectedAdId(post.content);
+  let advertiser = null;
+  if (adId) {
+    const [rows] = await pool.query(`SELECT u.id, u.nickname, u.profile_image_url AS profileImageUrl
+                                      FROM business_ads ba JOIN users u ON u.id = ba.owner_user_id WHERE ba.id = ? LIMIT 1`, [adId]);
+    advertiser = rows[0] || null;
+  }
+  const memberIds = new Set([Number(post.leaderId), ...admins.map((u) => Number(u.id)), ...participants.map((u) => Number(u.userId))]);
+  if (advertiser) memberIds.add(Number(advertiser.id));
+  const viewerRole = admins.some((u) => Number(u.id) === Number(userId)) ? 'ADMIN'
+    : Number(post.leaderId) === Number(userId) ? 'LEADER'
+      : advertiser && Number(advertiser.id) === Number(userId) ? 'ADVERTISER'
+        : participants.some((u) => Number(u.userId) === Number(userId)) ? 'MEMBER' : null;
+  return { post, admins, advertiser, participants, viewerRole, canManage: ['ADMIN', 'LEADER', 'ADVERTISER'].includes(viewerRole), isMember: memberIds.has(Number(userId)) };
+}
+
+async function listMessages(postId) {
+  const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.created_at AS createdAt,
+                                              u.nickname, u.profile_image_url AS profileImageUrl, u.role
+                                         FROM piece_chat_messages pcm JOIN users u ON u.id = pcm.user_id
+                                        WHERE pcm.post_id = ? ORDER BY pcm.created_at ASC, pcm.id ASC LIMIT 300`, [postId]);
+  return rows;
+}
+
+async function createMessage(postId, userId, content) {
+  const [result] = await getPool().query('INSERT INTO piece_chat_messages (post_id, user_id, content) VALUES (?, ?, ?)', [postId, userId, content]);
+  const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.created_at AS createdAt,
+                                              u.nickname, u.profile_image_url AS profileImageUrl, u.role
+                                         FROM piece_chat_messages pcm JOIN users u ON u.id = pcm.user_id WHERE pcm.id = ?`, [result.insertId]);
+  return rows[0];
+}
+
+async function setAttendance(postId, userId, status) {
+  await getPool().query(`UPDATE piece_participants SET attendance_status = ?, attended_at = CASE WHEN ? = 'PRESENT' THEN COALESCE(attended_at, NOW()) ELSE NULL END
+                          WHERE post_id = ? AND user_id = ? AND removed_at IS NULL`, [status, status, postId, userId]);
+}
+
+async function removeParticipant(postId, userId) {
+  await getPool().query('UPDATE piece_participants SET removed_at = NOW() WHERE post_id = ? AND user_id = ? AND removed_at IS NULL', [postId, userId]);
+}
+
+module.exports = { getRoomContext, listMessages, createMessage, setAttendance, removeParticipant };

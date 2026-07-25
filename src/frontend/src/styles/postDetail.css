@@ -321,6 +321,7 @@
     padding: 0 20px;
     scroll-padding-inline: 20px;
 }
+.piece-chat-enter { text-decoration: none; margin-left: 10px; }
 
 .piece-participant-chip {
     display: flex;

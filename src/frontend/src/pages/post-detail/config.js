@@ -106,6 +106,7 @@ const postDetailTemplate = `
                         <span id="like-icon">🤍</span>
                         <span id="like-count">0</span>
                     </button>
+                    <a class="btn btn-primary piece-chat-enter hidden" id="piece-chat-enter" href="#">채팅방 들어가기</a>
                 </div>
             </div>
 
