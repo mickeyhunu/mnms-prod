@@ -17,7 +17,10 @@ function renderMessages() {
 }
 function renderMembers() {
     document.getElementById('chat-member-count').textContent = `참여자 ${pieceChatRoom.members.length}명`;
-    document.getElementById('chat-member-list').innerHTML = pieceChatRoom.members.map((member) => `<div class="piece-chat-member"><div class="piece-chat-member-avatar">${avatar(member)}</div><div><strong>${chatEscape(member.nickname)}</strong><span>${chatRoleLabel(member.roomRole)}</span></div></div>`).join('');
+    document.getElementById('chat-member-list').innerHTML = pieceChatRoom.members.map((member) => {
+        const mine = Number(member.userId) === Number(pieceChatRoom.currentUserId);
+        return `<div class="piece-chat-member"><div class="piece-chat-member-avatar">${avatar(member)}</div><div><strong>${mine ? '<span class="piece-chat-member-me">나</span>' : ''}${chatEscape(member.nickname)}</strong><span>${chatRoleLabel(member.roomRole)}</span></div></div>`;
+    }).join('');
     document.getElementById('chat-manager-actions').innerHTML = pieceChatRoom.canManage ? '<button id="open-attendance" class="piece-chat-manage">✓ <span>출석 체크</span></button>' : '';
     document.getElementById('open-attendance')?.addEventListener('click', openAttendance);
 }
