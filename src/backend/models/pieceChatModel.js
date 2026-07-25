@@ -80,10 +80,10 @@ async function removeParticipant(postId, userId) {
       [postId, userId]
     );
     if (participants.length) {
-      await connection.query('UPDATE piece_participants SET removed_at = NOW() WHERE post_id = ? AND user_id = ?', [postId, userId]);
+      await connection.query('UPDATE piece_participants SET removed_at = NOW(), expelled_at = NOW() WHERE post_id = ? AND user_id = ?', [postId, userId]);
       await connection.query(
         "INSERT INTO piece_chat_messages (post_id, user_id, content, message_type) VALUES (?, ?, ?, 'SYSTEM')",
-        [postId, userId, `${participants[0].nickname}님이 조각 참여를 취소했습니다.`]
+        [postId, userId, `${participants[0].nickname}님이 조각에서 내보내졌습니다.`]
       );
     }
     await connection.commit();
