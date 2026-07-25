@@ -865,6 +865,9 @@ async function joinPiece(req, res, next) {
     if (error?.code === 'PIECE_FULL') {
       return res.status(409).json({ message: '조각 참여 가능 인원이 모두 찼습니다.' });
     }
+    if (error?.code === 'PIECE_EXPELLED') {
+      return res.status(403).json({ message: error.message });
+    }
     next(error);
   }
 }

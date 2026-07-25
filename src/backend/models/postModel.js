@@ -754,11 +754,17 @@ async function joinPiece(postId, userId, maxParticipants = 1) {
     await connection.query('SELECT id FROM posts WHERE id = ? FOR UPDATE', [postId]);
 
     const [existingRows] = await connection.query(
-      'SELECT 1 FROM piece_participants WHERE post_id = ? AND user_id = ? AND removed_at IS NULL LIMIT 1',
+      'SELECT removed_at AS removedAt, expelled_at AS expelledAt FROM piece_participants WHERE post_id = ? AND user_id = ? LIMIT 1',
       [postId, userId]
     );
 
-    if (!existingRows.length) {
+    if (existingRows[0]?.expelledAt) {
+      const error = new Error('이 조각에서 내보내기 처리되어 다시 참여할 수 없습니다.');
+      error.code = 'PIECE_EXPELLED';
+      throw error;
+    }
+
+    if (!existingRows.length || existingRows[0].removedAt) {
       const maxJoinableParticipants = Math.max(0, Number(maxParticipants || 1) - 1);
       const [participantRows] = await connection.query(
         'SELECT user_id FROM piece_participants WHERE post_id = ? AND removed_at IS NULL FOR UPDATE',
