@@ -76,27 +76,41 @@ function addNewMessages(messages) {
     pieceChatRoom.messages.push(...freshMessages);
     appendMessages(freshMessages);
 }
-async function pollPieceChatMessages() {
+function memberStateKey(room) {
+    return JSON.stringify({ members: room?.members || [], participants: room?.participants || [], canManage: room?.canManage });
+}
+function updateMembers(memberState) {
+    if (memberStateKey(pieceChatRoom) === memberStateKey(memberState)) return;
+    Object.assign(pieceChatRoom, memberState);
+    renderMembers();
+    if (!document.getElementById('attendance-modal').classList.contains('hidden')) openAttendance();
+}
+async function pollPieceChatUpdates() {
     if (pieceChatPolling || !pieceChatRoom || document.hidden) return;
     pieceChatPolling = true;
     try {
-        addNewMessages(await PieceChatAPI.getMessages(pieceChatId, latestMessageId()));
+        const [messages, memberState] = await Promise.all([
+            PieceChatAPI.getMessages(pieceChatId, latestMessageId()),
+            PieceChatAPI.getMembers(pieceChatId)
+        ]);
+        addNewMessages(messages);
+        updateMembers(memberState);
     } catch (error) {
-        if (![401, 403, 404].includes(error.status)) console.warn('채팅 메시지를 다시 불러오지 못했습니다.', error);
+        if (![401, 403, 404].includes(error.status)) console.warn('채팅방 정보를 다시 불러오지 못했습니다.', error);
     } finally {
         pieceChatPolling = false;
     }
 }
 function startPieceChatPolling() {
     clearInterval(pieceChatPollTimer);
-    pieceChatPollTimer = setInterval(pollPieceChatMessages, 2000);
-    document.addEventListener('visibilitychange', pollPieceChatMessages);
+    pieceChatPollTimer = setInterval(pollPieceChatUpdates, 2000);
+    document.addEventListener('visibilitychange', pollPieceChatUpdates);
     window.addEventListener('pagehide', stopPieceChatPolling, { once: true });
 }
 function stopPieceChatPolling() {
     clearInterval(pieceChatPollTimer);
     pieceChatPollTimer = null;
-    document.removeEventListener('visibilitychange', pollPieceChatMessages);
+    document.removeEventListener('visibilitychange', pollPieceChatUpdates);
 }
 function initPieceChatPage() {
     pieceChatId = window.location.pathname.split('/').filter(Boolean).pop();
