@@ -1,5 +1,7 @@
 let pieceChatId = null;
 let pieceChatRoom = null;
+let pieceChatPollTimer = null;
+let pieceChatPolling = false;
 const PIECE_CHAT_DEFAULT_PROFILE_IMAGE_URL = '/src/assets/image/img_profile.png';
 
 function chatEscape(value) { return sanitizeHTML(String(value || '')); }
@@ -40,6 +42,38 @@ async function loadPieceChat() {
     try { pieceChatRoom = await PieceChatAPI.getRoom(pieceChatId); renderRoom(); }
     catch (error) { alert(error.message || '채팅방에 입장할 수 없습니다.'); window.location.href = '/community'; }
 }
+function latestMessageId() {
+    return Math.max(0, ...(pieceChatRoom?.messages || []).map((message) => Number(message.id) || 0));
+}
+function addNewMessages(messages) {
+    const knownIds = new Set((pieceChatRoom.messages || []).map((message) => Number(message.id)));
+    const freshMessages = messages.filter((message) => !knownIds.has(Number(message.id)));
+    if (!freshMessages.length) return;
+    pieceChatRoom.messages.push(...freshMessages);
+    renderMessages();
+}
+async function pollPieceChatMessages() {
+    if (pieceChatPolling || !pieceChatRoom || document.hidden) return;
+    pieceChatPolling = true;
+    try {
+        addNewMessages(await PieceChatAPI.getMessages(pieceChatId, latestMessageId()));
+    } catch (error) {
+        if (![401, 403, 404].includes(error.status)) console.warn('채팅 메시지를 다시 불러오지 못했습니다.', error);
+    } finally {
+        pieceChatPolling = false;
+    }
+}
+function startPieceChatPolling() {
+    clearInterval(pieceChatPollTimer);
+    pieceChatPollTimer = setInterval(pollPieceChatMessages, 2000);
+    document.addEventListener('visibilitychange', pollPieceChatMessages);
+    window.addEventListener('pagehide', stopPieceChatPolling, { once: true });
+}
+function stopPieceChatPolling() {
+    clearInterval(pieceChatPollTimer);
+    pieceChatPollTimer = null;
+    document.removeEventListener('visibilitychange', pollPieceChatMessages);
+}
 function initPieceChatPage() {
     pieceChatId = window.location.pathname.split('/').filter(Boolean).pop();
     if (!Auth.isAuthenticated()) { window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`; return; }
@@ -48,16 +82,9 @@ function initPieceChatPage() {
     document.querySelectorAll('[data-close-drawer]').forEach((button) => button.onclick = () => document.getElementById('chat-drawer').classList.add('hidden'));
     document.querySelector('[data-close-attendance]').onclick = () => document.getElementById('attendance-modal').classList.add('hidden');
     document.getElementById('chat-report').onclick = () => { const reason = prompt('신고 사유를 입력해주세요.'); if (reason?.trim()) alert('신고가 접수되었습니다. 관리자가 확인하겠습니다.'); };
-    const chatForm = document.getElementById('chat-form');
-    const chatInput = document.getElementById('chat-input');
-    chatForm.onsubmit = async (event) => { event.preventDefault(); const content = chatInput.value.trim(); if (!content) return; const message = await PieceChatAPI.send(pieceChatId, content); pieceChatRoom.messages.push(message); chatInput.value = ''; renderMessages(); };
-    chatInput.onkeydown = (event) => {
-        if (event.key !== 'Enter' || event.shiftKey || event.isComposing || event.keyCode === 229) return;
-        event.preventDefault();
-        chatForm.requestSubmit();
-    };
+    document.getElementById('chat-form').onsubmit = async (event) => { event.preventDefault(); const input = document.getElementById('chat-input'); const content = input.value.trim(); if (!content) return; const message = await PieceChatAPI.send(pieceChatId, content); addNewMessages([message]); input.value = ''; };
     document.getElementById('attendance-list').onclick = async (event) => { const attendance = event.target.closest('[data-attendance]'); const remove = event.target.closest('[data-remove]'); try { if (attendance) { pieceChatRoom = await PieceChatAPI.attendance(pieceChatId, attendance.dataset.userId, attendance.dataset.attendance); renderRoom(); openAttendance(); } else if (remove && confirm('이 조각원을 채팅방과 조각에서 내보낼까요?')) { await PieceChatAPI.remove(pieceChatId, remove.dataset.remove); await loadPieceChat(); openAttendance(); } } catch (error) { alert(error.message); } };
-    loadPieceChat();
+    loadPieceChat().then(startPieceChatPolling);
 }
 window.initPieceChatPage = initPieceChatPage;
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initPieceChatPage, { once: true });
