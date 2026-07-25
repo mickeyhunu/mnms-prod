@@ -48,7 +48,14 @@ function initPieceChatPage() {
     document.querySelectorAll('[data-close-drawer]').forEach((button) => button.onclick = () => document.getElementById('chat-drawer').classList.add('hidden'));
     document.querySelector('[data-close-attendance]').onclick = () => document.getElementById('attendance-modal').classList.add('hidden');
     document.getElementById('chat-report').onclick = () => { const reason = prompt('신고 사유를 입력해주세요.'); if (reason?.trim()) alert('신고가 접수되었습니다. 관리자가 확인하겠습니다.'); };
-    document.getElementById('chat-form').onsubmit = async (event) => { event.preventDefault(); const input = document.getElementById('chat-input'); const content = input.value.trim(); if (!content) return; const message = await PieceChatAPI.send(pieceChatId, content); pieceChatRoom.messages.push(message); input.value = ''; renderMessages(); };
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    chatForm.onsubmit = async (event) => { event.preventDefault(); const content = chatInput.value.trim(); if (!content) return; const message = await PieceChatAPI.send(pieceChatId, content); pieceChatRoom.messages.push(message); chatInput.value = ''; renderMessages(); };
+    chatInput.onkeydown = (event) => {
+        if (event.key !== 'Enter' || event.shiftKey || event.isComposing || event.keyCode === 229) return;
+        event.preventDefault();
+        chatForm.requestSubmit();
+    };
     document.getElementById('attendance-list').onclick = async (event) => { const attendance = event.target.closest('[data-attendance]'); const remove = event.target.closest('[data-remove]'); try { if (attendance) { pieceChatRoom = await PieceChatAPI.attendance(pieceChatId, attendance.dataset.userId, attendance.dataset.attendance); renderRoom(); openAttendance(); } else if (remove && confirm('이 조각원을 채팅방과 조각에서 내보낼까요?')) { await PieceChatAPI.remove(pieceChatId, remove.dataset.remove); await loadPieceChat(); openAttendance(); } } catch (error) { alert(error.message); } };
     loadPieceChat();
 }
