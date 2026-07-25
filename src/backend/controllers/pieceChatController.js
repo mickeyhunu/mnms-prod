@@ -11,8 +11,7 @@ async function context(req, res) {
 }
 function serializeRoom(room, messages, currentUserId) {
   const members = [
-    ...room.admins.map((u) => ({ ...u, userId: u.id, roomRole: 'ADMIN' })),
-    { userId: room.post.leaderId, nickname: room.post.leaderNickname, roomRole: 'LEADER' },
+    { userId: room.post.leaderId, nickname: room.post.leaderNickname, profileImageUrl: room.post.leaderProfileImageUrl, roomRole: 'LEADER' },
     ...(room.advertiser ? [{ ...room.advertiser, userId: room.advertiser.id, roomRole: 'ADVERTISER' }] : []),
     ...room.participants.map((u) => ({ ...u, roomRole: 'MEMBER' }))
   ].filter((member, index, all) => all.findIndex((item) => Number(item.userId) === Number(member.userId)) === index);
