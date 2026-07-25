@@ -115,12 +115,27 @@ function closeMemberMenus() {
     document.querySelectorAll('.piece-chat-member-actions').forEach((actions) => actions.classList.add('hidden'));
     document.querySelectorAll('[data-member-menu]').forEach((button) => button.setAttribute('aria-expanded', 'false'));
 }
+function setMemberDrawerOpen(open) {
+    const drawer = document.getElementById('chat-drawer');
+    const trigger = document.getElementById('chat-members');
+    drawer.classList.toggle('is-open', open);
+    drawer.setAttribute('aria-hidden', String(!open));
+    trigger.setAttribute('aria-expanded', String(open));
+    drawer.querySelectorAll('[data-close-drawer]').forEach((button) => { button.tabIndex = open ? 0 : -1; });
+    if (!open) closeMemberMenus();
+}
 function initPieceChatPage() {
     pieceChatId = window.location.pathname.split('/').filter(Boolean).pop();
     if (!Auth.isAuthenticated()) { window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`; return; }
     document.getElementById('chat-back').onclick = () => history.length > 1 ? history.back() : window.location.assign('/community');
-    document.getElementById('chat-members').onclick = () => document.getElementById('chat-drawer').classList.remove('hidden');
-    document.querySelectorAll('[data-close-drawer]').forEach((button) => button.onclick = () => document.getElementById('chat-drawer').classList.add('hidden'));
+    document.getElementById('chat-members').onclick = () => setMemberDrawerOpen(true);
+    document.querySelectorAll('[data-close-drawer]').forEach((button) => button.onclick = () => setMemberDrawerOpen(false));
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && document.getElementById('chat-drawer').classList.contains('is-open')) {
+            setMemberDrawerOpen(false);
+            document.getElementById('chat-members').focus();
+        }
+    });
     document.getElementById('chat-cancel-participation').onclick = async () => {
         if (!confirm('이 조각 참여를 취소할까요?')) return;
         try { await PostAPI.cancelPieceJoin(pieceChatId); window.location.href = `/post-detail/${pieceChatId}`; }
