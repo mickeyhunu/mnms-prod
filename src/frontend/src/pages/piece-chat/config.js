@@ -8,7 +8,7 @@ const template = `<main class="piece-chat-page">
 서로를 존중하고 배려하며 건강한 조각 문화를 만들어주세요!</div><div id="chat-message-list" aria-live="polite"></div></div>
     <form id="chat-form" class="piece-chat-compose"><textarea id="chat-input" rows="1" maxlength="1000" placeholder="메시지를 입력하세요"></textarea><button>전송</button></form>
   </section>
-  <div id="chat-drawer" class="piece-chat-drawer" aria-hidden="true"><button class="piece-chat-drawer-backdrop" data-close-drawer aria-label="닫기" tabindex="-1"></button><aside><header><h2></h2><button data-close-drawer aria-label="구성원 보기 닫기" tabindex="-1">×</button></header><h3>참여자</h3><div id="chat-member-list"></div><button id="chat-cancel-participation" class="piece-chat-cancel hidden">참여 취소</button></aside></div>
+  <div id="chat-drawer" class="piece-chat-drawer" aria-hidden="true"><button class="piece-chat-drawer-backdrop" data-close-drawer aria-label="닫기" tabindex="-1"></button><aside><header><h2></h2><button data-close-drawer aria-label="구성원 보기 닫기" tabindex="-1">×</button></header><h3>참여자</h3><div id="chat-member-list"></div><button type="button" class="btn piece-join-btn btn-secondary hidden" id="chat-cancel-participation" data-piece-action="cancel">참여 취소</button></aside></div>
 </main>`;
 
 export const pieceChatPageConfig = createPageConfig({
