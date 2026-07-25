@@ -64,7 +64,7 @@ function renderMembers() {
         const profileLabel = chatEscape(member.nickname);
         const profileAvatar = profileHref ? `<a class="piece-chat-member-avatar" href="${profileHref}" aria-label="${profileLabel} 프로필 보기">${avatar(member)}</a>` : `<div class="piece-chat-member-avatar">${avatar(member)}</div>`;
         const profileName = profileHref ? `<a class="piece-chat-member-name" href="${profileHref}">${profileLabel}</a>` : profileLabel;
-        const attendance = pieceChatRoom.canManage && participant ? `<button type="button" class="piece-chat-attendance ${participant.attendanceStatus === 'PRESENT' ? 'is-done' : ''}" data-attendance-member="${member.userId}">${participant.attendanceStatus === 'PRESENT' ? '✓ 출석 완료' : '출석'}</button>` : '';
+        const attendance = pieceChatRoom.canManage && participant ? `<button type="button" class="piece-chat-attendance ${participant.attendanceStatus === 'PRESENT' ? 'is-done' : ''}" data-attendance-member="${member.userId}" aria-pressed="${participant.attendanceStatus === 'PRESENT'}">${participant.attendanceStatus === 'PRESENT' ? '✓ 출석 완료' : '출석'}</button>` : '';
         const menu = mine ? '' : `<div class="piece-chat-member-menu">${attendance}<button class="piece-chat-member-more" type="button" data-member-menu aria-label="${chatEscape(member.nickname)} 메뉴" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="12" cy="19" r="1.4"></circle></svg></button><div class="piece-chat-member-actions hidden"><button type="button" data-report-member="${member.userId}" data-member-nickname="${chatEscape(member.nickname)}">신고</button>${canRemove ? `<button type="button" class="danger" data-remove-member="${member.userId}">내보내기</button>` : ''}</div></div>`;
         return `<div class="piece-chat-member">${profileAvatar}<div class="piece-chat-member-info"><strong>${mine ? '<span class="piece-chat-member-me">나</span>' : ''}${profileName}</strong><span>${chatRoleLabel(member.roomRole)}</span></div>${menu}</div>`;
     }).join('');
@@ -159,7 +159,8 @@ function initPieceChatPage() {
         const reportButton = event.target.closest('[data-report-member]');
         const removeButton = event.target.closest('[data-remove-member]');
         if (attendanceButton) {
-            try { pieceChatRoom = await PieceChatAPI.attendance(pieceChatId, attendanceButton.dataset.attendanceMember, 'PRESENT'); renderRoom(); }
+            const attendanceStatus = attendanceButton.classList.contains('is-done') ? 'ABSENT' : 'PRESENT';
+            try { pieceChatRoom = await PieceChatAPI.attendance(pieceChatId, attendanceButton.dataset.attendanceMember, attendanceStatus); renderRoom(); }
             catch (error) { alert(error.message || '출석 처리 중 오류가 발생했습니다.'); }
         } else if (menuButton) {
             const actions = menuButton.nextElementSibling;
