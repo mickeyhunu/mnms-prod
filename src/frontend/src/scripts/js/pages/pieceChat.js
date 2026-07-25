@@ -6,6 +6,10 @@ const PIECE_CHAT_DEFAULT_PROFILE_IMAGE_URL = '/src/assets/image/img_profile.png'
 
 function chatEscape(value) { return sanitizeHTML(String(value || '')); }
 function chatRoleLabel(role) { return ({ ADMIN: '관리자', LEADER: '조각장', ADVERTISER: '광고주', MEMBER: '조각원' })[role] || '구성원'; }
+function chatMemberProfileHref(member) {
+    const nickname = String(member?.nickname || '').trim();
+    return nickname && nickname !== '익명' ? `/@${encodeURIComponent(nickname)}` : '';
+}
 function avatar(member) {
     const profileImageUrl = String(member.profileImageUrl || '').trim() || PIECE_CHAT_DEFAULT_PROFILE_IMAGE_URL;
     return `<img src="${chatEscape(profileImageUrl)}" alt="" onerror="this.onerror=null;this.src='${PIECE_CHAT_DEFAULT_PROFILE_IMAGE_URL}';">`;
@@ -16,7 +20,11 @@ function messageMarkup(message) {
     }
     const mine = Number(message.userId) === Number(pieceChatRoom.currentUserId);
     const member = pieceChatRoom.members.find((item) => Number(item.userId) === Number(message.userId)) || message;
-    return `<article class="piece-message ${mine ? 'is-mine' : ''}" data-message-id="${Number(message.id) || ''}">${mine ? '' : `<div class="piece-message-avatar">${avatar(member)}</div>`}<div><span class="piece-message-name">${mine ? '' : chatEscape(message.nickname)}</span><div class="piece-message-row"><div class="piece-message-bubble">${chatEscape(message.content).replace(/\n/g, '<br>')}</div><time>${new Date(message.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</time></div></div></article>`;
+    const profileHref = chatMemberProfileHref(member);
+    const profileLabel = chatEscape(member.nickname || message.nickname);
+    const profileAvatar = profileHref ? `<a class="piece-message-avatar" href="${profileHref}" aria-label="${profileLabel} 프로필 보기">${avatar(member)}</a>` : `<div class="piece-message-avatar">${avatar(member)}</div>`;
+    const profileName = profileHref ? `<a class="piece-message-name" href="${profileHref}">${profileLabel}</a>` : `<span class="piece-message-name">${profileLabel}</span>`;
+    return `<article class="piece-message ${mine ? 'is-mine' : ''}" data-message-id="${Number(message.id) || ''}">${mine ? '' : profileAvatar}<div>${mine ? '' : profileName}<div class="piece-message-row"><div class="piece-message-bubble">${chatEscape(message.content).replace(/\n/g, '<br>')}</div><time>${new Date(message.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</time></div></div></article>`;
 }
 function chatDateKey(value) {
     const date = new Date(value);
@@ -52,9 +60,13 @@ function renderMembers() {
         const mine = Number(member.userId) === Number(pieceChatRoom.currentUserId);
         const canRemove = pieceChatRoom.canManage && member.roomRole === 'MEMBER' && !mine;
         const participant = participants.get(Number(member.userId));
+        const profileHref = chatMemberProfileHref(member);
+        const profileLabel = chatEscape(member.nickname);
+        const profileAvatar = profileHref ? `<a class="piece-chat-member-avatar" href="${profileHref}" aria-label="${profileLabel} 프로필 보기">${avatar(member)}</a>` : `<div class="piece-chat-member-avatar">${avatar(member)}</div>`;
+        const profileName = profileHref ? `<a class="piece-chat-member-name" href="${profileHref}">${profileLabel}</a>` : profileLabel;
         const attendance = pieceChatRoom.canManage && participant ? `<button type="button" class="piece-chat-attendance ${participant.attendanceStatus === 'PRESENT' ? 'is-done' : ''}" data-attendance-member="${member.userId}">${participant.attendanceStatus === 'PRESENT' ? '✓ 출석 완료' : '출석'}</button>` : '';
         const menu = mine ? '' : `<div class="piece-chat-member-menu">${attendance}<button class="piece-chat-member-more" type="button" data-member-menu aria-label="${chatEscape(member.nickname)} 메뉴" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="12" cy="19" r="1.4"></circle></svg></button><div class="piece-chat-member-actions hidden"><button type="button" data-report-member="${member.userId}" data-member-nickname="${chatEscape(member.nickname)}">신고</button>${canRemove ? `<button type="button" class="danger" data-remove-member="${member.userId}">내보내기</button>` : ''}</div></div>`;
-        return `<div class="piece-chat-member"><div class="piece-chat-member-avatar">${avatar(member)}</div><div class="piece-chat-member-info"><strong>${mine ? '<span class="piece-chat-member-me">나</span>' : ''}${chatEscape(member.nickname)}</strong><span>${chatRoleLabel(member.roomRole)}</span></div>${menu}</div>`;
+        return `<div class="piece-chat-member">${profileAvatar}<div class="piece-chat-member-info"><strong>${mine ? '<span class="piece-chat-member-me">나</span>' : ''}${profileName}</strong><span>${chatRoleLabel(member.roomRole)}</span></div>${menu}</div>`;
     }).join('');
     document.getElementById('chat-cancel-participation').classList.toggle('hidden', pieceChatRoom.viewerRole !== 'MEMBER');
 }
