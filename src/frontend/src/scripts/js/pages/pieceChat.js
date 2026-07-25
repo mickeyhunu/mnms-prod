@@ -1,14 +1,17 @@
 let pieceChatId = null;
 let pieceChatRoom = null;
+const PIECE_CHAT_DEFAULT_PROFILE_IMAGE_URL = '/src/assets/image/img_profile.png';
 
 function chatEscape(value) { return sanitizeHTML(String(value || '')); }
 function chatRoleLabel(role) { return ({ ADMIN: '관리자', LEADER: '조각장', ADVERTISER: '광고주', MEMBER: '조각원' })[role] || '구성원'; }
 function avatar(member) {
-    return member.profileImageUrl ? `<img src="${chatEscape(member.profileImageUrl)}" alt="">` : `<span>${chatEscape((member.nickname || '?').slice(0, 1))}</span>`;
+    const profileImageUrl = String(member.profileImageUrl || '').trim() || PIECE_CHAT_DEFAULT_PROFILE_IMAGE_URL;
+    return `<img src="${chatEscape(profileImageUrl)}" alt="" onerror="this.onerror=null;this.src='${PIECE_CHAT_DEFAULT_PROFILE_IMAGE_URL}';">`;
 }
 function renderMessages() {
     const root = document.getElementById('chat-messages');
-    root.innerHTML = (pieceChatRoom.messages || []).map((message) => {
+    const list = document.getElementById('chat-message-list');
+    list.innerHTML = (pieceChatRoom.messages || []).map((message) => {
         const mine = Number(message.userId) === Number(pieceChatRoom.currentUserId);
         const member = pieceChatRoom.members.find((item) => Number(item.userId) === Number(message.userId)) || message;
         return `<article class="piece-message ${mine ? 'is-mine' : ''}">${mine ? '' : `<div class="piece-message-avatar">${avatar(member)}</div>`}<div><span class="piece-message-name">${mine ? '' : chatEscape(message.nickname)}</span><div class="piece-message-row"><div class="piece-message-bubble">${chatEscape(message.content).replace(/\n/g, '<br>')}</div><time>${new Date(message.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</time></div></div></article>`;
