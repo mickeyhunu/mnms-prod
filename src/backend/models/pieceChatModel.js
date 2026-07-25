@@ -47,6 +47,14 @@ async function listMessages(postId) {
   return rows;
 }
 
+async function listMessagesAfter(postId, afterId) {
+  const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.created_at AS createdAt,
+                                              u.nickname, u.profile_image_url AS profileImageUrl, u.role
+                                         FROM piece_chat_messages pcm JOIN users u ON u.id = pcm.user_id
+                                        WHERE pcm.post_id = ? AND pcm.id > ? ORDER BY pcm.id ASC LIMIT 300`, [postId, afterId]);
+  return rows;
+}
+
 async function createMessage(postId, userId, content) {
   const [result] = await getPool().query('INSERT INTO piece_chat_messages (post_id, user_id, content) VALUES (?, ?, ?)', [postId, userId, content]);
   const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.created_at AS createdAt,
@@ -64,4 +72,4 @@ async function removeParticipant(postId, userId) {
   await getPool().query('UPDATE piece_participants SET removed_at = NOW() WHERE post_id = ? AND user_id = ? AND removed_at IS NULL', [postId, userId]);
 }
 
-module.exports = { getRoomContext, listMessages, createMessage, setAttendance, removeParticipant };
+module.exports = { getRoomContext, listMessages, listMessagesAfter, createMessage, setAttendance, removeParticipant };
