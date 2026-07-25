@@ -1067,7 +1067,8 @@ async function initDatabase() {
 
   const pieceParticipantColumns = [
     { name: 'attendance_status', sql: "ALTER TABLE piece_participants ADD COLUMN attendance_status ENUM('PRESENT','ABSENT') NULL AFTER attended_at" },
-    { name: 'removed_at', sql: 'ALTER TABLE piece_participants ADD COLUMN removed_at TIMESTAMP NULL AFTER attendance_status' }
+    { name: 'removed_at', sql: 'ALTER TABLE piece_participants ADD COLUMN removed_at TIMESTAMP NULL AFTER attendance_status' },
+    { name: 'expelled_at', sql: 'ALTER TABLE piece_participants ADD COLUMN expelled_at TIMESTAMP NULL AFTER removed_at' }
   ];
   for (const column of pieceParticipantColumns) {
     const [rows] = await pool.query(

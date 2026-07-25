@@ -6,12 +6,12 @@ const template = `<main class="piece-chat-page">
     <div id="chat-messages" class="piece-chat-messages"><div id="chat-notice" class="piece-chat-notice">조각장, 조각원, 광고주와 관리자가 함께하는 채팅방입니다.</div><div id="chat-message-list" aria-live="polite"></div></div>
     <form id="chat-form" class="piece-chat-compose"><textarea id="chat-input" rows="1" maxlength="1000" placeholder="메시지를 입력하세요"></textarea><button>전송</button></form>
   </section>
-  <div id="chat-drawer" class="piece-chat-drawer hidden"><button class="piece-chat-drawer-backdrop" data-close-drawer aria-label="닫기"></button><aside><header><h2>채팅방 정보</h2><button data-close-drawer>×</button></header><div id="chat-manager-actions"></div><h3>참여자</h3><div id="chat-member-list"></div><button id="chat-report" class="piece-chat-report">신고하기</button></aside></div>
+  <div id="chat-drawer" class="piece-chat-drawer hidden"><button class="piece-chat-drawer-backdrop" data-close-drawer aria-label="닫기"></button><aside><header><h2>채팅방 정보</h2><button data-close-drawer>×</button></header><div id="chat-manager-actions"></div><h3>참여자</h3><div id="chat-member-list"></div><button id="chat-cancel-participation" class="piece-chat-cancel hidden">참여 취소</button></aside></div>
   <div id="attendance-modal" class="piece-chat-modal hidden"><section><header><h2>출석 체크</h2><button data-close-attendance>×</button></header><p>참여한 조각원의 출석 상태를 기록해주세요.</p><div id="attendance-list"></div></section></div>
 </main>`;
 
 export const pieceChatPageConfig = createPageConfig({
   template,
   styles: ['styles/common.css', 'styles/piece-chat.css'],
-  scripts: ['scripts/js/utils/helpers.js', 'scripts/js/utils/auth.js', 'scripts/js/api/apiClient.js', 'scripts/js/api/authAPI.js', 'scripts/js/api/pieceChatAPI.js', 'scripts/js/pages/pieceChat.js']
+  scripts: ['scripts/js/utils/helpers.js', 'scripts/js/utils/auth.js', 'scripts/js/api/apiClient.js', 'scripts/js/api/authAPI.js', 'scripts/js/api/postAPI.js', 'scripts/js/api/pieceChatAPI.js', 'scripts/js/pages/pieceChat.js']
 });
