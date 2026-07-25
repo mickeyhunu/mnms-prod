@@ -372,10 +372,34 @@ async function getUserNotifications(userId, { limit = 50 } = {}) {
          AND UPPER(COALESCE(p.board_type, '')) = 'PIECE'
          AND p.is_deleted = 0
          AND p.is_hidden = 0
+
+       UNION ALL
+
+       SELECT
+         CONCAT('piece-created-for-ad-', p.id, '-', ba.id) AS notificationKey,
+         'piece_created_for_ad' AS type,
+         p.id AS sourceId,
+         p.id AS postId,
+         p.title AS postTitle,
+         NULL AS inquiryId,
+         NULL AS parentId,
+         NULL AS content,
+         p.created_at AS createdAt,
+         COALESCE(p.author_nickname_snapshot, author.nickname, '회원') AS actorNickname,
+         CONCAT('내 광고 "', COALESCE(NULLIF(ba.title, ''), NULLIF(ba.business_name, ''), '광고'), '"에 새 조각 "', p.title, '"이 생성되었습니다.') AS message
+       FROM posts p
+       INNER JOIN business_ads ba
+         ON p.content REGEXP CONCAT('/business-info/[^[:space:]]*-', ba.id, '([[:space:]]|$)')
+       LEFT JOIN users author ON author.id = p.user_id
+       WHERE ba.owner_user_id = ?
+         AND p.user_id <> ?
+         AND UPPER(COALESCE(p.board_type, '')) = 'PIECE'
+         AND p.is_deleted = 0
+         AND p.is_hidden = 0
      ) notifications
      ORDER BY createdAt DESC, sourceId DESC
      LIMIT ?`,
-    [userId, userId, userId, userId, userId, userId, safeLimit]
+    [userId, userId, userId, userId, userId, userId, userId, userId, safeLimit]
   );
 
   return rows.map((row) => ({
