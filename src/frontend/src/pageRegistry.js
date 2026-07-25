@@ -5,9 +5,11 @@ import { adminPageConfig } from './pages/admin/config.js';
 import { communityPageConfig } from './pages/community/config.js';
 import { livePageConfig } from './pages/live/config.js';
 import { postDetailPageConfig } from './pages/post-detail/config.js';
+import { pieceChatPageConfig } from './pages/piece-chat/config.js';
 import { rbtiPageConfig } from './pages/rbti/config.js';
 
 const pageRegistry = {
+  'piece-chat': pieceChatPageConfig,
   'member-profile': {
     template: `<main class="main-content">
         <div class="container">
