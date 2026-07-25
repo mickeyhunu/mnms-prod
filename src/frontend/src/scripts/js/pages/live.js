@@ -2260,9 +2260,6 @@ async function handleKakaoShare() {
 function handleSmsShare() {
     const shareData = getShareData();
     const message = `${shareData.title}\n\n${document.title}\n\n${shareData.url}`;
-    const message = `${shareData.title}
-제목 ${document.title}
-주소 ${shareData.url}`;
     const isAppleDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const separator = isAppleDevice ? '&' : '?';
     window.location.href = `sms:${separator}body=${encodeURIComponent(message)}`;
