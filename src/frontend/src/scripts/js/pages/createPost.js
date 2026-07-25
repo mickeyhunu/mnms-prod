@@ -769,6 +769,26 @@ function hydratePieceCapacityFields(value) {
     if (maxValue) setPieceSelectValue(document.getElementById('piece-capacity-max'), maxValue);
 }
 
+function hydrateSelectedPieceBusinessAd(value) {
+    const selectedAdValue = String(value || '').trim();
+    const selectedAdPath = selectedAdValue.match(/(?:^|\s-\s)(\/business-info\/[^\s]+)\s*$/)?.[1] || '';
+    if (!selectedAdPath) return;
+
+    const selectedAdSlug = decodeURIComponent(selectedAdPath.split('/').filter(Boolean).pop() || '');
+    const selectedAdId = selectedAdSlug.match(/(?:^|-)business-(\d+)$|-(\d+)$|^(\d+)$/)?.slice(1).find(Boolean) || '';
+
+    const selectedAd = pieceBusinessAds.find((ad) => {
+        const detailPath = typeof createBusinessInfoDetailPath === 'function'
+            ? createBusinessInfoDetailPath(ad)
+            : `/business-info/${encodeURIComponent(String(ad.id || ''))}`;
+        return detailPath === selectedAdPath || (selectedAdId && String(ad.id || '') === selectedAdId);
+    });
+    if (!selectedAd) return;
+
+    selectedPieceBusinessAdId = String(selectedAd.id || '');
+    renderPieceBusinessAdSelector();
+}
+
 function hydratePieceFieldsFromContent(content) {
     const rawContent = String(content || '');
     const startIndex = rawContent.indexOf(PIECE_TEMPLATE_START);
@@ -778,6 +798,7 @@ function hydratePieceFieldsFromContent(content) {
     const templateContent = rawContent.slice(startIndex + PIECE_TEMPLATE_START.length, endIndex);
     const pieceTemplateValues = parsePieceTemplateContent(templateContent);
 
+    hydrateSelectedPieceBusinessAd(pieceTemplateValues['🏷️ 선택 광고']);
     hydratePieceLocationFields(pieceTemplateValues['📍 장소']);
 
     const dateTimeInput = document.getElementById('piece-datetime');
