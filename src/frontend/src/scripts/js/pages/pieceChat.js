@@ -1,0 +1,51 @@
+let pieceChatId = null;
+let pieceChatRoom = null;
+
+function chatEscape(value) { return sanitizeHTML(String(value || '')); }
+function chatRoleLabel(role) { return ({ ADMIN: '관리자', LEADER: '조각장', ADVERTISER: '광고주', MEMBER: '조각원' })[role] || '구성원'; }
+function avatar(member) {
+    return member.profileImageUrl ? `<img src="${chatEscape(member.profileImageUrl)}" alt="">` : `<span>${chatEscape((member.nickname || '?').slice(0, 1))}</span>`;
+}
+function renderMessages() {
+    const root = document.getElementById('chat-messages');
+    root.innerHTML = (pieceChatRoom.messages || []).map((message) => {
+        const mine = Number(message.userId) === Number(pieceChatRoom.currentUserId);
+        const member = pieceChatRoom.members.find((item) => Number(item.userId) === Number(message.userId)) || message;
+        return `<article class="piece-message ${mine ? 'is-mine' : ''}">${mine ? '' : `<div class="piece-message-avatar">${avatar(member)}</div>`}<div><span class="piece-message-name">${mine ? '' : chatEscape(message.nickname)}</span><div class="piece-message-row"><div class="piece-message-bubble">${chatEscape(message.content).replace(/\n/g, '<br>')}</div><time>${new Date(message.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</time></div></div></article>`;
+    }).join('') || '<p class="piece-chat-empty">첫 메시지를 남겨보세요.</p>';
+    root.scrollTop = root.scrollHeight;
+}
+function renderMembers() {
+    document.getElementById('chat-member-count').textContent = `참여자 ${pieceChatRoom.members.length}명`;
+    document.getElementById('chat-member-list').innerHTML = pieceChatRoom.members.map((member) => `<div class="piece-chat-member"><div class="piece-chat-member-avatar">${avatar(member)}</div><div><strong>${chatEscape(member.nickname)}</strong><span>${chatRoleLabel(member.roomRole)}</span></div></div>`).join('');
+    document.getElementById('chat-manager-actions').innerHTML = pieceChatRoom.canManage ? '<button id="open-attendance" class="piece-chat-manage">✓ <span>출석 체크</span></button>' : '';
+    document.getElementById('open-attendance')?.addEventListener('click', openAttendance);
+}
+function renderRoom() {
+    document.getElementById('chat-title').textContent = pieceChatRoom.post.title || '조각 채팅방';
+    renderMessages(); renderMembers();
+}
+function openAttendance() {
+    const list = document.getElementById('attendance-list');
+    list.innerHTML = pieceChatRoom.participants.map((member) => `<div class="attendance-member"><div class="piece-chat-member-avatar">${avatar(member)}</div><strong>${chatEscape(member.nickname)}</strong><div class="attendance-controls"><button data-attendance="PRESENT" data-user-id="${member.userId}" class="${member.attendanceStatus === 'PRESENT' ? 'is-done' : ''}">${member.attendanceStatus === 'PRESENT' ? '✓ 완료' : '출석'}</button><button data-attendance="ABSENT" data-user-id="${member.userId}" class="absent ${member.attendanceStatus === 'ABSENT' ? 'is-done' : ''}">${member.attendanceStatus === 'ABSENT' ? '✓ 미출석' : '미출석'}</button>${pieceChatRoom.canManage ? `<button data-remove="${member.userId}" class="remove">내보내기</button>` : ''}</div></div>`).join('') || '<p>참여한 조각원이 없습니다.</p>';
+    document.getElementById('attendance-modal').classList.remove('hidden');
+}
+async function loadPieceChat() {
+    try { pieceChatRoom = await PieceChatAPI.getRoom(pieceChatId); renderRoom(); }
+    catch (error) { alert(error.message || '채팅방에 입장할 수 없습니다.'); window.location.href = '/community'; }
+}
+function initPieceChatPage() {
+    pieceChatId = window.location.pathname.split('/').filter(Boolean).pop();
+    if (!Auth.isAuthenticated()) { window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`; return; }
+    document.getElementById('chat-back').onclick = () => history.length > 1 ? history.back() : window.location.assign('/community');
+    document.getElementById('chat-members').onclick = () => document.getElementById('chat-drawer').classList.remove('hidden');
+    document.querySelectorAll('[data-close-drawer]').forEach((button) => button.onclick = () => document.getElementById('chat-drawer').classList.add('hidden'));
+    document.querySelector('[data-close-attendance]').onclick = () => document.getElementById('attendance-modal').classList.add('hidden');
+    document.getElementById('chat-report').onclick = () => { const reason = prompt('신고 사유를 입력해주세요.'); if (reason?.trim()) alert('신고가 접수되었습니다. 관리자가 확인하겠습니다.'); };
+    document.getElementById('chat-form').onsubmit = async (event) => { event.preventDefault(); const input = document.getElementById('chat-input'); const content = input.value.trim(); if (!content) return; const message = await PieceChatAPI.send(pieceChatId, content); pieceChatRoom.messages.push(message); input.value = ''; renderMessages(); };
+    document.getElementById('attendance-list').onclick = async (event) => { const attendance = event.target.closest('[data-attendance]'); const remove = event.target.closest('[data-remove]'); try { if (attendance) { pieceChatRoom = await PieceChatAPI.attendance(pieceChatId, attendance.dataset.userId, attendance.dataset.attendance); renderRoom(); openAttendance(); } else if (remove && confirm('이 조각원을 채팅방과 조각에서 내보낼까요?')) { await PieceChatAPI.remove(pieceChatId, remove.dataset.remove); await loadPieceChat(); openAttendance(); } } catch (error) { alert(error.message); } };
+    loadPieceChat();
+}
+window.initPieceChatPage = initPieceChatPage;
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initPieceChatPage, { once: true });
+else initPieceChatPage();

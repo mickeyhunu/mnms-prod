@@ -985,6 +985,17 @@ function renderPieceParticipants(post, isHiddenPost) {
         : '';
 }
 
+function renderPieceChatButton(post, isHiddenPost) {
+    const button = document.getElementById('piece-chat-enter');
+    if (!button) return;
+    const user = Auth.getUser();
+    const role = String(user?.role || '').toUpperCase();
+    const canEnter = !isHiddenPost && String(post?.boardType || '').toUpperCase() === 'PIECE' && Auth.isAuthenticated()
+        && (post.isAuthor || isCurrentUserPostAuthor(post) || post.isPieceParticipant || role === 'ADMIN' || isBusinessUser(user));
+    button.classList.toggle('hidden', !canEnter);
+    button.href = canEnter ? `/piece-chat/${post.id}` : '#';
+}
+
 async function handlePieceJoinAction() {
     if (!Auth.isAuthenticated()) {
         alert('로그인이 필요합니다.');
@@ -1008,6 +1019,7 @@ async function handlePieceJoinAction() {
         currentPostDetail = { ...currentPostDetail, ...response };
         renderPieceJoinButton(currentPostDetail, currentPostDetail.isAuthor || isCurrentUserPostAuthor(currentPostDetail), Boolean(currentPostDetail.isHidden));
         renderPieceParticipants(currentPostDetail, Boolean(currentPostDetail.isHidden));
+        renderPieceChatButton(currentPostDetail, Boolean(currentPostDetail.isHidden));
     } catch (error) {
         alert(error?.message || '조각 참여 처리 중 오류가 발생했습니다.');
         renderPieceJoinButton(currentPostDetail, currentPostDetail.isAuthor || isCurrentUserPostAuthor(currentPostDetail), Boolean(currentPostDetail.isHidden));
@@ -1125,6 +1137,7 @@ function renderPostDetail(post) {
 
     renderPieceJoinButton(post, isCurrentAuthor, isHiddenPost);
     renderPieceParticipants(post, isHiddenPost);
+    renderPieceChatButton(post, isHiddenPost);
 
     const likeBtn = document.getElementById('like-btn');
     const likeIcon = document.getElementById('like-icon');
