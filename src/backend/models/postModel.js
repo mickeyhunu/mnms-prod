@@ -262,7 +262,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
       pool.query(
         `SELECT pp.post_id AS postId, COUNT(DISTINCT pp.user_id) AS pieceParticipantCount
          FROM piece_participants pp
-         WHERE pp.post_id IN (?)
+         WHERE pp.post_id IN (?) AND pp.removed_at IS NULL
          GROUP BY pp.post_id`,
         [postIds]
       )
@@ -707,7 +707,7 @@ async function updatePostLikePointAwards(postId, userId, { likerPointAwarded, au
 async function countPieceParticipants(postId) {
   const pool = getPool();
   const [rows] = await pool.query(
-    'SELECT COUNT(DISTINCT user_id) AS participantCount FROM piece_participants WHERE post_id = ?',
+    'SELECT COUNT(DISTINCT user_id) AS participantCount FROM piece_participants WHERE post_id = ? AND removed_at IS NULL',
     [postId]
   );
   return Number(rows[0]?.participantCount || 0);
@@ -775,6 +775,11 @@ async function joinPiece(postId, userId, maxParticipants = 1) {
         'INSERT INTO piece_participants (post_id, user_id, removed_at, attendance_status, attended_at) VALUES (?, ?, NULL, NULL, NULL) ON DUPLICATE KEY UPDATE removed_at = NULL, attendance_status = NULL, attended_at = NULL, created_at = CURRENT_TIMESTAMP',
         [postId, userId]
       );
+      const [users] = await connection.query("SELECT COALESCE(nickname, '조각원') AS nickname FROM users WHERE id = ? LIMIT 1", [userId]);
+      await connection.query(
+        "INSERT INTO piece_chat_messages (post_id, user_id, content, message_type) VALUES (?, ?, ?, 'SYSTEM')",
+        [postId, userId, `${users[0]?.nickname || '조각원'}님이 새로 참여했습니다.`]
+      );
     }
 
     await connection.commit();
@@ -789,7 +794,29 @@ async function joinPiece(postId, userId, maxParticipants = 1) {
 
 async function cancelPieceJoin(postId, userId) {
   const pool = getPool();
-  await pool.query('DELETE FROM piece_participants WHERE post_id = ? AND user_id = ?', [postId, userId]);
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [participants] = await connection.query(
+      `SELECT COALESCE(u.nickname, '조각원') AS nickname
+         FROM piece_participants pp LEFT JOIN users u ON u.id = pp.user_id
+        WHERE pp.post_id = ? AND pp.user_id = ? AND pp.removed_at IS NULL FOR UPDATE`,
+      [postId, userId]
+    );
+    if (participants.length) {
+      await connection.query('UPDATE piece_participants SET removed_at = NOW() WHERE post_id = ? AND user_id = ?', [postId, userId]);
+      await connection.query(
+        "INSERT INTO piece_chat_messages (post_id, user_id, content, message_type) VALUES (?, ?, ?, 'SYSTEM')",
+        [postId, userId, `${participants[0].nickname}님이 조각 참여를 취소했습니다.`]
+      );
+    }
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
   return listPieceParticipants(postId);
 }
 
