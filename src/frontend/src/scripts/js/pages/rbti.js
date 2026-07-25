@@ -1,7 +1,7 @@
 (function () {
   const RBTI_KAKAO_SHARE_TITLE = '미드나잇 맨즈 커뮤니티';
   const RBTI_KAKAO_SHARE_IMAGE_URL = 'https://nightmens.com/src/assets/rbti-avatars/16rbti.png';
-  let shareSheetOpen = false;
+  let shareSheetController = null;
   const state = {
     questions: [],
     answerScale: [],
@@ -352,7 +352,6 @@
 
   shareButtonEl?.addEventListener('click', handleSharePost);
   setupShareSheet();
-  document.addEventListener('keydown', handleShareSheetKeydown);
 
 
   function submitAnswers() {
@@ -376,20 +375,11 @@
   loadQuestions().then(bootstrap);
 
   function setupShareSheet() {
-    const shareSheet = document.getElementById('share-sheet');
-    if (!shareSheet) return;
-
-    document.getElementById('share-sheet-overlay')?.addEventListener('click', closeShareSheet);
-    document.getElementById('share-sheet-close')?.addEventListener('click', closeShareSheet);
-    document.getElementById('share-kakao-btn')?.addEventListener('click', handleKakaoShare);
-    document.getElementById('share-sms-btn')?.addEventListener('click', handleSmsShare);
-    document.getElementById('share-copy-btn')?.addEventListener('click', handleCopyShareLink);
-  }
-
-  function handleShareSheetKeydown(event) {
-    if (event.key === 'Escape' && shareSheetOpen) {
-      closeShareSheet();
-    }
+    shareSheetController = createShareSheetController({
+      onKakaoShare: handleKakaoShare,
+      onSmsShare: handleSmsShare,
+      onCopyShare: handleCopyShareLink
+    });
   }
 
   function getShareData() {
@@ -430,30 +420,13 @@
     };
   }
 
-  function openShareSheet() {
-    const shareSheet = document.getElementById('share-sheet');
-    if (!shareSheet) return;
-
-    shareSheet.classList.remove('hidden');
-    shareSheet.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('share-sheet-open');
-    shareSheetOpen = true;
-  }
-
   function closeShareSheet() {
-    const shareSheet = document.getElementById('share-sheet');
-    if (!shareSheet) return;
-
-    shareSheet.classList.add('hidden');
-    shareSheet.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('share-sheet-open');
-    shareSheetOpen = false;
+    shareSheetController?.close();
   }
 
   function handleSharePost() {
-    openShareSheet();
+    shareSheetController?.open();
   }
-
   async function handleKakaoShare() {
     const shareData = getShareData();
 

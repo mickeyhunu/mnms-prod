@@ -850,6 +850,62 @@ function resolveShareUrl(url) {
    }
 }
 
+function createShareSheetController({
+   root = document,
+   onKakaoShare,
+   onSmsShare,
+   onCopyShare
+} = {}) {
+   const shareSheet = root.querySelector('#share-sheet');
+   if (!shareSheet) return null;
+
+   let isOpen = false;
+   let transitionTimer = null;
+   let returnFocusElement = null;
+
+   const open = () => {
+      window.clearTimeout(transitionTimer);
+      shareSheet.classList.remove('hidden', 'is-open');
+      shareSheet.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('share-sheet-open');
+      isOpen = true;
+      returnFocusElement = document.activeElement;
+      shareSheet.querySelector('#share-sheet-close')?.focus({ preventScroll: true });
+
+      window.requestAnimationFrame(() => {
+         window.requestAnimationFrame(() => {
+            if (isOpen) shareSheet.classList.add('is-open');
+         });
+      });
+   };
+
+   const close = () => {
+      window.clearTimeout(transitionTimer);
+      shareSheet.classList.remove('is-open');
+      shareSheet.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('share-sheet-open');
+      isOpen = false;
+      returnFocusElement?.focus?.({ preventScroll: true });
+
+      transitionTimer = window.setTimeout(() => {
+         if (!isOpen) shareSheet.classList.add('hidden');
+      }, 300);
+   };
+
+   shareSheet.querySelector('#share-sheet-overlay')?.addEventListener('click', close);
+   shareSheet.querySelector('#share-sheet-close')?.addEventListener('click', close);
+   shareSheet.querySelector('#share-kakao-btn')?.addEventListener('click', onKakaoShare);
+   shareSheet.querySelector('#share-sms-btn')?.addEventListener('click', onSmsShare);
+   shareSheet.querySelector('#share-copy-btn')?.addEventListener('click', onCopyShare);
+   shareSheet.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && isOpen) close();
+   });
+
+   return { open, close };
+}
+
+window.createShareSheetController = createShareSheetController;
+
 function ensureKakaoShareLink(target = {}, shareUrl) {
    return {
       ...target,
