@@ -730,7 +730,7 @@ async function listPieceParticipants(postId) {
             u.profile_introduction AS profile_introduction
        FROM piece_participants pp
        LEFT JOIN users u ON u.id = pp.user_id
-      WHERE pp.post_id = ?
+      WHERE pp.post_id = ? AND pp.removed_at IS NULL
       ORDER BY pp.created_at ASC`,
     [postId]
   );
@@ -740,7 +740,7 @@ async function listPieceParticipants(postId) {
 async function isPieceParticipant(postId, userId) {
   const pool = getPool();
   const [rows] = await pool.query(
-    'SELECT 1 FROM piece_participants WHERE post_id = ? AND user_id = ? LIMIT 1',
+    'SELECT 1 FROM piece_participants WHERE post_id = ? AND user_id = ? AND removed_at IS NULL LIMIT 1',
     [postId, userId]
   );
   return rows.length > 0;
@@ -754,14 +754,14 @@ async function joinPiece(postId, userId, maxParticipants = 1) {
     await connection.query('SELECT id FROM posts WHERE id = ? FOR UPDATE', [postId]);
 
     const [existingRows] = await connection.query(
-      'SELECT 1 FROM piece_participants WHERE post_id = ? AND user_id = ? LIMIT 1',
+      'SELECT 1 FROM piece_participants WHERE post_id = ? AND user_id = ? AND removed_at IS NULL LIMIT 1',
       [postId, userId]
     );
 
     if (!existingRows.length) {
       const maxJoinableParticipants = Math.max(0, Number(maxParticipants || 1) - 1);
       const [participantRows] = await connection.query(
-        'SELECT user_id FROM piece_participants WHERE post_id = ? FOR UPDATE',
+        'SELECT user_id FROM piece_participants WHERE post_id = ? AND removed_at IS NULL FOR UPDATE',
         [postId]
       );
       const participantCount = new Set(participantRows.map((row) => Number(row.user_id))).size;
@@ -772,7 +772,7 @@ async function joinPiece(postId, userId, maxParticipants = 1) {
       }
 
       await connection.query(
-        'INSERT INTO piece_participants (post_id, user_id) VALUES (?, ?)',
+        'INSERT INTO piece_participants (post_id, user_id, removed_at, attendance_status, attended_at) VALUES (?, ?, NULL, NULL, NULL) ON DUPLICATE KEY UPDATE removed_at = NULL, attendance_status = NULL, attended_at = NULL, created_at = CURRENT_TIMESTAMP',
         [postId, userId]
       );
     }
