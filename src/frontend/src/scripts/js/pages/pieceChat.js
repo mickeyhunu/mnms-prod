@@ -111,6 +111,10 @@ function stopPieceChatPolling() {
     pieceChatPollTimer = null;
     document.removeEventListener('visibilitychange', pollPieceChatUpdates);
 }
+function closeMemberMenus() {
+    document.querySelectorAll('.piece-chat-member-actions').forEach((actions) => actions.classList.add('hidden'));
+    document.querySelectorAll('[data-member-menu]').forEach((button) => button.setAttribute('aria-expanded', 'false'));
+}
 function initPieceChatPage() {
     pieceChatId = window.location.pathname.split('/').filter(Boolean).pop();
     if (!Auth.isAuthenticated()) { window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`; return; }
@@ -133,7 +137,7 @@ function initPieceChatPage() {
         } else if (menuButton) {
             const actions = menuButton.nextElementSibling;
             const opening = actions.classList.contains('hidden');
-            document.querySelectorAll('.piece-chat-member-actions').forEach((item) => item.classList.add('hidden'));
+            closeMemberMenus();
             actions.classList.toggle('hidden', !opening);
             menuButton.setAttribute('aria-expanded', String(opening));
         } else if (reportButton) {
@@ -143,6 +147,9 @@ function initPieceChatPage() {
             catch (error) { alert(error.message || '내보내기 중 오류가 발생했습니다.'); }
         }
     };
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.piece-chat-member-menu')) closeMemberMenus();
+    });
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
     chatForm.onsubmit = async (event) => { event.preventDefault(); const content = chatInput.value.trim(); if (!content) return; const message = await PieceChatAPI.send(pieceChatId, content); addNewMessages([message]); chatInput.value = ''; };
