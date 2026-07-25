@@ -40,7 +40,7 @@ async function getRoomContext(postId, userId) {
 }
 
 async function listMessages(postId) {
-  const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.created_at AS createdAt,
+  const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.message_type AS messageType, pcm.created_at AS createdAt,
                                               u.nickname, u.profile_image_url AS profileImageUrl, u.role
                                          FROM piece_chat_messages pcm JOIN users u ON u.id = pcm.user_id
                                         WHERE pcm.post_id = ? ORDER BY pcm.created_at ASC, pcm.id ASC LIMIT 300`, [postId]);
@@ -48,7 +48,7 @@ async function listMessages(postId) {
 }
 
 async function listMessagesAfter(postId, afterId) {
-  const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.created_at AS createdAt,
+  const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.message_type AS messageType, pcm.created_at AS createdAt,
                                               u.nickname, u.profile_image_url AS profileImageUrl, u.role
                                          FROM piece_chat_messages pcm JOIN users u ON u.id = pcm.user_id
                                         WHERE pcm.post_id = ? AND pcm.id > ? ORDER BY pcm.id ASC LIMIT 300`, [postId, afterId]);
@@ -57,7 +57,7 @@ async function listMessagesAfter(postId, afterId) {
 
 async function createMessage(postId, userId, content) {
   const [result] = await getPool().query('INSERT INTO piece_chat_messages (post_id, user_id, content) VALUES (?, ?, ?)', [postId, userId, content]);
-  const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.created_at AS createdAt,
+  const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.message_type AS messageType, pcm.created_at AS createdAt,
                                               u.nickname, u.profile_image_url AS profileImageUrl, u.role
                                          FROM piece_chat_messages pcm JOIN users u ON u.id = pcm.user_id WHERE pcm.id = ?`, [result.insertId]);
   return rows[0];
@@ -69,7 +69,30 @@ async function setAttendance(postId, userId, status) {
 }
 
 async function removeParticipant(postId, userId) {
-  await getPool().query('UPDATE piece_participants SET removed_at = NOW() WHERE post_id = ? AND user_id = ? AND removed_at IS NULL', [postId, userId]);
+  const pool = getPool();
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [participants] = await connection.query(
+      `SELECT COALESCE(u.nickname, '조각원') AS nickname
+         FROM piece_participants pp LEFT JOIN users u ON u.id = pp.user_id
+        WHERE pp.post_id = ? AND pp.user_id = ? AND pp.removed_at IS NULL FOR UPDATE`,
+      [postId, userId]
+    );
+    if (participants.length) {
+      await connection.query('UPDATE piece_participants SET removed_at = NOW() WHERE post_id = ? AND user_id = ?', [postId, userId]);
+      await connection.query(
+        "INSERT INTO piece_chat_messages (post_id, user_id, content, message_type) VALUES (?, ?, ?, 'SYSTEM')",
+        [postId, userId, `${participants[0].nickname}님이 조각 참여를 취소했습니다.`]
+      );
+    }
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 
 module.exports = { getRoomContext, listMessages, listMessagesAfter, createMessage, setAttendance, removeParticipant };

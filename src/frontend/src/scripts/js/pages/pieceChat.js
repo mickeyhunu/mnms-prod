@@ -11,22 +11,38 @@ function avatar(member) {
     return `<img src="${chatEscape(profileImageUrl)}" alt="" onerror="this.onerror=null;this.src='${PIECE_CHAT_DEFAULT_PROFILE_IMAGE_URL}';">`;
 }
 function messageMarkup(message) {
+    if (message.messageType === 'SYSTEM') {
+        return `<div class="piece-chat-system-message" data-message-id="${Number(message.id) || ''}">${chatEscape(message.content)}</div>`;
+    }
     const mine = Number(message.userId) === Number(pieceChatRoom.currentUserId);
     const member = pieceChatRoom.members.find((item) => Number(item.userId) === Number(message.userId)) || message;
     return `<article class="piece-message ${mine ? 'is-mine' : ''}" data-message-id="${Number(message.id) || ''}">${mine ? '' : `<div class="piece-message-avatar">${avatar(member)}</div>`}<div><span class="piece-message-name">${mine ? '' : chatEscape(message.nickname)}</span><div class="piece-message-row"><div class="piece-message-bubble">${chatEscape(message.content).replace(/\n/g, '<br>')}</div><time>${new Date(message.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</time></div></div></article>`;
 }
+function chatDateKey(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '' : `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+function chatDateLabel(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+}
+function messagesMarkup(messages) {
+    let previousDate = '';
+    return messages.map((message) => {
+        const date = chatDateKey(message.createdAt);
+        const separator = date && date !== previousDate ? `<div class="piece-chat-date"><span>${chatEscape(chatDateLabel(message.createdAt))}</span></div>` : '';
+        previousDate = date || previousDate;
+        return separator + messageMarkup(message);
+    }).join('');
+}
 function renderMessages() {
     const root = document.getElementById('chat-messages');
     const list = document.getElementById('chat-message-list');
-    list.innerHTML = (pieceChatRoom.messages || []).map(messageMarkup).join('') || '<p class="piece-chat-empty">첫 메시지를 남겨보세요.</p>';
+    list.innerHTML = messagesMarkup(pieceChatRoom.messages || []) || '<p class="piece-chat-empty">첫 메시지를 남겨보세요.</p>';
     root.scrollTop = root.scrollHeight;
 }
-function appendMessages(messages) {
-    const root = document.getElementById('chat-messages');
-    const list = document.getElementById('chat-message-list');
-    list.querySelector('.piece-chat-empty')?.remove();
-    list.insertAdjacentHTML('beforeend', messages.map(messageMarkup).join(''));
-    root.scrollTop = root.scrollHeight;
+function appendMessages() {
+    renderMessages();
 }
 function renderMembers() {
     document.getElementById('chat-member-count').textContent = `참여자 ${pieceChatRoom.members.length}명`;

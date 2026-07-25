@@ -270,9 +270,9 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
             COALESCE(pp.created_at, p.created_at) AS joinedAt, pp.attended_at AS attendedAt,
             (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) AS commentCount,
             (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount,
-            (1 + (SELECT COUNT(DISTINCT pp2.user_id) FROM piece_participants pp2 WHERE pp2.post_id = p.id AND pp2.user_id <> p.user_id)) AS participantCount
+            (1 + (SELECT COUNT(DISTINCT pp2.user_id) FROM piece_participants pp2 WHERE pp2.post_id = p.id AND pp2.user_id <> p.user_id AND pp2.removed_at IS NULL)) AS participantCount
      FROM posts p
-     LEFT JOIN piece_participants pp ON pp.post_id = p.id AND pp.user_id = ?
+     LEFT JOIN piece_participants pp ON pp.post_id = p.id AND pp.user_id = ? AND pp.removed_at IS NULL
      WHERE p.is_deleted = 0
        AND UPPER(p.board_type) = 'PIECE'
        AND (p.user_id = ? OR pp.user_id IS NOT NULL)
@@ -368,6 +368,7 @@ async function getUserNotifications(userId, { limit = 50 } = {}) {
        LEFT JOIN users u ON u.id = pp.user_id
        WHERE p.user_id = ?
          AND pp.user_id <> ?
+         AND pp.removed_at IS NULL
          AND UPPER(COALESCE(p.board_type, '')) = 'PIECE'
          AND p.is_deleted = 0
          AND p.is_hidden = 0
