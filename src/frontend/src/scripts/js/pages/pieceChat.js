@@ -10,14 +10,22 @@ function avatar(member) {
     const profileImageUrl = String(member.profileImageUrl || '').trim() || PIECE_CHAT_DEFAULT_PROFILE_IMAGE_URL;
     return `<img src="${chatEscape(profileImageUrl)}" alt="" onerror="this.onerror=null;this.src='${PIECE_CHAT_DEFAULT_PROFILE_IMAGE_URL}';">`;
 }
+function messageMarkup(message) {
+    const mine = Number(message.userId) === Number(pieceChatRoom.currentUserId);
+    const member = pieceChatRoom.members.find((item) => Number(item.userId) === Number(message.userId)) || message;
+    return `<article class="piece-message ${mine ? 'is-mine' : ''}" data-message-id="${Number(message.id) || ''}">${mine ? '' : `<div class="piece-message-avatar">${avatar(member)}</div>`}<div><span class="piece-message-name">${mine ? '' : chatEscape(message.nickname)}</span><div class="piece-message-row"><div class="piece-message-bubble">${chatEscape(message.content).replace(/\n/g, '<br>')}</div><time>${new Date(message.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</time></div></div></article>`;
+}
 function renderMessages() {
     const root = document.getElementById('chat-messages');
     const list = document.getElementById('chat-message-list');
-    list.innerHTML = (pieceChatRoom.messages || []).map((message) => {
-        const mine = Number(message.userId) === Number(pieceChatRoom.currentUserId);
-        const member = pieceChatRoom.members.find((item) => Number(item.userId) === Number(message.userId)) || message;
-        return `<article class="piece-message ${mine ? 'is-mine' : ''}">${mine ? '' : `<div class="piece-message-avatar">${avatar(member)}</div>`}<div><span class="piece-message-name">${mine ? '' : chatEscape(message.nickname)}</span><div class="piece-message-row"><div class="piece-message-bubble">${chatEscape(message.content).replace(/\n/g, '<br>')}</div><time>${new Date(message.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</time></div></div></article>`;
-    }).join('') || '<p class="piece-chat-empty">첫 메시지를 남겨보세요.</p>';
+    list.innerHTML = (pieceChatRoom.messages || []).map(messageMarkup).join('') || '<p class="piece-chat-empty">첫 메시지를 남겨보세요.</p>';
+    root.scrollTop = root.scrollHeight;
+}
+function appendMessages(messages) {
+    const root = document.getElementById('chat-messages');
+    const list = document.getElementById('chat-message-list');
+    list.querySelector('.piece-chat-empty')?.remove();
+    list.insertAdjacentHTML('beforeend', messages.map(messageMarkup).join(''));
     root.scrollTop = root.scrollHeight;
 }
 function renderMembers() {
@@ -50,7 +58,7 @@ function addNewMessages(messages) {
     const freshMessages = messages.filter((message) => !knownIds.has(Number(message.id)));
     if (!freshMessages.length) return;
     pieceChatRoom.messages.push(...freshMessages);
-    renderMessages();
+    appendMessages(freshMessages);
 }
 async function pollPieceChatMessages() {
     if (pieceChatPolling || !pieceChatRoom || document.hidden) return;
@@ -82,7 +90,14 @@ function initPieceChatPage() {
     document.querySelectorAll('[data-close-drawer]').forEach((button) => button.onclick = () => document.getElementById('chat-drawer').classList.add('hidden'));
     document.querySelector('[data-close-attendance]').onclick = () => document.getElementById('attendance-modal').classList.add('hidden');
     document.getElementById('chat-report').onclick = () => { const reason = prompt('신고 사유를 입력해주세요.'); if (reason?.trim()) alert('신고가 접수되었습니다. 관리자가 확인하겠습니다.'); };
-    document.getElementById('chat-form').onsubmit = async (event) => { event.preventDefault(); const input = document.getElementById('chat-input'); const content = input.value.trim(); if (!content) return; const message = await PieceChatAPI.send(pieceChatId, content); addNewMessages([message]); input.value = ''; };
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    chatForm.onsubmit = async (event) => { event.preventDefault(); const content = chatInput.value.trim(); if (!content) return; const message = await PieceChatAPI.send(pieceChatId, content); addNewMessages([message]); chatInput.value = ''; };
+    chatInput.onkeydown = (event) => {
+        if (event.key !== 'Enter' || event.shiftKey || event.isComposing || event.keyCode === 229) return;
+        event.preventDefault();
+        chatForm.requestSubmit();
+    };
     document.getElementById('attendance-list').onclick = async (event) => { const attendance = event.target.closest('[data-attendance]'); const remove = event.target.closest('[data-remove]'); try { if (attendance) { pieceChatRoom = await PieceChatAPI.attendance(pieceChatId, attendance.dataset.userId, attendance.dataset.attendance); renderRoom(); openAttendance(); } else if (remove && confirm('이 조각원을 채팅방과 조각에서 내보낼까요?')) { await PieceChatAPI.remove(pieceChatId, remove.dataset.remove); await loadPieceChat(); openAttendance(); } } catch (error) { alert(error.message); } };
     loadPieceChat().then(startPieceChatPolling);
 }
