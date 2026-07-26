@@ -27,6 +27,7 @@ const rbtiRoutes = require('./src/backend/routes/rbtiRoutes');
 const rankingRoutes = require('./src/backend/routes/rankingRoutes');
 const bamcheatRoutes = require('./src/backend/routes/bamcheatRoutes');
 const wikiRoutes = require('./src/backend/routes/wikiRoutes');
+const posterRoutes = require('./src/backend/routes/posterRoutes');
 const adminModel = require('./src/backend/models/adminModel');
 const postModel = require('./src/backend/models/postModel');
 const liveModel = require('./src/backend/models/liveModel');
@@ -684,6 +685,7 @@ app.use('/api/rbti', rbtiRoutes);
 app.use('/api/rankings', rankingRoutes);
 app.use('/api/bamcheat', bamcheatRoutes);
 app.use('/api/wiki', wikiRoutes);
+app.use('/api/posters', posterRoutes);
 
 app.get('/live', (req, res) => {
   res.redirect(301, '/play/live');
