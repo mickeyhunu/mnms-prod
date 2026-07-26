@@ -179,7 +179,7 @@ function initPieceChatPage() {
             actions.classList.toggle('hidden', !opening);
             menuButton.setAttribute('aria-expanded', String(opening));
         } else if (reportButton) {
-            window.location.href = `/customer-service?type=account&targetId=${encodeURIComponent(reportButton.dataset.reportMember)}&nickname=${encodeURIComponent(reportButton.dataset.memberNickname)}`;
+            window.location.href = `/customer-service?type=member&targetId=${encodeURIComponent(reportButton.dataset.reportMember)}&nickname=${encodeURIComponent(reportButton.dataset.memberNickname)}`;
         } else if (removeButton && confirm('이 조각원을 조각에서 내보낼까요? 내보낸 회원은 다시 참여할 수 없습니다.')) {
             try { await PieceChatAPI.remove(pieceChatId, removeButton.dataset.removeMember); await loadPieceChat(); }
             catch (error) { alert(error.message || '내보내기 중 오류가 발생했습니다.'); }
