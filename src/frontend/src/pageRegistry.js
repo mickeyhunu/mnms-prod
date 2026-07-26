@@ -2173,7 +2173,7 @@ const pageRegistry = {
         </section>
         <div class="wiki-glossary" aria-label="화류업계 용어 카테고리">
         <details class="wiki-glossary-category">
-          <summary><span>💰 비용 · 정산</span><strong>11개</strong></summary>
+          <summary><span>💰 비용 · 정산</span><strong>12개</strong></summary>
           <dl class="wiki-glossary-list">
             <dt>TC (티씨)</dt>
             <dd>여성 종업원이 손님을 접대하고 받는 봉사료.</dd>
@@ -2181,6 +2181,8 @@ const pageRegistry = {
             <dd>룸 사용료. 주대 외 별도 부과되는 기본 이용요금.</dd>
             <dt>주대</dt>
             <dd>술값 및 기본 테이블 이용비.</dd>
+            <dt>킵술</dt>
+            <dd>마시고 남아 업소에 키핑(보관)해 둔 술. 다음 방문 때 맡겨 둔 술을 다시 요청해 마실 수 있습니다.</dd>
             <dt>반티</dt>
             <dd>TC의 절반 금액.</dd>
             <dt>외티</dt>
@@ -2221,10 +2223,12 @@ const pageRegistry = {
           </dl>
         </details>
         <details class="wiki-glossary-category">
-          <summary><span>🍸 영업 · 운영</span><strong>14개</strong></summary>
+          <summary><span>🍸 영업 · 운영</span><strong>15개</strong></summary>
           <dl class="wiki-glossary-list">
             <dt>초이스</dt>
             <dd>손님이 파트너를 선택하는 행위.</dd>
+            <dt>초톡</dt>
+            <dd>초이스톡의 줄임말. 규모가 큰 업소에서 영업 종사자들이 초이스 순서와 진행 상황을 공유해 원활하게 운영하기 위한 소통 방식 또는 규칙.</dd>
             <dt>룸초이스 (룸초)</dt>
             <dd>룸 안에서 진행하는 초이스.</dd>
             <dt>미러초이스 (미러초)</dt>
@@ -2336,8 +2340,10 @@ const pageRegistry = {
           </dl>
         </details>
         <details class="wiki-glossary-category">
-          <summary><span>🎭 업소 유형</span><strong>8개</strong></summary>
+          <summary><span>🎭 업소 유형</span><strong>11개</strong></summary>
           <dl class="wiki-glossary-list">
+            <dt>룸빵</dt>
+            <dd>룸살롱처럼 독립된 방에서 술자리를 갖는 업소나 그 문화를 통칭하는 화류계 은어.</dd>
             <dt>가라오케·퍼블릭</dt>
             <dd>노래·술 중심 업소.</dd>
             <dt>셔츠룸</dt>
@@ -2361,7 +2367,7 @@ const pageRegistry = {
           </dl>
         </details>
         <details class="wiki-glossary-category">
-          <summary><span>🗣️ 기타 자주 쓰는 용어</span><strong>12개</strong></summary>
+          <summary><span>🗣️ 기타 자주 쓰는 용어</span><strong>13개</strong></summary>
           <dl class="wiki-glossary-list">
             <dt>작업</dt>
             <dd>이성에게 접근하여 금전적 이득을 얻으려는 행위.</dd>
@@ -2387,6 +2393,8 @@ const pageRegistry = {
             <dd>다른 업소로 이동 근무.</dd>
             <dt>탈화류</dt>
             <dd>업계를 떠나는 것.</dd>
+            <dt>강남의밤</dt>
+            <dd>2026년에 개설된, 강남을 중심으로 화류계 소식과 이슈를 다루는 텔레그램 채널.</dd>
           </dl>
         </details>
         </div>
