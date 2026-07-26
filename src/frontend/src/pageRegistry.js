@@ -1555,7 +1555,7 @@ const pageRegistry = {
     <script src="scripts/js/components/topAds.js"></script>
     <script src="scripts/js/pages/home.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
-    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css"],
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/topAds.js", "scripts/js/pages/home.js", "scripts/js/components/footerNav.js"]
   },
 

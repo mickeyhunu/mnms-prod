@@ -3,12 +3,13 @@
  */
 const express = require('express');
 const uploadController = require('../controllers/uploadController');
-const { authMiddleware } = require('../middlewares/authMiddleware');
+const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
 router.post('/posts/images', authMiddleware, uploadController.uploadPostImages);
 router.post('/support/attachments', authMiddleware, uploadController.uploadSupportAttachments);
 router.post('/ads/images', authMiddleware, uploadController.uploadAdImages);
+router.post('/posters/images', authMiddleware, adminMiddleware, uploadController.uploadPosterImage);
 
 module.exports = router;

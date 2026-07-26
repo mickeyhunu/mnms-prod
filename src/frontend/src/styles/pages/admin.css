@@ -1069,3 +1069,7 @@ body[data-page="admin"] {
     font-weight: 800;
     line-height: 1;
 }
+
+.admin-poster-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+.admin-poster-thumbnail { display: block; width: 80px; height: 64px; border-radius: 6px; object-fit: cover; background: #eee; }
+@media (max-width: 640px) { .admin-poster-form { grid-template-columns: 1fr; } }

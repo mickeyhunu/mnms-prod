@@ -15,6 +15,7 @@ const { collectBusinessInfoImageUrls, deleteRejectedBusinessInfoImages, deleteUn
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validatePassword } = require('../utils/authPolicy');
 const { hashPassword } = require('../utils/passwordHasher');
+const posterModel = require('../models/posterModel');
 
 const router = express.Router();
 
@@ -59,6 +60,49 @@ function revealAnonymousAuthorForAdmin(item) {
 }
 
 router.use(authMiddleware, adminMiddleware);
+
+function parsePosterPayload(body = {}) {
+  return {
+    title: String(body.title || '').trim(),
+    imageUrl: String(body.imageUrl || '').trim(),
+    isActive: body.isActive === true,
+    displayOrder: Number.isFinite(Number(body.displayOrder)) ? Math.trunc(Number(body.displayOrder)) : 0
+  };
+}
+
+router.get('/posters', async (req, res, next) => {
+  try { res.json({ content: await posterModel.list() }); } catch (error) { next(error); }
+});
+
+router.post('/posters', async (req, res, next) => {
+  try {
+    const payload = parsePosterPayload(req.body);
+    if (!payload.title || !payload.imageUrl) return res.status(400).json({ message: '포스터 이름과 이미지는 필수입니다.' });
+    res.status(201).json(await posterModel.create({ ...payload, createdBy: req.user?.id }));
+  } catch (error) { next(error); }
+});
+
+router.put('/posters/:id', async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    const payload = parsePosterPayload(req.body);
+    if (!Number.isInteger(id) || id <= 0 || !payload.title || !payload.imageUrl) return res.status(400).json({ message: '포스터 정보를 확인해주세요.' });
+    const poster = await posterModel.update(id, payload);
+    if (!poster) return res.status(404).json({ message: '포스터를 찾을 수 없습니다.' });
+    res.json(poster);
+  } catch (error) { next(error); }
+});
+
+router.delete('/posters/:id', async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    const poster = await posterModel.findById(id);
+    if (!poster) return res.status(404).json({ message: '포스터를 찾을 수 없습니다.' });
+    await posterModel.remove(id);
+    await deleteS3ObjectByUrl(poster.imageUrl);
+    res.json({ success: true });
+  } catch (error) { next(error); }
+});
 
 
 router.get('/review-summary', async (req, res, next) => {
