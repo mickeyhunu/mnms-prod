@@ -29,6 +29,7 @@ const INQUIRY_TYPES = {
   QUESTION: 'question',
   POST_REPORT: 'post_report',
   COMMENT_REPORT: 'comment_report',
+  MEMBER_REPORT: 'member_report',
   ACCOUNT: 'account',
   SERVICE_ERROR: 'service_error',
   AD_INQUIRY: 'ad_inquiry',
@@ -96,6 +97,7 @@ function buildInquiryTarget(row) {
   const postTitle = row.targetPostTitle || row.target_post_title || null;
   const content = row.targetContent || row.target_content || null;
   const authorNickname = row.targetAuthorNickname || row.target_author_nickname || null;
+  const nickname = row.targetNickname || row.target_nickname || (targetType === 'member' ? authorNickname : null);
   const isDeleted = Boolean(row.targetIsDeleted ?? row.target_is_deleted);
   const isHidden = Boolean(row.targetIsHidden ?? row.target_is_hidden);
 
@@ -107,6 +109,7 @@ function buildInquiryTarget(row) {
     title: targetType === 'post' ? postTitle : null,
     content,
     authorNickname,
+    nickname,
     isDeleted,
     isHidden,
     url: postTitle ? `/post-detail/${encodeURIComponent(createSeoSlugWithId(postTitle, postId, 'post'))}` : null
@@ -126,7 +129,8 @@ const INQUIRY_TARGET_SELECT_SQL = `
             CASE WHEN i.target_type = 'post' THEN p.id WHEN i.target_type = 'comment' THEN c.post_id ELSE NULL END AS targetPostId,
             CASE WHEN i.target_type = 'post' THEN p.title WHEN i.target_type = 'comment' THEN cp.title ELSE NULL END AS targetPostTitle,
             CASE WHEN i.target_type = 'post' THEN p.content WHEN i.target_type = 'comment' THEN c.content ELSE NULL END AS targetContent,
-            CASE WHEN i.target_type = 'post' THEN COALESCE(pu.nickname, '비회원') WHEN i.target_type = 'comment' THEN COALESCE(cu.nickname, '비회원') ELSE NULL END AS targetAuthorNickname,
+            CASE WHEN i.target_type = 'post' THEN COALESCE(pu.nickname, '비회원') WHEN i.target_type = 'comment' THEN COALESCE(cu.nickname, '비회원') WHEN i.target_type = 'member' THEN tu.nickname ELSE NULL END AS targetAuthorNickname,
+            CASE WHEN i.target_type = 'member' THEN tu.nickname ELSE NULL END AS targetNickname,
             CASE WHEN i.target_type = 'post' THEN p.is_deleted WHEN i.target_type = 'comment' THEN c.is_deleted ELSE NULL END AS targetIsDeleted,
             CASE WHEN i.target_type = 'post' THEN p.is_hidden WHEN i.target_type = 'comment' THEN c.is_hidden ELSE NULL END AS targetIsHidden`;
 
@@ -135,7 +139,8 @@ const INQUIRY_TARGET_JOIN_SQL = `
      LEFT JOIN users pu ON pu.id = p.user_id
      LEFT JOIN comments c ON i.target_type = 'comment' AND c.id = i.target_id
      LEFT JOIN posts cp ON cp.id = c.post_id
-     LEFT JOIN users cu ON cu.id = c.user_id`;
+     LEFT JOIN users cu ON cu.id = c.user_id
+     LEFT JOIN users tu ON i.target_type = 'member' AND tu.id = i.target_id`;
 
 async function listArticles(category, includeDeleted = false, { sourceType = null } = {}) {
   const pool = getPool();
@@ -268,6 +273,19 @@ async function createInquiry({ userId, type, title, content, targetType = null, 
   }
 
   return result.insertId;
+}
+
+async function findMemberReportTarget(id) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT id, nickname
+       FROM users
+      WHERE id = ?
+        AND UPPER(COALESCE(role, '')) <> 'ADMIN'
+      LIMIT 1`,
+    [id]
+  );
+  return rows[0] || null;
 }
 
 async function listInquiriesByUser(userId) {
@@ -419,6 +437,7 @@ module.exports = {
   incrementArticleViewCount,
   deleteArticle,
   createInquiry,
+  findMemberReportTarget,
   listInquiriesByUser,
   findInquiryById,
   listInquiriesForAdmin,

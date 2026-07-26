@@ -1655,6 +1655,7 @@ function getInquiryTargetTypeLabel(targetType) {
     const normalized = String(targetType || '').toLowerCase();
     if (normalized === 'post') return '게시글';
     if (normalized === 'comment') return '댓글';
+    if (normalized === 'member') return '회원';
     return '대상';
 }
 
@@ -1671,6 +1672,12 @@ function renderInquiryTargetSummary(inquiry, { compact = false } = {}) {
     if (!targetType || !targetId) return '<span class="text-muted">-</span>';
 
     const typeLabel = getInquiryTargetTypeLabel(targetType);
+    if (String(targetType).toLowerCase() === 'member') {
+        const nickname = target?.nickname || target?.authorNickname;
+        return nickname
+            ? `<div class="admin-inquiry-target-summary"><strong>${sanitizeHTML(nickname)}</strong></div>`
+            : '<span class="text-muted">-</span>';
+    }
     const postTitle = target?.postTitle || target?.title || '';
     const content = target?.content || '';
     const deletedOrHidden = target?.isDeleted ? '삭제됨' : (target?.isHidden ? '가려짐' : '');
@@ -2814,6 +2821,7 @@ function toInquiryTypeLabel(type) {
     const normalized = String(type || '').toLowerCase();
     if (normalized === 'post_report') return '게시글 신고';
     if (normalized === 'comment_report') return '댓글 신고';
+    if (normalized === 'member_report') return '회원 신고';
     if (normalized === 'question') return '일반 문의';
     if (normalized === 'account') return '계정 문의';
     if (normalized === 'service_error') return '서비스 오류';

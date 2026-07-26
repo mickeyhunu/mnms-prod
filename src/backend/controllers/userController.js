@@ -607,6 +607,7 @@ async function publicProfile(req, res, next) {
     const { posts, comments, likedPosts, participatedPieces } = await getUserActivityDetails(profile.id, { limit: activityLimit });
 
     res.json({
+      id: Number(profile.id),
       nickname: profile.nickname,
       profileImageUrl: profile.profileImageUrl || '',
       profileIntroduction: getProfileIntroductionValue(profile),

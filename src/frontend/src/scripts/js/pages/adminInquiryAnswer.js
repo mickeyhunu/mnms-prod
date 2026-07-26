@@ -15,6 +15,7 @@ function toInquiryTypeLabel(type) {
     const normalized = String(type || '').toLowerCase();
     if (normalized === 'post_report') return '게시글 신고';
     if (normalized === 'comment_report') return '댓글 신고';
+    if (normalized === 'member_report') return '회원 신고';
     if (normalized === 'question') return '일반 문의';
     if (normalized === 'account') return '계정 문의';
     if (normalized === 'service_error') return '서비스 오류';
@@ -106,6 +107,7 @@ function getInquiryTargetTypeLabel(targetType) {
     const normalized = String(targetType || '').toLowerCase();
     if (normalized === 'post') return '게시글';
     if (normalized === 'comment') return '댓글';
+    if (normalized === 'member') return '회원';
     return '대상';
 }
 
@@ -122,6 +124,10 @@ function renderInquiryTargetInfo(inquiry) {
     if (!targetType || !targetId) return '-';
 
     const typeLabel = getInquiryTargetTypeLabel(targetType);
+    if (String(targetType).toLowerCase() === 'member') {
+        const nickname = target?.nickname || target?.authorNickname;
+        return nickname ? `<strong>${escapeHtml(nickname)}</strong>` : '-';
+    }
     const postTitle = target?.postTitle || target?.title || '';
     const content = target?.content || '';
     const href = target?.url || (target?.postId ? createPostDetailPath(target.postId, target.postTitle || target.title) : '');

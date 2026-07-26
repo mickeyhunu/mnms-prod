@@ -20,6 +20,11 @@ const pageRegistry = {
                     </a>
                     <span class="community-board-name">회원 프로필</span>
                 </div>
+                <div class="community-actions">
+                    <button type="button" class="member-profile-report-btn icon-btn icon-btn-square" id="member-profile-report-btn" aria-label="이 회원 신고하기" title="회원 신고" disabled>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17v-5a5 5 0 0 1 10 0v5"></path><path d="M5 20h14M12 3V1M4.2 6.2 2.8 4.8M19.8 6.2l1.4-1.4M8.5 17h7"></path></svg>
+                    </button>
+                </div>
             </header>
             <div id="member-profile-root" aria-live="polite">
                 <section class="member-profile-card member-profile-empty"><p>회원 프로필을 불러오는 중입니다.</p></section>
@@ -1996,11 +2001,12 @@ const pageRegistry = {
   'customer-service': {
     template: `<header class="header"><div class="header-container"><a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a><nav class="nav" id="navigation"><div class="nav-user"><span class="user-nickname" id="user-nickname"></span><a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a><button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button></div></nav></div></header>
     <main class="main-content"><div class="container customer-service-page mypage-linked-container"><header class="community-section-header"><div class="community-header-left"><a href="/my-page" class="community-back-link icon-btn icon-btn-square" aria-label="마이페이지로 이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a><span class="community-board-name">1:1 고객센터</span></div></header>
-    <div class="mypage-linked-content"><section class="customer-service-card"><div class="customer-service-intro"><h2>문의 / 신고 접수</h2><p>불편하신 사항을 접수해주시면 확인 후 신속하게 처리하겠습니다.<br>게시글 신고, 댓글 신고, 일반 문의 모두 동일한 화면에서 등록할 수 있습니다.</p></div>
+    <div class="mypage-linked-content"><section class="customer-service-card"><div class="customer-service-intro"><h2>문의 / 신고 접수</h2><p>불편하신 사항을 접수해주시면 확인 후 신속하게 처리하겠습니다.<br>게시글 신고, 댓글 신고, 회원 신고, 일반 문의 모두 동일한 화면에서 등록할 수 있습니다.</p></div>
     <form id="customer-service-form" class="customer-service-form" novalidate>
       <input type="hidden" id="inquiry-target-type" name="targetType" value="general">
       <input type="hidden" id="inquiry-target-id" name="targetId" value="">
-      <div class="form-group"><label for="inquiry-type">문의 유형</label><select id="inquiry-type" name="inquiryType" class="form-control" required><option value="">-- 유형 선택 --</option><option value="question">일반 문의</option><option value="post_report">게시글 신고</option><option value="comment_report">댓글 신고</option><option value="account">계정 문의</option><option value="service_error">서비스 오류</option><option value="ad_inquiry">광고 문의</option><option value="etc">기타</option></select></div>
+      <div class="form-group"><label for="inquiry-type">문의 유형</label><select id="inquiry-type" name="inquiryType" class="form-control" required><option value="">-- 유형 선택 --</option><option value="question">일반 문의</option><option value="post_report">게시글 신고</option><option value="comment_report">댓글 신고</option><option value="member_report">회원 신고</option><option value="account">계정 문의</option><option value="service_error">서비스 오류</option><option value="ad_inquiry">광고 문의</option><option value="etc">기타</option></select></div>
+      <div class="form-group hidden" id="inquiry-target-group"><label for="inquiry-target-nickname">신고 대상</label><input id="inquiry-target-nickname" type="text" class="form-control" readonly></div>
       <div class="form-group"><label for="inquiry-title">제목</label><input id="inquiry-title" name="title" type="text" class="form-control" maxlength="100" placeholder="문의 제목을 입력해주세요." required></div>
       <div class="form-group"><label for="inquiry-reason">신고/문의 사유</label><textarea id="inquiry-reason" name="content" class="form-control" rows="6" placeholder="상세 내용을 입력해주세요." required></textarea></div>
       <section class="customer-file-upload"><div class="file-upload-header">첨부파일</div><p class="file-upload-guide">* 파일 형식: JPG, PNG, GIF, WEBP, PDF (최대 50MB)</p>
