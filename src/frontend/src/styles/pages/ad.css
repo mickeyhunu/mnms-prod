@@ -877,6 +877,12 @@
     gap: 10px;
 }
 
+.ad-profile-stamp-event-fields[hidden],
+.ad-profile-stamp-event-help[hidden],
+#ad-profile-piece-chat-notice[hidden] {
+    display: none;
+}
+
 .ad-profile-stamp-event-fields > input[type="text"] {
     flex: 1 1 auto;
     min-width: 0;
