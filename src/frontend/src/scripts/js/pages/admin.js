@@ -11,6 +11,8 @@ let editingUserId = null;
 let editingEntryId = null;
 let editingAdId = null;
 let editingBusinessAdId = null;
+let editingPosterId = null;
+let adminPosters = [];
 let currentEntryStoreNo = null;
 let entryStores = [];
 let adStores = [];
@@ -26,7 +28,7 @@ let lastAdminReviewSummary = null;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
-const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'business-users', 'admins', 'entries', 'banner-ads', 'business-ads', 'support', 'business-applications', 'inquiries'];
+const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'business-users', 'admins', 'entries', 'posters', 'banner-ads', 'business-ads', 'support', 'business-applications', 'inquiries'];
 const ADMIN_SIDEBAR_COLLAPSED_STORAGE_KEY = 'adminSidebarCollapsed';
 
 const ADMIN_PAGE_SIZE = 20;
@@ -238,6 +240,7 @@ async function activateAdminTab(tabKey, options = {}) {
     else if (resolvedTabKey === 'business-applications') await loadBusinessApplications();
     else if (resolvedTabKey === 'admins') await loadAdmins();
     else if (resolvedTabKey === 'entries') await loadEntries();
+    else if (resolvedTabKey === 'posters') await loadPosters();
     else if (resolvedTabKey === 'banner-ads') await loadAds();
     else if (resolvedTabKey === 'business-ads') await loadBusinessAdsAdmin();
     else if (resolvedTabKey === 'support') await loadSupportArticles();
@@ -309,6 +312,7 @@ function bindCommonEvents() {
     document.getElementById('entries-retry-btn')?.addEventListener('click', loadEntries);
     document.getElementById('entries-retry-btn-secondary')?.addEventListener('click', loadEntries);
     document.getElementById('ads-retry-btn')?.addEventListener('click', loadAds);
+    document.getElementById('posters-retry-btn')?.addEventListener('click', loadPosters);
     document.getElementById('business-ads-retry-btn')?.addEventListener('click', loadBusinessAdsAdmin);
     document.getElementById('support-retry-btn')?.addEventListener('click', loadSupportArticles);
     document.getElementById('inquiries-retry-btn')?.addEventListener('click', loadInquiries);
@@ -332,6 +336,9 @@ function bindCommonEvents() {
     document.getElementById('ads-cancel-btn')?.addEventListener('click', resetAdEditor);
     document.getElementById('ads-image-upload-btn')?.addEventListener('click', uploadAdImage);
     document.getElementById('ads-form-ad-type')?.addEventListener('change', handleAdTypeChange);
+    document.getElementById('posters-save-btn')?.addEventListener('click', savePoster);
+    document.getElementById('posters-cancel-btn')?.addEventListener('click', resetPosterEditor);
+    document.getElementById('posters-image-upload-btn')?.addEventListener('click', uploadPosterImage);
     document.getElementById('business-ads-save-btn')?.addEventListener('click', saveBusinessAdAdmin);
     document.getElementById('business-ads-cancel-btn')?.addEventListener('click', resetBusinessAdEditor);
     document.getElementById('business-ads-image-upload-btn')?.addEventListener('click', uploadBusinessAdImage);
@@ -2246,6 +2253,78 @@ async function loadAds() {
     } catch (error) {
         showError('ads', error.message || '광고 목록을 불러오지 못했습니다.');
     }
+}
+
+async function loadPosters() {
+    toggleLoading('posters', true);
+    try {
+        const response = await APIClient.get('/admin/posters');
+        adminPosters = response.content || [];
+        const tbody = document.getElementById('posters-tbody');
+        if (tbody) {
+            tbody.innerHTML = adminPosters.length ? adminPosters.map((poster) => `
+                <tr>
+                    <td>${Number(poster.displayOrder || 0)}</td>
+                    <td><img class="admin-poster-thumbnail" src="${sanitizeHTML(poster.imageUrl)}" alt=""></td>
+                    <td>${sanitizeHTML(poster.title)}</td>
+                    <td><span class="${poster.isActive ? 'status-active' : 'status-inactive'}">${poster.isActive ? '노출' : '비노출'}</span></td>
+                    <td>${formatDate(poster.updatedAt || poster.createdAt)}</td>
+                    <td><button class="btn btn-sm btn-secondary" type="button" data-poster-edit="${poster.id}">수정</button> <button class="btn btn-sm btn-danger" type="button" data-poster-delete="${poster.id}">삭제</button></td>
+                </tr>`).join('') : '<tr><td colspan="6" class="text-center text-muted">등록된 포스터가 없습니다.</td></tr>';
+            tbody.querySelectorAll('[data-poster-edit]').forEach((button) => button.addEventListener('click', () => fillPosterEditor(adminPosters.find((item) => Number(item.id) === Number(button.dataset.posterEdit)))));
+            tbody.querySelectorAll('[data-poster-delete]').forEach((button) => button.addEventListener('click', () => deletePoster(Number(button.dataset.posterDelete))));
+        }
+        showContent('posters');
+    } catch (error) { showError('posters', error.message || '포스터 목록을 불러오지 못했습니다.'); }
+}
+
+function setPosterHelp(message, color = '#6c757d') {
+    const element = document.getElementById('posters-form-help');
+    if (element) { element.textContent = message; element.style.color = color; }
+}
+
+function fillPosterEditor(poster = null) {
+    editingPosterId = poster ? Number(poster.id) : null;
+    document.getElementById('posters-editor-title').textContent = poster ? `포스터 수정 #${poster.id}` : '새 포스터 등록';
+    document.getElementById('posters-form-title').value = poster?.title || '';
+    document.getElementById('posters-form-display-order').value = Number(poster?.displayOrder || 0);
+    document.getElementById('posters-form-is-active').value = String(poster ? Boolean(poster.isActive) : true);
+    document.getElementById('posters-form-image-url').value = poster?.imageUrl || '';
+    document.getElementById('posters-form-image-file').value = '';
+    document.getElementById('posters-form-image-help').textContent = poster?.imageUrl ? '현재 이미지가 등록되어 있습니다.' : '';
+    document.getElementById('posters-save-btn').textContent = poster ? '수정 저장' : '포스터 등록';
+    document.getElementById('posters-cancel-btn').classList.toggle('hidden', !poster);
+    setPosterHelp('');
+}
+
+function resetPosterEditor() { fillPosterEditor(null); }
+
+async function uploadPosterImage() {
+    const file = document.getElementById('posters-form-image-file')?.files?.[0];
+    if (!file || !String(file.type).startsWith('image/')) return setPosterHelp('이미지 파일을 선택해주세요.', '#dc3545');
+    const dataUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
+    const button = document.getElementById('posters-image-upload-btn');
+    try {
+        button.disabled = true;
+        const response = await APIClient.post('/uploads/posters/images', { files: [{ dataUrl, fileName: file.name }] });
+        document.getElementById('posters-form-image-url').value = response.files?.[0]?.url || '';
+        document.getElementById('posters-form-image-help').textContent = '업로드 완료';
+        setPosterHelp('포스터 이미지가 업로드되었습니다.', '#198754');
+    } catch (error) { setPosterHelp(error.message || '업로드에 실패했습니다.', '#dc3545'); } finally { button.disabled = false; }
+}
+
+async function savePoster() {
+    const payload = { title: document.getElementById('posters-form-title').value.trim(), imageUrl: document.getElementById('posters-form-image-url').value.trim(), displayOrder: Number(document.getElementById('posters-form-display-order').value) || 0, isActive: document.getElementById('posters-form-is-active').value === 'true' };
+    if (!payload.title || !payload.imageUrl) return setPosterHelp('관리용 이름을 입력하고 이미지를 업로드해주세요.', '#dc3545');
+    try {
+        if (editingPosterId) await APIClient.put(`/admin/posters/${editingPosterId}`, payload); else await APIClient.post('/admin/posters', payload);
+        resetPosterEditor(); await loadPosters(); setPosterHelp('포스터가 저장되었습니다.', '#198754');
+    } catch (error) { setPosterHelp(error.message || '저장에 실패했습니다.', '#dc3545'); }
+}
+
+async function deletePoster(id) {
+    if (!window.confirm('이 포스터를 삭제할까요?')) return;
+    try { await APIClient.delete(`/admin/posters/${id}`); if (editingPosterId === id) resetPosterEditor(); await loadPosters(); } catch (error) { alert(error.message || '삭제에 실패했습니다.'); }
 }
 
 async function ensureAdStoresLoaded() {

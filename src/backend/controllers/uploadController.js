@@ -71,8 +71,26 @@ async function uploadAdImages(req, res, next) {
   }
 }
 
+async function uploadPosterImage(req, res, next) {
+  try {
+    const file = Array.isArray(req.body.files) ? req.body.files[0] : null;
+    if (!file) return res.status(400).json({ message: '업로드할 포스터 이미지가 없습니다.' });
+    const uploadedItem = await uploadDataUrlToS3({
+      dataUrl: file.dataUrl,
+      fileName: file.fileName,
+      folder: 'posters',
+      allowedMimeTypes: IMAGE_MIME_TYPES,
+      maxBytes: 12 * 1024 * 1024
+    });
+    res.status(201).json({ success: true, files: [uploadedItem] });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   uploadPostImages,
   uploadSupportAttachments,
-  uploadAdImages
+  uploadAdImages,
+  uploadPosterImage
 };
