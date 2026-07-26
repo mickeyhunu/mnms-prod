@@ -34,15 +34,16 @@ function parseDateTime(value) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function resolvePieceChatLifecycle(post, now = new Date()) {
+function resolvePieceChatLifecycle(post, now = new Date(), participantCount = null) {
   const rows = parseTemplateRows(post?.content);
   const startsAt = parseDateTime(rows.get('시간') || rows.get('날짜/시간') || rows.get('일정') || rows.get('만남 시간'));
   const closedAt = post?.pieceClosedAt || post?.piece_closed_at || null;
   const autoEndsAt = startsAt ? new Date(startsAt.getTime() + PIECE_DURATION_MS) : null;
   const closedDate = closedAt ? new Date(closedAt) : null;
-  const isEnded = Boolean(closedAt || (autoEndsAt && autoEndsAt <= now));
+  const hasStartedEmpty = participantCount === 0 && Boolean(startsAt && startsAt <= now);
+  const isEnded = Boolean(closedAt || (autoEndsAt && autoEndsAt <= now) || hasStartedEmpty);
   const isInProgress = Boolean(startsAt && startsAt <= now && !isEnded);
-  const endedAt = closedDate && !Number.isNaN(closedDate.getTime()) ? closedDate : autoEndsAt;
+  const endedAt = closedDate && !Number.isNaN(closedDate.getTime()) ? closedDate : (hasStartedEmpty ? startsAt : autoEndsAt);
   return {
     status: isEnded ? 'ENDED' : (isInProgress ? 'IN_PROGRESS' : 'RECRUITING'),
     isInProgress,
