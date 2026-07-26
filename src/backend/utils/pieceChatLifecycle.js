@@ -60,7 +60,7 @@ function lifecycleMessages(lifecycle) {
     messages.push({ id: -1, userId: null, nickname: '조각안내', messageType: 'SYSTEM', content: '조각이 시작되었습니다.', createdAt: lifecycle.startsAt });
   }
   if (lifecycle.isEnded) {
-    messages.push({ id: -2, userId: null, nickname: '조각안내', messageType: 'SYSTEM', content: '조각이 종료되었습니다. 더 이상 채팅할 수 없습니다.', createdAt: lifecycle.endedAt });
+    messages.push({ id: -2, userId: null, nickname: '조각안내', messageType: 'SYSTEM', content: '조각이 종료되었습니다.', createdAt: lifecycle.endedAt });
   }
   return messages;
 }
