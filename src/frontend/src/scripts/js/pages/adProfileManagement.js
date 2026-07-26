@@ -387,6 +387,7 @@ function bindAdProfileInteractions() {
     const telegramIdInput = document.getElementById('ad-profile-telegram-id');
     const usePieceChatNoticeInput = document.getElementById('ad-profile-use-piece-chat-notice');
     const pieceChatNoticeInput = document.getElementById('ad-profile-piece-chat-notice');
+    const pieceChatNoticeHelp = document.querySelector('.ad-profile-piece-chat-notice-help');
     const showBusinessAddressMapInput = document.getElementById('ad-profile-show-business-address-map');
     const useStampEventInput = document.getElementById('ad-profile-use-stamp-event');
     const stampEventDescriptionInput = document.getElementById('ad-profile-stamp-event-description');
@@ -493,6 +494,7 @@ function bindAdProfileInteractions() {
         if (!pieceChatNoticeInput) return;
         pieceChatNoticeInput.hidden = !isEnabled;
         pieceChatNoticeInput.disabled = !isEnabled;
+        if (pieceChatNoticeHelp) pieceChatNoticeHelp.hidden = !isEnabled;
         if (!isEnabled) pieceChatNoticeInput.value = '';
     };
 
@@ -1028,6 +1030,7 @@ function applyAdProfileToForm(ad) {
     const telegramIdInput = document.getElementById('ad-profile-telegram-id');
     const usePieceChatNoticeInput = document.getElementById('ad-profile-use-piece-chat-notice');
     const pieceChatNoticeInput = document.getElementById('ad-profile-piece-chat-notice');
+    const pieceChatNoticeHelp = document.querySelector('.ad-profile-piece-chat-notice-help');
     const showBusinessAddressMapInput = document.getElementById('ad-profile-show-business-address-map');
     const useStampEventInput = document.getElementById('ad-profile-use-stamp-event');
     const stampEventDescriptionInput = document.getElementById('ad-profile-stamp-event-description');
@@ -1057,6 +1060,7 @@ function applyAdProfileToForm(ad) {
         pieceChatNoticeInput.hidden = !hasPieceChatNotice;
         pieceChatNoticeInput.disabled = !hasPieceChatNotice;
     }
+    if (pieceChatNoticeHelp) pieceChatNoticeHelp.hidden = !hasPieceChatNotice;
     if (showBusinessAddressMapInput) showBusinessAddressMapInput.checked = normalizeBooleanFlag(ad.showBusinessAddressMap);
     if (useStampEventInput) useStampEventInput.checked = normalizeBooleanFlag(ad.useStampEvent || ad.useVisitVerification);
     const isStampEventEnabled = normalizeBooleanFlag(ad.useStampEvent || ad.useVisitVerification);

@@ -879,6 +879,7 @@
 
 .ad-profile-stamp-event-fields[hidden],
 .ad-profile-stamp-event-help[hidden],
+.ad-profile-piece-chat-notice-help[hidden],
 #ad-profile-piece-chat-notice[hidden] {
     display: none;
 }
