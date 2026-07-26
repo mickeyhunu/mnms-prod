@@ -259,6 +259,7 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
      FROM post_likes pl
      INNER JOIN posts p ON p.id = pl.post_id
      WHERE pl.user_id = ? AND p.is_deleted = 0
+       AND UPPER(COALESCE(p.board_type, '')) <> 'ANON'
      ORDER BY pl.created_at DESC, p.id DESC
      LIMIT ?`,
     [userId, safeLimit]
