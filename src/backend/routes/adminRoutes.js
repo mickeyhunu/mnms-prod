@@ -625,6 +625,7 @@ function readBusinessAdPayload(body = {}, fallback = {}) {
     description: String(body.description ?? fallback.description ?? '').trim(),
     kakaoTalkId: String(body.kakaoTalkId ?? fallback.kakaoTalkId ?? '').trim(),
     telegramId: String(body.telegramId ?? fallback.telegramId ?? '').trim(),
+    pieceChatNotice: String(body.pieceChatNotice ?? fallback.pieceChatNotice ?? '').trim().slice(0, 500),
     showBusinessAddressMap: Boolean(body.showBusinessAddressMap),
     useVisitVerification: useStampEvent,
     useStampEvent,
