@@ -231,6 +231,20 @@ function renderMemberProfile(profile) {
     `;
 
     bindMemberProfileActivityTabs(root);
+
+    const reportButton = document.getElementById('member-profile-report-btn');
+    if (reportButton && Number(profile.id) > 0) {
+        reportButton.disabled = false;
+        reportButton.addEventListener('click', () => {
+            if (typeof Auth !== 'undefined' && !Auth.requireAuth()) return;
+            const params = new URLSearchParams({
+                type: 'member',
+                targetId: String(profile.id),
+                nickname: String(profile.nickname || '')
+            });
+            window.location.href = `/customer-service?${params.toString()}`;
+        }, { once: true });
+    }
 }
 
 async function initMemberProfilePage() {

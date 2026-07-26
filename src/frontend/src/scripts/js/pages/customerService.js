@@ -26,14 +26,18 @@ function applyTargetContextFromQuery() {
     const params = new URLSearchParams(window.location.search);
     const type = String(params.get('type') || '').toLowerCase();
     const targetId = String(params.get('targetId') || '').trim();
+    const targetNickname = String(params.get('nickname') || '').trim();
 
     const targetTypeInput = document.getElementById('inquiry-target-type');
     const targetIdInput = document.getElementById('inquiry-target-id');
     const inquiryTypeSelect = document.getElementById('inquiry-type');
+    const targetGroup = document.getElementById('inquiry-target-group');
+    const targetNicknameInput = document.getElementById('inquiry-target-nickname');
 
     const mappings = {
         post: { targetType: 'post', inquiryType: 'post_report' },
         comment: { targetType: 'comment', inquiryType: 'comment_report' },
+        member: { targetType: 'member', inquiryType: 'member_report' },
         inquiry: { targetType: 'general', inquiryType: 'question' }
     };
 
@@ -42,6 +46,8 @@ function applyTargetContextFromQuery() {
     if (targetTypeInput) targetTypeInput.value = selected.targetType;
     if (targetIdInput) targetIdInput.value = targetId;
     if (inquiryTypeSelect && selected.inquiryType) inquiryTypeSelect.value = selected.inquiryType;
+    if (targetGroup) targetGroup.classList.toggle('hidden', selected.targetType !== 'member');
+    if (targetNicknameInput) targetNicknameInput.value = selected.targetType === 'member' ? targetNickname : '';
 }
 
 function bindFileValidation() {
