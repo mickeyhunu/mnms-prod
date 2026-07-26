@@ -1235,6 +1235,14 @@
 
 }
 
+.home-poster-modal { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 20px; }
+.home-poster-modal__backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, .68); }
+.home-poster-modal__panel { position: relative; width: min(92vw, 620px); max-height: 92vh; overflow: hidden; border-radius: 14px; background: #111; box-shadow: 0 24px 70px rgba(0,0,0,.45); }
+.home-poster-modal__image { display: block; width: 100%; max-height: calc(92vh - 52px); object-fit: contain; background: #111; }
+.home-poster-modal__actions { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #333; }
+.home-poster-modal__actions button { min-height: 52px; border: 0; background: #fff; color: #222; font-weight: 700; cursor: pointer; }
+.home-poster-modal__actions button + button { border-left: 1px solid #ddd; }
+
 .member-profile-activity .mypage-activity-tab-header {
     display: flex;
 }

@@ -47,6 +47,7 @@ export const adminTemplate = `
                         <button class="admin-tab" data-tab="admins" title="관리자 관리"><span class="admin-tab__label">관리자 관리</span></button>
                         <button class="admin-tab" data-tab="posts" title="게시글 관리"><span class="admin-tab__label">게시글 관리</span></button>
                         <button class="admin-tab" data-tab="comments" title="댓글 관리"><span class="admin-tab__label">댓글 관리</span></button>
+                        <button class="admin-tab" data-tab="posters" title="홈 포스터 관리"><span class="admin-tab__label">홈 포스터 관리</span></button>
                         <button class="admin-tab" data-tab="banner-ads" title="배너광고관리"><span class="admin-tab__label">배너광고관리</span></button>
                         <button class="admin-tab" data-tab="business-ads" title="업체광고관리"><span class="admin-tab__label">업체광고관리</span></button>
                         <button class="admin-tab" data-tab="entries" title="엔트리 관리"><span class="admin-tab__label">엔트리 관리</span></button>
@@ -217,6 +218,23 @@ export const adminTemplate = `
                         <table class="admin-table"><thead><tr><th>이름</th><th>언급수</th><th>가산점</th><th>등록일</th><th>관리</th></tr></thead><tbody id="entries-tbody"></tbody></table>
                     </div>
                     <div class="admin-pagination hidden" id="entries-pagination"></div>
+                </div>
+
+                <div id="posters-section" class="tab-pane hidden">
+                    <section class="admin-entry-editor">
+                        <div><p class="admin-user-detail-eyebrow">홈 팝업 관리</p><h3 id="posters-editor-title">새 포스터 등록</h3><p class="admin-user-detail-description">첨부 이미지만 홈 팝업에 표시되며, 노출 여부와 순서를 지정할 수 있습니다.</p></div>
+                        <div class="admin-user-form-grid admin-poster-form">
+                            <div class="form-group"><label class="form-label" for="posters-form-title">관리용 이름</label><input id="posters-form-title" class="form-control" maxlength="255" placeholder="포스터 이름"></div>
+                            <div class="form-group"><label class="form-label" for="posters-form-display-order">노출 순서</label><input id="posters-form-display-order" class="form-control" type="number" value="0"><small class="help-text">숫자가 작을수록 먼저 표시됩니다.</small></div>
+                            <div class="form-group"><label class="form-label" for="posters-form-is-active">노출 여부</label><select id="posters-form-is-active" class="form-control"><option value="true">노출</option><option value="false">비노출</option></select></div>
+                            <div class="form-group"><label class="form-label" for="posters-form-image-file">포스터 이미지</label><input id="posters-form-image-file" class="form-control" type="file" accept="image/*"><input id="posters-form-image-url" type="hidden"><button id="posters-image-upload-btn" class="btn btn-outline btn-sm" type="button">이미지 업로드</button><small id="posters-form-image-help" class="help-text"></small></div>
+                        </div>
+                        <div class="admin-entry-editor__actions"><button id="posters-cancel-btn" class="btn btn-secondary hidden" type="button">취소</button><button id="posters-save-btn" class="btn btn-primary" type="button">포스터 등록</button></div>
+                        <p id="posters-form-help" class="help-text" role="status"></p>
+                    </section>
+                    <div class="loading" id="posters-loading"><div class="spinner"></div><p>포스터 목록을 불러오는 중...</p></div>
+                    <div class="error-banner hidden" id="posters-error"><p id="posters-error-message"></p><button class="btn btn-sm btn-primary" id="posters-retry-btn">다시 시도</button></div>
+                    <div class="admin-table-container hidden" id="posters-content"><table class="admin-table"><thead><tr><th>순서</th><th>미리보기</th><th>이름</th><th>노출 상태</th><th>수정일</th><th>관리</th></tr></thead><tbody id="posters-tbody"></tbody></table></div>
                 </div>
 
                 <div id="banner-ads-section" class="tab-pane hidden">

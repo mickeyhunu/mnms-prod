@@ -215,6 +215,20 @@ async function initDatabase() {
   pool = mysql.createPool(dbConfig);
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS home_posters (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      title VARCHAR(255) NOT NULL,
+      image_url VARCHAR(2048) NOT NULL,
+      is_active TINYINT(1) NOT NULL DEFAULT 1,
+      display_order INT NOT NULL DEFAULT 0,
+      created_by BIGINT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_home_posters_display (is_active, display_order, id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       login_id VARCHAR(255) NOT NULL UNIQUE,
