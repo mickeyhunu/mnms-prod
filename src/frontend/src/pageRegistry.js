@@ -21,7 +21,7 @@ const pageRegistry = {
                     <span class="community-board-name">회원 프로필</span>
                 </div>
                 <div class="community-actions">
-                    <button type="button" class="icon-btn icon-btn-square" id="member-profile-report-btn" aria-label="이 회원 신고하기" title="회원 신고" disabled>
+                    <button type="button" class="icon-btn icon-btn-square hidden" id="member-profile-report-btn" aria-label="이 회원 신고하기" title="회원 신고" disabled hidden>
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17v-5a5 5 0 0 1 10 0v5"></path><path d="M5 20h14M12 3V1M4.2 6.2 2.8 4.8M19.8 6.2l1.4-1.4M8.5 17h7"></path></svg>
                     </button>
                 </div>

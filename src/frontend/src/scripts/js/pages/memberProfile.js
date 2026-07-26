@@ -233,8 +233,19 @@ function renderMemberProfile(profile) {
     bindMemberProfileActivityTabs(root);
 
     const reportButton = document.getElementById('member-profile-report-btn');
-    if (reportButton && Number(profile.id) > 0) {
-        reportButton.disabled = false;
+    const currentUser = typeof Auth !== 'undefined' ? Auth.getUser() : null;
+    const isOwnProfile = Number(profile.id) > 0
+        && Number(currentUser?.id) > 0
+        && Number(profile.id) === Number(currentUser.id);
+    const canReportProfile = Number(profile.id) > 0 && !isOwnProfile;
+
+    if (reportButton) {
+        reportButton.hidden = !canReportProfile;
+        reportButton.classList.toggle('hidden', !canReportProfile);
+        reportButton.disabled = !canReportProfile;
+    }
+
+    if (reportButton && canReportProfile) {
         reportButton.addEventListener('click', () => {
             if (typeof Auth !== 'undefined' && !Auth.requireAuth()) return;
             const params = new URLSearchParams({
