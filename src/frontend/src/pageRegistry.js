@@ -294,6 +294,7 @@ const pageRegistry = {
                         </div>
                         <input id="ad-profile-kakao-talk-id" type="text" maxlength="50" placeholder="카카오톡 아이디를 입력해주세요." autocomplete="off">
                         <input id="ad-profile-telegram-id" type="text" maxlength="50" placeholder="텔레그램 아이디를 입력해주세요." autocomplete="off">
+                        <textarea id="ad-profile-piece-chat-notice" maxlength="500" rows="3" aria-label="조각 안내 문구" placeholder="조각장소로 선택되어 채팅이 생성될 때 최초 1회 전송할 안내 문구를 입력해주세요."></textarea>
                         <label class="ad-profile-map-toggle" for="ad-profile-show-business-address-map">
                             <input id="ad-profile-show-business-address-map" type="checkbox">
                             <span>사업자등록기준 주소지 미니맵 노출</span>

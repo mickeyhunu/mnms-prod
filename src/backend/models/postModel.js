@@ -77,6 +77,12 @@ function normalizeImageUrls(imageUrls) {
     .slice(0, 5);
 }
 
+function extractSelectedPieceAdId(content = '') {
+  const selectedAdLine = String(content).split('\n').find((line) => line.includes('선택 광고')) || '';
+  const match = selectedAdLine.match(/\/business-info\/[^\s)]*-(\d+)(?:\s|$|\))/);
+  return match ? Number(match[1]) : null;
+}
+
 function parseImageUrlsFromRow(row) {
   const raw = row?.imageUrls;
   if (!raw) return [];
@@ -344,16 +350,48 @@ async function findUserPromotionPostForCurrentDbDay(userId) {
 
 async function createPost({ userId, title, content, imageUrls = [], boardType = BOARD_TYPES.FREE, isNotice = false, noticeType = null, isPinned = false, noticeTargetBoards = [], authorSnapshot = null }) {
   const pool = getPool();
+  const connection = await pool.getConnection();
   const normalizedBoardType = normalizeBoardType(boardType);
   const normalizedNoticeType = isNotice ? (String(noticeType || '').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE') : null;
   const serializedNoticeTargetBoards = isNotice
     ? serializeNoticeTargetBoards(noticeTargetBoards.length ? noticeTargetBoards : [normalizedBoardType])
     : null;
-  const [result] = await pool.query(
-    'INSERT INTO posts (user_id, author_nickname_snapshot, author_role_snapshot, author_member_type_snapshot, board_type, is_notice, notice_type, is_pinned, notice_target_boards, title, content, image_urls) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [userId || null, authorSnapshot?.nickname || null, authorSnapshot?.role || null, authorSnapshot?.memberType || null, normalizedBoardType, isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, serializedNoticeTargetBoards, title, content, JSON.stringify(normalizeImageUrls(imageUrls))]
-  );
-  return result.insertId;
+  try {
+    await connection.beginTransaction();
+    const [result] = await connection.query(
+      'INSERT INTO posts (user_id, author_nickname_snapshot, author_role_snapshot, author_member_type_snapshot, board_type, is_notice, notice_type, is_pinned, notice_target_boards, title, content, image_urls) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [userId || null, authorSnapshot?.nickname || null, authorSnapshot?.role || null, authorSnapshot?.memberType || null, normalizedBoardType, isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, serializedNoticeTargetBoards, title, content, JSON.stringify(normalizeImageUrls(imageUrls))]
+    );
+
+    if (normalizedBoardType === BOARD_TYPES.PIECE) {
+      const selectedAdId = extractSelectedPieceAdId(content);
+      if (selectedAdId) {
+        const [ads] = await connection.query(
+          `SELECT owner_user_id AS ownerUserId, piece_chat_notice AS pieceChatNotice
+             FROM business_ads
+            WHERE id = ?
+              AND registration_status = 'REGISTERED'
+            LIMIT 1`,
+          [selectedAdId]
+        );
+        const notice = String(ads[0]?.pieceChatNotice || '').trim();
+        if (notice) {
+          await connection.query(
+            "INSERT INTO piece_chat_messages (post_id, user_id, content, message_type) VALUES (?, ?, ?, 'CHAT')",
+            [result.insertId, ads[0].ownerUserId, notice]
+          );
+        }
+      }
+    }
+
+    await connection.commit();
+    return result.insertId;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 
 async function findPostById(id, options = {}) {
