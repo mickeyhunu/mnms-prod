@@ -1243,8 +1243,8 @@
 .home-poster-popup__titlebar span:first-child { overflow: hidden; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .home-poster-popup__drag-hint { margin-left: 12px; color: #aaa; font-size: 16px; }
 .home-poster-popup__image { display: block; width: 100%; max-height: calc(100vh - 124px); object-fit: contain; background: #111; }
-.home-poster-popup__actions { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #333; }
-.home-poster-popup__actions button { min-height: 48px; padding: 8px; border: 0; background: #fff; color: #222; font-size: 13px; font-weight: 700; cursor: pointer; }
+.home-poster-popup__actions { display: grid; grid-template-columns: 7fr 3fr; border-top: 1px solid #333; }
+.home-poster-popup__actions button { min-height: 36px; padding: 8px; border: 0; background: #fff; color: #222; font-size: 13px; font-weight: 700; cursor: pointer; }
 .home-poster-popup__actions button:hover { background: #f1f1f1; }
 .home-poster-popup__actions button + button { border-left: 1px solid #ddd; }
 
