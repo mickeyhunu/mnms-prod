@@ -613,6 +613,7 @@ function resolvePieceStatus(post) {
         || pieceRows.get('만남 시간')
     );
     if (dateTime && dateTime.getTime() + (9 * 60 * 60 * 1000) <= Date.now()) return '종료';
+    if (dateTime && dateTime.getTime() <= Date.now() && Number(post?.pieceParticipantCount) === 0) return '종료';
     if (dateTime && dateTime.getTime() <= Date.now()) return '진행중';
 
     return '모집중';
