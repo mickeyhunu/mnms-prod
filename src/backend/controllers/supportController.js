@@ -251,6 +251,17 @@ async function createInquiry(req, res, next) {
 
     if (!title || !content) return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
 
+    if (type === supportModel.INQUIRY_TYPES.MEMBER_REPORT) {
+      if (targetType !== 'member' || !targetId) {
+        return res.status(400).json({ message: '신고할 회원을 확인해주세요.' });
+      }
+      const targetMember = await supportModel.findMemberReportTarget(targetId);
+      if (!targetMember) return res.status(404).json({ message: '신고할 회원을 찾을 수 없습니다.' });
+      if (Number(targetId) === Number(req.user.id)) {
+        return res.status(400).json({ message: '본인은 신고할 수 없습니다.' });
+      }
+    }
+
     const canReport = await canCreateCommentReport({
       type,
       targetType,

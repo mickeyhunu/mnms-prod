@@ -41,6 +41,30 @@ header.community-section-header .community-back-link svg {
     stroke-linejoin: round;
 }
 
+header.community-section-header .member-profile-report-btn {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    background: transparent;
+    color: #f87171;
+    cursor: pointer;
+}
+
+header.community-section-header .member-profile-report-btn:disabled {
+    cursor: default;
+    opacity: 0.45;
+}
+
+header.community-section-header .member-profile-report-btn svg {
+    width: 23px;
+    height: 23px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 header.community-section-header .community-board-name {
     font-size: 16px;
     font-weight: 600;
