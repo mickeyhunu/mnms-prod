@@ -303,14 +303,14 @@ const pageRegistry = {
                             <span>스탬프 이벤트 사용</span>
                         </label>
                         <div class="ad-profile-stamp-event-fields" hidden>
-                            <input id="ad-profile-stamp-event-description" type="text" maxlength="200" placeholder="광고페이지에 노출할 이벤트 설명을 입력해주세요." disabled>
+                            <input id="ad-profile-stamp-event-description" type="text" maxlength="200" placeholder="이벤트 설명 입력." disabled>
                             <label class="ad-profile-stamp-event-count" for="ad-profile-stamp-event-count">
                                 <span>스탬프 차감갯수</span>
                                 <input id="ad-profile-stamp-event-count" type="number" min="5" max="999" inputmode="numeric" placeholder="5" disabled>
                                 <span>개</span>
                             </label>
                         </div>
-                        <p class="ad-profile-map-toggle-help ad-profile-stamp-event-help" hidden>체크하면 이벤트 설명과 스탬프 차감갯수(최소 5개)를 필수로 입력해주세요.</p>
+                        <p class="ad-profile-map-toggle-help ad-profile-stamp-event-help" hidden>이벤트 설명과 스탬프 차감갯수(최소 5개)를 필수로 입력해주세요.</p>
                         <label class="ad-profile-map-toggle" for="ad-profile-use-piece-chat-notice">
                             <input id="ad-profile-use-piece-chat-notice" type="checkbox">
                             <span>조각채팅 인사말 사용</span>
