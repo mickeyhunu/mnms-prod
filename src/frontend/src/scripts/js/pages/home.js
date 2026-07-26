@@ -58,25 +58,41 @@ function showHomePosters(posters) {
     workspace.className = 'home-poster-workspace';
     workspace.setAttribute('aria-label', '알림 포스터');
 
-    posters.forEach((poster) => {
+    posters.forEach((poster, index) => {
         const popup = document.createElement('section');
         popup.className = 'home-poster-popup';
+        setHomePosterStackOffset(popup, index);
         popup.setAttribute('role', 'dialog');
         popup.setAttribute('aria-label', poster.title || '안내 포스터');
-        popup.innerHTML = `<header class="home-poster-popup__titlebar" data-poster-drag><span>${sanitizeHTML(poster.title || '안내 포스터')}</span><span class="home-poster-popup__drag-hint" aria-hidden="true">☰</span></header><img class="home-poster-popup__image" src="${sanitizeHTML(poster.imageUrl)}" alt="${sanitizeHTML(poster.title || '안내 포스터')}"><div class="home-poster-popup__actions"><button type="button" data-poster-today>오늘 하루 보지 않기</button><button type="button" data-poster-close>창닫기</button></div>`;
+        popup.innerHTML = `<header class="home-poster-popup__titlebar" data-poster-drag><span>${sanitizeHTML(poster.title || '안내 포스터')}</span><button class="home-poster-popup__close" type="button" data-poster-close aria-label="창닫기">&times;</button></header><img class="home-poster-popup__image" src="${sanitizeHTML(poster.imageUrl)}" alt="${sanitizeHTML(poster.title || '안내 포스터')}"><div class="home-poster-popup__actions"><button type="button" data-poster-today>오늘 하루 보지 않기</button><button type="button" data-poster-close>창닫기</button></div>`;
 
         const close = (dismissToday = false) => {
             if (dismissToday) dismissPosterToday(poster.id);
             popup.remove();
-            if (!workspace.children.length) workspace.remove();
+            if (!workspace.children.length) {
+                workspace.remove();
+                return;
+            }
+            [...workspace.children].forEach((remainingPopup, index) => {
+                if (!remainingPopup.classList.contains('is-positioned')) {
+                    setHomePosterStackOffset(remainingPopup, index);
+                }
+            });
         };
         popup.querySelector('[data-poster-today]').addEventListener('click', () => close(true));
-        popup.querySelector('[data-poster-close]').addEventListener('click', () => close(false));
+        popup.querySelectorAll('[data-poster-close]').forEach((button) => {
+            button.addEventListener('click', () => close(false));
+        });
         bindHomePosterDrag(popup);
         workspace.appendChild(popup);
     });
 
     document.body.appendChild(workspace);
+}
+
+function setHomePosterStackOffset(popup, index) {
+    popup.style.setProperty('--poster-stack-offset', `${index * 32}px`);
+    popup.style.setProperty('--poster-stack-offset-mobile', `${index * 18}px`);
 }
 
 function bindHomePosterDrag(popup) {
@@ -85,7 +101,7 @@ function bindHomePosterDrag(popup) {
     let dragOffsetY = 0;
 
     handle.addEventListener('pointerdown', (event) => {
-        if (event.button !== 0) return;
+        if (event.button !== 0 || event.target.closest('button')) return;
         const rect = popup.getBoundingClientRect();
         dragOffsetX = event.clientX - rect.left;
         dragOffsetY = event.clientY - rect.top;
