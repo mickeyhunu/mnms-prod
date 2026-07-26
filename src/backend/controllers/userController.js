@@ -1173,6 +1173,7 @@ async function createMyBusinessAd(req, res, next) {
     const requestedDescription = String(req.body?.description || '').trim();
     const kakaoTalkId = String(req.body?.kakaoTalkId || '').trim();
     const telegramId = String(req.body?.telegramId || '').trim();
+    const pieceChatNotice = String(req.body?.pieceChatNotice || '').trim().slice(0, 500);
     const showBusinessAddressMap = normalizeBooleanPayload(req.body?.showBusinessAddressMap, false);
     const useStampEvent = normalizeBooleanPayload(req.body?.useStampEvent, false);
     const useVisitVerification = useStampEvent;
@@ -1216,6 +1217,7 @@ async function createMyBusinessAd(req, res, next) {
       description,
       kakaoTalkId,
       telegramId,
+      pieceChatNotice,
       showBusinessAddressMap,
       useVisitVerification,
       useStampEvent,
@@ -1261,6 +1263,7 @@ async function updateMyBusinessAd(req, res, next) {
     const requestedDescription = pickTrimmedText(req.body, 'description', target.description || '');
     const kakaoTalkId = pickTrimmedText(req.body, 'kakaoTalkId', target.kakaoTalkId || '');
     const telegramId = pickTrimmedText(req.body, 'telegramId', target.telegramId || '');
+    const pieceChatNotice = pickTrimmedText(req.body, 'pieceChatNotice', target.pieceChatNotice || '').slice(0, 500);
     const showBusinessAddressMap = Object.prototype.hasOwnProperty.call(req.body || {}, 'showBusinessAddressMap')
       ? normalizeBooleanPayload(req.body?.showBusinessAddressMap, false)
       : normalizeBooleanPayload(target.showBusinessAddressMap, false);
@@ -1322,6 +1325,7 @@ async function updateMyBusinessAd(req, res, next) {
       description,
       kakaoTalkId,
       telegramId,
+      pieceChatNotice,
       showBusinessAddressMap,
       useVisitVerification,
       useStampEvent,
