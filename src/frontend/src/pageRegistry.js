@@ -294,7 +294,6 @@ const pageRegistry = {
                         </div>
                         <input id="ad-profile-kakao-talk-id" type="text" maxlength="50" placeholder="카카오톡 아이디를 입력해주세요." autocomplete="off">
                         <input id="ad-profile-telegram-id" type="text" maxlength="50" placeholder="텔레그램 아이디를 입력해주세요." autocomplete="off">
-                        <textarea id="ad-profile-piece-chat-notice" maxlength="500" rows="3" aria-label="조각 안내 문구" placeholder="조각장소로 선택되어 채팅이 생성될 때 최초 1회 전송할 안내 문구를 입력해주세요."></textarea>
                         <label class="ad-profile-map-toggle" for="ad-profile-show-business-address-map">
                             <input id="ad-profile-show-business-address-map" type="checkbox">
                             <span>사업자등록기준 주소지 미니맵 노출</span>
@@ -303,7 +302,7 @@ const pageRegistry = {
                             <input id="ad-profile-use-stamp-event" type="checkbox">
                             <span>스탬프 이벤트 사용</span>
                         </label>
-                        <div class="ad-profile-stamp-event-fields">
+                        <div class="ad-profile-stamp-event-fields" hidden>
                             <input id="ad-profile-stamp-event-description" type="text" maxlength="200" placeholder="광고페이지에 노출할 이벤트 설명을 입력해주세요." disabled>
                             <label class="ad-profile-stamp-event-count" for="ad-profile-stamp-event-count">
                                 <span>스탬프 차감갯수</span>
@@ -311,7 +310,12 @@ const pageRegistry = {
                                 <span>개</span>
                             </label>
                         </div>
-                        <p class="ad-profile-map-toggle-help">체크하면 이벤트 설명과 스탬프 차감갯수(최소 5개)를 필수로 입력해주세요.</p>
+                        <p class="ad-profile-map-toggle-help ad-profile-stamp-event-help" hidden>체크하면 이벤트 설명과 스탬프 차감갯수(최소 5개)를 필수로 입력해주세요.</p>
+                        <label class="ad-profile-map-toggle" for="ad-profile-use-piece-chat-notice">
+                            <input id="ad-profile-use-piece-chat-notice" type="checkbox">
+                            <span>조각채팅 인사말 사용</span>
+                        </label>
+                        <textarea id="ad-profile-piece-chat-notice" maxlength="500" rows="3" aria-label="조각 안내 문구" placeholder="조각장소로 선택되어 채팅이 생성될 때 최초 1회 전송할 안내 문구를 입력해주세요." disabled hidden></textarea>
                     </div>
                 </div>
 
