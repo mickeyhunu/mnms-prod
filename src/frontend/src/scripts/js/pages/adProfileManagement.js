@@ -385,11 +385,14 @@ function bindAdProfileInteractions() {
     const imageClearButton = document.getElementById('ad-profile-image-clear-btn');
     const kakaoTalkIdInput = document.getElementById('ad-profile-kakao-talk-id');
     const telegramIdInput = document.getElementById('ad-profile-telegram-id');
+    const usePieceChatNoticeInput = document.getElementById('ad-profile-use-piece-chat-notice');
     const pieceChatNoticeInput = document.getElementById('ad-profile-piece-chat-notice');
     const showBusinessAddressMapInput = document.getElementById('ad-profile-show-business-address-map');
     const useStampEventInput = document.getElementById('ad-profile-use-stamp-event');
     const stampEventDescriptionInput = document.getElementById('ad-profile-stamp-event-description');
     const stampEventCountInput = document.getElementById('ad-profile-stamp-event-count');
+    const stampEventFields = document.querySelector('.ad-profile-stamp-event-fields');
+    const stampEventHelp = document.querySelector('.ad-profile-stamp-event-help');
 
     const previewTitle = document.getElementById('ad-profile-preview-title');
     const previewManager = document.getElementById('ad-profile-preview-manager');
@@ -475,12 +478,22 @@ function bindAdProfileInteractions() {
 
     const syncStampEventFieldState = () => {
         const isEnabled = Boolean(useStampEventInput?.checked);
+        if (stampEventFields) stampEventFields.hidden = !isEnabled;
+        if (stampEventHelp) stampEventHelp.hidden = !isEnabled;
         [stampEventDescriptionInput, stampEventCountInput].forEach((input) => {
             if (!input) return;
             input.disabled = !isEnabled;
             input.required = isEnabled;
             if (!isEnabled) input.value = '';
         });
+    };
+
+    const syncPieceChatNoticeFieldState = () => {
+        const isEnabled = Boolean(usePieceChatNoticeInput?.checked);
+        if (!pieceChatNoticeInput) return;
+        pieceChatNoticeInput.hidden = !isEnabled;
+        pieceChatNoticeInput.disabled = !isEnabled;
+        if (!isEnabled) pieceChatNoticeInput.value = '';
     };
 
     stampEventDescriptionInput?.addEventListener('input', () => {
@@ -497,6 +510,11 @@ function bindAdProfileInteractions() {
         syncPreview();
         saveDraftData();
     });
+    usePieceChatNoticeInput?.addEventListener('change', () => {
+        syncPieceChatNoticeFieldState();
+        syncPreview();
+        saveDraftData();
+    });
 
     [districtSelect, categorySelect, openHourSelect, closeHourSelect, titleInput, businessNameInput, managerNameInput, kakaoTalkIdInput, telegramIdInput, pieceChatNoticeInput, showBusinessAddressMapInput]
         .forEach((element) => {
@@ -507,6 +525,7 @@ function bindAdProfileInteractions() {
         });
 
     syncStampEventFieldState();
+    syncPieceChatNoticeFieldState();
     adProfileState.syncPreview = syncPreview;
     syncPreview();
 }
@@ -1007,6 +1026,7 @@ function applyAdProfileToForm(ad) {
     const managerContactInput = document.getElementById('ad-profile-manager-contact');
     const kakaoTalkIdInput = document.getElementById('ad-profile-kakao-talk-id');
     const telegramIdInput = document.getElementById('ad-profile-telegram-id');
+    const usePieceChatNoticeInput = document.getElementById('ad-profile-use-piece-chat-notice');
     const pieceChatNoticeInput = document.getElementById('ad-profile-piece-chat-notice');
     const showBusinessAddressMapInput = document.getElementById('ad-profile-show-business-address-map');
     const useStampEventInput = document.getElementById('ad-profile-use-stamp-event');
@@ -1030,9 +1050,20 @@ function applyAdProfileToForm(ad) {
     if (managerContactInput) managerContactInput.value = formatPhoneNumber(ad.managerContact || '');
     if (kakaoTalkIdInput) kakaoTalkIdInput.value = ad.kakaoTalkId || '';
     if (telegramIdInput) telegramIdInput.value = ad.telegramId || '';
-    if (pieceChatNoticeInput) pieceChatNoticeInput.value = ad.pieceChatNotice || '';
+    const hasPieceChatNotice = Boolean(String(ad.pieceChatNotice || '').trim());
+    if (usePieceChatNoticeInput) usePieceChatNoticeInput.checked = hasPieceChatNotice;
+    if (pieceChatNoticeInput) {
+        pieceChatNoticeInput.value = ad.pieceChatNotice || '';
+        pieceChatNoticeInput.hidden = !hasPieceChatNotice;
+        pieceChatNoticeInput.disabled = !hasPieceChatNotice;
+    }
     if (showBusinessAddressMapInput) showBusinessAddressMapInput.checked = normalizeBooleanFlag(ad.showBusinessAddressMap);
     if (useStampEventInput) useStampEventInput.checked = normalizeBooleanFlag(ad.useStampEvent || ad.useVisitVerification);
+    const isStampEventEnabled = normalizeBooleanFlag(ad.useStampEvent || ad.useVisitVerification);
+    const stampEventFields = document.querySelector('.ad-profile-stamp-event-fields');
+    const stampEventHelp = document.querySelector('.ad-profile-stamp-event-help');
+    if (stampEventFields) stampEventFields.hidden = !isStampEventEnabled;
+    if (stampEventHelp) stampEventHelp.hidden = !isStampEventEnabled;
     if (stampEventDescriptionInput) {
         stampEventDescriptionInput.value = normalizeBooleanFlag(ad.useStampEvent || ad.useVisitVerification) ? String(ad.stampEventDescription || '') : '';
         stampEventDescriptionInput.disabled = !normalizeBooleanFlag(ad.useStampEvent || ad.useVisitVerification);
