@@ -1041,3 +1041,65 @@ body.share-sheet-open {
         justify-content: space-around;
     }
 }
+/* 공통 회사 정보 푸터 */
+.company-footer-slot {
+    margin-top: 150px;
+    padding: 0 20px 20px;
+    background: #27262b;
+    color: #f6f6f9;
+}
+
+.company-footer-top {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+}
+
+.company-footer-logo {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.company-footer-links-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0;
+    margin-bottom: 16px;
+    padding: 4px 0;
+    color: #b8bbc5;
+    font-size: 14px;
+}
+
+.company-footer-links-row a,
+.company-footer-links-row button {
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-size: inherit;
+    text-decoration: none;
+}
+
+.footer-divider {
+    width: 1px;
+    min-width: 1px;
+    height: 16px;
+    margin: 0 10px;
+    background: #444750;
+}
+
+.company-footer-notice {
+    margin-bottom: 8px;
+    color: #737782;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.company-footer-copyright {
+    color: #737782;
+    font-size: 12px;
+}
