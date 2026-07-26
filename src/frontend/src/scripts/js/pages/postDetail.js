@@ -1339,7 +1339,8 @@ function reportPost() {
         menu.classList.add('hidden');
     }
 
-    window.location.href = `/customer-service?type=post&targetId=${encodeURIComponent(postId)}`;
+    const postTitle = String(currentPostDetail?.title || '').trim();
+    window.location.href = `/customer-service?type=post&targetId=${encodeURIComponent(postId)}&targetText=${encodeURIComponent(postTitle)}`;
 }
 
 function renderAdjacentPosts(previousPost, nextPost) {
@@ -1808,7 +1809,9 @@ function openCommentMessageModal(authorId, authorNickname) {
 function reportComment(commentId) {
     if (!Auth.requireAuth()) return;
 
-    window.location.href = `/customer-service?type=comment&targetId=${encodeURIComponent(commentId)}`;
+    const comment = currentCommentById.get(String(commentId));
+    const commentContent = String(comment?.content || '').trim();
+    window.location.href = `/customer-service?type=comment&targetId=${encodeURIComponent(commentId)}&targetText=${encodeURIComponent(commentContent)}`;
 }
 
 async function handleToggleLike() {
