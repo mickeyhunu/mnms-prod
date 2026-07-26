@@ -12,6 +12,7 @@ const {
 } = require('../utils/fileUpload');
 const { createSeoSlugWithId } = require('../utils/seoSlug');
 const { resolveMemberLevel } = require('../utils/memberLevel');
+const { isPieceCancellationLocked } = require('../utils/pieceCancellationPolicy');
 
 const BOARD_TYPES = postModel.BOARD_TYPES || {
   FREE: 'FREE',
@@ -881,6 +882,10 @@ async function cancelPieceJoin(req, res, next) {
     if (!post) return;
     if (Number(post.user_id) === Number(req.user.id)) {
       return res.status(400).json({ message: '조각장은 참여를 취소할 수 없습니다.' });
+    }
+    const pieceLifecycle = resolvePieceLifecycle(post);
+    if (isPieceCancellationLocked(pieceLifecycle.startsAt)) {
+      return res.status(409).json({ message: '조각 시작 10분 전부터는 참여를 취소할 수 없습니다.' });
     }
 
     const participants = await postModel.cancelPieceJoin(post.id, req.user.id);
