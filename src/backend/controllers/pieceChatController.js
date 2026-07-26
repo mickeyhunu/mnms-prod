@@ -3,16 +3,23 @@ const model = require('../models/pieceChatModel');
 const PIECE_GUIDE_MESSAGE = Object.freeze({
   id: 0,
   userId: null,
-  nickname: '조각안내',
+  nickname: '📢 조각안내',
   profileImageUrl: '/src/assets/live-avatars/favicon.png',
   messageType: 'CHAT',
-  content: `안녕하세요! 미드나잇맨즈입니다.🙇‍♂️
-조각장은 조각시작 후 출석자 출석체크 필수입니다!
-조각원은 미출석시 미리 참여취소하셔야 패널티 없으십니다!
+  content: `안녕하세요! 미드나잇맨즈입니다. 🙇‍♂️
 
-만남 전까지는 해당 채팅방에서 연락처 공유 금지입니다!
+📢 조각장 안내
 
-안전하고 즐거운 조각되세요!😍`
+- 조각 시작 후에는 출석자 출석 체크를 반드시 완료해 주세요.
+
+📢 조각원 안내
+
+- 참석이 어려운 경우에는 미리 참여를 취소해 주셔야 패널티가 부과되지 않습니다.
+
+⚠️ 만남 전까지는 해당 채팅방에서 연락처를 공유하지 말아 주세요.
+
+안전하고 즐거운 조각 모임 되시길 바랍니다! 😍
+`
 });
 
 function parseId(value) { const id = Number(value); return Number.isInteger(id) && id > 0 ? id : null; }
