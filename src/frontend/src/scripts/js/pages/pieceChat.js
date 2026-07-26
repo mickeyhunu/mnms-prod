@@ -72,7 +72,16 @@ function renderMembers() {
 }
 function renderRoom() {
     document.getElementById('chat-title').textContent = pieceChatRoom.post.title || '조각 채팅방';
-    renderMessages(); renderMembers();
+    renderMessages(); renderMembers(); renderChatAvailability();
+}
+function renderChatAvailability() {
+    const ended = Boolean(pieceChatRoom?.lifecycle?.isEnded);
+    const form = document.getElementById('chat-form');
+    const input = document.getElementById('chat-input');
+    form.classList.toggle('is-ended', ended);
+    document.getElementById('chat-ended-notice').classList.toggle('hidden', !ended);
+    input.disabled = ended;
+    form.querySelector('button[type="submit"], button:not([type])').disabled = ended;
 }
 async function loadPieceChat() {
     try { pieceChatRoom = await PieceChatAPI.getRoom(pieceChatId); renderRoom(); }
@@ -89,12 +98,13 @@ function addNewMessages(messages) {
     appendMessages(freshMessages);
 }
 function memberStateKey(room) {
-    return JSON.stringify({ members: room?.members || [], participants: room?.participants || [], canManage: room?.canManage });
+    return JSON.stringify({ members: room?.members || [], participants: room?.participants || [], canManage: room?.canManage, lifecycle: room?.lifecycle || null });
 }
 function updateMembers(memberState) {
     if (memberStateKey(pieceChatRoom) === memberStateKey(memberState)) return;
     Object.assign(pieceChatRoom, memberState);
     renderMembers();
+    renderChatAvailability();
 }
 async function pollPieceChatUpdates() {
     if (pieceChatPolling || !pieceChatRoom || document.hidden) return;
@@ -180,7 +190,7 @@ function initPieceChatPage() {
     });
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
-    chatForm.onsubmit = async (event) => { event.preventDefault(); const content = chatInput.value.trim(); if (!content) return; const message = await PieceChatAPI.send(pieceChatId, content); addNewMessages([message]); chatInput.value = ''; };
+    chatForm.onsubmit = async (event) => { event.preventDefault(); const content = chatInput.value.trim(); if (!content || pieceChatRoom?.lifecycle?.isEnded) return; try { const message = await PieceChatAPI.send(pieceChatId, content); addNewMessages([message]); chatInput.value = ''; } catch (error) { if (error.status === 409) { await loadPieceChat(); } alert(error.message || '메시지를 전송하지 못했습니다.'); } };
     chatInput.onkeydown = (event) => {
         if (event.key !== 'Enter' || event.shiftKey || event.isComposing || event.keyCode === 229) return;
         event.preventDefault();
