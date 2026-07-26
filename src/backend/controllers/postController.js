@@ -150,7 +150,7 @@ function validatePiecePostContent(content) {
 }
 
 
-function resolvePieceLifecycle(post) {
+function resolvePieceLifecycle(post, participantCount = null) {
   if (String(post?.boardType || post?.board_type || '').toUpperCase() !== BOARD_TYPES.PIECE) {
     return { isEnded: false, status: '' };
   }
@@ -161,11 +161,12 @@ function resolvePieceLifecycle(post) {
   const autoEndsAt = startsAt ? new Date(startsAt.getTime() + (9 * 60 * 60 * 1000)) : null;
   const isClosedByLeader = Boolean(closedAt);
   const isAutoEnded = Boolean(autoEndsAt && autoEndsAt.getTime() <= Date.now());
+  const hasStartedEmpty = participantCount === 0 && Boolean(startsAt && startsAt.getTime() <= Date.now());
 
   return {
-    isEnded: isClosedByLeader || isAutoEnded,
-    isInProgress: Boolean(startsAt && startsAt.getTime() <= Date.now() && !isClosedByLeader && !isAutoEnded),
-    status: isClosedByLeader || isAutoEnded ? '종료' : (startsAt && startsAt.getTime() <= Date.now() ? '진행중' : '모집중'),
+    isEnded: isClosedByLeader || isAutoEnded || hasStartedEmpty,
+    isInProgress: Boolean(startsAt && startsAt.getTime() <= Date.now() && !isClosedByLeader && !isAutoEnded && !hasStartedEmpty),
+    status: isClosedByLeader || isAutoEnded || hasStartedEmpty ? '종료' : (startsAt && startsAt.getTime() <= Date.now() ? '진행중' : '모집중'),
     startsAt: startsAt ? startsAt.toISOString() : null,
     autoEndsAt: autoEndsAt ? autoEndsAt.toISOString() : null,
     closedAt
@@ -767,7 +768,7 @@ async function getPost(req, res, next) {
     const pieceParticipants = String(postDetail?.boardType || '').toUpperCase() === BOARD_TYPES.PIECE
       ? await postModel.listPieceParticipants(postId)
       : [];
-    const pieceLifecycle = resolvePieceLifecycle(postDetail);
+    const pieceLifecycle = resolvePieceLifecycle(postDetail, pieceParticipants.length);
 
     const isLiked = req.user
       ? await postModel.isPostLikedByUser(postId, req.user.id)
@@ -835,7 +836,8 @@ async function resolveJoinablePiecePost(req, res) {
     return null;
   }
 
-  if (resolvePieceLifecycle(post).isEnded) {
+  const participantCount = await postModel.countPieceParticipants(post.id);
+  if (resolvePieceLifecycle(post, participantCount).isEnded) {
     res.status(400).json({ message: '종료된 조각입니다.' });
     return null;
   }

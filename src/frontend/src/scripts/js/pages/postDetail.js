@@ -766,6 +766,7 @@ function resolvePieceStatus(post) {
 
     const startsAt = parsePieceDateTime(rows.get('시간') || rows.get('날짜/시간') || rows.get('일정') || rows.get('만남 시간'));
     if (startsAt && startsAt.getTime() + (9 * 60 * 60 * 1000) <= Date.now()) return '종료';
+    if (startsAt && startsAt.getTime() <= Date.now() && Array.isArray(post?.pieceParticipants) && post.pieceParticipants.length === 0) return '종료';
     if (startsAt && startsAt.getTime() <= Date.now()) return '진행중';
     return '모집중';
 }
