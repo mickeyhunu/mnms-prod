@@ -266,14 +266,6 @@
     color: inherit;
 }
 
-.footer-divider {
-    width: 1px;
-    min-width: 1px;
-    height: 16px;
-    background: #444750;
-    margin: 0 10px;
-}
-
 .company-business-link-wrap {
     padding: 4px 0;
     margin-bottom: 2px;

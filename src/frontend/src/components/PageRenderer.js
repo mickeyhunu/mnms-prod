@@ -6,6 +6,7 @@ import { useRoute } from 'vue-router';
 import { pageRegistry } from '../pageRegistry.js';
 import { GLOBAL_HEADER_TEMPLATE, stripLegacyHeaderTemplate } from './GLOBAL_HEADER_TEMPLATE.js';
 import { BRAND_ASSETS, createBrandLogoMarkup } from '../brandAssets.js';
+import CompanyFooter from './CompanyFooter.js';
 
 const LINK_MAP = {
   'index.html': '/',
@@ -39,6 +40,15 @@ const GLOBAL_SCRIPTS = [
 
 const PAGES_WITHOUT_GLOBAL_HEADER = new Set(['live']);
 const PAGES_WITHOUT_BOTTOM_NAV = new Set(['live', 'business-info-detail']);
+const PAGES_WITH_COMPANY_FOOTER = new Set([
+  'index',
+  'play',
+  'community',
+  'business-info',
+  'login',
+  'register',
+  'my-page'
+]);
 
 const persistentStyleNodes = new Map();
 const persistentScriptNodes = new Map();
@@ -160,6 +170,7 @@ function ensureScript(src, { persistent = false } = {}) {
 }
 
 export default {
+  components: { CompanyFooter },
   props: {
     page: {
       type: String,
@@ -174,6 +185,7 @@ export default {
     const pageBodyContent = computed(() => normalizeTemplateLinks(stripTemplateScripts(stripLegacyHeaderTemplate(pageConfig.value.template || ''))));
     const pageShellClass = computed(() => `page-shell page-shell--${props.page || 'unknown'}`);
     const shouldRenderGlobalHeader = computed(() => !PAGES_WITHOUT_GLOBAL_HEADER.has(props.page));
+    const shouldRenderCompanyFooter = computed(() => PAGES_WITH_COMPANY_FOOTER.has(props.page));
     const seoHeadingText = computed(() => {
       const routeTitle = typeof route.meta?.title === 'string' ? route.meta.title.trim() : '';
       return routeTitle || '미드나잇 맨즈';
@@ -273,8 +285,9 @@ export default {
       globalHeaderTemplate: GLOBAL_HEADER_TEMPLATE,
       pageShellClass,
       shouldRenderGlobalHeader,
+      shouldRenderCompanyFooter,
       seoHeadingText
     };
   },
-  template: `<div :class="pageShellClass"><div v-if="shouldRenderGlobalHeader" v-html="globalHeaderTemplate"></div><h1 class="sr-only">{{ seoHeadingText }}</h1><div v-html="pageBodyContent"></div></div>`
+  template: `<div :class="pageShellClass"><div v-if="shouldRenderGlobalHeader" v-html="globalHeaderTemplate"></div><h1 class="sr-only">{{ seoHeadingText }}</h1><div v-html="pageBodyContent"></div><CompanyFooter v-if="shouldRenderCompanyFooter" /></div>`
 };
