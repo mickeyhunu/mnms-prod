@@ -1236,7 +1236,7 @@
 }
 
 .home-poster-workspace { position: fixed; inset: 0; z-index: 10000; overflow: auto; pointer-events: none; }
-.home-poster-popup { position: absolute; top: calc(16px + var(--poster-stack-offset)); left: calc(50% + var(--poster-stack-offset)); width: min(380px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: hidden; border: 1px solid #343434; border-radius: 10px; background: #111; box-shadow: 0 18px 50px rgba(0,0,0,.42); pointer-events: auto; transform: translateX(-50%); }
+.home-poster-popup { position: absolute; top: calc(70px + var(--poster-stack-offset)); left: calc(45% + var(--poster-stack-offset)); width: min(380px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: hidden; border: 1px solid #343434; border-radius: 10px; background: #111; box-shadow: 0 18px 50px rgba(0,0,0,.42); pointer-events: auto; transform: translateX(-50%); }
 .home-poster-popup.is-positioned { position: fixed; z-index: 1; margin: 0; transform: none; }
 .home-poster-popup.is-dragging { cursor: grabbing; user-select: none; }
 .home-poster-popup__titlebar { display: flex; align-items: center; justify-content: space-between; min-height: 38px; padding: 8px 12px; background: #242424; color: #fff; cursor: grab; touch-action: none; }
@@ -1250,7 +1250,7 @@
 .home-poster-popup__actions button + button { border-left: 1px solid #ddd; }
 
 @media (max-width: 640px) {
-  .home-poster-popup { top: calc(10px + var(--poster-stack-offset-mobile)); left: calc(50% + var(--poster-stack-offset-mobile)); width: min(300px, calc(100vw - 20px)); max-height: calc(100vh - 20px); }
+  .home-poster-popup { top: calc(70px + var(--poster-stack-offset-mobile)); left: calc(45% + var(--poster-stack-offset-mobile)); width: min(300px, calc(100vw - 20px)); max-height: calc(100vh - 20px); }
   .home-poster-popup__image { max-height: calc(100vh - 112px); }
 }
 
