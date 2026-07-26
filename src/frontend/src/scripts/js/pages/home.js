@@ -26,7 +26,7 @@ async function initHomePosters() {
     try {
         const response = await APIClient.get('/posters');
         const posters = (response.content || []).filter((poster) => !isPosterDismissedToday(poster.id));
-        showNextHomePoster(posters);
+        showHomePosters(posters);
     } catch (error) {
         console.warn('홈 포스터를 불러오지 못했습니다.', error);
     }
@@ -51,17 +51,64 @@ function getLocalDateKey() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
-function showNextHomePoster(posters) {
-    const poster = posters.shift();
-    if (!poster) return;
-    const modal = document.createElement('div');
-    modal.className = 'home-poster-modal';
-    modal.innerHTML = `<div class="home-poster-modal__backdrop"></div><section class="home-poster-modal__panel" role="dialog" aria-modal="true" aria-label="${sanitizeHTML(poster.title || '안내 포스터')}"><img class="home-poster-modal__image" src="${sanitizeHTML(poster.imageUrl)}" alt="${sanitizeHTML(poster.title || '안내 포스터')}"><div class="home-poster-modal__actions"><button type="button" data-poster-today>오늘 하루 보지 않기</button><button type="button" data-poster-close>창닫기</button></div></section>`;
-    const close = (dismissToday = false) => { if (dismissToday) dismissPosterToday(poster.id); modal.remove(); showNextHomePoster(posters); };
-    modal.querySelector('[data-poster-today]').addEventListener('click', () => close(true));
-    modal.querySelector('[data-poster-close]').addEventListener('click', () => close(false));
-    modal.querySelector('.home-poster-modal__backdrop').addEventListener('click', () => close(false));
-    document.body.appendChild(modal);
+function showHomePosters(posters) {
+    if (!posters.length) return;
+
+    const workspace = document.createElement('div');
+    workspace.className = 'home-poster-workspace';
+    workspace.setAttribute('aria-label', '알림 포스터');
+
+    posters.forEach((poster) => {
+        const popup = document.createElement('section');
+        popup.className = 'home-poster-popup';
+        popup.setAttribute('role', 'dialog');
+        popup.setAttribute('aria-label', poster.title || '안내 포스터');
+        popup.innerHTML = `<header class="home-poster-popup__titlebar" data-poster-drag><span>${sanitizeHTML(poster.title || '안내 포스터')}</span><span class="home-poster-popup__drag-hint" aria-hidden="true">☰</span></header><img class="home-poster-popup__image" src="${sanitizeHTML(poster.imageUrl)}" alt="${sanitizeHTML(poster.title || '안내 포스터')}"><div class="home-poster-popup__actions"><button type="button" data-poster-today>오늘 하루 보지 않기</button><button type="button" data-poster-close>창닫기</button></div>`;
+
+        const close = (dismissToday = false) => {
+            if (dismissToday) dismissPosterToday(poster.id);
+            popup.remove();
+            if (!workspace.children.length) workspace.remove();
+        };
+        popup.querySelector('[data-poster-today]').addEventListener('click', () => close(true));
+        popup.querySelector('[data-poster-close]').addEventListener('click', () => close(false));
+        bindHomePosterDrag(popup);
+        workspace.appendChild(popup);
+    });
+
+    document.body.appendChild(workspace);
+}
+
+function bindHomePosterDrag(popup) {
+    const handle = popup.querySelector('[data-poster-drag]');
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    handle.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        const rect = popup.getBoundingClientRect();
+        dragOffsetX = event.clientX - rect.left;
+        dragOffsetY = event.clientY - rect.top;
+        popup.style.left = `${rect.left}px`;
+        popup.style.top = `${rect.top}px`;
+        popup.style.width = `${rect.width}px`;
+        popup.classList.add('is-positioned', 'is-dragging');
+        popup.parentElement?.appendChild(popup);
+        handle.setPointerCapture(event.pointerId);
+        event.preventDefault();
+    });
+
+    handle.addEventListener('pointermove', (event) => {
+        if (!popup.classList.contains('is-dragging')) return;
+        const maxLeft = Math.max(8, window.innerWidth - popup.offsetWidth - 8);
+        const maxTop = Math.max(8, window.innerHeight - popup.offsetHeight - 8);
+        popup.style.left = `${Math.min(Math.max(8, event.clientX - dragOffsetX), maxLeft)}px`;
+        popup.style.top = `${Math.min(Math.max(8, event.clientY - dragOffsetY), maxTop)}px`;
+    });
+
+    const stopDragging = () => popup.classList.remove('is-dragging');
+    handle.addEventListener('pointerup', stopDragging);
+    handle.addEventListener('pointercancel', stopDragging);
 }
 
 if (document.readyState === 'loading') {
