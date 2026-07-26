@@ -849,6 +849,11 @@
     line-height: 1.45;
 }
 
+.ad-profile-additional-info textarea {
+    min-height: 84px;
+    resize: vertical;
+}
+
 .ad-profile-map-toggle {
     display: flex;
     align-items: center;

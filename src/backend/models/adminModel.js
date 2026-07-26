@@ -1033,7 +1033,7 @@ async function listBusinessAdsByOwner(ownerUserId) {
     `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, manager_name AS managerName, manager_contact AS managerContact,
             title, image_url AS imageUrl, link_url AS linkUrl,
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
-            kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
+            kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, piece_chat_notice AS pieceChatNotice, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
             description, plan_type AS planType, view_count AS viewCount, daily_jump_remaining AS dailyJumpRemaining, jump_reset_date AS jumpResetDate, jumped_at AS jumpedAt,
             registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, piece_activated_at AS pieceActivatedAt, piece_activated_until AS pieceActivatedUntil, (piece_is_active = 1 AND piece_activated_until IS NOT NULL AND piece_activated_until > NOW()) AS isPieceActive, (piece_activated_until IS NOT NULL AND piece_activated_until > NOW()) AS isPieceCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), piece_activated_until), 0) AS pieceRemainingSeconds, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), activated_until), 0) AS remainingSeconds, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), DATE_ADD(jumped_at, INTERVAL 10 MINUTE)), 0) AS jumpCooldownSeconds, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
@@ -1151,7 +1151,7 @@ async function listBusinessAdsForAdmin() {
   const [rows] = await pool.query(
     `SELECT ba.id, ba.owner_user_id AS ownerUserId, ba.business_name AS businessName, ba.manager_name AS managerName, ba.manager_contact AS managerContact,
             ba.title, ba.image_url AS imageUrl, ba.link_url AS linkUrl, ba.region, ba.district, ba.category, ba.open_hour AS openHour, ba.close_hour AS closeHour,
-            ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification,
+            ba.kakao_talk_id AS kakaoTalkId, ba.telegram_id AS telegramId, ba.piece_chat_notice AS pieceChatNotice, ba.show_business_address_map AS showBusinessAddressMap, ba.use_visit_verification AS useVisitVerification,
             ba.use_stamp_event AS useStampEvent, ba.stamp_event_description AS stampEventDescription, ba.stamp_event_count AS stampEventCount, ba.description, ba.plan_type AS planType,
             ba.view_count AS viewCount, ba.registration_status AS registrationStatus, ba.activated_at AS activatedAt, ba.activated_until AS activatedUntil, ba.display_order AS displayOrder,
             (ba.is_active = 1) AS isActive, (ba.piece_is_active = 1 AND ba.piece_activated_until IS NOT NULL AND ba.piece_activated_until > NOW()) AS isPieceActive, (ba.piece_activated_until IS NOT NULL AND ba.piece_activated_until > NOW()) AS isPieceCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), ba.piece_activated_until), 0) AS pieceRemainingSeconds, (ba.activated_until IS NOT NULL AND ba.activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), ba.activated_until), 0) AS remainingSeconds, ba.created_at AS createdAt, ba.updated_at AS updatedAt,
@@ -1180,6 +1180,7 @@ async function createBusinessAd({
   description = '',
   kakaoTalkId = '',
   telegramId = '',
+  pieceChatNotice = '',
   showBusinessAddressMap = false,
   useVisitVerification = false,
   useStampEvent = false,
@@ -1194,9 +1195,9 @@ async function createBusinessAd({
   const [result] = await pool.query(
     `INSERT INTO business_ads (
       owner_user_id, business_name, manager_name, manager_contact, title, image_url, link_url, region, district, category, open_hour, close_hour,
-      kakao_talk_id, telegram_id, show_business_address_map, use_visit_verification, use_stamp_event, stamp_event_description, stamp_event_count, description, plan_type, registration_status, display_order, is_active
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [ownerUserId, businessName, managerName, managerContact, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, kakaoTalkId, telegramId, showBusinessAddressMap ? 1 : 0, useVisitVerification ? 1 : 0, useStampEvent ? 1 : 0, stampEventDescription, Number(stampEventCount) || 0, description, normalizeBusinessAdPlanType(planType), registrationStatus, displayOrder, isActive ? 1 : 0]
+      kakao_talk_id, telegram_id, piece_chat_notice, show_business_address_map, use_visit_verification, use_stamp_event, stamp_event_description, stamp_event_count, description, plan_type, registration_status, display_order, is_active
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [ownerUserId, businessName, managerName, managerContact, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, kakaoTalkId, telegramId, pieceChatNotice, showBusinessAddressMap ? 1 : 0, useVisitVerification ? 1 : 0, useStampEvent ? 1 : 0, stampEventDescription, Number(stampEventCount) || 0, description, normalizeBusinessAdPlanType(planType), registrationStatus, displayOrder, isActive ? 1 : 0]
   );
   return result.insertId;
 }
@@ -1310,7 +1311,7 @@ async function findBusinessAdById(adId) {
     `SELECT id, owner_user_id AS ownerUserId, business_name AS businessName, manager_name AS managerName, manager_contact AS managerContact,
             title, image_url AS imageUrl, link_url AS linkUrl,
             region, district, category, open_hour AS openHour, close_hour AS closeHour,
-            kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
+            kakao_talk_id AS kakaoTalkId, telegram_id AS telegramId, piece_chat_notice AS pieceChatNotice, show_business_address_map AS showBusinessAddressMap, use_visit_verification AS useVisitVerification, use_stamp_event AS useStampEvent, stamp_event_description AS stampEventDescription, stamp_event_count AS stampEventCount,
             description, plan_type AS planType, view_count AS viewCount, daily_jump_remaining AS dailyJumpRemaining, jump_reset_date AS jumpResetDate, jumped_at AS jumpedAt,
             registration_status AS registrationStatus, activated_at AS activatedAt, activated_until AS activatedUntil, piece_activated_at AS pieceActivatedAt, piece_activated_until AS pieceActivatedUntil, (piece_is_active = 1 AND piece_activated_until IS NOT NULL AND piece_activated_until > NOW()) AS isPieceActive, (piece_activated_until IS NOT NULL AND piece_activated_until > NOW()) AS isPieceCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), piece_activated_until), 0) AS pieceRemainingSeconds, display_order AS displayOrder, (is_active = 1 AND activated_until IS NOT NULL AND activated_until > NOW()) AS isActive, (activated_until IS NOT NULL AND activated_until > NOW()) AS isCurrentlyVisible, GREATEST(TIMESTAMPDIFF(SECOND, NOW(), activated_until), 0) AS remainingSeconds, created_at AS createdAt, updated_at AS updatedAt
        FROM business_ads
@@ -1335,6 +1336,7 @@ async function updateBusinessAd(adId, {
   description = '',
   kakaoTalkId = '',
   telegramId = '',
+  pieceChatNotice = '',
   showBusinessAddressMap = false,
   useVisitVerification = false,
   useStampEvent = false,
@@ -1349,9 +1351,9 @@ async function updateBusinessAd(adId, {
   await pool.query(
     `UPDATE business_ads
      SET business_name = ?, manager_name = ?, manager_contact = ?, title = ?, image_url = ?, link_url = ?, region = ?, district = ?, category = ?, open_hour = ?, close_hour = ?,
-         kakao_talk_id = ?, telegram_id = ?, show_business_address_map = ?, use_visit_verification = ?, use_stamp_event = ?, stamp_event_description = ?, stamp_event_count = ?, description = ?, plan_type = ?, registration_status = ?, display_order = ?, is_active = ?
+         kakao_talk_id = ?, telegram_id = ?, piece_chat_notice = ?, show_business_address_map = ?, use_visit_verification = ?, use_stamp_event = ?, stamp_event_description = ?, stamp_event_count = ?, description = ?, plan_type = ?, registration_status = ?, display_order = ?, is_active = ?
      WHERE id = ?`,
-    [businessName, managerName, managerContact, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, kakaoTalkId, telegramId, showBusinessAddressMap ? 1 : 0, useVisitVerification ? 1 : 0, useStampEvent ? 1 : 0, stampEventDescription, Number(stampEventCount) || 0, description, normalizeBusinessAdPlanType(planType), registrationStatus, displayOrder, isActive ? 1 : 0, adId]
+    [businessName, managerName, managerContact, title, imageUrl, linkUrl, region, district, category, openHour, closeHour, kakaoTalkId, telegramId, pieceChatNotice, showBusinessAddressMap ? 1 : 0, useVisitVerification ? 1 : 0, useStampEvent ? 1 : 0, stampEventDescription, Number(stampEventCount) || 0, description, normalizeBusinessAdPlanType(planType), registrationStatus, displayOrder, isActive ? 1 : 0, adId]
   );
 }
 
