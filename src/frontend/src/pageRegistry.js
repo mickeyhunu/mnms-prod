@@ -315,7 +315,8 @@ const pageRegistry = {
                             <input id="ad-profile-use-piece-chat-notice" type="checkbox">
                             <span>조각채팅 인사말 사용</span>
                         </label>
-                        <textarea id="ad-profile-piece-chat-notice" maxlength="500" rows="3" aria-label="조각 안내 문구" placeholder="조각장소로 선택되어 채팅이 생성될 때 최초 1회 전송할 안내 문구를 입력해주세요." disabled hidden></textarea>
+                        <textarea id="ad-profile-piece-chat-notice" maxlength="500" rows="3" aria-label="조각 안내 문구" aria-describedby="ad-profile-piece-chat-notice-help" placeholder="" disabled hidden></textarea>
+                        <p id="ad-profile-piece-chat-notice-help" class="ad-profile-map-toggle-help ad-profile-piece-chat-notice-help" hidden>조각장소로 선택되어 채팅이 생성될 때 최초 1회 전송할 안내 문구를 입력해주세요.</p>
                     </div>
                 </div>
 
