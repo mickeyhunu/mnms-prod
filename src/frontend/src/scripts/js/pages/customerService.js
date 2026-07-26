@@ -27,6 +27,7 @@ function applyTargetContextFromQuery() {
     const type = String(params.get('type') || '').toLowerCase();
     const targetId = String(params.get('targetId') || '').trim();
     const targetNickname = String(params.get('nickname') || '').trim();
+    const targetText = String(params.get('targetText') || '').trim();
 
     const targetTypeInput = document.getElementById('inquiry-target-type');
     const targetIdInput = document.getElementById('inquiry-target-id');
@@ -46,8 +47,10 @@ function applyTargetContextFromQuery() {
     if (targetTypeInput) targetTypeInput.value = selected.targetType;
     if (targetIdInput) targetIdInput.value = targetId;
     if (inquiryTypeSelect && selected.inquiryType) inquiryTypeSelect.value = selected.inquiryType;
-    if (targetGroup) targetGroup.classList.toggle('hidden', selected.targetType !== 'member');
-    if (targetNicknameInput) targetNicknameInput.value = selected.targetType === 'member' ? targetNickname : '';
+    const isReportTarget = ['post', 'comment', 'member'].includes(selected.targetType);
+    const displayTarget = selected.targetType === 'member' ? targetNickname : targetText;
+    if (targetGroup) targetGroup.classList.toggle('hidden', !isReportTarget);
+    if (targetNicknameInput) targetNicknameInput.value = displayTarget;
 }
 
 function bindFileValidation() {
