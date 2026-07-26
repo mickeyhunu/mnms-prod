@@ -313,6 +313,18 @@
     margin-top: 0;
 }
 
+.terms-policy-card h3 {
+    margin: 18px 0 8px;
+    color: #212529;
+    font-size: 16px;
+}
+
+#stamp-purchase-refund-policy {
+    scroll-margin-top: 20px;
+    padding-top: 8px;
+    border-top: 1px solid #e5e7eb;
+}
+
 .terms-policy-card p {
     line-height: 1.7;
     color: #495057;
