@@ -83,6 +83,10 @@ async function setAttendance(postId, userId, status) {
                           WHERE post_id = ? AND user_id = ? AND removed_at IS NULL`, [status, status, postId, userId]);
 }
 
+async function clearAttendance(postId) {
+  await getPool().query('UPDATE piece_participants SET attendance_status = NULL, attended_at = NULL WHERE post_id = ?', [postId]);
+}
+
 async function removeParticipant(postId, userId) {
   const pool = getPool();
   const connection = await pool.getConnection();
@@ -110,4 +114,4 @@ async function removeParticipant(postId, userId) {
   }
 }
 
-module.exports = { getRoomContext, listMessages, listMessagesAfter, createMessage, markRead, getUnreadCount, setAttendance, removeParticipant };
+module.exports = { getRoomContext, listMessages, listMessagesAfter, createMessage, markRead, getUnreadCount, setAttendance, clearAttendance, removeParticipant };

@@ -13,6 +13,7 @@ const {
 const { createSeoSlugWithId } = require('../utils/seoSlug');
 const { resolveMemberLevel } = require('../utils/memberLevel');
 const { isPieceCancellationLocked } = require('../utils/pieceCancellationPolicy');
+const { resolvePieceChatLifecycle } = require('../utils/pieceChatLifecycle');
 
 const BOARD_TYPES = postModel.BOARD_TYPES || {
   FREE: 'FREE',
@@ -156,21 +157,12 @@ function resolvePieceLifecycle(post, participantCount = null) {
     return { isEnded: false, status: '' };
   }
 
-  const rows = parsePieceTemplateRows(post.content || '');
-  const startsAt = parsePieceDateTime(rows.get('시간') || rows.get('날짜/시간') || rows.get('일정') || rows.get('만남 시간'));
-  const closedAt = post.pieceClosedAt || post.piece_closed_at || null;
-  const autoEndsAt = startsAt ? new Date(startsAt.getTime() + (9 * 60 * 60 * 1000)) : null;
-  const isClosedByLeader = Boolean(closedAt);
-  const isAutoEnded = Boolean(autoEndsAt && autoEndsAt.getTime() <= Date.now());
-  const hasStartedEmpty = participantCount === 0 && Boolean(startsAt && startsAt.getTime() <= Date.now());
-
+  const lifecycle = resolvePieceChatLifecycle(post, new Date(), participantCount);
   return {
-    isEnded: isClosedByLeader || isAutoEnded || hasStartedEmpty,
-    isInProgress: Boolean(startsAt && startsAt.getTime() <= Date.now() && !isClosedByLeader && !isAutoEnded && !hasStartedEmpty),
-    status: isClosedByLeader || isAutoEnded || hasStartedEmpty ? '종료' : (startsAt && startsAt.getTime() <= Date.now() ? '진행중' : '모집중'),
-    startsAt: startsAt ? startsAt.toISOString() : null,
-    autoEndsAt: autoEndsAt ? autoEndsAt.toISOString() : null,
-    closedAt
+    ...lifecycle,
+    status: lifecycle.isCancelled ? '조각취소' : ({ ENDED: '종료', IN_PROGRESS: '진행중', RECRUITING: '모집중' }[lifecycle.status] || ''),
+    autoEndsAt: lifecycle.startsAt ? new Date(new Date(lifecycle.startsAt).getTime() + (9 * 60 * 60 * 1000)).toISOString() : null,
+    closedAt: post.pieceClosedAt || post.piece_closed_at || null
   };
 }
 
@@ -580,6 +572,13 @@ function sanitizePostForViewer(post, currentUser = null) {
     noticeTargetBoards: Array.isArray(post.noticeTargetBoards) ? post.noticeTargetBoards.map((board) => parseBoardType(board)) : []
   };
 
+  if (normalized.boardType === BOARD_TYPES.PIECE && post.pieceParticipantCount !== undefined) {
+    const lifecycle = resolvePieceLifecycle(normalized, Number(post.pieceParticipantCount || 0));
+    normalized.pieceStatus = lifecycle.status;
+    normalized.isPieceEnded = lifecycle.isEnded;
+    normalized.isPieceCancelled = lifecycle.isCancelled;
+  }
+
   if (normalized.isHidden) {
     normalized.content = '관리자에 의해 제한된 게시글입니다.';
     normalized.imageUrls = [];
@@ -770,6 +769,10 @@ async function getPost(req, res, next) {
       ? await postModel.listPieceParticipants(postId)
       : [];
     const pieceLifecycle = resolvePieceLifecycle(postDetail, pieceParticipants.length);
+    if (pieceLifecycle.isCancelled) {
+      await postModel.clearPieceAttendance(postId);
+      pieceParticipants.forEach((participant) => { participant.attendedAt = null; });
+    }
 
     const isLiked = req.user
       ? await postModel.isPostLikedByUser(postId, req.user.id)
@@ -790,6 +793,7 @@ async function getPost(req, res, next) {
       isPieceParticipant: req.user ? pieceParticipants.some((participant) => Number(participant.userId) === Number(req.user.id)) : false,
       pieceStatus: pieceLifecycle.status,
       isPieceEnded: pieceLifecycle.isEnded,
+      isPieceCancelled: pieceLifecycle.isCancelled,
       pieceStartsAt: pieceLifecycle.startsAt,
       pieceAutoEndsAt: pieceLifecycle.autoEndsAt,
       pieceClosedAt: pieceLifecycle.closedAt,
@@ -838,8 +842,10 @@ async function resolveJoinablePiecePost(req, res) {
   }
 
   const participantCount = await postModel.countPieceParticipants(post.id);
-  if (resolvePieceLifecycle(post, participantCount).isEnded) {
-    res.status(400).json({ message: '종료된 조각입니다.' });
+  const lifecycle = resolvePieceLifecycle(post, participantCount);
+  if (lifecycle.isEnded) {
+    if (lifecycle.isCancelled) await postModel.clearPieceAttendance(post.id);
+    res.status(400).json({ message: lifecycle.isCancelled ? '최소 인원 미달로 취소된 조각입니다.' : '종료된 조각입니다.' });
     return null;
   }
 

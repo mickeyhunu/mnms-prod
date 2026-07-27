@@ -30,12 +30,21 @@ async function context(req, res) {
   const room = await model.getRoomContext(postId, req.user.id);
   if (!room) { res.status(404).json({ message: '조각 채팅방을 찾을 수 없습니다.' }); return null; }
   if (!room.isMember) { res.status(403).json({ message: '조각 채팅방 구성원만 입장할 수 있습니다.' }); return null; }
+  room.lifecycle = resolvePieceChatLifecycle(room.post, new Date(), room.participants.length);
+  if (room.lifecycle.isCancelled) {
+    await model.clearAttendance(postId);
+    room.participants.forEach((participant) => {
+      participant.attendanceStatus = null;
+      participant.attendedAt = null;
+    });
+  }
   return { postId, room };
 }
 function serializeMembers(room, currentUserId) {
+  const leaderHasStarted = !room.lifecycle.isCancelled && room.lifecycle.startsAt && new Date(room.lifecycle.startsAt) <= new Date();
   const members = [
     ...room.admins.map((u) => ({ ...u, userId: u.id, roomRole: 'ADMIN' })),
-    { userId: room.post.leaderId, nickname: room.post.leaderNickname, profileImageUrl: room.post.leaderProfileImageUrl, roomRole: 'LEADER' },
+    { userId: room.post.leaderId, nickname: room.post.leaderNickname, profileImageUrl: room.post.leaderProfileImageUrl, roomRole: 'LEADER', attendanceStatus: leaderHasStarted ? 'PRESENT' : null, attendedAt: leaderHasStarted ? room.lifecycle.startsAt : null },
     ...(room.advertiser ? [{ ...room.advertiser, userId: room.advertiser.id, roomRole: 'ADVERTISER' }] : []),
     ...room.participants.map((u) => ({ ...u, roomRole: 'MEMBER' }))
   ].filter((member, index, all) => all.findIndex((item) => Number(item.userId) === Number(member.userId)) === index);
@@ -43,15 +52,15 @@ function serializeMembers(room, currentUserId) {
 }
 function serializeRoom(room, messages, currentUserId) {
   const guideMessage = { ...PIECE_GUIDE_MESSAGE, createdAt: room.post.createdAt };
-  const lifecycle = resolvePieceChatLifecycle(room.post, new Date(), room.participants.length);
+  const lifecycle = room.lifecycle;
   return { post: room.post, lifecycle, ...serializeMembers(room, currentUserId), messages: [guideMessage, ...messages, ...lifecycleMessages(lifecycle)] };
 }
 async function getRoom(req, res, next) { try { const value = await context(req, res); if (!value) return; res.json(serializeRoom(value.room, await model.listMessages(value.postId), req.user.id)); } catch (e) { next(e); } }
 async function getMembers(req, res, next) { try { const value = await context(req, res); if (!value) return; res.json({ ...serializeMembers(value.room, req.user.id), lifecycle: resolvePieceChatLifecycle(value.room.post, new Date(), value.room.participants.length) }); } catch (e) { next(e); } }
 async function getMessages(req, res, next) { try { const value = await context(req, res); if (!value) return; const afterId = Math.max(0, Number.parseInt(req.query.afterId, 10) || 0); const lifecycle = resolvePieceChatLifecycle(value.room.post, new Date(), value.room.participants.length); res.json([...(await model.listMessagesAfter(value.postId, afterId)), ...lifecycleMessages(lifecycle)]); } catch (e) { next(e); } }
-async function sendMessage(req, res, next) { try { const value = await context(req, res); if (!value) return; if (resolvePieceChatLifecycle(value.room.post, new Date(), value.room.participants.length).isEnded) return res.status(409).json({ message: '종료된 조각에서는 더 이상 채팅할 수 없습니다.' }); const content = String(req.body.content || '').trim(); if (!content) return res.status(400).json({ message: '메시지를 입력해주세요.' }); if (content.length > 1000) return res.status(400).json({ message: '메시지는 1,000자까지 입력할 수 있습니다.' }); res.status(201).json(await model.createMessage(value.postId, req.user.id, content)); } catch (e) { next(e); } }
+async function sendMessage(req, res, next) { try { const value = await context(req, res); if (!value) return; if (value.room.lifecycle.isEnded) return res.status(409).json({ message: value.room.lifecycle.isCancelled ? '취소된 조각에서는 더 이상 채팅할 수 없습니다.' : '종료된 조각에서는 더 이상 채팅할 수 없습니다.' }); const content = String(req.body.content || '').trim(); if (!content) return res.status(400).json({ message: '메시지를 입력해주세요.' }); if (content.length > 1000) return res.status(400).json({ message: '메시지는 1,000자까지 입력할 수 있습니다.' }); res.status(201).json(await model.createMessage(value.postId, req.user.id, content)); } catch (e) { next(e); } }
 async function markRead(req, res, next) { try { const value = await context(req, res); if (!value) return; const messageId = Math.max(0, Number.parseInt(req.body.messageId, 10) || 0); await model.markRead(value.postId, req.user.id, messageId); res.json({ success: true, lastReadMessageId: messageId }); } catch (e) { next(e); } }
 async function getUnread(req, res, next) { try { const value = await context(req, res); if (!value) return; res.json({ unreadCount: await model.getUnreadCount(value.postId, req.user.id) }); } catch (e) { next(e); } }
-async function attendance(req, res, next) { try { const value = await context(req, res); if (!value) return; if (!value.room.canManage) return res.status(403).json({ message: '조각 관리 권한이 없습니다.' }); const userId = parseId(req.params.userId); const status = String(req.body.status || '').toUpperCase(); if (!userId || !['PRESENT', 'ABSENT'].includes(status)) return res.status(400).json({ message: '출석 상태를 확인해주세요.' }); if (!value.room.participants.some((u) => Number(u.userId) === userId)) return res.status(404).json({ message: '조각원을 찾을 수 없습니다.' }); await model.setAttendance(value.postId, userId, status); const room = await model.getRoomContext(value.postId, req.user.id); res.json(serializeRoom(room, await model.listMessages(value.postId), req.user.id)); } catch (e) { next(e); } }
+async function attendance(req, res, next) { try { const value = await context(req, res); if (!value) return; if (!value.room.canManage) return res.status(403).json({ message: '조각 관리 권한이 없습니다.' }); if (value.room.lifecycle.isEnded) return res.status(409).json({ message: value.room.lifecycle.isCancelled ? '취소된 조각은 출석 처리할 수 없습니다.' : '종료된 조각은 출석 처리할 수 없습니다.' }); const userId = parseId(req.params.userId); const status = String(req.body.status || '').toUpperCase(); if (!userId || !['PRESENT', 'ABSENT'].includes(status)) return res.status(400).json({ message: '출석 상태를 확인해주세요.' }); if (!value.room.participants.some((u) => Number(u.userId) === userId)) return res.status(404).json({ message: '조각원을 찾을 수 없습니다.' }); await model.setAttendance(value.postId, userId, status); const room = await model.getRoomContext(value.postId, req.user.id); room.lifecycle = value.room.lifecycle; res.json(serializeRoom(room, await model.listMessages(value.postId), req.user.id)); } catch (e) { next(e); } }
 async function remove(req, res, next) { try { const value = await context(req, res); if (!value) return; if (!value.room.canManage) return res.status(403).json({ message: '조각 관리 권한이 없습니다.' }); const userId = parseId(req.params.userId); if (!userId || !value.room.participants.some((u) => Number(u.userId) === userId)) return res.status(404).json({ message: '조각원을 찾을 수 없습니다.' }); const protectedIds = [value.room.post.leaderId, value.room.advertiser?.id, ...value.room.admins.map((u) => u.id)].map(Number); if (protectedIds.includes(userId)) return res.status(403).json({ message: '관리자, 광고주, 조각장은 내보낼 수 없습니다.' }); await model.removeParticipant(value.postId, userId); res.json({ success: true }); } catch (e) { next(e); } }
 module.exports = { getRoom, getMembers, getMessages, sendMessage, markRead, getUnread, attendance, remove };
