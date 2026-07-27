@@ -322,6 +322,7 @@ function bindCommonEvents() {
     document.getElementById('user-edit-cancel-btn')?.addEventListener('click', closeUserEditModal);
     document.getElementById('user-edit-cancel-btn-secondary')?.addEventListener('click', closeUserEditModal);
     document.getElementById('user-edit-save-btn')?.addEventListener('click', saveUserDetail);
+    document.getElementById('admin-user-stamp-adjustment-btn')?.addEventListener('click', adjustUserStamps);
     bindUserEditForm();
     bindAdminListControls();
 
@@ -2024,6 +2025,12 @@ function fillUserEditForm(user) {
     document.getElementById('admin-user-point-adjustment-type').value = 'NONE';
     document.getElementById('admin-user-point-adjustment-amount').value = '0';
     document.getElementById('admin-user-point-adjustment-reason').value = '';
+    const stampAdjustment = document.getElementById('admin-user-stamp-adjustment');
+    stampAdjustment?.classList.toggle('hidden', !isMasterAdmin);
+    document.getElementById('admin-user-stamp-balance').value = Number(user.stampBalance || 0);
+    document.getElementById('admin-user-stamp-adjustment-type').value = 'ADD';
+    document.getElementById('admin-user-stamp-adjustment-amount').value = '1';
+    document.getElementById('admin-user-stamp-adjustment-reason').value = '';
     const roleSelect = document.getElementById('admin-user-role');
     if (roleSelect) {
         roleSelect.value = user.role || 'MEMBER';
@@ -2239,6 +2246,48 @@ async function saveUserDetail() {
         setAdminUserHelpMessage(error.message || '회원 정보 저장에 실패했습니다.', '#dc3545');
     } finally {
         if (saveButton) saveButton.disabled = false;
+    }
+}
+
+async function adjustUserStamps() {
+    if (!editingUserId || !isMasterAdmin) {
+        setAdminUserHelpMessage('마스터 관리자만 스탬프를 지급하거나 차감할 수 있습니다.', '#dc3545');
+        return;
+    }
+
+    const adjustmentType = document.getElementById('admin-user-stamp-adjustment-type')?.value || '';
+    const amount = Number(document.getElementById('admin-user-stamp-adjustment-amount')?.value);
+    const reason = document.getElementById('admin-user-stamp-adjustment-reason')?.value?.trim() || '';
+    const button = document.getElementById('admin-user-stamp-adjustment-btn');
+
+    if (!Number.isInteger(amount) || amount < 1) {
+        setAdminUserHelpMessage('스탬프 수량은 1 이상의 정수로 입력해주세요.', '#dc3545');
+        return;
+    }
+    if (!reason || reason.length > 255) {
+        setAdminUserHelpMessage('지급/차감 사유는 1자 이상 255자 이하로 입력해주세요.', '#dc3545');
+        return;
+    }
+
+    const actionLabel = adjustmentType === 'DEDUCT' ? '차감' : '지급';
+    if (!window.confirm(`스탬프 ${amount}개를 ${actionLabel}하시겠습니까?`)) return;
+
+    try {
+        if (button) button.disabled = true;
+        setAdminUserHelpMessage(`스탬프 ${actionLabel} 처리 중입니다...`);
+        const response = await APIClient.post(`/admin/users/${editingUserId}/stamps/adjust`, {
+            adjustmentType,
+            amount,
+            reason
+        });
+        document.getElementById('admin-user-stamp-balance').value = Number(response.stampBalance || 0);
+        document.getElementById('admin-user-stamp-adjustment-amount').value = '1';
+        document.getElementById('admin-user-stamp-adjustment-reason').value = '';
+        setAdminUserHelpMessage(`스탬프 ${amount}개가 ${actionLabel}되었습니다.`, '#198754');
+    } catch (error) {
+        setAdminUserHelpMessage(error.message || `스탬프 ${actionLabel}에 실패했습니다.`, '#dc3545');
+    } finally {
+        if (button) button.disabled = false;
     }
 }
 

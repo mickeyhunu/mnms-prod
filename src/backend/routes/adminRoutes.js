@@ -16,6 +16,7 @@ const { validateNickname } = require('../utils/nicknamePolicy');
 const { validatePassword } = require('../utils/authPolicy');
 const { hashPassword } = require('../utils/passwordHasher');
 const posterModel = require('../models/posterModel');
+const { STAMP_TYPES, getUserStampBalance, adjustUserStampsByAdmin } = require('../models/stampModel');
 
 const router = express.Router();
 
@@ -315,15 +316,67 @@ router.get('/users/:id', async (req, res, next) => {
     const user = await adminModel.getUserDetail(id);
     if (!user || !isManagedUserAccount(user)) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
 
-    const activity = await adminModel.getUserActivityOverview(id, { limit: 1000 });
+    const stampType = String(user.role || '').toUpperCase() === 'BUSINESS'
+      || String(user.memberType || user.member_type || '').toUpperCase() === 'BUSINESS'
+      ? STAMP_TYPES.BUSINESS
+      : STAMP_TYPES.MEMBER;
+    const [activity, stampBalance] = await Promise.all([
+      adminModel.getUserActivityOverview(id, { limit: 1000 }),
+      getUserStampBalance(id, stampType)
+    ]);
 
     res.json({
       user: {
         ...user,
+        stampType,
+        stampBalance,
         isCurrentUser: Number(user.id) === Number(req.user.id)
       },
       activity
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/users/:id/stamps/adjust', async (req, res, next) => {
+  try {
+    if (!isMasterAdminUser(req.user)) {
+      return res.status(403).json({ message: '마스터 관리자만 스탬프를 지급하거나 차감할 수 있습니다.' });
+    }
+
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 회원 ID입니다.' });
+
+    const target = await adminModel.findUserById(id);
+    if (!target || !isManagedUserAccount(target)) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
+
+    const adjustmentType = String(req.body?.adjustmentType || '').trim().toUpperCase();
+    const amount = Number(req.body?.amount);
+    const reason = String(req.body?.reason || '').trim();
+    if (!['ADD', 'DEDUCT'].includes(adjustmentType)) {
+      return res.status(400).json({ message: '스탬프 처리 유형을 선택해주세요.' });
+    }
+    if (!Number.isInteger(amount) || amount < 1) {
+      return res.status(400).json({ message: '스탬프 수량은 1 이상의 정수로 입력해주세요.' });
+    }
+    if (!reason || reason.length > 255) {
+      return res.status(400).json({ message: '지급/차감 사유는 1자 이상 255자 이하로 입력해주세요.' });
+    }
+
+    const stampType = String(target.role || '').toUpperCase() === 'BUSINESS'
+      || String(target.member_type || '').toUpperCase() === 'BUSINESS'
+      ? STAMP_TYPES.BUSINESS
+      : STAMP_TYPES.MEMBER;
+    const stampBalance = await adjustUserStampsByAdmin(id, {
+      stampType,
+      amount,
+      reason,
+      actionType: adjustmentType === 'ADD' ? 'ADMIN_ADJUST_ADD' : 'ADMIN_ADJUST_DEDUCT',
+      adminUserId: req.user.id
+    });
+
+    res.json({ success: true, stampType, stampBalance });
   } catch (error) {
     next(error);
   }
