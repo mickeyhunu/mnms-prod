@@ -171,7 +171,7 @@ aws s3api create-bucket \
 
 ## Toss Payments 결제창 연동 설정
 
-스탬프 구매는 Toss Payments SDK v2와 API 개별 연동 키로 카드·간편결제 결제창을 열고, 결제 완료 후 서버에서 승인 API를 호출한 뒤에만 스탬프를 지급합니다. 결제위젯 계약 및 키 발급 전에도 사용할 수 있는 방식입니다.
+스탬프 구매는 Toss Payments SDK v2와 API 개별 연동 키로 **가상계좌 결제창만** 열고, 결제 완료 후 서버에서 결제수단을 다시 확인한 뒤 승인된 건에만 스탬프를 지급합니다. 카드·간편결제 등 다른 결제수단은 허용하지 않습니다. 결제위젯 계약 및 키 발급 전에도 사용할 수 있는 방식입니다.
 
 - `TOSS_PAYMENTS_CLIENT_KEY`: API 개별 연동 클라이언트 키 (브라우저 SDK 초기화용, `test_ck_` 또는 `live_ck_` 형식)
 - `TOSS_PAYMENTS_SECRET_KEY`: API 개별 연동 시크릿 키 (서버 승인 API 전용, `test_sk_` 또는 `live_sk_` 형식)

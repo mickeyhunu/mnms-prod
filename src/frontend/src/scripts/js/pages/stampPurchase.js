@@ -1,5 +1,5 @@
 /**
- * 스탬프 상품 선택과 Toss Payments 표준 결제창 결제/승인 흐름을 담당한다.
+ * 스탬프 상품 선택과 Toss Payments 가상계좌 결제/승인 흐름을 담당한다.
  */
 (() => {
     const planList = document.getElementById('stamp-plan-list');
@@ -83,7 +83,7 @@
             document.getElementById('stamp-payment-agreement').replaceChildren();
             state.payment = payment;
             state.order = order;
-            if (widgetStatus) widgetStatus.textContent = '결제하기 버튼을 누르면 카드·간편결제 결제창이 열립니다.';
+            if (widgetStatus) widgetStatus.textContent = '결제하기 버튼을 누르면 가상계좌 결제창이 열립니다.';
         } catch (error) {
             if (sequence !== state.setupSequence) return;
             state.setupError = error.message || '결제수단을 준비하지 못했습니다.';
@@ -141,7 +141,7 @@
         try {
             const origin = window.location.origin;
             await state.payment.requestPayment({
-                method: 'CARD',
+                method: 'VIRTUAL_ACCOUNT',
                 amount: { currency: 'KRW', value: state.order.amount },
                 orderId: state.order.orderId,
                 orderName: state.order.orderName,
