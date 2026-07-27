@@ -1178,7 +1178,7 @@ const pageRegistry = {
                                             </section>
                                         </div>
                                     </div>
-                                    <div class="hidden" id="piece-selected-ad-preview" aria-live="polite">
+                                    <div class="piece-selected-ad-preview hidden" id="piece-selected-ad-preview" aria-live="polite">
                                         <ul class="business-directory-list" id="piece-selected-ad-preview-list"></ul>
                                     </div>
                                 </div>
