@@ -1048,6 +1048,7 @@ function renderPostDetail(post) {
     currentPostDetail = post;
 
     const titleElement = document.getElementById('post-title');
+    const restrictionBadge = document.getElementById('post-restriction-badge');
     const contentElement = document.getElementById('post-content');
     const authorElement = document.getElementById('post-author');
     const avatarElement = document.querySelector('.author-avatar');
@@ -1062,10 +1063,15 @@ function renderPostDetail(post) {
     const authorBadgeMarkup = resolveAuthorBadgeMarkup(post);
     const currentUser = Auth.getUser();
     const isAdminViewer = String(currentUser?.role || '').toUpperCase() === 'ADMIN';
+    const showRestrictionBadge = isHiddenPost && isAdminViewer;
     const anonymousAuthorLabel = isAdminViewer && post.authorNickname ? post.authorNickname : '익명';
     const postAuthorLabel = boardType === 'ANON' && !post.authorIsBusiness ? anonymousAuthorLabel : `${post.authorNickname || ''}`;
 
     if (titleElement) titleElement.textContent = `[${boardTagMap[boardType] || '자유'}] ${post.title || ''}`;
+    if (restrictionBadge) {
+        restrictionBadge.classList.toggle('hidden', !showRestrictionBadge);
+        restrictionBadge.setAttribute('aria-hidden', String(!showRestrictionBadge));
+    }
     if (contentElement) {
         contentElement.innerHTML = boardType === 'PIECE' ? renderPiecePostContent(post.content || '') : renderPostContent(post.content || '');
         contentElement.classList.toggle('admin-restricted-content', isHiddenPost);

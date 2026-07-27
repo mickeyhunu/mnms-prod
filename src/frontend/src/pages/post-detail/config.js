@@ -69,6 +69,7 @@ const postDetailTemplate = `
                 <div class="top">
                     <div class="tit">
                         <h1 id="post-title"></h1>
+                        <span class="post-restriction-badge hidden" id="post-restriction-badge">관리자 제한 게시글</span>
                     </div>
 
                     <div class="grid">
