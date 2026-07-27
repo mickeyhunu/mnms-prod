@@ -147,6 +147,20 @@
     color: #20242a;
 }
 
+.post-restriction-badge {
+    flex: none;
+    margin-top: 5px;
+    padding: 4px 9px;
+    border: 1px solid #f0b429;
+    border-radius: 999px;
+    background: #fff8e1;
+    color: #8a5a00;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
 .bbs-view .grid {
     display: grid;
     grid-template-columns: 40px auto;
