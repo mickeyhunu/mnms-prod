@@ -322,6 +322,7 @@ function bindCommonEvents() {
     document.getElementById('user-edit-cancel-btn')?.addEventListener('click', closeUserEditModal);
     document.getElementById('user-edit-cancel-btn-secondary')?.addEventListener('click', closeUserEditModal);
     document.getElementById('user-edit-save-btn')?.addEventListener('click', saveUserDetail);
+    document.getElementById('admin-user-point-adjustment-btn')?.addEventListener('click', adjustUserPoints);
     document.getElementById('admin-user-stamp-adjustment-btn')?.addEventListener('click', adjustUserStamps);
     bindUserEditForm();
     bindAdminListControls();
@@ -2292,6 +2293,57 @@ async function adjustUserStamps() {
         setAdminUserHelpMessage(`스탬프 ${amount}개가 ${actionLabel}되었습니다.`, '#198754');
     } catch (error) {
         setAdminUserHelpMessage(error.message || `스탬프 ${actionLabel}에 실패했습니다.`, '#dc3545');
+    } finally {
+        if (button) button.disabled = false;
+    }
+}
+
+async function adjustUserPoints() {
+    if (!editingUserId) {
+        setAdminUserHelpMessage('포인트를 처리할 회원을 선택해주세요.', '#dc3545');
+        return;
+    }
+
+    const adjustmentType = document.getElementById('admin-user-point-adjustment-type')?.value || '';
+    const amount = Number(document.getElementById('admin-user-point-adjustment-amount')?.value);
+    const reason = document.getElementById('admin-user-point-adjustment-reason')?.value?.trim() || '';
+    const button = document.getElementById('admin-user-point-adjustment-btn');
+
+    if (!['ADD', 'DEDUCT'].includes(adjustmentType)) {
+        setAdminUserHelpMessage('포인트 처리 유형을 선택해주세요.', '#dc3545');
+        return;
+    }
+    if (!Number.isInteger(amount) || amount < 1) {
+        setAdminUserHelpMessage('포인트 수량은 1 이상의 정수로 입력해주세요.', '#dc3545');
+        return;
+    }
+    if (!reason || reason.length > 255) {
+        setAdminUserHelpMessage('지급/차감 사유는 1자 이상 255자 이하로 입력해주세요.', '#dc3545');
+        return;
+    }
+
+    const actionLabel = adjustmentType === 'DEDUCT' ? '차감' : '적립';
+    if (!window.confirm(`포인트 ${amount}점을 ${actionLabel}하시겠습니까?`)) return;
+
+    try {
+        if (button) button.disabled = true;
+        setAdminUserHelpMessage(`포인트 ${actionLabel} 처리 중입니다...`);
+        const response = await APIClient.post(`/admin/users/${editingUserId}/points/adjust`, {
+            adjustmentType,
+            amount,
+            reason
+        });
+        const totalPoints = document.getElementById('admin-user-total-points');
+        const pointAdjustmentType = document.getElementById('admin-user-point-adjustment-type');
+        const pointAdjustmentAmount = document.getElementById('admin-user-point-adjustment-amount');
+        const pointAdjustmentReason = document.getElementById('admin-user-point-adjustment-reason');
+        if (totalPoints) totalPoints.value = Number(response.totalPoints || 0);
+        if (pointAdjustmentType) pointAdjustmentType.value = 'NONE';
+        if (pointAdjustmentAmount) pointAdjustmentAmount.value = '0';
+        if (pointAdjustmentReason) pointAdjustmentReason.value = '';
+        setAdminUserHelpMessage(`포인트 ${amount}점이 ${actionLabel}되었습니다.`, '#198754');
+    } catch (error) {
+        setAdminUserHelpMessage(error.message || `포인트 ${actionLabel}에 실패했습니다.`, '#dc3545');
     } finally {
         if (button) button.disabled = false;
     }
