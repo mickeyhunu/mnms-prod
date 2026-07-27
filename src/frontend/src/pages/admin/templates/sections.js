@@ -37,22 +37,25 @@ export const userEditPanelTemplate = `
                                     <input type="text" id="admin-user-phone" name="phone" placeholder="010-0000-0000">
                                     <span class="profile-consent-inline"><input type="checkbox" id="admin-user-sms-consent" name="smsConsent"><span class="profile-consent-text">SMS 수신 동의</span></span>
                                 </label>
-                                <label>현재 포인트
-                                    <input type="number" id="admin-user-total-points" name="totalPoints" min="0" step="1" readonly>
-                                </label>
-                                <label>포인트 처리
-                                    <select id="admin-user-point-adjustment-type" name="pointAdjustmentType" class="form-control">
-                                        <option value="NONE">변경 없음</option>
-                                        <option value="ADD">적립</option>
-                                        <option value="DEDUCT">차감</option>
-                                    </select>
-                                </label>
-                                <label>포인트 수량
-                                    <input type="number" id="admin-user-point-adjustment-amount" name="pointAdjustmentAmount" min="0" step="1" value="0">
-                                </label>
-                                <label>지급 사유
-                                    <input type="text" id="admin-user-point-adjustment-reason" name="pointAdjustmentReason" maxlength="255" placeholder="적립/차감 사유 입력">
-                                </label>
+                                <div class="admin-user-point-adjustment">
+                                    <strong>포인트 수동 적립/차감</strong>
+                                    <label>현재 포인트
+                                        <input type="number" id="admin-user-total-points" name="totalPoints" min="0" step="1" readonly>
+                                    </label>
+                                    <label>포인트 처리
+                                        <select id="admin-user-point-adjustment-type" name="pointAdjustmentType" class="form-control">
+                                            <option value="NONE">변경 없음</option>
+                                            <option value="ADD">적립</option>
+                                            <option value="DEDUCT">차감</option>
+                                        </select>
+                                    </label>
+                                    <label>포인트 수량
+                                        <input type="number" id="admin-user-point-adjustment-amount" name="pointAdjustmentAmount" min="0" step="1" value="0">
+                                    </label>
+                                    <label>지급 사유
+                                        <input type="text" id="admin-user-point-adjustment-reason" name="pointAdjustmentReason" maxlength="255" placeholder="적립/차감 사유 입력">
+                                    </label>
+                                </div>
                                 <div class="admin-user-stamp-adjustment hidden" id="admin-user-stamp-adjustment">
                                     <strong>스탬프 수동 지급/차감 (마스터 전용)</strong>
                                     <label>현재 스탬프
