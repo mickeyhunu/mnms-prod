@@ -796,11 +796,18 @@ function alertLockedPiecePostActionIfNeeded(actionLabel) {
 
 function getPieceMaximumParticipantCount(content) {
     const rawContent = String(content || '');
-    const maxMatch = rawContent.match(/^\s*최대 인원\s*:\s*(\d+)/m);
-    if (maxMatch) return Math.max(1, Number(maxMatch[1]) || 1);
+    const maxMatch = rawContent.match(/^\s*최대 인원\s*:\s*(\d+)명?\s*(이상)?/m);
+    if (maxMatch) return maxMatch[2] ? Infinity : Math.max(1, Number(maxMatch[1]) || 1);
 
-    const summaryMaxMatch = rawContent.match(/최대\s*(\d+)명/);
-    return summaryMaxMatch ? Math.max(1, Number(summaryMaxMatch[1]) || 1) : 1;
+    const summaryMaxMatch = rawContent.match(/최대\s*(\d+)명?\s*(이상)?/);
+    if (!summaryMaxMatch) return 1;
+    return summaryMaxMatch[2] ? Infinity : Math.max(1, Number(summaryMaxMatch[1]) || 1);
+}
+
+function getPieceMaximumParticipantLabel(content, maxParticipants) {
+    if (Number.isFinite(maxParticipants)) return String(maxParticipants);
+    const unlimitedMinimumMatch = String(content || '').match(/최대\s*(\d+)명?\s*이상/);
+    return unlimitedMinimumMatch ? `${unlimitedMinimumMatch[1]}+` : '제한 없음';
 }
 
 function getPieceSelectedAdPath(row) {
@@ -944,7 +951,7 @@ function renderPieceJoinButton(post, isCurrentAuthor, isHiddenPost) {
 
     const maxParticipants = getPieceMaximumParticipantCount(post.content || '');
     const currentParticipants = 1 + getPieceParticipants(post).length;
-    const isFull = currentParticipants >= maxParticipants;
+    const isFull = Number.isFinite(maxParticipants) && currentParticipants >= maxParticipants;
     const currentUser = Auth.getUser();
     const isRegularMemberViewer = isRegularMember(currentUser);
     const hasPiecePermission = canUsePieceBoard(currentUser);
@@ -977,7 +984,7 @@ function renderPieceParticipants(post, isHiddenPost) {
     participantsCountElement.innerHTML = `
         <span class="piece-participants-count-current">${currentParticipants}</span>
         <span class="piece-participants-count-divider"> / </span>
-        <span class="piece-participants-count-max">${maxParticipants || 1}</span>`;
+        <span class="piece-participants-count-max">${getPieceMaximumParticipantLabel(post.content || '', maxParticipants)}</span>`;
     participantsListElement.innerHTML = isPiecePost
         ? [
             renderPieceParticipantCard(post, { isLeader: true }),

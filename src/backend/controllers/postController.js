@@ -85,10 +85,13 @@ function getPieceMaximumParticipantCount(content) {
   const capacity = rows.get('인원') || '';
   const [, capacityMaxText = ''] = capacity.split('/');
   const capacityMax = parsePieceOrderedNumber(capacityMaxText);
-  if (capacityMax !== null) return Math.max(1, capacityMax);
+  if (capacityMax !== null) {
+    return /이상/.test(capacityMaxText) ? Infinity : Math.max(1, capacityMax);
+  }
 
-  const maxMatch = String(content || '').match(/최대\s*(\d+)명/);
-  return maxMatch ? Math.max(1, Number(maxMatch[1]) || 1) : 1;
+  const maxMatch = String(content || '').match(/최대\s*(\d+)명?\s*(이상)?/);
+  if (!maxMatch) return 1;
+  return maxMatch[2] ? Infinity : Math.max(1, Number(maxMatch[1]) || 1);
 }
 
 function parsePieceAgeOrder(value) {
