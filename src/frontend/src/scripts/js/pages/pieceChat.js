@@ -146,13 +146,22 @@ function setMemberDrawerOpen(open) {
     drawer.querySelectorAll('[data-close-drawer]').forEach((button) => { button.tabIndex = open ? 0 : -1; });
     if (!open) closeMemberMenus();
 }
+function hideMemberDrawerImmediately() {
+    const drawer = document.getElementById('chat-drawer');
+    drawer.classList.add('is-resetting');
+    setMemberDrawerOpen(false);
+}
 function initPieceChatPage() {
     pieceChatId = window.location.pathname.split('/').filter(Boolean).pop();
     if (!Auth.isAuthenticated()) { window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`; return; }
-    setMemberDrawerOpen(false);
-    document.getElementById('chat-drawer').classList.add('is-ready');
+    const drawer = document.getElementById('chat-drawer');
+    hideMemberDrawerImmediately();
+    void drawer.offsetWidth;
+    drawer.classList.remove('is-resetting');
+    drawer.classList.add('is-ready');
+    window.addEventListener('pagehide', hideMemberDrawerImmediately);
     document.getElementById('chat-back').onclick = () => history.length > 1 ? history.back() : window.location.assign('/community');
-    document.getElementById('chat-refresh').onclick = () => window.location.reload();
+    document.getElementById('chat-refresh').onclick = () => { hideMemberDrawerImmediately(); window.location.reload(); };
     document.getElementById('chat-members').onclick = () => setMemberDrawerOpen(true);
     document.querySelectorAll('[data-close-drawer]').forEach((button) => button.onclick = () => setMemberDrawerOpen(false));
     document.addEventListener('keydown', (event) => {
