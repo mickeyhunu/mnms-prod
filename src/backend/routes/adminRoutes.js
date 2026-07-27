@@ -10,8 +10,8 @@ const supportModel = require('../models/supportModel');
 const { findByNicknameExceptUser } = require('../models/userModel');
 const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddleware');
 const { LOGIN_STATUS } = require('../utils/loginRestriction');
-const { deleteS3ObjectByUrl, deleteS3ObjectsByUrls } = require('../utils/fileUpload');
-const { collectBusinessInfoImageUrls, deleteRejectedBusinessInfoImages, deleteUnreferencedBusinessInfoImages } = require('../utils/businessProfileImages');
+const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
+const { deleteRejectedBusinessInfoImages, deleteUnreferencedBusinessInfoImages } = require('../utils/businessProfileImages');
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validatePassword } = require('../utils/authPolicy');
 const { hashPassword } = require('../utils/passwordHasher');
@@ -575,31 +575,6 @@ router.patch('/users/:id/member-type', async (req, res, next) => {
     if (!target || !isManagedUserAccount(target)) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
 
     await adminModel.updateUserMemberType(id, memberType);
-    res.json({ success: true });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.delete('/users/:id', async (req, res, next) => {
-  try {
-    const id = Number.parseInt(req.params.id, 10);
-    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 회원 ID입니다.' });
-    if (id === Number(req.user.id)) return res.status(400).json({ message: '현재 로그인한 계정은 삭제할 수 없습니다.' });
-
-    const target = await adminModel.findUserById(id);
-    if (!target || !isManagedUserAccount(target)) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
-
-    const [businessProfile, businessAds] = await Promise.all([
-      adminModel.findBusinessApplicationByUserId(id),
-      adminModel.listBusinessAdsByOwner(id)
-    ]);
-
-    await adminModel.deleteUser(id);
-    await deleteS3ObjectsByUrls([
-      ...collectBusinessInfoImageUrls(businessProfile?.businessInfo, businessProfile?.lastApprovedBusinessInfo),
-      ...businessAds.map((ad) => ad.imageUrl).filter(Boolean)
-    ]);
     res.json({ success: true });
   } catch (error) {
     next(error);

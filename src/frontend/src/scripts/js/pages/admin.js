@@ -1390,7 +1390,6 @@ function renderUsersTable() {
                 <td>
                     <div class="admin-user-actions">
                         <a class="btn btn-sm btn-secondary" href="/admin?tab=${activeUserTab}&editUserId=${user.id}" data-admin-action="edit-user" data-target-id="${user.id}">정보 수정</a>
-                        <button type="button" class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="user" data-target-id="${user.id}">삭제</button>
                     </div>
                 </td>
             </tr>
@@ -3221,10 +3220,6 @@ async function confirmDelete() {
             await APIClient.delete(`/admin/comments/${adminActionTarget.id}`);
             closeDeleteModal();
             await loadComments();
-        } else if (adminActionTarget.type === 'user') {
-            await APIClient.delete(`/admin/users/${adminActionTarget.id}`);
-            closeDeleteModal();
-            await loadUsers();
         } else if (adminActionTarget.type === 'ad') {
             await APIClient.delete(`/admin/ads/${adminActionTarget.id}`);
             closeDeleteModal();
