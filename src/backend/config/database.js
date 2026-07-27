@@ -1192,6 +1192,26 @@ async function initDatabase() {
   `);
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS stamp_payment_orders (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      order_id VARCHAR(64) NOT NULL UNIQUE,
+      user_id BIGINT NOT NULL,
+      plan_code VARCHAR(20) NOT NULL,
+      stamp_type ENUM('MEMBER','BUSINESS') NOT NULL DEFAULT 'MEMBER',
+      amount INT NOT NULL,
+      payment_key VARCHAR(200) NULL UNIQUE,
+      status ENUM('READY','PAID','FAILED') NOT NULL DEFAULT 'READY',
+      failure_code VARCHAR(100) NULL,
+      failure_message VARCHAR(500) NULL,
+      approved_at DATETIME NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_stamp_payment_orders_user_created (user_id, created_at),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
     ALTER TABLE stamp_histories
     MODIFY COLUMN action_type ENUM('STAMP_PURCHASE','STAMP_PURCHASE_CANCEL','VISIT_VERIFICATION','SERVICE_BOTTLE_USE','BUSINESS_AD_BASIC','BUSINESS_AD_PLUS','BUSINESS_AD_PREMIUM','BUSINESS_AD_PIECE','ADMIN_ADJUST_ADD','ADMIN_ADJUST_DEDUCT','EXPIRED') NOT NULL
   `);

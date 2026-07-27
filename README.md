@@ -168,3 +168,12 @@ aws s3api create-bucket \
 ### KCP 키/라이브러리 보관 위치
 - `KCP_ENC_KEY`와 KCP 제공 암복호화 라이브러리는 프론트엔드/레포에 직접 넣지 말고, 서버의 외부 안전 경로(예: `/etc/mnms/kcp/`)에 저장하세요.
 - 경로가 필요하면 `.env.local` 같은 로컬 전용 환경 파일을 통해 주입하세요.
+
+## Toss Payments 결제위젯 연동 설정
+
+스탬프 구매는 Toss Payments 결제위젯 SDK v2로 결제수단을 표시하고, 결제 완료 후 서버에서 승인 API를 호출한 뒤에만 스탬프를 지급합니다.
+
+- `TOSS_PAYMENTS_CLIENT_KEY`: 결제위젯 클라이언트 키 (브라우저 SDK 초기화용)
+- `TOSS_PAYMENTS_SECRET_KEY`: 결제 승인 API 시크릿 키 (서버 전용)
+
+테스트 중에는 Toss Payments 개발자센터의 테스트 키를 사용하고, 운영 배포 시 운영 키로 교체하세요. 시크릿 키는 프론트엔드 코드나 `PUBLIC_` 환경변수에 넣지 마세요.

@@ -117,6 +117,84 @@ async function createStampPurchase(userId, { planCode, stampType = STAMP_TYPES.M
   }
 }
 
+async function createStampPaymentOrder(userId, { planCode, stampType = STAMP_TYPES.MEMBER } = {}) {
+  const pool = getPool();
+  const plan = getStampPurchasePlan(planCode);
+  if (!plan) {
+    const error = new Error('구매할 스탬프 상품을 선택해주세요.');
+    error.status = 400;
+    throw error;
+  }
+
+  const normalizedType = normalizeStampType(stampType);
+  const amount = plan.price + Math.round(plan.price * 0.1);
+  const orderId = `STAMP-${userId}-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  await pool.query(
+    `INSERT INTO stamp_payment_orders (order_id, user_id, plan_code, stamp_type, amount)
+     VALUES (?, ?, ?, ?, ?)`,
+    [orderId, userId, plan.code, normalizedType, amount]
+  );
+
+  return { orderId, amount, orderName: `${plan.name} (${plan.composition})`, plan };
+}
+
+async function completeStampPayment(userId, { orderId, paymentKey }) {
+  const pool = getPool();
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [orders] = await connection.query(
+      'SELECT * FROM stamp_payment_orders WHERE order_id = ? AND user_id = ? LIMIT 1 FOR UPDATE',
+      [orderId, userId]
+    );
+    const order = orders[0];
+    if (!order) {
+      const error = new Error('유효하지 않은 결제 주문입니다.');
+      error.status = 404;
+      throw error;
+    }
+    if (order.status === 'PAID') {
+      await connection.commit();
+      return { alreadyCompleted: true, order };
+    }
+    if (order.status !== 'READY') {
+      const error = new Error('처리할 수 없는 결제 주문입니다.');
+      error.status = 409;
+      throw error;
+    }
+
+    const plan = getStampPurchasePlan(order.plan_code);
+    const reason = `${plan.name} (${plan.composition})`;
+    await connection.query(
+      `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
+       VALUES (?, ?, 'STAMP_PURCHASE', ?, ?, ?)`,
+      [userId, order.stamp_type, plan.stampCount, reason, orderId]
+    );
+    await connection.query(
+      `UPDATE stamp_payment_orders
+          SET status = 'PAID', payment_key = ?, approved_at = NOW()
+        WHERE id = ?`,
+      [paymentKey, order.id]
+    );
+    await connection.commit();
+    return { alreadyCompleted: false, order: { ...order, status: 'PAID', payment_key: paymentKey }, plan };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+async function getStampPaymentOrder(userId, orderId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    'SELECT * FROM stamp_payment_orders WHERE order_id = ? AND user_id = ? LIMIT 1',
+    [orderId, userId]
+  );
+  return rows[0] || null;
+}
+
 async function getUserStampBalance(userId, stampType = STAMP_TYPES.MEMBER) {
   const pool = getPool();
   const normalizedType = normalizeStampType(stampType);
@@ -228,6 +306,9 @@ module.exports = {
   STAMP_ACTION_LABELS,
   getStampPurchasePlan,
   createStampPurchase,
+  createStampPaymentOrder,
+  getStampPaymentOrder,
+  completeStampPayment,
   getUserStampBalance,
   getUserStampHistories,
   getUserStampPaymentHistories

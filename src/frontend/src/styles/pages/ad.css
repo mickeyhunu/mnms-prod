@@ -1445,6 +1445,18 @@
     transform: translateX(-50%);
 }
 
+.stamp-payment-widget {
+    margin-top: 20px;
+    min-height: 48px;
+}
+
+.stamp-payment-widget-status {
+    margin: 8px 0 0;
+    color: var(--text-secondary, #6b7280);
+    font-size: 14px;
+    text-align: center;
+}
+
 .stamp-purchase-submit-bar .ad-purchase-submit {
     display: block;
     width: 100%;

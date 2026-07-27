@@ -712,6 +712,11 @@ const pageRegistry = {
                         </ul>
                         <a href="/board/terms#stamp-purchase-refund-policy" target="_blank" rel="noopener noreferrer">스탬프 청약철회·환불 정책 전문 보기</a>
                     </div>
+                    <div class="stamp-payment-widget" id="stamp-payment-widget">
+                        <div id="stamp-payment-methods"></div>
+                        <div id="stamp-payment-agreement"></div>
+                        <p class="stamp-payment-widget-status" id="stamp-payment-widget-status" role="status" aria-live="polite"></p>
+                    </div>
                 </article>
             </section>
         </div>
