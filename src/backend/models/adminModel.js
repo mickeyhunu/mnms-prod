@@ -928,11 +928,6 @@ async function adjustUserPointsByAdmin(userId, { amount, reason, actionType }) {
   }
 }
 
-async function deleteUser(userId) {
-  const pool = getPool();
-  await pool.query('DELETE FROM users WHERE id = ?', [userId]);
-}
-
 async function listAds() {
   const pool = getPool();
   const [rows] = await pool.query(
@@ -2206,7 +2201,6 @@ module.exports = {
   listBusinessProfileRejectionHistories,
   updateUserByAdmin,
   adjustUserPointsByAdmin,
-  deleteUser,
   listAds,
   listLiveAdsByStore,
   listTopAdsByPlacement,
