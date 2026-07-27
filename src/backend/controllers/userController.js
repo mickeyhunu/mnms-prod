@@ -22,7 +22,8 @@ const {
 } = require('../models/userModel');
 const { resolveMemberLevel, resolveAdvertiserAdDayLevel, MEMBER_LEVELS, ADVERTISER_AD_DAY_LEVELS } = require('../utils/memberLevel');
 const { POINT_RULES } = require('../models/pointModel');
-const { STAMP_TYPES, createStampPurchase, getUserStampBalance, getUserStampHistories, getUserStampPaymentHistories } = require('../models/stampModel');
+const { STAMP_TYPES, createStampPaymentOrder, getStampPaymentOrder, completeStampPayment, getUserStampBalance, getUserStampHistories, getUserStampPaymentHistories } = require('../models/stampModel');
+const { getTossPaymentConfig, confirmTossPayment } = require('../utils/tossPayments');
 const { createStampEventRequest, listOwnerStampEventRequests, reviewStampEventRequest } = require('../models/stampEventRequestModel');
 const supportModel = require('../models/supportModel');
 const adminModel = require('../models/adminModel');
@@ -1093,16 +1094,41 @@ async function purchaseMyStamps(req, res, next) {
   try {
     const planCode = String(req.body?.planCode || '').trim();
     const stampType = resolveUserStampType(req.user);
-    const purchase = await createStampPurchase(req.user.id, { planCode, stampType });
-    const totalStamps = await getUserStampBalance(req.user.id, stampType);
-
+    const { clientKey } = getTossPaymentConfig();
+    const order = await createStampPaymentOrder(req.user.id, { planCode, stampType });
     res.status(201).json({
       success: true,
-      message: '스탬프 구매가 완료되었습니다.',
-      purchase,
-      totalStamps,
-      stampType
+      clientKey,
+      customerKey: `USER-${req.user.id}`,
+      orderId: order.orderId,
+      orderName: order.orderName,
+      amount: order.amount,
+      customerName: req.user.name || req.user.nickname || ''
     });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function confirmMyStampPayment(req, res, next) {
+  try {
+    const orderId = String(req.body?.orderId || '').trim();
+    const paymentKey = String(req.body?.paymentKey || '').trim();
+    const requestedAmount = Number(req.body?.amount);
+    const order = await getStampPaymentOrder(req.user.id, orderId);
+    if (!order || !paymentKey || !Number.isInteger(requestedAmount) || requestedAmount !== Number(order.amount)) {
+      return res.status(400).json({ message: '결제 정보가 주문 내용과 일치하지 않습니다.' });
+    }
+    if (order.status === 'PAID' && order.payment_key !== paymentKey) {
+      return res.status(409).json({ message: '이미 다른 결제 정보로 완료된 주문입니다.' });
+    }
+
+    if (order.status !== 'PAID') {
+      await confirmTossPayment({ paymentKey, orderId, amount: Number(order.amount) });
+    }
+    const completed = await completeStampPayment(req.user.id, { orderId, paymentKey });
+    const totalStamps = await getUserStampBalance(req.user.id, order.stamp_type);
+    res.json({ success: true, alreadyCompleted: completed.alreadyCompleted, totalStamps });
   } catch (error) {
     next(error);
   }
@@ -1755,6 +1781,7 @@ module.exports = {
   myStampHistories,
   myStampPaymentHistories,
   purchaseMyStamps,
+  confirmMyStampPayment,
   myActivity,
   myLiveAccessStatus,
   myNotifications,

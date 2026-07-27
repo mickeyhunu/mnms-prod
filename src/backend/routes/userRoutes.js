@@ -10,6 +10,7 @@ const {
   myStampHistories,
   myStampPaymentHistories,
   purchaseMyStamps,
+  confirmMyStampPayment,
   myActivity,
   myLiveAccessStatus,
   myNotifications,
@@ -45,6 +46,7 @@ router.get('/me/points', authMiddleware, myPointHistories);
 router.get('/me/stamps', authMiddleware, myStampHistories);
 router.get('/me/stamps/payments', authMiddleware, myStampPaymentHistories);
 router.post('/me/stamps/purchases', authMiddleware, purchaseMyStamps);
+router.post('/me/stamps/purchases/confirm', authMiddleware, confirmMyStampPayment);
 router.get('/me/stamp-event-requests', authMiddleware, myStampEventRequests);
 router.patch('/me/stamp-event-requests/:id', authMiddleware, reviewMyStampEventRequest);
 router.post('/me/business-ads/:id/stamp-event-requests', authMiddleware, createMyStampEventRequest);

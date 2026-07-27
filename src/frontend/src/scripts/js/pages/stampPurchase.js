@@ -1,5 +1,5 @@
 /**
- * 파일 역할: stamp-purchase 페이지의 스탬프 상품 선택/결제정보 UI를 담당하는 스크립트 파일.
+ * 스탬프 상품 선택과 Toss Payments 결제위젯 결제/승인 흐름을 담당한다.
  */
 (() => {
     const planList = document.getElementById('stamp-plan-list');
@@ -10,162 +10,145 @@
     const paymentCard = document.getElementById('stamp-payment-card');
     const purchaseButton = document.getElementById('stamp-purchase-submit');
     const purchaseSubmitBar = document.getElementById('stamp-purchase-submit-bar');
+    const widgetStatus = document.getElementById('stamp-payment-widget-status');
 
-    if (!planList || !selectedProduct || !productPrice || !vatPrice || !totalPrice) {
-        return;
-    }
+    if (!planList || !selectedProduct || !productPrice || !vatPrice || !totalPrice) return;
 
     const plans = {
-        starter: {
-            name: '🥉 스타터팩',
-            composition: '스탬프 5개',
-            stampCount: 5,
-            price: 100000
-        },
-        basic: {
-            name: '🥈 베이직팩',
-            composition: '스탬프 10개 + 1개',
-            stampCount: 11,
-            price: 200000
-        },
-        premium: {
-            name: '🥇 프리미엄팩',
-            composition: '스탬프 20개 + 3개',
-            stampCount: 23,
-            price: 400000
-        },
-        vip: {
-            name: '💎 VIP팩',
-            composition: '스탬프 30개 + 5개',
-            stampCount: 35,
-            price: 600000
-        }
+        starter: { name: '🥉 스타터팩', composition: '스탬프 5개', price: 100000 },
+        basic: { name: '🥈 베이직팩', composition: '스탬프 10개 + 1개', price: 200000 },
+        premium: { name: '🥇 프리미엄팩', composition: '스탬프 20개 + 3개', price: 400000 },
+        vip: { name: '💎 VIP팩', composition: '스탬프 30개 + 5개', price: 600000 }
     };
-
-    const planCodes = Object.keys(plans);
-    const state = { plan: null, isSubmitting: false };
+    const state = { plan: null, isSubmitting: false, widget: null, order: null, setupSequence: 0 };
     const formatPrice = (value) => `${value.toLocaleString('ko-KR')}원`;
 
-    const renderPlanList = () => {
-        planList.innerHTML = planCodes
-            .map((code) => {
-                const plan = plans[code];
-                const isSelected = code === state.plan;
+    const loadTossPayments = () => new Promise((resolve, reject) => {
+        if (window.TossPayments) return resolve(window.TossPayments);
+        const script = document.createElement('script');
+        script.src = 'https://js.tosspayments.com/v2/standard';
+        script.onload = () => resolve(window.TossPayments);
+        script.onerror = () => reject(new Error('결제 모듈을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'));
+        document.head.appendChild(script);
+    });
 
-                return `<tr class="stamp-plan-row${isSelected ? ' is-selected' : ''}" data-stamp-plan="${code}" aria-current="${isSelected ? 'true' : 'false'}">
-                    <th scope="row">
-                        <button type="button" class="stamp-plan-select" data-stamp-plan="${code}">
-                            <span class="stamp-plan-select-dot" aria-hidden="true"></span>
-                            <span>${plan.name}</span>
-                        </button>
-                    </th>
-                    <td>${plan.composition}</td>
-                    <td>${formatPrice(plan.price)}</td>
-                </tr>`;
-            })
-            .join('');
+    const renderPlanList = () => {
+        planList.innerHTML = Object.entries(plans).map(([code, plan]) => {
+            const selected = code === state.plan;
+            return `<tr class="stamp-plan-row${selected ? ' is-selected' : ''}" data-stamp-plan="${code}" aria-current="${selected}">
+                <th scope="row"><button type="button" class="stamp-plan-select" data-stamp-plan="${code}"><span class="stamp-plan-select-dot" aria-hidden="true"></span><span>${plan.name}</span></button></th>
+                <td>${plan.composition}</td><td>${formatPrice(plan.price)}</td></tr>`;
+        }).join('');
     };
 
     const renderPaymentSummary = () => {
-        const currentPlan = plans[state.plan];
-
-        if (!currentPlan) {
-            selectedProduct.textContent = '-';
-            productPrice.textContent = '-';
-            vatPrice.textContent = '-';
-            totalPrice.textContent = '-';
-
-            if (paymentCard) {
-                paymentCard.classList.add('hidden');
-            }
-
-            if (purchaseSubmitBar) {
-                purchaseSubmitBar.classList.add('hidden');
-            }
-
-            if (purchaseButton) {
-                purchaseButton.disabled = true;
-                purchaseButton.textContent = '스탬프 구매하기';
-                purchaseButton.removeAttribute('aria-label');
-            }
-
-            return;
-        }
-
-        const vat = Math.round(currentPlan.price * 0.1);
-        const purchaseButtonText = `${formatPrice(currentPlan.price)} 결제하기`;
-
-        selectedProduct.textContent = currentPlan.name;
-        productPrice.textContent = formatPrice(currentPlan.price);
+        const plan = plans[state.plan];
+        if (!plan) return;
+        const vat = Math.round(plan.price * 0.1);
+        selectedProduct.textContent = plan.name;
+        productPrice.textContent = formatPrice(plan.price);
         vatPrice.textContent = formatPrice(vat);
-        totalPrice.textContent = formatPrice(currentPlan.price + vat);
-
-        if (paymentCard) {
-            paymentCard.classList.remove('hidden');
-        }
-
-        if (purchaseSubmitBar) {
-            purchaseSubmitBar.classList.remove('hidden');
-        }
-
+        totalPrice.textContent = formatPrice(plan.price + vat);
+        paymentCard?.classList.remove('hidden');
+        purchaseSubmitBar?.classList.remove('hidden');
         if (purchaseButton) {
-            purchaseButton.disabled = state.isSubmitting;
-            purchaseButton.textContent = state.isSubmitting ? '스탬프 지급 처리 중...' : purchaseButtonText;
-            purchaseButton.setAttribute('aria-label', `${currentPlan.name} ${purchaseButtonText}`);
+            purchaseButton.disabled = state.isSubmitting || !state.order;
+            purchaseButton.textContent = state.isSubmitting ? '결제 처리 중...' : `${formatPrice(plan.price + vat)} 결제하기`;
+            purchaseButton.setAttribute('aria-label', `${plan.name} ${purchaseButton.textContent}`);
         }
     };
 
-    const render = () => {
-        renderPlanList();
+    const setupWidget = async (planCode) => {
+        const sequence = ++state.setupSequence;
+        state.order = null;
+        state.widget = null;
+        if (widgetStatus) widgetStatus.textContent = '결제수단을 준비하고 있습니다...';
         renderPaymentSummary();
+        try {
+            const [order, TossPayments] = await Promise.all([
+                APIClient.post('/users/me/stamps/purchases', { planCode }),
+                loadTossPayments()
+            ]);
+            if (sequence !== state.setupSequence) return;
+            const widgets = TossPayments(order.clientKey).widgets({ customerKey: order.customerKey });
+            await widgets.setAmount({ currency: 'KRW', value: order.amount });
+            document.getElementById('stamp-payment-methods').replaceChildren();
+            document.getElementById('stamp-payment-agreement').replaceChildren();
+            await Promise.all([
+                widgets.renderPaymentMethods({ selector: '#stamp-payment-methods', variantKey: 'DEFAULT' }),
+                widgets.renderAgreement({ selector: '#stamp-payment-agreement', variantKey: 'AGREEMENT' })
+            ]);
+            state.widget = widgets;
+            state.order = order;
+            if (widgetStatus) widgetStatus.textContent = '';
+        } catch (error) {
+            if (sequence !== state.setupSequence) return;
+            if (widgetStatus) widgetStatus.textContent = error.message || '결제수단을 준비하지 못했습니다.';
+        } finally {
+            renderPaymentSummary();
+        }
+    };
+
+    const confirmReturnedPayment = async () => {
+        const params = new URLSearchParams(window.location.search);
+        const paymentKey = params.get('paymentKey');
+        const orderId = params.get('orderId');
+        const amount = Number(params.get('amount'));
+        const failureCode = params.get('code');
+        if (failureCode) {
+            alert(params.get('message') || '결제가 취소되었거나 실패했습니다.');
+            history.replaceState({}, '', '/stamp-purchase');
+            return;
+        }
+        if (!paymentKey || !orderId || !Number.isInteger(amount)) return;
+        state.isSubmitting = true;
+        try {
+            const response = await APIClient.post('/users/me/stamps/purchases/confirm', { paymentKey, orderId, amount });
+            alert(`결제가 완료되었습니다. 현재 보유 스탬프는 ${Number(response.totalStamps || 0).toLocaleString('ko-KR')}개입니다.`);
+            window.location.replace('/ad-order-history');
+        } catch (error) {
+            alert(error.message || '결제 승인 처리 중 오류가 발생했습니다. 고객센터로 문의해주세요.');
+            history.replaceState({}, '', '/stamp-purchase');
+        } finally {
+            state.isSubmitting = false;
+        }
     };
 
     planList.addEventListener('click', (event) => {
-        const planButton = event.target.closest('[data-stamp-plan]');
-
-        if (!planButton) return;
-
-        const selectedPlan = planButton.dataset.stampPlan;
-
-        if (!plans[selectedPlan]) return;
-
-        state.plan = selectedPlan;
-        render();
+        const button = event.target.closest('[data-stamp-plan]');
+        const planCode = button?.dataset.stampPlan;
+        if (!plans[planCode]) return;
+        if (typeof Auth !== 'undefined' && !Auth.isAuthenticated()) {
+            alert('로그인 후 스탬프를 구매할 수 있습니다.');
+            window.location.href = '/login';
+            return;
+        }
+        state.plan = planCode;
+        renderPlanList();
+        renderPaymentSummary();
+        setupWidget(planCode);
     });
 
-    if (purchaseButton) {
-        purchaseButton.addEventListener('click', async () => {
-            if (state.isSubmitting) return;
-
-            const currentPlan = plans[state.plan];
-
-            if (!currentPlan) {
-                alert('구매할 스탬프 상품을 선택해주세요.');
-                return;
-            }
-
-            if (typeof Auth !== 'undefined' && !Auth.isAuthenticated()) {
-                alert('로그인 후 스탬프를 구매할 수 있습니다.');
-                window.location.href = '/login';
-                return;
-            }
-
-            state.isSubmitting = true;
+    purchaseButton?.addEventListener('click', async () => {
+        if (state.isSubmitting || !state.widget || !state.order) return;
+        state.isSubmitting = true;
+        renderPaymentSummary();
+        try {
+            const origin = window.location.origin;
+            await state.widget.requestPayment({
+                orderId: state.order.orderId,
+                orderName: state.order.orderName,
+                successUrl: `${origin}/stamp-purchase`,
+                failUrl: `${origin}/stamp-purchase`,
+                customerName: state.order.customerName
+            });
+        } catch (error) {
+            if (error.code !== 'USER_CANCEL') alert(error.message || '결제창을 열지 못했습니다.');
+            state.isSubmitting = false;
             renderPaymentSummary();
+        }
+    });
 
-            try {
-                const response = await APIClient.post('/users/me/stamps/purchases', { planCode: state.plan });
-                const totalStamps = Number(response.totalStamps || 0).toLocaleString('ko-KR');
-                alert(`스탬프 구매가 완료되었습니다. 현재 보유 스탬프는 ${totalStamps}개입니다.`);
-                window.location.href = '/ad-order-history';
-            } catch (error) {
-                alert(error.message || '스탬프 구매 처리 중 오류가 발생했습니다.');
-            } finally {
-                state.isSubmitting = false;
-                renderPaymentSummary();
-            }
-        });
-    }
-
-    render();
+    renderPlanList();
+    confirmReturnedPayment();
 })();
