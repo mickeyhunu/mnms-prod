@@ -317,9 +317,15 @@
     grid-auto-columns: clamp(48px, calc((100vw - 90px) / 6), 56px);
     gap: 10px;
     overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     overscroll-behavior-inline: contain;
     padding: 0 20px;
     scroll-padding-inline: 20px;
+}
+
+.piece-participants-list::-webkit-scrollbar {
+    display: none;
 }
 .piece-chat-enter { position:relative; text-decoration: none; margin-left: 10px; }
 .piece-chat-unread { position:absolute;top:-9px;right:-9px;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#e53935;color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center;box-shadow:0 1px 3px #0004; }
