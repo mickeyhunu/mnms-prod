@@ -38,14 +38,14 @@ export const userEditPanelTemplate = `
                                     <span class="profile-consent-inline"><input type="checkbox" id="admin-user-sms-consent" name="smsConsent"><span class="profile-consent-text">SMS 수신 동의</span></span>
                                 </label>
                                 <div class="admin-user-point-adjustment">
-                                    <strong>포인트 수동 적립/차감</strong>
+                                    <strong>포인트 수동 지급/차감</strong>
                                     <label>현재 포인트
                                         <input type="number" id="admin-user-total-points" name="totalPoints" min="0" step="1" readonly>
                                     </label>
                                     <label>포인트 처리
                                         <select id="admin-user-point-adjustment-type" name="pointAdjustmentType" class="form-control">
                                             <option value="NONE">변경 없음</option>
-                                            <option value="ADD">적립</option>
+                                            <option value="ADD">지급</option>
                                             <option value="DEDUCT">차감</option>
                                         </select>
                                     </label>
@@ -64,6 +64,7 @@ export const userEditPanelTemplate = `
                                     </label>
                                     <label>스탬프 처리
                                         <select id="admin-user-stamp-adjustment-type" class="form-control">
+                                            <option value="NONE">변경 없음</option>
                                             <option value="ADD">지급</option>
                                             <option value="DEDUCT">차감</option>
                                         </select>
