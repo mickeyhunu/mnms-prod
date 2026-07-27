@@ -49,13 +49,13 @@ async function getUnreadCount(postId, userId) {
   const [rows] = await getPool().query(`SELECT COUNT(*) AS unreadCount
     FROM piece_chat_messages pcm
     LEFT JOIN piece_chat_reads pcr ON pcr.post_id = pcm.post_id AND pcr.user_id = ?
-    WHERE pcm.post_id = ? AND pcm.message_type = 'CHAT' AND pcm.user_id <> ?
+    WHERE pcm.post_id = ? AND pcm.message_type = 'CHAT' AND pcm.is_hidden = 0 AND pcm.user_id <> ?
       AND pcm.id > COALESCE(pcr.last_read_message_id, 0)`, [userId, postId, userId]);
   return Number(rows[0]?.unreadCount) || 0;
 }
 
 async function listMessages(postId) {
-  const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.message_type AS messageType, pcm.created_at AS createdAt,
+  const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.message_type AS messageType, pcm.is_hidden AS isHidden, pcm.hidden_by AS hiddenBy, pcm.hidden_at AS hiddenAt, pcm.created_at AS createdAt,
                                               u.nickname, u.profile_image_url AS profileImageUrl, u.role
                                          FROM piece_chat_messages pcm JOIN users u ON u.id = pcm.user_id
                                         WHERE pcm.post_id = ? ORDER BY pcm.created_at ASC, pcm.id ASC LIMIT 300`, [postId]);
@@ -63,19 +63,37 @@ async function listMessages(postId) {
 }
 
 async function listMessagesAfter(postId, afterId) {
-  const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.message_type AS messageType, pcm.created_at AS createdAt,
+  const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.message_type AS messageType, pcm.is_hidden AS isHidden, pcm.hidden_by AS hiddenBy, pcm.hidden_at AS hiddenAt, pcm.created_at AS createdAt,
                                               u.nickname, u.profile_image_url AS profileImageUrl, u.role
                                          FROM piece_chat_messages pcm JOIN users u ON u.id = pcm.user_id
                                         WHERE pcm.post_id = ? AND pcm.id > ? ORDER BY pcm.id ASC LIMIT 300`, [postId, afterId]);
   return rows;
 }
 
+async function listMessageVisibility(postId) {
+  const [rows] = await getPool().query(
+    'SELECT id, is_hidden AS isHidden, CASE WHEN is_hidden = 0 THEN content ELSE NULL END AS content FROM piece_chat_messages WHERE post_id = ? ORDER BY id DESC LIMIT 300',
+    [postId]
+  );
+  return rows;
+}
+
 async function createMessage(postId, userId, content) {
   const [result] = await getPool().query('INSERT INTO piece_chat_messages (post_id, user_id, content) VALUES (?, ?, ?)', [postId, userId, content]);
-  const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.message_type AS messageType, pcm.created_at AS createdAt,
+  const [rows] = await getPool().query(`SELECT pcm.id, pcm.user_id AS userId, pcm.content, pcm.message_type AS messageType, pcm.is_hidden AS isHidden, pcm.hidden_by AS hiddenBy, pcm.hidden_at AS hiddenAt, pcm.created_at AS createdAt,
                                               u.nickname, u.profile_image_url AS profileImageUrl, u.role
                                          FROM piece_chat_messages pcm JOIN users u ON u.id = pcm.user_id WHERE pcm.id = ?`, [result.insertId]);
   return rows[0];
+}
+
+async function setMessageHidden(postId, messageId, adminId, hidden) {
+  const [result] = await getPool().query(
+    `UPDATE piece_chat_messages
+        SET is_hidden = ?, hidden_by = ?, hidden_at = ?
+      WHERE id = ? AND post_id = ? AND message_type = 'CHAT'`,
+    [hidden ? 1 : 0, hidden ? adminId : null, hidden ? new Date() : null, messageId, postId]
+  );
+  return result.affectedRows > 0;
 }
 
 async function setAttendance(postId, userId, status) {
@@ -114,4 +132,4 @@ async function removeParticipant(postId, userId) {
   }
 }
 
-module.exports = { getRoomContext, listMessages, listMessagesAfter, createMessage, markRead, getUnreadCount, setAttendance, clearAttendance, removeParticipant };
+module.exports = { getRoomContext, listMessages, listMessagesAfter, listMessageVisibility, createMessage, setMessageHidden, markRead, getUnreadCount, setAttendance, clearAttendance, removeParticipant };

@@ -33,7 +33,11 @@ function messageMarkup(message) {
     const profileAvatar = profileHref ? `<a class="piece-message-avatar" href="${profileHref}" aria-label="${profileLabel} 프로필 보기">${avatar(member)}</a>` : `<div class="piece-message-avatar">${avatar(member)}</div>`;
     const profileName = profileHref ? `<a class="piece-message-name" href="${profileHref}">${profileLabel}</a>` : `<span class="piece-message-name">${profileLabel}</span>`;
     const unreadCount = messageUnreadCount(message);
-    return `<article class="piece-message ${mine ? 'is-mine' : ''}" data-message-id="${Number(message.id) || ''}">${mine ? '' : profileAvatar}<div>${mine ? '' : profileName}<div class="piece-message-row"><div class="piece-message-bubble">${chatEscape(message.content).replace(/\n/g, '<br>')}</div><div class="piece-message-meta">${unreadCount ? `<span class="piece-message-unread" aria-label="${unreadCount}명이 읽지 않음">${unreadCount}</span>` : ''}<time>${new Date(message.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</time></div></div></div></article>`;
+    const isHidden = Boolean(message.isHidden);
+    const canModerate = pieceChatRoom.viewerRole === 'ADMIN' && Number(message.id) > 0;
+    const content = isHidden ? '<span class="piece-message-hidden-text">관리자에 의해 제한된 메시지입니다.</span>' : chatEscape(message.content).replace(/\n/g, '<br>');
+    const moderation = canModerate ? `<button type="button" class="piece-message-moderate" data-message-visibility="${message.id}" data-hidden="${isHidden}" aria-label="메시지 ${isHidden ? '제한 해제' : '가리기'}">${isHidden ? '제한 해제' : '가리기'}</button>` : '';
+    return `<article class="piece-message ${mine ? 'is-mine' : ''} ${isHidden ? 'is-hidden' : ''}" data-message-id="${Number(message.id) || ''}">${mine ? '' : profileAvatar}<div>${mine ? '' : profileName}<div class="piece-message-row"><div class="piece-message-bubble">${content}</div><div class="piece-message-meta">${moderation}${unreadCount && !isHidden ? `<span class="piece-message-unread" aria-label="${unreadCount}명이 읽지 않음">${unreadCount}</span>` : ''}<time>${new Date(message.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</time></div></div></div></article>`;
 }
 function chatDateKey(value) {
     const date = new Date(value);
@@ -134,6 +138,21 @@ function addNewMessages(messages) {
     appendMessages(freshMessages);
     if (!document.hidden) markLatestMessagesRead().catch((error) => console.warn('메시지 읽음 처리를 저장하지 못했습니다.', error));
 }
+function updateMessageVisibility(states) {
+    let changed = false;
+    const visibilityById = new Map(states.map((state) => [Number(state.id), state]));
+    (pieceChatRoom.messages || []).forEach((message) => {
+        if (!visibilityById.has(Number(message.id))) return;
+        const state = visibilityById.get(Number(message.id));
+        const isHidden = Boolean(state.isHidden);
+        if (Boolean(message.isHidden) !== isHidden) {
+            message.isHidden = isHidden;
+            if (!isHidden) message.content = state.content;
+            changed = true;
+        }
+    });
+    if (changed) renderMessages(null, true);
+}
 function memberStateKey(room) {
     return JSON.stringify({ members: room?.members || [], participants: room?.participants || [], readStates: room?.readStates || [], canManage: room?.canManage, lifecycle: room?.lifecycle || null });
 }
@@ -148,11 +167,13 @@ async function pollPieceChatUpdates() {
     if (pieceChatPolling || !pieceChatRoom || document.hidden) return;
     pieceChatPolling = true;
     try {
-        const [messages, memberState] = await Promise.all([
+        const [messages, memberState, messageVisibility] = await Promise.all([
             PieceChatAPI.getMessages(pieceChatId, latestMessageId()),
-            PieceChatAPI.getMembers(pieceChatId)
+            PieceChatAPI.getMembers(pieceChatId),
+            PieceChatAPI.getMessageVisibility(pieceChatId)
         ]);
         addNewMessages(messages);
+        updateMessageVisibility(messageVisibility);
         updateMembers(memberState);
     } catch (error) {
         if (![401, 403, 404].includes(error.status)) console.warn('채팅방 정보를 다시 불러오지 못했습니다.', error);
@@ -238,6 +259,19 @@ function initPieceChatPage() {
     document.addEventListener('click', (event) => {
         if (!event.target.closest('.piece-chat-member-menu')) closeMemberMenus();
     });
+    document.getElementById('chat-message-list').onclick = async (event) => {
+        const button = event.target.closest('[data-message-visibility]');
+        if (!button || pieceChatRoom.viewerRole !== 'ADMIN') return;
+        const hidden = button.dataset.hidden !== 'true';
+        if (!confirm(hidden ? '이 채팅 메시지를 가릴까요?' : '이 채팅 메시지의 제한을 해제할까요?')) return;
+        button.disabled = true;
+        try {
+            await PieceChatAPI.setMessageVisibility(pieceChatId, button.dataset.messageVisibility, hidden);
+            const message = pieceChatRoom.messages.find((item) => Number(item.id) === Number(button.dataset.messageVisibility));
+            if (message) message.isHidden = hidden;
+            renderMessages(null, true);
+        } catch (error) { button.disabled = false; alert(error.message || '메시지 제한 처리 중 오류가 발생했습니다.'); }
+    };
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
     chatForm.onsubmit = async (event) => { event.preventDefault(); const content = chatInput.value.trim(); if (!content || pieceChatRoom?.lifecycle?.isEnded) return; try { const message = await PieceChatAPI.send(pieceChatId, content); addNewMessages([message]); chatInput.value = ''; } catch (error) { if (error.status === 409) { await loadPieceChat(); } alert(error.message || '메시지를 전송하지 못했습니다.'); } };
