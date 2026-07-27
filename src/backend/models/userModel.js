@@ -136,8 +136,12 @@ async function getUserActivityStats(userId) {
   const pool = getPool();
   const [rows] = await pool.query(
     `SELECT
-        (SELECT COUNT(*) FROM posts p WHERE p.user_id = ? AND p.is_deleted = 0) AS postCount,
-        (SELECT COUNT(*) FROM comments c WHERE c.user_id = ? AND c.is_deleted = 0) AS commentCount,
+        (SELECT COUNT(*) FROM posts p WHERE p.user_id = ? AND p.is_deleted = 0 AND p.is_hidden = 0) AS postCount,
+        (SELECT COUNT(*)
+           FROM comments c
+           INNER JOIN posts cp ON cp.id = c.post_id
+          WHERE c.user_id = ? AND c.is_deleted = 0 AND c.is_hidden = 0
+            AND cp.is_deleted = 0 AND cp.is_hidden = 0) AS commentCount,
         (SELECT COUNT(*) FROM point_histories ph WHERE ph.user_id = ? AND ph.action_type = 'LOGIN_DAILY') AS attendanceCount,
         (SELECT COUNT(*) FROM posts p2 WHERE p2.user_id = ? AND p2.board_type = 'REVIEW' AND p2.is_deleted = 0) AS reviewCount,
         (SELECT COUNT(*) FROM post_likes pl WHERE pl.user_id = ?) AS recommendCount`,
@@ -229,10 +233,10 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
 
   const [posts] = await pool.query(
     `SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt, p.view_count AS viewCount, p.view_count AS view_count,
-            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) AS commentCount,
+            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0 AND c.is_hidden = 0) AS commentCount,
             (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount
      FROM posts p
-     WHERE p.user_id = ? AND p.is_deleted = 0
+     WHERE p.user_id = ? AND p.is_deleted = 0 AND p.is_hidden = 0
        AND UPPER(COALESCE(p.board_type, '')) <> 'ANON'
      ORDER BY p.created_at DESC, p.id DESC
      LIMIT ?`,
@@ -245,7 +249,8 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
             p.board_type AS postBoardType
      FROM comments c
      INNER JOIN posts p ON p.id = c.post_id
-     WHERE c.user_id = ? AND c.is_deleted = 0 AND p.is_deleted = 0
+     WHERE c.user_id = ? AND c.is_deleted = 0 AND c.is_hidden = 0
+       AND p.is_deleted = 0 AND p.is_hidden = 0
        AND UPPER(COALESCE(p.board_type, '')) <> 'ANON'
      ORDER BY c.created_at DESC, c.id DESC
      LIMIT ?`,
@@ -255,11 +260,11 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
   const [likedPosts] = await pool.query(
     `SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt, p.view_count AS viewCount, p.view_count AS view_count,
             pl.created_at AS likedAt,
-            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) AS commentCount,
+            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0 AND c.is_hidden = 0) AS commentCount,
             (SELECT COUNT(DISTINCT pl2.user_id) FROM post_likes pl2 WHERE pl2.post_id = p.id) AS likeCount
      FROM post_likes pl
      INNER JOIN posts p ON p.id = pl.post_id
-     WHERE pl.user_id = ? AND p.is_deleted = 0
+     WHERE pl.user_id = ? AND p.is_deleted = 0 AND p.is_hidden = 0
        AND UPPER(COALESCE(p.board_type, '')) <> 'ANON'
      ORDER BY pl.created_at DESC, p.id DESC
      LIMIT ?`,
@@ -271,12 +276,12 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
             p.view_count AS viewCount, p.view_count AS view_count,
             COALESCE(pp.created_at, p.created_at) AS joinedAt, pp.attended_at AS attendedAt,
             p.user_id AS leaderId, p.piece_closed_at AS pieceClosedAt,
-            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) AS commentCount,
+            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0 AND c.is_hidden = 0) AS commentCount,
             (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount,
             (1 + (SELECT COUNT(DISTINCT pp2.user_id) FROM piece_participants pp2 WHERE pp2.post_id = p.id AND pp2.user_id <> p.user_id AND pp2.removed_at IS NULL)) AS participantCount
      FROM posts p
      LEFT JOIN piece_participants pp ON pp.post_id = p.id AND pp.user_id = ? AND pp.removed_at IS NULL
-     WHERE p.is_deleted = 0
+     WHERE p.is_deleted = 0 AND p.is_hidden = 0
        AND UPPER(p.board_type) = 'PIECE'
        AND (p.user_id = ? OR pp.user_id IS NOT NULL)
      ORDER BY COALESCE(pp.created_at, p.created_at) DESC, p.id DESC
@@ -526,9 +531,13 @@ async function findPublicProfileByNickname(nickname) {
             u.profile_introduction AS profileIntroduction,
             u.profile_introduction AS profile_introduction,
             u.created_at AS joinedAt,
-            (SELECT COUNT(*) FROM posts p WHERE p.user_id = u.id AND p.is_deleted = 0) AS postCount,
-            (SELECT COUNT(*) FROM comments c WHERE c.user_id = u.id AND c.is_deleted = 0) AS commentCount,
-            (SELECT COUNT(*) FROM posts p2 WHERE p2.user_id = u.id AND p2.board_type = 'REVIEW' AND p2.is_deleted = 0) AS reviewCount
+            (SELECT COUNT(*) FROM posts p WHERE p.user_id = u.id AND p.is_deleted = 0 AND p.is_hidden = 0) AS postCount,
+            (SELECT COUNT(*)
+               FROM comments c
+               INNER JOIN posts cp ON cp.id = c.post_id
+              WHERE c.user_id = u.id AND c.is_deleted = 0 AND c.is_hidden = 0
+                AND cp.is_deleted = 0 AND cp.is_hidden = 0) AS commentCount,
+            (SELECT COUNT(*) FROM posts p2 WHERE p2.user_id = u.id AND p2.board_type = 'REVIEW' AND p2.is_deleted = 0 AND p2.is_hidden = 0) AS reviewCount
        FROM users u
       WHERE u.nickname = ?
       LIMIT 1`,
