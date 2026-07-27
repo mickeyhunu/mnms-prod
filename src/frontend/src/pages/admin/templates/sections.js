@@ -50,9 +50,9 @@ export const userEditPanelTemplate = `
                                         </select>
                                     </label>
                                     <label>포인트 수량
-                                        <input type="number" id="admin-user-point-adjustment-amount" name="pointAdjustmentAmount" min="0" step="1" value="0">
+                                        <input type="number" id="admin-user-point-adjustment-amount" name="pointAdjustmentAmount" min="1" step="1" value="1">
                                     </label>
-                                    <label>지급 사유
+                                    <label>지급/차감 사유
                                         <input type="text" id="admin-user-point-adjustment-reason" name="pointAdjustmentReason" maxlength="255" placeholder="적립/차감 사유 입력">
                                     </label>
                                     <button class="btn btn-primary btn-sm" id="admin-user-point-adjustment-btn" type="button">포인트 처리</button>

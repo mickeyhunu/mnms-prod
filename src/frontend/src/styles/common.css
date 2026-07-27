@@ -433,8 +433,7 @@ body,
 }
 
 .piece-location-selector-wrap {
-    display: grid;
-    gap: 8px;
+
 }
 
 .piece-field-row select[multiple] {
@@ -658,7 +657,6 @@ body.piece-ad-selector-modal-open {
 }
 
 .piece-selected-ad-preview {
-    display: grid;
     gap: 8px;
     margin-top: 8px;
 }
