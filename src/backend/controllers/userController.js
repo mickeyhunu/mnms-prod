@@ -1124,7 +1124,13 @@ async function confirmMyStampPayment(req, res, next) {
     }
 
     if (order.status !== 'PAID') {
-      await confirmTossPayment({ paymentKey, orderId, amount: Number(order.amount) });
+      const payment = await confirmTossPayment({ paymentKey, orderId, amount: Number(order.amount) });
+      if (payment.method !== '가상계좌') {
+        const error = new Error('가상계좌 결제만 이용할 수 있습니다.');
+        error.status = 400;
+        error.code = 'UNSUPPORTED_PAYMENT_METHOD';
+        throw error;
+      }
     }
     const completed = await completeStampPayment(req.user.id, { orderId, paymentKey });
     const totalStamps = await getUserStampBalance(req.user.id, order.stamp_type);
