@@ -2023,7 +2023,7 @@ function fillUserEditForm(user) {
     document.getElementById('admin-user-sms-consent').checked = Boolean(user.smsConsent);
     document.getElementById('admin-user-total-points').value = Number(user.totalPoints || 0);
     document.getElementById('admin-user-point-adjustment-type').value = 'NONE';
-    document.getElementById('admin-user-point-adjustment-amount').value = '0';
+    document.getElementById('admin-user-point-adjustment-amount').value = '1';
     document.getElementById('admin-user-point-adjustment-reason').value = '';
     const stampAdjustment = document.getElementById('admin-user-stamp-adjustment');
     stampAdjustment?.classList.toggle('hidden', !isMasterAdmin);
@@ -2032,7 +2032,7 @@ function fillUserEditForm(user) {
     const stampAdjustmentAmount = document.getElementById('admin-user-stamp-adjustment-amount');
     const stampAdjustmentReason = document.getElementById('admin-user-stamp-adjustment-reason');
     if (stampBalance) stampBalance.value = Number(user.stampBalance || 0);
-    if (stampAdjustmentType) stampAdjustmentType.value = 'ADD';
+    if (stampAdjustmentType) stampAdjustmentType.value = 'NONE';
     if (stampAdjustmentAmount) stampAdjustmentAmount.value = '1';
     if (stampAdjustmentReason) stampAdjustmentReason.value = '';
     const roleSelect = document.getElementById('admin-user-role');
@@ -2140,8 +2140,11 @@ async function saveUserDetail() {
     const passwordConfirm = document.getElementById('admin-user-password-confirm')?.value?.trim() || '';
     const phone = formatPhoneNumber(document.getElementById('admin-user-phone')?.value?.trim() || '');
     const pointAdjustmentType = document.getElementById('admin-user-point-adjustment-type')?.value || 'NONE';
-    const pointAdjustmentAmount = Number.parseInt(document.getElementById('admin-user-point-adjustment-amount')?.value || '0', 10);
+    const pointAdjustmentAmount = Number.parseInt(document.getElementById('admin-user-point-adjustment-amount')?.value || '1', 10);
     const pointAdjustmentReason = document.getElementById('admin-user-point-adjustment-reason')?.value?.trim() || '';
+    const stampAdjustmentType = document.getElementById('admin-user-stamp-adjustment-type')?.value || 'NONE';
+    const stampAdjustmentAmount = Number.parseInt(document.getElementById('admin-user-stamp-adjustment-amount')?.value || '1', 10);
+    const stampAdjustmentReason = document.getElementById('admin-user-stamp-adjustment-reason')?.value?.trim() || '';
     const role = document.getElementById('admin-user-role')?.value || 'MEMBER';
     const memberType = role === 'BUSINESS'
         ? 'BUSINESS'
@@ -2181,8 +2184,8 @@ async function saveUserDetail() {
         return;
     }
 
-    if (!Number.isInteger(pointAdjustmentAmount) || pointAdjustmentAmount < 0) {
-        setAdminUserHelpMessage('포인트 처리 수량은 0 이상의 정수만 입력할 수 있습니다.', '#dc3545');
+    if (!Number.isInteger(pointAdjustmentAmount) || pointAdjustmentAmount < 1) {
+        setAdminUserHelpMessage('포인트 처리 수량은 1 이상의 정수만 입력할 수 있습니다.', '#dc3545');
         return;
     }
 
@@ -2191,13 +2194,28 @@ async function saveUserDetail() {
         return;
     }
 
-    if (pointAdjustmentType === 'NONE' && pointAdjustmentAmount > 0) {
-        setAdminUserHelpMessage('포인트 처리 유형을 선택해주세요.', '#dc3545');
+    if (!['NONE', 'ADD', 'DEDUCT'].includes(stampAdjustmentType)) {
+        setAdminUserHelpMessage('유효하지 않은 스탬프 처리 유형입니다.', '#dc3545');
         return;
     }
 
     if (pointAdjustmentType !== 'NONE' && (!pointAdjustmentReason || pointAdjustmentReason.length > 255)) {
         setAdminUserHelpMessage('지급 사유는 1자 이상 255자 이하로 입력해주세요.', '#dc3545');
+        return;
+    }
+
+    if (!Number.isInteger(stampAdjustmentAmount) || stampAdjustmentAmount < 1) {
+        setAdminUserHelpMessage('스탬프 처리 수량은 1 이상의 정수만 입력할 수 있습니다.', '#dc3545');
+        return;
+    }
+
+    if (stampAdjustmentType !== 'NONE' && !isMasterAdmin) {
+        setAdminUserHelpMessage('마스터 관리자만 스탬프를 지급하거나 차감할 수 있습니다.', '#dc3545');
+        return;
+    }
+
+    if (stampAdjustmentType !== 'NONE' && (!stampAdjustmentReason || stampAdjustmentReason.length > 255)) {
+        setAdminUserHelpMessage('스탬프 지급/차감 사유는 1자 이상 255자 이하로 입력해주세요.', '#dc3545');
         return;
     }
 
@@ -2225,6 +2243,9 @@ async function saveUserDetail() {
         pointAdjustmentType,
         pointAdjustmentAmount,
         pointAdjustmentReason,
+        stampAdjustmentType,
+        stampAdjustmentAmount,
+        stampAdjustmentReason,
         role,
         memberType,
         businessApprovalStatus,
@@ -2264,6 +2285,10 @@ async function adjustUserStamps() {
     const reason = document.getElementById('admin-user-stamp-adjustment-reason')?.value?.trim() || '';
     const button = document.getElementById('admin-user-stamp-adjustment-btn');
 
+    if (!['ADD', 'DEDUCT'].includes(adjustmentType)) {
+        setAdminUserHelpMessage('스탬프 처리 유형을 선택해주세요.', '#dc3545');
+        return;
+    }
     if (!Number.isInteger(amount) || amount < 1) {
         setAdminUserHelpMessage('스탬프 수량은 1 이상의 정수로 입력해주세요.', '#dc3545');
         return;
@@ -2288,6 +2313,8 @@ async function adjustUserStamps() {
         const stampAdjustmentAmount = document.getElementById('admin-user-stamp-adjustment-amount');
         const stampAdjustmentReason = document.getElementById('admin-user-stamp-adjustment-reason');
         if (stampBalance) stampBalance.value = Number(response.stampBalance || 0);
+        const stampAdjustmentType = document.getElementById('admin-user-stamp-adjustment-type');
+        if (stampAdjustmentType) stampAdjustmentType.value = 'NONE';
         if (stampAdjustmentAmount) stampAdjustmentAmount.value = '1';
         if (stampAdjustmentReason) stampAdjustmentReason.value = '';
         setAdminUserHelpMessage(`스탬프 ${amount}개가 ${actionLabel}되었습니다.`, '#198754');
@@ -2322,7 +2349,7 @@ async function adjustUserPoints() {
         return;
     }
 
-    const actionLabel = adjustmentType === 'DEDUCT' ? '차감' : '적립';
+    const actionLabel = adjustmentType === 'DEDUCT' ? '차감' : '지급';
     if (!window.confirm(`포인트 ${amount}점을 ${actionLabel}하시겠습니까?`)) return;
 
     try {
@@ -2339,7 +2366,7 @@ async function adjustUserPoints() {
         const pointAdjustmentReason = document.getElementById('admin-user-point-adjustment-reason');
         if (totalPoints) totalPoints.value = Number(response.totalPoints || 0);
         if (pointAdjustmentType) pointAdjustmentType.value = 'NONE';
-        if (pointAdjustmentAmount) pointAdjustmentAmount.value = '0';
+        if (pointAdjustmentAmount) pointAdjustmentAmount.value = '1';
         if (pointAdjustmentReason) pointAdjustmentReason.value = '';
         setAdminUserHelpMessage(`포인트 ${amount}점이 ${actionLabel}되었습니다.`, '#198754');
     } catch (error) {
