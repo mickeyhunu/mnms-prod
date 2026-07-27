@@ -4,6 +4,7 @@
 const { getPool } = require('../config/database');
 const { getLoginRestrictionState, LOGIN_STATUS } = require('../utils/loginRestriction');
 const { hashPassword } = require('../utils/passwordHasher');
+const { resolvePieceChatLifecycle } = require('../utils/pieceChatLifecycle');
 
 async function createUser({
   loginId,
@@ -269,6 +270,7 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
     `SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt,
             p.view_count AS viewCount, p.view_count AS view_count,
             COALESCE(pp.created_at, p.created_at) AS joinedAt, pp.attended_at AS attendedAt,
+            p.user_id AS leaderId, p.piece_closed_at AS pieceClosedAt,
             (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) AS commentCount,
             (SELECT COUNT(DISTINCT pl.user_id) FROM post_likes pl WHERE pl.post_id = p.id) AS likeCount,
             (1 + (SELECT COUNT(DISTINCT pp2.user_id) FROM piece_participants pp2 WHERE pp2.post_id = p.id AND pp2.user_id <> p.user_id AND pp2.removed_at IS NULL)) AS participantCount
@@ -281,6 +283,13 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
      LIMIT ?`,
     [userId, userId, safeLimit]
   );
+
+  participatedPieces.forEach((post) => {
+    const lifecycle = resolvePieceChatLifecycle(post, new Date(), Math.max(0, Number(post.participantCount || 1) - 1));
+    const hasStarted = lifecycle.startsAt && new Date(lifecycle.startsAt) <= new Date();
+    if (lifecycle.isCancelled) post.attendedAt = null;
+    else if (Number(post.leaderId) === Number(userId) && hasStarted) post.attendedAt = lifecycle.startsAt;
+  });
 
   return { posts, comments, likedPosts, participatedPieces };
 }
