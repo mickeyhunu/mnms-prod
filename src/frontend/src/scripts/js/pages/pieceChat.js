@@ -14,6 +14,14 @@ function avatar(member) {
     const profileImageUrl = String(member.profileImageUrl || '').trim() || PIECE_CHAT_DEFAULT_PROFILE_IMAGE_URL;
     return `<img src="${chatEscape(profileImageUrl)}" alt="" onerror="this.onerror=null;this.src='${PIECE_CHAT_DEFAULT_PROFILE_IMAGE_URL}';">`;
 }
+function messageUnreadCount(message) {
+    const messageId = Number(message.id) || 0;
+    if (!messageId) return 0;
+    const members = pieceChatRoom.members.filter((member) => member.roomRole !== 'ADMIN');
+    const readByUser = new Map((pieceChatRoom.readStates || []).map((state) => [Number(state.userId), Number(state.lastReadMessageId) || 0]));
+    const readCount = members.filter((member) => Number(member.userId) === Number(message.userId) || (readByUser.get(Number(member.userId)) || 0) >= messageId).length;
+    return Math.max(0, members.length - readCount);
+}
 function messageMarkup(message) {
     if (message.messageType === 'SYSTEM') {
         return `<div class="piece-chat-system-message" data-message-id="${Number(message.id) || ''}">${chatEscape(message.content)}</div>`;
@@ -24,7 +32,8 @@ function messageMarkup(message) {
     const profileLabel = chatEscape(member.nickname || message.nickname);
     const profileAvatar = profileHref ? `<a class="piece-message-avatar" href="${profileHref}" aria-label="${profileLabel} 프로필 보기">${avatar(member)}</a>` : `<div class="piece-message-avatar">${avatar(member)}</div>`;
     const profileName = profileHref ? `<a class="piece-message-name" href="${profileHref}">${profileLabel}</a>` : `<span class="piece-message-name">${profileLabel}</span>`;
-    return `<article class="piece-message ${mine ? 'is-mine' : ''}" data-message-id="${Number(message.id) || ''}">${mine ? '' : profileAvatar}<div>${mine ? '' : profileName}<div class="piece-message-row"><div class="piece-message-bubble">${chatEscape(message.content).replace(/\n/g, '<br>')}</div><time>${new Date(message.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</time></div></div></article>`;
+    const unreadCount = messageUnreadCount(message);
+    return `<article class="piece-message ${mine ? 'is-mine' : ''}" data-message-id="${Number(message.id) || ''}">${mine ? '' : profileAvatar}<div>${mine ? '' : profileName}<div class="piece-message-row"><div class="piece-message-bubble">${chatEscape(message.content).replace(/\n/g, '<br>')}</div><div class="piece-message-meta">${unreadCount ? `<span class="piece-message-unread" aria-label="${unreadCount}명이 읽지 않음">${unreadCount}</span>` : ''}<time>${new Date(message.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</time></div></div></div></article>`;
 }
 function chatDateKey(value) {
     const date = new Date(value);
@@ -43,11 +52,15 @@ function messagesMarkup(messages) {
         return separator + messageMarkup(message);
     }).join('');
 }
-function renderMessages() {
+function renderMessages(scrollToMessageId = null, preserveScroll = false) {
     const root = document.getElementById('chat-messages');
     const list = document.getElementById('chat-message-list');
+    const previousScrollTop = root.scrollTop;
     list.innerHTML = messagesMarkup(pieceChatRoom.messages || []) || '<p class="piece-chat-empty">첫 메시지를 남겨보세요.</p>';
-    root.scrollTop = root.scrollHeight;
+    const target = scrollToMessageId && list.querySelector(`[data-message-id="${scrollToMessageId}"]`);
+    if (preserveScroll) root.scrollTop = previousScrollTop;
+    else if (target) target.scrollIntoView({ block: 'start' });
+    else root.scrollTop = root.scrollHeight;
 }
 function appendMessages() {
     renderMessages();
@@ -74,6 +87,18 @@ function renderRoom() {
     document.getElementById('chat-title').textContent = pieceChatRoom.post.title || '조각 채팅방';
     renderMessages(); renderMembers(); renderChatAvailability();
 }
+function viewerLastReadMessageId() {
+    return Number((pieceChatRoom.readStates || []).find((state) => Number(state.userId) === Number(pieceChatRoom.currentUserId))?.lastReadMessageId) || 0;
+}
+async function markLatestMessagesRead() {
+    const messageId = latestMessageId();
+    if (!messageId || messageId <= viewerLastReadMessageId()) return;
+    await PieceChatAPI.markRead(pieceChatId, messageId);
+    const state = (pieceChatRoom.readStates || []).find((item) => Number(item.userId) === Number(pieceChatRoom.currentUserId));
+    if (state) state.lastReadMessageId = messageId;
+    else (pieceChatRoom.readStates ||= []).push({ userId: pieceChatRoom.currentUserId, lastReadMessageId: messageId });
+    renderMessages(null, true);
+}
 function renderChatAvailability() {
     const ended = Boolean(pieceChatRoom?.lifecycle?.isEnded);
     const form = document.getElementById('chat-form');
@@ -84,7 +109,14 @@ function renderChatAvailability() {
     form.querySelector('button[type="submit"], button:not([type])').disabled = ended;
 }
 async function loadPieceChat() {
-    try { pieceChatRoom = await PieceChatAPI.getRoom(pieceChatId); renderRoom(); }
+    try {
+        pieceChatRoom = await PieceChatAPI.getRoom(pieceChatId);
+        const lastReadMessageId = viewerLastReadMessageId();
+        const firstUnread = (pieceChatRoom.messages || []).find((message) => Number(message.id) > lastReadMessageId && Number(message.userId) !== Number(pieceChatRoom.currentUserId));
+        renderRoom();
+        if (firstUnread) renderMessages(Number(firstUnread.id));
+        markLatestMessagesRead().catch((error) => console.warn('메시지 읽음 처리를 저장하지 못했습니다.', error));
+    }
     catch (error) { alert(error.message || '채팅방에 입장할 수 없습니다.'); window.location.href = '/community'; }
 }
 function latestMessageId() {
@@ -96,13 +128,15 @@ function addNewMessages(messages) {
     if (!freshMessages.length) return;
     pieceChatRoom.messages.push(...freshMessages);
     appendMessages(freshMessages);
+    if (!document.hidden) markLatestMessagesRead().catch((error) => console.warn('메시지 읽음 처리를 저장하지 못했습니다.', error));
 }
 function memberStateKey(room) {
-    return JSON.stringify({ members: room?.members || [], participants: room?.participants || [], canManage: room?.canManage, lifecycle: room?.lifecycle || null });
+    return JSON.stringify({ members: room?.members || [], participants: room?.participants || [], readStates: room?.readStates || [], canManage: room?.canManage, lifecycle: room?.lifecycle || null });
 }
 function updateMembers(memberState) {
     if (memberStateKey(pieceChatRoom) === memberStateKey(memberState)) return;
     Object.assign(pieceChatRoom, memberState);
+    renderMessages(null, true);
     renderMembers();
     renderChatAvailability();
 }
