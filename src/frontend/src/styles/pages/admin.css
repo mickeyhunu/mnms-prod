@@ -443,6 +443,7 @@ body[data-page="admin"] {
     width: 100%;
 }
 
+.admin-user-point-adjustment,
 .admin-user-stamp-adjustment {
     grid-column: 1 / -1;
     display: grid;
@@ -455,6 +456,7 @@ body[data-page="admin"] {
     background: #f8fafc;
 }
 
+.admin-user-point-adjustment > strong,
 .admin-user-stamp-adjustment > strong {
     grid-column: 1 / -1;
 }
@@ -768,6 +770,7 @@ body[data-page="admin"] {
         grid-template-columns: 1fr;
     }
 
+    .admin-user-point-adjustment,
     .admin-user-stamp-adjustment {
         grid-template-columns: 1fr;
     }
