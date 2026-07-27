@@ -1101,6 +1101,9 @@ async function initDatabase() {
       user_id BIGINT NOT NULL,
       content VARCHAR(1000) NOT NULL,
       message_type ENUM('CHAT','SYSTEM') NOT NULL DEFAULT 'CHAT',
+      is_hidden TINYINT(1) NOT NULL DEFAULT 0,
+      hidden_by BIGINT NULL,
+      hidden_at TIMESTAMP NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       INDEX idx_piece_chat_post_created (post_id, created_at),
@@ -1115,6 +1118,9 @@ async function initDatabase() {
     'message_type',
     "ALTER TABLE piece_chat_messages ADD COLUMN message_type ENUM('CHAT','SYSTEM') NOT NULL DEFAULT 'CHAT' AFTER content"
   );
+  await ensureColumn(pool, 'piece_chat_messages', 'is_hidden', 'ALTER TABLE piece_chat_messages ADD COLUMN is_hidden TINYINT(1) NOT NULL DEFAULT 0 AFTER message_type');
+  await ensureColumn(pool, 'piece_chat_messages', 'hidden_by', 'ALTER TABLE piece_chat_messages ADD COLUMN hidden_by BIGINT NULL AFTER is_hidden');
+  await ensureColumn(pool, 'piece_chat_messages', 'hidden_at', 'ALTER TABLE piece_chat_messages ADD COLUMN hidden_at TIMESTAMP NULL AFTER hidden_by');
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS piece_chat_reads (
