@@ -2027,10 +2027,14 @@ function fillUserEditForm(user) {
     document.getElementById('admin-user-point-adjustment-reason').value = '';
     const stampAdjustment = document.getElementById('admin-user-stamp-adjustment');
     stampAdjustment?.classList.toggle('hidden', !isMasterAdmin);
-    document.getElementById('admin-user-stamp-balance').value = Number(user.stampBalance || 0);
-    document.getElementById('admin-user-stamp-adjustment-type').value = 'ADD';
-    document.getElementById('admin-user-stamp-adjustment-amount').value = '1';
-    document.getElementById('admin-user-stamp-adjustment-reason').value = '';
+    const stampBalance = document.getElementById('admin-user-stamp-balance');
+    const stampAdjustmentType = document.getElementById('admin-user-stamp-adjustment-type');
+    const stampAdjustmentAmount = document.getElementById('admin-user-stamp-adjustment-amount');
+    const stampAdjustmentReason = document.getElementById('admin-user-stamp-adjustment-reason');
+    if (stampBalance) stampBalance.value = Number(user.stampBalance || 0);
+    if (stampAdjustmentType) stampAdjustmentType.value = 'ADD';
+    if (stampAdjustmentAmount) stampAdjustmentAmount.value = '1';
+    if (stampAdjustmentReason) stampAdjustmentReason.value = '';
     const roleSelect = document.getElementById('admin-user-role');
     if (roleSelect) {
         roleSelect.value = user.role || 'MEMBER';
@@ -2280,9 +2284,12 @@ async function adjustUserStamps() {
             amount,
             reason
         });
-        document.getElementById('admin-user-stamp-balance').value = Number(response.stampBalance || 0);
-        document.getElementById('admin-user-stamp-adjustment-amount').value = '1';
-        document.getElementById('admin-user-stamp-adjustment-reason').value = '';
+        const stampBalance = document.getElementById('admin-user-stamp-balance');
+        const stampAdjustmentAmount = document.getElementById('admin-user-stamp-adjustment-amount');
+        const stampAdjustmentReason = document.getElementById('admin-user-stamp-adjustment-reason');
+        if (stampBalance) stampBalance.value = Number(response.stampBalance || 0);
+        if (stampAdjustmentAmount) stampAdjustmentAmount.value = '1';
+        if (stampAdjustmentReason) stampAdjustmentReason.value = '';
         setAdminUserHelpMessage(`스탬프 ${amount}개가 ${actionLabel}되었습니다.`, '#198754');
     } catch (error) {
         setAdminUserHelpMessage(error.message || `스탬프 ${actionLabel}에 실패했습니다.`, '#dc3545');
