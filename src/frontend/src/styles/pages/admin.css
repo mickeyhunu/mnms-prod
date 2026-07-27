@@ -443,6 +443,26 @@ body[data-page="admin"] {
     width: 100%;
 }
 
+.admin-user-stamp-adjustment {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    align-items: end;
+    padding: 16px;
+    border: 1px solid #dbe4ef;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.admin-user-stamp-adjustment > strong {
+    grid-column: 1 / -1;
+}
+
+.admin-user-stamp-adjustment.hidden {
+    display: none;
+}
+
 .admin-user-save-result {
     margin-top: 12px;
     margin-left: 0;
@@ -745,6 +765,10 @@ body[data-page="admin"] {
     }
 
     .admin-user-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-user-stamp-adjustment {
         grid-template-columns: 1fr;
     }
 
