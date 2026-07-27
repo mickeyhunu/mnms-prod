@@ -150,6 +150,7 @@ function initPieceChatPage() {
     pieceChatId = window.location.pathname.split('/').filter(Boolean).pop();
     if (!Auth.isAuthenticated()) { window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`; return; }
     document.getElementById('chat-back').onclick = () => history.length > 1 ? history.back() : window.location.assign('/community');
+    document.getElementById('chat-refresh').onclick = () => window.location.reload();
     document.getElementById('chat-members').onclick = () => setMemberDrawerOpen(true);
     document.querySelectorAll('[data-close-drawer]').forEach((button) => button.onclick = () => setMemberDrawerOpen(false));
     document.addEventListener('keydown', (event) => {
