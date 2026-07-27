@@ -13,6 +13,22 @@ function getTossPaymentConfig() {
     throw error;
   }
 
+  // This integration opens the standard payment window and therefore uses the
+  // general API keys (ck/sk), not Payment Widget keys (gck/gsk).
+  if (/^(test|live)_gck_/.test(clientKey) || /^(test|live)_gsk_/.test(secretKey)) {
+    const error = new Error('현재 결제창 연동에는 토스페이먼츠 API 개별 연동 키(ck/sk)가 필요합니다.');
+    error.status = 503;
+    throw error;
+  }
+
+  const clientEnvironment = clientKey.match(/^(test|live)_ck_/)?.[1];
+  const secretEnvironment = secretKey.match(/^(test|live)_sk_/)?.[1];
+  if (clientEnvironment && secretEnvironment && clientEnvironment !== secretEnvironment) {
+    const error = new Error('토스페이먼츠 클라이언트 키와 시크릿 키의 테스트/운영 환경이 일치하지 않습니다.');
+    error.status = 503;
+    throw error;
+  }
+
   return { clientKey, secretKey };
 }
 
