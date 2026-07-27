@@ -1152,7 +1152,7 @@ function formatStampHistoryReason(item = {}) {
     const sourceLabel = String(item.sourceLabel || '');
     if (sourceLabel.includes('-AUTO-') || reason.includes('자동연장')) return reason;
 
-    return '조각제휴 광고 2일 활성화';
+    return reason || '조각제휴 광고 활성화';
 }
 
 function renderStampHistoryList(stampHistories = []) {
