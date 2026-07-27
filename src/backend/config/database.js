@@ -1116,6 +1116,19 @@ async function initDatabase() {
     "ALTER TABLE piece_chat_messages ADD COLUMN message_type ENUM('CHAT','SYSTEM') NOT NULL DEFAULT 'CHAT' AFTER content"
   );
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS piece_chat_reads (
+      post_id BIGINT NOT NULL,
+      user_id BIGINT NOT NULL,
+      last_read_message_id BIGINT NOT NULL DEFAULT 0,
+      read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (post_id, user_id),
+      INDEX idx_piece_chat_reads_message (post_id, last_read_message_id),
+      FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
   const [likerPointAwardedColumn] = await pool.query(
     `SELECT 1
      FROM INFORMATION_SCHEMA.COLUMNS

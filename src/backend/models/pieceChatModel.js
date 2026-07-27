@@ -8,7 +8,7 @@ function extractSelectedAdId(content = '') {
 
 async function getRoomContext(postId, userId) {
   const pool = getPool();
-  const [postResult, adminResult, participantResult] = await Promise.all([
+  const [postResult, adminResult, participantResult, readResult] = await Promise.all([
     pool.query(`SELECT p.id, p.title, p.content, p.created_at AS createdAt, p.piece_closed_at AS pieceClosedAt, p.user_id AS leaderId, u.nickname AS leaderNickname,
                        u.profile_image_url AS leaderProfileImageUrl
                   FROM posts p LEFT JOIN users u ON u.id = p.user_id
@@ -17,7 +17,8 @@ async function getRoomContext(postId, userId) {
     pool.query(`SELECT pp.user_id AS userId, u.nickname, u.profile_image_url AS profileImageUrl,
                        pp.attended_at AS attendedAt, pp.attendance_status AS attendanceStatus, pp.created_at AS joinedAt
                   FROM piece_participants pp JOIN users u ON u.id = pp.user_id
-                 WHERE pp.post_id = ? AND pp.removed_at IS NULL ORDER BY pp.created_at`, [postId])
+                 WHERE pp.post_id = ? AND pp.removed_at IS NULL ORDER BY pp.created_at`, [postId]),
+    pool.query('SELECT user_id AS userId, last_read_message_id AS lastReadMessageId FROM piece_chat_reads WHERE post_id = ?', [postId])
   ]);
   const post = postResult[0][0];
   const admins = adminResult[0];
@@ -36,7 +37,21 @@ async function getRoomContext(postId, userId) {
     : Number(post.leaderId) === Number(userId) ? 'LEADER'
       : advertiser && Number(advertiser.id) === Number(userId) ? 'ADVERTISER'
         : participants.some((u) => Number(u.userId) === Number(userId)) ? 'MEMBER' : null;
-  return { post, admins, advertiser, participants, viewerRole, canManage: ['ADMIN', 'LEADER', 'ADVERTISER'].includes(viewerRole), isMember: memberIds.has(Number(userId)) };
+  return { post, admins, advertiser, participants, readStates: readResult[0], viewerRole, canManage: ['ADMIN', 'LEADER', 'ADVERTISER'].includes(viewerRole), isMember: memberIds.has(Number(userId)) };
+}
+
+async function markRead(postId, userId, messageId) {
+  await getPool().query(`INSERT INTO piece_chat_reads (post_id, user_id, last_read_message_id) VALUES (?, ?, ?)
+    ON DUPLICATE KEY UPDATE last_read_message_id = GREATEST(last_read_message_id, VALUES(last_read_message_id))`, [postId, userId, messageId]);
+}
+
+async function getUnreadCount(postId, userId) {
+  const [rows] = await getPool().query(`SELECT COUNT(*) AS unreadCount
+    FROM piece_chat_messages pcm
+    LEFT JOIN piece_chat_reads pcr ON pcr.post_id = pcm.post_id AND pcr.user_id = ?
+    WHERE pcm.post_id = ? AND pcm.message_type = 'CHAT' AND pcm.user_id <> ?
+      AND pcm.id > COALESCE(pcr.last_read_message_id, 0)`, [userId, postId, userId]);
+  return Number(rows[0]?.unreadCount) || 0;
 }
 
 async function listMessages(postId) {
@@ -95,4 +110,4 @@ async function removeParticipant(postId, userId) {
   }
 }
 
-module.exports = { getRoomContext, listMessages, listMessagesAfter, createMessage, setAttendance, removeParticipant };
+module.exports = { getRoomContext, listMessages, listMessagesAfter, createMessage, markRead, getUnreadCount, setAttendance, removeParticipant };
