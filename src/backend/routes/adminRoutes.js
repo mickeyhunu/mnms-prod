@@ -382,6 +382,40 @@ router.post('/users/:id/stamps/adjust', async (req, res, next) => {
   }
 });
 
+router.post('/users/:id/points/adjust', async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 회원 ID입니다.' });
+
+    const target = await adminModel.findUserById(id);
+    if (!target || !isManagedUserAccount(target)) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
+
+    const adjustmentType = String(req.body?.adjustmentType || '').trim().toUpperCase();
+    const amount = Number(req.body?.amount);
+    const reason = String(req.body?.reason || '').trim();
+    if (!['ADD', 'DEDUCT'].includes(adjustmentType)) {
+      return res.status(400).json({ message: '포인트 처리 유형을 선택해주세요.' });
+    }
+    if (!Number.isInteger(amount) || amount < 1) {
+      return res.status(400).json({ message: '포인트 수량은 1 이상의 정수로 입력해주세요.' });
+    }
+    if (!reason || reason.length > 255) {
+      return res.status(400).json({ message: '지급/차감 사유는 1자 이상 255자 이하로 입력해주세요.' });
+    }
+
+    await adminModel.adjustUserPointsByAdmin(id, {
+      amount,
+      reason,
+      actionType: adjustmentType === 'ADD' ? 'ADMIN_ADJUST_ADD' : 'ADMIN_ADJUST_DEDUCT'
+    });
+    const updatedUser = await adminModel.getUserDetail(id);
+
+    res.json({ success: true, totalPoints: Number(updatedUser?.totalPoints || 0) });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.put('/users/:id', async (req, res, next) => {
   try {
     const id = Number.parseInt(req.params.id, 10);
