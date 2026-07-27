@@ -192,7 +192,8 @@ function initPieceChatPage() {
     const chatInput = document.getElementById('chat-input');
     chatForm.onsubmit = async (event) => { event.preventDefault(); const content = chatInput.value.trim(); if (!content || pieceChatRoom?.lifecycle?.isEnded) return; try { const message = await PieceChatAPI.send(pieceChatId, content); addNewMessages([message]); chatInput.value = ''; } catch (error) { if (error.status === 409) { await loadPieceChat(); } alert(error.message || '메시지를 전송하지 못했습니다.'); } };
     chatInput.onkeydown = (event) => {
-        if (event.key !== 'Enter' || event.shiftKey || event.isComposing || event.keyCode === 229) return;
+        const usesMobileInput = window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(max-width: 680px)').matches;
+        if (event.key !== 'Enter' || event.shiftKey || event.isComposing || event.keyCode === 229 || usesMobileInput) return;
         event.preventDefault();
         chatForm.requestSubmit();
     };
