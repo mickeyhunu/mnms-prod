@@ -736,6 +736,7 @@ function getPieceTemplateRows(content) {
 function normalizePieceStatusValue(value) {
     const normalizedValue = String(value || '').trim().toUpperCase();
     if (!normalizedValue) return '';
+    if (['조각취소', '조각 취소', 'CANCELLED', 'CANCELED'].some((token) => normalizedValue.includes(token))) return '조각취소';
     if (['모집완료', '모집 완료', '진행', 'ONGOING', 'IN_PROGRESS'].some((token) => normalizedValue.includes(token))) return '진행중';
     if (['종료', '마감', '완료', 'ENDED', 'CLOSED', 'DONE'].some((token) => normalizedValue.includes(token))) return '종료';
     if (['모집', 'RECRUITING', 'OPEN'].some((token) => normalizedValue.includes(token))) return '모집중';
@@ -753,6 +754,7 @@ function resolvePieceStatus(post) {
         || post?.recruitmentStatus
         || post?.recruitment_status
     );
+    if (post?.isPieceCancelled) return '조각취소';
     if (post?.isPieceEnded || post?.pieceClosedAt || post?.piece_closed_at) return '종료';
     if (explicitStatus) return explicitStatus;
 
@@ -781,7 +783,7 @@ function isPieceRecruiting(post) {
 
 function isPiecePostLockedForEditing(post) {
     return String(post?.boardType || post?.board_type || '').toUpperCase() === 'PIECE'
-        && ['진행중', '종료'].includes(resolvePieceStatus(post));
+        && ['진행중', '종료', '조각취소'].includes(resolvePieceStatus(post));
 }
 
 function alertLockedPiecePostActionIfNeeded(actionLabel) {
@@ -939,7 +941,7 @@ function renderPieceJoinButton(post, isCurrentAuthor, isHiddenPost) {
     if (statusBadge) {
         statusBadge.textContent = pieceStatus || '모집중';
         statusBadge.classList.remove('is-recruiting', 'is-progress', 'is-ended');
-        statusBadge.classList.add(pieceStatus === '종료' ? 'is-ended' : (pieceStatus === '진행중' ? 'is-progress' : 'is-recruiting'));
+        statusBadge.classList.add(['종료', '조각취소'].includes(pieceStatus) ? 'is-ended' : (pieceStatus === '진행중' ? 'is-progress' : 'is-recruiting'));
     }
 
     const maxParticipants = getPieceMaximumParticipantCount(post.content || '');

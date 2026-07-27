@@ -578,6 +578,7 @@ function parsePieceDateTime(value) {
 function normalizePieceStatusValue(value) {
     const normalizedValue = String(value || '').trim().toUpperCase();
     if (!normalizedValue) return '';
+    if (['조각취소', '조각 취소', 'CANCELLED', 'CANCELED'].some((token) => normalizedValue.includes(token))) return '조각취소';
     if (['모집완료', '모집 완료', '진행', 'ONGOING', 'IN_PROGRESS'].some((token) => normalizedValue.includes(token))) return '진행중';
     if (['종료', '마감', '완료', 'ENDED', 'CLOSED', 'DONE'].some((token) => normalizedValue.includes(token))) return '종료';
     if (['모집', 'RECRUITING', 'OPEN'].some((token) => normalizedValue.includes(token))) return '모집중';
@@ -595,6 +596,7 @@ function resolvePieceStatus(post) {
         || post?.recruitmentStatus
         || post?.recruitment_status
     );
+    if (post?.isPieceCancelled) return '조각취소';
     if (post?.isPieceEnded || post?.pieceClosedAt || post?.piece_closed_at) return '종료';
     if (explicitStatus) return explicitStatus;
 
@@ -612,8 +614,11 @@ function resolvePieceStatus(post) {
         || pieceRows.get('일정')
         || pieceRows.get('만남 시간')
     );
+    const capacity = pieceRows.get('인원') || '';
+    const minimumParticipants = Math.max(1, Number(capacity.split('/')[0].match(/\d+/)?.[0]) || 1);
+    const additionalParticipants = Number(post?.pieceParticipantCount || 0);
+    if (dateTime && dateTime.getTime() <= Date.now() && additionalParticipants + 1 < minimumParticipants) return '조각취소';
     if (dateTime && dateTime.getTime() + (9 * 60 * 60 * 1000) <= Date.now()) return '종료';
-    if (dateTime && dateTime.getTime() <= Date.now() && Number(post?.pieceParticipantCount) === 0) return '종료';
     if (dateTime && dateTime.getTime() <= Date.now()) return '진행중';
 
     return '모집중';
@@ -648,7 +653,8 @@ function getPieceStatusBadgeMarkup(post) {
     const statusClassMap = {
         모집중: 'article-piece-status-recruiting',
         진행중: 'article-piece-status-ongoing',
-        종료: 'article-piece-status-ended'
+        종료: 'article-piece-status-ended',
+        조각취소: 'article-piece-status-ended'
     };
     const statusClass = statusClassMap[status] || 'article-piece-status-recruiting';
     const currentParticipants = getPieceCurrentParticipantCount(post);

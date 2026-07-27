@@ -873,6 +873,13 @@ async function checkPieceAttendance(postId, userId) {
   return listPieceParticipants(postId);
 }
 
+async function clearPieceAttendance(postId) {
+  await getPool().query(
+    'UPDATE piece_participants SET attendance_status = NULL, attended_at = NULL WHERE post_id = ?',
+    [postId]
+  );
+}
+
 async function listPointAwardedCommentsByPostId(postId) {
   const pool = getPool();
   const [rows] = await pool.query(
@@ -1009,5 +1016,6 @@ module.exports = {
   joinPiece,
   cancelPieceJoin,
   checkPieceAttendance,
+  clearPieceAttendance,
   listBestPosts
 };

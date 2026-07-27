@@ -37,18 +37,25 @@ function parseDateTime(value) {
 function resolvePieceChatLifecycle(post, now = new Date(), participantCount = null) {
   const rows = parseTemplateRows(post?.content);
   const startsAt = parseDateTime(rows.get('시간') || rows.get('날짜/시간') || rows.get('일정') || rows.get('만남 시간'));
+  const capacity = rows.get('인원') || '';
+  const minimumParticipantCount = Math.max(1, Number(capacity.split('/')[0].match(/\d+/)?.[0]) || 1);
   const closedAt = post?.pieceClosedAt || post?.piece_closed_at || null;
   const autoEndsAt = startsAt ? new Date(startsAt.getTime() + PIECE_DURATION_MS) : null;
   const closedDate = closedAt ? new Date(closedAt) : null;
-  const hasStartedEmpty = participantCount === 0 && Boolean(startsAt && startsAt <= now);
-  const isEnded = Boolean(closedAt || (autoEndsAt && autoEndsAt <= now) || hasStartedEmpty);
+  const hasStarted = Boolean(startsAt && startsAt <= now);
+  const totalParticipantCount = participantCount === null ? null : participantCount + 1;
+  const isCancelled = !closedAt && hasStarted && totalParticipantCount !== null && totalParticipantCount < minimumParticipantCount;
+  const isEnded = Boolean(closedAt || isCancelled || (autoEndsAt && autoEndsAt <= now));
   const isInProgress = Boolean(startsAt && startsAt <= now && !isEnded);
-  const endedAt = closedDate && !Number.isNaN(closedDate.getTime()) ? closedDate : (hasStartedEmpty ? startsAt : autoEndsAt);
+  const endedAt = closedDate && !Number.isNaN(closedDate.getTime()) ? closedDate : (isCancelled ? startsAt : autoEndsAt);
   return {
-    status: isEnded ? 'ENDED' : (isInProgress ? 'IN_PROGRESS' : 'RECRUITING'),
+    status: isCancelled ? 'CANCELLED' : (isEnded ? 'ENDED' : (isInProgress ? 'IN_PROGRESS' : 'RECRUITING')),
     isInProgress,
     isEnded,
+    isCancelled,
     canChat: !isEnded,
+    minimumParticipantCount,
+    totalParticipantCount,
     startsAt: startsAt?.toISOString() || null,
     endedAt: isEnded ? endedAt?.toISOString() || null : null
   };
@@ -56,11 +63,11 @@ function resolvePieceChatLifecycle(post, now = new Date(), participantCount = nu
 
 function lifecycleMessages(lifecycle) {
   const messages = [];
-  if (lifecycle.isInProgress || lifecycle.isEnded) {
+  if (!lifecycle.isCancelled && (lifecycle.isInProgress || lifecycle.isEnded)) {
     messages.push({ id: -1, userId: null, nickname: '조각안내', messageType: 'SYSTEM', content: '조각이 시작되었습니다.', createdAt: lifecycle.startsAt });
   }
   if (lifecycle.isEnded) {
-    messages.push({ id: -2, userId: null, nickname: '조각안내', messageType: 'SYSTEM', content: '조각이 종료되었습니다.', createdAt: lifecycle.endedAt });
+    messages.push({ id: -2, userId: null, nickname: '조각안내', messageType: 'SYSTEM', content: lifecycle.isCancelled ? '최소 인원 미달로 조각이 취소되었습니다.' : '조각이 종료되었습니다.', createdAt: lifecycle.endedAt });
   }
   return messages;
 }

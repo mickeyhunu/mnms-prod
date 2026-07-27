@@ -104,7 +104,11 @@ function renderChatAvailability() {
     const form = document.getElementById('chat-form');
     const input = document.getElementById('chat-input');
     form.classList.toggle('is-ended', ended);
-    document.getElementById('chat-ended-notice').classList.toggle('hidden', !ended);
+    const endedNotice = document.getElementById('chat-ended-notice');
+    endedNotice.textContent = pieceChatRoom?.lifecycle?.isCancelled
+        ? '최소 인원 미달로 조각이 취소되어 더 이상 채팅할 수 없습니다.'
+        : '종료된 조각에서는 더 이상 채팅할 수 없습니다.';
+    endedNotice.classList.toggle('hidden', !ended);
     input.disabled = ended;
     form.querySelector('button[type="submit"], button:not([type])').disabled = ended;
 }
