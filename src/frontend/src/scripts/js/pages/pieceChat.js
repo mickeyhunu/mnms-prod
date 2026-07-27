@@ -149,6 +149,8 @@ function setMemberDrawerOpen(open) {
 function initPieceChatPage() {
     pieceChatId = window.location.pathname.split('/').filter(Boolean).pop();
     if (!Auth.isAuthenticated()) { window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`; return; }
+    setMemberDrawerOpen(false);
+    document.getElementById('chat-drawer').classList.add('is-ready');
     document.getElementById('chat-back').onclick = () => history.length > 1 ? history.back() : window.location.assign('/community');
     document.getElementById('chat-refresh').onclick = () => window.location.reload();
     document.getElementById('chat-members').onclick = () => setMemberDrawerOpen(true);
