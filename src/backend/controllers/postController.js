@@ -582,7 +582,7 @@ function sanitizePostForViewer(post, currentUser = null) {
     normalized.isPieceCancelled = lifecycle.isCancelled;
   }
 
-  if (normalized.isHidden) {
+  if (normalized.isHidden && !isAdminViewer(currentUser)) {
     normalized.content = '관리자에 의해 제한된 게시글입니다.';
     normalized.imageUrls = [];
     normalized.imageUrl = null;
@@ -609,8 +609,8 @@ function isHiddenPost(post) {
   return Boolean(post?.is_hidden || post?.isHidden);
 }
 
-function ensurePostAccessible(post, res) {
-  if (!isHiddenPost(post)) {
+function ensurePostAccessible(post, currentUser, res) {
+  if (!isHiddenPost(post) || isAdminViewer(currentUser)) {
     return true;
   }
 
@@ -651,7 +651,7 @@ function sanitizeCommentForViewer(comment, post, currentUser) {
     });
   }
 
-  if (normalized.isHidden) {
+  if (normalized.isHidden && !isAdminUser) {
     return stripSecretThreadMetadata({
       ...normalized,
       content: '관리자에 의해 제한된 댓글입니다.',
@@ -760,7 +760,7 @@ async function getPost(req, res, next) {
 
     const post = await postModel.findPostById(postId, { includeDeleted: isAdminViewer(req.user) });
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
-    if (!ensurePostAccessible(post, res)) return;
+    if (!ensurePostAccessible(post, req.user, res)) return;
 
     await postModel.incrementPostViewCount(postId);
 
@@ -1221,7 +1221,7 @@ async function listComments(req, res, next) {
 
     const post = await postModel.findPostById(postId);
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
-    if (!ensurePostAccessible(post, res)) return;
+    if (!ensurePostAccessible(post, req.user, res)) return;
 
     const comments = annotateSecretThreadOwnerIds(await postModel.listComments(postId));
     const visibleComments = comments.map((comment) => sanitizeCommentForViewer(comment, post, req.user));
