@@ -300,6 +300,53 @@ async function getUserStampPaymentHistories(userId, options = {}) {
   }));
 }
 
+async function adjustUserStampsByAdmin(userId, {
+  stampType = STAMP_TYPES.MEMBER,
+  amount,
+  reason,
+  actionType,
+  adminUserId
+} = {}) {
+  const pool = getPool();
+  const normalizedType = normalizeStampType(stampType);
+  const normalizedAmount = Number(amount);
+  const normalizedActionType = String(actionType || '').trim().toUpperCase();
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    await connection.query('SELECT id FROM users WHERE id = ? FOR UPDATE', [userId]);
+
+    const [balanceRows] = await connection.query(
+      `SELECT COALESCE(SUM(amount), 0) AS balance
+         FROM stamp_histories
+        WHERE user_id = ? AND stamp_type = ?`,
+      [userId, normalizedType]
+    );
+    const currentBalance = Math.max(0, Number(balanceRows[0]?.balance || 0));
+
+    if (normalizedActionType === 'ADMIN_ADJUST_DEDUCT' && normalizedAmount > currentBalance) {
+      const error = new Error(`보유 스탬프(${currentBalance}개)보다 많이 차감할 수 없습니다.`);
+      error.status = 400;
+      throw error;
+    }
+
+    const signedAmount = normalizedActionType === 'ADMIN_ADJUST_ADD' ? normalizedAmount : -normalizedAmount;
+    await connection.query(
+      `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [userId, normalizedType, normalizedActionType, signedAmount, reason, `ADMIN:${adminUserId}`]
+    );
+    await connection.commit();
+    return currentBalance + signedAmount;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 module.exports = {
   STAMP_TYPES,
   STAMP_PURCHASE_PLANS,
@@ -311,5 +358,6 @@ module.exports = {
   completeStampPayment,
   getUserStampBalance,
   getUserStampHistories,
-  getUserStampPaymentHistories
+  getUserStampPaymentHistories,
+  adjustUserStampsByAdmin
 };

@@ -53,6 +53,25 @@ export const userEditPanelTemplate = `
                                 <label>지급 사유
                                     <input type="text" id="admin-user-point-adjustment-reason" name="pointAdjustmentReason" maxlength="255" placeholder="적립/차감 사유 입력">
                                 </label>
+                                <div class="admin-user-stamp-adjustment hidden" id="admin-user-stamp-adjustment">
+                                    <strong>스탬프 수동 지급/차감 (마스터 전용)</strong>
+                                    <label>현재 스탬프
+                                        <input type="number" id="admin-user-stamp-balance" min="0" step="1" readonly>
+                                    </label>
+                                    <label>스탬프 처리
+                                        <select id="admin-user-stamp-adjustment-type" class="form-control">
+                                            <option value="ADD">지급</option>
+                                            <option value="DEDUCT">차감</option>
+                                        </select>
+                                    </label>
+                                    <label>스탬프 수량
+                                        <input type="number" id="admin-user-stamp-adjustment-amount" min="1" step="1" value="1">
+                                    </label>
+                                    <label>지급/차감 사유
+                                        <input type="text" id="admin-user-stamp-adjustment-reason" maxlength="255" placeholder="지급/차감 사유 입력">
+                                    </label>
+                                    <button class="btn btn-primary btn-sm" id="admin-user-stamp-adjustment-btn" type="button">스탬프 처리</button>
+                                </div>
                                 <label>권한
                                     <select id="admin-user-role" name="role" class="form-control">
                                         <option value="MEMBER">MEMBER</option>
