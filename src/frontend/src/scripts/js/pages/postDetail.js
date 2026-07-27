@@ -986,7 +986,7 @@ function renderPieceParticipants(post, isHiddenPost) {
         : '';
 }
 
-function renderPieceChatButton(post, isHiddenPost) {
+async function renderPieceChatButton(post, isHiddenPost) {
     const button = document.getElementById('piece-chat-enter');
     if (!button) return;
     const user = Auth.getUser();
@@ -995,6 +995,15 @@ function renderPieceChatButton(post, isHiddenPost) {
         && (post.isAuthor || isCurrentUserPostAuthor(post) || post.isPieceParticipant || role === 'ADMIN' || isBusinessUser(user));
     button.classList.toggle('hidden', !canEnter);
     button.href = canEnter ? `/piece-chat/${post.id}` : '#';
+    button.querySelector('.piece-chat-unread')?.remove();
+    if (canEnter) {
+        try {
+            const { unreadCount } = await PostAPI.getPieceChatUnread(post.id);
+            if (Number(unreadCount) > 0 && button.href.endsWith(`/piece-chat/${post.id}`)) {
+                button.insertAdjacentHTML('beforeend', `<span class="piece-chat-unread" aria-label="안읽은 메시지 ${Number(unreadCount)}개">${Number(unreadCount) > 99 ? '99+' : Number(unreadCount)}</span>`);
+            }
+        } catch (error) { console.warn('안읽은 채팅 메시지 수를 불러오지 못했습니다.', error); }
+    }
 }
 
 async function handlePieceJoinAction() {
