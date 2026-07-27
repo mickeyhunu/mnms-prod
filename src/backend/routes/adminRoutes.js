@@ -432,8 +432,11 @@ router.put('/users/:id', async (req, res, next) => {
     const businessApprovalStatus = String(req.body?.businessApprovalStatus || '').toUpperCase();
     const businessRejectionReason = String(req.body?.businessRejectionReason || '').trim();
     const pointAdjustmentType = String(req.body?.pointAdjustmentType || 'NONE').toUpperCase();
-    const pointAdjustmentAmount = Number(req.body?.pointAdjustmentAmount || 0);
+    const pointAdjustmentAmount = Number(req.body?.pointAdjustmentAmount || 1);
     const pointAdjustmentReason = String(req.body?.pointAdjustmentReason || '').trim();
+    const stampAdjustmentType = String(req.body?.stampAdjustmentType || 'NONE').toUpperCase();
+    const stampAdjustmentAmount = Number(req.body?.stampAdjustmentAmount || 1);
+    const stampAdjustmentReason = String(req.body?.stampAdjustmentReason || '').trim();
     const smsConsent = Boolean(req.body?.smsConsent);
     const accountStatus = String(req.body?.accountStatus || LOGIN_STATUS.ACTIVE).toUpperCase();
     const isLoginRestrictionPermanent = Boolean(req.body?.isLoginRestrictionPermanent);
@@ -482,20 +485,32 @@ router.put('/users/:id', async (req, res, next) => {
       return res.status(400).json({ message: '유효하지 않은 포인트 처리 유형입니다.' });
     }
 
-    if (!Number.isInteger(pointAdjustmentAmount) || pointAdjustmentAmount < 0) {
-      return res.status(400).json({ message: '포인트 처리 수량은 0 이상의 정수만 입력할 수 있습니다.' });
+    if (!Number.isInteger(pointAdjustmentAmount) || pointAdjustmentAmount < 1) {
+      return res.status(400).json({ message: '포인트 처리 수량은 1 이상의 정수만 입력할 수 있습니다.' });
     }
 
     if (pointAdjustmentType !== 'NONE' && pointAdjustmentAmount < 1) {
       return res.status(400).json({ message: '포인트를 적립/차감하려면 수량을 1 이상 입력해주세요.' });
     }
 
-    if (pointAdjustmentType === 'NONE' && pointAdjustmentAmount > 0) {
-      return res.status(400).json({ message: '포인트 처리 유형을 선택해주세요.' });
-    }
-
     if (pointAdjustmentType !== 'NONE' && (!pointAdjustmentReason || pointAdjustmentReason.length > 255)) {
       return res.status(400).json({ message: '지급 사유는 1자 이상 255자 이하로 입력해주세요.' });
+    }
+
+    if (!['NONE', 'ADD', 'DEDUCT'].includes(stampAdjustmentType)) {
+      return res.status(400).json({ message: '유효하지 않은 스탬프 처리 유형입니다.' });
+    }
+
+    if (!Number.isInteger(stampAdjustmentAmount) || stampAdjustmentAmount < 1) {
+      return res.status(400).json({ message: '스탬프 처리 수량은 1 이상의 정수만 입력할 수 있습니다.' });
+    }
+
+    if (stampAdjustmentType !== 'NONE' && !isMasterAdmin) {
+      return res.status(403).json({ message: '마스터 관리자만 스탬프를 지급하거나 차감할 수 있습니다.' });
+    }
+
+    if (stampAdjustmentType !== 'NONE' && (!stampAdjustmentReason || stampAdjustmentReason.length > 255)) {
+      return res.status(400).json({ message: '스탬프 지급/차감 사유는 1자 이상 255자 이하로 입력해주세요.' });
     }
 
     if (![LOGIN_STATUS.ACTIVE, LOGIN_STATUS.SUSPENDED].includes(accountStatus)) {
@@ -562,7 +577,21 @@ router.put('/users/:id', async (req, res, next) => {
         actionType: pointAdjustmentType === 'ADD' ? 'ADMIN_ADJUST_ADD' : 'ADMIN_ADJUST_DEDUCT'
       });
     }
-    const updatedUser = await adminModel.getUserDetail(id);
+    let updatedUser = await adminModel.getUserDetail(id);
+    if (stampAdjustmentType !== 'NONE') {
+      const stampType = String(updatedUser?.role || '').toUpperCase() === 'BUSINESS'
+        || String(updatedUser?.memberType || updatedUser?.member_type || '').toUpperCase() === 'BUSINESS'
+        ? STAMP_TYPES.BUSINESS
+        : STAMP_TYPES.MEMBER;
+      await adjustUserStampsByAdmin(id, {
+        stampType,
+        amount: stampAdjustmentAmount,
+        reason: stampAdjustmentReason,
+        actionType: stampAdjustmentType === 'ADD' ? 'ADMIN_ADJUST_ADD' : 'ADMIN_ADJUST_DEDUCT',
+        adminUserId: req.user.id
+      });
+      updatedUser = await adminModel.getUserDetail(id);
+    }
 
     res.json({
       success: true,
