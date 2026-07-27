@@ -55,6 +55,7 @@ export const userEditPanelTemplate = `
                                     <label>지급 사유
                                         <input type="text" id="admin-user-point-adjustment-reason" name="pointAdjustmentReason" maxlength="255" placeholder="적립/차감 사유 입력">
                                     </label>
+                                    <button class="btn btn-primary btn-sm" id="admin-user-point-adjustment-btn" type="button">포인트 처리</button>
                                 </div>
                                 <div class="admin-user-stamp-adjustment hidden" id="admin-user-stamp-adjustment">
                                     <strong>스탬프 수동 지급/차감 (마스터 전용)</strong>
