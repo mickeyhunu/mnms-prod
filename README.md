@@ -169,11 +169,11 @@ aws s3api create-bucket \
 - `KCP_ENC_KEY`와 KCP 제공 암복호화 라이브러리는 프론트엔드/레포에 직접 넣지 말고, 서버의 외부 안전 경로(예: `/etc/mnms/kcp/`)에 저장하세요.
 - 경로가 필요하면 `.env.local` 같은 로컬 전용 환경 파일을 통해 주입하세요.
 
-## Toss Payments 결제창 연동 설정
+## Toss Payments 결제위젯 연동 설정
 
-스탬프 구매는 Toss Payments SDK v2와 API 개별 연동 키로 카드·간편결제 결제창을 열고, 결제 완료 후 서버에서 승인 API를 호출한 뒤에만 스탬프를 지급합니다. 결제위젯 계약 및 키 발급 전에도 사용할 수 있는 방식입니다.
+스탬프 구매는 Toss Payments 결제위젯 SDK v2로 결제수단을 표시하고, 결제 완료 후 서버에서 승인 API를 호출한 뒤에만 스탬프를 지급합니다.
 
-- `TOSS_PAYMENTS_CLIENT_KEY`: API 개별 연동 클라이언트 키 (브라우저 SDK 초기화용, `test_ck_` 또는 `live_ck_` 형식)
-- `TOSS_PAYMENTS_SECRET_KEY`: API 개별 연동 시크릿 키 (서버 승인 API 전용, `test_sk_` 또는 `live_sk_` 형식)
+- `TOSS_PAYMENTS_CLIENT_KEY`: 결제위젯 클라이언트 키 (브라우저 SDK 초기화용)
+- `TOSS_PAYMENTS_SECRET_KEY`: 결제 승인 API 시크릿 키 (서버 전용)
 
-결제위젯 연동 키(`test_gck_`/`live_gck_`, `test_gsk_`/`live_gsk_`)가 아니라 API 개별 연동 키를 설정해야 합니다. 테스트 중에는 Toss Payments 개발자센터의 테스트 키를 사용하고, 운영 배포 시 운영 키로 교체하세요. 두 키의 `test`/`live` 환경은 서로 같아야 하며, 시크릿 키는 프론트엔드 코드나 `PUBLIC_` 환경변수에 넣지 마세요. 환경변수를 변경한 뒤에는 Node 서버 프로세스를 재시작해야 합니다.
+테스트 중에는 Toss Payments 개발자센터의 테스트 키를 사용하고, 운영 배포 시 운영 키로 교체하세요. 시크릿 키는 프론트엔드 코드나 `PUBLIC_` 환경변수에 넣지 마세요.

@@ -20,7 +20,7 @@
         premium: { name: '🥇 프리미엄팩', composition: '스탬프 20개 + 3개', price: 400000 },
         vip: { name: '💎 VIP팩', composition: '스탬프 30개 + 5개', price: 600000 }
     };
-    const state = { plan: null, isSubmitting: false, payment: null, order: null, setupError: '', setupSequence: 0 };
+    const state = { plan: null, isSubmitting: false, widget: null, order: null, setupSequence: 0 };
     const formatPrice = (value) => `${value.toLocaleString('ko-KR')}원`;
 
     const loadTossPayments = () => new Promise((resolve, reject) => {
@@ -53,23 +53,15 @@
         purchaseSubmitBar?.classList.remove('hidden');
         if (purchaseButton) {
             purchaseButton.disabled = state.isSubmitting || !state.order;
-            purchaseButton.textContent = state.isSubmitting
-                ? '결제 처리 중...'
-                : state.setupError
-                    ? '결제 설정 확인 필요'
-                    : state.order
-                        ? `${formatPrice(plan.price + vat)} 결제하기`
-                        : '결제수단 준비 중...';
+            purchaseButton.textContent = state.isSubmitting ? '결제 처리 중...' : `${formatPrice(plan.price + vat)} 결제하기`;
             purchaseButton.setAttribute('aria-label', `${plan.name} ${purchaseButton.textContent}`);
-            purchaseButton.title = state.setupError;
         }
     };
 
-    const setupPayment = async (planCode) => {
+    const setupWidget = async (planCode) => {
         const sequence = ++state.setupSequence;
         state.order = null;
-        state.payment = null;
-        state.setupError = '';
+        state.widget = null;
         if (widgetStatus) widgetStatus.textContent = '결제수단을 준비하고 있습니다...';
         renderPaymentSummary();
         try {
@@ -78,17 +70,20 @@
                 loadTossPayments()
             ]);
             if (sequence !== state.setupSequence) return;
-            const payment = TossPayments(order.clientKey).payment({ customerKey: order.customerKey });
+            const widgets = TossPayments(order.clientKey).widgets({ customerKey: order.customerKey });
+            await widgets.setAmount({ currency: 'KRW', value: order.amount });
             document.getElementById('stamp-payment-methods').replaceChildren();
             document.getElementById('stamp-payment-agreement').replaceChildren();
-            state.payment = payment;
+            await Promise.all([
+                widgets.renderPaymentMethods({ selector: '#stamp-payment-methods', variantKey: 'DEFAULT' }),
+                widgets.renderAgreement({ selector: '#stamp-payment-agreement', variantKey: 'AGREEMENT' })
+            ]);
+            state.widget = widgets;
             state.order = order;
-            if (widgetStatus) widgetStatus.textContent = '결제하기 버튼을 누르면 카드·간편결제 결제창이 열립니다.';
+            if (widgetStatus) widgetStatus.textContent = '';
         } catch (error) {
             if (sequence !== state.setupSequence) return;
-            state.setupError = error.message || '결제수단을 준비하지 못했습니다.';
-            if (widgetStatus) widgetStatus.textContent = `${state.setupError} 상품을 다시 선택해 재시도해주세요.`;
-            console.error('Toss Payments setup failed:', error);
+            if (widgetStatus) widgetStatus.textContent = error.message || '결제수단을 준비하지 못했습니다.';
         } finally {
             renderPaymentSummary();
         }
@@ -131,18 +126,16 @@
         state.plan = planCode;
         renderPlanList();
         renderPaymentSummary();
-        setupPayment(planCode);
+        setupWidget(planCode);
     });
 
     purchaseButton?.addEventListener('click', async () => {
-        if (state.isSubmitting || !state.payment || !state.order) return;
+        if (state.isSubmitting || !state.widget || !state.order) return;
         state.isSubmitting = true;
         renderPaymentSummary();
         try {
             const origin = window.location.origin;
-            await state.payment.requestPayment({
-                method: 'CARD',
-                amount: { currency: 'KRW', value: state.order.amount },
+            await state.widget.requestPayment({
                 orderId: state.order.orderId,
                 orderName: state.order.orderName,
                 successUrl: `${origin}/stamp-purchase`,
