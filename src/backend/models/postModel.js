@@ -803,7 +803,10 @@ async function joinPiece(postId, userId, maxParticipants = 1) {
     }
 
     if (!existingRows.length || existingRows[0].removedAt) {
-      const maxJoinableParticipants = Math.max(0, Number(maxParticipants || 1) - 1);
+      const numericMaxParticipants = Number(maxParticipants);
+      const maxJoinableParticipants = Number.isFinite(numericMaxParticipants)
+        ? Math.max(0, numericMaxParticipants - 1)
+        : Infinity;
       const [participantRows] = await connection.query(
         'SELECT user_id FROM piece_participants WHERE post_id = ? AND removed_at IS NULL FOR UPDATE',
         [postId]
