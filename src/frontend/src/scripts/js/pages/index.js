@@ -621,11 +621,18 @@ function resolvePieceStatus(post) {
 
 function getPieceMaximumParticipantCount(content) {
     const rawContent = String(content || '');
-    const maxMatch = rawContent.match(/^\s*최대 인원\s*:\s*(\d+)/m);
-    if (maxMatch) return Math.max(1, Number(maxMatch[1]) || 1);
+    const maxMatch = rawContent.match(/^\s*최대 인원\s*:\s*(\d+)명?\s*(이상)?/m);
+    if (maxMatch) return maxMatch[2] ? Infinity : Math.max(1, Number(maxMatch[1]) || 1);
 
-    const summaryMaxMatch = rawContent.match(/최대\s*(\d+)명/);
-    return summaryMaxMatch ? Math.max(1, Number(summaryMaxMatch[1]) || 1) : 1;
+    const summaryMaxMatch = rawContent.match(/최대\s*(\d+)명?\s*(이상)?/);
+    if (!summaryMaxMatch) return 1;
+    return summaryMaxMatch[2] ? Infinity : Math.max(1, Number(summaryMaxMatch[1]) || 1);
+}
+
+function getPieceMaximumParticipantLabel(content, maxParticipants) {
+    if (Number.isFinite(maxParticipants)) return String(maxParticipants);
+    const unlimitedMinimumMatch = String(content || '').match(/최대\s*(\d+)명?\s*이상/);
+    return unlimitedMinimumMatch ? `${unlimitedMinimumMatch[1]}+` : '제한 없음';
 }
 
 function getPieceCurrentParticipantCount(post) {
@@ -652,8 +659,9 @@ function getPieceStatusBadgeMarkup(post) {
     };
     const statusClass = statusClassMap[status] || 'article-piece-status-recruiting';
     const currentParticipants = getPieceCurrentParticipantCount(post);
-    const maxParticipants = getPieceMaximumParticipantCount(post?.content || post?.body || '');
-    const participantText = `${currentParticipants} / ${maxParticipants}`;
+    const pieceContent = post?.content || post?.body || '';
+    const maxParticipants = getPieceMaximumParticipantCount(pieceContent);
+    const participantText = `${currentParticipants} / ${getPieceMaximumParticipantLabel(pieceContent, maxParticipants)}`;
     return `<span class="article-piece-status ${statusClass}">${sanitizeHTML(participantText)} ${sanitizeHTML(status)}</span>`;
 }
 
