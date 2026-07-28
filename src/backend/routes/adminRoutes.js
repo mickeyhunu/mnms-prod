@@ -10,7 +10,7 @@ const supportModel = require('../models/supportModel');
 const { findByNicknameExceptUser } = require('../models/userModel');
 const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddleware');
 const { LOGIN_STATUS } = require('../utils/loginRestriction');
-const { deleteS3ObjectByUrl } = require('../utils/fileUpload');
+const { deleteS3ObjectByUrl, uploadDataUrlToS3 } = require('../utils/fileUpload');
 const { deleteRejectedBusinessInfoImages, deleteUnreferencedBusinessInfoImages } = require('../utils/businessProfileImages');
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validatePassword } = require('../utils/authPolicy');
@@ -82,34 +82,64 @@ function isValidPosterTargetUrl(value) {
   }
 }
 
+const POSTER_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
+
+async function uploadPosterImage(imageFile) {
+  if (!imageFile?.dataUrl) return null;
+  return uploadDataUrlToS3({
+    dataUrl: imageFile.dataUrl,
+    fileName: imageFile.fileName,
+    folder: 'posters',
+    allowedMimeTypes: POSTER_IMAGE_MIME_TYPES,
+    maxBytes: 12 * 1024 * 1024
+  });
+}
+
 router.get('/posters', async (req, res, next) => {
   try { res.json({ content: await posterModel.list() }); } catch (error) { next(error); }
 });
 
 router.post('/posters', async (req, res, next) => {
+  let uploadedImage = null;
   try {
     const payload = parsePosterPayload(req.body);
-    if (!payload.title || !payload.imageUrl) return res.status(400).json({ message: '포스터 이름과 이미지는 필수입니다.' });
+    if (!payload.title || !req.body.imageFile?.dataUrl) return res.status(400).json({ message: '포스터 이름과 이미지는 필수입니다.' });
     if (!isValidPosterTargetUrl(payload.targetUrl)) return res.status(400).json({ message: '이동 URL 형식을 확인해주세요.' });
+    uploadedImage = await uploadPosterImage(req.body.imageFile);
+    payload.imageUrl = uploadedImage.url;
     res.status(201).json(await posterModel.create({ ...payload, createdBy: req.user?.id }));
-  } catch (error) { next(error); }
+  } catch (error) {
+    if (uploadedImage?.url) await deleteS3ObjectByUrl(uploadedImage.url).catch(() => {});
+    next(error);
+  }
 });
 
 router.put('/posters/:id', async (req, res, next) => {
+  let uploadedImage = null;
   try {
     const id = Number.parseInt(req.params.id, 10);
     const payload = parsePosterPayload(req.body);
-    if (!Number.isInteger(id) || id <= 0 || !payload.title || !payload.imageUrl) return res.status(400).json({ message: '포스터 정보를 확인해주세요.' });
+    if (!Number.isInteger(id) || id <= 0 || !payload.title) return res.status(400).json({ message: '포스터 정보를 확인해주세요.' });
     if (!isValidPosterTargetUrl(payload.targetUrl)) return res.status(400).json({ message: '이동 URL 형식을 확인해주세요.' });
     const previousPoster = await posterModel.findById(id);
     if (!previousPoster) return res.status(404).json({ message: '포스터를 찾을 수 없습니다.' });
+    uploadedImage = await uploadPosterImage(req.body.imageFile);
+    payload.imageUrl = uploadedImage?.url || previousPoster.imageUrl;
     const poster = await posterModel.update(id, payload);
     if (!poster) return res.status(404).json({ message: '포스터를 찾을 수 없습니다.' });
     if (previousPoster.imageUrl && previousPoster.imageUrl !== poster.imageUrl) {
-      await deleteS3ObjectByUrl(previousPoster.imageUrl);
+      try {
+        await deleteS3ObjectByUrl(previousPoster.imageUrl);
+      } catch (deleteError) {
+        console.error('기존 포스터 이미지를 삭제하지 못했습니다.', deleteError);
+      }
     }
+    uploadedImage = null;
     res.json(poster);
-  } catch (error) { next(error); }
+  } catch (error) {
+    if (uploadedImage?.url) await deleteS3ObjectByUrl(uploadedImage.url).catch(() => {});
+    next(error);
+  }
 });
 
 router.delete('/posters/:id', async (req, res, next) => {
