@@ -184,7 +184,6 @@ body[data-page="admin"] {
 
 #admin-page-shell .tab-content,
 #admin-page-shell .tab-content * {
-    white-space: nowrap;
 }
 
 .admin-support-toolbar {
