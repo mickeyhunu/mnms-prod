@@ -61,6 +61,7 @@ function showHomePosters(posters) {
     posters.forEach((poster, index) => {
         const popup = document.createElement('section');
         popup.className = 'home-poster-popup';
+        popup.setAttribute('data-poster-drag', '');
         setHomePosterStackOffset(popup, index);
         // Later siblings are painted on top by default, so explicitly keep the
         // first (lowest displayOrder) poster in the foreground.
@@ -71,7 +72,7 @@ function showHomePosters(posters) {
         const linkedImage = poster.targetUrl
             ? `<a class="home-poster-popup__link" href="${sanitizeHTML(poster.targetUrl)}">${image}</a>`
             : image;
-        popup.innerHTML = `<header class="home-poster-popup__titlebar" data-poster-drag><span>${sanitizeHTML(poster.title || '안내 포스터')}</span><button class="home-poster-popup__close" type="button" data-poster-close aria-label="창닫기">&times;</button></header>${linkedImage}<div class="home-poster-popup__actions"><button type="button" data-poster-today>오늘 하루 보지 않기</button><button type="button" data-poster-close>창닫기</button></div>`;
+        popup.innerHTML = `<header class="home-poster-popup__titlebar"><span>${sanitizeHTML(poster.title || '안내 포스터')}</span><button class="home-poster-popup__close" type="button" data-poster-close aria-label="창닫기">&times;</button></header>${linkedImage}<div class="home-poster-popup__actions"><button type="button" data-poster-today>오늘 하루 보지 않기</button><button type="button" data-poster-close>창닫기</button></div>`;
 
         const close = (dismissToday = false) => {
             if (dismissToday) dismissPosterToday(poster.id);
@@ -103,7 +104,7 @@ function setHomePosterStackOffset(popup, index) {
 }
 
 function bindHomePosterDrag(popup) {
-    const handle = popup.querySelector('[data-poster-drag]');
+    const handle = popup;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
 
