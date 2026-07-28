@@ -1243,6 +1243,8 @@
 .home-poster-popup__titlebar span:first-child { overflow: hidden; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .home-poster-popup__close { display: grid; flex: 0 0 28px; width: 28px; height: 28px; margin: -3px -6px -3px 12px; padding: 0; place-items: center; border: 0; border-radius: 4px; background: transparent; color: #ddd; cursor: pointer; font-size: 24px; line-height: 1; }
 .home-poster-popup__close:hover, .home-poster-popup__close:focus-visible { background: #3b3b3b; color: #fff; }
+.home-poster-popup__link { display: block; }
+.home-poster-popup__link .home-poster-popup__image { cursor: pointer; }
 .home-poster-popup__image { display: block; width: 100%; max-height: calc(100vh - 124px); object-fit: contain; background: #111; }
 .home-poster-popup__actions { display: grid; grid-template-columns: 7fr 3fr; border-top: 1px solid #333; }
 .home-poster-popup__actions button { min-height: 36px; padding: 8px; border: 0; background: #fff; color: #222; font-size: 13px; font-weight: 700; cursor: pointer; }

@@ -6,6 +6,7 @@ function mapPoster(row) {
     id: Number(row.id),
     title: row.title,
     imageUrl: row.image_url,
+    targetUrl: row.target_url || '',
     isActive: Boolean(row.is_active),
     displayOrder: Number(row.display_order),
     createdAt: row.created_at,
@@ -26,18 +27,18 @@ async function findById(id) {
   return rows[0] ? mapPoster(rows[0]) : null;
 }
 
-async function create({ title, imageUrl, isActive, displayOrder, createdBy }) {
+async function create({ title, imageUrl, targetUrl, isActive, displayOrder, createdBy }) {
   const [result] = await getPool().query(
-    'INSERT INTO home_posters (title, image_url, is_active, display_order, created_by) VALUES (?, ?, ?, ?, ?)',
-    [title, imageUrl, isActive ? 1 : 0, displayOrder, createdBy || null]
+    'INSERT INTO home_posters (title, image_url, target_url, is_active, display_order, created_by) VALUES (?, ?, ?, ?, ?, ?)',
+    [title, imageUrl, targetUrl || null, isActive ? 1 : 0, displayOrder, createdBy || null]
   );
   return findById(result.insertId);
 }
 
-async function update(id, { title, imageUrl, isActive, displayOrder }) {
+async function update(id, { title, imageUrl, targetUrl, isActive, displayOrder }) {
   await getPool().query(
-    'UPDATE home_posters SET title = ?, image_url = ?, is_active = ?, display_order = ? WHERE id = ?',
-    [title, imageUrl, isActive ? 1 : 0, displayOrder, id]
+    'UPDATE home_posters SET title = ?, image_url = ?, target_url = ?, is_active = ?, display_order = ? WHERE id = ?',
+    [title, imageUrl, targetUrl || null, isActive ? 1 : 0, displayOrder, id]
   );
   return findById(id);
 }

@@ -66,9 +66,20 @@ function parsePosterPayload(body = {}) {
   return {
     title: String(body.title || '').trim(),
     imageUrl: String(body.imageUrl || '').trim(),
+    targetUrl: String(body.targetUrl || '').trim(),
     isActive: body.isActive === true,
     displayOrder: Number.isFinite(Number(body.displayOrder)) ? Math.trunc(Number(body.displayOrder)) : 0
   };
+}
+
+function isValidPosterTargetUrl(value) {
+  if (!value) return true;
+  if (value.startsWith('/') && !value.startsWith('//')) return true;
+  try {
+    return ['http:', 'https:'].includes(new URL(value).protocol);
+  } catch (error) {
+    return false;
+  }
 }
 
 router.get('/posters', async (req, res, next) => {
@@ -79,6 +90,7 @@ router.post('/posters', async (req, res, next) => {
   try {
     const payload = parsePosterPayload(req.body);
     if (!payload.title || !payload.imageUrl) return res.status(400).json({ message: '포스터 이름과 이미지는 필수입니다.' });
+    if (!isValidPosterTargetUrl(payload.targetUrl)) return res.status(400).json({ message: '이동 URL 형식을 확인해주세요.' });
     res.status(201).json(await posterModel.create({ ...payload, createdBy: req.user?.id }));
   } catch (error) { next(error); }
 });
@@ -88,6 +100,7 @@ router.put('/posters/:id', async (req, res, next) => {
     const id = Number.parseInt(req.params.id, 10);
     const payload = parsePosterPayload(req.body);
     if (!Number.isInteger(id) || id <= 0 || !payload.title || !payload.imageUrl) return res.status(400).json({ message: '포스터 정보를 확인해주세요.' });
+    if (!isValidPosterTargetUrl(payload.targetUrl)) return res.status(400).json({ message: '이동 URL 형식을 확인해주세요.' });
     const poster = await posterModel.update(id, payload);
     if (!poster) return res.status(404).json({ message: '포스터를 찾을 수 없습니다.' });
     res.json(poster);
