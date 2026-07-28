@@ -219,6 +219,7 @@ async function initDatabase() {
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       title VARCHAR(255) NOT NULL,
       image_url VARCHAR(2048) NOT NULL,
+      target_url VARCHAR(2048) NULL,
       is_active TINYINT(1) NOT NULL DEFAULT 1,
       display_order INT NOT NULL DEFAULT 0,
       created_by BIGINT NULL,
@@ -227,6 +228,16 @@ async function initDatabase() {
       INDEX idx_home_posters_display (is_active, display_order, id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  const [homePosterTargetUrlColumns] = await pool.query(
+    `SELECT COLUMN_NAME
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'home_posters' AND COLUMN_NAME = 'target_url'`,
+    [dbConfig.database]
+  );
+  if (!homePosterTargetUrlColumns.length) {
+    await pool.query('ALTER TABLE home_posters ADD COLUMN target_url VARCHAR(2048) NULL AFTER image_url');
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
