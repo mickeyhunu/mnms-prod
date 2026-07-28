@@ -64,7 +64,11 @@ function showHomePosters(posters) {
         setHomePosterStackOffset(popup, index);
         popup.setAttribute('role', 'dialog');
         popup.setAttribute('aria-label', poster.title || '안내 포스터');
-        popup.innerHTML = `<header class="home-poster-popup__titlebar" data-poster-drag><span>${sanitizeHTML(poster.title || '안내 포스터')}</span><button class="home-poster-popup__close" type="button" data-poster-close aria-label="창닫기">&times;</button></header><img class="home-poster-popup__image" src="${sanitizeHTML(poster.imageUrl)}" alt="${sanitizeHTML(poster.title || '안내 포스터')}"><div class="home-poster-popup__actions"><button type="button" data-poster-today>오늘 하루 보지 않기</button><button type="button" data-poster-close>창닫기</button></div>`;
+        const image = `<img class="home-poster-popup__image" src="${sanitizeHTML(poster.imageUrl)}" alt="${sanitizeHTML(poster.title || '안내 포스터')}">`;
+        const linkedImage = poster.targetUrl
+            ? `<a class="home-poster-popup__link" href="${sanitizeHTML(poster.targetUrl)}">${image}</a>`
+            : image;
+        popup.innerHTML = `<header class="home-poster-popup__titlebar" data-poster-drag><span>${sanitizeHTML(poster.title || '안내 포스터')}</span><button class="home-poster-popup__close" type="button" data-poster-close aria-label="창닫기">&times;</button></header>${linkedImage}<div class="home-poster-popup__actions"><button type="button" data-poster-today>오늘 하루 보지 않기</button><button type="button" data-poster-close>창닫기</button></div>`;
 
         const close = (dismissToday = false) => {
             if (dismissToday) dismissPosterToday(poster.id);
