@@ -340,7 +340,6 @@ function bindCommonEvents() {
     document.getElementById('ads-form-ad-type')?.addEventListener('change', handleAdTypeChange);
     document.getElementById('posters-save-btn')?.addEventListener('click', savePoster);
     document.getElementById('posters-cancel-btn')?.addEventListener('click', resetPosterEditor);
-    document.getElementById('posters-image-upload-btn')?.addEventListener('click', uploadPosterImage);
     document.getElementById('business-ads-save-btn')?.addEventListener('click', saveBusinessAdAdmin);
     document.getElementById('business-ads-cancel-btn')?.addEventListener('click', resetBusinessAdEditor);
     document.getElementById('business-ads-image-upload-btn')?.addEventListener('click', uploadBusinessAdImage);
@@ -2426,7 +2425,7 @@ function fillPosterEditor(poster = null) {
     document.getElementById('posters-form-target-url').value = poster?.targetUrl || '';
     document.getElementById('posters-form-image-url').value = poster?.imageUrl || '';
     document.getElementById('posters-form-image-file').value = '';
-    document.getElementById('posters-form-image-help').textContent = poster?.imageUrl ? '현재 이미지가 등록되어 있습니다.' : '';
+    document.getElementById('posters-form-image-help').textContent = poster?.imageUrl ? '현재 이미지가 등록되어 있습니다. 새 파일을 선택하면 저장 시 교체됩니다.' : '포스터를 저장할 때 이미지가 함께 업로드됩니다.';
     document.getElementById('posters-save-btn').textContent = poster ? '수정 저장' : '포스터 등록';
     document.getElementById('posters-cancel-btn').classList.toggle('hidden', !poster);
     setPosterHelp('');
@@ -2434,27 +2433,22 @@ function fillPosterEditor(poster = null) {
 
 function resetPosterEditor() { fillPosterEditor(null); }
 
-async function uploadPosterImage() {
-    const file = document.getElementById('posters-form-image-file')?.files?.[0];
-    if (!file || !String(file.type).startsWith('image/')) return setPosterHelp('이미지 파일을 선택해주세요.', '#dc3545');
-    const dataUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
-    const button = document.getElementById('posters-image-upload-btn');
-    try {
-        button.disabled = true;
-        const response = await APIClient.post('/uploads/posters/images', { files: [{ dataUrl, fileName: file.name }] });
-        document.getElementById('posters-form-image-url').value = response.files?.[0]?.url || '';
-        document.getElementById('posters-form-image-help').textContent = '업로드 완료';
-        setPosterHelp('포스터 이미지가 업로드되었습니다.', '#198754');
-    } catch (error) { setPosterHelp(error.message || '업로드에 실패했습니다.', '#dc3545'); } finally { button.disabled = false; }
-}
-
 async function savePoster() {
-    const payload = { title: document.getElementById('posters-form-title').value.trim(), imageUrl: document.getElementById('posters-form-image-url').value.trim(), targetUrl: document.getElementById('posters-form-target-url').value.trim(), displayOrder: Number(document.getElementById('posters-form-display-order').value) || 0, isActive: document.getElementById('posters-form-is-active').value === 'true' };
-    if (!payload.title || !payload.imageUrl) return setPosterHelp('관리용 이름을 입력하고 이미지를 업로드해주세요.', '#dc3545');
+    const file = document.getElementById('posters-form-image-file')?.files?.[0];
+    const existingImageUrl = document.getElementById('posters-form-image-url').value.trim();
+    const payload = { title: document.getElementById('posters-form-title').value.trim(), targetUrl: document.getElementById('posters-form-target-url').value.trim(), displayOrder: Number(document.getElementById('posters-form-display-order').value) || 0, isActive: document.getElementById('posters-form-is-active').value === 'true' };
+    if (!payload.title || (!file && !existingImageUrl)) return setPosterHelp('관리용 이름과 이미지를 선택해주세요.', '#dc3545');
+    if (file && !String(file.type).startsWith('image/')) return setPosterHelp('이미지 파일을 선택해주세요.', '#dc3545');
+    const saveButton = document.getElementById('posters-save-btn');
     try {
+        saveButton.disabled = true;
+        if (file) {
+            const dataUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
+            payload.imageFile = { dataUrl, fileName: file.name };
+        }
         if (editingPosterId) await APIClient.put(`/admin/posters/${editingPosterId}`, payload); else await APIClient.post('/admin/posters', payload);
         resetPosterEditor(); await loadPosters(); setPosterHelp('포스터가 저장되었습니다.', '#198754');
-    } catch (error) { setPosterHelp(error.message || '저장에 실패했습니다.', '#dc3545'); }
+    } catch (error) { setPosterHelp(error.message || '저장에 실패했습니다.', '#dc3545'); } finally { saveButton.disabled = false; }
 }
 
 async function deletePoster(id) {
