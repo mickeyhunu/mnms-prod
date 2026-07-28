@@ -101,8 +101,13 @@ router.put('/posters/:id', async (req, res, next) => {
     const payload = parsePosterPayload(req.body);
     if (!Number.isInteger(id) || id <= 0 || !payload.title || !payload.imageUrl) return res.status(400).json({ message: '포스터 정보를 확인해주세요.' });
     if (!isValidPosterTargetUrl(payload.targetUrl)) return res.status(400).json({ message: '이동 URL 형식을 확인해주세요.' });
+    const previousPoster = await posterModel.findById(id);
+    if (!previousPoster) return res.status(404).json({ message: '포스터를 찾을 수 없습니다.' });
     const poster = await posterModel.update(id, payload);
     if (!poster) return res.status(404).json({ message: '포스터를 찾을 수 없습니다.' });
+    if (previousPoster.imageUrl && previousPoster.imageUrl !== poster.imageUrl) {
+      await deleteS3ObjectByUrl(previousPoster.imageUrl);
+    }
     res.json(poster);
   } catch (error) { next(error); }
 });
