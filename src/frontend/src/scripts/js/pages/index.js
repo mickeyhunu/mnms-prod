@@ -17,8 +17,43 @@ const searchState = {
     keyword: ''
 };
 let currentBoardType = 'ALL';
+const COMMUNITY_BOARD_SLUGS = {
+    ALL: '',
+    FREE: 'free',
+    ANON: 'anon',
+    REVIEW: 'review',
+    STORY: 'story',
+    PIECE: 'piece',
+    ATTENDANCE: 'attendance',
+    QUESTION: 'question',
+    EVENT: 'event',
+    PROMOTION: 'promotion'
+};
+
+function getBoardTypeFromPath(pathname = window.location.pathname) {
+    const normalizedPath = String(pathname || '').replace(/\/+$/, '');
+    const slug = normalizedPath.startsWith('/community/')
+        ? normalizedPath.slice('/community/'.length).toLowerCase()
+        : '';
+    const matchedBoard = Object.entries(COMMUNITY_BOARD_SLUGS)
+        .find(([, boardSlug]) => boardSlug === slug);
+
+    return matchedBoard?.[0] || 'ALL';
+}
+
+function getCommunityBoardPath(boardType) {
+    const slug = COMMUNITY_BOARD_SLUGS[boardType] || '';
+    return slug ? `/community/${slug}` : '/community';
+}
+
+function syncActiveBoardTab(tabs) {
+    tabs.forEach((tab) => {
+        tab.classList.toggle('active', tab.dataset.boardType === currentBoardType);
+    });
+}
 
 async function initIndexPage() {
+    currentBoardType = getBoardTypeFromPath();
     Auth.updateHeaderUI();
 
     if (typeof initHeader === 'function') {
@@ -710,6 +745,8 @@ function initBoardTabs() {
     const tabs = document.querySelectorAll('.board-tab');
     if (!tabs.length || !tabsPanel || !toggleButton) return;
 
+    syncActiveBoardTab(tabs);
+
     const closeTabsPanel = () => {
         hideElement(tabsPanel);
         toggleButton.setAttribute('aria-expanded', 'false');
@@ -741,12 +778,21 @@ function initBoardTabs() {
     tabs.forEach((tab) => {
         tab.addEventListener('click', () => {
             currentBoardType = tab.dataset.boardType || 'ALL';
-            tabs.forEach((item) => item.classList.toggle('active', item === tab));
+            window.history.pushState({}, '', getCommunityBoardPath(currentBoardType));
+            syncActiveBoardTab(tabs);
             closeTabsPanel();
             setupCommunityActions();
             updateBestPostsVisibility();
             loadPosts(0);
         });
+    });
+
+    window.addEventListener('popstate', () => {
+        currentBoardType = getBoardTypeFromPath();
+        syncActiveBoardTab(tabs);
+        setupCommunityActions();
+        updateBestPostsVisibility();
+        loadPosts(0);
     });
 }
 
