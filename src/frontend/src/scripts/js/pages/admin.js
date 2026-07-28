@@ -2423,6 +2423,7 @@ function fillPosterEditor(poster = null) {
     document.getElementById('posters-form-title').value = poster?.title || '';
     document.getElementById('posters-form-display-order').value = Number(poster?.displayOrder || 0);
     document.getElementById('posters-form-is-active').value = String(poster ? Boolean(poster.isActive) : true);
+    document.getElementById('posters-form-target-url').value = poster?.targetUrl || '';
     document.getElementById('posters-form-image-url').value = poster?.imageUrl || '';
     document.getElementById('posters-form-image-file').value = '';
     document.getElementById('posters-form-image-help').textContent = poster?.imageUrl ? '현재 이미지가 등록되어 있습니다.' : '';
@@ -2448,7 +2449,7 @@ async function uploadPosterImage() {
 }
 
 async function savePoster() {
-    const payload = { title: document.getElementById('posters-form-title').value.trim(), imageUrl: document.getElementById('posters-form-image-url').value.trim(), displayOrder: Number(document.getElementById('posters-form-display-order').value) || 0, isActive: document.getElementById('posters-form-is-active').value === 'true' };
+    const payload = { title: document.getElementById('posters-form-title').value.trim(), imageUrl: document.getElementById('posters-form-image-url').value.trim(), targetUrl: document.getElementById('posters-form-target-url').value.trim(), displayOrder: Number(document.getElementById('posters-form-display-order').value) || 0, isActive: document.getElementById('posters-form-is-active').value === 'true' };
     if (!payload.title || !payload.imageUrl) return setPosterHelp('관리용 이름을 입력하고 이미지를 업로드해주세요.', '#dc3545');
     try {
         if (editingPosterId) await APIClient.put(`/admin/posters/${editingPosterId}`, payload); else await APIClient.post('/admin/posters', payload);
