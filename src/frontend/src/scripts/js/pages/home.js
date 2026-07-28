@@ -62,6 +62,9 @@ function showHomePosters(posters) {
         const popup = document.createElement('section');
         popup.className = 'home-poster-popup';
         setHomePosterStackOffset(popup, index);
+        // Later siblings are painted on top by default, so explicitly keep the
+        // first (lowest displayOrder) poster in the foreground.
+        popup.style.zIndex = String(posters.length - index);
         popup.setAttribute('role', 'dialog');
         popup.setAttribute('aria-label', poster.title || '안내 포스터');
         const image = `<img class="home-poster-popup__image" src="${sanitizeHTML(poster.imageUrl)}" alt="${sanitizeHTML(poster.title || '안내 포스터')}">`;
@@ -113,6 +116,9 @@ function bindHomePosterDrag(popup) {
         popup.style.top = `${rect.top}px`;
         popup.style.width = `${rect.width}px`;
         popup.classList.add('is-positioned', 'is-dragging');
+        const siblingZIndexes = [...(popup.parentElement?.children || [])]
+            .map((element) => Number(element.style.zIndex) || 0);
+        popup.style.zIndex = String(Math.max(0, ...siblingZIndexes) + 1);
         popup.parentElement?.appendChild(popup);
         handle.setPointerCapture(event.pointerId);
         event.preventDefault();
