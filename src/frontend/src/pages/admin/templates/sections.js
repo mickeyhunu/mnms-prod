@@ -37,7 +37,7 @@ export const userEditPanelTemplate = `
                                     <input type="text" id="admin-user-phone" name="phone" placeholder="010-0000-0000">
                                     <span class="profile-consent-inline"><input type="checkbox" id="admin-user-sms-consent" name="smsConsent"><span class="profile-consent-text">SMS 수신 동의</span></span>
                                 </label>
-                                <div class="admin-user-point-adjustment">
+                                <div class="admin-user-point-adjustment" id="admin-user-point-adjustment">
                                     <strong>포인트 수동 지급/차감</strong>
                                     <label>현재 포인트
                                         <input type="number" id="admin-user-total-points" name="totalPoints" min="0" step="1" readonly>
