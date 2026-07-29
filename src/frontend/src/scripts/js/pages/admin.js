@@ -141,6 +141,7 @@ function updateUsersListLabels() {
     const searchInput = document.getElementById('users-search-input');
     const idHeader = document.getElementById('users-id-header');
     const loginIdHeader = document.getElementById('users-login-id-header');
+    const balanceHeader = document.getElementById('users-balance-header');
 
     if (loadingText) loadingText.textContent = isBusinessUsersTab ? '기업 회원 정보를 불러오는 중...' : '일반 회원 정보를 불러오는 중...';
     if (searchInput) {
@@ -149,6 +150,7 @@ function updateUsersListLabels() {
     }
     if (idHeader) idHeader.textContent = isBusinessUsersTab ? '기업회원 아이디' : 'ID';
     if (loginIdHeader) loginIdHeader.textContent = isBusinessUsersTab ? '회원번호' : '아이디';
+    if (balanceHeader) balanceHeader.textContent = isBusinessUsersTab ? '스탬프' : '포인트';
 }
 
 function getAdminPageState() {
@@ -1383,7 +1385,9 @@ function renderUsersTable() {
                 <td>${sanitizeHTML(user.nickname || '')}</td>
                 <td>${sanitizeHTML(user.phone || '')}</td>
                 <td>${formatAdminRestrictionStatus(user)}</td>
-                <td>${Number(user.totalPoints || 0).toLocaleString()} P</td>
+                <td>${isBusinessUsersTab
+                    ? `${Number(user.businessStampBalance || 0).toLocaleString()}개`
+                    : `${Number(user.totalPoints || 0).toLocaleString()} P`}</td>
                 <td>${formatDate(user.createdAt || user.created_at)}</td>
                 <td>${sanitizeHTML(user.role || 'MEMBER')}</td>
                 <td>${memberTypeLabel}</td>
@@ -2014,6 +2018,8 @@ function syncMemberTypeForBusinessRole() {
 }
 
 function fillUserEditForm(user) {
+    const isBusinessUser = String(user.role || '').toUpperCase() === 'BUSINESS'
+        || String(user.memberType || '').toUpperCase() === 'BUSINESS';
     document.getElementById('admin-user-login-id').value = user.loginId || '';
     document.getElementById('admin-user-name').value = user.name || user.nickname || '';
     document.getElementById('admin-user-birth').value = user.birthDate || '';
@@ -2024,8 +2030,9 @@ function fillUserEditForm(user) {
     document.getElementById('admin-user-point-adjustment-type').value = 'NONE';
     document.getElementById('admin-user-point-adjustment-amount').value = '1';
     document.getElementById('admin-user-point-adjustment-reason').value = '';
+    document.getElementById('admin-user-point-adjustment')?.classList.toggle('hidden', isBusinessUser);
     const stampAdjustment = document.getElementById('admin-user-stamp-adjustment');
-    stampAdjustment?.classList.toggle('hidden', !isMasterAdmin);
+    stampAdjustment?.classList.toggle('hidden', !isBusinessUser && !isMasterAdmin);
     const stampBalance = document.getElementById('admin-user-stamp-balance');
     const stampAdjustmentType = document.getElementById('admin-user-stamp-adjustment-type');
     const stampAdjustmentAmount = document.getElementById('admin-user-stamp-adjustment-amount');
@@ -2034,6 +2041,10 @@ function fillUserEditForm(user) {
     if (stampAdjustmentType) stampAdjustmentType.value = 'NONE';
     if (stampAdjustmentAmount) stampAdjustmentAmount.value = '1';
     if (stampAdjustmentReason) stampAdjustmentReason.value = '';
+    [stampAdjustmentType, stampAdjustmentAmount, stampAdjustmentReason, document.getElementById('admin-user-stamp-adjustment-btn')]
+        .forEach((control) => {
+            if (control) control.disabled = !isMasterAdmin;
+        });
     const roleSelect = document.getElementById('admin-user-role');
     if (roleSelect) {
         roleSelect.value = user.role || 'MEMBER';

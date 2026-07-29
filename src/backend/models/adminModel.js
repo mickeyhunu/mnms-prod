@@ -650,9 +650,16 @@ async function listUsers() {
             bp.manager_name AS businessManagerName,
             bp.contact_phone AS businessContactPhone,
             bp.approval_status AS businessApprovalStatus,
-            bp.registration_status AS businessRegistrationStatus
+            bp.registration_status AS businessRegistrationStatus,
+            COALESCE(bs.stamp_balance, 0) AS businessStampBalance
        FROM users u
        LEFT JOIN business_profiles bp ON bp.user_id = u.id
+       LEFT JOIN (
+         SELECT user_id, SUM(amount) AS stamp_balance
+           FROM stamp_histories
+          WHERE stamp_type = 'BUSINESS'
+          GROUP BY user_id
+       ) bs ON bs.user_id = u.id
       WHERE u.role IN ('MEMBER', 'BUSINESS')
       ORDER BY u.created_at DESC, u.id DESC`
   );
@@ -669,7 +676,8 @@ async function listUsers() {
       businessManagerName: source.businessManagerName || '',
       businessContactPhone: source.businessContactPhone || '',
       businessApprovalStatus: source.businessApprovalStatus || '',
-      businessRegistrationStatus: source.businessRegistrationStatus || ''
+      businessRegistrationStatus: source.businessRegistrationStatus || '',
+      businessStampBalance: Math.max(0, Number(source.businessStampBalance || 0))
     });
   }
   return resolvedRows;
