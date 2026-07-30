@@ -2,6 +2,21 @@
 
 Node.js(Express) + MySQL 백엔드와 Vue 3 기반 프론트엔드 구조로 정리된 프로젝트입니다.
 
+## 데이터베이스 환경 변수
+
+```env
+MYSQL_HOST=
+MYSQL_PORT=3306
+MYSQL_USER=
+MYSQL_PASSWORD=
+MYSQL_DATABASE=gangnam_DB
+BLACKCHECK_ACCESS_CODE=qwerasdf12,mastercode,password
+```
+
+`BLACKCHECK_ACCESS_CODE`는 쉼표로 여러 코드를 구분합니다. 서버 시작 시 코드를
+해시해 `blackcheck_access_codes` 테이블에 동기화하며, 접근 코드와 밤치트 코멘트는
+각각 `blackcheck_access_codes`, `bamcheat_comments` 테이블에서 처리합니다.
+
 ## 기술 스택
 - Backend: Node.js, Express
 - Frontend: Vue 3 (ESM), Vue Router
