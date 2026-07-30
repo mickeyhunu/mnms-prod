@@ -1614,6 +1614,8 @@
     color: #212529;
     font-size: 15px;
     line-height: 1.6;
+    user-select: text;
+    -webkit-user-select: text;
 }
 
 
