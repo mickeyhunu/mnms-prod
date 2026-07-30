@@ -363,7 +363,7 @@
 }
 
 .business-profile-disclosure {
-    margin: 22px 0 0;
+    margin: 6px 0 0;
     border-top: 1px solid #edf0f3;
     border-bottom: 1px solid #edf0f3;
     background: #ffffff;
@@ -608,7 +608,7 @@ body.business-profile-modal-open {
     margin-right: 16px;
 }
 
-.business-profile-standalone .business-profile-disclosure {
+.business-profile-standalone {
     margin-top: 24px;
 }
 
@@ -692,4 +692,37 @@ body.business-profile-modal-open {
     background: #15803d;
     color: #ffffff;
     box-shadow: 0 12px 28px rgba(21, 128, 61, 0.32);
+}
+
+.business-profile-welcome-banner {
+}
+
+.business-profile-welcome-banner-frame {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 3px;
+    background: linear-gradient(90deg, #ff2d55, #ffcc00, #34c759, #00c7ff, #5856d6, #ff2d95, #ff2d55);
+    background-size: 300% 100%;
+    box-shadow: 0 0 18px rgba(175, 45, 255, 0.35);
+    animation: business-profile-rainbow-border 4s linear infinite;
+}
+
+.business-profile-welcome-banner-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 11px;
+}
+
+@keyframes business-profile-rainbow-border {
+    to {
+        background-position: 300% 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .business-profile-welcome-banner-frame {
+        animation: none;
+    }
 }
