@@ -2,6 +2,23 @@
  * 파일 역할: 기업회원 전용 밤치트 전화번호 코멘트 조회/저장 쿼리를 담당하는 모델 파일.
  */
 const { getPool } = require('../config/database');
+const crypto = require('crypto');
+
+function hashAccessCode(code) {
+  return crypto.createHash('sha256').update(String(code)).digest('hex');
+}
+
+async function isValidAccessCode(code) {
+  const normalizedCode = String(code || '').trim();
+  if (!normalizedCode) return false;
+
+  const pool = getPool();
+  const [rows] = await pool.query(
+    'SELECT 1 FROM blackcheck_access_codes WHERE code_hash = ? AND is_active = 1 LIMIT 1',
+    [hashAccessCode(normalizedCode)]
+  );
+  return rows.length > 0;
+}
 
 function normalizePhoneNumber(phoneNumber) {
   return String(phoneNumber || '').replace(/[^0-9]/g, '').trim();
@@ -104,6 +121,7 @@ async function deleteComment(commentId) {
 }
 
 module.exports = {
+  isValidAccessCode,
   normalizePhoneNumber,
   findCommentsByPhoneNumber,
   createComment,
