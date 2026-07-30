@@ -1,6 +1,7 @@
 /**
  * 파일 역할: 기업회원 전용 밤치트 번호 검색/코멘트 작성 페이지를 초기화하는 스크립트 파일.
  */
+const BAMCHEAT_ACCESS_CODE = 'blackcode';
 let bamcheatAccessCode = '';
 
 const REGION_DISTRICT_MAP = {
@@ -32,7 +33,7 @@ function getBamcheatAccessCode() {
 }
 
 function hasBamcheatCodeAccess() {
-    return Boolean(getBamcheatAccessCode());
+    return getBamcheatAccessCode() === BAMCHEAT_ACCESS_CODE;
 }
 
 function canAccessBamcheat() {
@@ -58,26 +59,20 @@ function updateBamcheatAccessView() {
     return canAccess;
 }
 
-async function submitBamcheatAccessCode(event) {
+function submitBamcheatAccessCode(event) {
     event.preventDefault();
     const input = document.getElementById('bamcheat-access-code-input');
     const status = document.getElementById('bamcheat-access-status');
     const code = String(input?.value || '').trim();
 
-    if (!code) {
+    if (code !== BAMCHEAT_ACCESS_CODE) {
         if (status) status.textContent = '접근 코드가 올바르지 않습니다.';
         return;
     }
 
-    try {
-        await APIClient.post('/bamcheat/access/verify', { accessCode: code });
-        bamcheatAccessCode = code;
-        if (status) status.textContent = '';
-        updateBamcheatAccessView();
-    } catch (error) {
-        bamcheatAccessCode = '';
-        if (status) status.textContent = '접근 코드가 올바르지 않습니다.';
-    }
+    bamcheatAccessCode = code;
+    if (status) status.textContent = '';
+    updateBamcheatAccessView();
 }
 
 function formatBamcheatDate(value) {

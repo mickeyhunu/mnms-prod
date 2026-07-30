@@ -2,7 +2,6 @@
  * 파일 역할: 애플리케이션의 데이터베이스 연결 설정을 담당하는 구성 파일.
  */
 const mysql = require('mysql2/promise');
-const crypto = require('crypto');
 const { hashPassword, isHashedPassword } = require('../utils/passwordHasher');
 
 function isEnabled(value) {
@@ -10,17 +9,6 @@ function isEnabled(value) {
 }
 
 const useLocalDb = isEnabled(process.env.MNMS_USE_LOCAL_DB || process.env.USE_LOCAL_DB);
-
-function hashBlackcheckAccessCode(code) {
-  return crypto.createHash('sha256').update(String(code)).digest('hex');
-}
-
-function readBlackcheckAccessCodes() {
-  return [...new Set(String(process.env.BLACKCHECK_ACCESS_CODE || '')
-    .split(',')
-    .map((code) => code.trim())
-    .filter(Boolean))];
-}
 
 function readDbValue(options) {
   const { localKeys = [], remoteKeys = [], fallback } = options;
@@ -1479,42 +1467,6 @@ async function initDatabase() {
 
   if (!supportAttachmentUrlsColumn.length) {
     await pool.query('ALTER TABLE support_inquiries ADD COLUMN attachment_urls LONGTEXT NULL AFTER content');
-  }
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS blackcheck_access_codes (
-      id BIGINT PRIMARY KEY AUTO_INCREMENT,
-      code_hash CHAR(64) NOT NULL,
-      is_active TINYINT(1) NOT NULL DEFAULT 1,
-      source ENUM('ENV','MANUAL') NOT NULL DEFAULT 'MANUAL',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      UNIQUE KEY uq_blackcheck_access_codes_hash (code_hash),
-      INDEX idx_blackcheck_access_codes_active (is_active)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-  `);
-
-  const blackcheckAccessCodes = readBlackcheckAccessCodes();
-  if (blackcheckAccessCodes.length) {
-    const connection = await pool.getConnection();
-    try {
-      await connection.beginTransaction();
-      await connection.query("UPDATE blackcheck_access_codes SET is_active = 0 WHERE source = 'ENV'");
-      for (const code of blackcheckAccessCodes) {
-        await connection.query(
-          `INSERT INTO blackcheck_access_codes (code_hash, is_active, source)
-           VALUES (?, 1, 'ENV')
-           ON DUPLICATE KEY UPDATE is_active = 1, source = 'ENV'`,
-          [hashBlackcheckAccessCode(code)]
-        );
-      }
-      await connection.commit();
-    } catch (error) {
-      await connection.rollback();
-      throw error;
-    } finally {
-      connection.release();
-    }
   }
 
   await pool.query(`
