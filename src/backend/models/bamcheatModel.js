@@ -1,8 +1,14 @@
 /**
  * 파일 역할: 기업회원 전용 밤치트 전화번호 코멘트 조회/저장 쿼리를 담당하는 모델 파일.
+ *
+ * 쓰기 작업은 연결의 기본 스키마(gangnam_DB)에만 수행한다. 조회할 때만
+ * mnms_prod의 기존 코멘트를 읽기 전용 결과로 합친다.
  */
 const { getPool } = require('../config/database');
 const crypto = require('crypto');
+
+const PRIMARY_COMMENT_SOURCE = 'gangnam_DB';
+const READ_ONLY_COMMENT_SOURCE = 'mnms_prod';
 
 function hashAccessCode(code) {
   return crypto.createHash('sha256').update(String(code)).digest('hex');
@@ -51,7 +57,7 @@ async function findCommentsByPhoneNumber(phoneNumber, viewerUserId) {
             u.nickname AS authorNickname,
             COUNT(bcr.id) AS recommendationCount,
             MAX(CASE WHEN bcr.user_id = ? THEN 1 ELSE 0 END) AS isRecommendedByMe,
-            'gangnam_DB' AS source,
+            '${PRIMARY_COMMENT_SOURCE}' AS source,
             0 AS isReadOnly
        FROM bamcheat_comments bc
        JOIN users u ON u.id = bc.author_user_id
@@ -68,10 +74,10 @@ async function findCommentsByPhoneNumber(phoneNumber, viewerUserId) {
              u.nickname AS authorNickname,
              0 AS recommendationCount,
              0 AS isRecommendedByMe,
-             'mnms_prod' AS source,
+             '${READ_ONLY_COMMENT_SOURCE}' AS source,
              1 AS isReadOnly
-        FROM mnms_prod.bamcheat_comments bc
-        JOIN mnms_prod.users u ON u.id = bc.author_user_id
+        FROM \`${READ_ONLY_COMMENT_SOURCE}\`.bamcheat_comments bc
+        JOIN \`${READ_ONLY_COMMENT_SOURCE}\`.users u ON u.id = bc.author_user_id
        WHERE bc.phone_number = ?
        ) comments
       ORDER BY comments.createdAt DESC, comments.id DESC`,
@@ -103,7 +109,7 @@ async function createComment({ phoneNumber, authorUserId, region, district, comm
             u.nickname AS authorNickname,
             0 AS recommendationCount,
             0 AS isRecommendedByMe,
-            'gangnam_DB' AS source,
+            '${PRIMARY_COMMENT_SOURCE}' AS source,
             0 AS isReadOnly
        FROM bamcheat_comments bc
        JOIN users u ON u.id = bc.author_user_id

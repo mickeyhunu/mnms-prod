@@ -14,8 +14,13 @@ BLACKCHECK_ACCESS_CODE=qwerasdf12,mastercode,password
 ```
 
 `BLACKCHECK_ACCESS_CODE`는 쉼표로 여러 코드를 구분합니다. 서버 시작 시 코드를
-해시해 `blackcheck_access_codes` 테이블에 동기화하며, 접근 코드와 밤치트 코멘트는
-각각 `blackcheck_access_codes`, `bamcheat_comments` 테이블에서 처리합니다.
+해시해 `blackcheck_access_codes` 테이블에 동기화합니다.
+
+밤치트 번호 조회는 연결의 기본 스키마인 `gangnam_DB.bamcheat_comments`와
+`mnms_prod.bamcheat_comments`를 함께 검색합니다. `mnms_prod`에서 가져온 코멘트는
+읽기 전용으로 표시되며, 신규 코멘트 등록·추천·삭제는 기존 `gangnam_DB`에만
+반영됩니다. 따라서 애플리케이션의 MySQL 계정에는 `mnms_prod.bamcheat_comments`와
+`mnms_prod.users`에 대한 `SELECT` 권한도 필요합니다.
 
 ## 기술 스택
 - Backend: Node.js, Express
