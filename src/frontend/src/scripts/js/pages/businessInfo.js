@@ -812,6 +812,11 @@ function buildBusinessProfileDisclosureMarkup(ad) {
     if (!disclosureItems.length) return '';
 
     return `
+        <figure class="business-profile-welcome-banner">
+            <div class="business-profile-welcome-banner-frame">
+                <img src="/src/assets/image/business-profile-welcome-banner.png" alt="안녕하세요 미드나잇맨즈보고 전화드렸어요" loading="lazy" decoding="async">
+            </div>
+        </figure>
         <section class="business-profile-disclosure" aria-label="사업자정보">
             <dl>
                 ${disclosureItems.map(([label, value]) => `
