@@ -609,10 +609,6 @@ body.business-profile-modal-open {
     margin-right: 16px;
 }
 
-.business-profile-standalone {
-    margin-top: 24px;
-}
-
 .business-profile-standalone .business-profile-info {
     grid-template-columns: 1fr;
     gap: 8px;
