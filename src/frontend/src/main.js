@@ -5,7 +5,7 @@ import { createApp } from 'vue';
 import router from './router/index.js';
 import App from './App.js';
 
-const INTERACTION_ALLOWED_SELECTOR = 'input, textarea, select, [contenteditable], [role="textbox"], .ad-profile-editor-content, #post-content, #post-content *';
+const INTERACTION_ALLOWED_SELECTOR = 'input, textarea, select, [contenteditable], [role="textbox"], .ad-profile-editor--quill, #post-content, #post-content *';
 const ADMIN_INTERACTION_ALLOWED_PATH_PREFIX = '/admin';
 let isDevToolsBlocked = false;
 
