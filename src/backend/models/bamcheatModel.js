@@ -30,19 +30,7 @@ async function findCommentsByPhoneNumber(phoneNumber, viewerUserId) {
 
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT comments.id,
-            comments.phoneNumber,
-            comments.comment,
-            comments.region,
-            comments.district,
-            comments.createdAt,
-            comments.authorNickname,
-            comments.recommendationCount,
-            comments.isRecommendedByMe,
-            comments.source,
-            comments.isReadOnly
-       FROM (
-      SELECT bc.id,
+    `SELECT bc.id,
             bc.phone_number AS phoneNumber,
             bc.comment,
             bc.region,
@@ -50,32 +38,14 @@ async function findCommentsByPhoneNumber(phoneNumber, viewerUserId) {
             bc.created_at AS createdAt,
             u.nickname AS authorNickname,
             COUNT(bcr.id) AS recommendationCount,
-            MAX(CASE WHEN bcr.user_id = ? THEN 1 ELSE 0 END) AS isRecommendedByMe,
-            'gangnam_DB' AS source,
-            0 AS isReadOnly
+            MAX(CASE WHEN bcr.user_id = ? THEN 1 ELSE 0 END) AS isRecommendedByMe
        FROM bamcheat_comments bc
        JOIN users u ON u.id = bc.author_user_id
        LEFT JOIN bamcheat_comment_recommendations bcr ON bcr.comment_id = bc.id
       WHERE bc.phone_number = ?
       GROUP BY bc.id, bc.phone_number, bc.comment, bc.region, bc.district, bc.created_at, u.nickname
-      UNION ALL
-      SELECT bc.id,
-             bc.phone_number AS phoneNumber,
-             bc.comment,
-             bc.region,
-             bc.district,
-             bc.created_at AS createdAt,
-             u.nickname AS authorNickname,
-             0 AS recommendationCount,
-             0 AS isRecommendedByMe,
-             'mnms_prod' AS source,
-             1 AS isReadOnly
-        FROM mnms_prod.bamcheat_comments bc
-        JOIN mnms_prod.users u ON u.id = bc.author_user_id
-       WHERE bc.phone_number = ?
-       ) comments
-      ORDER BY comments.createdAt DESC, comments.id DESC`,
-    [viewerUserId || 0, normalizedPhoneNumber, normalizedPhoneNumber]
+      ORDER BY bc.created_at DESC, bc.id DESC`,
+    [viewerUserId || 0, normalizedPhoneNumber]
   );
 
   return rows;
@@ -102,9 +72,7 @@ async function createComment({ phoneNumber, authorUserId, region, district, comm
             bc.created_at AS createdAt,
             u.nickname AS authorNickname,
             0 AS recommendationCount,
-            0 AS isRecommendedByMe,
-            'gangnam_DB' AS source,
-            0 AS isReadOnly
+            0 AS isRecommendedByMe
        FROM bamcheat_comments bc
        JOIN users u ON u.id = bc.author_user_id
       WHERE bc.id = ?`,
