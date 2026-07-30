@@ -242,9 +242,10 @@ function renderBamcheatComments(comments, searchedPhoneNumber) {
         recommendButton.textContent = `👍 ${Number(item.recommendationCount || 0)}`;
         recommendButton.setAttribute('aria-pressed', item.isRecommendedByMe ? 'true' : 'false');
         if (item.isRecommendedByMe) recommendButton.classList.add('active');
+        const isReadOnlyComment = Boolean(item.isReadOnly);
 
         header.append(meta);
-        if (isAdminViewer) {
+        if (isAdminViewer && !isReadOnlyComment) {
             const deleteButton = document.createElement('button');
             deleteButton.className = 'bamcheat-comment-delete-btn';
             deleteButton.type = 'button';
@@ -258,7 +259,10 @@ function renderBamcheatComments(comments, searchedPhoneNumber) {
         const body = document.createElement('p');
         body.className = 'bamcheat-comment-body';
         body.textContent = stripLegacyBamcheatRegionPrefix(item.comment);
-        if (!Auth.getUser() || !Auth.isAuthenticated()) {
+        if (isReadOnlyComment) {
+            recommendButton.disabled = true;
+            recommendButton.title = '통합 조회된 코멘트는 추천할 수 없습니다.';
+        } else if (!Auth.getUser() || !Auth.isAuthenticated()) {
             recommendButton.disabled = true;
             recommendButton.title = '로그인 후 추천할 수 있습니다.';
         }
