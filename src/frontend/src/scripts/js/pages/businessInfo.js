@@ -566,6 +566,12 @@ function getBusinessProfileTelHref(contact) {
     return `tel:${digits}`;
 }
 
+function getBusinessProfileTelegramHref(telegramId) {
+    const username = String(telegramId || '').trim().replace(/^@+/, '');
+    if (!username) return '';
+    return `https://t.me/${encodeURIComponent(username)}`;
+}
+
 function normalizeBooleanFlag(value) {
     if (typeof value === 'boolean') return value;
     if (typeof value === 'number') return value === 1;
@@ -587,12 +593,17 @@ function buildBusinessProfileContactInfoGroup(managerContact, ad) {
     ];
     const kakaoTalkId = String(ad?.kakaoTalkId || '').trim();
     const telegramId = String(ad?.telegramId || '').trim();
+    const telegramHref = getBusinessProfileTelegramHref(telegramId);
 
     if (kakaoTalkId) {
         contactItems.push({ label: '카카오톡', value: sanitizeHTML(kakaoTalkId), icon: '💬' });
     }
-    if (telegramId) {
-        contactItems.push({ label: '텔레그램', value: sanitizeHTML(telegramId), icon: '✈️' });
+    if (telegramHref) {
+        contactItems.push({
+            label: '텔레그램',
+            value: `<a href="${telegramHref}" target="_blank" rel="noopener noreferrer">${sanitizeHTML(telegramId)}</a>`,
+            icon: '✈️'
+        });
     }
 
     const contactMarkup = contactItems.map((item) => `
