@@ -588,8 +588,15 @@ function buildBusinessProfileInfoPair(firstRow, secondRow) {
 }
 
 function buildBusinessProfileContactInfoGroup(managerContact, ad) {
+    const managerContactHref = getBusinessProfileTelHref(ad?.managerContact);
     const contactItems = [
-        { label: '연락처', value: managerContact, icon: '📞' }
+        {
+            label: '연락처',
+            value: managerContactHref
+                ? `<a href="${managerContactHref}" aria-label="${managerContact} 전화하기">${managerContact}</a>`
+                : managerContact,
+            icon: '📞'
+        }
     ];
     const kakaoTalkId = String(ad?.kakaoTalkId || '').trim();
     const telegramId = String(ad?.telegramId || '').trim();
