@@ -6,7 +6,6 @@ const { optionalAuthMiddleware } = require('../middlewares/authMiddleware');
 const {
   requireBamcheatAccess,
   requireBamcheatAuthenticatedUser,
-  verifyBamcheatAccess,
   searchBamcheatComments,
   createBamcheatComment,
   recommendBamcheatComment,
@@ -16,7 +15,6 @@ const {
 const router = express.Router();
 
 router.use(optionalAuthMiddleware, requireBamcheatAccess);
-router.post('/access/verify', verifyBamcheatAccess);
 router.get('/comments', searchBamcheatComments);
 router.post('/comments', requireBamcheatAuthenticatedUser, createBamcheatComment);
 router.post('/comments/:commentId/recommend', requireBamcheatAuthenticatedUser, recommendBamcheatComment);
