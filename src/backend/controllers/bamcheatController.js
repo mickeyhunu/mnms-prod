@@ -3,8 +3,6 @@
  */
 const bamcheatModel = require('../models/bamcheatModel');
 
-const BAMCHEAT_ACCESS_CODE = 'blackcode';
-
 const REGION_DISTRICT_MAP = {
   서울: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
   경기: ['가평군', '고양시', '과천시', '광명시', '광주시', '구리시', '군포시', '김포시', '남양주시', '동두천시', '부천시', '성남시', '수원시', '시흥시', '안산시', '안성시', '안양시', '양주시', '양평군', '여주시', '연천군', '오산시', '용인시', '의왕시', '의정부시', '이천시', '파주시', '평택시', '포천시', '하남시', '화성시'],
@@ -35,21 +33,29 @@ function isBusinessUser(user) {
   return role === 'BUSINESS' || memberType === 'BUSINESS';
 }
 
-function hasValidBamcheatAccessCode(req) {
+async function hasValidBamcheatAccessCode(req) {
   const code = String(
     req.headers['x-bamcheat-access-code']
     || req.query?.accessCode
     || req.body?.accessCode
     || ''
   ).trim();
-  return code === BAMCHEAT_ACCESS_CODE;
+  return bamcheatModel.isValidAccessCode(code);
 }
 
-function requireBamcheatAccess(req, res, next) {
-  if (isBusinessUser(req.user) || isAdminUser(req.user) || hasValidBamcheatAccessCode(req)) {
-    return next();
+async function requireBamcheatAccess(req, res, next) {
+  try {
+    if (isBusinessUser(req.user) || isAdminUser(req.user) || await hasValidBamcheatAccessCode(req)) {
+      return next();
+    }
+    return res.status(403).json({ message: '밤치트 접근 코드가 필요합니다.' });
+  } catch (error) {
+    return next(error);
   }
-  return res.status(403).json({ message: '밤치트 접근 코드가 필요합니다.' });
+}
+
+function verifyBamcheatAccess(req, res) {
+  return res.json({ valid: true });
 }
 
 function requireBamcheatAuthenticatedUser(req, res, next) {
@@ -155,6 +161,7 @@ async function deleteBamcheatComment(req, res, next) {
 module.exports = {
   requireBamcheatAccess,
   requireBamcheatAuthenticatedUser,
+  verifyBamcheatAccess,
   searchBamcheatComments,
   createBamcheatComment,
   recommendBamcheatComment,
