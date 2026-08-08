@@ -2203,7 +2203,7 @@ const pageRegistry = {
           </dl>
         </details>
         <details class="wiki-glossary-category">
-          <summary><span>👩 종사자 관련</span><strong>8개</strong></summary>
+          <summary><span>👩 종사자 관련</span><strong>9개</strong></summary>
           <dl class="wiki-glossary-list">
             <dt>지정 (고정)</dt>
             <dd>특정 업소에 소속되어 정기적으로 근무하는 종업원.</dd>
@@ -2221,6 +2221,8 @@ const pageRegistry = {
             <dd>종사자 관리 및 영업을 담당하는 관리자.</dd>
             <dt>새끼마담</dt>
             <dd>마담 아래에서 손님 관리 및 인력 관리를 하는 중간 관리자.</dd>
+            <dt>뼈가씨</dt>
+            <dd>‘뼈 속까지 아가씨’라는 말로, 누가 봐도 유흥업계에서 일하는 것이 느껴지는 아가씨를 지칭하는 말.</dd>
           </dl>
         </details>
         <details class="wiki-glossary-category">
@@ -2259,7 +2261,7 @@ const pageRegistry = {
           </dl>
         </details>
         <details class="wiki-glossary-category">
-          <summary><span>👤 손님 관련</span><strong>10개</strong></summary>
+          <summary><span>👤 손님 관련</span><strong>11개</strong></summary>
           <dl class="wiki-glossary-list">
             <dt>빠꼼이</dt>
             <dd>업소 사정을 잘 아는 단골 손님.</dd>
@@ -2281,10 +2283,12 @@ const pageRegistry = {
             <dd>여성을 직접 데리고 업소에 방문하는 손님.</dd>
             <dt>의리초이스</dt>
             <dd>친분 때문에 선택하는 초이스.</dd>
+            <dt>NF (뉴페이스)</dt>
+            <dd>‘New Face’의 약자로, 깨끗한(?) 뉴페이스만 찾아다니는 손님을 저격한 표현.</dd>
           </dl>
         </details>
         <details class="wiki-glossary-category">
-          <summary><span>⭐ 외모 관련</span><strong>8개</strong></summary>
+          <summary><span>⭐ 외모 관련</span><strong>9개</strong></summary>
           <dl class="wiki-glossary-list">
             <dt>사이즈 / 와꾸</dt>
             <dd>외모 및 몸매 평가.</dd>
@@ -2368,7 +2372,7 @@ const pageRegistry = {
           </dl>
         </details>
         <details class="wiki-glossary-category">
-          <summary><span>🗣️ 기타 자주 쓰는 용어</span><strong>13개</strong></summary>
+          <summary><span>🗣️ 기타 자주 쓰는 용어</span><strong>14개</strong></summary>
           <dl class="wiki-glossary-list">
             <dt>작업</dt>
             <dd>이성에게 접근하여 금전적 이득을 얻으려는 행위.</dd>
@@ -2396,6 +2400,8 @@ const pageRegistry = {
             <dd>업계를 떠나는 것.</dd>
             <dt>강남의밤</dt>
             <dd>2026년에 개설된, 강남을 중심으로 화류계 소식과 이슈를 다루는 텔레그램 채널.</dd>
+            <dt>화밍</dt>
+            <dd>‘화류계 커밍아웃’의 줄임말. ‘강남주’, ‘드럼통’, ‘강남의밤’ 같은 SNS의 유명 인플루언서들이 자신이 브압이나 화류계 출신이었다고 밝히는 ‘화밍’을 하면서 큰 논란이 되기도 함.</dd>
           </dl>
         </details>
         </div>
