@@ -105,37 +105,74 @@ function setHomePosterStackOffset(popup, index) {
 
 function bindHomePosterDrag(popup) {
     const handle = popup;
+    const DRAG_START_DISTANCE = 6;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
+    let activePointerId = null;
+    let didDrag = false;
 
     handle.addEventListener('pointerdown', (event) => {
         if (event.button !== 0 || event.target.closest('button')) return;
         const rect = popup.getBoundingClientRect();
+        activePointerId = event.pointerId;
+        pointerStartX = event.clientX;
+        pointerStartY = event.clientY;
         dragOffsetX = event.clientX - rect.left;
         dragOffsetY = event.clientY - rect.top;
-        popup.style.left = `${rect.left}px`;
-        popup.style.top = `${rect.top}px`;
-        popup.style.width = `${rect.width}px`;
-        popup.classList.add('is-positioned', 'is-dragging');
-        const siblingZIndexes = [...(popup.parentElement?.children || [])]
-            .map((element) => Number(element.style.zIndex) || 0);
-        popup.style.zIndex = String(Math.max(0, ...siblingZIndexes) + 1);
-        popup.parentElement?.appendChild(popup);
-        handle.setPointerCapture(event.pointerId);
-        event.preventDefault();
+        didDrag = false;
     });
 
     handle.addEventListener('pointermove', (event) => {
-        if (!popup.classList.contains('is-dragging')) return;
+        if (event.pointerId !== activePointerId) return;
+
+        if (!didDrag) {
+            const distance = Math.hypot(event.clientX - pointerStartX, event.clientY - pointerStartY);
+            if (distance < DRAG_START_DISTANCE) return;
+
+            didDrag = true;
+            handle.setPointerCapture(event.pointerId);
+            const rect = popup.getBoundingClientRect();
+            // Repositioning the popup on pointerdown detaches a clicked link from
+            // the document and cancels its click in Safari and desktop browsers.
+            // Only change the DOM after the pointer has actually started dragging.
+            popup.style.left = `${rect.left}px`;
+            popup.style.top = `${rect.top}px`;
+            popup.style.width = `${rect.width}px`;
+            popup.classList.add('is-positioned', 'is-dragging');
+            const siblingZIndexes = [...(popup.parentElement?.children || [])]
+                .map((element) => Number(element.style.zIndex) || 0);
+            popup.style.zIndex = String(Math.max(0, ...siblingZIndexes) + 1);
+            popup.parentElement?.appendChild(popup);
+        }
+
+        event.preventDefault();
         const maxLeft = Math.max(8, window.innerWidth - popup.offsetWidth - 8);
         const maxTop = Math.max(8, window.innerHeight - popup.offsetHeight - 8);
         popup.style.left = `${Math.min(Math.max(8, event.clientX - dragOffsetX), maxLeft)}px`;
         popup.style.top = `${Math.min(Math.max(8, event.clientY - dragOffsetY), maxTop)}px`;
     });
 
-    const stopDragging = () => popup.classList.remove('is-dragging');
+    const stopDragging = (event) => {
+        if (event.pointerId !== activePointerId) return;
+        popup.classList.remove('is-dragging');
+        activePointerId = null;
+        if (event.type === 'pointercancel') {
+            didDrag = false;
+        } else if (didDrag) {
+            window.setTimeout(() => { didDrag = false; }, 0);
+        }
+    };
     handle.addEventListener('pointerup', stopDragging);
     handle.addEventListener('pointercancel', stopDragging);
+
+    handle.addEventListener('click', (event) => {
+        if (!didDrag) return;
+        event.preventDefault();
+        event.stopPropagation();
+        didDrag = false;
+    }, true);
 }
 
 if (document.readyState === 'loading') {
