@@ -191,6 +191,47 @@
     padding: 5%;
 }
 
+.home-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    padding: 0 5% 48px;
+}
+
+.home-preview-section {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #e7e2eb;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(47, 31, 56, 0.06);
+}
+
+.home-preview-section--community { grid-column: 1 / -1; }
+.home-preview-header { display: flex; align-items: end; justify-content: space-between; gap: 12px; padding: 20px 20px 14px; border-bottom: 1px solid #eeeaf0; }
+.home-preview-header h2 { margin: 2px 0 0; color: #27202b; font-size: 20px; }
+.home-preview-header > a { color: #765082; font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.home-preview-eyebrow { color: #9b6aaa; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; }
+.home-preview-list { padding: 4px 16px 10px; }
+.home-preview-status { margin: 0; padding: 30px 8px; color: #8a8490; font-size: 13px; text-align: center; }
+.home-business-preview, .home-text-preview { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px 4px; color: #2c2730; text-decoration: none; border-bottom: 1px solid #f0edf1; }
+.home-business-preview:last-child, .home-text-preview:last-child { border-bottom: 0; }
+.home-business-preview:hover, .home-text-preview:hover { background: #fcf9fd; }
+.home-business-preview img { width: 52px; height: 52px; flex: 0 0 auto; border-radius: 12px; object-fit: cover; background: #f1eef3; }
+.home-business-preview__copy, .home-text-preview__copy { display: flex; flex: 1; flex-direction: column; min-width: 0; gap: 5px; }
+.home-business-preview__copy strong, .home-text-preview__copy strong { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.home-business-preview__copy small, .home-text-preview__copy small { overflow: hidden; color: #817984; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.home-preview-chevron { color: #b9afbD; font-size: 23px; }
+.home-live-dot { display: inline-block; width: 8px; height: 8px; margin-right: 7px; border-radius: 50%; background: #ff3b57; box-shadow: 0 0 0 4px rgba(255, 59, 87, .12); vertical-align: 2px; }
+.home-text-preview__badge, .home-community-category { min-width: 46px; padding: 5px 7px; border-radius: 999px; color: #e72f4d; background: #fff0f3; font-size: 9px; font-weight: 800; text-align: center; }
+.home-community-category { min-width: 54px; color: #78478a; background: #f5ebf8; }
+
+@media (max-width: 640px) {
+    .home-preview-grid { grid-template-columns: 1fr; gap: 14px; padding-right: 3%; padding-left: 3%; }
+    .home-preview-section--community { grid-column: auto; }
+    .home-preview-header { padding: 17px 16px 12px; }
+}
+
 .top-ads {
     position: relative;
     width: 100%;
