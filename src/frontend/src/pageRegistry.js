@@ -1538,27 +1538,30 @@ const pageRegistry = {
 
     
     <main class="main-content">
-        <div class="container"><section class="top-ads hidden" id="top-ads-container" data-top-ad-placement="HOME" aria-label="홈 상단 광고"></section></div>
-        <div class="container home-service-wrap">
-            <section class="service-category-grid" aria-label="홈 카테고리">
-                <a class="service-item" href="play.html">
-                    <span class="service-icon">🎲</span>
-                    <span class="service-label">PLAY</span>
-                </a>
-                <a class="service-item" href="community.html">
-                    <span class="service-icon">📝</span>
-                    <span class="service-label">커뮤니티</span>
-                </a>
-                <a class="service-item" href="business-info.html">
-                    <span class="service-icon">🏢</span>
-                    <span class="service-label">업체정보</span>
-                </a>
-                <a class="service-item service-item-business-only hidden" href="/bamcheat" id="bamcheat-service-item">
-                    <span class="service-icon">🕵️</span>
-                    <span class="service-label">밤치트</span>
-                </a>
-            </section>
+        <div class="container">
+            <section class="top-ads hidden" id="top-ads-container" data-top-ad-placement="HOME" aria-label="홈 상단 광고"></section>
+            <div class="home-service-wrap">
+                <section class="service-category-grid" aria-label="홈 카테고리">
+                    <a class="service-item" href="play.html">
+                        <span class="service-icon">🎲</span>
+                        <span class="service-label">PLAY</span>
+                    </a>
+                    <a class="service-item" href="community.html">
+                        <span class="service-icon">📝</span>
+                        <span class="service-label">커뮤니티</span>
+                    </a>
+                    <a class="service-item" href="business-info.html">
+                        <span class="service-icon">🏢</span>
+                        <span class="service-label">업체정보</span>
+                    </a>
+                    <a class="service-item service-item-business-only hidden" href="/bamcheat" id="bamcheat-service-item">
+                        <span class="service-icon">🕵️</span>
+                        <span class="service-label">밤치트</span>
+                    </a>
+                </section>
+            </div>
         </div>
+
     </main>
 
     <script src="scripts/js/utils/constants.js"></script>
