@@ -195,7 +195,7 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 18px;
-    padding: 0 5% 48px;
+    padding: 5%;
 }
 
 .home-preview-section {
@@ -227,7 +227,7 @@
 .home-community-category { min-width: 54px; color: #78478a; background: #f5ebf8; }
 
 @media (max-width: 640px) {
-    .home-preview-grid { grid-template-columns: 1fr; gap: 14px; padding-right: 3%; padding-left: 3%; }
+    .home-preview-grid { grid-template-columns: 1fr; gap: 14px; }
     .home-preview-section--community { grid-column: auto; }
     .home-preview-header { padding: 17px 16px 12px; }
 }
