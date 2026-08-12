@@ -18,6 +18,85 @@ function initHomePage() {
         });
     }
     initHomePosters();
+    initHomePreviews();
+}
+
+async function initHomePreviews() {
+    await Promise.allSettled([
+        loadHomeBusinessPreview(),
+        loadHomeLivePreview(),
+        loadHomeCommunityPreview()
+    ]);
+}
+
+function renderHomePreviewStatus(containerId, message) {
+    const container = document.getElementById(containerId);
+    if (container) container.innerHTML = `<p class="home-preview-status">${sanitizeHTML(message)}</p>`;
+}
+
+async function loadHomeBusinessPreview() {
+    const container = document.getElementById('home-business-preview-list');
+    if (!container) return;
+    try {
+        const response = await APIClient.get('/live/business-ads');
+        const ads = Array.isArray(response?.content) ? response.content.slice(0, 4) : [];
+        if (!ads.length) return renderHomePreviewStatus(container.id, '현재 노출 중인 업체정보가 없습니다.');
+        container.innerHTML = ads.map((ad) => {
+            const detailPath = createBusinessInfoDetailPath(ad);
+            const imageUrl = ad.imageUrl || '/src/assets/image/ad-profile-default.webp';
+            return `<a class="home-business-preview" href="${sanitizeHTML(detailPath)}">
+                <img src="${sanitizeHTML(imageUrl)}" alt="" loading="lazy" onerror="this.onerror=null;this.src='/src/assets/image/ad-profile-default.webp';">
+                <span class="home-business-preview__copy"><strong>${sanitizeHTML(ad.businessName || ad.companyName || ad.title || '업체정보')}</strong><small>${sanitizeHTML([ad.region, ad.district, ad.category].filter(Boolean).join(' · ') || '상세정보 보기')}</small></span>
+                <span class="home-preview-chevron" aria-hidden="true">›</span>
+            </a>`;
+        }).join('');
+    } catch (error) {
+        renderHomePreviewStatus(container.id, '업체정보를 불러오지 못했습니다.');
+    }
+}
+
+function getHomeLiveRowText(row, candidates) {
+    const key = candidates.find((candidate) => row?.[candidate] !== undefined && row[candidate] !== null && String(row[candidate]).trim());
+    return key ? String(row[key]).trim() : '';
+}
+
+async function loadHomeLivePreview() {
+    const container = document.getElementById('home-live-preview-list');
+    if (!container) return;
+    try {
+        const response = await APIClient.get('/live/entries', { category: 'room', limit: 4 });
+        const rows = Array.isArray(response?.rows) ? response.rows.slice(0, 4) : [];
+        if (!rows.length) return renderHomePreviewStatus(container.id, '등록된 LIVE 정보가 없습니다.');
+        container.innerHTML = rows.map((row, index) => {
+            const title = getHomeLiveRowText(row, [response?.titleColumn, 'title', 'name', 'roomName', 'room_name']) || `LIVE 정보 ${index + 1}`;
+            const store = getHomeLiveRowText(row, ['storeName', 'store_name', 'shopName', 'shop_name']);
+            const description = getHomeLiveRowText(row, ['content', 'message', 'status', 'memo', 'description']);
+            return `<a class="home-text-preview" href="live.html">
+                <span class="home-text-preview__badge">LIVE</span>
+                <span class="home-text-preview__copy"><strong>${sanitizeHTML(title)}</strong><small>${sanitizeHTML([store, description].filter(Boolean).join(' · ') || '실시간 현황을 확인해 보세요.')}</small></span>
+                <span class="home-preview-chevron" aria-hidden="true">›</span>
+            </a>`;
+        }).join('');
+    } catch (error) {
+        renderHomePreviewStatus(container.id, 'LIVE 정보를 불러오지 못했습니다.');
+    }
+}
+
+async function loadHomeCommunityPreview() {
+    const container = document.getElementById('home-community-preview-list');
+    if (!container) return;
+    try {
+        const response = await APIClient.get('/api/posts', { page: 0, size: 5, boardType: 'ALL' });
+        const posts = Array.isArray(response?.content) ? response.content.slice(0, 5) : [];
+        if (!posts.length) return renderHomePreviewStatus(container.id, '등록된 커뮤니티 게시글이 없습니다.');
+        container.innerHTML = posts.map((post) => `<a class="home-text-preview" href="${sanitizeHTML(post.url || `/post-detail.html?id=${post.id}`)}">
+            <span class="home-community-category">${sanitizeHTML(post.boardTypeLabel || post.boardType || '커뮤니티')}</span>
+            <span class="home-text-preview__copy"><strong>${sanitizeHTML(post.title || '제목 없음')}</strong><small>${sanitizeHTML(post.authorNickname || '익명')} · 조회 ${Number(post.viewCount || 0).toLocaleString('ko-KR')}</small></span>
+            <span class="home-preview-chevron" aria-hidden="true">›</span>
+        </a>`).join('');
+    } catch (error) {
+        renderHomePreviewStatus(container.id, '커뮤니티 게시글을 불러오지 못했습니다.');
+    }
 }
 
 const HOME_POSTER_DISMISS_KEY = 'homePosterDismissedUntil';
