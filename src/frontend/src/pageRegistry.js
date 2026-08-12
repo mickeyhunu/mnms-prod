@@ -1562,6 +1562,16 @@ const pageRegistry = {
             </div>
 
             <div class="home-preview-grid" aria-label="홈 최신 정보">
+                <section class="home-preview-section home-preview-section--community" aria-labelledby="home-community-title">
+                    <header class="home-preview-header">
+                        <div><span class="home-preview-eyebrow">COMMUNITY</span><h2 id="home-community-title">커뮤니티 최신글</h2></div>
+                        <a href="community.html">전체보기 <span aria-hidden="true">→</span></a>
+                    </header>
+                    <div class="home-preview-list" id="home-community-preview-list" aria-live="polite">
+                        <p class="home-preview-status">최신 게시글을 불러오는 중입니다.</p>
+                    </div>
+                </section>
+
                 <section class="home-preview-section home-preview-section--business" aria-labelledby="home-business-title">
                     <header class="home-preview-header">
                         <div><span class="home-preview-eyebrow">BUSINESS</span><h2 id="home-business-title">업체정보</h2></div>
@@ -1579,16 +1589,6 @@ const pageRegistry = {
                     </header>
                     <div class="home-preview-list" id="home-live-preview-list" aria-live="polite">
                         <p class="home-preview-status">실시간 정보를 불러오는 중입니다.</p>
-                    </div>
-                </section>
-
-                <section class="home-preview-section home-preview-section--community" aria-labelledby="home-community-title">
-                    <header class="home-preview-header">
-                        <div><span class="home-preview-eyebrow">COMMUNITY</span><h2 id="home-community-title">커뮤니티 최신글</h2></div>
-                        <a href="community.html">전체보기 <span aria-hidden="true">→</span></a>
-                    </header>
-                    <div class="home-preview-list" id="home-community-preview-list" aria-live="polite">
-                        <p class="home-preview-status">최신 게시글을 불러오는 중입니다.</p>
                     </div>
                 </section>
             </div>
