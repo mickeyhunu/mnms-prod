@@ -1570,6 +1570,18 @@ const pageRegistry = {
                     <div class="home-preview-list" id="home-community-preview-list" aria-live="polite">
                         <p class="home-preview-status">최신 게시글을 불러오는 중입니다.</p>
                     </div>
+                    <section class="best-posts-section home-best-posts" aria-label="베스트 게시글">
+                        <div class="best-posts-block">
+                            <h3 class="best-posts-title">🔥 오늘의 베스트</h3>
+                            <ul class="best-posts-list" id="home-daily-best-list"></ul>
+                            <p class="best-posts-empty hidden" id="home-daily-best-empty">조건을 충족한 게시글이 없습니다.</p>
+                        </div>
+                        <div class="best-posts-block">
+                            <h3 class="best-posts-title">📅 주간 베스트</h3>
+                            <ul class="best-posts-list" id="home-weekly-best-list"></ul>
+                            <p class="best-posts-empty hidden" id="home-weekly-best-empty">조건을 충족한 게시글이 없습니다.</p>
+                        </div>
+                    </section>
                 </section>
 
                 <section class="home-preview-section home-preview-section--business" aria-labelledby="home-business-title">
