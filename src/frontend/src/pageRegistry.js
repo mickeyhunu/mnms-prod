@@ -1567,9 +1567,6 @@ const pageRegistry = {
                         <div><span class="home-preview-eyebrow">COMMUNITY</span><h2 id="home-community-title">커뮤니티 최신글</h2></div>
                         <a href="community.html">전체보기 <span aria-hidden="true">→</span></a>
                     </header>
-                    <ul class="home-preview-list home-community-article-list" id="home-community-preview-list" aria-live="polite">
-                        <li class="home-preview-status">최신 게시글을 불러오는 중입니다.</li>
-                    </ul>
                     <section class="best-posts-section home-best-posts" aria-label="베스트 게시글">
                         <div class="best-posts-block">
                             <h3 class="best-posts-title">🔥 오늘의 베스트</h3>
@@ -1582,6 +1579,9 @@ const pageRegistry = {
                             <p class="best-posts-empty hidden" id="home-weekly-best-empty">조건을 충족한 게시글이 없습니다.</p>
                         </div>
                     </section>
+                    <ul class="home-community-article-list" id="home-community-preview-list" aria-live="polite">
+                        <li class="home-preview-status">최신 게시글을 불러오는 중입니다.</li>
+                    </ul>
                 </section>
 
                 <section class="home-preview-section home-preview-section--business" aria-labelledby="home-business-title">
@@ -1589,7 +1589,7 @@ const pageRegistry = {
                         <div><span class="home-preview-eyebrow">BUSINESS</span><h2 id="home-business-title">업체정보</h2></div>
                         <a href="business-info.html">전체보기 <span aria-hidden="true">→</span></a>
                     </header>
-                    <div class="home-preview-list home-business-preview-list" id="home-business-preview-list" aria-live="polite">
+                    <div class="home-business-preview-list" id="home-business-preview-list" aria-live="polite">
                         <p class="home-preview-status">최신 업체정보를 불러오는 중입니다.</p>
                     </div>
                 </section>
@@ -1601,7 +1601,7 @@ const pageRegistry = {
                     </header>
                     <div class="home-live-preview-shell">
                         <button class="home-live-scroll-button home-live-scroll-button--prev" id="home-live-scroll-prev" type="button" aria-label="이전 가게 정보" disabled>‹</button>
-                        <div class="home-preview-list home-live-preview-list" id="home-live-preview-list" aria-live="polite" tabindex="0" aria-label="가게별 최신 LIVE 정보">
+                        <div class="home-live-preview-list" id="home-live-preview-list" aria-live="polite" tabindex="0" aria-label="가게별 최신 LIVE 정보">
                             <p class="home-preview-status">실시간 정보를 불러오는 중입니다.</p>
                         </div>
                         <button class="home-live-scroll-button home-live-scroll-button--next" id="home-live-scroll-next" type="button" aria-label="다음 가게 정보" disabled>›</button>

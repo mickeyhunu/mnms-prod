@@ -212,7 +212,6 @@
 .home-preview-header h2 { margin: 2px 0 0; color: #27202b; font-size: 20px; }
 .home-preview-header > a { color: #765082; font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; }
 .home-preview-eyebrow { color: #9b6aaa; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; }
-.home-preview-list { padding: 4px 16px 10px; }
 .home-community-article-list { margin: 0; list-style: none; }
 .home-community-article-list .article-item:last-child { border-bottom: 0; }
 .home-preview-status { margin: 0; padding: 30px 8px; color: #8a8490; font-size: 13px; text-align: center; }
