@@ -213,6 +213,8 @@
 .home-preview-header > a { color: #765082; font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; }
 .home-preview-eyebrow { color: #9b6aaa; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; }
 .home-preview-list { padding: 4px 16px 10px; }
+.home-community-article-list { margin: 0; list-style: none; }
+.home-community-article-list .article-item:last-child { border-bottom: 0; }
 .home-preview-status { margin: 0; padding: 30px 8px; color: #8a8490; font-size: 13px; text-align: center; }
 .home-business-preview, .home-text-preview { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px 4px; color: #2c2730; text-decoration: none; border-bottom: 1px solid #f0edf1; }
 .home-business-preview:last-child, .home-text-preview:last-child { border-bottom: 0; }

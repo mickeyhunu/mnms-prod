@@ -32,7 +32,10 @@ async function initHomePreviews() {
 
 function renderHomePreviewStatus(containerId, message) {
     const container = document.getElementById(containerId);
-    if (container) container.innerHTML = `<p class="home-preview-status">${sanitizeHTML(message)}</p>`;
+    if (container) {
+        const tagName = container.tagName === 'UL' ? 'li' : 'p';
+        container.innerHTML = `<${tagName} class="home-preview-status">${sanitizeHTML(message)}</${tagName}>`;
+    }
 }
 
 async function loadHomeBusinessPreview() {
@@ -168,14 +171,52 @@ async function loadHomeCommunityPreview() {
         });
         const posts = Array.isArray(response?.content) ? response.content.slice(0, 5) : [];
         if (!posts.length) return renderHomePreviewStatus(container.id, '등록된 커뮤니티 게시글이 없습니다.');
-        container.innerHTML = posts.map((post) => `<a class="home-text-preview" href="${sanitizeHTML(post.url || `/post-detail.html?id=${post.id}`)}">
-            <span class="home-community-category">${sanitizeHTML(post.boardTypeLabel || post.boardType || '커뮤니티')}</span>
-            <span class="home-text-preview__copy"><strong>${sanitizeHTML(post.title || '제목 없음')}</strong><small>${sanitizeHTML(post.authorNickname || '익명')} · 조회 ${Number(post.viewCount || 0).toLocaleString('ko-KR')}</small></span>
-            <span class="home-preview-chevron" aria-hidden="true">›</span>
-        </a>`).join('');
+        container.innerHTML = posts.map(renderHomeCommunityArticle).join('');
     } catch (error) {
         renderHomePreviewStatus(container.id, '커뮤니티 게시글을 불러오지 못했습니다.');
     }
+}
+
+function renderHomeCommunityArticle(post) {
+    const boardLabel = HOME_BOARD_LABELS[String(post.boardType || '').toUpperCase()]
+        || post.boardTypeLabel
+        || post.boardType
+        || '커뮤니티';
+    const href = post.url || createPostDetailPath(post);
+    const commentCount = Number(post.commentCount || 0);
+    const viewCount = Number(post.viewCount || 0).toLocaleString('ko-KR');
+    const recommendCount = Number(post.likeCount || post.recommendCount || 0).toLocaleString('ko-KR');
+    const preview = post.preview || post.previewText || post.contentPreview || post.content || '내용 미리보기가 없습니다.';
+    const previewText = String(preview).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const authorLevel = Number(post.authorLevel ?? post.level ?? post.authorRank ?? post.rank);
+    const authorBadge = Number.isInteger(authorLevel) && authorLevel > 0
+        ? ` <img class="user-level-badge" src="/src/assets/lv-badges/lv${authorLevel}.png" alt="회원 등급 배지" loading="lazy">`
+        : '';
+    let isViewed = false;
+    try {
+        const viewedPostIds = JSON.parse(localStorage.getItem('communityViewedPostIds') || '[]');
+        isViewed = Array.isArray(viewedPostIds) && viewedPostIds.map(String).includes(String(post.id));
+    } catch (error) {
+        isViewed = false;
+    }
+
+    return `<li class="article-item ${isViewed ? 'article-item-viewed' : 'article-item-unviewed'}">
+        <a class="article-main" href="${sanitizeHTML(href)}" data-post-id="${sanitizeHTML(post.id)}">
+            <div class="article-title-row">
+                <span class="article-inline-icon" aria-hidden="true">💬</span>
+                <h3 class="article-title"><span class="article-board-label">[${sanitizeHTML(boardLabel)}]</span> ${sanitizeHTML(post.title || '제목 없음')}</h3>
+                <span class="article-comment-inline">[${commentCount}]</span>
+            </div>
+            <p class="article-preview">${sanitizeHTML(previewText || '내용 미리보기가 없습니다.')}</p>
+            <div class="article-meta">
+                <span>${sanitizeHTML(post.authorNickname || '익명')}${authorBadge}</span>
+                <span>${sanitizeHTML(formatDate(post.createdAt))}</span>
+                <span>조회수 : ${viewCount}</span>
+                <span class="article-recommend">추천수 : ${recommendCount}</span>
+            </div>
+        </a>
+        <div class="article-side"></div>
+    </li>`;
 }
 
 const HOME_BOARD_LABELS = {

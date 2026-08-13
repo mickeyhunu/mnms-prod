@@ -1567,9 +1567,9 @@ const pageRegistry = {
                         <div><span class="home-preview-eyebrow">COMMUNITY</span><h2 id="home-community-title">커뮤니티 최신글</h2></div>
                         <a href="community.html">전체보기 <span aria-hidden="true">→</span></a>
                     </header>
-                    <div class="home-preview-list" id="home-community-preview-list" aria-live="polite">
-                        <p class="home-preview-status">최신 게시글을 불러오는 중입니다.</p>
-                    </div>
+                    <ul class="home-preview-list home-community-article-list" id="home-community-preview-list" aria-live="polite">
+                        <li class="home-preview-status">최신 게시글을 불러오는 중입니다.</li>
+                    </ul>
                     <section class="best-posts-section home-best-posts" aria-label="베스트 게시글">
                         <div class="best-posts-block">
                             <h3 class="best-posts-title">🔥 오늘의 베스트</h3>
