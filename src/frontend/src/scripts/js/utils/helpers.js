@@ -13,6 +13,40 @@ function hideElement(element) {
    }
 }
 
+/**
+ * Removes the generated recruitment fields from a piece post and returns the
+ * first user-authored line for list previews.
+ */
+function getCommunityPostPreviewText(post = {}, maxLength = 140) {
+   const pieceTemplateStart = '<!-- PIECE_TEMPLATE_START -->';
+   const pieceTemplateEnd = '<!-- PIECE_TEMPLATE_END -->';
+   const isPiecePost = String(post.boardType || post.board_type || '').toUpperCase() === 'PIECE';
+   const rawContent = String(isPiecePost
+      ? (post.content || post.body || post.preview || post.previewText || post.contentPreview || '')
+      : (post.preview || post.previewText || post.contentPreview || post.content || post.body || ''));
+   let previewContent = rawContent;
+
+   if (isPiecePost) {
+      const startIndex = rawContent.indexOf(pieceTemplateStart);
+      const endIndex = rawContent.indexOf(pieceTemplateEnd, startIndex + pieceTemplateStart.length);
+      if (startIndex !== -1 && endIndex !== -1) {
+         previewContent = `${rawContent.slice(0, startIndex)}${rawContent.slice(endIndex + pieceTemplateEnd.length)}`;
+      } else if (startIndex !== -1) {
+         // A shortened API preview can omit the closing marker. In that case,
+         // generated recruitment information must not leak into the preview.
+         previewContent = rawContent.slice(0, startIndex);
+      }
+   }
+
+   const firstLine = previewContent
+      .replace(/<[^>]*>/g, ' ')
+      .split(/\r?\n/)
+      .map((line) => line.replace(/\s+/g, ' ').trim())
+      .find(Boolean);
+
+   return firstLine?.slice(0, maxLength) || '내용 미리보기가 없습니다.';
+}
+
 function setLoading(button, loading = true) {
    if (!button) return;
    
