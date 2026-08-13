@@ -111,6 +111,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
   const keyword = typeof options.keyword === 'string' ? options.keyword.trim() : '';
   const searchType = options.searchType || 'bbs_title';
   const boardFilter = normalizeBoardFilter(options.boardType);
+  const excludeAdminAuthors = Boolean(options.excludeAdminAuthors);
 
   const includeDeleted = Boolean(options.includeDeleted);
   const whereConditions = [];
@@ -118,6 +119,11 @@ async function listPosts(page = 0, size = 10, options = {}) {
     whereConditions.push('p.is_deleted = 0');
   }
   const whereParams = [];
+
+  if (excludeAdminAuthors) {
+    whereConditions.push("p.is_notice = 0");
+    whereConditions.push("UPPER(COALESCE(p.author_role_snapshot, u.role, 'MEMBER')) <> 'ADMIN'");
+  }
 
   if (boardFilter === 'ALL') {
     whereConditions.push(`(
@@ -156,6 +162,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
     pool.query(
       `SELECT COUNT(*) AS total
        FROM posts p
+       LEFT JOIN users u ON u.id = p.user_id
        ${whereClause}`,
       whereParams
     ),
@@ -203,7 +210,7 @@ async function listPosts(page = 0, size = 10, options = {}) {
   ]);
 
   let supportNoticeRows = [];
-  if (!keyword && page === 0) {
+  if (!keyword && page === 0 && !excludeAdminAuthors) {
     const supportBoardCondition = boardFilter === 'ALL'
       ? "a.board_type <> 'SUPPORT_ONLY' AND a.notice_type = 'IMPORTANT'"
       : 'a.board_type = ?';
