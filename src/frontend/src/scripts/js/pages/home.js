@@ -61,23 +61,96 @@ function getHomeLiveRowText(row, candidates) {
     return key ? String(row[key]).trim() : '';
 }
 
+const HOME_LIVE_CATEGORIES = [
+    { key: 'choice', label: '초톡' },
+    { key: 'chojoong', label: '초중' },
+    { key: 'waiting', label: '룸/웨이팅' },
+    { key: 'entry', label: '엔트리' }
+];
+
+function getHomeLiveStoreKey(row) {
+    const storeNo = getHomeLiveRowText(row, ['storeNo', 'store_no', 'shopNo', 'shop_no', 'branchNo', 'branch_no']);
+    if (storeNo) return `no:${storeNo}`;
+    const storeName = getHomeLiveRowText(row, ['storeName', 'store_name', 'shopName', 'shop_name', 'branchName', 'branch_name']);
+    return storeName ? `name:${storeName}` : '';
+}
+
+function getHomeLiveSummary(categoryKey, rows) {
+    if (!rows.length) return '업데이트 없음';
+    const latest = rows[rows.length - 1];
+    if (categoryKey === 'choice') {
+        return getHomeLiveRowText(latest, ['choiceMsg', 'choice_msg', 'message', 'msg', 'content']) || '초톡 업데이트';
+    }
+    if (categoryKey === 'chojoong') {
+        return getHomeLiveRowText(latest, ['chojoongMsg', 'chojoong_msg', 'message', 'msg', 'content']) || '초중 업데이트';
+    }
+    if (categoryKey === 'waiting') {
+        const room = getHomeLiveRowText(latest, ['roomInfo', 'room_info']);
+        const waiting = getHomeLiveRowText(latest, ['waitInfo', 'wait_info', 'waitingInfo', 'waiting_info']);
+        return [room, waiting].filter(Boolean).join(' · ') || '룸/웨이팅 업데이트';
+    }
+
+    const names = rows
+        .map((row) => getHomeLiveRowText(row, ['workerName', 'worker_name', 'entryName', 'entry_name', 'name']))
+        .filter(Boolean);
+    return names.length ? `${names.slice(0, 3).join(', ')}${names.length > 3 ? ` 외 ${names.length - 3}명` : ''}` : `현재 ${rows.length}명`;
+}
+
+function bindHomeLiveScroller(container) {
+    const previousButton = document.getElementById('home-live-scroll-prev');
+    const nextButton = document.getElementById('home-live-scroll-next');
+    if (!previousButton || !nextButton) return;
+
+    const updateButtons = () => {
+        const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth);
+        previousButton.disabled = container.scrollLeft <= 4;
+        nextButton.disabled = container.scrollLeft >= maxScrollLeft - 4;
+    };
+    const move = (direction) => container.scrollBy({ left: direction * container.clientWidth, behavior: 'smooth' });
+    previousButton.onclick = () => move(-1);
+    nextButton.onclick = () => move(1);
+    container.addEventListener('scroll', updateButtons, { passive: true });
+    window.addEventListener('resize', updateButtons);
+    window.requestAnimationFrame(updateButtons);
+}
+
 async function loadHomeLivePreview() {
     const container = document.getElementById('home-live-preview-list');
     if (!container) return;
     try {
-        const response = await APIClient.get('/live/entries', { category: 'room', limit: 4 });
-        const rows = Array.isArray(response?.rows) ? response.rows.slice(0, 4) : [];
-        if (!rows.length) return renderHomePreviewStatus(container.id, '등록된 LIVE 정보가 없습니다.');
-        container.innerHTML = rows.map((row, index) => {
-            const title = getHomeLiveRowText(row, [response?.titleColumn, 'title', 'name', 'roomName', 'room_name']) || `LIVE 정보 ${index + 1}`;
-            const store = getHomeLiveRowText(row, ['storeName', 'store_name', 'shopName', 'shop_name']);
-            const description = getHomeLiveRowText(row, ['content', 'message', 'status', 'memo', 'description']);
-            return `<a class="home-text-preview" href="live.html">
-                <span class="home-text-preview__badge">LIVE</span>
-                <span class="home-text-preview__copy"><strong>${sanitizeHTML(title)}</strong><small>${sanitizeHTML([store, description].filter(Boolean).join(' · ') || '실시간 현황을 확인해 보세요.')}</small></span>
-                <span class="home-preview-chevron" aria-hidden="true">›</span>
+        const filters = await APIClient.get('/live/filters');
+        const stores = Array.isArray(filters?.stores) ? filters.stores : [];
+        if (!stores.length) return renderHomePreviewStatus(container.id, '등록된 LIVE 정보가 없습니다.');
+
+        const categoryResponses = await Promise.all(HOME_LIVE_CATEGORIES.map(({ key }) =>
+            APIClient.get('/live/entries', { category: key, limit: 300 })
+        ));
+        const rowsByCategoryAndStore = new Map();
+        HOME_LIVE_CATEGORIES.forEach(({ key }, index) => {
+            const rows = Array.isArray(categoryResponses[index]?.rows) ? categoryResponses[index].rows : [];
+            rows.forEach((row) => {
+                const storeKey = getHomeLiveStoreKey(row);
+                if (!storeKey) return;
+                const mapKey = `${key}|${storeKey}`;
+                if (!rowsByCategoryAndStore.has(mapKey)) rowsByCategoryAndStore.set(mapKey, []);
+                rowsByCategoryAndStore.get(mapKey).push(row);
+            });
+        });
+
+        container.innerHTML = stores.map((store) => {
+            const storeNo = Number(store.storeNo);
+            const storeKey = Number.isInteger(storeNo) && storeNo > 0 ? `no:${storeNo}` : `name:${store.storeName}`;
+            const items = HOME_LIVE_CATEGORIES.map(({ key, label }) => {
+                const summary = getHomeLiveSummary(key, rowsByCategoryAndStore.get(`${key}|${storeKey}`) || []);
+                return `<li><span>${sanitizeHTML(label)}</span><strong>${sanitizeHTML(summary)}</strong></li>`;
+            }).join('');
+            return `<a class="home-live-store-card" href="live.html" aria-label="${sanitizeHTML(store.storeName)} LIVE 정보 보기">
+                <span class="home-live-store-card__heading"><strong>${sanitizeHTML(store.storeName || '가게')}</strong><small>최신 LIVE</small></span>
+                <ul>${items}</ul>
+                <span class="home-live-store-card__more">상세 정보 보기 <span aria-hidden="true">→</span></span>
             </a>`;
         }).join('');
+        bindHomeLiveScroller(container);
     } catch (error) {
         renderHomePreviewStatus(container.id, 'LIVE 정보를 불러오지 못했습니다.');
     }
