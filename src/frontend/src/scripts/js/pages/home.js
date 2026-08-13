@@ -25,7 +25,8 @@ async function initHomePreviews() {
     await Promise.allSettled([
         loadHomeBusinessPreview(),
         loadHomeLivePreview(),
-        loadHomeCommunityPreview()
+        loadHomeCommunityPreview(),
+        loadHomeBestPosts()
     ]);
 }
 
@@ -86,7 +87,12 @@ async function loadHomeCommunityPreview() {
     const container = document.getElementById('home-community-preview-list');
     if (!container) return;
     try {
-        const response = await APIClient.get('/api/posts', { page: 0, size: 5, boardType: 'ALL' });
+        const response = await APIClient.get('/api/posts', {
+            page: 0,
+            size: 5,
+            boardType: 'ALL',
+            excludeAdminAuthors: true
+        });
         const posts = Array.isArray(response?.content) ? response.content.slice(0, 5) : [];
         if (!posts.length) return renderHomePreviewStatus(container.id, '등록된 커뮤니티 게시글이 없습니다.');
         container.innerHTML = posts.map((post) => `<a class="home-text-preview" href="${sanitizeHTML(post.url || `/post-detail.html?id=${post.id}`)}">
@@ -96,6 +102,52 @@ async function loadHomeCommunityPreview() {
         </a>`).join('');
     } catch (error) {
         renderHomePreviewStatus(container.id, '커뮤니티 게시글을 불러오지 못했습니다.');
+    }
+}
+
+const HOME_BOARD_LABELS = {
+    FREE: '자유', ANON: '익명', REVIEW: '후기', STORY: '썰', PIECE: '조각',
+    ATTENDANCE: '출석', QUESTION: '질문', EVENT: '이벤트', PROMOTION: '홍보'
+};
+
+function renderHomeBestPosts(posts, list, empty) {
+    if (!Array.isArray(posts) || !posts.length) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+    }
+
+    empty.classList.add('hidden');
+    list.innerHTML = posts.map((post, index) => {
+        const boardLabel = HOME_BOARD_LABELS[String(post.boardType || '').toUpperCase()] || '자유';
+        const href = post.url || createPostDetailPath(post);
+        return `<li class="best-post-item">
+            <a class="best-post-link" href="${sanitizeHTML(href)}">
+                <span class="best-post-rank">${index + 1}</span>
+                <span class="best-post-text">[${sanitizeHTML(boardLabel)}] ${sanitizeHTML(post.title || '제목 없음')}</span>
+                <span class="best-post-meta">👍 ${Number(post.likeCount || 0)} · 💬 ${Number(post.commentCount || 0)} · 👁 ${Number(post.viewCount || 0)}</span>
+            </a>
+        </li>`;
+    }).join('');
+}
+
+async function loadHomeBestPosts() {
+    const dailyList = document.getElementById('home-daily-best-list');
+    const weeklyList = document.getElementById('home-weekly-best-list');
+    const dailyEmpty = document.getElementById('home-daily-best-empty');
+    const weeklyEmpty = document.getElementById('home-weekly-best-empty');
+    if (!dailyList || !weeklyList || !dailyEmpty || !weeklyEmpty) return;
+
+    try {
+        const response = await APIClient.get('/api/posts/best');
+        renderHomeBestPosts(response?.daily, dailyList, dailyEmpty);
+        renderHomeBestPosts(response?.weekly, weeklyList, weeklyEmpty);
+    } catch (error) {
+        [dailyList, weeklyList].forEach((list) => { list.innerHTML = ''; });
+        [dailyEmpty, weeklyEmpty].forEach((empty) => {
+            empty.textContent = '베스트 게시글을 불러오지 못했습니다.';
+            empty.classList.remove('hidden');
+        });
     }
 }
 
