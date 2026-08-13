@@ -38,21 +38,41 @@ function renderHomePreviewStatus(containerId, message) {
     }
 }
 
+function openHomeBusinessPreview(item) {
+    const detailUrl = item?.dataset?.businessAdUrl;
+    if (detailUrl) window.location.href = detailUrl;
+}
+
+function bindHomeBusinessPreviewNavigation(container) {
+    if (container.dataset.navigationBound === 'true') return;
+    container.dataset.navigationBound = 'true';
+    container.addEventListener('click', (event) => {
+        const item = event.target.closest('.business-directory-item[data-business-ad-url]');
+        if (item && container.contains(item)) openHomeBusinessPreview(item);
+    });
+    container.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        const item = event.target.closest('.business-directory-item[data-business-ad-url]');
+        if (!item || !container.contains(item)) return;
+        event.preventDefault();
+        openHomeBusinessPreview(item);
+    });
+}
+
 async function loadHomeBusinessPreview() {
     const container = document.getElementById('home-business-preview-list');
     if (!container) return;
+    bindHomeBusinessPreviewNavigation(container);
     try {
         const response = await APIClient.get('/live/business-ads');
         const ads = Array.isArray(response?.content) ? response.content.slice(0, 4) : [];
         if (!ads.length) return renderHomePreviewStatus(container.id, '현재 노출 중인 업체정보가 없습니다.');
-        container.innerHTML = ads.map((ad) => {
+        container.innerHTML = ads.map((ad, index) => {
             const detailPath = createBusinessInfoDetailPath(ad);
-            const imageUrl = ad.imageUrl || '/src/assets/image/ad-profile-default.webp';
-            return `<a class="home-business-preview" href="${sanitizeHTML(detailPath)}">
-                <img src="${sanitizeHTML(imageUrl)}" alt="" loading="lazy" onerror="this.onerror=null;this.src='/src/assets/image/ad-profile-default.webp';">
-                <span class="home-business-preview__copy"><strong>${sanitizeHTML(ad.businessName || ad.companyName || ad.title || '업체정보')}</strong><small>${sanitizeHTML([ad.region, ad.district, ad.category].filter(Boolean).join(' · ') || '상세정보 보기')}</small></span>
-                <span class="home-preview-chevron" aria-hidden="true">›</span>
-            </a>`;
+            return BusinessDirectoryItem.render(ad, {
+                index,
+                attributes: (item) => `data-business-ad-id="${sanitizeHTML(item.id || '')}" data-business-ad-url="${sanitizeHTML(detailPath)}" data-business-ad-view-count="${Number(item.viewCount || 0)}"`
+            });
         }).join('');
     } catch (error) {
         renderHomePreviewStatus(container.id, '업체정보를 불러오지 못했습니다.');
@@ -186,8 +206,7 @@ function renderHomeCommunityArticle(post) {
     const commentCount = Number(post.commentCount || 0);
     const viewCount = Number(post.viewCount || 0).toLocaleString('ko-KR');
     const recommendCount = Number(post.likeCount || post.recommendCount || 0).toLocaleString('ko-KR');
-    const preview = post.preview || post.previewText || post.contentPreview || post.content || '내용 미리보기가 없습니다.';
-    const previewText = String(preview).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const previewText = getCommunityPostPreviewText(post);
     const authorLevel = Number(post.authorLevel ?? post.level ?? post.authorRank ?? post.rank);
     const authorBadge = Number.isInteger(authorLevel) && authorLevel > 0
         ? ` <img class="user-level-badge" src="/src/assets/lv-badges/lv${authorLevel}.png" alt="회원 등급 배지" loading="lazy">`

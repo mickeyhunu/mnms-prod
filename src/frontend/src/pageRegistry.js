@@ -1589,9 +1589,9 @@ const pageRegistry = {
                         <div><span class="home-preview-eyebrow">BUSINESS</span><h2 id="home-business-title">업체정보</h2></div>
                         <a href="business-info.html">전체보기 <span aria-hidden="true">→</span></a>
                     </header>
-                    <div class="home-business-preview-list" id="home-business-preview-list" aria-live="polite">
-                        <p class="home-preview-status">최신 업체정보를 불러오는 중입니다.</p>
-                    </div>
+                    <ul class="home-business-preview-list business-directory-list" id="home-business-preview-list" aria-live="polite">
+                        <li class="home-preview-status">최신 업체정보를 불러오는 중입니다.</li>
+                    </ul>
                 </section>
 
                 <section class="home-preview-section home-preview-section--live" aria-labelledby="home-live-title">
@@ -1619,10 +1619,11 @@ const pageRegistry = {
     <script src="scripts/js/api/apiClient.js"></script>
     <script src="scripts/js/api/authAPI.js"></script>
     <script src="scripts/js/components/topAds.js"></script>
+    <script src="scripts/js/components/businessDirectoryItem.js"></script>
     <script src="scripts/js/pages/home.js"></script>
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/community-board.css", "styles/pages.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/topAds.js", "scripts/js/pages/home.js", "scripts/js/components/footerNav.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/topAds.js", "scripts/js/components/businessDirectoryItem.js", "scripts/js/pages/home.js", "scripts/js/components/footerNav.js"]
   },
 
   'bamcheat': {

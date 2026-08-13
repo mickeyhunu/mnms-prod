@@ -554,25 +554,7 @@ function isWithin12Hours(dateValue) {
 }
 
 function getPreviewText(post) {
-    const source = stripPieceTemplateFromPreview(post.preview || post.content || post.body || '');
-    const firstLine = String(source)
-        .split(/\r?\n/)
-        .map((line) => line.replace(/\s+/g, ' ').trim())
-        .find(Boolean);
-
-    return firstLine?.slice(0, 140) || '내용 미리보기가 없습니다.';
-}
-
-function stripPieceTemplateFromPreview(content) {
-    const rawContent = String(content || '');
-    const startIndex = rawContent.indexOf(PIECE_TEMPLATE_START);
-    const endIndex = rawContent.indexOf(PIECE_TEMPLATE_END);
-
-    if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
-        return rawContent.trim();
-    }
-
-    return `${rawContent.slice(0, startIndex)}${rawContent.slice(endIndex + PIECE_TEMPLATE_END.length)}`.trim();
+    return getCommunityPostPreviewText(post);
 }
 
 function parsePieceTemplateRows(content) {
