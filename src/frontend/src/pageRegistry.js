@@ -1599,8 +1599,12 @@ const pageRegistry = {
                         <div><span class="home-preview-eyebrow">NOW</span><h2 id="home-live-title"><span class="home-live-dot" aria-hidden="true"></span>LIVE 정보</h2></div>
                         <a href="live.html">전체보기 <span aria-hidden="true">→</span></a>
                     </header>
-                    <div class="home-preview-list" id="home-live-preview-list" aria-live="polite">
-                        <p class="home-preview-status">실시간 정보를 불러오는 중입니다.</p>
+                    <div class="home-live-preview-shell">
+                        <button class="home-live-scroll-button home-live-scroll-button--prev" id="home-live-scroll-prev" type="button" aria-label="이전 가게 정보" disabled>‹</button>
+                        <div class="home-preview-list home-live-preview-list" id="home-live-preview-list" aria-live="polite" tabindex="0" aria-label="가게별 최신 LIVE 정보">
+                            <p class="home-preview-status">실시간 정보를 불러오는 중입니다.</p>
+                        </div>
+                        <button class="home-live-scroll-button home-live-scroll-button--next" id="home-live-scroll-next" type="button" aria-label="다음 가게 정보" disabled>›</button>
                     </div>
                 </section>
             </div>
