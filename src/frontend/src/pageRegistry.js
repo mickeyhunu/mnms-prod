@@ -1589,9 +1589,11 @@ const pageRegistry = {
                         <div><span class="home-preview-eyebrow">BUSINESS</span><h2 id="home-business-title">업체정보</h2></div>
                         <a href="business-info.html">전체보기 <span aria-hidden="true">→</span></a>
                     </header>
-                    <ul class="home-business-preview-list business-directory-list" id="home-business-preview-list" aria-live="polite">
-                        <li class="home-preview-status">최신 업체정보를 불러오는 중입니다.</li>
-                    </ul>
+                    <div class="home-business-preview-list-wrap">
+                        <ul class="home-business-preview-list business-directory-list" id="home-business-preview-list" aria-live="polite">
+                            <li class="home-preview-status">최신 업체정보를 불러오는 중입니다.</li>
+                        </ul>
+                    </div>
                 </section>
 
                 <section class="home-preview-section home-preview-section--live" aria-labelledby="home-live-title">
