@@ -215,6 +215,7 @@
 .home-community-article-list { margin: 0; list-style: none; }
 .home-community-article-list .article-item:last-child { border-bottom: 0; }
 .home-preview-status { margin: 0; padding: 30px 8px; color: #8a8490; font-size: 13px; text-align: center; }
+.home-business-preview-list { margin: 0; padding: 12px; }
 .home-business-preview, .home-text-preview { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px 4px; color: #2c2730; text-decoration: none; border-bottom: 1px solid #f0edf1; }
 .home-business-preview:last-child, .home-text-preview:last-child { border-bottom: 0; }
 .home-business-preview:hover, .home-text-preview:hover { background: #fcf9fd; }
