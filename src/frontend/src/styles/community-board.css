@@ -446,6 +446,11 @@
     color: #787878;
 }
 
+.home-best-posts {
+    border-top: 1px solid #eeeaf0;
+    border-bottom: 0;
+}
+
 .article-item {
     border-bottom: 1px solid #e4e4e4;
     padding: 7px 7px 9px;

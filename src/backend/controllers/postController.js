@@ -677,7 +677,14 @@ async function listPosts(req, res, next) {
     const keyword = typeof req.query.keyword === 'string' ? req.query.keyword.trim() : '';
     const searchType = typeof req.query.search === 'string' ? req.query.search : 'bbs_title';
     const boardType = parseBoardType(req.query.boardType || 'ALL');
-    const { rows, total } = await postModel.listPosts(page, size, { keyword, searchType, boardType, includeDeleted: isAdminViewer(req.user) });
+    const excludeAdminAuthors = String(req.query.excludeAdminAuthors || '').toLowerCase() === 'true';
+    const { rows, total } = await postModel.listPosts(page, size, {
+      keyword,
+      searchType,
+      boardType,
+      excludeAdminAuthors,
+      includeDeleted: isAdminViewer(req.user)
+    });
     const normalizedRows = rows.map((item) => attachPostDetailUrl(req, sanitizePostForViewer(item, req.user)));
     res.json({ content: normalizedRows, totalElements: total, page, size, totalPages: Math.ceil(total / size) });
   } catch (error) {
