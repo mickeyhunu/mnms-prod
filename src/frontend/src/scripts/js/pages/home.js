@@ -91,6 +91,30 @@ const HOME_LIVE_CATEGORIES = [
     { key: 'entry', label: '엔트리' }
 ];
 
+const HOME_LIVE_AVATAR_IMAGE_BASE_PATH = '/src/assets/live-avatars';
+
+function enhanceHomeLiveAvatarImages(root) {
+    root.querySelectorAll('.live-chat-card__avatar[data-avatar-name]').forEach((avatarElement) => {
+        const avatarName = String(avatarElement.dataset.avatarName || '').trim();
+        if (!avatarName) return;
+
+        const imageElement = document.createElement('img');
+        imageElement.className = 'live-chat-card__avatar-image';
+        imageElement.alt = '';
+        imageElement.loading = 'lazy';
+        imageElement.decoding = 'async';
+        imageElement.src = `${HOME_LIVE_AVATAR_IMAGE_BASE_PATH}/${encodeURIComponent(avatarName)}프로필이미지.webp`;
+        imageElement.addEventListener('load', () => {
+            avatarElement.classList.add('has-image');
+        }, { once: true });
+        imageElement.addEventListener('error', () => {
+            imageElement.remove();
+        }, { once: true });
+
+        avatarElement.prepend(imageElement);
+    });
+}
+
 function getHomeLiveStoreKey(row) {
     const storeNo = getHomeLiveRowText(row, ['storeNo', 'store_no', 'shopNo', 'shop_no', 'branchNo', 'branch_no']);
     if (storeNo) return `no:${storeNo}`;
@@ -175,7 +199,7 @@ async function loadHomeLivePreview() {
             const avatarLabel = Array.from(storeName.trim())[0] || '가';
             return `<a class="home-live-store-card" href="live.html" aria-label="${sanitizeHTML(store.storeName)} LIVE 정보 보기">
                 <div class="live-chat-card__header">
-                    <div class="live-chat-card__avatar" aria-hidden="true"><span class="live-chat-card__avatar-fallback">${sanitizeHTML(avatarLabel)}</span></div>
+                    <div class="live-chat-card__avatar" aria-hidden="true" data-avatar-name="${sanitizeHTML(storeName)}"><span class="live-chat-card__avatar-fallback">${sanitizeHTML(avatarLabel)}</span></div>
                     <div class="live-chat-card__header-copy">
                         <h3 class="live-chat-card__title">${sanitizeHTML(storeName)}</h3>
                         <small>최신 LIVE</small>
@@ -191,6 +215,7 @@ async function loadHomeLivePreview() {
                 <span class="home-live-store-card__more">상세 정보 보기 <span aria-hidden="true">→</span></span>
             </a>`;
         }).join('');
+        enhanceHomeLiveAvatarImages(container);
         bindHomeLiveScroller(container);
     } catch (error) {
         renderHomePreviewStatus(container.id, 'LIVE 정보를 불러오지 못했습니다.');
