@@ -110,10 +110,14 @@ function getHomeLiveSummary(categoryKey, rows) {
     if (categoryKey === 'waiting') {
         const room = getHomeLiveRowText(latest, ['roomInfo', 'room_info']);
         const waiting = getHomeLiveRowText(latest, ['waitInfo', 'wait_info', 'waitingInfo', 'waiting_info']);
-        return `방수 : ${room || 0} · 웨이팅 : ${waiting || 0}`;
+        const roomLabel = Number(room) === 999 ? '여유' : (room || 0);
+        return `방수 : ${roomLabel} · 웨이팅 : ${waiting || 0}`;
     }
 
-    return `총 출근인원 ${rows.length}명`;
+    const entryCount = rows.filter((row) => getHomeLiveRowText(row, [
+        'workerName', 'worker_name', 'nickName', 'nickname', 'name', 'entryName', 'entry_name'
+    ])).length;
+    return `총 출근인원 ${entryCount}명`;
 }
 
 function bindHomeLiveScroller(container) {
