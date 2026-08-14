@@ -166,16 +166,28 @@ async function loadHomeLivePreview() {
             const storeKey = Number.isInteger(storeNo) && storeNo > 0 ? `no:${storeNo}` : `name:${store.storeName}`;
             const items = HOME_LIVE_CATEGORIES.map(({ key, label }) => {
                 const summary = getHomeLiveSummary(key, rowsByCategoryAndStore.get(`${key}|${storeKey}`) || []);
-                return `<li><span>${sanitizeHTML(label)}</span><strong>${sanitizeHTML(summary)}</strong></li>`;
+                return `<li class="live-chat-card__detail-item">
+                    <span class="live-chat-card__detail-key">${sanitizeHTML(label)}</span>
+                    <span class="live-chat-card__detail-value">${sanitizeHTML(summary)}</span>
+                </li>`;
             }).join('');
             const storeName = store.storeName || '가게';
             const avatarLabel = Array.from(storeName.trim())[0] || '가';
             return `<a class="home-live-store-card" href="live.html" aria-label="${sanitizeHTML(store.storeName)} LIVE 정보 보기">
-                <span class="home-live-store-card__heading">
-                    <span class="home-live-store-card__avatar" aria-hidden="true"><span class="live-chat-card__avatar-fallback">${sanitizeHTML(avatarLabel)}</span></span>
-                    <strong>${sanitizeHTML(storeName)}</strong><small>최신 LIVE</small>
-                </span>
-                <ul>${items}</ul>
+                <div class="live-chat-card__header">
+                    <div class="live-chat-card__avatar" aria-hidden="true"><span class="live-chat-card__avatar-fallback">${sanitizeHTML(avatarLabel)}</span></div>
+                    <div class="live-chat-card__header-copy">
+                        <h3 class="live-chat-card__title">${sanitizeHTML(storeName)}</h3>
+                        <small>최신 LIVE</small>
+                    </div>
+                </div>
+                <div class="live-chat-card__body">
+                    <div class="live-chat-card__bubble-wrap">
+                        <div class="live-chat-card__bubble">
+                            <ul class="live-chat-card__details">${items}</ul>
+                        </div>
+                    </div>
+                </div>
                 <span class="home-live-store-card__more">상세 정보 보기 <span aria-hidden="true">→</span></span>
             </a>`;
         }).join('');
