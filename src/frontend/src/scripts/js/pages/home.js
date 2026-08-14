@@ -197,7 +197,7 @@ async function loadHomeLivePreview() {
             }).join('');
             const storeName = store.storeName || '가게';
             const avatarLabel = Array.from(storeName.trim())[0] || '가';
-            return `<a class="home-live-store-card" href="live.html" aria-label="${sanitizeHTML(store.storeName)} LIVE 정보 보기">
+            return `<a class="home-live-store-card" href="/play/live" aria-label="${sanitizeHTML(store.storeName)} LIVE 정보 보기">
                 <div class="live-chat-card__header">
                     <div class="live-chat-card__avatar" aria-hidden="true" data-avatar-name="${sanitizeHTML(storeName)}"><span class="live-chat-card__avatar-fallback">${sanitizeHTML(avatarLabel)}</span></div>
                     <div class="live-chat-card__header-copy">

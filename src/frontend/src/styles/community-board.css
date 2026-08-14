@@ -245,7 +245,7 @@
 .home-live-store-card .live-chat-card__bubble-wrap { display: flex; width: 100%; max-width: 100%; }
 .home-live-store-card .live-chat-card__bubble { display: flex; width: min(100%, 760px); padding: 18px 20px; border: 1px solid rgba(63, 63, 70, .78); border-radius: 15px; background: linear-gradient(135deg, rgba(39, 39, 42, .96), rgba(24, 24, 27, .9)); box-shadow: 0 12px 24px rgba(0, 0, 0, .2); }
 .home-live-store-card .live-chat-card__details { display: flex; width: 100%; margin: 0; padding: 0; flex-direction: column; gap: 12px; list-style: none; }
-.home-live-store-card .live-chat-card__detail-item { display: grid; grid-template-columns: minmax(68px, 92px) minmax(0, 1fr); align-items: start; gap: 12px; }
+.home-live-store-card .live-chat-card__detail-item { display: grid; grid-template-columns: 1fr; align-items: start; gap: 12px; }
 .home-live-store-card .live-chat-card__detail-key { color: #93c5fd; font-size: 12px; font-weight: 700; line-height: 1.5; word-break: break-word; }
 .home-live-store-card .live-chat-card__detail-value { min-width: 0; color: #f4f4f5; font-size: 13px; font-weight: 500; line-height: 1.8; overflow-wrap: anywhere; white-space: pre-wrap; }
 .home-live-store-card__more { color: #765082; font-size: 11px; font-weight: 800; text-align: right; }
