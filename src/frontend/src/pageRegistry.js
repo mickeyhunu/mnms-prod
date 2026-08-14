@@ -1584,18 +1584,6 @@ const pageRegistry = {
                     </ul>
                 </section>
 
-                <section class="home-preview-section home-preview-section--business" aria-labelledby="home-business-title">
-                    <header class="home-preview-header">
-                        <div><span class="home-preview-eyebrow">BUSINESS</span><h2 id="home-business-title">업체정보</h2></div>
-                        <a href="business-info.html">전체보기 <span aria-hidden="true">→</span></a>
-                    </header>
-                    <div class="home-business-preview-list-wrap">
-                        <ul class="home-business-preview-list business-directory-list" id="home-business-preview-list" aria-live="polite">
-                            <li class="home-preview-status">최신 업체정보를 불러오는 중입니다.</li>
-                        </ul>
-                    </div>
-                </section>
-
                 <section class="home-preview-section home-preview-section--live" aria-labelledby="home-live-title">
                     <header class="home-preview-header">
                         <div><span class="home-preview-eyebrow">NOW</span><h2 id="home-live-title"><span class="home-live-dot" aria-hidden="true"></span>LIVE 정보</h2></div>
@@ -1607,6 +1595,18 @@ const pageRegistry = {
                             <p class="home-preview-status">실시간 정보를 불러오는 중입니다.</p>
                         </div>
                         <button class="home-live-scroll-button home-live-scroll-button--next" id="home-live-scroll-next" type="button" aria-label="다음 가게 정보" disabled>›</button>
+                    </div>
+                </section>
+
+                <section class="home-preview-section home-preview-section--business" aria-labelledby="home-business-title">
+                    <header class="home-preview-header">
+                        <div><span class="home-preview-eyebrow">BUSINESS</span><h2 id="home-business-title">업체정보</h2></div>
+                        <a href="business-info.html">전체보기 <span aria-hidden="true">→</span></a>
+                    </header>
+                    <div class="home-business-preview-list-wrap">
+                        <ul class="home-business-preview-list business-directory-list" id="home-business-preview-list" aria-live="polite">
+                            <li class="home-preview-status">최신 업체정보를 불러오는 중입니다.</li>
+                        </ul>
                     </div>
                 </section>
             </div>
