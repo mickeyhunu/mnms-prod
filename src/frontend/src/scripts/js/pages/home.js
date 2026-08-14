@@ -122,7 +122,12 @@ function getHomeLiveStoreKey(row) {
     return storeName ? `name:${storeName}` : '';
 }
 
-function getHomeLiveSummary(categoryKey, rows) {
+function getHomeLiveSummary(categoryKey, rows, totalCount = null) {
+    if (categoryKey === 'entry') {
+        const normalizedTotalCount = Number(totalCount);
+        return `총 출근인원 ${Number.isFinite(normalizedTotalCount) ? normalizedTotalCount : 0}명`;
+    }
+
     if (!rows.length) return '업데이트 없음';
     const latest = rows[rows.length - 1];
     if (categoryKey === 'choice') {
@@ -137,11 +142,6 @@ function getHomeLiveSummary(categoryKey, rows) {
         const roomLabel = Number(room) === 999 ? '여유' : (room || 0);
         return `방수 : ${roomLabel} · 웨이팅 : ${waiting || 0}`;
     }
-
-    const entryCount = rows.filter((row) => getHomeLiveRowText(row, [
-        'workerName', 'worker_name', 'nickName', 'nickname', 'name', 'entryName', 'entry_name'
-    ])).length;
-    return `총 출근인원 ${entryCount}명`;
 }
 
 function bindHomeLiveScroller(container) {
@@ -170,11 +170,20 @@ async function loadHomeLivePreview() {
         const stores = Array.isArray(filters?.stores) ? filters.stores : [];
         if (!stores.length) return renderHomePreviewStatus(container.id, '등록된 LIVE 정보가 없습니다.');
 
-        const categoryResponses = await Promise.all(HOME_LIVE_CATEGORIES.map(({ key }) =>
-            APIClient.get('/live/entries', { category: key, limit: 300 })
-        ));
+        const sharedCategories = HOME_LIVE_CATEGORIES.filter(({ key }) => key !== 'entry');
+        const [categoryResponses, entryResponses] = await Promise.all([
+            Promise.all(sharedCategories.map(({ key }) =>
+                APIClient.get('/live/entries', { category: key, limit: 300 })
+            )),
+            Promise.all(stores.map((store) => APIClient.get('/live/entries', {
+                category: 'entry',
+                storeNo: store.storeNo,
+                limit: 1
+            })))
+        ]);
         const rowsByCategoryAndStore = new Map();
-        HOME_LIVE_CATEGORIES.forEach(({ key }, index) => {
+        const entryCountByStore = new Map();
+        sharedCategories.forEach(({ key }, index) => {
             const rows = Array.isArray(categoryResponses[index]?.rows) ? categoryResponses[index].rows : [];
             rows.forEach((row) => {
                 const storeKey = getHomeLiveStoreKey(row);
@@ -184,12 +193,22 @@ async function loadHomeLivePreview() {
                 rowsByCategoryAndStore.get(mapKey).push(row);
             });
         });
+        stores.forEach((store, index) => {
+            const storeNo = Number(store.storeNo);
+            const storeKey = Number.isInteger(storeNo) && storeNo > 0 ? `no:${storeNo}` : `name:${store.storeName}`;
+            const totalCount = Number(entryResponses[index]?.totalCount);
+            entryCountByStore.set(storeKey, Number.isFinite(totalCount) ? totalCount : 0);
+        });
 
         container.innerHTML = stores.map((store) => {
             const storeNo = Number(store.storeNo);
             const storeKey = Number.isInteger(storeNo) && storeNo > 0 ? `no:${storeNo}` : `name:${store.storeName}`;
             const items = HOME_LIVE_CATEGORIES.map(({ key, label }) => {
-                const summary = getHomeLiveSummary(key, rowsByCategoryAndStore.get(`${key}|${storeKey}`) || []);
+                const summary = getHomeLiveSummary(
+                    key,
+                    rowsByCategoryAndStore.get(`${key}|${storeKey}`) || [],
+                    key === 'entry' ? entryCountByStore.get(storeKey) : null
+                );
                 return `<li class="live-chat-card__detail-item">
                     <span class="live-chat-card__detail-key">${sanitizeHTML(label)}</span>
                     <span class="live-chat-card__detail-value">${sanitizeHTML(summary)}</span>
