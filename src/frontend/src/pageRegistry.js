@@ -1586,8 +1586,8 @@ const pageRegistry = {
 
                 <section class="home-preview-section home-preview-section--live" aria-labelledby="home-live-title">
                     <header class="home-preview-header">
-                        <div><span class="home-preview-eyebrow">NOW</span><h2 id="home-live-title"><span class="home-live-dot" aria-hidden="true"></span>LIVE 정보</h2></div>
-                        <a href="live.html">전체보기 <span aria-hidden="true">→</span></a>
+                        <div><span class="home-preview-eyebrow">LIVE</span><h2 id="home-live-title"><span class="home-live-dot" aria-hidden="true"></span>LIVE 정보</h2></div>
+                        <a href="/play/live">전체보기 <span aria-hidden="true">→</span></a>
                     </header>
                     <div class="home-live-preview-shell">
                         <button class="home-live-scroll-button home-live-scroll-button--prev" id="home-live-scroll-prev" type="button" aria-label="이전 가게 정보" disabled>‹</button>
