@@ -110,13 +110,10 @@ function getHomeLiveSummary(categoryKey, rows) {
     if (categoryKey === 'waiting') {
         const room = getHomeLiveRowText(latest, ['roomInfo', 'room_info']);
         const waiting = getHomeLiveRowText(latest, ['waitInfo', 'wait_info', 'waitingInfo', 'waiting_info']);
-        return [room, waiting].filter(Boolean).join(' · ') || '룸/웨이팅 업데이트';
+        return `방수 : ${room || 0} · 웨이팅 : ${waiting || 0}`;
     }
 
-    const names = rows
-        .map((row) => getHomeLiveRowText(row, ['workerName', 'worker_name', 'entryName', 'entry_name', 'name']))
-        .filter(Boolean);
-    return names.length ? `${names.slice(0, 3).join(', ')}${names.length > 3 ? ` 외 ${names.length - 3}명` : ''}` : `현재 ${rows.length}명`;
+    return `총 출근인원 ${rows.length}명`;
 }
 
 function bindHomeLiveScroller(container) {
@@ -167,8 +164,13 @@ async function loadHomeLivePreview() {
                 const summary = getHomeLiveSummary(key, rowsByCategoryAndStore.get(`${key}|${storeKey}`) || []);
                 return `<li><span>${sanitizeHTML(label)}</span><strong>${sanitizeHTML(summary)}</strong></li>`;
             }).join('');
+            const storeName = store.storeName || '가게';
+            const avatarLabel = Array.from(storeName.trim())[0] || '가';
             return `<a class="home-live-store-card" href="live.html" aria-label="${sanitizeHTML(store.storeName)} LIVE 정보 보기">
-                <span class="home-live-store-card__heading"><strong>${sanitizeHTML(store.storeName || '가게')}</strong><small>최신 LIVE</small></span>
+                <span class="home-live-store-card__heading">
+                    <span class="home-live-store-card__avatar" aria-hidden="true"><span class="live-chat-card__avatar-fallback">${sanitizeHTML(avatarLabel)}</span></span>
+                    <strong>${sanitizeHTML(storeName)}</strong><small>최신 LIVE</small>
+                </span>
                 <ul>${items}</ul>
                 <span class="home-live-store-card__more">상세 정보 보기 <span aria-hidden="true">→</span></span>
             </a>`;
