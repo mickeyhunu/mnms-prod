@@ -15,7 +15,7 @@ const COMPRESSIBLE_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'imag
 const DIRECT_UPLOAD_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
 const PIECE_TEMPLATE_START = '<!-- PIECE_TEMPLATE_START -->';
 const PIECE_TEMPLATE_END = '<!-- PIECE_TEMPLATE_END -->';
-const WRITABLE_BOARD_TYPES = new Set(['FREE', 'ANON', 'REVIEW', 'STORY', 'PIECE', 'ATTENDANCE', 'QUESTION', 'EVENT', 'PROMOTION']);
+const WRITABLE_BOARD_TYPES = new Set(['FREE', 'ANON', 'REVIEW', 'STORY', 'PIECE', 'ATTENDANCE', 'QUESTION', 'EVENT', 'NEWS', 'PROMOTION']);
 const PIECE_MINIMUM_MEMBER_LEVEL = 3;
 const PIECE_MINIMUM_TOTAL_POINTS = 400;
 
