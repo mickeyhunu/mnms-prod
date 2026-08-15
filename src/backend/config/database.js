@@ -508,7 +508,7 @@ async function initDatabase() {
       author_nickname_snapshot VARCHAR(255) NULL,
       author_role_snapshot ENUM('MEMBER','BUSINESS','ADMIN') NULL,
       author_member_type_snapshot ENUM('MEMBER','BUSINESS') NULL,
-      board_type ENUM('FREE','ANON','REVIEW','STORY','PIECE','ATTENDANCE','QUESTION','EVENT','PROMOTION') NOT NULL DEFAULT 'FREE',
+      board_type ENUM('FREE','ANON','REVIEW','STORY','PIECE','ATTENDANCE','QUESTION','EVENT','NEWS','PROMOTION') NOT NULL DEFAULT 'FREE',
       is_notice TINYINT(1) NOT NULL DEFAULT 0,
       notice_type ENUM('NOTICE','IMPORTANT') NULL,
       is_pinned TINYINT(1) NOT NULL DEFAULT 0,
