@@ -18,7 +18,24 @@ function initHomePage() {
         });
     }
     initHomePosters();
+    bindHomeProtectedPreviewNavigation();
     initHomePreviews();
+}
+
+function bindHomeProtectedPreviewNavigation() {
+    const protectedPreviewSelectors = [
+        '#home-community-preview-list a',
+        '#home-daily-best-list a',
+        '#home-weekly-best-list a'
+    ];
+
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest(protectedPreviewSelectors.join(', '))) return;
+        if (Auth.isAuthenticated()) return;
+
+        event.preventDefault();
+        Auth.requireAuth();
+    });
 }
 
 async function initHomePreviews() {
@@ -39,6 +56,7 @@ function renderHomePreviewStatus(containerId, message) {
 }
 
 function openHomeBusinessPreview(item) {
+    if (!Auth.requireAuth()) return;
     const detailUrl = item?.dataset?.businessAdUrl;
     if (detailUrl) window.location.href = detailUrl;
 }
