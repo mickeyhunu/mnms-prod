@@ -776,6 +776,7 @@ function getBoardLabel(boardType) {
         PIECE: '조각',
         ATTENDANCE: '출석',
         QUESTION: '질문',
+        NEWS: '최신정보(뉴스)',
         PROMOTION: '홍보'
     };
 
