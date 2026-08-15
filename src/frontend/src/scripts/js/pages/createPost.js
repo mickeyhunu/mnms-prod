@@ -1045,10 +1045,10 @@ async function setupBoardOptions() {
     const isAdmin = Boolean(me?.isAdmin || String(me?.role || '').toUpperCase() === 'ADMIN');
 
     if (!isAdmin) {
-        const eventOption = Array.from(boardTypeSelect.options).find((option) => option.value === 'EVENT');
-        if (eventOption) {
-            eventOption.remove();
-        }
+        const adminOnlyBoardTypes = new Set(['EVENT', 'NEWS']);
+        Array.from(boardTypeSelect.options)
+            .filter((option) => adminOnlyBoardTypes.has(option.value))
+            .forEach((option) => option.remove());
     }
 
     if (!isBusinessUser && !isAdmin) {
