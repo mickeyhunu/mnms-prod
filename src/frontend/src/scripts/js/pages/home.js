@@ -34,7 +34,8 @@ function bindHomeProtectedPreviewNavigation() {
         if (Auth.isAuthenticated()) return;
 
         event.preventDefault();
-        Auth.requireAuth();
+        alert('로그인 후 게시글을 볼 수 있습니다.');
+        window.location.href = '/login';
     });
 }
 
@@ -56,7 +57,12 @@ function renderHomePreviewStatus(containerId, message) {
 }
 
 function openHomeBusinessPreview(item) {
-    if (!Auth.requireAuth()) return;
+    if (!Auth.isAuthenticated()) {
+        alert('로그인 후 업체정보를 볼 수 있습니다.');
+        window.location.href = '/login';
+        return;
+    }
+
     const detailUrl = item?.dataset?.businessAdUrl;
     if (detailUrl) window.location.href = detailUrl;
 }
