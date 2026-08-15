@@ -1019,6 +1019,9 @@ async function createPost(req, res, next) {
     if (!isAdmin && boardType === BOARD_TYPES.EVENT) {
       return res.status(403).json({ message: '이벤트게시판은 관리자만 글을 작성할 수 있습니다.' });
     }
+    if (!isAdmin && boardType === BOARD_TYPES.NEWS) {
+      return res.status(403).json({ message: '뉴스게시판은 관리자만 글을 작성할 수 있습니다.' });
+    }
     if (!isAdmin && !isBusinessUser(req.user) && boardType === BOARD_TYPES.PROMOTION) {
       return res.status(403).json({ message: '홍보게시판은 광고자 또는 관리자만 글을 작성할 수 있습니다.' });
     }
@@ -1105,6 +1108,9 @@ async function updatePost(req, res, next) {
       return res.status(403).json({ message: '공지글/필독글은 관리자 페이지에서만 수정할 수 있습니다.' });
     }
     const targetBoardType = parseBoardType(post.board_type || post.boardType);
+    if (!isAdminViewer(req.user) && targetBoardType === BOARD_TYPES.NEWS) {
+      return res.status(403).json({ message: '뉴스게시판은 관리자만 글을 수정할 수 있습니다.' });
+    }
     if (targetBoardType === BOARD_TYPES.PIECE && isPiecePostLocked(post)) {
       return res.status(409).json({ message: '진행중이거나 종료된 조각글은 수정할 수 없습니다.' });
     }
