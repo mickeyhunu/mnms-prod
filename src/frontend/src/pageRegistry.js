@@ -1125,6 +1125,7 @@ const pageRegistry = {
                     <option value="ATTENDANCE">출석게시판</option>
                     <option value="QUESTION">질문게시판</option>
                     <option value="EVENT">이벤트게시판</option>
+                    <option value="NEWS">최신정보(뉴스)</option>
                     <option value="PROMOTION">홍보게시판</option>
                     </select>
                     </div>
@@ -1356,6 +1357,7 @@ const pageRegistry = {
                                 <option value="ATTENDANCE">출석게시판</option>
                                 <option value="QUESTION">질문게시판</option>
                                 <option value="EVENT">이벤트게시판</option>
+                                <option value="NEWS">최신정보(뉴스)</option>
                                 <option value="PROMOTION">홍보게시판</option>
                             </select>
                         </div>

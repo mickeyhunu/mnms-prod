@@ -326,7 +326,7 @@ function renderHomeCommunityArticle(post) {
 
 const HOME_BOARD_LABELS = {
     FREE: '자유', ANON: '익명', REVIEW: '후기', STORY: '썰', PIECE: '조각',
-    ATTENDANCE: '출석', QUESTION: '질문', EVENT: '이벤트', PROMOTION: '홍보'
+    ATTENDANCE: '출석', QUESTION: '질문', EVENT: '이벤트', NEWS: '최신정보(뉴스)', PROMOTION: '홍보'
 };
 
 function renderHomeBestPosts(posts, list, empty) {

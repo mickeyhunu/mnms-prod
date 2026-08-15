@@ -27,6 +27,7 @@ const COMMUNITY_BOARD_SLUGS = {
     ATTENDANCE: 'attendance',
     QUESTION: 'question',
     EVENT: 'event',
+    NEWS: 'news',
     PROMOTION: 'promotion'
 };
 
@@ -216,6 +217,7 @@ function getBoardLabel(boardType) {
         ATTENDANCE: '출석',
         QUESTION: '질문',
         EVENT: '이벤트',
+        NEWS: '최신정보(뉴스)',
         PROMOTION: '홍보'
     };
 

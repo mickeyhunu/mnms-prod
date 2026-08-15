@@ -38,6 +38,7 @@ const communityTemplate = `
                         <button type="button" class="board-tab" data-board-type="ATTENDANCE">출석게시판</button>
                         <button type="button" class="board-tab" data-board-type="QUESTION">질문게시판</button>
                         <button type="button" class="board-tab" data-board-type="EVENT">이벤트게시판</button>
+                        <button type="button" class="board-tab" data-board-type="NEWS">최신정보(뉴스)</button>
                         <button type="button" class="board-tab" data-board-type="PROMOTION">홍보게시판</button>
                     </nav>
                     <span class="community-board-name">커뮤니티 게시글</span>

@@ -598,6 +598,7 @@ function getBoardTypeLabel(boardType) {
         STORY: '썰',
         ATTENDANCE: '출석',
         QUESTION: '질문',
+        NEWS: '최신정보(뉴스)',
         PROMOTION: '홍보'
     };
     return labels[String(boardType || '').toUpperCase()] || (boardType || '기타');
@@ -1606,6 +1607,7 @@ function getSupportBoardTypeLabel(boardType) {
         ATTENDANCE: '출석게시판',
         QUESTION: '질문게시판',
         EVENT: '이벤트게시판',
+        NEWS: '최신정보(뉴스)',
         PROMOTION: '홍보게시판'
     };
     return labels[normalized] || '커뮤니티 미노출';
