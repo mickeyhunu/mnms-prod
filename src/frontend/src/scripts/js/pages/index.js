@@ -217,7 +217,7 @@ function getBoardLabel(boardType) {
         ATTENDANCE: '출석',
         QUESTION: '질문',
         EVENT: '이벤트',
-        NEWS: 'NEWS',
+        NEWS: '뉴스',
         PROMOTION: '홍보'
     };
 
