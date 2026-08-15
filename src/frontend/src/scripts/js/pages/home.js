@@ -18,7 +18,25 @@ function initHomePage() {
         });
     }
     initHomePosters();
+    bindHomeProtectedPreviewNavigation();
     initHomePreviews();
+}
+
+function bindHomeProtectedPreviewNavigation() {
+    const protectedPreviewSelectors = [
+        '#home-community-preview-list a',
+        '#home-daily-best-list a',
+        '#home-weekly-best-list a'
+    ];
+
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest(protectedPreviewSelectors.join(', '))) return;
+        if (Auth.isAuthenticated()) return;
+
+        event.preventDefault();
+        alert('로그인 후 게시글을 볼 수 있습니다.');
+        window.location.href = '/login';
+    });
 }
 
 async function initHomePreviews() {
@@ -39,6 +57,12 @@ function renderHomePreviewStatus(containerId, message) {
 }
 
 function openHomeBusinessPreview(item) {
+    if (!Auth.isAuthenticated()) {
+        alert('로그인 후 업체정보를 볼 수 있습니다.');
+        window.location.href = '/login';
+        return;
+    }
+
     const detailUrl = item?.dataset?.businessAdUrl;
     if (detailUrl) window.location.href = detailUrl;
 }
