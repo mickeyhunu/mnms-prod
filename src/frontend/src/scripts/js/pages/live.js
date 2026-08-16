@@ -246,6 +246,23 @@ function bindLiveEvents() {
     });
 
     listElement?.addEventListener('click', async (event) => {
+        const attendanceNameButton = event.target.closest('[data-attendance-detail-toggle]');
+        if (attendanceNameButton) {
+            const detailId = attendanceNameButton.getAttribute('aria-controls');
+            const detail = detailId ? document.getElementById(detailId) : null;
+            const willOpen = attendanceNameButton.getAttribute('aria-expanded') !== 'true';
+
+            listElement.querySelectorAll('[data-attendance-detail-toggle][aria-expanded="true"]').forEach((button) => {
+                button.setAttribute('aria-expanded', 'false');
+                const openDetail = document.getElementById(button.getAttribute('aria-controls') || '');
+                openDetail?.classList.add('hidden');
+            });
+
+            attendanceNameButton.setAttribute('aria-expanded', String(willOpen));
+            detail?.classList.toggle('hidden', !willOpen);
+            return;
+        }
+
         const deleteButton = event.target.closest('[data-live-chojoong-delete]');
         if (!deleteButton || !liveState.canDeleteChojoong) return;
 
@@ -1040,6 +1057,7 @@ function syncLiveListLayout(listElement) {
     const isHistoryTimeline = shouldUseHistoryPagination();
     listElement.classList.toggle('live-entry-list--timeline', isHistoryTimeline);
     listElement.classList.toggle('live-entry-list--entry', liveState.selectedCategoryKey === 'entry');
+    listElement.classList.toggle('live-entry-list--attendance', liveState.selectedCategoryKey === 'attendance');
     listElement.classList.toggle('live-entry-list--entry-blurred', isEntryRestrictedView());
     listElement.classList.toggle('live-entry-list--content-blurred', ['chojoong', 'waiting'].includes(liveState.selectedCategoryKey) && isCategoryRestrictedView(liveState.selectedCategoryKey));
 }
@@ -1236,6 +1254,11 @@ function renderLiveEntries(rows, titleColumn) {
 
     hideElement(emptyElement);
 
+    if (liveState.selectedCategoryKey === 'attendance') {
+        listElement.innerHTML = createAttendanceList(rows, titleColumn);
+        return;
+    }
+
     if (liveState.selectedCategoryKey === 'entry') {
         listElement.innerHTML = createEntrySummaryLiveCard(rows, titleColumn);
         enhanceLiveAvatarImages(listElement);
@@ -1244,6 +1267,66 @@ function renderLiveEntries(rows, titleColumn) {
 
     listElement.innerHTML = createLiveTimelineMarkup(rows, titleColumn);
     enhanceLiveAvatarImages(listElement);
+}
+
+function createAttendanceList(rows, titleColumn) {
+    const sortedRows = [...rows].sort((leftRow, rightRow) => {
+        const leftTime = new Date(getLiveRowRawTimestamp(leftRow)).getTime();
+        const rightTime = new Date(getLiveRowRawTimestamp(rightRow)).getTime();
+        if (!Number.isFinite(leftTime)) return Number.isFinite(rightTime) ? 1 : 0;
+        if (!Number.isFinite(rightTime)) return -1;
+        return rightTime - leftTime;
+    });
+
+    return `
+        <section class="attendance-list" aria-label="출근자 정보">
+            <header class="attendance-list__header">
+                <span>이름</span>
+                <span>마지막 출근날짜</span>
+            </header>
+            <ol class="attendance-list__items">
+                ${sortedRows.map((row, index) => createAttendanceListItem(row, titleColumn, index)).join('')}
+            </ol>
+        </section>
+    `;
+}
+
+function createAttendanceListItem(row, titleColumn, index) {
+    const name = resolveEntryWorkerName(row, titleColumn, index);
+    const lastAttendanceDate = formatAttendanceDate(getLiveRowRawTimestamp(row));
+    const detailId = `attendance-detail-${index}`;
+
+    return `
+        <li class="attendance-list__item">
+            <div class="attendance-list__row">
+                <button
+                    type="button"
+                    class="attendance-list__name"
+                    data-attendance-detail-toggle
+                    aria-expanded="false"
+                    aria-controls="${detailId}"
+                >${sanitizeHTML(name)}</button>
+                <time class="attendance-list__date">${sanitizeHTML(lastAttendanceDate)}</time>
+            </div>
+            <div class="attendance-list__popover hidden" id="${detailId}" role="status">
+                <span class="attendance-list__popover-caret" aria-hidden="true"></span>
+                <dl>
+                    <div><dt>이름</dt><dd>${sanitizeHTML(name)}</dd></div>
+                    <div><dt>마지막 출근날짜</dt><dd>${sanitizeHTML(lastAttendanceDate)}</dd></div>
+                </dl>
+            </div>
+        </li>
+    `;
+}
+
+function formatAttendanceDate(rawTimestamp) {
+    const date = new Date(rawTimestamp);
+    if (!Number.isFinite(date.getTime())) return '-';
+
+    const year = String(date.getFullYear()).slice(-2);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
 }
 
 function createLiveTimelineMarkup(rows, titleColumn) {
@@ -1262,7 +1345,7 @@ function createLiveTimelineMarkup(rows, titleColumn) {
 }
 
 function getLiveRowRawTimestamp(row) {
-    return getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'date']);
+    return getRowValueByCandidates(row, ['createdAt', 'created_at', 'updatedAt', 'updated_at', 'regDate', 'reg_date', 'entryDate', 'entry_date', 'date']);
 }
 
 function createLiveDateDivider(dateLabel) {
