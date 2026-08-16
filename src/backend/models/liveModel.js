@@ -33,7 +33,8 @@ const LIVE_CATEGORY_MAP = {
   choice: { key: 'choice', label: '초이스톡', tableName: 'LIVE_CHOICE_HISTORY', sourceTableName: 'INFO_CHOICE' },
   chojoong: { key: 'chojoong', label: '초중', tableName: 'LIVE_CHOJOONG_HISTORY', sourceTableName: 'INFO_CHOJOONG' },
   waiting: { key: 'waiting', label: '웨이팅', tableName: 'LIVE_ROOM_HISTORY', sourceTableName: 'INFO_ROOM' },
-  entry: { key: 'entry', label: '엔트리', tableName: 'ENTRY_TODAY' }
+  entry: { key: 'entry', label: '엔트리', tableName: 'ENTRY_TODAY' },
+  mind: { key: 'mind', label: '마인드표', tableName: 'ENTRY_ALLDAY' }
 };
 
 function ensureTableName(tableName) {
@@ -204,7 +205,8 @@ async function listLiveEntries(categoryKey, { storeNo = null, limit = 50, offset
     storeNo,
     storeName: selectedStore?.storeName || ''
   });
-  const params = category.key === 'entry'
+  const isEntryList = category.key === 'entry' || category.key === 'mind';
+  const params = isEntryList
     ? [...storeFilter.params, rowLimit]
     : [...storeFilter.params, rowLimit, rowOffset];
 
@@ -221,6 +223,12 @@ async function listLiveEntries(categoryKey, { storeNo = null, limit = 50, offset
               LIMIT ?
            ) AS recent_entries
           ORDER BY \`${orderColumn}\` ASC`
+      : category.key === 'mind'
+        ? `SELECT ${selectClause}
+             FROM \`${safeTableName}\`
+             ${storeFilter.clause}
+            ORDER BY \`${orderColumn}\` DESC
+            LIMIT ?`
       : `SELECT ${selectClause}
            FROM (
              SELECT ${selectClause}
@@ -230,7 +238,7 @@ async function listLiveEntries(categoryKey, { storeNo = null, limit = 50, offset
               LIMIT ? OFFSET ?
            ) AS history_entries
           ORDER BY \`${orderColumn}\` ASC`
-    : category.key === 'entry'
+    : isEntryList
       ? `SELECT ${selectClause}
            FROM \`${safeTableName}\`
            ${storeFilter.clause}
