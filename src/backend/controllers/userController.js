@@ -823,17 +823,19 @@ async function myLiveAccessStatus(req, res, next) {
     const levelInfo = resolveMemberLevel(req.user.total_points || 0);
     const isChojoongUnlockedLevel = Number(levelInfo.level || 0) >= 3;
     const isEntryUnlockedLevel = Number(levelInfo.level || 0) >= 4;
+    const isAttendanceUnlockedLevel = Number(levelInfo.level || 0) >= 5;
     const hasDailyActivity = todayPostCount >= 1 || todayCommentCount >= 5;
     const memberAccess = {
       choice: true,
       chojoong: isAdmin || isChojoongUnlockedLevel || hasDailyActivity,
       waiting: isAdmin || isChojoongUnlockedLevel || hasDailyActivity,
-      entry: isAdmin || isEntryUnlockedLevel || (isChojoongUnlockedLevel && hasDailyActivity)
+      entry: isAdmin || isEntryUnlockedLevel || (isChojoongUnlockedLevel && hasDailyActivity),
+      attendance: isAdmin || isAttendanceUnlockedLevel || hasDailyActivity
     };
     const access = hasBusinessFullLiveAccess || isAdmin
-      ? { choice: true, chojoong: true, waiting: true, entry: true }
+      ? { choice: true, chojoong: true, waiting: true, entry: true, attendance: true }
       : shouldLimitInactiveBusinessAd
-        ? { choice: true, chojoong: false, waiting: false, entry: false }
+        ? { choice: true, chojoong: false, waiting: false, entry: false, attendance: false }
         : memberAccess;
 
     res.json({
