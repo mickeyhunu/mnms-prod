@@ -5,7 +5,8 @@ const LIVE_CATEGORIES = {
     choice: { key: 'choice', label: '초이스톡' },
     chojoong: { key: 'chojoong', label: '초중' },
     waiting: { key: 'waiting', label: '룸/웨이팅' },
-    entry: { key: 'entry', label: '엔트리' }
+    entry: { key: 'entry', label: '엔트리' },
+    attendance: { key: 'attendance', label: '출근자 정보' }
 };
 
 const LIVE_FILTERS_CACHE_KEY = 'liveFiltersCache:v1';
@@ -150,7 +151,8 @@ function getDefaultLiveAccessRules() {
             choice: true,
             chojoong: level >= 3,
             waiting: level >= 3,
-            entry: level >= 4
+            entry: level >= 4,
+            attendance: level >= 4
         }
     };
 }
@@ -179,7 +181,8 @@ async function loadLiveAccessRules() {
                 choice: Boolean(response?.access?.choice ?? true),
                 chojoong: Boolean(response?.access?.chojoong),
                 waiting: Boolean(response?.access?.waiting),
-                entry: Boolean(response?.access?.entry)
+                entry: Boolean(response?.access?.entry),
+                attendance: Boolean(response?.access?.entry)
             }
         };
     } catch (error) {
@@ -828,14 +831,14 @@ function renderCategoryButtons(categories) {
         };
     });
     const selectedHasAccess = Boolean(liveState.accessRules?.access?.[liveState.selectedCategoryKey] ?? true);
-    if (!selectedHasAccess && !['entry', 'chojoong', 'waiting'].includes(liveState.selectedCategoryKey)) {
+    if (!selectedHasAccess && !['entry', 'attendance', 'chojoong', 'waiting'].includes(liveState.selectedCategoryKey)) {
         liveState.selectedCategoryKey = 'choice';
     }
 
     categoryFilter.innerHTML = normalizedCategories.map((category) => {
         const hasAccess = Boolean(liveState.accessRules?.access?.[category.key] ?? true);
         const deniedReason = getLiveCategoryDeniedReason(category.key);
-        const shouldShowLockedStyle = !hasAccess && !['chojoong', 'waiting', 'entry'].includes(category.key);
+        const shouldShowLockedStyle = !hasAccess && !['chojoong', 'waiting', 'entry', 'attendance'].includes(category.key);
         return `<button type="button" class="area-filter__button area-filter__button--district ${liveState.selectedCategoryKey === category.key ? 'is-active' : ''} ${shouldShowLockedStyle ? 'is-locked' : ''}" data-category-option="${category.key}" data-locked="${hasAccess ? 'false' : 'true'}" aria-disabled="${hasAccess ? 'false' : 'true'}" ${!hasAccess && deniedReason ? `data-denied-reason="${sanitizeHTML(deniedReason)}"` : ''}>${sanitizeHTML(category.label)}</button>`;
     }).join('');
     syncScrollableFilterState(categoryFilter);
@@ -847,7 +850,7 @@ function getLiveCategoryDeniedReason(categoryKey) {
         && !Boolean(liveState.accessRules?.hasActiveBusinessAd)
         && Number(liveState.accessRules?.advertiserLevel || 0) < 4;
 
-    if (isInactiveBusinessMember && ['chojoong', 'waiting', 'entry'].includes(categoryKey)) {
+    if (isInactiveBusinessMember && ['chojoong', 'waiting', 'entry', 'attendance'].includes(categoryKey)) {
         return '광고자 계정은 광고가 활성화되어 있으면 초중/룸웨이팅/엔트리를 제한 없이 열람할 수 있습니다.\n\n광고가 비활성화된 경우 기본 초이스톡만 볼 수 있으며, 광고등급이 골드 이상이면 광고 비활성 상태에서도 모두 열람할 수 있습니다.';
     }
 
@@ -856,14 +859,15 @@ function getLiveCategoryDeniedReason(categoryKey) {
         return '초중/룸웨이팅은 {{LIVE_LEVEL_BADGE:3}} 미만 계급의 경우 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.\n\n{{LIVE_LEVEL_BADGE:3}} 계급이 되면 제한이 해제됩니다.';
     }
 
-    if (categoryKey === 'entry') {
+    if (categoryKey === 'entry' || categoryKey === 'attendance') {
+        const categoryLabel = categoryKey === 'attendance' ? '출근자 정보' : '엔트리';
         if (level >= 4) {
             return '';
         }
         if (level < 3) {
-            return '엔트리는 {{LIVE_LEVEL_BADGE:3}} 계급부터 열람할 수 있습니다.';
+            return `${categoryLabel}는 {{LIVE_LEVEL_BADGE:3}} 계급부터 열람할 수 있습니다.`;
         }
-        return '엔트리는 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.\n\n{{LIVE_LEVEL_BADGE:4}} 계급이 되면 제한이 해제됩니다.';
+        return `${categoryLabel}는 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.\n\n{{LIVE_LEVEL_BADGE:4}} 계급이 되면 제한이 해제됩니다.`;
     }
 
     return '';
@@ -1006,7 +1010,7 @@ function shouldUseHistoryPagination(categoryKey = liveState.selectedCategoryKey)
 }
 
 function shouldSyncLatestCardViewport(categoryKey = liveState.selectedCategoryKey) {
-    return Boolean(LIVE_CATEGORIES[categoryKey]);
+    return Boolean(LIVE_CATEGORIES[categoryKey]) && categoryKey !== 'attendance';
 }
 
 function isChoiceLikeCategory(categoryKey = liveState.selectedCategoryKey) {
@@ -1018,7 +1022,8 @@ function isCategoryRestrictedView(categoryKey = liveState.selectedCategoryKey) {
 }
 
 function isEntryRestrictedView() {
-    return liveState.selectedCategoryKey === 'entry' && isCategoryRestrictedView('entry');
+    return ['entry', 'attendance'].includes(liveState.selectedCategoryKey)
+        && isCategoryRestrictedView(liveState.selectedCategoryKey);
 }
 
 function getChoiceLikeMessageCandidates() {
@@ -1043,7 +1048,7 @@ function buildLiveEntriesQuery({ appendOlder = false } = {}) {
     return {
         category: liveState.selectedCategoryKey,
         storeNo: liveState.selectedStoreNo,
-        limit: liveState.selectedCategoryKey === 'entry' ? LIVE_ENTRY_PAGE_SIZE : LIVE_HISTORY_PAGE_SIZE,
+        limit: ['entry', 'attendance'].includes(liveState.selectedCategoryKey) ? LIVE_ENTRY_PAGE_SIZE : LIVE_HISTORY_PAGE_SIZE,
         offset: appendOlder && shouldUseHistoryPagination() ? liveState.nextOffset : 0
     };
 }
