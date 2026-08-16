@@ -34,7 +34,7 @@ const LIVE_CATEGORY_MAP = {
   chojoong: { key: 'chojoong', label: '초중', tableName: 'LIVE_CHOJOONG_HISTORY', sourceTableName: 'INFO_CHOJOONG' },
   waiting: { key: 'waiting', label: '웨이팅', tableName: 'LIVE_ROOM_HISTORY', sourceTableName: 'INFO_ROOM' },
   entry: { key: 'entry', label: '엔트리', tableName: 'ENTRY_TODAY' },
-  mind: { key: 'mind', label: '마인드표', tableName: 'ENTRY_ALLDAY' }
+  attendance: { key: 'attendance', label: '출근자 정보', tableName: 'ENTRY_ALLDAY' }
 };
 
 function ensureTableName(tableName) {
@@ -205,7 +205,7 @@ async function listLiveEntries(categoryKey, { storeNo = null, limit = 50, offset
     storeNo,
     storeName: selectedStore?.storeName || ''
   });
-  const isEntryList = category.key === 'entry' || category.key === 'mind';
+  const isEntryList = category.key === 'entry' || category.key === 'attendance';
   const params = isEntryList
     ? [...storeFilter.params, rowLimit]
     : [...storeFilter.params, rowLimit, rowOffset];
@@ -223,7 +223,7 @@ async function listLiveEntries(categoryKey, { storeNo = null, limit = 50, offset
               LIMIT ?
            ) AS recent_entries
           ORDER BY \`${orderColumn}\` ASC`
-      : category.key === 'mind'
+      : category.key === 'attendance'
         ? `SELECT ${selectClause}
              FROM \`${safeTableName}\`
              ${storeFilter.clause}
