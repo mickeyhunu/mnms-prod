@@ -24,6 +24,10 @@ const LIVE_CATEGORY_ALIASES = {
   entries: 'entry',
   엔트리: 'entry',
   출근부: 'entry',
+  mind: 'mind',
+  minds: 'mind',
+  마인드: 'mind',
+  마인드표: 'mind',
   choice: 'choice',
   choices: 'choice',
   choiceTalk: 'choice',
@@ -92,8 +96,8 @@ async function getLiveEntries(req, res, next) {
       rows: data.rows,
       limit: data.rowLimit,
       offset: data.rowOffset,
-      hasMore: data.category.key !== 'entry' && totalCount > (data.rowOffset + data.rows.length),
-      nextOffset: data.category.key !== 'entry' ? data.rowOffset + data.rows.length : data.rowOffset
+      hasMore: !['entry', 'mind'].includes(data.category.key) && totalCount > (data.rowOffset + data.rows.length),
+      nextOffset: !['entry', 'mind'].includes(data.category.key) ? data.rowOffset + data.rows.length : data.rowOffset
     });
   } catch (error) {
     return handleLiveError(error, next, res);
