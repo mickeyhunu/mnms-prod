@@ -285,6 +285,13 @@ function bindLiveEvents() {
         }
     });
 
+    listElement?.addEventListener('input', (event) => {
+        const searchInput = event.target.closest('[data-attendance-search]');
+        if (!searchInput) return;
+
+        renderAttendanceSearchResults(searchInput.value);
+    });
+
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
             refreshLiveData({ showLoading: false, syncToLatest: isLiveViewportNearBottom() }).catch((error) => {
@@ -441,7 +448,7 @@ function applyLiveEntriesResponse() {
     updateLiveScrollBottomButton();
 
     const hasRows = Array.isArray(liveState.rows) && liveState.rows.length > 0;
-    const shouldShowSummaryCard = liveState.selectedCategoryKey === 'entry';
+    const shouldShowSummaryCard = ['entry', 'attendance'].includes(liveState.selectedCategoryKey);
     const emptyElement = document.getElementById('live-empty');
 
     if (hasRows || shouldShowSummaryCard) {
@@ -1240,6 +1247,12 @@ function renderLiveEntries(rows, titleColumn) {
     syncLiveListLayout(listElement);
 
     if (!Array.isArray(rows) || !rows.length) {
+        if (liveState.selectedCategoryKey === 'attendance') {
+            listElement.innerHTML = createAttendanceList([], titleColumn, liveState.totalCount);
+            hideElement(emptyElement);
+            return;
+        }
+
         if (liveState.selectedCategoryKey === 'entry') {
             listElement.innerHTML = createEntrySummaryLiveCard([], titleColumn);
             enhanceLiveAvatarImages(listElement);
@@ -1255,7 +1268,7 @@ function renderLiveEntries(rows, titleColumn) {
     hideElement(emptyElement);
 
     if (liveState.selectedCategoryKey === 'attendance') {
-        listElement.innerHTML = createAttendanceList(rows, titleColumn);
+        listElement.innerHTML = createAttendanceList(rows, titleColumn, liveState.totalCount);
         return;
     }
 
@@ -1269,8 +1282,9 @@ function renderLiveEntries(rows, titleColumn) {
     enhanceLiveAvatarImages(listElement);
 }
 
-function createAttendanceList(rows, titleColumn) {
-    const sortedRows = [...rows].sort((leftRow, rightRow) => {
+function createAttendanceList(rows, titleColumn, totalCount = rows.length) {
+    const attendanceRows = Array.isArray(rows) ? rows : [];
+    const sortedRows = [...attendanceRows].sort((leftRow, rightRow) => {
         const leftTime = new Date(getLiveRowRawTimestamp(leftRow)).getTime();
         const rightTime = new Date(getLiveRowRawTimestamp(rightRow)).getTime();
         if (!Number.isFinite(leftTime)) return Number.isFinite(rightTime) ? 1 : 0;
@@ -1280,15 +1294,65 @@ function createAttendanceList(rows, titleColumn) {
 
     return `
         <section class="attendance-list" aria-label="출근자 정보">
-            <header class="attendance-list__header">
-                <span>이름</span>
-                <span>마지막 출근날짜</span>
-            </header>
-            <ol class="attendance-list__items">
-                ${sortedRows.map((row, index) => createAttendanceListItem(row, titleColumn, index)).join('')}
-            </ol>
+            <div class="attendance-list__search-wrap">
+                <label class="sr-only" for="attendance-search">출근자 이름 검색</label>
+                <input
+                    type="search"
+                    class="attendance-list__search"
+                    id="attendance-search"
+                    data-attendance-search
+                    placeholder="이름을 검색해 주세요"
+                    autocomplete="off"
+                >
+            </div>
+            <p class="attendance-list__summary">총 ${Number(totalCount) || 0}명의 정보가 있습니다.</p>
+            <div data-attendance-results aria-live="polite">
+                ${createAttendanceSearchResultsMarkup([], titleColumn, '')}
+            </div>
         </section>
     `;
+}
+
+function renderAttendanceSearchResults(searchTerm) {
+    const resultsElement = document.querySelector('#live-entry-list [data-attendance-results]');
+    if (!resultsElement || liveState.selectedCategoryKey !== 'attendance') return;
+
+    const normalizedSearchTerm = normalizeAttendanceSearchTerm(searchTerm);
+    const matchingRows = normalizedSearchTerm
+        ? liveState.rows.filter((row, index) => normalizeAttendanceSearchTerm(
+            resolveEntryWorkerName(row, liveState.titleColumn, index)
+        ).includes(normalizedSearchTerm))
+        : [];
+
+    resultsElement.innerHTML = createAttendanceSearchResultsMarkup(
+        matchingRows,
+        liveState.titleColumn,
+        normalizedSearchTerm
+    );
+}
+
+function createAttendanceSearchResultsMarkup(rows, titleColumn, searchTerm) {
+    if (!searchTerm) {
+        return '<p class="attendance-list__guide">이름을 검색하면 출근자 정보가 표시됩니다.</p>';
+    }
+
+    if (!rows.length) {
+        return '<p class="attendance-list__guide">검색한 이름과 일치하는 정보가 없습니다.</p>';
+    }
+
+    return `
+        <header class="attendance-list__header">
+            <span>이름</span>
+            <span>마지막 출근날짜</span>
+        </header>
+        <ol class="attendance-list__items">
+            ${rows.map((row, index) => createAttendanceListItem(row, titleColumn, index)).join('')}
+        </ol>
+    `;
+}
+
+function normalizeAttendanceSearchTerm(value) {
+    return String(value || '').trim().toLocaleLowerCase('ko-KR');
 }
 
 function createAttendanceListItem(row, titleColumn, index) {

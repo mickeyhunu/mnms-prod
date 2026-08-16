@@ -468,6 +468,50 @@ body[data-page="live"] .header {
     color: #f8fafc;
 }
 
+.attendance-list__search-wrap {
+    padding: 20px 20px 12px;
+}
+
+.attendance-list__search {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    background: #1b1c1f;
+    color: #f8fafc;
+    font: inherit;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.attendance-list__search::placeholder {
+    color: #71717a;
+}
+
+.attendance-list__search:focus {
+    border-color: #facc15;
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.14);
+}
+
+.attendance-list__summary {
+    margin: 0;
+    padding: 0 20px 18px;
+    color: #d4d4d8;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.attendance-list__guide {
+    margin: 0;
+    padding: 24px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    color: #a1a1aa;
+    font-size: 14px;
+    text-align: center;
+}
+
 .attendance-list__header,
 .attendance-list__row {
     display: grid;
@@ -592,6 +636,16 @@ body[data-page="live"] .header {
 }
 
 @media (max-width: 480px) {
+    .attendance-list__search-wrap {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .attendance-list__summary {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
     .attendance-list__header,
     .attendance-list__row {
         gap: 12px;
