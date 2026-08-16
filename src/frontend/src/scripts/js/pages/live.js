@@ -22,7 +22,8 @@ const LIVE_AD_AUTOPLAY_INTERVAL_MS = 5000;
 const LIVE_LEVEL_BADGE_TOKEN_PATTERN = /\{\{LIVE_LEVEL_BADGE:(\d+)\}\}/g;
 const LIVE_LEVEL_BADGE_ALT_TEXT = {
     3: 'LV3 계급 배지',
-    4: 'LV4 계급 배지'
+    4: 'LV4 계급 배지',
+    5: 'LV5 계급 배지'
 };
 let shareSheetController = null;
 
@@ -182,7 +183,7 @@ async function loadLiveAccessRules() {
                 chojoong: Boolean(response?.access?.chojoong),
                 waiting: Boolean(response?.access?.waiting),
                 entry: Boolean(response?.access?.entry),
-                attendance: Boolean(response?.access?.entry)
+                attendance: Boolean(response?.access?.attendance)
             }
         };
     } catch (error) {
@@ -289,6 +290,10 @@ function bindLiveEvents() {
         const searchInput = event.target.closest('[data-attendance-search]');
         if (!searchInput) return;
 
+        const koreanName = getAttendanceKoreanName(searchInput.value);
+        if (searchInput.value !== koreanName) {
+            searchInput.value = koreanName;
+        }
         renderAttendanceSearchResults(searchInput.value);
     });
 
@@ -862,7 +867,7 @@ function renderCategoryButtons(categories) {
     categoryFilter.innerHTML = normalizedCategories.map((category) => {
         const hasAccess = Boolean(liveState.accessRules?.access?.[category.key] ?? true);
         const deniedReason = getLiveCategoryDeniedReason(category.key);
-        const shouldShowLockedStyle = !hasAccess && !['chojoong', 'waiting', 'entry', 'attendance'].includes(category.key);
+        const shouldShowLockedStyle = !hasAccess && category.key === 'attendance';
         return `<button type="button" class="area-filter__button area-filter__button--district ${liveState.selectedCategoryKey === category.key ? 'is-active' : ''} ${shouldShowLockedStyle ? 'is-locked' : ''}" data-category-option="${category.key}" data-locked="${hasAccess ? 'false' : 'true'}" aria-disabled="${hasAccess ? 'false' : 'true'}" ${!hasAccess && deniedReason ? `data-denied-reason="${sanitizeHTML(deniedReason)}"` : ''}>${sanitizeHTML(category.label)}</button>`;
     }).join('');
     syncScrollableFilterState(categoryFilter);
@@ -883,8 +888,13 @@ function getLiveCategoryDeniedReason(categoryKey) {
         return '초중/룸웨이팅은 {{LIVE_LEVEL_BADGE:3}} 미만 계급의 경우 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.\n\n{{LIVE_LEVEL_BADGE:3}} 계급이 되면 제한이 해제됩니다.';
     }
 
-    if (categoryKey === 'entry' || categoryKey === 'attendance') {
-        const categoryLabel = categoryKey === 'attendance' ? '출근자 정보' : '엔트리';
+    if (categoryKey === 'attendance') {
+        if (level >= 5) return '';
+        return '출근자 정보는 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.\n\n{{LIVE_LEVEL_BADGE:5}} 계급이 되면 제한이 해제됩니다.';
+    }
+
+    if (categoryKey === 'entry') {
+        const categoryLabel = '엔트리';
         if (level >= 4) {
             return '';
         }
@@ -1291,6 +1301,10 @@ function createAttendanceList(rows, titleColumn, totalCount = rows.length) {
         if (!Number.isFinite(rightTime)) return -1;
         return rightTime - leftTime;
     });
+    const hasAttendanceAccess = Boolean(liveState.accessRules?.access?.attendance);
+    const searchPlaceholder = hasAttendanceAccess
+        ? '한글 이름 두 글자를 입력해 주세요'
+        : '열람 조건 충족 후 검색할 수 있습니다';
 
     return `
         <section class="attendance-list" aria-label="출근자 정보">
@@ -1301,8 +1315,11 @@ function createAttendanceList(rows, titleColumn, totalCount = rows.length) {
                     class="attendance-list__search"
                     id="attendance-search"
                     data-attendance-search
-                    placeholder="이름을 검색해 주세요"
+                    placeholder="${searchPlaceholder}"
                     autocomplete="off"
+                    maxlength="2"
+                    inputmode="text"
+                    ${hasAttendanceAccess ? '' : 'disabled aria-disabled="true"'}
                 >
             </div>
             <p class="attendance-list__summary">총 ${Number(totalCount) || 0}명의 정보가 있습니다.</p>
@@ -1318,7 +1335,9 @@ function renderAttendanceSearchResults(searchTerm) {
     if (!resultsElement || liveState.selectedCategoryKey !== 'attendance') return;
 
     const normalizedSearchTerm = normalizeAttendanceSearchTerm(searchTerm);
-    const matchingRows = normalizedSearchTerm
+    const canSearch = Boolean(liveState.accessRules?.access?.attendance)
+        && normalizedSearchTerm.length === 2;
+    const matchingRows = canSearch
         ? liveState.rows.filter((row, index) => normalizeAttendanceSearchTerm(
             resolveEntryWorkerName(row, liveState.titleColumn, index)
         ).includes(normalizedSearchTerm))
@@ -1327,7 +1346,7 @@ function renderAttendanceSearchResults(searchTerm) {
     resultsElement.innerHTML = createAttendanceSearchResultsMarkup(
         matchingRows,
         liveState.titleColumn,
-        normalizedSearchTerm
+        canSearch ? normalizedSearchTerm : ''
     );
 }
 
@@ -1352,7 +1371,11 @@ function createAttendanceSearchResultsMarkup(rows, titleColumn, searchTerm) {
 }
 
 function normalizeAttendanceSearchTerm(value) {
-    return String(value || '').trim().toLocaleLowerCase('ko-KR');
+    return getAttendanceKoreanName(value).toLocaleLowerCase('ko-KR');
+}
+
+function getAttendanceKoreanName(value) {
+    return (String(value || '').match(/[가-힣]/g) || []).slice(0, 2).join('');
 }
 
 function createAttendanceListItem(row, titleColumn, index) {
