@@ -12,28 +12,79 @@ const LIVE_CATEGORIES = {
 const LIVE_HELP_GUIDES = {
     choice: {
         title: '초이스톡',
-        description: '매장에서 실시간으로 전달하는 초이스 현황을 확인하는 공간입니다.',
-        points: ['상단에서 원하는 매장을 선택해 해당 매장의 소식만 볼 수 있습니다.', '새로운 내용은 아래쪽에 표시되며, 하단 이동 버튼으로 최신 소식을 바로 확인할 수 있습니다.']
+        content: `
+            <p class="live-help-dialog__description">초이스톡은 보통 <strong>방번호 → 담당(구좌) → 초이스 필요 인원 → 담당 웨이터 → 상태/용어</strong> 순서로 표시됩니다. 상황에 따라 일부 항목이 생략되거나 추가될 수 있습니다.</p>
+            <div class="live-help-dialog__example">
+                <code>101 미맨 3 똘비 ㄷㅊ</code>
+                <dl>
+                    <div><dt>101</dt><dd>방번호</dd></div>
+                    <div><dt>미맨</dt><dd>해당 방의 담당(구좌)</dd></div>
+                    <div><dt>3</dt><dd>초이스가 필요한 인원 3명</dd></div>
+                    <div><dt>똘비</dt><dd>해당 방을 담당하는 웨이터</dd></div>
+                    <div><dt>ㄷㅊ</dt><dd>담초. 담당이 직접 초이스를 봄</dd></div>
+                </dl>
+                <p>101번 방에서 미맨 담당이 3명의 초이스를 필요로 하며, 똘비 웨이터가 담당하고 담당자가 직접 초이스를 보는 방이라는 뜻입니다.</p>
+            </div>
+            <h4 class="live-help-dialog__section-title">주요 용어</h4>
+            <dl class="live-help-dialog__terms">
+                <div><dt>ㄷㅊ / 담초</dt><dd><b>담당 초이스</b> — 담당(구좌)이 직접 초이스를 봄</dd></div>
+                <div><dt>ㄷㄱ / 대기</dt><dd><b>대기</b> — 아직 초이스를 보지 않고 대기 중</dd></div>
+                <div><dt>ㅃ1</dt><dd><b>빵꾸 1</b> — 초이스로 맞춰야 할 인원이 1명 남음</dd></div>
+                <div><dt>ㅈㅃ1</dt><dd><b>지명빵꾸 1</b> — 신규방에 지명이 들어와 있고 추가로 1명을 맞춰야 함</dd></div>
+                <div><dt>ㅇㅎㅃ1</dt><dd><b>일행빵꾸 1</b> — 일행이 추가로 와서 초이스로 1명을 맞춰야 함</dd></div>
+                <div><dt>SSS</dt><dd><b>선불방</b> — 선불로 진행되는 방</dd></div>
+                <div><dt>PPP</dt><dd><b>패스방</b> — 패스가 심해 초이스를 보여주지 않는 방</dd></div>
+                <div><dt>ㅈㅁ</dt><dd>지명으로 진행되는 경우</dd></div>
+                <div><dt>ㄴㄱ</dt><dd>날개</dd></div>
+                <div><dt>a</dt><dd>아베크</dd></div>
+            </dl>
+            <p class="live-help-dialog__note"><strong>ㅃ 계열 뒤의 숫자</strong>는 현재 추가로 맞춰야 하는 인원 수입니다. 예: ㅃ2는 2명, ㅈㅃ1은 지명이 들어온 신규방에서 추가 1명, ㅇㅎㅃ2는 일행으로 인해 추가 2명이 필요한 상황입니다.</p>
+        `
     },
     chojoong: {
-        title: '초중',
-        description: '현재 매칭이 진행 중인 상황과 관련 메시지를 시간순으로 확인할 수 있습니다.',
-        points: ['오래된 내용부터 최신 내용까지 대화 흐름처럼 이어서 볼 수 있습니다.', '일부 회원은 회원 등급 또는 당일 커뮤니티 활동 조건을 충족해야 열람할 수 있습니다.']
+        title: '현재 인원',
+        content: `
+            <p class="live-help-dialog__description">LIVE에서는 현재 인원들의 상태를 다음과 같이 구분해 표시합니다.</p>
+            <dl class="live-help-dialog__terms">
+                <div><dt>초중</dt><dd>현재 초이스를 보고 있는 인원</dd></div>
+                <div><dt>방중</dt><dd>현재 방 안에서 일을 하고 있는 인원</dd></div>
+                <div><dt>바로대기 / ㅂㄹㄷㄱ</dt><dd>초이스를 모두 보고 난 뒤 바로 대기 중인 인원</dd></div>
+                <div><dt>첫초</dt><dd>출근한 뒤 처음으로 초이스를 돌고 있는 인원</dd></div>
+            </dl>
+        `
     },
     waiting: {
         title: '룸/웨이팅',
-        description: '매장별 룸 현황과 웨이팅 정보를 빠르게 확인하는 메뉴입니다.',
-        points: ['매장을 먼저 선택하면 해당 매장의 최신 룸·대기 정보를 볼 수 있습니다.', '현장 상황은 실시간으로 달라질 수 있으므로 가장 최근 등록 시간을 함께 확인해 주세요.']
+        content: `
+            <p class="live-help-dialog__description">매장별 현재 인원 상태와 룸·웨이팅 현황을 빠르게 확인할 수 있습니다. 매장을 먼저 선택하고 가장 최근 등록 시간을 함께 확인해 주세요.</p>
+            <p class="live-help-dialog__note">LIVE 정보는 실시간 상황을 이해하기 위한 참고용 정보입니다. 실제 현장 상황과 차이가 있을 수 있으며 업장 및 담당에 따라 사용하는 용어의 의미가 일부 다를 수 있습니다.</p>
+        `
     },
     entry: {
         title: '엔트리',
-        description: '현재 엔트리 인원과 순위 등 매장에서 제공하는 현황을 확인할 수 있습니다.',
-        points: ['표시된 인원, 이름, 순위 정보는 선택한 매장을 기준으로 제공됩니다.', '회원 등급이나 당일 활동 조건에 따라 일부 정보가 흐리게 표시될 수 있습니다.']
+        content: `
+            <p class="live-help-dialog__description">엔트리에 표시되는 인원은 실제 전체 출근 인원과 다를 수 있습니다. 출근 후 최소 한 번 이상 방에 들어간 기록이 있어야 엔트리 데이터에 표시됩니다.</p>
+            <p class="live-help-dialog__note">LIVE 엔트리는 실제 총 출근 인원의 약 <strong>80~90%</strong> 수준만 표시될 수 있으며, 엔트리에 없다고 해서 반드시 출근하지 않았다는 의미는 아닙니다.</p>
+            <h4 class="live-help-dialog__section-title">멤버별 점수</h4>
+            <p class="live-help-dialog__description">멤버별 점수는 일한 개수나 들어간 방의 개수가 아닙니다. 미드나잇맨즈 자체 알고리즘으로 산정하는 활동·참고용 포인트이므로 실제 근무 횟수나 실적으로 해석하지 않는 것이 좋습니다.</p>
+        `
     },
     attendance: {
         title: '출근자 정보',
-        description: '선택한 매장의 출근자 정보를 이름으로 찾아볼 수 있습니다.',
-        points: ['검색창에 찾고 싶은 이름을 입력하면 일치하는 출근자 정보가 표시됩니다.', '출근 정보는 매장 등록 내용을 기준으로 하며, 열람에는 회원 등급 또는 활동 조건이 적용될 수 있습니다.']
+        content: `
+            <p class="live-help-dialog__description">출근자 정보는 최근 출근 기록을 기반으로 관리됩니다. 마지막 출근 기록으로부터 <strong>6개월 이상</strong> 새 기록이 없는 출근자는 자동으로 삭제되어 LIVE에 더 이상 표시되지 않을 수 있습니다.</p>
+            <h4 class="live-help-dialog__section-title">코멘트 작성 주의사항</h4>
+            <p class="live-help-dialog__description">코멘트는 사실에 기반하고 타인의 권리를 침해하지 않는 범위에서만 작성해야 합니다. 사실이라도 법에 어긋나거나 타인의 권리를 침해하는 내용은 작성할 수 없습니다.</p>
+            <ul class="live-help-dialog__restricted-list">
+                <li>‘마인드 좋음’, ‘배팅’ 등 성적인 내용이나 성적 행위를 암시·평가하는 정보</li>
+                <li>개인의 연락처, 주소 등 개인정보</li>
+                <li>개인을 과도하게 특정할 수 있는 상세한 특징</li>
+                <li>확인되지 않은 사실이나 허위정보</li>
+                <li>비방·모욕 또는 명예를 훼손할 수 있는 내용</li>
+                <li>그 밖에 개인정보 침해 등 관련 법령에 위반될 수 있는 내용</li>
+            </ul>
+            <p class="live-help-dialog__warning">신고된 코멘트는 운영진이 검토하며, 운영정책 위반 시 코멘트 삭제 및 작성자 이용 제한 등의 패널티가 적용될 수 있습니다.</p>
+        `
     }
 };
 
@@ -241,10 +292,7 @@ function renderLiveHelp(categoryKey = liveState.selectedCategoryKey) {
     if (contentElement) {
         contentElement.innerHTML = `
             <h3 class="live-help-dialog__category-title">${sanitizeHTML(guide.title)}</h3>
-            <p class="live-help-dialog__description">${sanitizeHTML(guide.description)}</p>
-            <ul class="live-help-dialog__points">
-                ${guide.points.map((point) => `<li>${sanitizeHTML(point)}</li>`).join('')}
-            </ul>
+            ${guide.content}
         `;
     }
 }
