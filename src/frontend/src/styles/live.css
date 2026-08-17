@@ -463,8 +463,6 @@ body[data-page="live"] .header {
     width: 100%;
     overflow: visible;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 18px;
-    background: #111214;
     color: #f8fafc;
 }
 
