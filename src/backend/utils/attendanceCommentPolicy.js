@@ -43,7 +43,7 @@ function normalizeForAttendanceCommentScan(value) {
   return String(value || '')
     .normalize('NFKC')
     .toLowerCase()
-    .replace(/[^0-9a-z가-힣ㄱ-ㅎㅏ-ㅣ]+/g, '');
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, '');
 }
 
 function findBlockedAttendanceCommentExpression(value) {
