@@ -20,7 +20,7 @@ function findBlockedAttendanceCommentExpression(value) {
     const normalize = (text) => String(text || '')
         .normalize('NFKC')
         .toLowerCase()
-        .replace(/[^0-9a-z가-힣ㄱ-ㅎㅏ-ㅣ]+/g, '');
+        .replace(/[\u200B-\u200D\u2060\uFEFF]/g, '');
     const normalized = normalize(value);
     return BLOCKED_ATTENDANCE_COMMENT_EXPRESSIONS.find((expression) => normalized.includes(normalize(expression))) || null;
 }
@@ -1716,10 +1716,10 @@ async function loadAttendanceComments(container) {
             <h3 class="attendance-comments__title">코멘트</h3>
             <div class="attendance-comments__list">
                 ${comments.length ? sortRowsNewestFirst(comments).map((comment) => `
-                    <article class="attendance-comment${comment.isMine ? ' attendance-comment--mine' : ''}${comment.author !== '익명' ? ' attendance-comment--identified' : ''}">
-                        ${comment.isMine && comment.author === '익명' ? '' : `<img class="attendance-comment__avatar" src="${sanitizeHTML(comment.authorProfileImageUrl || '/src/assets/image/img_profile.png')}" alt="" aria-hidden="true">`}
+                    <article class="attendance-comment${comment.isMine ? ' attendance-comment--mine' : ''}">
+                        ${comment.isMine ? '' : '<img class="attendance-comment__avatar" src="/src/assets/image/img_profile.png" alt="" aria-hidden="true">'}
                         <div class="attendance-comment__message">
-                            <strong>${sanitizeHTML(comment.author || '익명')}</strong>
+                            <strong>익명</strong>
                             <p class="attendance-comment__content${comment.isHidden ? ' attendance-comment__content--restricted' : ''}">${sanitizeHTML(comment.content)}</p>
                             <div class="attendance-comment__meta"><time>${sanitizeHTML(formatDate(comment.createdAt))}</time>${comment.isMine
                                 ? (comment.isHidden ? '' : `<button type="button" class="attendance-comment__action" data-attendance-comment-edit="${comment.id}">수정</button><button type="button" class="attendance-comment__action attendance-comment__action--danger" data-attendance-comment-delete="${comment.id}">삭제</button>`)
