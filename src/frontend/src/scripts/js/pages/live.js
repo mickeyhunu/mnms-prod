@@ -418,6 +418,39 @@ function bindLiveEvents() {
             return;
         }
 
+        const editButton = event.target.closest('[data-attendance-comment-edit]');
+        if (editButton) {
+            const article = editButton.closest('.attendance-comment');
+            const currentContent = article?.querySelector('.attendance-comment__content')?.textContent || '';
+            const content = window.prompt('코멘트를 수정해주세요.', currentContent);
+            if (content === null) return;
+            const normalizedContent = content.trim();
+            if (!normalizedContent || normalizedContent.length > 500) return alert('코멘트는 1~500자로 입력해주세요.');
+            editButton.disabled = true;
+            try {
+                await APIClient.put(`/live/attendance-comments/${editButton.dataset.attendanceCommentEdit}`, { content: normalizedContent });
+                await loadAttendanceComments(editButton.closest('.attendance-list'));
+            } catch (error) {
+                editButton.disabled = false;
+                alert(error.message || '코멘트를 수정하지 못했습니다.');
+            }
+            return;
+        }
+
+        const commentDeleteButton = event.target.closest('[data-attendance-comment-delete]');
+        if (commentDeleteButton) {
+            if (!window.confirm('이 코멘트를 삭제할까요? 삭제 후 복구할 수 없습니다.')) return;
+            commentDeleteButton.disabled = true;
+            try {
+                await APIClient.delete(`/live/attendance-comments/${commentDeleteButton.dataset.attendanceCommentDelete}`);
+                await loadAttendanceComments(commentDeleteButton.closest('.attendance-list'));
+            } catch (error) {
+                commentDeleteButton.disabled = false;
+                alert(error.message || '코멘트를 삭제하지 못했습니다.');
+            }
+            return;
+        }
+
         const deleteButton = event.target.closest('[data-live-chojoong-delete]');
         if (!deleteButton || !liveState.canDeleteChojoong) return;
 
@@ -1645,12 +1678,14 @@ async function loadAttendanceComments(container) {
             <h3 class="attendance-comments__title">${sanitizeHTML(workerName)} 코멘트</h3>
             <div class="attendance-comments__list">
                 ${comments.length ? sortRowsNewestFirst(comments).map((comment) => `
-                    <article class="attendance-comment">
-                        <img class="attendance-comment__avatar" src="/src/assets/image/img_profile.png" alt="" aria-hidden="true">
+                    <article class="attendance-comment${comment.isMine ? ' attendance-comment--mine' : ''}">
+                        ${comment.isMine ? '' : '<img class="attendance-comment__avatar" src="/src/assets/image/img_profile.png" alt="" aria-hidden="true">'}
                         <div class="attendance-comment__message">
                             <strong>익명</strong>
-                            <p>${sanitizeHTML(comment.content)}</p>
-                            <div class="attendance-comment__meta"><time>${sanitizeHTML(formatDate(comment.createdAt))}</time><button type="button" class="attendance-comment__report" data-attendance-comment-report="${comment.id}" ${comment.isReported ? 'disabled' : ''}>${comment.isReported ? '신고됨' : '신고'}</button></div>
+                            <p class="attendance-comment__content">${sanitizeHTML(comment.content)}</p>
+                            <div class="attendance-comment__meta"><time>${sanitizeHTML(formatDate(comment.createdAt))}</time>${comment.isMine
+                                ? `<button type="button" class="attendance-comment__action" data-attendance-comment-edit="${comment.id}">수정</button><button type="button" class="attendance-comment__action attendance-comment__action--danger" data-attendance-comment-delete="${comment.id}">삭제</button>`
+                                : `<button type="button" class="attendance-comment__report" data-attendance-comment-report="${comment.id}" ${comment.isReported ? 'disabled' : ''}>${comment.isReported ? '신고됨' : '신고'}</button>`}</div>
                         </div>
                     </article>`).join('') : '<p class="attendance-comments__empty">첫 코멘트를 남겨보세요.</p>'}
             </div>`;

@@ -1,16 +1,21 @@
 /** 출근자 정보에 달린 익명 코멘트와 신고를 관리한다. */
 const { getPool } = require('../config/database');
 
-async function listPublic(storeNo, workerName) {
+async function listPublic(storeNo, workerName, viewerUserId = null) {
   const [rows] = await getPool().query(
-    `SELECT id, content, created_at AS createdAt,
+    `SELECT id, content, created_at AS createdAt, (user_id = ?) AS isMine,
             EXISTS(SELECT 1 FROM attendance_comment_reports r WHERE r.comment_id = c.id) AS isReported
        FROM attendance_comments c
       WHERE store_no = ? AND worker_name = ? AND is_deleted = 0
       ORDER BY created_at DESC, id DESC`,
-    [storeNo, workerName]
+    [viewerUserId, storeNo, workerName]
   );
-  return rows.map((row) => ({ ...row, author: '익명', isReported: Boolean(row.isReported) }));
+  return rows.map((row) => ({
+    ...row,
+    author: '익명',
+    isMine: Boolean(row.isMine),
+    isReported: Boolean(row.isReported)
+  }));
 }
 
 async function create({ storeNo, workerName, userId, content }) {
@@ -60,4 +65,20 @@ async function remove(commentId) {
   return result.affectedRows > 0;
 }
 
-module.exports = { listPublic, create, report, listAdmin, countReported, remove };
+async function updateOwn(commentId, userId, content) {
+  const [result] = await getPool().query(
+    'UPDATE attendance_comments SET content = ? WHERE id = ? AND user_id = ? AND is_deleted = 0',
+    [content, commentId, userId]
+  );
+  return result.affectedRows > 0;
+}
+
+async function removeOwn(commentId, userId) {
+  const [result] = await getPool().query(
+    'UPDATE attendance_comments SET is_deleted = 1 WHERE id = ? AND user_id = ? AND is_deleted = 0',
+    [commentId, userId]
+  );
+  return result.affectedRows > 0;
+}
+
+module.exports = { listPublic, create, report, listAdmin, countReported, remove, updateOwn, removeOwn };
