@@ -1499,14 +1499,6 @@ function renderLiveEntries(rows, titleColumn) {
 }
 
 function createAttendanceList(rows, titleColumn, totalCount = rows.length) {
-    const attendanceRows = Array.isArray(rows) ? rows : [];
-    const sortedRows = [...attendanceRows].sort((leftRow, rightRow) => {
-        const leftTime = new Date(getLiveRowRawTimestamp(leftRow)).getTime();
-        const rightTime = new Date(getLiveRowRawTimestamp(rightRow)).getTime();
-        if (!Number.isFinite(leftTime)) return Number.isFinite(rightTime) ? 1 : 0;
-        if (!Number.isFinite(rightTime)) return -1;
-        return rightTime - leftTime;
-    });
     const hasAttendanceAccess = Boolean(liveState.accessRules?.access?.attendance);
     const searchPlaceholder = hasAttendanceAccess
         ? '한글 이름 두 글자를 입력해 주세요'
@@ -1544,9 +1536,9 @@ function renderAttendanceSearchResults(searchTerm) {
     const canSearch = Boolean(liveState.accessRules?.access?.attendance)
         && normalizedSearchTerm.length === 2;
     const matchingRows = canSearch
-        ? liveState.rows.filter((row, index) => normalizeAttendanceSearchTerm(
+        ? sortRowsNewestFirst(liveState.rows.filter((row, index) => normalizeAttendanceSearchTerm(
             resolveEntryWorkerName(row, liveState.titleColumn, index)
-        ).includes(normalizedSearchTerm))
+        ).includes(normalizedSearchTerm)))
         : [];
 
     resultsElement.innerHTML = createAttendanceSearchResultsMarkup(
@@ -1652,7 +1644,7 @@ async function loadAttendanceComments(container) {
         section.innerHTML = `
             <h3 class="attendance-comments__title">${sanitizeHTML(workerName)} 코멘트</h3>
             <div class="attendance-comments__list">
-                ${comments.length ? [...comments].reverse().map((comment) => `
+                ${comments.length ? sortRowsNewestFirst(comments).map((comment) => `
                     <article class="attendance-comment">
                         <img class="attendance-comment__avatar" src="/src/assets/image/img_profile.png" alt="" aria-hidden="true">
                         <div class="attendance-comment__message">
@@ -1663,12 +1655,20 @@ async function loadAttendanceComments(container) {
                     </article>`).join('') : '<p class="attendance-comments__empty">첫 코멘트를 남겨보세요.</p>'}
             </div>`;
         syncAttendanceCommentsViewport();
-        const messageList = section.querySelector('.attendance-comments__list');
-        if (messageList) messageList.scrollTop = messageList.scrollHeight;
     } catch (error) {
         if (requestId !== liveState.attendanceCommentRequestId) return;
         section.innerHTML = `<p class="attendance-comments__empty">${sanitizeHTML(error.message || '코멘트를 불러오지 못했습니다.')}</p>`;
     }
+}
+
+function sortRowsNewestFirst(rows) {
+    return [...rows].sort((leftRow, rightRow) => {
+        const leftTime = new Date(getLiveRowRawTimestamp(leftRow)).getTime();
+        const rightTime = new Date(getLiveRowRawTimestamp(rightRow)).getTime();
+        if (!Number.isFinite(leftTime)) return Number.isFinite(rightTime) ? 1 : 0;
+        if (!Number.isFinite(rightTime)) return -1;
+        return rightTime - leftTime || (Number(rightRow.id) || 0) - (Number(leftRow.id) || 0);
+    });
 }
 
 function formatAttendanceDate(rawTimestamp) {
