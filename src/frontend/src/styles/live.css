@@ -896,7 +896,7 @@ body.live-help-open {
 .attendance-comment__report { padding: 2px 0; border: 0; background: transparent; color: #a1a1aa; font-size: 11px; cursor: pointer; }
 .attendance-comment__report:disabled { cursor: default; opacity: .65; }
 .attendance-comments__loading, .attendance-comments__empty { margin: 8px 0; color: #a1a1aa; font-size: 13px; text-align: center; }
-.attendance-comment-form { position: sticky; bottom: 0; z-index: 2; display: flex; align-items: flex-end; gap: 8px; margin-top: 4px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,.12); background: #18181b; }
+.attendance-comment-form { position: fixed; right: 0; bottom: 0; left: 0; z-index: 31; display: flex; align-items: flex-end; gap: 8px; width: min(920px, 100%); margin: 0 auto; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,.12); background: #18181b; }
 .attendance-comment-form textarea { min-width: 0; min-height: 40px; max-height: 100px; flex: 1; resize: none; padding: 10px 13px; border: 1px solid rgba(255,255,255,.16); border-radius: 20px; outline: 0; background: #27272a; color: #fafafa; font: inherit; font-size: 13px; line-height: 1.4; }
 .attendance-comment-form textarea:focus { border-color: rgba(250,204,21,.65); }
 .attendance-comment-form button { flex: 0 0 auto; min-height: 40px; padding: 7px 14px; border: 0; border-radius: 20px; background: #facc15; color: #18181b; font-weight: 800; cursor: pointer; }
