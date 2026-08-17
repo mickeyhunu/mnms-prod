@@ -28,7 +28,7 @@ let lastAdminReviewSummary = null;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
-const ADMIN_TABS = ['stats', 'posts', 'comments', 'users', 'business-users', 'admins', 'entries', 'posters', 'banner-ads', 'business-ads', 'support', 'business-applications', 'inquiries'];
+const ADMIN_TABS = ['stats', 'posts', 'comments', 'attendance-comments', 'users', 'business-users', 'admins', 'entries', 'posters', 'banner-ads', 'business-ads', 'support', 'business-applications', 'inquiries'];
 const ADMIN_SIDEBAR_COLLAPSED_STORAGE_KEY = 'adminSidebarCollapsed';
 
 const ADMIN_PAGE_SIZE = 20;
@@ -50,6 +50,7 @@ const ADMIN_STATS_METRIC_META = {
 const ADMIN_LIST_STATE = {
     posts: { items: [], query: '', searchType: 'post', page: 1 },
     comments: { items: [], query: '', searchType: 'post', page: 1 },
+    'attendance-comments': { items: [], query: '', page: 1 },
     users: { items: [], query: '', page: 1 },
     'business-applications': { items: [], query: '', page: 1 },
     admins: { items: [], query: '', page: 1 },
@@ -62,6 +63,7 @@ const ADMIN_LIST_STATE = {
 const ADMIN_SEARCH_PLACEHOLDERS = {
     posts: '게시글 검색',
     comments: '댓글 검색',
+    'attendance-comments': '이름·작성자·내용 검색',
     users: '일반 회원 검색',
     'business-applications': '기업회원 신청/변경 검색',
     admins: '관리자 검색',
@@ -195,6 +197,7 @@ function renderAdminReviewSummary(summary = {}) {
     const pendingBusinessApplications = Math.max(0, Number(summary.pendingBusinessApplications) || 0);
     setAdminBadge('inquiries-tab-badge', pendingInquiries);
     setAdminBadge('business-applications-tab-badge', pendingBusinessApplications);
+    setAdminBadge('attendance-comments-tab-badge', summary.reportedAttendanceComments);
 }
 
 async function loadAdminReviewSummary() {
@@ -238,6 +241,7 @@ async function activateAdminTab(tabKey, options = {}) {
     if (resolvedTabKey === 'stats') await loadStatsDashboard();
     else if (resolvedTabKey === 'posts') await loadPosts();
     else if (resolvedTabKey === 'comments') await loadComments();
+    else if (resolvedTabKey === 'attendance-comments') await loadAttendanceCommentsAdmin();
     else if (isUserManagementTab(resolvedTabKey)) await loadUsers();
     else if (resolvedTabKey === 'business-applications') await loadBusinessApplications();
     else if (resolvedTabKey === 'admins') await loadAdmins();
@@ -308,6 +312,7 @@ function bindCommonEvents() {
     document.getElementById('stats-summary-cards')?.addEventListener('keydown', handleStatsCardKeyboard);
     document.getElementById('posts-retry-btn')?.addEventListener('click', loadPosts);
     document.getElementById('comments-retry-btn')?.addEventListener('click', loadComments);
+    document.getElementById('attendance-comments-retry-btn')?.addEventListener('click', loadAttendanceCommentsAdmin);
     document.getElementById('users-retry-btn')?.addEventListener('click', loadUsers);
     document.getElementById('business-applications-retry-btn')?.addEventListener('click', loadBusinessApplications);
     document.getElementById('admins-retry-btn')?.addEventListener('click', loadAdmins);
@@ -497,6 +502,7 @@ function getAdminFilteredItems(prefix) {
     const matchers = {
         posts: ['id', 'title', 'authorNickname', 'user_id', 'userId'],
         comments: ['id', 'content', 'authorNickname', 'user_id', 'userId', 'postId', 'post_id'],
+        'attendance-comments': ['id', 'workerName', 'content', 'authorLoginId', 'authorNickname', 'storeNo'],
         users: ['id', 'loginId', 'login_id', 'userLoginId', 'name', 'nickname', 'role', 'memberType', 'member_type', 'phone', 'businessCompanyName', 'businessRegistrationNumber', 'businessManagerName', 'businessContactPhone'],
         'business-applications': ['userId', 'loginId', 'nickname', 'companyName', 'businessRegistrationNumber', 'managerName', 'contactPhone', 'userPhone', 'approvalStatus', 'registrationStatus', 'applicationType', (item) => toBusinessApplicationTypeText(item.applicationType), (item) => item.businessInfo?.businessAddress, (item) => item.businessInfo?.businessType],
         admins: ['id', 'loginId', 'nickname', 'role'],
@@ -577,6 +583,7 @@ function renderAdminPagination(prefix, totalPages, currentPage) {
 function renderAdminList(prefix) {
     if (prefix === 'posts') renderPostsTable();
     else if (prefix === 'comments') renderCommentsTable();
+    else if (prefix === 'attendance-comments') renderAttendanceCommentsAdminTable();
     else if (prefix === 'users') renderUsersTable();
     else if (prefix === 'business-applications') renderBusinessApplicationsTable();
     else if (prefix === 'entries') renderEntriesTable();
@@ -802,6 +809,19 @@ async function loadComments() {
         showContent('comments');
     } catch (error) {
         showError('comments', error.message || '댓글을 불러오지 못했습니다.');
+    }
+}
+
+async function loadAttendanceCommentsAdmin() {
+    toggleLoading('attendance-comments', true);
+    try {
+        const response = await APIClient.get('/admin/attendance-comments');
+        ADMIN_LIST_STATE['attendance-comments'].items = response.content || [];
+        renderAttendanceCommentsAdminTable();
+        showContent('attendance-comments');
+        await loadAdminReviewSummary();
+    } catch (error) {
+        showError('attendance-comments', error.message || '출근자 코멘트를 불러오지 못했습니다.');
     }
 }
 
@@ -1055,6 +1075,23 @@ function renderCommentsTable() {
     }
 
     renderAdminPagination('comments', totalPages, page);
+}
+
+
+function renderAttendanceCommentsAdminTable() {
+    const tbody = document.getElementById('attendance-comments-tbody');
+    if (!tbody) return;
+    const { filteredItems, pageItems, page, totalPages } = getAdminPagination('attendance-comments');
+    updateAdminTotal('attendance-comments', filteredItems.length);
+    tbody.innerHTML = pageItems.length ? pageItems.map((comment) => `
+        <tr class="${comment.reportCount ? 'admin-row--reported' : ''}">
+            <td>${sanitizeHTML(comment.workerName)} <small>#${Number(comment.storeNo)}</small></td>
+            <td>${sanitizeHTML(comment.authorNickname)}<br><small>${sanitizeHTML(comment.authorLoginId)}</small></td>
+            <td>${sanitizeHTML(comment.content)}</td><td>${formatDate(comment.createdAt)}</td>
+            <td>${comment.reportCount ? `<strong class="text-danger">${comment.reportCount}건</strong>` : '없음'}</td>
+            <td><button class="btn btn-sm btn-danger" type="button" data-admin-action="delete" data-target-type="attendance-comment" data-target-id="${comment.id}">삭제</button></td>
+        </tr>`).join('') : '<tr><td colspan="6">출근자 코멘트가 없습니다.</td></tr>';
+    renderAdminPagination('attendance-comments', totalPages, page);
 }
 
 
@@ -3307,6 +3344,10 @@ async function confirmDelete() {
             await APIClient.delete(`/admin/comments/${adminActionTarget.id}`);
             closeDeleteModal();
             await loadComments();
+        } else if (adminActionTarget.type === 'attendance-comment') {
+            await APIClient.delete(`/admin/attendance-comments/${adminActionTarget.id}`);
+            closeDeleteModal();
+            await loadAttendanceCommentsAdmin();
         } else if (adminActionTarget.type === 'ad') {
             await APIClient.delete(`/admin/ads/${adminActionTarget.id}`);
             closeDeleteModal();
