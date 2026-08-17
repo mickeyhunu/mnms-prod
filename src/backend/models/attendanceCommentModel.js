@@ -1,25 +1,38 @@
 /** 출근자 정보에 달린 익명 코멘트와 신고를 관리한다. */
 const { getPool } = require('../config/database');
 
-async function listPublic(storeNo, workerName, viewerUserId = null) {
+async function listPublic(storeNo, workerName, viewer = null) {
+  const viewerUserId = viewer?.id ?? viewer ?? null;
+  const isAdminViewer = String(viewer?.role || '').toUpperCase() === 'ADMIN';
   const [rows] = await getPool().query(
-    `SELECT id, content, created_at AS createdAt, (user_id = ?) AS isMine,
-            is_hidden AS isHidden,
+    `SELECT c.id, c.content, c.created_at AS createdAt, (c.user_id = ?) AS isMine,
+            c.is_hidden AS isHidden,
+            u.login_id AS authorLoginId, u.nickname AS authorNickname,
+            u.profile_image_url AS authorProfileImageUrl,
             EXISTS(SELECT 1 FROM attendance_comment_reports r WHERE r.comment_id = c.id AND r.reporter_user_id = ?) AS isReported
        FROM attendance_comments c
-      WHERE store_no = ? AND worker_name = ? AND is_deleted = 0
-        AND (is_hidden = 0 OR user_id = ?)
-      ORDER BY created_at DESC, id DESC`,
-    [viewerUserId, viewerUserId, storeNo, workerName, viewerUserId]
+       JOIN users u ON u.id = c.user_id
+      WHERE c.store_no = ? AND c.worker_name = ? AND c.is_deleted = 0
+        AND (c.is_hidden = 0 OR c.user_id = ? OR ?)
+      ORDER BY c.created_at DESC, c.id DESC`,
+    [viewerUserId, viewerUserId, storeNo, workerName, viewerUserId, isAdminViewer]
   );
-  return rows.map((row) => ({
-    ...row,
-    author: '익명',
-    isMine: Boolean(row.isMine),
-    isReported: Boolean(row.isReported),
-    isHidden: Boolean(row.isHidden),
-    content: row.isHidden && row.isMine ? '관리자에 의해 제한된 코멘트입니다.' : row.content
-  }));
+  return rows.map((row) => {
+    const { authorLoginId, authorNickname, authorProfileImageUrl, ...comment } = row;
+    const author = isAdminViewer
+      ? `${authorNickname || '닉네임 없음'} (${authorLoginId})`
+      : '익명';
+
+    return {
+      ...comment,
+      author,
+      ...(isAdminViewer ? { authorLoginId, authorNickname, authorProfileImageUrl } : {}),
+      isMine: Boolean(row.isMine),
+      isReported: Boolean(row.isReported),
+      isHidden: Boolean(row.isHidden),
+      content: row.isHidden && row.isMine && !isAdminViewer ? '관리자에 의해 제한된 코멘트입니다.' : row.content
+    };
+  });
 }
 
 async function create({ storeNo, workerName, userId, content }) {
