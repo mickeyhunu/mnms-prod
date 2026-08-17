@@ -9,6 +9,28 @@ const LIVE_CATEGORIES = {
     attendance: { key: 'attendance', label: '출근자 정보' }
 };
 
+const BLOCKED_ATTENDANCE_COMMENT_EXPRESSIONS = [
+    '마인드', 'ㅁㅇㄷ', '수위', 'ㅅㅇ', '배팅', '베팅', 'ㅂㅌ', '전투', 'ㅈㅌ', '성관계', '성행위',
+    '번호', '전번', '폰번', '연락처', '연락', '휴대폰', '핸드폰', '카톡', '카카오톡', '텔레그램',
+    '인스타', '인스타그램', '라인아이디', 'sns', '실명', '본명', '주소', '학교', '직장', '거주지',
+    '사이즈', '가슴', '컵사이즈', '몸무게'
+];
+
+function findBlockedAttendanceCommentExpression(value) {
+    const normalize = (text) => String(text || '')
+        .normalize('NFKC')
+        .toLowerCase()
+        .replace(/[^0-9a-z가-힣ㄱ-ㅎㅏ-ㅣ]+/g, '');
+    const normalized = normalize(value);
+    return BLOCKED_ATTENDANCE_COMMENT_EXPRESSIONS.find((expression) => normalized.includes(normalize(expression))) || null;
+}
+
+function alertIfAttendanceCommentIsBlocked(content) {
+    if (!findBlockedAttendanceCommentExpression(content)) return false;
+    alert('코멘트에 금지된 문구나 기호가 포함되어 있습니다.');
+    return true;
+}
+
 const LIVE_HELP_GUIDES = {
     choice: {
         title: '초이스톡',
@@ -440,6 +462,7 @@ function bindLiveEvents() {
             if (content === null) return;
             const normalizedContent = content.trim();
             if (!normalizedContent || normalizedContent.length > 500) return alert('코멘트는 1~500자로 입력해주세요.');
+            if (alertIfAttendanceCommentIsBlocked(normalizedContent)) return;
             editButton.disabled = true;
             try {
                 await APIClient.put(`/live/attendance-comments/${editButton.dataset.attendanceCommentEdit}`, { content: normalizedContent });
@@ -503,6 +526,7 @@ function bindLiveEvents() {
         const input = form.querySelector('[name="content"]');
         const content = String(input?.value || '').trim();
         if (!content) return;
+        if (alertIfAttendanceCommentIsBlocked(content)) return;
         const submitButton = form.querySelector('button[type="submit"]');
         submitButton.disabled = true;
         try {
@@ -1622,9 +1646,10 @@ function createAttendanceSearchResultsMarkup(rows, titleColumn, searchTerm) {
         </section>
         <form class="attendance-comment-form" data-attendance-comment-form>
             <label class="sr-only" for="attendance-comment-input">선택한 출근자에게 익명 코멘트 남기기</label>
-            <textarea id="attendance-comment-input" name="content" rows="1" maxlength="500" placeholder="익명 코멘트를 입력하세요" autocomplete="off" required></textarea>
+            <textarea id="attendance-comment-input" name="content" rows="1" maxlength="500" placeholder="익명 코멘트를 입력하세요" autocomplete="off" aria-describedby="attendance-comment-policy" required></textarea>
             <button type="submit" aria-label="코멘트 등록">전송</button>
         </form>
+        <p id="attendance-comment-policy" class="sr-only">성적인 평가, 연락처와 SNS 등 개인정보, 상세한 신체 정보는 입력할 수 없습니다.</p>
     `;
 }
 
