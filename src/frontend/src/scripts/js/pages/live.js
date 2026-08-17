@@ -9,6 +9,34 @@ const LIVE_CATEGORIES = {
     attendance: { key: 'attendance', label: '출근자 정보' }
 };
 
+const LIVE_HELP_GUIDES = {
+    choice: {
+        title: '초이스톡',
+        description: '매장에서 실시간으로 전달하는 초이스 현황을 확인하는 공간입니다.',
+        points: ['상단에서 원하는 매장을 선택해 해당 매장의 소식만 볼 수 있습니다.', '새로운 내용은 아래쪽에 표시되며, 하단 이동 버튼으로 최신 소식을 바로 확인할 수 있습니다.']
+    },
+    chojoong: {
+        title: '초중',
+        description: '현재 매칭이 진행 중인 상황과 관련 메시지를 시간순으로 확인할 수 있습니다.',
+        points: ['오래된 내용부터 최신 내용까지 대화 흐름처럼 이어서 볼 수 있습니다.', '일부 회원은 회원 등급 또는 당일 커뮤니티 활동 조건을 충족해야 열람할 수 있습니다.']
+    },
+    waiting: {
+        title: '룸/웨이팅',
+        description: '매장별 룸 현황과 웨이팅 정보를 빠르게 확인하는 메뉴입니다.',
+        points: ['매장을 먼저 선택하면 해당 매장의 최신 룸·대기 정보를 볼 수 있습니다.', '현장 상황은 실시간으로 달라질 수 있으므로 가장 최근 등록 시간을 함께 확인해 주세요.']
+    },
+    entry: {
+        title: '엔트리',
+        description: '현재 엔트리 인원과 순위 등 매장에서 제공하는 현황을 확인할 수 있습니다.',
+        points: ['표시된 인원, 이름, 순위 정보는 선택한 매장을 기준으로 제공됩니다.', '회원 등급이나 당일 활동 조건에 따라 일부 정보가 흐리게 표시될 수 있습니다.']
+    },
+    attendance: {
+        title: '출근자 정보',
+        description: '선택한 매장의 출근자 정보를 이름으로 찾아볼 수 있습니다.',
+        points: ['검색창에 찾고 싶은 이름을 입력하면 일치하는 출근자 정보가 표시됩니다.', '출근 정보는 매장 등록 내용을 기준으로 하며, 열람에는 회원 등급 또는 활동 조건이 적용될 수 있습니다.']
+    }
+};
+
 const LIVE_FILTERS_CACHE_KEY = 'liveFiltersCache:v1';
 const LIVE_HISTORY_PAGE_SIZE = 30;
 const LIVE_ENTRY_PAGE_SIZE = 200;
@@ -193,6 +221,76 @@ async function loadLiveAccessRules() {
     return liveState.accessRules;
 }
 
+function renderLiveHelp(categoryKey = liveState.selectedCategoryKey) {
+    const activeKey = LIVE_HELP_GUIDES[categoryKey] ? categoryKey : 'choice';
+    const tabsElement = document.getElementById('live-help-tabs');
+    const contentElement = document.getElementById('live-help-content');
+    const guide = LIVE_HELP_GUIDES[activeKey];
+
+    if (tabsElement) {
+        tabsElement.innerHTML = Object.entries(LIVE_HELP_GUIDES).map(([key, item]) => `
+            <button
+                type="button"
+                class="live-help-dialog__tab ${key === activeKey ? 'is-active' : ''}"
+                data-live-help-category="${key}"
+                aria-pressed="${key === activeKey ? 'true' : 'false'}"
+            >${sanitizeHTML(item.title)}</button>
+        `).join('');
+    }
+
+    if (contentElement) {
+        contentElement.innerHTML = `
+            <div class="live-help-dialog__category-mark" aria-hidden="true">?</div>
+            <h3 class="live-help-dialog__category-title">${sanitizeHTML(guide.title)}</h3>
+            <p class="live-help-dialog__description">${sanitizeHTML(guide.description)}</p>
+            <ul class="live-help-dialog__points">
+                ${guide.points.map((point) => `<li>${sanitizeHTML(point)}</li>`).join('')}
+            </ul>
+        `;
+    }
+}
+
+function openLiveHelp() {
+    const modal = document.getElementById('live-help-modal');
+    if (!modal) return;
+
+    renderLiveHelp();
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('live-help-open');
+    window.requestAnimationFrame(() => modal.classList.add('is-visible'));
+    modal.querySelector('.live-help-dialog__close')?.focus();
+}
+
+function closeLiveHelp() {
+    const modal = document.getElementById('live-help-modal');
+    if (!modal || modal.classList.contains('hidden')) return;
+
+    modal.classList.remove('is-visible');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('live-help-open');
+    window.setTimeout(() => modal.classList.add('hidden'), 180);
+    document.getElementById('live-help-button')?.focus();
+}
+
+function handleLiveHelpClick(event) {
+    if (event.target.closest('[data-live-help-close]')) {
+        closeLiveHelp();
+        return;
+    }
+
+    const categoryButton = event.target.closest('[data-live-help-category]');
+    if (categoryButton) {
+        renderLiveHelp(categoryButton.dataset.liveHelpCategory);
+    }
+}
+
+function handleLiveHelpKeydown(event) {
+    if (event.key === 'Escape' && !document.getElementById('live-help-modal')?.classList.contains('hidden')) {
+        closeLiveHelp();
+    }
+}
+
 function bindLiveEvents() {
     if (liveState.hasBoundEvents) return;
 
@@ -203,6 +301,7 @@ function bindLiveEvents() {
     const scrollBottomButton = document.getElementById('live-scroll-bottom-button');
     const scrollMessageButton = document.getElementById('live-scroll-message-button');
     const shareButton = document.getElementById('share-btn');
+    const helpButton = document.getElementById('live-help-button');
 
     initializeScrollableFilter(storeFilter);
     initializeScrollableFilter(categoryFilter);
@@ -216,6 +315,9 @@ function bindLiveEvents() {
         window.location.href = '/play';
     });
     shareButton?.addEventListener('click', handleSharePost);
+    helpButton?.addEventListener('click', openLiveHelp);
+    document.getElementById('live-help-modal')?.addEventListener('click', handleLiveHelpClick);
+    document.addEventListener('keydown', handleLiveHelpKeydown);
 
     storeFilter?.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-store-option]');

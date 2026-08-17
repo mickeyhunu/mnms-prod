@@ -74,3 +74,37 @@ export const liveScrollBottomButtonTemplate = `
                 </span>
             </button>
 `;
+
+export const liveHelpTemplate = `
+<button
+                type="button"
+                class="live-help-button"
+                id="live-help-button"
+                aria-label="LIVE 이용 안내 열기"
+                aria-haspopup="dialog"
+                aria-controls="live-help-dialog"
+            >
+                <span aria-hidden="true">?</span>
+            </button>
+
+            <div class="live-help-modal hidden" id="live-help-modal" aria-hidden="true">
+                <div class="live-help-modal__backdrop" data-live-help-close></div>
+                <section
+                    class="live-help-dialog"
+                    id="live-help-dialog"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="live-help-title"
+                >
+                    <header class="live-help-dialog__header">
+                        <div>
+                            <p class="live-help-dialog__eyebrow">LIVE GUIDE</p>
+                            <h2 class="live-help-dialog__title" id="live-help-title">LIVE 보는 방법</h2>
+                        </div>
+                        <button type="button" class="live-help-dialog__close" data-live-help-close aria-label="안내 닫기">×</button>
+                    </header>
+                    <nav class="live-help-dialog__tabs" id="live-help-tabs" aria-label="LIVE 안내 카테고리"></nav>
+                    <div class="live-help-dialog__content" id="live-help-content" tabindex="0"></div>
+                </section>
+            </div>
+`;
