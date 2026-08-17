@@ -447,7 +447,7 @@ function bindLiveEvents() {
     });
 
     document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
+        if (!document.hidden && shouldAutoRefreshLiveData()) {
             refreshLiveData({ showLoading: false, syncToLatest: isLiveViewportNearBottom() }).catch((error) => {
                 console.error('LIVE visibility refresh error:', error);
             });
@@ -481,12 +481,16 @@ function startLiveAutoRefresh() {
     }
 
     liveState.refreshTimerId = window.setInterval(() => {
-        if (document.hidden) return;
+        if (document.hidden || !shouldAutoRefreshLiveData()) return;
 
         refreshLiveData({ showLoading: false, syncToLatest: isLiveViewportNearBottom() }).catch((error) => {
             console.error('LIVE auto refresh error:', error);
         });
     }, LIVE_REFRESH_INTERVAL_MS);
+}
+
+function shouldAutoRefreshLiveData() {
+    return liveState.selectedCategoryKey !== 'attendance';
 }
 
 async function refreshLiveData({ showLoading = false, syncToLatest = false } = {}) {
