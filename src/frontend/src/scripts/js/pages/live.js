@@ -440,6 +440,14 @@ function bindLiveEvents() {
         }
     });
 
+    listElement?.addEventListener('keydown', async (event) => {
+        const attendanceName = event.target.closest('[data-attendance-detail-toggle]');
+        if (!attendanceName || (event.key !== 'Enter' && event.key !== ' ')) return;
+
+        event.preventDefault();
+        await selectAttendanceCommentTarget(attendanceName);
+    });
+
     listElement?.addEventListener('submit', async (event) => {
         const form = event.target.closest('[data-attendance-comment-form]');
         if (!form) return;
@@ -1578,14 +1586,15 @@ function createAttendanceListItem(row, titleColumn, index) {
     return `
         <li class="attendance-list__item">
             <div class="attendance-list__row">
-                <button
-                    type="button"
+                <div
+                    role="button"
+                    tabindex="0"
                     class="attendance-list__name"
                     data-attendance-detail-toggle
                     data-store-no="${Number(liveState.selectedStoreNo) || 0}"
                     data-worker-name="${sanitizeHTML(name)}"
                     aria-pressed="false"
-                >${sanitizeHTML(name)}</button>
+                >${sanitizeHTML(name)}</div>
                 <time class="attendance-list__date">${sanitizeHTML(lastAttendanceDate)}</time>
             </div>
         </li>
