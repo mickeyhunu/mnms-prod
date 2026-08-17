@@ -8,6 +8,12 @@ body[data-page="live"].live-has-ads {
     --live-ads-height: 112px;
 }
 
+body[data-page="live"].live-attendance-scroll-locked {
+    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
 body[data-page="live"] .main-content,
 body[data-page="live"] .container {
     background: #000;
@@ -884,16 +890,19 @@ body.live-help-open {
     white-space: nowrap;
 }
 
-.attendance-comments { min-height: 180px; padding: 12px 20px; border-top: 1px solid rgba(255,255,255,.1); }
+.attendance-comments { display: flex; min-height: 180px; height: var(--attendance-comments-height, auto); flex-direction: column; padding: 12px 20px; overflow: hidden; border-top: 1px solid rgba(255,255,255,.1); }
 .attendance-comments__title { margin: 0 0 16px; color: #fafafa; font-size: 15px; }
 .attendance-comments__list {
     display: flex;
+    min-height: 0;
+    flex: 1;
     flex-direction: column;
     gap: 16px;
-    max-height: 420px;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
     padding: 0 4px calc(72px + env(safe-area-inset-bottom, 0px));
     scroll-padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    -webkit-overflow-scrolling: touch;
 }
 .attendance-comment { display: flex; align-items: flex-start; gap: 9px; width: 100%; }
 .attendance-comment__avatar { display: block; flex: 0 0 36px; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
