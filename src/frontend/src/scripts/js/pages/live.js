@@ -153,7 +153,7 @@ function getDefaultLiveAccessRules() {
             chojoong: level >= 3,
             waiting: level >= 3,
             entry: level >= 4,
-            attendance: level >= 4
+            attendance: level >= 5
         }
     };
 }
@@ -890,7 +890,10 @@ function getLiveCategoryDeniedReason(categoryKey) {
 
     if (categoryKey === 'attendance') {
         if (level >= 5) return '';
-        return '출근자 정보는 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.\n\n{{LIVE_LEVEL_BADGE:5}} 계급이 되면 제한이 해제됩니다.';
+        if (level < 4) {
+            return '출근자 정보는 {{LIVE_LEVEL_BADGE:4}} 계급부터 열람할 수 있습니다.';
+        }
+        return '출근자 정보는 {{LIVE_LEVEL_BADGE:5}} 미만 계급의 경우 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.\n\n{{LIVE_LEVEL_BADGE:5}} 계급이 되면 제한이 해제됩니다.';
     }
 
     if (categoryKey === 'entry') {
@@ -899,9 +902,9 @@ function getLiveCategoryDeniedReason(categoryKey) {
             return '';
         }
         if (level < 3) {
-            return `${categoryLabel}는 {{LIVE_LEVEL_BADGE:3}} 계급부터 열람할 수 있습니다.`;
+            return `${categoryLabel}는 {{LIVE_LEVEL_BADGE:4}} 계급부터 열람할 수 있습니다.`;
         }
-        return `${categoryLabel}는 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.\n\n{{LIVE_LEVEL_BADGE:4}} 계급이 되면 제한이 해제됩니다.`;
+        return `${categoryLabel}는 {{LIVE_LEVEL_BADGE:4}} 미만 계급의 경우 오늘 게시글 1개 또는 댓글 5개 작성 시 열람할 수 있습니다.\n\n{{LIVE_LEVEL_BADGE:4}} 계급이 되면 제한이 해제됩니다.`;
     }
 
     return '';
