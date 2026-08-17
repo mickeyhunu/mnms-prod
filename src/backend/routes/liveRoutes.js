@@ -33,7 +33,7 @@ router.get('/attendance-comments', optionalAuthMiddleware, async (req, res, next
   try {
     const target = parseCommentTarget(req, res);
     if (!target) return;
-    res.json({ content: await attendanceCommentModel.listPublic(target.storeNo, target.workerName) });
+    res.json({ content: await attendanceCommentModel.listPublic(target.storeNo, target.workerName, req.user?.id) });
   } catch (error) { next(error); }
 });
 
@@ -53,6 +53,28 @@ router.post('/attendance-comments/:id/report', authMiddleware, async (req, res, 
     if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '코멘트 정보를 확인해주세요.' });
     const reported = await attendanceCommentModel.report(id, req.user.id);
     if (!reported) return res.status(404).json({ message: '코멘트를 찾을 수 없습니다.' });
+    res.json({ success: true });
+  } catch (error) { next(error); }
+});
+
+router.put('/attendance-comments/:id', authMiddleware, async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    const content = String(req.body?.content || '').trim();
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '코멘트 정보를 확인해주세요.' });
+    if (!content || content.length > 500) return res.status(400).json({ message: '코멘트는 1~500자로 입력해주세요.' });
+    const updated = await attendanceCommentModel.updateOwn(id, req.user.id, content);
+    if (!updated) return res.status(404).json({ message: '수정할 수 있는 코멘트를 찾을 수 없습니다.' });
+    res.json({ success: true });
+  } catch (error) { next(error); }
+});
+
+router.delete('/attendance-comments/:id', authMiddleware, async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '코멘트 정보를 확인해주세요.' });
+    const removed = await attendanceCommentModel.removeOwn(id, req.user.id);
+    if (!removed) return res.status(404).json({ message: '삭제할 수 있는 코멘트를 찾을 수 없습니다.' });
     res.json({ success: true });
   } catch (error) { next(error); }
 });
