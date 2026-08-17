@@ -1086,11 +1086,12 @@ function renderAttendanceCommentsAdminTable() {
     tbody.innerHTML = pageItems.length ? pageItems.map((comment) => `
         <tr class="${comment.reportCount ? 'admin-row--reported' : ''}">
             <td>${sanitizeHTML(comment.workerName)} <small>#${Number(comment.storeNo)}</small></td>
-            <td>${sanitizeHTML(comment.authorNickname)}<br><small>${sanitizeHTML(comment.authorLoginId)}</small></td>
-            <td>${sanitizeHTML(comment.content)}</td><td>${formatDate(comment.createdAt)}</td>
+            <td>${comment.authorProfileImageUrl ? `<img class="admin-author-avatar" src="${sanitizeHTML(comment.authorProfileImageUrl)}" alt="">` : ''}${sanitizeHTML(comment.authorNickname)}<br><small>${sanitizeHTML(comment.authorLoginId)}</small></td>
+            <td>${sanitizeHTML(comment.content)}${comment.isDeleted ? '<br><strong class="text-danger">작성자 삭제</strong>' : (comment.isHidden ? '<br><small>가려짐</small>' : '')}</td><td>${formatDate(comment.createdAt)}</td>
             <td>${comment.reportCount ? `<strong class="text-danger">${comment.reportCount}건</strong>` : '없음'}</td>
-            <td><button class="btn btn-sm btn-danger" type="button" data-admin-action="delete" data-target-type="attendance-comment" data-target-id="${comment.id}">삭제</button></td>
+            <td>${comment.isDeleted ? '삭제됨' : `<button class="btn btn-sm ${comment.isHidden ? 'btn-outline' : 'btn-secondary'}" type="button" data-admin-action="toggle-hide" data-target-type="attendance-comment" data-target-id="${comment.id}" data-current-hidden="${comment.isHidden ? 'true' : 'false'}">${comment.isHidden ? '가리기 해제' : '가리기'}</button> <button class="btn btn-sm btn-danger" type="button" data-admin-action="delete" data-target-type="attendance-comment" data-target-id="${comment.id}">삭제</button>`}</td>
         </tr>`).join('') : '<tr><td colspan="6">출근자 코멘트가 없습니다.</td></tr>';
+    bindAdminHideToggleButtons(tbody);
     renderAdminPagination('attendance-comments', totalPages, page);
 }
 
@@ -3316,8 +3317,10 @@ async function toggleAdminHiddenState(actionElement, target) {
     actionElement.textContent = nextHidden ? '처리 중...' : '해제 중...';
 
     try {
-        await APIClient.put(`/admin/${target.type === 'post' ? 'posts' : 'comments'}/${target.id}/hide`, { isHidden: nextHidden });
+        const resource = target.type === 'post' ? 'posts' : (target.type === 'attendance-comment' ? 'attendance-comments' : 'comments');
+        await APIClient.put(`/admin/${resource}/${target.id}/hide`, { isHidden: nextHidden });
         if (target.type === 'post') await loadPosts();
+        else if (target.type === 'attendance-comment') await loadAttendanceCommentsAdmin();
         else await loadComments();
     } catch (error) {
         actionElement.disabled = originalDisabled;

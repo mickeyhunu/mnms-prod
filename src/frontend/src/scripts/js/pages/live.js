@@ -1720,9 +1720,9 @@ async function loadAttendanceComments(container) {
                         ${comment.isMine ? '' : '<img class="attendance-comment__avatar" src="/src/assets/image/img_profile.png" alt="" aria-hidden="true">'}
                         <div class="attendance-comment__message">
                             <strong>익명</strong>
-                            <p class="attendance-comment__content">${sanitizeHTML(comment.content)}</p>
+                            <p class="attendance-comment__content${comment.isHidden ? ' attendance-comment__content--restricted' : ''}">${sanitizeHTML(comment.content)}</p>
                             <div class="attendance-comment__meta"><time>${sanitizeHTML(formatDate(comment.createdAt))}</time>${comment.isMine
-                                ? `<button type="button" class="attendance-comment__action" data-attendance-comment-edit="${comment.id}">수정</button><button type="button" class="attendance-comment__action attendance-comment__action--danger" data-attendance-comment-delete="${comment.id}">삭제</button>`
+                                ? (comment.isHidden ? '' : `<button type="button" class="attendance-comment__action" data-attendance-comment-edit="${comment.id}">수정</button><button type="button" class="attendance-comment__action attendance-comment__action--danger" data-attendance-comment-delete="${comment.id}">삭제</button>`)
                                 : `<button type="button" class="attendance-comment__report" data-attendance-comment-report="${comment.id}" ${comment.isReported ? 'disabled' : ''}>${comment.isReported ? '신고됨' : '신고'}</button>`}</div>
                         </div>
                     </article>`).join('') : '<p class="attendance-comments__empty">첫 코멘트를 남겨보세요.</p>'}
