@@ -410,6 +410,22 @@ function bindLiveEvents() {
 
             attendanceNameButton.setAttribute('aria-expanded', String(willOpen));
             detail?.classList.toggle('hidden', !willOpen);
+            if (willOpen && detail) await loadAttendanceComments(detail);
+            return;
+        }
+
+        const reportButton = event.target.closest('[data-attendance-comment-report]');
+        if (reportButton) {
+            if (!Auth.isAuthenticated()) return alert('로그인 후 신고할 수 있습니다.');
+            if (!window.confirm('이 코멘트를 신고할까요?')) return;
+            reportButton.disabled = true;
+            try {
+                await APIClient.post(`/live/attendance-comments/${reportButton.dataset.attendanceCommentReport}/report`);
+                reportButton.textContent = '신고됨';
+            } catch (error) {
+                reportButton.disabled = false;
+                alert(error.message || '신고하지 못했습니다.');
+            }
             return;
         }
 
@@ -432,6 +448,31 @@ function bindLiveEvents() {
             alert(error.message || '초중 메시지 삭제에 실패했습니다.');
         } finally {
             deleteButton.disabled = false;
+        }
+    });
+
+    listElement?.addEventListener('submit', async (event) => {
+        const form = event.target.closest('[data-attendance-comment-form]');
+        if (!form) return;
+        event.preventDefault();
+        if (!Auth.isAuthenticated()) return alert('로그인 후 코멘트를 작성할 수 있습니다.');
+        const input = form.querySelector('[name="content"]');
+        const content = String(input?.value || '').trim();
+        if (!content) return;
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        try {
+            await APIClient.post('/live/attendance-comments', {
+                storeNo: Number(form.dataset.storeNo),
+                workerName: form.dataset.workerName,
+                content
+            });
+            input.value = '';
+            await loadAttendanceComments(form.closest('.attendance-list__popover'));
+        } catch (error) {
+            alert(error.message || '코멘트를 등록하지 못했습니다.');
+        } finally {
+            submitButton.disabled = false;
         }
     });
 
@@ -1553,9 +1594,40 @@ function createAttendanceListItem(row, titleColumn, index) {
                     <div><dt>이름</dt><dd>${sanitizeHTML(name)}</dd></div>
                     <div><dt>마지막 출근날짜</dt><dd>${sanitizeHTML(lastAttendanceDate)}</dd></div>
                 </dl>
+                <section class="attendance-comments" data-attendance-comments data-store-no="${Number(liveState.selectedStoreNo) || 0}" data-worker-name="${sanitizeHTML(name)}">
+                    <p class="attendance-comments__loading">코멘트를 불러오는 중...</p>
+                </section>
             </div>
         </li>
     `;
+}
+
+async function loadAttendanceComments(detailElement) {
+    const section = detailElement?.querySelector('[data-attendance-comments]');
+    if (!section) return;
+    const storeNo = Number(section.dataset.storeNo);
+    const workerName = section.dataset.workerName || '';
+    section.innerHTML = '<p class="attendance-comments__loading">코멘트를 불러오는 중...</p>';
+    try {
+        const response = await APIClient.get('/live/attendance-comments', { storeNo, workerName });
+        const comments = Array.isArray(response.content) ? response.content : [];
+        section.innerHTML = `
+            <div class="attendance-comments__list">
+                ${comments.length ? comments.map((comment) => `
+                    <article class="attendance-comment">
+                        <div class="attendance-comment__meta"><strong>익명</strong><time>${sanitizeHTML(formatDate(comment.createdAt))}</time></div>
+                        <p>${sanitizeHTML(comment.content)}</p>
+                        <button type="button" class="attendance-comment__report" data-attendance-comment-report="${comment.id}" ${comment.isReported ? 'disabled' : ''}>${comment.isReported ? '신고됨' : '신고'}</button>
+                    </article>`).join('') : '<p class="attendance-comments__empty">첫 코멘트를 남겨보세요.</p>'}
+            </div>
+            <form class="attendance-comment-form" data-attendance-comment-form data-store-no="${storeNo}" data-worker-name="${sanitizeHTML(workerName)}">
+                <label class="sr-only" for="attendance-comment-${detailElement.id}">익명 코멘트</label>
+                <input id="attendance-comment-${detailElement.id}" name="content" maxlength="500" placeholder="익명 코멘트를 입력하세요" autocomplete="off" required>
+                <button type="submit" aria-label="코멘트 등록">전송</button>
+            </form>`;
+    } catch (error) {
+        section.innerHTML = `<p class="attendance-comments__empty">${sanitizeHTML(error.message || '코멘트를 불러오지 못했습니다.')}</p>`;
+    }
 }
 
 function formatAttendanceDate(rawTimestamp) {
