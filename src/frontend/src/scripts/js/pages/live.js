@@ -1636,7 +1636,7 @@ async function loadAttendanceComments(container) {
             <div class="attendance-comments__list">
                 ${comments.length ? [...comments].reverse().map((comment) => `
                     <article class="attendance-comment">
-                        <div class="attendance-comment__avatar" aria-hidden="true">익</div>
+                        <img class="attendance-comment__avatar" src="/src/assets/image/img_profile.png" alt="" aria-hidden="true">
                         <div class="attendance-comment__message">
                             <strong>익명</strong>
                             <p>${sanitizeHTML(comment.content)}</p>
