@@ -240,7 +240,6 @@ function renderLiveHelp(categoryKey = liveState.selectedCategoryKey) {
 
     if (contentElement) {
         contentElement.innerHTML = `
-            <div class="live-help-dialog__category-mark" aria-hidden="true">?</div>
             <h3 class="live-help-dialog__category-title">${sanitizeHTML(guide.title)}</h3>
             <p class="live-help-dialog__description">${sanitizeHTML(guide.description)}</p>
             <ul class="live-help-dialog__points">
@@ -969,8 +968,7 @@ function renderCategoryButtons(categories) {
     categoryFilter.innerHTML = normalizedCategories.map((category) => {
         const hasAccess = Boolean(liveState.accessRules?.access?.[category.key] ?? true);
         const deniedReason = getLiveCategoryDeniedReason(category.key);
-        const shouldShowLockedStyle = !hasAccess && category.key === 'attendance';
-        return `<button type="button" class="area-filter__button area-filter__button--district ${liveState.selectedCategoryKey === category.key ? 'is-active' : ''} ${shouldShowLockedStyle ? 'is-locked' : ''}" data-category-option="${category.key}" data-locked="${hasAccess ? 'false' : 'true'}" aria-disabled="${hasAccess ? 'false' : 'true'}" ${!hasAccess && deniedReason ? `data-denied-reason="${sanitizeHTML(deniedReason)}"` : ''}>${sanitizeHTML(category.label)}</button>`;
+        return `<button type="button" class="area-filter__button area-filter__button--district ${liveState.selectedCategoryKey === category.key ? 'is-active' : ''}" data-category-option="${category.key}" data-locked="${hasAccess ? 'false' : 'true'}" aria-disabled="${hasAccess ? 'false' : 'true'}" ${!hasAccess && deniedReason ? `data-denied-reason="${sanitizeHTML(deniedReason)}"` : ''}>${sanitizeHTML(category.label)}</button>`;
     }).join('');
     syncScrollableFilterState(categoryFilter);
 }
