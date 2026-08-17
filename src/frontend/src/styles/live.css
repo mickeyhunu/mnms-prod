@@ -145,7 +145,7 @@ body.live-help-open {
     align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
-    padding: 24px 24px 18px;
+    padding: 18px;
 }
 
 .live-help-dialog__eyebrow {
@@ -180,8 +180,8 @@ body.live-help-open {
 
 .live-help-dialog__tabs {
     display: flex;
-    gap: 7px;
-    padding: 0 24px 18px;
+    gap: 5px;
+    padding: 7px;
     overflow-x: auto;
     scrollbar-width: none;
 }
