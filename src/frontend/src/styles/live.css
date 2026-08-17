@@ -309,7 +309,7 @@ body.live-help-open {
     border-color: rgba(255, 255, 255, 0.18);
 }
 
-.live-help-dialog__restricted-list {
+.live-help-dialog__policy-list {
     display: grid;
     gap: 8px;
     margin: 16px 0 0;
@@ -317,6 +317,14 @@ body.live-help-open {
     color: #d4d4d4;
     font-size: 13px;
     line-height: 1.55;
+}
+
+.live-help-dialog__policy-list--allowed li::marker {
+    color: #86efac;
+}
+
+.live-help-dialog__policy-list--prohibited li::marker {
+    color: #fca5a5;
 }
 
 .live-help-dialog__warning {
