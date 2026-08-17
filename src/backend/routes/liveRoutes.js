@@ -48,7 +48,7 @@ router.get('/attendance-comments', optionalAuthMiddleware, async (req, res, next
   try {
     const target = parseCommentTarget(req, res);
     if (!target) return;
-    res.json({ content: await attendanceCommentModel.listPublic(target.storeNo, target.workerName, req.user?.id) });
+    res.json({ content: await attendanceCommentModel.listPublic(target.storeNo, target.workerName, req.user) });
   } catch (error) { next(error); }
 });
 
