@@ -182,6 +182,18 @@ router.get('/attendance-comments', async (_req, res, next) => {
   try { res.json({ content: await attendanceCommentModel.listAdmin() }); } catch (error) { next(error); }
 });
 
+router.put('/attendance-comments/:id/hide', async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '코멘트 정보를 확인해주세요.' });
+    const isHidden = Boolean(req.body?.isHidden);
+    if (!await attendanceCommentModel.setHidden(id, req.user.id, isHidden)) {
+      return res.status(404).json({ message: '가릴 수 있는 코멘트를 찾을 수 없습니다.' });
+    }
+    res.json({ success: true, isHidden });
+  } catch (error) { next(error); }
+});
+
 router.delete('/attendance-comments/:id', async (req, res, next) => {
   try {
     const id = Number.parseInt(req.params.id, 10);
