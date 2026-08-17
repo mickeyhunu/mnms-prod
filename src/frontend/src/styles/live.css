@@ -56,14 +56,14 @@ body[data-page="live"] .header {
 
 .live-help-button {
     position: fixed;
-    top: 50%;
-    right: max(18px, calc(((100vw - 920px) / 2) + 18px));
+    top: 165px;
+    right: max(14px, calc(((100vw - 920px) / 2) + 18px));
     z-index: 95;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 30px;
+    height: 30px;
     padding: 0;
     border: 2px solid rgba(255, 255, 255, 0.82);
     border-radius: 50%;
@@ -216,19 +216,6 @@ body.live-help-open {
     background: rgba(0, 0, 0, 0.2);
 }
 
-.live-help-dialog__category-mark {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    margin-bottom: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    border-radius: 50%;
-    color: #fff;
-    font-weight: 700;
-}
-
 .live-help-dialog__category-title {
     margin: 0 0 8px;
     color: #fff;
@@ -268,42 +255,6 @@ body.live-help-open {
     left: 14px;
     color: #fff;
     font-weight: 700;
-}
-
-@media (max-width: 600px) {
-    .live-help-button {
-        right: 14px;
-        width: 44px;
-        height: 44px;
-        font-size: 23px;
-    }
-
-    .live-help-modal {
-        align-items: flex-end;
-        padding: 0;
-    }
-
-    .live-help-dialog {
-        width: 100%;
-        max-height: min(78dvh, 680px);
-        border-right: 0;
-        border-bottom: 0;
-        border-left: 0;
-        border-radius: 24px 24px 0 0;
-    }
-
-    .live-help-dialog__header {
-        padding: 20px 18px 16px;
-    }
-
-    .live-help-dialog__tabs {
-        padding: 0 18px 16px;
-    }
-
-    .live-help-dialog__content {
-        max-height: calc(78dvh - 190px);
-        padding: 20px 18px calc(24px + env(safe-area-inset-bottom, 0px));
-    }
 }
 
 .live-scroll-bottom-button {
@@ -516,7 +467,7 @@ body.live-help-open {
     display: flex;
     flex-direction: column;
     gap: 5px;
-    padding: 10px 10px 12px;
+    padding: 8px;
     border: 1px solid rgba(115, 115, 115, 0.34);
     background: linear-gradient(180deg, rgba(26, 26, 26, 0.96) 0%, rgba(10, 10, 10, 0.96) 100%);
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
@@ -1561,13 +1512,8 @@ body.live-help-open {
 }
 
 @media (max-width: 768px) {
-    .live-store-name-list,
-    .site-subheader__container {
+    .live-store-name-list {
         padding: 8px;
-    }
-
-    .site-subheader__container {
-        padding: 8px 8px 10px;
     }
 
     .live-entry-list {
