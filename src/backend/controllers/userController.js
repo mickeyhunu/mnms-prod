@@ -830,7 +830,7 @@ async function myLiveAccessStatus(req, res, next) {
       chojoong: isAdmin || isChojoongUnlockedLevel || hasDailyActivity,
       waiting: isAdmin || isChojoongUnlockedLevel || hasDailyActivity,
       entry: isAdmin || isEntryUnlockedLevel || (isChojoongUnlockedLevel && hasDailyActivity),
-      attendance: isAdmin || isAttendanceUnlockedLevel || hasDailyActivity
+      attendance: isAdmin || isAttendanceUnlockedLevel || (isEntryUnlockedLevel && hasDailyActivity)
     };
     const access = hasBusinessFullLiveAccess || isAdmin
       ? { choice: true, chojoong: true, waiting: true, entry: true, attendance: true }
