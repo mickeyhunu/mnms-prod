@@ -2,7 +2,7 @@
  * 파일 역할: LIVE 페이지의 렌더링 설정을 정의하는 파일.
  */
 import { createPageConfig } from '../shared/createPageConfig.js';
-import { liveStickyHeaderTemplate, liveScrollBottomButtonTemplate } from './templates/index.js';
+import { liveStickyHeaderTemplate, liveScrollBottomButtonTemplate, liveHelpTemplate } from './templates/index.js';
 import { shareSheetTemplate } from '../post-detail/templates/shareSheet.js';
 
 const liveTemplate = `
@@ -28,6 +28,7 @@ const liveTemplate = `
             </div>
 
             ${liveScrollBottomButtonTemplate}
+            ${liveHelpTemplate}
             ${shareSheetTemplate}
         </div>
     </main>
