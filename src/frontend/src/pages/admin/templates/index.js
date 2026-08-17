@@ -47,6 +47,7 @@ export const adminTemplate = `
                         <button class="admin-tab" data-tab="admins" title="관리자 관리"><span class="admin-tab__label">관리자 관리</span></button>
                         <button class="admin-tab" data-tab="posts" title="게시글 관리"><span class="admin-tab__label">게시글 관리</span></button>
                         <button class="admin-tab" data-tab="comments" title="댓글 관리"><span class="admin-tab__label">댓글 관리</span></button>
+                        <button class="admin-tab" data-tab="attendance-comments" title="출근자 코멘트"><span class="admin-tab__label">출근자 코멘트</span><span class="admin-tab__badge hidden" id="attendance-comments-tab-badge">0</span></button>
                         <button class="admin-tab" data-tab="posters" title="홈 포스터 관리"><span class="admin-tab__label">홈 포스터 관리</span></button>
                         <button class="admin-tab" data-tab="banner-ads" title="배너광고관리"><span class="admin-tab__label">배너광고관리</span></button>
                         <button class="admin-tab" data-tab="business-ads" title="업체광고관리"><span class="admin-tab__label">업체광고관리</span></button>
@@ -142,6 +143,14 @@ export const adminTemplate = `
                         <table class="admin-table"><thead><tr><th>ID</th><th>내용</th><th>게시글</th><th>작성자</th><th>작성일</th><th>관리</th></tr></thead><tbody id="comments-tbody"></tbody></table>
                     </div>
                     <div class="admin-pagination hidden" id="comments-pagination"></div>
+                </div>
+
+                <div id="attendance-comments-section" class="tab-pane hidden">
+                    <div class="loading" id="attendance-comments-loading"><div class="spinner"></div><p>출근자 코멘트를 불러오는 중...</p></div>
+                    <div class="error-banner hidden" id="attendance-comments-error"><p id="attendance-comments-error-message"></p><button class="btn btn-sm btn-primary" id="attendance-comments-retry-btn">다시 시도</button></div>
+                    <div class="admin-list-toolbar"><p class="admin-list-toolbar__meta">총 <strong id="attendance-comments-total">0</strong>건</p><input type="search" id="attendance-comments-search-input" class="form-control admin-list-toolbar__search" placeholder="이름·작성자·내용 검색" aria-label="출근자 코멘트 검색"></div>
+                    <div class="admin-table-container hidden" id="attendance-comments-content"><table class="admin-table"><thead><tr><th>출근자</th><th>실제 작성자</th><th>내용</th><th>작성일</th><th>신고</th><th>관리</th></tr></thead><tbody id="attendance-comments-tbody"></tbody></table></div>
+                    <div class="admin-pagination hidden" id="attendance-comments-pagination"></div>
                 </div>
 
                 <div id="users-section" class="tab-pane hidden">

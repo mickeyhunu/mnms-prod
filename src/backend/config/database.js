@@ -1428,6 +1428,33 @@ async function initDatabase() {
   `);
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS attendance_comments (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      store_no BIGINT NOT NULL,
+      worker_name VARCHAR(100) NOT NULL,
+      user_id BIGINT NOT NULL,
+      content VARCHAR(500) NOT NULL,
+      is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_attendance_comments_worker (store_no, worker_name, is_deleted, created_at),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS attendance_comment_reports (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      comment_id BIGINT NOT NULL,
+      reporter_user_id BIGINT NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY uniq_attendance_comment_report (comment_id, reporter_user_id),
+      INDEX idx_attendance_comment_reports_created (created_at),
+      FOREIGN KEY (comment_id) REFERENCES attendance_comments(id) ON DELETE CASCADE,
+      FOREIGN KEY (reporter_user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS user_post_reads (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       user_id BIGINT NOT NULL,
