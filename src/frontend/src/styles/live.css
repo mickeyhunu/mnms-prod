@@ -920,7 +920,7 @@ body.live-help-open {
 .attendance-comment__message > strong { display: block; margin-bottom: 5px; color: #d4d4d8; font-size: 12px; }
 .attendance-comment__message p { display: inline-block; max-width: min(420px, 85%); margin: 0; padding: 10px 12px; border-radius: 4px 12px 12px; background: #3f3f46; color: #fafafa; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; white-space: pre-wrap; }
 .attendance-comment__meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; color: #a1a1aa; font-size: 10px; }
-.attendance-comment__report { padding: 2px 0; border: 0; background: transparent; color: #a1a1aa; font-size: 11px; cursor: pointer; }
+.attendance-comment__report { padding: 2px 0; border: 0; background: transparent; color: #f87171; font-size: 11px; cursor: pointer; }
 .attendance-comment__report:disabled { cursor: default; opacity: .65; }
 .attendance-comment__action { padding: 2px 0; border: 0; background: transparent; color: #d4d4d8; font-size: 11px; cursor: pointer; }
 .attendance-comment__action--danger { color: #f87171; }
