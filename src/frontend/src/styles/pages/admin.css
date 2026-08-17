@@ -286,6 +286,15 @@ body[data-page="admin"] {
     border-bottom: 1px solid #e0e0e0;
 }
 
+.admin-author-avatar {
+    width: 32px;
+    height: 32px;
+    margin-right: 8px;
+    border-radius: 50%;
+    object-fit: cover;
+    vertical-align: middle;
+}
+
 .admin-table th {
     background-color: #f8f9fa;
     font-weight: 600;

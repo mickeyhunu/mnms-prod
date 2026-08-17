@@ -1454,6 +1454,15 @@ async function initDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
+  await ensureColumn(pool, 'attendance_comments', 'is_hidden',
+    'ALTER TABLE attendance_comments ADD COLUMN is_hidden TINYINT(1) NOT NULL DEFAULT 0 AFTER is_deleted');
+  await ensureColumn(pool, 'attendance_comments', 'hidden_by',
+    'ALTER TABLE attendance_comments ADD COLUMN hidden_by BIGINT NULL AFTER is_hidden');
+  await ensureColumn(pool, 'attendance_comments', 'hidden_at',
+    'ALTER TABLE attendance_comments ADD COLUMN hidden_at TIMESTAMP NULL AFTER hidden_by');
+  await ensureColumn(pool, 'attendance_comments', 'deleted_at',
+    'ALTER TABLE attendance_comments ADD COLUMN deleted_at TIMESTAMP NULL AFTER is_deleted');
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS user_post_reads (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
