@@ -5,6 +5,7 @@ const express = require('express');
 const liveController = require('../controllers/liveController');
 const attendanceCommentModel = require('../models/attendanceCommentModel');
 const { authMiddleware, optionalAuthMiddleware } = require('../middlewares/authMiddleware');
+const { findBlockedAttendanceCommentExpression } = require('../utils/attendanceCommentPolicy');
 
 const router = express.Router();
 
@@ -29,6 +30,20 @@ function parseCommentTarget(req, res) {
   return { storeNo, workerName };
 }
 
+function validateAttendanceComment(content, res) {
+  if (!content || content.length > 500) {
+    res.status(400).json({ message: '코멘트는 1~500자로 입력해주세요.' });
+    return false;
+  }
+
+  if (findBlockedAttendanceCommentExpression(content)) {
+    res.status(400).json({ message: '코멘트에 금지된 문구나 기호가 포함되어 있습니다.' });
+    return false;
+  }
+
+  return true;
+}
+
 router.get('/attendance-comments', optionalAuthMiddleware, async (req, res, next) => {
   try {
     const target = parseCommentTarget(req, res);
@@ -42,7 +57,7 @@ router.post('/attendance-comments', authMiddleware, async (req, res, next) => {
     const target = parseCommentTarget(req, res);
     if (!target) return;
     const content = String(req.body?.content || '').trim();
-    if (!content || content.length > 500) return res.status(400).json({ message: '코멘트는 1~500자로 입력해주세요.' });
+    if (!validateAttendanceComment(content, res)) return;
     res.status(201).json(await attendanceCommentModel.create({ ...target, userId: req.user.id, content }));
   } catch (error) { next(error); }
 });
@@ -62,7 +77,7 @@ router.put('/attendance-comments/:id', authMiddleware, async (req, res, next) =>
     const id = Number.parseInt(req.params.id, 10);
     const content = String(req.body?.content || '').trim();
     if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '코멘트 정보를 확인해주세요.' });
-    if (!content || content.length > 500) return res.status(400).json({ message: '코멘트는 1~500자로 입력해주세요.' });
+    if (!validateAttendanceComment(content, res)) return;
     const updated = await attendanceCommentModel.updateOwn(id, req.user.id, content);
     if (!updated) return res.status(404).json({ message: '수정할 수 있는 코멘트를 찾을 수 없습니다.' });
     res.json({ success: true });
