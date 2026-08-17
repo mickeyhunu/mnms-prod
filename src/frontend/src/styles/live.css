@@ -913,6 +913,7 @@ body.live-help-open {
 .attendance-comment--mine { justify-content: flex-end; text-align: right; }
 .attendance-comment--mine .attendance-comment__message { display: flex; flex: 0 1 auto; flex-direction: column; align-items: flex-end; max-width: 85%; }
 .attendance-comment--mine .attendance-comment__message > strong { display: none; }
+.attendance-comment--mine.attendance-comment--identified .attendance-comment__message > strong { display: block; }
 .attendance-comment--mine .attendance-comment__message p { border-radius: 12px 4px 12px 12px; background: #facc15; color: #18181b; text-align: left; }
 .attendance-comment--mine .attendance-comment__meta { justify-content: flex-end; }
 .attendance-comment__avatar { display: block; flex: 0 0 36px; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
