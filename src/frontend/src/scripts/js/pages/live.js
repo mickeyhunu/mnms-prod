@@ -149,6 +149,7 @@ const liveState = {
     adsRequestId: 0,
     adsLoadedStoreNo: null,
     adAutoPlayTimerId: null,
+    attendanceCommentRequestId: 0,
     canDeleteChojoong: false,
     accessRules: {
         level: 0,
@@ -398,19 +399,7 @@ function bindLiveEvents() {
     listElement?.addEventListener('click', async (event) => {
         const attendanceNameButton = event.target.closest('[data-attendance-detail-toggle]');
         if (attendanceNameButton) {
-            const detailId = attendanceNameButton.getAttribute('aria-controls');
-            const detail = detailId ? document.getElementById(detailId) : null;
-            const willOpen = attendanceNameButton.getAttribute('aria-expanded') !== 'true';
-
-            listElement.querySelectorAll('[data-attendance-detail-toggle][aria-expanded="true"]').forEach((button) => {
-                button.setAttribute('aria-expanded', 'false');
-                const openDetail = document.getElementById(button.getAttribute('aria-controls') || '');
-                openDetail?.classList.add('hidden');
-            });
-
-            attendanceNameButton.setAttribute('aria-expanded', String(willOpen));
-            detail?.classList.toggle('hidden', !willOpen);
-            if (willOpen && detail) await loadAttendanceComments(detail);
+            await selectAttendanceCommentTarget(attendanceNameButton);
             return;
         }
 
@@ -468,7 +457,7 @@ function bindLiveEvents() {
                 content
             });
             input.value = '';
-            await loadAttendanceComments(form.closest('.attendance-list__popover'));
+            await loadAttendanceComments(form.closest('.attendance-list'));
         } catch (error) {
             alert(error.message || '코멘트를 등록하지 못했습니다.');
         } finally {
@@ -1541,6 +1530,9 @@ function renderAttendanceSearchResults(searchTerm) {
         liveState.titleColumn,
         canSearch ? normalizedSearchTerm : ''
     );
+
+    const firstResult = resultsElement.querySelector('[data-attendance-detail-toggle]');
+    if (firstResult) selectAttendanceCommentTarget(firstResult);
 }
 
 function createAttendanceSearchResultsMarkup(rows, titleColumn, searchTerm) {
@@ -1560,6 +1552,14 @@ function createAttendanceSearchResultsMarkup(rows, titleColumn, searchTerm) {
         <ol class="attendance-list__items">
             ${rows.map((row, index) => createAttendanceListItem(row, titleColumn, index)).join('')}
         </ol>
+        <section class="attendance-comments" data-attendance-comments aria-live="polite">
+            <p class="attendance-comments__loading">코멘트를 불러오는 중...</p>
+        </section>
+        <form class="attendance-comment-form" data-attendance-comment-form>
+            <label class="sr-only" for="attendance-comment-input">선택한 출근자에게 익명 코멘트 남기기</label>
+            <textarea id="attendance-comment-input" name="content" rows="1" maxlength="500" placeholder="익명 코멘트를 입력하세요" autocomplete="off" required></textarea>
+            <button type="submit" aria-label="코멘트 등록">전송</button>
+        </form>
     `;
 }
 
@@ -1574,7 +1574,6 @@ function getAttendanceKoreanName(value) {
 function createAttendanceListItem(row, titleColumn, index) {
     const name = resolveEntryWorkerName(row, titleColumn, index);
     const lastAttendanceDate = formatAttendanceDate(getLiveRowRawTimestamp(row));
-    const detailId = `attendance-detail-${index}`;
 
     return `
         <li class="attendance-list__item">
@@ -1583,49 +1582,63 @@ function createAttendanceListItem(row, titleColumn, index) {
                     type="button"
                     class="attendance-list__name"
                     data-attendance-detail-toggle
-                    aria-expanded="false"
-                    aria-controls="${detailId}"
+                    data-store-no="${Number(liveState.selectedStoreNo) || 0}"
+                    data-worker-name="${sanitizeHTML(name)}"
+                    aria-pressed="false"
                 >${sanitizeHTML(name)}</button>
                 <time class="attendance-list__date">${sanitizeHTML(lastAttendanceDate)}</time>
-            </div>
-            <div class="attendance-list__popover hidden" id="${detailId}" role="status">
-                <span class="attendance-list__popover-caret" aria-hidden="true"></span>
-                <dl>
-                    <div><dt>이름</dt><dd>${sanitizeHTML(name)}</dd></div>
-                    <div><dt>마지막 출근날짜</dt><dd>${sanitizeHTML(lastAttendanceDate)}</dd></div>
-                </dl>
-                <section class="attendance-comments" data-attendance-comments data-store-no="${Number(liveState.selectedStoreNo) || 0}" data-worker-name="${sanitizeHTML(name)}">
-                    <p class="attendance-comments__loading">코멘트를 불러오는 중...</p>
-                </section>
             </div>
         </li>
     `;
 }
 
-async function loadAttendanceComments(detailElement) {
-    const section = detailElement?.querySelector('[data-attendance-comments]');
+async function selectAttendanceCommentTarget(button) {
+    const attendanceList = button?.closest('.attendance-list');
+    const section = attendanceList?.querySelector('[data-attendance-comments]');
+    const form = attendanceList?.querySelector('[data-attendance-comment-form]');
+    if (!section || !form) return;
+
+    attendanceList.querySelectorAll('[data-attendance-detail-toggle]').forEach((item) => {
+        const selected = item === button;
+        item.classList.toggle('is-selected', selected);
+        item.setAttribute('aria-pressed', String(selected));
+    });
+    section.dataset.storeNo = button.dataset.storeNo || '';
+    section.dataset.workerName = button.dataset.workerName || '';
+    form.dataset.storeNo = button.dataset.storeNo || '';
+    form.dataset.workerName = button.dataset.workerName || '';
+    form.querySelector('textarea')?.setAttribute('placeholder', `${button.dataset.workerName || '선택한 이름'}에게 익명 코멘트 남기기`);
+    await loadAttendanceComments(attendanceList);
+}
+
+async function loadAttendanceComments(container) {
+    const section = container?.querySelector('[data-attendance-comments]');
     if (!section) return;
+    const requestId = ++liveState.attendanceCommentRequestId;
     const storeNo = Number(section.dataset.storeNo);
     const workerName = section.dataset.workerName || '';
     section.innerHTML = '<p class="attendance-comments__loading">코멘트를 불러오는 중...</p>';
     try {
         const response = await APIClient.get('/live/attendance-comments', { storeNo, workerName });
+        if (requestId !== liveState.attendanceCommentRequestId) return;
         const comments = Array.isArray(response.content) ? response.content : [];
         section.innerHTML = `
+            <h3 class="attendance-comments__title">${sanitizeHTML(workerName)} 코멘트</h3>
             <div class="attendance-comments__list">
-                ${comments.length ? comments.map((comment) => `
+                ${comments.length ? [...comments].reverse().map((comment) => `
                     <article class="attendance-comment">
-                        <div class="attendance-comment__meta"><strong>익명</strong><time>${sanitizeHTML(formatDate(comment.createdAt))}</time></div>
-                        <p>${sanitizeHTML(comment.content)}</p>
-                        <button type="button" class="attendance-comment__report" data-attendance-comment-report="${comment.id}" ${comment.isReported ? 'disabled' : ''}>${comment.isReported ? '신고됨' : '신고'}</button>
+                        <div class="attendance-comment__avatar" aria-hidden="true">익</div>
+                        <div class="attendance-comment__message">
+                            <strong>익명</strong>
+                            <p>${sanitizeHTML(comment.content)}</p>
+                            <div class="attendance-comment__meta"><time>${sanitizeHTML(formatDate(comment.createdAt))}</time><button type="button" class="attendance-comment__report" data-attendance-comment-report="${comment.id}" ${comment.isReported ? 'disabled' : ''}>${comment.isReported ? '신고됨' : '신고'}</button></div>
+                        </div>
                     </article>`).join('') : '<p class="attendance-comments__empty">첫 코멘트를 남겨보세요.</p>'}
-            </div>
-            <form class="attendance-comment-form" data-attendance-comment-form data-store-no="${storeNo}" data-worker-name="${sanitizeHTML(workerName)}">
-                <label class="sr-only" for="attendance-comment-${detailElement.id}">익명 코멘트</label>
-                <input id="attendance-comment-${detailElement.id}" name="content" maxlength="500" placeholder="익명 코멘트를 입력하세요" autocomplete="off" required>
-                <button type="submit" aria-label="코멘트 등록">전송</button>
-            </form>`;
+            </div>`;
+        const messageList = section.querySelector('.attendance-comments__list');
+        if (messageList) messageList.scrollTop = messageList.scrollHeight;
     } catch (error) {
+        if (requestId !== liveState.attendanceCommentRequestId) return;
         section.innerHTML = `<p class="attendance-comments__empty">${sanitizeHTML(error.message || '코멘트를 불러오지 못했습니다.')}</p>`;
     }
 }
