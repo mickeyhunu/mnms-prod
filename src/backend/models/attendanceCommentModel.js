@@ -4,17 +4,21 @@ const { getPool } = require('../config/database');
 async function listPublic(storeNo, workerName, viewerUserId = null) {
   const [rows] = await getPool().query(
     `SELECT id, content, created_at AS createdAt, (user_id = ?) AS isMine,
-            EXISTS(SELECT 1 FROM attendance_comment_reports r WHERE r.comment_id = c.id) AS isReported
+            is_hidden AS isHidden,
+            EXISTS(SELECT 1 FROM attendance_comment_reports r WHERE r.comment_id = c.id AND r.reporter_user_id = ?) AS isReported
        FROM attendance_comments c
       WHERE store_no = ? AND worker_name = ? AND is_deleted = 0
+        AND (is_hidden = 0 OR user_id = ?)
       ORDER BY created_at DESC, id DESC`,
-    [viewerUserId, storeNo, workerName]
+    [viewerUserId, viewerUserId, storeNo, workerName, viewerUserId]
   );
   return rows.map((row) => ({
     ...row,
     author: '익명',
     isMine: Boolean(row.isMine),
-    isReported: Boolean(row.isReported)
+    isReported: Boolean(row.isReported),
+    isHidden: Boolean(row.isHidden),
+    content: row.isHidden && row.isMine ? '관리자에 의해 제한된 코멘트입니다.' : row.content
   }));
 }
 
@@ -40,13 +44,15 @@ async function report(commentId, reporterUserId) {
 async function listAdmin() {
   const [rows] = await getPool().query(
     `SELECT c.id, c.store_no AS storeNo, c.worker_name AS workerName, c.content,
-            c.created_at AS createdAt, u.login_id AS authorLoginId, u.nickname AS authorNickname,
+            c.created_at AS createdAt, c.is_deleted AS isDeleted, c.deleted_at AS deletedAt,
+            c.is_hidden AS isHidden, u.id AS authorUserId, u.login_id AS authorLoginId,
+            u.nickname AS authorNickname, u.profile_image_url AS authorProfileImageUrl,
             COUNT(r.id) AS reportCount, MAX(r.created_at) AS lastReportedAt
        FROM attendance_comments c
        JOIN users u ON u.id = c.user_id
        LEFT JOIN attendance_comment_reports r ON r.comment_id = c.id
-      WHERE c.is_deleted = 0
-      GROUP BY c.id, c.store_no, c.worker_name, c.content, c.created_at, u.login_id, u.nickname
+      GROUP BY c.id, c.store_no, c.worker_name, c.content, c.created_at, c.is_deleted,
+               c.deleted_at, c.is_hidden, u.id, u.login_id, u.nickname, u.profile_image_url
       ORDER BY (COUNT(r.id) > 0) DESC, COALESCE(MAX(r.created_at), c.created_at) DESC`
   );
   return rows.map((row) => ({ ...row, reportCount: Number(row.reportCount || 0) }));
@@ -61,7 +67,7 @@ async function countReported() {
 }
 
 async function remove(commentId) {
-  const [result] = await getPool().query('UPDATE attendance_comments SET is_deleted = 1 WHERE id = ? AND is_deleted = 0', [commentId]);
+  const [result] = await getPool().query('UPDATE attendance_comments SET is_deleted = 1, deleted_at = NOW() WHERE id = ? AND is_deleted = 0', [commentId]);
   return result.affectedRows > 0;
 }
 
@@ -75,10 +81,20 @@ async function updateOwn(commentId, userId, content) {
 
 async function removeOwn(commentId, userId) {
   const [result] = await getPool().query(
-    'UPDATE attendance_comments SET is_deleted = 1 WHERE id = ? AND user_id = ? AND is_deleted = 0',
+    'UPDATE attendance_comments SET is_deleted = 1, deleted_at = NOW() WHERE id = ? AND user_id = ? AND is_deleted = 0',
     [commentId, userId]
   );
   return result.affectedRows > 0;
 }
 
-module.exports = { listPublic, create, report, listAdmin, countReported, remove, updateOwn, removeOwn };
+async function setHidden(commentId, adminId, isHidden) {
+  const [result] = await getPool().query(
+    `UPDATE attendance_comments
+        SET is_hidden = ?, hidden_by = ?, hidden_at = ?
+      WHERE id = ? AND is_deleted = 0`,
+    [isHidden ? 1 : 0, isHidden ? adminId : null, isHidden ? new Date() : null, commentId]
+  );
+  return result.affectedRows > 0;
+}
+
+module.exports = { listPublic, create, report, listAdmin, countReported, remove, updateOwn, removeOwn, setHidden };
