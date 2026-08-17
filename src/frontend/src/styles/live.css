@@ -905,6 +905,11 @@ body.live-help-open {
     -webkit-overflow-scrolling: touch;
 }
 .attendance-comment { display: flex; align-items: flex-start; gap: 9px; width: 100%; }
+.attendance-comment--mine { justify-content: flex-end; text-align: right; }
+.attendance-comment--mine .attendance-comment__message { display: flex; flex: 0 1 auto; flex-direction: column; align-items: flex-end; max-width: 85%; }
+.attendance-comment--mine .attendance-comment__message > strong { display: none; }
+.attendance-comment--mine .attendance-comment__message p { border-radius: 12px 4px 12px 12px; background: #facc15; color: #18181b; text-align: left; }
+.attendance-comment--mine .attendance-comment__meta { justify-content: flex-end; }
 .attendance-comment__avatar { display: block; flex: 0 0 36px; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
 .attendance-comment__message { min-width: 0; flex: 1; }
 .attendance-comment__message > strong { display: block; margin-bottom: 5px; color: #d4d4d8; font-size: 12px; }
@@ -912,6 +917,9 @@ body.live-help-open {
 .attendance-comment__meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; color: #a1a1aa; font-size: 10px; }
 .attendance-comment__report { padding: 2px 0; border: 0; background: transparent; color: #a1a1aa; font-size: 11px; cursor: pointer; }
 .attendance-comment__report:disabled { cursor: default; opacity: .65; }
+.attendance-comment__action { padding: 2px 0; border: 0; background: transparent; color: #d4d4d8; font-size: 11px; cursor: pointer; }
+.attendance-comment__action--danger { color: #f87171; }
+.attendance-comment__action:disabled { cursor: default; opacity: .55; }
 .attendance-comments__loading, .attendance-comments__empty { margin: 8px 0; color: #a1a1aa; font-size: 13px; text-align: center; }
 .attendance-comment-form { position: fixed; right: 0; bottom: 0; left: 0; z-index: 31; display: flex; align-items: flex-end; gap: 8px; width: min(920px, 100%); margin: 0 auto; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,.12); background: #18181b; }
 .attendance-comment-form textarea { min-width: 0; min-height: 40px; max-height: 100px; flex: 1; resize: none; padding: 10px 13px; border: 1px solid rgba(255,255,255,.16); border-radius: 20px; outline: 0; background: #27272a; color: #fafafa; font: inherit; font-size: 13px; line-height: 1.4; }
