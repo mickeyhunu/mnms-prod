@@ -17,6 +17,7 @@ const { validatePassword } = require('../utils/authPolicy');
 const { hashPassword } = require('../utils/passwordHasher');
 const posterModel = require('../models/posterModel');
 const { STAMP_TYPES, getUserStampBalance, adjustUserStampsByAdmin } = require('../models/stampModel');
+const attendanceCommentModel = require('../models/attendanceCommentModel');
 
 const router = express.Router();
 
@@ -156,11 +157,12 @@ router.delete('/posters/:id', async (req, res, next) => {
 
 router.get('/review-summary', async (req, res, next) => {
   try {
-    const [pendingInquiries, pendingBusinessApplications, recentInquiries, recentBusinessApplications] = await Promise.all([
+    const [pendingInquiries, pendingBusinessApplications, recentInquiries, recentBusinessApplications, reportedAttendanceComments] = await Promise.all([
       supportModel.countPendingInquiries(),
       adminModel.countPendingBusinessApplications(),
       supportModel.listRecentPendingInquiries({ limit: 5 }),
-      adminModel.listRecentPendingBusinessApplications({ limit: 5 })
+      adminModel.listRecentPendingBusinessApplications({ limit: 5 }),
+      attendanceCommentModel.countReported()
     ]);
 
     res.json({
@@ -168,11 +170,25 @@ router.get('/review-summary', async (req, res, next) => {
       pendingBusinessApplications,
       totalPending: pendingInquiries + pendingBusinessApplications,
       recentInquiries,
-      recentBusinessApplications
+      recentBusinessApplications,
+      reportedAttendanceComments
     });
   } catch (error) {
     next(error);
   }
+});
+
+router.get('/attendance-comments', async (_req, res, next) => {
+  try { res.json({ content: await attendanceCommentModel.listAdmin() }); } catch (error) { next(error); }
+});
+
+router.delete('/attendance-comments/:id', async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '코멘트 정보를 확인해주세요.' });
+    if (!await attendanceCommentModel.remove(id)) return res.status(404).json({ message: '코멘트를 찾을 수 없습니다.' });
+    res.json({ success: true });
+  } catch (error) { next(error); }
 });
 
 router.get('/stats/dashboard', async (req, res, next) => {

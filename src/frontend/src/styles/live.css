@@ -934,6 +934,21 @@ body.live-help-open {
     font-weight: 700;
 }
 
+.attendance-comments { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.1); }
+.attendance-comments__list { display: flex; flex-direction: column; gap: 10px; max-height: 320px; overflow-y: auto; }
+.attendance-comment { position: relative; align-self: flex-start; width: min(92%, 310px); padding: 11px 13px 9px; border-radius: 4px 16px 16px; background: #3f3f46; }
+.attendance-comment::before { content: ''; position: absolute; left: -6px; top: 0; border-top: 8px solid #3f3f46; border-left: 7px solid transparent; }
+.attendance-comment__meta { display: flex; align-items: center; gap: 8px; color: #d4d4d8; font-size: 11px; }
+.attendance-comment__meta strong { color: #fde047; font-size: 12px; }
+.attendance-comment p { margin: 6px 0 4px; color: #fafafa; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.attendance-comment__report { display: block; margin-left: auto; padding: 2px 0; border: 0; background: transparent; color: #a1a1aa; font-size: 11px; cursor: pointer; }
+.attendance-comment__report:disabled { cursor: default; opacity: .65; }
+.attendance-comments__loading, .attendance-comments__empty { margin: 8px 0; color: #a1a1aa; font-size: 13px; text-align: center; }
+.attendance-comment-form { display: flex; gap: 8px; margin-top: 14px; padding: 7px; border: 1px solid rgba(255,255,255,.16); border-radius: 22px; background: #18181b; }
+.attendance-comment-form input { min-width: 0; flex: 1; padding: 6px 9px; border: 0; outline: 0; background: transparent; color: #fafafa; font: inherit; font-size: 13px; }
+.attendance-comment-form button { flex: 0 0 auto; padding: 7px 12px; border: 0; border-radius: 16px; background: #facc15; color: #18181b; font-weight: 800; cursor: pointer; }
+.attendance-comment-form button:disabled { opacity: .55; }
+
 @media (max-width: 480px) {
     .attendance-list__search-wrap {
         padding-left: 16px;
