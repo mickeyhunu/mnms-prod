@@ -73,17 +73,31 @@ const LIVE_HELP_GUIDES = {
         title: '출근자 정보',
         content: `
             <p class="live-help-dialog__description">출근자 정보는 최근 출근 기록을 기반으로 관리됩니다. 마지막 출근 기록으로부터 <strong>6개월 이상</strong> 새 기록이 없는 출근자는 자동으로 삭제되어 LIVE에 더 이상 표시되지 않을 수 있습니다.</p>
-            <h4 class="live-help-dialog__section-title">코멘트 작성 주의사항</h4>
-            <p class="live-help-dialog__description">코멘트는 사실에 기반하고 타인의 권리를 침해하지 않는 범위에서만 작성해야 합니다. 사실이라도 법에 어긋나거나 타인의 권리를 침해하는 내용은 작성할 수 없습니다.</p>
-            <ul class="live-help-dialog__restricted-list">
-                <li>‘마인드 좋음’, ‘배팅’ 등 성적인 내용이나 성적 행위를 암시·평가하는 정보</li>
-                <li>개인의 연락처, 주소 등 개인정보</li>
-                <li>개인을 과도하게 특정할 수 있는 상세한 특징</li>
-                <li>확인되지 않은 사실이나 허위정보</li>
-                <li>비방·모욕 또는 명예를 훼손할 수 있는 내용</li>
-                <li>그 밖에 개인정보 침해 등 관련 법령에 위반될 수 있는 내용</li>
+            <h4 class="live-help-dialog__section-title">출근자 코멘트 운영정책</h4>
+            <p class="live-help-dialog__description">출근자 코멘트는 이용자의 실제 경험을 바탕으로 다른 이용자에게 참고가 될 수 있는 정보를 공유하기 위한 기능입니다. 출근자의 사생활과 권리를 보호하기 위해 아래 기준을 지켜주세요.</p>
+            <h4 class="live-help-dialog__section-title">작성 가능한 내용</h4>
+            <ul class="live-help-dialog__policy-list live-help-dialog__policy-list--allowed">
+                <li>친절함, 응대 스타일 등 일반적인 서비스 경험</li>
+                <li>대화 분위기 등 주관적인 이용 경험</li>
+                <li>사이트 내 공개된 가명을 이용한 후기</li>
+                <li>개인의 사생활을 침해하지 않는 범위의 일반적인 평가</li>
             </ul>
-            <p class="live-help-dialog__warning">신고된 코멘트는 운영진이 검토하며, 운영정책 위반 시 코멘트 삭제 및 작성자 이용 제한 등의 패널티가 적용될 수 있습니다.</p>
+            <h4 class="live-help-dialog__section-title">작성 금지 내용</h4>
+            <ul class="live-help-dialog__policy-list live-help-dialog__policy-list--prohibited">
+                <li>성적 행위 또는 성적 서비스에 관한 내용</li>
+                <li>‘배팅’, ‘수위’, ‘마인드’ 등 성적인 의미의 평가</li>
+                <li>본명, 전화번호, SNS, 주소 등 개인정보</li>
+                <li>학교, 직장, 거주지역 등 신원을 특정할 수 있는 정보</li>
+                <li>신체의 특정 부위 등 지나치게 상세한 신체적 특징</li>
+                <li>사진이나 외부 SNS 등을 이용하여 실제 신원을 찾아내거나 공유하는 행위</li>
+                <li>질병, 가족관계, 연애관계 등 사생활에 관한 정보</li>
+                <li>범죄경력 등 민감하거나 중대한 개인 정보에 관한 주장</li>
+                <li>확인되지 않은 소문이나 허위사실</li>
+                <li>욕설, 모욕, 비방 및 인신공격</li>
+                <li>그 밖에 타인의 권리를 침해하거나 관련 법령에 위반되는 내용</li>
+            </ul>
+            <p class="live-help-dialog__note">사실에 기반한 내용이라도 개인정보, 사생활 또는 타인의 권리를 침해하는 내용은 허용되지 않을 수 있습니다.</p>
+            <p class="live-help-dialog__warning">신고가 접수된 코멘트는 운영진 검토 후 숨김 또는 삭제될 수 있으며, 반복적으로 운영정책을 위반하는 이용자는 코멘트 작성 제한 또는 서비스 이용 제한 등의 조치를 받을 수 있습니다.</p>
         `
     }
 };
