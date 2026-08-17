@@ -1652,7 +1652,6 @@ async function selectAttendanceCommentTarget(button) {
 
     attendanceList.querySelectorAll('[data-attendance-detail-toggle]').forEach((item) => {
         const selected = item === button;
-        item.classList.toggle('is-selected', selected);
         item.setAttribute('aria-pressed', String(selected));
     });
     section.dataset.storeNo = button.dataset.storeNo || '';
@@ -1675,7 +1674,7 @@ async function loadAttendanceComments(container) {
         if (requestId !== liveState.attendanceCommentRequestId) return;
         const comments = Array.isArray(response.content) ? response.content : [];
         section.innerHTML = `
-            <h3 class="attendance-comments__title">${sanitizeHTML(workerName)} 코멘트</h3>
+            <h3 class="attendance-comments__title">코멘트</h3>
             <div class="attendance-comments__list">
                 ${comments.length ? sortRowsNewestFirst(comments).map((comment) => `
                     <article class="attendance-comment${comment.isMine ? ' attendance-comment--mine' : ''}">

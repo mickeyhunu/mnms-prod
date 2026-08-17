@@ -761,7 +761,6 @@ body.live-help-open {
 .attendance-list {
     width: 100%;
     overflow: visible;
-    border: 1px solid rgba(255, 255, 255, 0.12);
     color: #f8fafc;
 }
 
@@ -871,8 +870,7 @@ body.live-help-open {
     cursor: pointer;
 }
 
-.attendance-list__name:hover,
-.attendance-list__name.is-selected {
+.attendance-list__name:hover {
     border-bottom-color: #facc15;
     color: #fde047;
 }
@@ -900,9 +898,8 @@ body.live-help-open {
     gap: 16px;
     overflow-y: auto;
     overscroll-behavior-y: contain;
-    padding: 0 4px calc(72px + env(safe-area-inset-bottom, 0px));
-    scroll-padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
 }
 .attendance-comment { display: flex; align-items: flex-start; gap: 9px; width: 100%; }
 .attendance-comment--mine { justify-content: flex-end; text-align: right; }
