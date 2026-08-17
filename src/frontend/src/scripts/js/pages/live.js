@@ -499,7 +499,10 @@ function bindLiveEvents() {
         });
     }, { passive: true });
 
-    window.addEventListener('resize', updateLiveScrollBottomButton, { passive: true });
+    window.addEventListener('resize', () => {
+        updateLiveScrollBottomButton();
+        syncAttendanceCommentsViewport();
+    }, { passive: true });
 
     scrollBottomButton?.addEventListener('click', () => {
         scrollLiveToLatest();
@@ -1262,11 +1265,24 @@ function syncLiveListLayout(listElement) {
     if (!listElement) return;
 
     const isHistoryTimeline = shouldUseHistoryPagination();
+    const isAttendance = liveState.selectedCategoryKey === 'attendance';
     listElement.classList.toggle('live-entry-list--timeline', isHistoryTimeline);
     listElement.classList.toggle('live-entry-list--entry', liveState.selectedCategoryKey === 'entry');
-    listElement.classList.toggle('live-entry-list--attendance', liveState.selectedCategoryKey === 'attendance');
+    listElement.classList.toggle('live-entry-list--attendance', isAttendance);
+    document.body.classList.toggle('live-attendance-scroll-locked', isAttendance);
     listElement.classList.toggle('live-entry-list--entry-blurred', isEntryRestrictedView());
     listElement.classList.toggle('live-entry-list--content-blurred', ['chojoong', 'waiting'].includes(liveState.selectedCategoryKey) && isCategoryRestrictedView(liveState.selectedCategoryKey));
+}
+
+function syncAttendanceCommentsViewport() {
+    const section = document.querySelector('[data-attendance-comments]');
+    if (!section || liveState.selectedCategoryKey !== 'attendance') return;
+
+    const form = document.querySelector('[data-attendance-comment-form]');
+    const availableHeight = window.innerHeight
+        - Math.max(section.getBoundingClientRect().top, 0)
+        - (form?.offsetHeight || 0);
+    section.style.setProperty('--attendance-comments-height', `${Math.max(180, availableHeight)}px`);
 }
 
 function buildLiveEntriesQuery({ appendOlder = false } = {}) {
@@ -1539,6 +1555,8 @@ function renderAttendanceSearchResults(searchTerm) {
         canSearch ? normalizedSearchTerm : ''
     );
 
+    window.requestAnimationFrame(syncAttendanceCommentsViewport);
+
     const firstResult = resultsElement.querySelector('[data-attendance-detail-toggle]');
     if (firstResult) selectAttendanceCommentTarget(firstResult);
 }
@@ -1644,6 +1662,7 @@ async function loadAttendanceComments(container) {
                         </div>
                     </article>`).join('') : '<p class="attendance-comments__empty">첫 코멘트를 남겨보세요.</p>'}
             </div>`;
+        syncAttendanceCommentsViewport();
         const messageList = section.querySelector('.attendance-comments__list');
         if (messageList) messageList.scrollTop = messageList.scrollHeight;
     } catch (error) {
