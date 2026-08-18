@@ -1462,6 +1462,10 @@ async function initDatabase() {
     'ALTER TABLE attendance_comments ADD COLUMN hidden_at TIMESTAMP NULL AFTER hidden_by');
   await ensureColumn(pool, 'attendance_comments', 'deleted_at',
     'ALTER TABLE attendance_comments ADD COLUMN deleted_at TIMESTAMP NULL AFTER is_deleted');
+  await ensureColumn(pool, 'attendance_comment_reports', 'resolved_at',
+    'ALTER TABLE attendance_comment_reports ADD COLUMN resolved_at TIMESTAMP NULL AFTER created_at');
+  await ensureColumn(pool, 'attendance_comment_reports', 'resolved_by',
+    'ALTER TABLE attendance_comment_reports ADD COLUMN resolved_by BIGINT NULL AFTER resolved_at');
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS user_post_reads (

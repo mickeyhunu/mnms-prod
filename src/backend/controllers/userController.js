@@ -28,6 +28,7 @@ const { createStampEventRequest, listOwnerStampEventRequests, reviewStampEventRe
 const supportModel = require('../models/supportModel');
 const adminModel = require('../models/adminModel');
 const wikiQuestionModel = require('../models/wikiQuestionModel');
+const attendanceCommentModel = require('../models/attendanceCommentModel');
 const { deleteS3ObjectsByUrls, parseDataUrl, uploadDataUrlToS3 } = require('../utils/fileUpload');
 const {
   collectBusinessInfoImageUrls,
@@ -860,13 +861,14 @@ async function myNotifications(req, res, next) {
   try {
     const limit = Math.max(1, Math.min(100, Number(req.query.limit) || 50));
     const isAdmin = String(req.user?.role || '').toUpperCase() === 'ADMIN';
-    const [commentNotifications, notices, answeredInquiries, pendingInquiries, pendingBusinessApplications, pendingWikiQuestions] = await Promise.all([
+    const [commentNotifications, notices, answeredInquiries, pendingInquiries, pendingBusinessApplications, pendingWikiQuestions, pendingAttendanceCommentReports] = await Promise.all([
       getUserNotifications(req.user.id, { limit }),
       supportModel.listArticles(supportModel.SUPPORT_CATEGORIES.NOTICE, false),
       supportModel.listAnsweredInquiriesByUser(req.user.id, { limit }),
       isAdmin ? supportModel.listRecentPendingInquiries({ limit }) : Promise.resolve([]),
       isAdmin ? adminModel.listRecentPendingBusinessApplications({ limit }) : Promise.resolve([]),
-      isAdmin ? wikiQuestionModel.listRecentPendingQuestions({ limit }) : Promise.resolve([])
+      isAdmin ? wikiQuestionModel.listRecentPendingQuestions({ limit }) : Promise.resolve([]),
+      isAdmin ? attendanceCommentModel.listPendingReported({ limit }) : Promise.resolve([])
     ]);
 
     const normalizedNotifications = [
@@ -935,6 +937,21 @@ async function myNotifications(req, res, next) {
         createdAt: item.createdAt,
         targetUrl: '/wiki'
       })),
+      ...pendingAttendanceCommentReports.map((item) => ({
+        notificationKey: `admin-attendance-comment-report-${item.id}-${item.latestReportId}`,
+        type: 'admin_attendance_comment_report',
+        sourceId: item.id,
+        postId: null,
+        inquiryId: null,
+        parentId: null,
+        postTitle: null,
+        content: item.content,
+        actorNickname: item.workerName,
+        title: '출근자 코멘트 신고',
+        message: `신고된 출근자 코멘트가 있습니다 (${item.reportCount}건)`,
+        createdAt: item.lastReportedAt,
+        targetUrl: '/admin?tab=attendance-comments'
+      })),
       ...answeredInquiries.map((item) => ({
         notificationKey: `inquiry-answer-${item.id}`,
         type: 'inquiry_answer',
@@ -992,13 +1009,14 @@ async function markMyNotificationsReadAll(req, res, next) {
   try {
     const limit = Math.max(1, Math.min(100, Number(req.body.limit) || 100));
     const isAdmin = String(req.user?.role || '').toUpperCase() === 'ADMIN';
-    const [commentNotifications, notices, answeredInquiries, pendingInquiries, pendingBusinessApplications, pendingWikiQuestions] = await Promise.all([
+    const [commentNotifications, notices, answeredInquiries, pendingInquiries, pendingBusinessApplications, pendingWikiQuestions, pendingAttendanceCommentReports] = await Promise.all([
       getUserNotifications(req.user.id, { limit }),
       supportModel.listArticles(supportModel.SUPPORT_CATEGORIES.NOTICE, false),
       supportModel.listAnsweredInquiriesByUser(req.user.id, { limit }),
       isAdmin ? supportModel.listRecentPendingInquiries({ limit }) : Promise.resolve([]),
       isAdmin ? adminModel.listRecentPendingBusinessApplications({ limit }) : Promise.resolve([]),
-      isAdmin ? wikiQuestionModel.listRecentPendingQuestions({ limit }) : Promise.resolve([])
+      isAdmin ? wikiQuestionModel.listRecentPendingQuestions({ limit }) : Promise.resolve([]),
+      isAdmin ? attendanceCommentModel.listPendingReported({ limit }) : Promise.resolve([])
     ]);
 
     const allNotificationKeys = [
@@ -1007,6 +1025,7 @@ async function markMyNotificationsReadAll(req, res, next) {
       ...pendingInquiries.map((item) => `admin-pending-inquiry-${item.id}`),
       ...pendingBusinessApplications.map((item) => `admin-pending-business-application-${item.userId}-${item.updatedAt || item.createdAt || ''}`),
       ...pendingWikiQuestions.map((item) => `admin-pending-wiki-question-${item.id}`),
+      ...pendingAttendanceCommentReports.map((item) => `admin-attendance-comment-report-${item.id}-${item.latestReportId}`),
       ...answeredInquiries.map((item) => `inquiry-answer-${item.id}`)
     ];
 

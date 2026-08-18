@@ -60,7 +60,9 @@ async function listAdmin() {
             c.created_at AS createdAt, c.is_deleted AS isDeleted, c.deleted_at AS deletedAt,
             c.is_hidden AS isHidden, u.id AS authorUserId, u.login_id AS authorLoginId,
             u.nickname AS authorNickname,
-            COUNT(r.id) AS reportCount, MAX(r.created_at) AS lastReportedAt
+            COUNT(r.id) AS reportCount,
+            SUM(r.resolved_at IS NULL AND r.id IS NOT NULL) AS pendingReportCount,
+            MAX(r.created_at) AS lastReportedAt, MAX(r.resolved_at) AS lastResolvedAt
        FROM attendance_comments c
        JOIN users u ON u.id = c.user_id
        LEFT JOIN attendance_comment_reports r ON r.comment_id = c.id
@@ -68,15 +70,52 @@ async function listAdmin() {
                c.deleted_at, c.is_hidden, u.id, u.login_id, u.nickname
       ORDER BY (COUNT(r.id) > 0) DESC, COALESCE(MAX(r.created_at), c.created_at) DESC`
   );
-  return rows.map((row) => ({ ...row, reportCount: Number(row.reportCount || 0) }));
+  return rows.map((row) => ({
+    ...row,
+    reportCount: Number(row.reportCount || 0),
+    pendingReportCount: Number(row.pendingReportCount || 0)
+  }));
 }
 
 async function countReported() {
   const [rows] = await getPool().query(
     `SELECT COUNT(DISTINCT c.id) AS total FROM attendance_comments c
-      JOIN attendance_comment_reports r ON r.comment_id = c.id WHERE c.is_deleted = 0`
+      JOIN attendance_comment_reports r ON r.comment_id = c.id
+     WHERE c.is_deleted = 0 AND r.resolved_at IS NULL`
   );
   return Number(rows[0]?.total || 0);
+}
+
+async function listPendingReported({ limit = 50 } = {}) {
+  const safeLimit = Math.max(1, Math.min(100, Number(limit) || 50));
+  const [rows] = await getPool().query(
+    `SELECT c.id, c.worker_name AS workerName, c.content, COUNT(r.id) AS reportCount,
+            MAX(r.id) AS latestReportId,
+            MAX(r.created_at) AS lastReportedAt
+       FROM attendance_comments c
+       JOIN attendance_comment_reports r ON r.comment_id = c.id AND r.resolved_at IS NULL
+      WHERE c.is_deleted = 0
+      GROUP BY c.id, c.worker_name, c.content
+      ORDER BY lastReportedAt DESC
+      LIMIT ?`,
+    [safeLimit]
+  );
+  return rows.map((row) => ({ ...row, reportCount: Number(row.reportCount || 0) }));
+}
+
+async function resolveReports(commentId, adminId) {
+  const [comments] = await getPool().query(
+    'SELECT id FROM attendance_comments WHERE id = ? AND is_deleted = 0',
+    [commentId]
+  );
+  if (!comments.length) return false;
+  await getPool().query(
+    `UPDATE attendance_comment_reports
+        SET resolved_at = NOW(), resolved_by = ?
+      WHERE comment_id = ? AND resolved_at IS NULL`,
+    [adminId, commentId]
+  );
+  return true;
 }
 
 async function remove(commentId) {
@@ -110,4 +149,4 @@ async function setHidden(commentId, adminId, isHidden) {
   return result.affectedRows > 0;
 }
 
-module.exports = { listPublic, create, report, listAdmin, countReported, remove, updateOwn, removeOwn, setHidden };
+module.exports = { listPublic, create, report, listAdmin, countReported, listPendingReported, resolveReports, remove, updateOwn, removeOwn, setHidden };
