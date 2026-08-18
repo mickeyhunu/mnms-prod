@@ -194,6 +194,17 @@ router.put('/attendance-comments/:id/hide', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+router.put('/attendance-comments/:id/resolve-reports', async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '코멘트 정보를 확인해주세요.' });
+    if (!await attendanceCommentModel.resolveReports(id, req.user.id)) {
+      return res.status(404).json({ message: '신고를 확인할 코멘트를 찾을 수 없습니다.' });
+    }
+    res.json({ success: true });
+  } catch (error) { next(error); }
+});
+
 router.delete('/attendance-comments/:id', async (req, res, next) => {
   try {
     const id = Number.parseInt(req.params.id, 10);
