@@ -186,6 +186,7 @@ const liveState = {
     adsLoadedStoreNo: null,
     adAutoPlayTimerId: null,
     attendanceCommentRequestId: 0,
+    isAdmin: false,
     canDeleteChojoong: false,
     accessRules: {
         level: 0,
@@ -233,7 +234,8 @@ function syncScrollableFilterState(element) {
 async function initLivePage() {
     removeLivePageSharedChrome();
     Auth.updateHeaderUI();
-    liveState.canDeleteChojoong = Boolean(Auth.getUser()?.isAdmin);
+    liveState.isAdmin = Auth.isAdminAccount(Auth.getUser());
+    liveState.canDeleteChojoong = liveState.isAdmin;
     bindLiveEvents();
     setupShareSheet();
 
@@ -450,6 +452,22 @@ function bindLiveEvents() {
             } catch (error) {
                 reportButton.disabled = false;
                 alert(error.message || '신고하지 못했습니다.');
+            }
+            return;
+        }
+
+        const hideButton = event.target.closest('[data-attendance-comment-hide]');
+        if (hideButton && liveState.isAdmin) {
+            const isHidden = hideButton.dataset.currentHidden === 'true';
+            hideButton.disabled = true;
+            try {
+                await APIClient.put(`/admin/attendance-comments/${hideButton.dataset.attendanceCommentHide}/hide`, {
+                    isHidden: !isHidden
+                });
+                await loadAttendanceComments(hideButton.closest('.attendance-list'));
+            } catch (error) {
+                hideButton.disabled = false;
+                alert(error.message || '코멘트 가리기 상태를 변경하지 못했습니다.');
             }
             return;
         }
@@ -1716,14 +1734,16 @@ async function loadAttendanceComments(container) {
             <h3 class="attendance-comments__title">코멘트</h3>
             <div class="attendance-comments__list">
                 ${comments.length ? sortRowsNewestFirst(comments).map((comment) => `
-                    <article class="attendance-comment${comment.isMine ? ' attendance-comment--mine' : ''}">
-                        ${comment.isMine ? '' : '<img class="attendance-comment__avatar" src="/src/assets/image/img_profile.png" alt="" aria-hidden="true">'}
+                    <article class="attendance-comment${comment.isMine ? ' attendance-comment--mine' : ''}${liveState.isAdmin ? ' attendance-comment--identified' : ''}">
+                        ${comment.isMine && !liveState.isAdmin ? '' : `<img class="attendance-comment__avatar" src="${sanitizeHTML(liveState.isAdmin && comment.authorProfileImageUrl ? comment.authorProfileImageUrl : '/src/assets/image/img_profile.png')}" alt="" aria-hidden="true">`}
                         <div class="attendance-comment__message">
-                            <strong>익명</strong>
+                            <strong>${sanitizeHTML(liveState.isAdmin ? comment.author : '익명')}</strong>
                             <p class="attendance-comment__content${comment.isHidden ? ' attendance-comment__content--restricted' : ''}">${sanitizeHTML(comment.content)}</p>
-                            <div class="attendance-comment__meta"><time>${sanitizeHTML(formatDate(comment.createdAt))}</time>${comment.isMine
-                                ? (comment.isHidden ? '' : `<button type="button" class="attendance-comment__action" data-attendance-comment-edit="${comment.id}">수정</button><button type="button" class="attendance-comment__action attendance-comment__action--danger" data-attendance-comment-delete="${comment.id}">삭제</button>`)
-                                : `<button type="button" class="attendance-comment__report" data-attendance-comment-report="${comment.id}" ${comment.isReported ? 'disabled' : ''}>${comment.isReported ? '신고됨' : '신고'}</button>`}</div>
+                            <div class="attendance-comment__meta"><time>${sanitizeHTML(formatDate(comment.createdAt))}</time>${comment.isHidden ? '<span class="attendance-comment__hidden-label">가려짐</span>' : ''}${liveState.isAdmin
+                                ? `<button type="button" class="attendance-comment__action" data-attendance-comment-hide="${comment.id}" data-current-hidden="${comment.isHidden ? 'true' : 'false'}">${comment.isHidden ? '가리기 해제' : '가리기'}</button>`
+                                : (comment.isMine
+                                    ? (comment.isHidden ? '' : `<button type="button" class="attendance-comment__action" data-attendance-comment-edit="${comment.id}">수정</button><button type="button" class="attendance-comment__action attendance-comment__action--danger" data-attendance-comment-delete="${comment.id}">삭제</button>`)
+                                    : `<button type="button" class="attendance-comment__report" data-attendance-comment-report="${comment.id}" ${comment.isReported ? 'disabled' : ''}>${comment.isReported ? '신고됨' : '신고'}</button>`)}</div>
                         </div>
                     </article>`).join('') : '<p class="attendance-comments__empty">첫 코멘트를 남겨보세요.</p>'}
             </div>`;
