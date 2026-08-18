@@ -59,13 +59,13 @@ async function listAdmin() {
     `SELECT c.id, c.store_no AS storeNo, c.worker_name AS workerName, c.content,
             c.created_at AS createdAt, c.is_deleted AS isDeleted, c.deleted_at AS deletedAt,
             c.is_hidden AS isHidden, u.id AS authorUserId, u.login_id AS authorLoginId,
-            u.nickname AS authorNickname, u.profile_image_url AS authorProfileImageUrl,
+            u.nickname AS authorNickname,
             COUNT(r.id) AS reportCount, MAX(r.created_at) AS lastReportedAt
        FROM attendance_comments c
        JOIN users u ON u.id = c.user_id
        LEFT JOIN attendance_comment_reports r ON r.comment_id = c.id
       GROUP BY c.id, c.store_no, c.worker_name, c.content, c.created_at, c.is_deleted,
-               c.deleted_at, c.is_hidden, u.id, u.login_id, u.nickname, u.profile_image_url
+               c.deleted_at, c.is_hidden, u.id, u.login_id, u.nickname
       ORDER BY (COUNT(r.id) > 0) DESC, COALESCE(MAX(r.created_at), c.created_at) DESC`
   );
   return rows.map((row) => ({ ...row, reportCount: Number(row.reportCount || 0) }));
