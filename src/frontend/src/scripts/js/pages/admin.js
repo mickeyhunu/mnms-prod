@@ -1081,16 +1081,57 @@ function renderCommentsTable() {
 function renderAttendanceCommentsAdminTable() {
     const tbody = document.getElementById('attendance-comments-tbody');
     if (!tbody) return;
-    const { filteredItems, pageItems, page, totalPages } = getAdminPagination('attendance-comments');
-    updateAdminTotal('attendance-comments', filteredItems.length);
-    tbody.innerHTML = pageItems.length ? pageItems.map((comment) => `
-        <tr class="${comment.reportCount ? 'admin-row--reported' : ''}">
-            <td>${sanitizeHTML(comment.workerName)} <small>#${Number(comment.storeNo)}</small></td>
-            <td>${comment.authorProfileImageUrl ? `<img class="admin-author-avatar" src="${sanitizeHTML(comment.authorProfileImageUrl)}" alt="">` : ''}${sanitizeHTML(comment.authorNickname)}<br><small>${sanitizeHTML(comment.authorLoginId)}</small></td>
-            <td>${sanitizeHTML(comment.content)}${comment.isDeleted ? '<br><strong class="text-danger">작성자 삭제</strong>' : (comment.isHidden ? '<br><small>가려짐</small>' : '')}</td><td>${formatDate(comment.createdAt)}</td>
-            <td>${comment.reportCount ? `<strong class="text-danger">${comment.reportCount}건</strong>` : '없음'}</td>
-            <td>${comment.isDeleted ? '삭제됨' : `<button class="btn btn-sm ${comment.isHidden ? 'btn-outline' : 'btn-secondary'}" type="button" data-admin-action="toggle-hide" data-target-type="attendance-comment" data-target-id="${comment.id}" data-current-hidden="${comment.isHidden ? 'true' : 'false'}">${comment.isHidden ? '가리기 해제' : '가리기'}</button> <button class="btn btn-sm btn-danger" type="button" data-admin-action="delete" data-target-type="attendance-comment" data-target-id="${comment.id}">삭제</button>`}</td>
-        </tr>`).join('') : '<tr><td colspan="6">출근자 코멘트가 없습니다.</td></tr>';
+    const state = getAdminListState('attendance-comments');
+    const groupedComments = Array.from(getAdminFilteredItems('attendance-comments').reduce((groups, comment) => {
+        const key = `${comment.storeNo}:${comment.workerName}`;
+        if (!groups.has(key)) groups.set(key, { key, storeNo: comment.storeNo, workerName: comment.workerName, comments: [] });
+        groups.get(key).comments.push(comment);
+        return groups;
+    }, new Map()).values());
+    const totalPages = Math.max(1, Math.ceil(groupedComments.length / ADMIN_PAGE_SIZE));
+    const page = Math.min(Math.max(1, state.page || 1), totalPages);
+    state.page = page;
+    const pageGroups = groupedComments.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
+    updateAdminTotal('attendance-comments', groupedComments.length);
+    tbody.innerHTML = pageGroups.length ? pageGroups.map((group) => {
+        const isExpanded = state.expandedWorkers?.has(group.key) || false;
+        const reportCount = group.comments.reduce((total, comment) => total + Number(comment.reportCount || 0), 0);
+        const latestCreatedAt = group.comments.reduce((latest, comment) => !latest || new Date(comment.createdAt) > new Date(latest) ? comment.createdAt : latest, null);
+        return `
+            <tr class="admin-attendance-worker-row ${reportCount ? 'admin-row--reported' : ''}">
+                <td><strong>${sanitizeHTML(group.workerName)}</strong> <small>#${Number(group.storeNo)}</small></td>
+                <td>${group.comments.length}건</td>
+                <td>${formatDate(latestCreatedAt)}</td>
+                <td>${reportCount ? `<strong class="text-danger">${reportCount}건</strong>` : '없음'}</td>
+                <td><button class="btn btn-sm btn-outline" type="button" data-attendance-worker-toggle="${sanitizeHTML(group.key)}" aria-expanded="${isExpanded}">${isExpanded ? '접기' : '코멘트 확인'}</button></td>
+            </tr>
+            <tr class="admin-attendance-comments-detail ${isExpanded ? '' : 'hidden'}">
+                <td colspan="5">
+                    <div class="admin-attendance-comments-detail__inner">
+                        <table class="admin-table admin-attendance-comments-detail__table">
+                            <thead><tr><th>작성자</th><th>내용</th><th>작성일</th><th>신고</th><th>관리</th></tr></thead>
+                            <tbody>${group.comments.map((comment) => `
+                                <tr class="${comment.reportCount ? 'admin-row--reported' : ''}">
+                                    <td>${sanitizeHTML(comment.authorNickname)}<br><small>${sanitizeHTML(comment.authorLoginId)}</small></td>
+                                    <td>${sanitizeHTML(comment.content)}${comment.isDeleted ? '<br><strong class="text-danger">작성자 삭제</strong>' : (comment.isHidden ? '<br><small>가려짐</small>' : '')}</td>
+                                    <td>${formatDate(comment.createdAt)}</td>
+                                    <td>${comment.reportCount ? `<strong class="text-danger">${comment.reportCount}건</strong>` : '없음'}</td>
+                                    <td>${comment.isDeleted ? '삭제됨' : `<button class="btn btn-sm ${comment.isHidden ? 'btn-outline' : 'btn-secondary'}" type="button" data-admin-action="toggle-hide" data-target-type="attendance-comment" data-target-id="${comment.id}" data-current-hidden="${comment.isHidden ? 'true' : 'false'}">${comment.isHidden ? '가리기 해제' : '가리기'}</button> <button class="btn btn-sm btn-danger" type="button" data-admin-action="delete" data-target-type="attendance-comment" data-target-id="${comment.id}">삭제</button>`}</td>
+                                </tr>`).join('')}</tbody>
+                        </table>
+                    </div>
+                </td>
+            </tr>`;
+    }).join('') : '<tr><td colspan="5">출근자 코멘트가 없습니다.</td></tr>';
+    tbody.querySelectorAll('[data-attendance-worker-toggle]').forEach((button) => {
+        button.addEventListener('click', () => {
+            if (!(state.expandedWorkers instanceof Set)) state.expandedWorkers = new Set();
+            const key = button.dataset.attendanceWorkerToggle;
+            if (state.expandedWorkers.has(key)) state.expandedWorkers.delete(key);
+            else state.expandedWorkers.add(key);
+            renderAttendanceCommentsAdminTable();
+        });
+    });
     bindAdminHideToggleButtons(tbody);
     renderAdminPagination('attendance-comments', totalPages, page);
 }
