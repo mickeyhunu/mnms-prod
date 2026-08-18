@@ -286,19 +286,29 @@ body[data-page="admin"] {
     border-bottom: 1px solid #e0e0e0;
 }
 
-.admin-author-avatar {
-    width: 32px;
-    height: 32px;
-    margin-right: 8px;
-    border-radius: 50%;
-    object-fit: cover;
-    vertical-align: middle;
-}
-
 .admin-table th {
     background-color: #f8f9fa;
     font-weight: 600;
     color: #495057;
+}
+
+.admin-attendance-worker-row td {
+    vertical-align: middle;
+}
+
+.admin-attendance-comments-detail > td {
+    padding: 0;
+    background: #f8f9fa;
+}
+
+.admin-attendance-comments-detail__inner {
+    padding: 12px 20px 20px;
+    overflow-x: auto;
+}
+
+.admin-attendance-comments-detail__table {
+    min-width: 720px;
+    border: 1px solid #e0e0e0;
 }
 
 .admin-table tr:hover {
