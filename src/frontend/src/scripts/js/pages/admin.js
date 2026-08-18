@@ -1096,13 +1096,14 @@ function renderAttendanceCommentsAdminTable() {
     tbody.innerHTML = pageGroups.length ? pageGroups.map((group) => {
         const isExpanded = state.expandedWorkers?.has(group.key) || false;
         const reportCount = group.comments.reduce((total, comment) => total + Number(comment.reportCount || 0), 0);
+        const pendingReportCount = group.comments.reduce((total, comment) => total + Number(comment.pendingReportCount || 0), 0);
         const latestCreatedAt = group.comments.reduce((latest, comment) => !latest || new Date(comment.createdAt) > new Date(latest) ? comment.createdAt : latest, null);
         return `
-            <tr class="admin-attendance-worker-row ${reportCount ? 'admin-row--reported' : ''}">
+            <tr class="admin-attendance-worker-row ${pendingReportCount ? 'admin-row--reported' : ''}">
                 <td><strong>${sanitizeHTML(group.workerName)}</strong> <small>#${Number(group.storeNo)}</small></td>
                 <td>${group.comments.length}건</td>
                 <td>${formatDate(latestCreatedAt)}</td>
-                <td>${reportCount ? `<strong class="text-danger">${reportCount}건</strong>` : '없음'}</td>
+                <td>${reportCount ? `<strong class="${pendingReportCount ? 'text-danger' : ''}">${reportCount}건${pendingReportCount ? ` (미확인 ${pendingReportCount}건)` : ' (확인됨)'}</strong>` : '없음'}</td>
                 <td><button class="btn btn-sm btn-outline" type="button" data-attendance-worker-toggle="${sanitizeHTML(group.key)}" aria-expanded="${isExpanded}">${isExpanded ? '접기' : '코멘트 확인'}</button></td>
             </tr>
             <tr class="admin-attendance-comments-detail ${isExpanded ? '' : 'hidden'}">
@@ -1111,12 +1112,12 @@ function renderAttendanceCommentsAdminTable() {
                         <table class="admin-table admin-attendance-comments-detail__table">
                             <thead><tr><th>작성자</th><th>내용</th><th>작성일</th><th>신고</th><th>관리</th></tr></thead>
                             <tbody>${group.comments.map((comment) => `
-                                <tr class="${comment.reportCount ? 'admin-row--reported' : ''}">
+                                <tr class="${comment.pendingReportCount ? 'admin-row--reported' : ''}">
                                     <td>${sanitizeHTML(comment.authorNickname)}<br><small>${sanitizeHTML(comment.authorLoginId)}</small></td>
                                     <td>${sanitizeHTML(comment.content)}${comment.isDeleted ? '<br><strong class="text-danger">작성자 삭제</strong>' : (comment.isHidden ? '<br><small>가려짐</small>' : '')}</td>
                                     <td>${formatDate(comment.createdAt)}</td>
-                                    <td>${comment.reportCount ? `<strong class="text-danger">${comment.reportCount}건</strong>` : '없음'}</td>
-                                    <td>${comment.isDeleted ? '삭제됨' : `<button class="btn btn-sm ${comment.isHidden ? 'btn-outline' : 'btn-secondary'}" type="button" data-admin-action="toggle-hide" data-target-type="attendance-comment" data-target-id="${comment.id}" data-current-hidden="${comment.isHidden ? 'true' : 'false'}">${comment.isHidden ? '가리기 해제' : '가리기'}</button> <button class="btn btn-sm btn-danger" type="button" data-admin-action="delete" data-target-type="attendance-comment" data-target-id="${comment.id}">삭제</button>`}</td>
+                                    <td>${comment.reportCount ? `<strong class="${comment.pendingReportCount ? 'text-danger' : ''}">${comment.reportCount}건${comment.pendingReportCount ? '' : ' (확인됨)'}</strong>` : '없음'}</td>
+                                    <td>${comment.isDeleted ? '삭제됨' : `<button class="btn btn-sm ${comment.isHidden ? 'btn-outline' : 'btn-secondary'}" type="button" data-admin-action="toggle-hide" data-target-type="attendance-comment" data-target-id="${comment.id}" data-current-hidden="${comment.isHidden ? 'true' : 'false'}">${comment.isHidden ? '가리기 해제' : '가리기'}</button>${comment.pendingReportCount ? ` <button class="btn btn-sm btn-primary" type="button" data-attendance-comment-resolve="${comment.id}">신고 확인</button>` : ''}`}</td>
                                 </tr>`).join('')}</tbody>
                         </table>
                     </div>
@@ -1133,6 +1134,20 @@ function renderAttendanceCommentsAdminTable() {
         });
     });
     bindAdminHideToggleButtons(tbody);
+    tbody.querySelectorAll('[data-attendance-comment-resolve]').forEach((button) => {
+        button.addEventListener('click', async () => {
+            button.disabled = true;
+            button.textContent = '처리 중...';
+            try {
+                await APIClient.put(`/admin/attendance-comments/${button.dataset.attendanceCommentResolve}/resolve-reports`);
+                await Promise.all([loadAttendanceCommentsAdmin(), loadAdminReviewSummary()]);
+            } catch (error) {
+                button.disabled = false;
+                button.textContent = '신고 확인';
+                alert(error.message || '신고를 확인 처리하지 못했습니다.');
+            }
+        });
+    });
     renderAdminPagination('attendance-comments', totalPages, page);
 }
 
