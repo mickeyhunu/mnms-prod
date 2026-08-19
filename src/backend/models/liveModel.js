@@ -194,8 +194,9 @@ async function countRows(tableName, { storeNo = null, storeName = '' } = {}) {
 async function listLiveEntries(categoryKey, { storeNo = null, limit = 50, offset = 0 } = {}) {
   const pool = await getChatbotPool();
   const category = getCategoryConfig(categoryKey);
+  const isAttendance = category.key === 'attendance';
   const safeTableName = ensureTableName(category.tableName);
-  const rowLimit = normalizeLimit(limit);
+  const rowLimit = isAttendance ? null : normalizeLimit(limit);
   const rowOffset = normalizeOffset(offset);
   const columns = await getTableColumns(safeTableName);
   const orderColumn = findColumn(columns, ORDER_CANDIDATES);
@@ -206,9 +207,11 @@ async function listLiveEntries(categoryKey, { storeNo = null, limit = 50, offset
     storeName: selectedStore?.storeName || ''
   });
   const isEntryList = category.key === 'entry' || category.key === 'attendance';
-  const params = isEntryList
-    ? [...storeFilter.params, rowLimit]
-    : [...storeFilter.params, rowLimit, rowOffset];
+  const params = isAttendance
+    ? storeFilter.params
+    : isEntryList
+      ? [...storeFilter.params, rowLimit]
+      : [...storeFilter.params, rowLimit, rowOffset];
 
   const selectClause = buildLiveSelectClause(columns);
 
@@ -223,12 +226,11 @@ async function listLiveEntries(categoryKey, { storeNo = null, limit = 50, offset
               LIMIT ?
            ) AS recent_entries
           ORDER BY \`${orderColumn}\` ASC`
-      : category.key === 'attendance'
+      : isAttendance
         ? `SELECT ${selectClause}
              FROM \`${safeTableName}\`
              ${storeFilter.clause}
-            ORDER BY \`${orderColumn}\` DESC
-            LIMIT ?`
+            ORDER BY \`${orderColumn}\` DESC`
       : `SELECT ${selectClause}
            FROM (
              SELECT ${selectClause}
@@ -238,6 +240,10 @@ async function listLiveEntries(categoryKey, { storeNo = null, limit = 50, offset
               LIMIT ? OFFSET ?
            ) AS history_entries
           ORDER BY \`${orderColumn}\` ASC`
+    : isAttendance
+      ? `SELECT ${selectClause}
+           FROM \`${safeTableName}\`
+           ${storeFilter.clause}`
     : isEntryList
       ? `SELECT ${selectClause}
            FROM \`${safeTableName}\`

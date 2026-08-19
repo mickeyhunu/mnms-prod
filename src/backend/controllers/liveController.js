@@ -94,8 +94,10 @@ async function getLiveEntries(req, res, next) {
       titleColumn: data.titleColumn,
       storeFilterColumn: data.storeFilterColumn,
       rows: data.rows,
-      limit: data.rowLimit,
-      offset: data.rowOffset,
+      ...(data.category.key === 'attendance' ? {} : {
+        limit: data.rowLimit,
+        offset: data.rowOffset
+      }),
       hasMore: !['entry', 'attendance'].includes(data.category.key) && totalCount > (data.rowOffset + data.rows.length),
       nextOffset: !['entry', 'attendance'].includes(data.category.key) ? data.rowOffset + data.rows.length : data.rowOffset
     });
