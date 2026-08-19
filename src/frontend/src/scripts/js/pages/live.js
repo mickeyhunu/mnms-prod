@@ -566,10 +566,6 @@ function bindLiveEvents() {
         const searchInput = event.target.closest('[data-attendance-search]');
         if (!searchInput) return;
 
-        const koreanName = getAttendanceKoreanName(searchInput.value);
-        if (searchInput.value !== koreanName) {
-            searchInput.value = koreanName;
-        }
         renderAttendanceSearchResults(searchInput.value);
     });
 
@@ -1681,11 +1677,7 @@ function createAttendanceSearchResultsMarkup(rows, titleColumn, searchTerm) {
 }
 
 function normalizeAttendanceSearchTerm(value) {
-    return getAttendanceKoreanName(value).toLocaleLowerCase('ko-KR');
-}
-
-function getAttendanceKoreanName(value) {
-    return (String(value || '').match(/[가-힣]/g) || []).slice(0, 2).join('');
+    return String(value || '').slice(0, 2).toLocaleLowerCase('ko-KR');
 }
 
 function createAttendanceListItem(row, titleColumn, index) {
