@@ -1375,12 +1375,21 @@ function syncAttendanceCommentsViewport() {
 }
 
 function buildLiveEntriesQuery({ appendOlder = false } = {}) {
-    return {
+    if (liveState.selectedCategoryKey === 'attendance') {
+        return {
+            category: liveState.selectedCategoryKey,
+            storeNo: liveState.selectedStoreNo
+        };
+    }
+
+    const query = {
         category: liveState.selectedCategoryKey,
         storeNo: liveState.selectedStoreNo,
-        limit: ['entry', 'attendance'].includes(liveState.selectedCategoryKey) ? LIVE_ENTRY_PAGE_SIZE : LIVE_HISTORY_PAGE_SIZE,
+        limit: liveState.selectedCategoryKey === 'entry' ? LIVE_ENTRY_PAGE_SIZE : LIVE_HISTORY_PAGE_SIZE,
         offset: appendOlder && shouldUseHistoryPagination() ? liveState.nextOffset : 0
     };
+
+    return query;
 }
 
 function updateLiveEntriesState(response = {}, { appendOlder = false } = {}) {
