@@ -112,7 +112,8 @@ const HOME_LIVE_CATEGORIES = [
     { key: 'choice', label: '초톡' },
     { key: 'chojoong', label: '초중' },
     { key: 'waiting', label: '룸/웨이팅' },
-    { key: 'entry', label: '엔트리' }
+    { key: 'entry', label: '엔트리' },
+    { key: 'attendance', label: '출근자 정보' }
 ];
 
 const HOME_LIVE_AVATAR_IMAGE_BASE_PATH = '/src/assets/live-avatars';
@@ -150,6 +151,10 @@ function getHomeLiveSummary(categoryKey, rows, totalCount = null) {
     if (categoryKey === 'entry') {
         const normalizedTotalCount = Number(totalCount);
         return `총 출근인원 ${Number.isFinite(normalizedTotalCount) ? normalizedTotalCount : 0}명`;
+    }
+    if (categoryKey === 'attendance') {
+        const normalizedTotalCount = Number(totalCount);
+        return `총 ${Number.isFinite(normalizedTotalCount) ? normalizedTotalCount : 0}명의 정보가 있습니다`;
     }
 
     if (!rows.length) return '업데이트 없음';
@@ -207,8 +212,15 @@ async function loadHomeLivePreview() {
         ]);
         const rowsByCategoryAndStore = new Map();
         const entryCountByStore = new Map();
+        let attendanceCount = 0;
         sharedCategories.forEach(({ key }, index) => {
-            const rows = Array.isArray(categoryResponses[index]?.rows) ? categoryResponses[index].rows : [];
+            const response = categoryResponses[index];
+            if (key === 'attendance') {
+                const totalCount = Number(response?.totalCount);
+                attendanceCount = Number.isFinite(totalCount) ? totalCount : 0;
+                return;
+            }
+            const rows = Array.isArray(response?.rows) ? response.rows : [];
             rows.forEach((row) => {
                 const storeKey = getHomeLiveStoreKey(row);
                 if (!storeKey) return;
@@ -231,7 +243,9 @@ async function loadHomeLivePreview() {
                 const summary = getHomeLiveSummary(
                     key,
                     rowsByCategoryAndStore.get(`${key}|${storeKey}`) || [],
-                    key === 'entry' ? entryCountByStore.get(storeKey) : null
+                    key === 'entry'
+                        ? entryCountByStore.get(storeKey)
+                        : (key === 'attendance' ? attendanceCount : null)
                 );
                 return `<li class="live-chat-card__detail-item">
                     <span class="live-chat-card__detail-key">${sanitizeHTML(label)}</span>
