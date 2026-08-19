@@ -199,27 +199,24 @@ async function loadHomeLivePreview() {
         const stores = Array.isArray(filters?.stores) ? filters.stores : [];
         if (!stores.length) return renderHomePreviewStatus(container.id, '등록된 LIVE 정보가 없습니다.');
 
-        const sharedCategories = HOME_LIVE_CATEGORIES.filter(({ key }) => key !== 'entry');
-        const [categoryResponses, entryResponses] = await Promise.all([
+        const sharedCategories = HOME_LIVE_CATEGORIES.filter(({ key }) => !['entry', 'attendance'].includes(key));
+        const [categoryResponses, storeCountResponses] = await Promise.all([
             Promise.all(sharedCategories.map(({ key }) =>
                 APIClient.get('/live/entries', { category: key, limit: 300 })
             )),
-            Promise.all(stores.map((store) => APIClient.get('/live/entries', {
-                category: 'entry',
-                storeNo: store.storeNo,
-                limit: 1
-            })))
+            Promise.all(stores.map((store) => Promise.all(['entry', 'attendance'].map((category) =>
+                APIClient.get('/live/entries', {
+                    category,
+                    storeNo: store.storeNo,
+                    limit: 1
+                })
+            ))))
         ]);
         const rowsByCategoryAndStore = new Map();
         const entryCountByStore = new Map();
-        let attendanceCount = 0;
+        const attendanceCountByStore = new Map();
         sharedCategories.forEach(({ key }, index) => {
             const response = categoryResponses[index];
-            if (key === 'attendance') {
-                const totalCount = Number(response?.totalCount);
-                attendanceCount = Number.isFinite(totalCount) ? totalCount : 0;
-                return;
-            }
             const rows = Array.isArray(response?.rows) ? response.rows : [];
             rows.forEach((row) => {
                 const storeKey = getHomeLiveStoreKey(row);
@@ -232,8 +229,10 @@ async function loadHomeLivePreview() {
         stores.forEach((store, index) => {
             const storeNo = Number(store.storeNo);
             const storeKey = Number.isInteger(storeNo) && storeNo > 0 ? `no:${storeNo}` : `name:${store.storeName}`;
-            const totalCount = Number(entryResponses[index]?.totalCount);
-            entryCountByStore.set(storeKey, Number.isFinite(totalCount) ? totalCount : 0);
+            const entryCount = Number(storeCountResponses[index]?.[0]?.totalCount);
+            const attendanceCount = Number(storeCountResponses[index]?.[1]?.totalCount);
+            entryCountByStore.set(storeKey, Number.isFinite(entryCount) ? entryCount : 0);
+            attendanceCountByStore.set(storeKey, Number.isFinite(attendanceCount) ? attendanceCount : 0);
         });
 
         container.innerHTML = stores.map((store) => {
@@ -245,7 +244,7 @@ async function loadHomeLivePreview() {
                     rowsByCategoryAndStore.get(`${key}|${storeKey}`) || [],
                     key === 'entry'
                         ? entryCountByStore.get(storeKey)
-                        : (key === 'attendance' ? attendanceCount : null)
+                        : (key === 'attendance' ? attendanceCountByStore.get(storeKey) : null)
                 );
                 return `<li class="live-chat-card__detail-item">
                     <span class="live-chat-card__detail-key">${sanitizeHTML(label)}</span>
