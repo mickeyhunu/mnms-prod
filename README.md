@@ -77,6 +77,12 @@ cp src/backend/.env.local.example src/backend/.env.local
 - `MNMS_MYSQL_PASSWORD`
 - `MNMS_MYSQL_DATABASE` (기본값: `mnms_DB`)
 
+### 시간대 원칙
+
+- MySQL과 애플리케이션의 DB 연결은 UTC로 유지하며 `TIMESTAMP`/`DATETIME` 저장값을 일괄 변경하지 않습니다.
+- 화면 표시와 “오늘”, 일일 제한, 월간 랭킹, 일별 통계 같은 달력 기준 기능은 한국 시간(UTC+9)을 사용합니다.
+- 달력 기준 SQL은 `src/backend/utils/koreaTimeSql.js`의 공통 표현식을 사용합니다. 새 일일·월간 기능에서도 서버의 `CURRENT_DATE()`를 직접 사용하지 마세요.
+
 ## chatBot_DB 동시 사용 (별도 DB 풀)
 메인 사이트 DB와 별개로 `chatBot_DB`를 동시에 연결할 수 있습니다.
 

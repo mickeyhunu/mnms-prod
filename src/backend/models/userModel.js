@@ -2,6 +2,7 @@
  * 파일 역할: userModel 도메인 데이터의 DB 조회/저장 쿼리를 담당하는 모델 파일.
  */
 const { getPool } = require('../config/database');
+const { KOREA_CURRENT_DAY_START_UTC_SQL, KOREA_NEXT_DAY_START_UTC_SQL } = require('../utils/koreaTimeSql');
 const { getLoginRestrictionState, LOGIN_STATUS } = require('../utils/loginRestriction');
 const { hashPassword } = require('../utils/passwordHasher');
 const { resolvePieceChatLifecycle } = require('../utils/pieceChatLifecycle');
@@ -181,14 +182,14 @@ async function getUserDailyActivityStats(userId) {
            FROM posts p
           WHERE p.user_id = ?
             AND p.is_deleted = 0
-            AND p.created_at >= CURDATE()
-            AND p.created_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY)) AS todayPostCount,
+            AND p.created_at >= ${KOREA_CURRENT_DAY_START_UTC_SQL}
+            AND p.created_at < ${KOREA_NEXT_DAY_START_UTC_SQL}) AS todayPostCount,
         (SELECT COUNT(*)
            FROM comments c
           WHERE c.user_id = ?
             AND c.is_deleted = 0
-            AND c.created_at >= CURDATE()
-            AND c.created_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY)) AS todayCommentCount`,
+            AND c.created_at >= ${KOREA_CURRENT_DAY_START_UTC_SQL}
+            AND c.created_at < ${KOREA_NEXT_DAY_START_UTC_SQL}) AS todayCommentCount`,
     [userId, userId]
   );
 

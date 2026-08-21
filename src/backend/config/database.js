@@ -56,7 +56,8 @@ const dbConfig = {
     fallback: useLocalDb ? 'mnms_DB_local' : 'mnms_DB'
   }),
   connectionLimit: 10,
-  charset: 'utf8mb4'
+  charset: 'utf8mb4',
+  timezone: 'Z'
 };
 
 const chatbotDbConfig = {
@@ -86,7 +87,8 @@ const chatbotDbConfig = {
     fallback: useLocalDb ? 'chatBot_DB_local' : 'chatBot_DB'
   }),
   connectionLimit: 10,
-  charset: 'utf8mb4'
+  charset: 'utf8mb4',
+  timezone: 'Z'
 };
 
 const CHATBOT_DATABASE_FALLBACKS = ['chatBot_DB', 'chatbot_db', 'chatbotdb'];
@@ -95,6 +97,18 @@ let pool;
 let chatbotPool;
 let chatbotPoolPromise;
 let resolvedChatbotDbConfig;
+
+function configureUtcPool(poolInstance) {
+  poolInstance.on('connection', (connection) => {
+    connection.query("SET SESSION time_zone = '+00:00'", (error) => {
+      if (error) {
+        connection.destroy();
+        console.error('Failed to keep the MySQL session in UTC:', error);
+      }
+    });
+  });
+  return poolInstance;
+}
 
 async function ensureIndex(poolInstance, tableName, indexName, createQuery) {
   const [rows] = await poolInstance.query(
@@ -212,7 +226,7 @@ async function initDatabase() {
   await bootstrap.query(`CREATE DATABASE IF NOT EXISTS \`${dbConfig.database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
   await bootstrap.end();
 
-  pool = mysql.createPool(dbConfig);
+  pool = configureUtcPool(mysql.createPool(dbConfig));
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS home_posters (
@@ -1601,7 +1615,7 @@ async function getChatbotPool() {
   if (!chatbotPoolPromise) {
     chatbotPoolPromise = resolveChatbotDbConfig()
       .then((config) => {
-        chatbotPool = mysql.createPool(config);
+        chatbotPool = configureUtcPool(mysql.createPool(config));
         return chatbotPool;
       })
       .catch((error) => {
