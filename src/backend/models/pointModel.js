@@ -2,6 +2,7 @@
  * 파일 역할: 회원 포인트 적립/조회 관련 DB 쿼리를 담당하는 모델 파일.
  */
 const { getPool } = require('../config/database');
+const { KOREA_CURRENT_DAY_START_UTC_SQL, KOREA_NEXT_DAY_START_UTC_SQL } = require('../utils/koreaTimeSql');
 
 const POINT_RULES = {
   REGISTER: { points: 20, dailyLimit: null },
@@ -21,20 +22,15 @@ const POINT_REVOKE_ACTIONS = {
   RECEIVE_POST_LIKE: 'REVOKE_RECEIVE_POST_LIKE'
 };
 
-function startOfToday() {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  return now;
-}
-
 async function countTodayAction(connection, userId, actionType) {
   const [rows] = await connection.query(
     `SELECT COUNT(*) AS count
      FROM point_histories
      WHERE user_id = ?
        AND action_type = ?
-       AND created_at >= ?`,
-    [userId, actionType, startOfToday()]
+       AND created_at >= ${KOREA_CURRENT_DAY_START_UTC_SQL}
+       AND created_at < ${KOREA_NEXT_DAY_START_UTC_SQL}`,
+    [userId, actionType]
   );
 
   return Number(rows[0]?.count || 0);

@@ -2,6 +2,7 @@
  * 파일 역할: 월간 일반회원 랭킹 데이터 조회 쿼리를 담당하는 모델 파일.
  */
 const { getPool } = require('../config/database');
+const { KOREA_CURRENT_DATE_SQL } = require('../utils/koreaTimeSql');
 
 const DEFAULT_LIMIT = 5;
 const MAX_LIMIT = 5;
@@ -21,13 +22,15 @@ async function getMonthlyRankings(options = {}) {
   const limit = normalizeLimit(options.limit);
 
   const [periodRows] = await pool.query(
-    `SELECT DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01') AS monthStart,
-            DATE_ADD(DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01'), INTERVAL 1 MONTH) AS nextMonthStart,
-            YEAR(CURRENT_DATE()) AS year,
-            MONTH(CURRENT_DATE()) AS month`
+    `SELECT DATE_FORMAT(${KOREA_CURRENT_DATE_SQL}, '%Y-%m-01') AS monthStart,
+            DATE_ADD(DATE_FORMAT(${KOREA_CURRENT_DATE_SQL}, '%Y-%m-01'), INTERVAL 1 MONTH) AS nextMonthStart,
+            DATE_FORMAT(${KOREA_CURRENT_DATE_SQL}, '%Y-%m-01') - INTERVAL 9 HOUR AS monthStartUtc,
+            DATE_ADD(DATE_FORMAT(${KOREA_CURRENT_DATE_SQL}, '%Y-%m-01'), INTERVAL 1 MONTH) - INTERVAL 9 HOUR AS nextMonthStartUtc,
+            YEAR(${KOREA_CURRENT_DATE_SQL}) AS year,
+            MONTH(${KOREA_CURRENT_DATE_SQL}) AS month`
   );
   const period = periodRows[0];
-  const params = [period.monthStart, period.nextMonthStart, limit];
+  const params = [period.monthStartUtc, period.nextMonthStartUtc, limit];
 
   const memberWhere = `COALESCE(u.member_type, 'MEMBER') = 'MEMBER' AND COALESCE(u.role, 'MEMBER') <> 'ADMIN'`;
 

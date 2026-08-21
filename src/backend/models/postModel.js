@@ -4,6 +4,7 @@
 const { getPool } = require('../config/database');
 const { extractTrailingSlugId, normalizeSeoSlug } = require('../utils/seoSlug');
 const { buildMemberLevelCaseSql } = require('../utils/memberLevel');
+const { KOREA_CURRENT_DAY_START_UTC_SQL, KOREA_NEXT_DAY_START_UTC_SQL } = require('../utils/koreaTimeSql');
 
 const AUTHOR_LEVEL_SQL = buildMemberLevelCaseSql('u.total_points', 'u.id');
 const AUTHOR_ADVERTISER_AD_DAYS_SQL = `(
@@ -315,8 +316,8 @@ async function findUserAttendancePostForCurrentDbDay(userId) {
        FROM posts
       WHERE user_id = ?
         AND board_type = ?
-        AND created_at >= CURRENT_DATE()
-        AND created_at < DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)
+        AND created_at >= ${KOREA_CURRENT_DAY_START_UTC_SQL}
+        AND created_at < ${KOREA_NEXT_DAY_START_UTC_SQL}
       ORDER BY created_at ASC, id ASC
       LIMIT 1`,
     [userId, BOARD_TYPES.ATTENDANCE]
@@ -347,8 +348,8 @@ async function findUserPromotionPostForCurrentDbDay(userId) {
        FROM posts
       WHERE user_id = ?
         AND board_type = ?
-        AND created_at >= CURRENT_DATE()
-        AND created_at < DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)
+        AND created_at >= ${KOREA_CURRENT_DAY_START_UTC_SQL}
+        AND created_at < ${KOREA_NEXT_DAY_START_UTC_SQL}
       ORDER BY created_at ASC, id ASC
       LIMIT 1`,
     [userId, BOARD_TYPES.PROMOTION]
