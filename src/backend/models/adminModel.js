@@ -8,6 +8,7 @@ const { createSeoSlugWithId, extractTrailingSlugId, normalizeSeoSlug } = require
 const { pickUserRow } = require('../utils/response');
 const { ensureResolvedLoginRestriction, getUserActivityStats, getUserActivityDetails, getUserLoginHistories, getBusinessProfileByUserId, updateBusinessProfileReviewByUserId: updateBusinessProfileReviewRecordByUserId, updateBusinessAuthorNicknameSnapshots } = require('./userModel');
 const { getStoreByNo, listStores } = require('./liveModel');
+const { KOREA_CURRENT_DATE_SQL, KOREA_CURRENT_DAY_START_UTC_SQL, koreaDateOfUtcColumnSql } = require('../utils/koreaTimeSql');
 
 
 const isLocalEnvLoaded = process.env.MNMS_ENV_LOCAL_LOADED === 'true'
@@ -158,11 +159,11 @@ async function resetBusinessAdDailyJumps(connectionOrPool = getPool()) {
   await connectionOrPool.query(
     `UPDATE business_ads
         SET daily_jump_remaining = CASE plan_type WHEN 'PREMIUM' THEN ? WHEN 'PLUS' THEN ? ELSE ? END,
-            jump_reset_date = CURDATE()
+            jump_reset_date = ${KOREA_CURRENT_DATE_SQL}
       WHERE registration_status = 'REGISTERED'
         AND activated_until IS NOT NULL
         AND activated_until > NOW()
-        AND (jump_reset_date IS NULL OR jump_reset_date < CURDATE())`,
+        AND (jump_reset_date IS NULL OR jump_reset_date < ${KOREA_CURRENT_DATE_SQL})`,
     [BUSINESS_AD_PLAN_JUMP_COUNTS.PREMIUM, BUSINESS_AD_PLAN_JUMP_COUNTS.PLUS, BUSINESS_AD_PLAN_JUMP_COUNTS.BASIC]
   );
 }
@@ -309,7 +310,7 @@ async function renewExpiredBusinessAdsWithStamp() {
                 activated_at = ${BUSINESS_AD_CURRENT_MINUTE_SQL},
                 activated_until = DATE_ADD(${BUSINESS_AD_CURRENT_MINUTE_SQL}, INTERVAL ? ${BUSINESS_AD_PLAN_DURATION_UNIT_SQL}),
                 daily_jump_remaining = ?,
-                jump_reset_date = CURDATE(),
+                jump_reset_date = ${KOREA_CURRENT_DATE_SQL},
                 jumped_at = NULL
           WHERE id = ?`,
         [planType, durationDays, getBusinessAdPlanJumpCount(planType), ad.id]
@@ -1466,7 +1467,7 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
       `UPDATE business_ads
           SET is_active = ?, plan_type = ?, activated_at = ${BUSINESS_AD_CURRENT_MINUTE_SQL}, activated_until = DATE_ADD(${BUSINESS_AD_CURRENT_MINUTE_SQL}, INTERVAL ? ${BUSINESS_AD_PLAN_DURATION_UNIT_SQL}),
               daily_jump_remaining = ?,
-              jump_reset_date = CURDATE(),
+              jump_reset_date = ${KOREA_CURRENT_DATE_SQL},
               jumped_at = NULL
         WHERE id = ?`,
       [autoRenew ? 1 : 0, planType, durationDays, getBusinessAdPlanJumpCount(planType), adId]
@@ -1673,7 +1674,7 @@ async function replaceBusinessAdJumpSchedules({ adId, ownerUserId, schedules }) 
 async function runDueBusinessAdJumpSchedules() {
   const pool = getPool();
   await resetBusinessAdDailyJumps(pool);
-  const [[timeRow]] = await pool.query("SELECT DATE_FORMAT(NOW(), '%H:%i') AS currentTime");
+  const [[timeRow]] = await pool.query("SELECT DATE_FORMAT(UTC_TIMESTAMP() + INTERVAL 9 HOUR, '%H:%i') AS currentTime");
   const currentTime = timeRow?.currentTime;
   if (!currentTime) return;
   const [rows] = await pool.query(
@@ -1937,10 +1938,10 @@ async function recordSiteVisit({ visitorKey, path }) {
 
   await pool.query(
     `INSERT INTO site_visit_logs (visitor_key, path, visit_date, page_views, first_visited_at, last_visited_at)
-     VALUES (?, ?, CURRENT_DATE(), 1, NOW(), NOW())
+     VALUES (?, ?, ${KOREA_CURRENT_DATE_SQL}, 1, UTC_TIMESTAMP(), UTC_TIMESTAMP())
      ON DUPLICATE KEY UPDATE
        page_views = page_views + 1,
-       last_visited_at = NOW()`,
+       last_visited_at = UTC_TIMESTAMP()`,
     [normalizedVisitorKey, normalizedPath]
   );
 }
@@ -2071,15 +2072,15 @@ async function getDashboardStats(rangeDays = 14, { period = 'daily' } = {}) {
   const [summaryRows] = await pool.query(
     `SELECT
         (SELECT COUNT(DISTINCT visitor_key) FROM site_visit_logs) AS totalVisitors,
-        (SELECT COUNT(DISTINCT visitor_key) FROM site_visit_logs WHERE visit_date = CURRENT_DATE()) AS todayVisitors,
+        (SELECT COUNT(DISTINCT visitor_key) FROM site_visit_logs WHERE visit_date = ${KOREA_CURRENT_DATE_SQL}) AS todayVisitors,
         (SELECT COALESCE(SUM(page_views), 0) FROM site_visit_logs) AS totalPageViews,
-        (SELECT COALESCE(SUM(page_views), 0) FROM site_visit_logs WHERE visit_date = CURRENT_DATE()) AS todayPageViews,
+        (SELECT COALESCE(SUM(page_views), 0) FROM site_visit_logs WHERE visit_date = ${KOREA_CURRENT_DATE_SQL}) AS todayPageViews,
         (SELECT COUNT(*) FROM posts WHERE is_deleted = 0) AS totalPosts,
-        (SELECT COUNT(*) FROM posts WHERE is_deleted = 0 AND DATE(created_at) = CURRENT_DATE()) AS todayPosts,
+        (SELECT COUNT(*) FROM posts WHERE is_deleted = 0 AND created_at >= ${KOREA_CURRENT_DAY_START_UTC_SQL} AND created_at < ${KOREA_CURRENT_DAY_START_UTC_SQL} + INTERVAL 1 DAY) AS todayPosts,
         (SELECT COUNT(*) FROM comments WHERE is_deleted = 0) AS totalComments,
-        (SELECT COUNT(*) FROM comments WHERE is_deleted = 0 AND DATE(created_at) = CURRENT_DATE()) AS todayComments,
+        (SELECT COUNT(*) FROM comments WHERE is_deleted = 0 AND created_at >= ${KOREA_CURRENT_DAY_START_UTC_SQL} AND created_at < ${KOREA_CURRENT_DAY_START_UTC_SQL} + INTERVAL 1 DAY) AS todayComments,
         (SELECT COUNT(*) FROM users WHERE role = 'MEMBER') AS totalUsers,
-        (SELECT COUNT(*) FROM users WHERE role = 'MEMBER' AND DATE(created_at) = CURRENT_DATE()) AS todaySignups`
+        (SELECT COUNT(*) FROM users WHERE role = 'MEMBER' AND created_at >= ${KOREA_CURRENT_DAY_START_UTC_SQL} AND created_at < ${KOREA_CURRENT_DAY_START_UTC_SQL} + INTERVAL 1 DAY) AS todaySignups`
   );
 
   const [visitRows, postRows, commentRows, signupRows, boardRows] = await Promise.all([
@@ -2088,42 +2089,42 @@ async function getDashboardStats(rangeDays = 14, { period = 'daily' } = {}) {
               COUNT(DISTINCT visitor_key) AS visitors,
               COALESCE(SUM(page_views), 0) AS pageViews
          FROM site_visit_logs
-        WHERE visit_date >= DATE_SUB(CURRENT_DATE(), INTERVAL ? DAY)
+        WHERE visit_date >= DATE_SUB(${KOREA_CURRENT_DATE_SQL}, INTERVAL ? DAY)
         GROUP BY visit_date
         ORDER BY visit_date ASC`,
       [normalizedRangeDays - 1]
     ).then(([rows]) => rows),
     pool.query(
-      `SELECT DATE(created_at) AS statsDate, COUNT(*) AS postCount
+      `SELECT ${koreaDateOfUtcColumnSql('created_at')} AS statsDate, COUNT(*) AS postCount
          FROM posts
         WHERE is_deleted = 0
-          AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL ? DAY)
-        GROUP BY DATE(created_at)
-        ORDER BY DATE(created_at) ASC`,
+          AND created_at >= DATE_SUB(${KOREA_CURRENT_DAY_START_UTC_SQL}, INTERVAL ? DAY)
+        GROUP BY ${koreaDateOfUtcColumnSql('created_at')}
+        ORDER BY ${koreaDateOfUtcColumnSql('created_at')} ASC`,
       [normalizedRangeDays - 1]
     ).then(([rows]) => rows),
     pool.query(
-      `SELECT DATE(created_at) AS statsDate, COUNT(*) AS commentCount
+      `SELECT ${koreaDateOfUtcColumnSql('created_at')} AS statsDate, COUNT(*) AS commentCount
          FROM comments
         WHERE is_deleted = 0
-          AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL ? DAY)
-        GROUP BY DATE(created_at)
-        ORDER BY DATE(created_at) ASC`,
+          AND created_at >= DATE_SUB(${KOREA_CURRENT_DAY_START_UTC_SQL}, INTERVAL ? DAY)
+        GROUP BY ${koreaDateOfUtcColumnSql('created_at')}
+        ORDER BY ${koreaDateOfUtcColumnSql('created_at')} ASC`,
       [normalizedRangeDays - 1]
     ).then(([rows]) => rows),
     pool.query(
-      `SELECT DATE(created_at) AS statsDate, COUNT(*) AS signupCount
+      `SELECT ${koreaDateOfUtcColumnSql('created_at')} AS statsDate, COUNT(*) AS signupCount
          FROM users
         WHERE role = 'MEMBER'
-          AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL ? DAY)
-        GROUP BY DATE(created_at)
-        ORDER BY DATE(created_at) ASC`,
+          AND created_at >= DATE_SUB(${KOREA_CURRENT_DAY_START_UTC_SQL}, INTERVAL ? DAY)
+        GROUP BY ${koreaDateOfUtcColumnSql('created_at')}
+        ORDER BY ${koreaDateOfUtcColumnSql('created_at')} ASC`,
       [normalizedRangeDays - 1]
     ).then(([rows]) => rows),
     pool.query(
       `SELECT board_type AS boardType,
               COUNT(*) AS totalPosts,
-              SUM(CASE WHEN DATE(created_at) = CURRENT_DATE() THEN 1 ELSE 0 END) AS todayPosts
+              SUM(CASE WHEN ${koreaDateOfUtcColumnSql('created_at')} = ${KOREA_CURRENT_DATE_SQL} THEN 1 ELSE 0 END) AS todayPosts
          FROM posts
         WHERE is_deleted = 0
         GROUP BY board_type

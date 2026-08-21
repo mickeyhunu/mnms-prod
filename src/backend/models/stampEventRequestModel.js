@@ -3,6 +3,7 @@
  */
 const { getPool } = require('../config/database');
 const { STAMP_TYPES } = require('./stampModel');
+const { KOREA_CURRENT_DAY_START_UTC_SQL, KOREA_NEXT_DAY_START_UTC_SQL } = require('../utils/koreaTimeSql');
 
 const REQUEST_TYPES = {
   VISIT_VERIFICATION: 'VISIT_VERIFICATION',
@@ -60,8 +61,8 @@ async function getTodayVisitVerificationRequestPlaceCount(connection, applicantU
        FROM stamp_event_requests
       WHERE applicant_user_id = ?
         AND request_type = 'VISIT_VERIFICATION'
-        AND created_at >= CURRENT_DATE()
-        AND created_at < CURRENT_DATE() + INTERVAL 1 DAY`,
+        AND created_at >= ${KOREA_CURRENT_DAY_START_UTC_SQL}
+        AND created_at < ${KOREA_NEXT_DAY_START_UTC_SQL}`,
     [applicantUserId]
   );
   return Number(rows[0]?.totalRequestPlaces || 0);
@@ -73,8 +74,8 @@ async function hasStampUseRequestToday(connection, applicantUserId) {
        FROM stamp_event_requests
       WHERE applicant_user_id = ?
         AND request_type = 'STAMP_USE'
-        AND created_at >= CURRENT_DATE()
-        AND created_at < CURRENT_DATE() + INTERVAL 1 DAY
+        AND created_at >= ${KOREA_CURRENT_DAY_START_UTC_SQL}
+        AND created_at < ${KOREA_NEXT_DAY_START_UTC_SQL}
       LIMIT 1`,
     [applicantUserId]
   );
@@ -88,8 +89,8 @@ async function hasVisitVerificationRequestForAdToday(connection, applicantUserId
       WHERE applicant_user_id = ?
         AND business_ad_id = ?
         AND request_type = 'VISIT_VERIFICATION'
-        AND created_at >= CURRENT_DATE()
-        AND created_at < CURRENT_DATE() + INTERVAL 1 DAY
+        AND created_at >= ${KOREA_CURRENT_DAY_START_UTC_SQL}
+        AND created_at < ${KOREA_NEXT_DAY_START_UTC_SQL}
       LIMIT 1`,
     [applicantUserId, businessAdId]
   );
@@ -112,8 +113,8 @@ async function hasApprovedVisitVerificationForAdToday(connection, applicantUserI
         AND request_type = 'VISIT_VERIFICATION'
         AND status = 'APPROVED'
         AND reviewed_at IS NOT NULL
-        AND reviewed_at >= CURRENT_DATE()
-        AND reviewed_at < CURRENT_DATE() + INTERVAL 1 DAY${excludeClause}
+        AND reviewed_at >= ${KOREA_CURRENT_DAY_START_UTC_SQL}
+        AND reviewed_at < ${KOREA_NEXT_DAY_START_UTC_SQL}${excludeClause}
       LIMIT 1`,
     params
   );
@@ -135,8 +136,8 @@ async function getTodayApprovedVisitVerificationCount(connection, applicantUserI
         AND request_type = 'VISIT_VERIFICATION'
         AND status = 'APPROVED'
         AND reviewed_at IS NOT NULL
-        AND reviewed_at >= CURRENT_DATE()
-        AND reviewed_at < CURRENT_DATE() + INTERVAL 1 DAY${excludeClause}`,
+        AND reviewed_at >= ${KOREA_CURRENT_DAY_START_UTC_SQL}
+        AND reviewed_at < ${KOREA_NEXT_DAY_START_UTC_SQL}${excludeClause}`,
     params
   );
   return Number(rows[0]?.totalApprovals || 0);
