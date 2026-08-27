@@ -262,13 +262,16 @@ function renderBusinessRejectionReason(elementId, isRejected, rejectionReason) {
     reason.classList.toggle('hidden', !isRejected);
 }
 
-function applyStampEventStatusBadge(isEnabled) {
+function applyStampEventStatusBadge(isEnabled, pendingCount = 0) {
     const badge = document.getElementById('mypage-stamp-event-status');
     if (!badge) return;
 
-    badge.classList.remove('mypage-status-badge--registered', 'mypage-status-badge--unregistered');
-    badge.textContent = isEnabled ? 'ON' : 'OFF';
-    badge.classList.add(isEnabled ? 'mypage-status-badge--registered' : 'mypage-status-badge--unregistered');
+    const normalizedPendingCount = Math.max(0, Number(pendingCount || 0));
+    badge.classList.remove('mypage-status-badge--registered', 'mypage-status-badge--pending', 'mypage-status-badge--unregistered');
+    badge.textContent = normalizedPendingCount > 0 ? `${normalizedPendingCount.toLocaleString('ko-KR')}건` : (isEnabled ? 'ON' : 'OFF');
+    badge.classList.add(normalizedPendingCount > 0
+        ? 'mypage-status-badge--pending'
+        : (isEnabled ? 'mypage-status-badge--registered' : 'mypage-status-badge--unregistered'));
 }
 
 function renderAdActivationStatus(ad) {
@@ -322,6 +325,7 @@ async function renderBusinessProfileStatuses() {
     let businessApprovalStatus = 'pending';
     let businessRejectionReason = '';
     let stampEventEnabled = false;
+    let pendingStampEventCount = 0;
 
     try {
         const response = await APIClient.get('/users/me/business-ads');
@@ -336,6 +340,13 @@ async function renderBusinessProfileStatuses() {
     }
 
     try {
+        const response = await APIClient.get('/users/me/stamp-event-requests', { status: 'PENDING', limit: 1 });
+        pendingStampEventCount = Number(response?.pendingCount || 0);
+    } catch (error) {
+        pendingStampEventCount = 0;
+    }
+
+    try {
         const profile = await APIClient.get('/users/me/business-profile');
         businessStatus = normalizeRegistrationStatus(profile?.registrationStatus);
         businessApprovalStatus = normalizeBusinessApprovalStatus(profile?.approvalStatus);
@@ -345,7 +356,7 @@ async function renderBusinessProfileStatuses() {
     }
 
     applyStatusBadge('mypage-ad-profile-status', adStatus);
-    applyStampEventStatusBadge(stampEventEnabled);
+    applyStampEventStatusBadge(stampEventEnabled, pendingStampEventCount);
     renderBusinessInfoStatusBadge({
         registrationStatus: businessStatus,
         approvalStatus: businessApprovalStatus,
