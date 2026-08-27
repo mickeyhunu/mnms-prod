@@ -190,20 +190,21 @@ function populatePieceLocationOptions(selectedCity = '', selectedDistrict = '') 
     if (!locationSelect) return;
 
     const cities = pieceAdAreaAvailability.regions;
-    const fallbackCity = cities.includes(PIECE_LOCATION_FALLBACK_CITY) ? PIECE_LOCATION_FALLBACK_CITY : (cities[0] || '');
-    const cityValue = cities.includes(selectedCity) ? selectedCity : fallbackCity;
+    const cityValue = cities.includes(selectedCity) ? selectedCity : '';
     const districts = pieceAdAreaAvailability.districtsByRegion[cityValue] || [];
-    const fallbackDistrict = districts.includes(PIECE_LOCATION_FALLBACK_DISTRICT) ? PIECE_LOCATION_FALLBACK_DISTRICT : (districts[0] || '');
-    const districtValue = districts.includes(selectedDistrict) ? selectedDistrict : fallbackDistrict;
-    const selectedValue = getPieceLocationOptionValue(cityValue, districtValue);
+    const districtValue = districts.includes(selectedDistrict) ? selectedDistrict : '';
+    const selectedValue = cityValue && districtValue ? getPieceLocationOptionValue(cityValue, districtValue) : '';
 
-    locationSelect.innerHTML = cities.flatMap((city) => {
-        const cityDistricts = pieceAdAreaAvailability.districtsByRegion[city] || [];
-        return cityDistricts.map((district) => {
-            const value = getPieceLocationOptionValue(city, district);
-            return `<option value="${sanitizeHTML(value)}">${sanitizeHTML(formatPieceLocationValue(city, district))}</option>`;
-        });
-    }).join('');
+    locationSelect.innerHTML = [
+        '<option value="">선택</option>',
+        ...cities.flatMap((city) => {
+            const cityDistricts = pieceAdAreaAvailability.districtsByRegion[city] || [];
+            return cityDistricts.map((district) => {
+                const value = getPieceLocationOptionValue(city, district);
+                return `<option value="${sanitizeHTML(value)}">${sanitizeHTML(formatPieceLocationValue(city, district))}</option>`;
+            });
+        })
+    ].join('');
     locationSelect.value = selectedValue;
 }
 
@@ -211,7 +212,7 @@ async function setupPieceLocationOptions() {
     const locationSelect = document.getElementById('piece-location-city');
     if (!locationSelect) return;
 
-    const initialLocation = parsePieceLocationOptionValue(locationSelect.value || getPieceLocationOptionValue(PIECE_LOCATION_FALLBACK_CITY, PIECE_LOCATION_FALLBACK_DISTRICT));
+    const initialLocation = parsePieceLocationOptionValue(locationSelect.value);
     await loadPieceAdAreaAvailability();
     populatePieceLocationOptions(initialLocation.city, initialLocation.district);
     locationSelect.addEventListener('change', validateForm);
