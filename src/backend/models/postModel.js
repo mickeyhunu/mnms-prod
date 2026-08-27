@@ -580,13 +580,14 @@ async function incrementPostViewCount(id) {
   const pool = getPool();
   await pool.query('UPDATE posts SET view_count = view_count + 1 WHERE id = ?', [id]);
 }
-async function updatePost(id, { title, content, imageUrls = [], isNotice, noticeType, isPinned, noticeTargetBoards = [] }) {
+async function updatePost(id, { title, content, imageUrls = [], boardType, isNotice, noticeType, isPinned, noticeTargetBoards = [] }) {
   const pool = getPool();
+  const normalizedBoardType = normalizeBoardType(boardType);
   const normalizedNoticeType = isNotice ? (String(noticeType || '').toUpperCase() === 'IMPORTANT' ? 'IMPORTANT' : 'NOTICE') : null;
   const serializedNoticeTargetBoards = isNotice ? serializeNoticeTargetBoards(noticeTargetBoards) : null;
   await pool.query(
-    'UPDATE posts SET title = ?, content = ?, image_urls = ?, is_notice = ?, notice_type = ?, is_pinned = ?, notice_target_boards = ? WHERE id = ?',
-    [title, content, JSON.stringify(normalizeImageUrls(imageUrls)), isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, serializedNoticeTargetBoards, id]
+    'UPDATE posts SET title = ?, content = ?, image_urls = ?, board_type = ?, is_notice = ?, notice_type = ?, is_pinned = ?, notice_target_boards = ? WHERE id = ?',
+    [title, content, JSON.stringify(normalizeImageUrls(imageUrls)), normalizedBoardType, isNotice ? 1 : 0, normalizedNoticeType, isNotice && isPinned ? 1 : 0, serializedNoticeTargetBoards, id]
   );
 }
 
