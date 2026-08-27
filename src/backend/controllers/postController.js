@@ -458,7 +458,7 @@ function canBusinessUserCommentOnPost(post, user) {
     return true;
   }
 
-  return isPromotionBoardPost(post) && isPromotionPostOwner(post, user);
+  return !isPromotionBoardPost(post) || isPromotionPostOwner(post, user);
 }
 
 function canReplyToComment(comment, post, currentUser) {
@@ -1277,7 +1277,19 @@ async function createComment(req, res, next) {
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
     if (post.is_hidden) return res.status(403).json({ message: '관리자에 의해 제한된 게시글에는 댓글을 작성할 수 없습니다.' });
     if (!canBusinessUserCommentOnPost(post, req.user)) {
-      return res.status(403).json({ message: '광고자 계정은 홍보게시판의 본인 게시글에만 댓글을 작성할 수 있습니다.' });
+      return res.status(403).json({ message: '광고자 계정은 다른 광고자의 홍보게시글에 댓글을 작성할 수 없습니다.' });
+    }
+    const isOwnPromotionPost = isPromotionBoardPost(post) && isPromotionPostOwner(post, req.user);
+    if (isBusinessUser(req.user) && !isOwnPromotionPost) {
+      const activePlanType = String(await postModel.findActiveBusinessAdPlanForUser(req.user.id) || '').toUpperCase();
+      if (activePlanType !== 'PREMIUM') {
+        return res.status(403).json({ message: '일반회원 게시글의 댓글은 활성화된 프리미엄 광고 기간에만 작성할 수 있습니다.' });
+      }
+
+      const dailyCommentCount = await postModel.countUserNonPromotionCommentsForCurrentDbDay(req.user.id);
+      if (dailyCommentCount >= PREMIUM_DAILY_COMMENT_LIMIT) {
+        return res.status(409).json({ message: `일반회원 게시글의 댓글은 하루에 ${PREMIUM_DAILY_COMMENT_LIMIT}번까지 작성할 수 있습니다.` });
+      }
     }
     if (isBusinessUser(req.user)) {
       const activePlanType = String(await postModel.findActiveBusinessAdPlanForUser(req.user.id) || '').toUpperCase();
