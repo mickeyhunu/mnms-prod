@@ -357,6 +357,21 @@ async function findUserPromotionPostForCurrentDbDay(userId) {
   return rows[0] || null;
 }
 
+async function countUserNonPromotionCommentsForCurrentDbDay(userId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT COUNT(*) AS commentCount
+       FROM comments c
+       JOIN posts p ON p.id = c.post_id
+      WHERE c.user_id = ?
+        AND p.board_type <> ?
+        AND c.created_at >= ${KOREA_CURRENT_DAY_START_UTC_SQL}
+        AND c.created_at < ${KOREA_NEXT_DAY_START_UTC_SQL}`,
+    [userId, BOARD_TYPES.PROMOTION]
+  );
+  return Number(rows[0]?.commentCount || 0);
+}
+
 async function createPost({ userId, title, content, imageUrls = [], boardType = BOARD_TYPES.FREE, isNotice = false, noticeType = null, isPinned = false, noticeTargetBoards = [], authorSnapshot = null }) {
   const pool = getPool();
   const connection = await pool.getConnection();
@@ -994,6 +1009,7 @@ module.exports = {
   findUserAttendancePostForCurrentDbDay,
   findActiveBusinessAdPlanForUser,
   findUserPromotionPostForCurrentDbDay,
+  countUserNonPromotionCommentsForCurrentDbDay,
   createPost,
   findPostById,
   findPostDetailById,
