@@ -83,7 +83,7 @@
     async function loadRequests() {
         setLoading();
         try {
-            const status = filterElement?.value || 'PENDING';
+            const status = filterElement?.value || 'ALL';
             const response = await APIClient.get('/users/me/stamp-event-requests', { status, limit: 100 });
             renderRequests(Array.isArray(response?.content) ? response.content : []);
         } catch (error) {

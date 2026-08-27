@@ -24,7 +24,7 @@ const { resolveMemberLevel, resolveAdvertiserAdDayLevel, MEMBER_LEVELS, ADVERTIS
 const { POINT_RULES } = require('../models/pointModel');
 const { STAMP_TYPES, createStampPaymentOrder, getStampPaymentOrder, completeStampPayment, getUserStampBalance, getUserStampHistories, getUserStampPaymentHistories } = require('../models/stampModel');
 const { getTossPaymentConfig, confirmTossPayment } = require('../utils/tossPayments');
-const { createStampEventRequest, listOwnerStampEventRequests, reviewStampEventRequest } = require('../models/stampEventRequestModel');
+const { createStampEventRequest, listOwnerStampEventRequests, countOwnerPendingStampEventRequests, reviewStampEventRequest } = require('../models/stampEventRequestModel');
 const supportModel = require('../models/supportModel');
 const adminModel = require('../models/adminModel');
 const wikiQuestionModel = require('../models/wikiQuestionModel');
@@ -874,7 +874,9 @@ async function myNotifications(req, res, next) {
     const normalizedNotifications = [
       ...commentNotifications.map((item) => ({
         ...item,
-        targetUrl: item.postTitle ? `/post-detail/${encodeURIComponent(createSeoSlugWithId(item.postTitle, item.postId, 'post'))}` : '/'
+        targetUrl: item.type === 'stamp_event_request'
+          ? '/stamp-event-management'
+          : item.postTitle ? `/post-detail/${encodeURIComponent(createSeoSlugWithId(item.postTitle, item.postId, 'post'))}` : '/'
       })),
       ...notices.map((notice) => ({
         notificationKey: `admin-notice-${notice.sourceType || 'SUPPORT'}-${notice.sourceId || notice.id}`,
@@ -1425,14 +1427,18 @@ async function createMyStampEventRequest(req, res, next) {
 
 async function myStampEventRequests(req, res, next) {
   try {
-    const requests = await listOwnerStampEventRequests(req.user.id, {
-      status: req.query?.status || 'PENDING',
-      limit: req.query?.limit
-    });
+    const [requests, pendingCount] = await Promise.all([
+      listOwnerStampEventRequests(req.user.id, {
+        status: req.query?.status || 'PENDING',
+        limit: req.query?.limit
+      }),
+      countOwnerPendingStampEventRequests(req.user.id)
+    ]);
 
     return res.json({
       content: requests,
-      totalElements: requests.length
+      totalElements: requests.length,
+      pendingCount
     });
   } catch (error) {
     next(error);

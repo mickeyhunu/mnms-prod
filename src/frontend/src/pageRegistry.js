@@ -1063,6 +1063,7 @@ const pageRegistry = {
                 <div class="stamp-event-management-toolbar">
                     <label for="stamp-event-management-status">상태</label>
                     <select id="stamp-event-management-status">
+                        <option value="ALL">전체</option>
                         <option value="PENDING">대기</option>
                         <option value="APPROVED">승인</option>
                         <option value="REJECTED">반려</option>
