@@ -1107,14 +1107,27 @@ async function updatePost(req, res, next) {
     if (Boolean(post.is_notice)) {
       return res.status(403).json({ message: '공지글/필독글은 관리자 페이지에서만 수정할 수 있습니다.' });
     }
-    const targetBoardType = parseBoardType(post.board_type || post.boardType);
-    if (!isAdminViewer(req.user) && targetBoardType === BOARD_TYPES.NEWS) {
+    const currentBoardType = parseBoardType(post.board_type || post.boardType);
+    const requestedBoardValue = req.body.boardType ?? req.body.board_type ?? req.body.category ?? req.body.board;
+    const requestedBoardType = requestedBoardValue == null
+      ? currentBoardType
+      : parseWritableBoardType(req.body);
+    if (!requestedBoardType) {
+      return res.status(400).json({ message: '게시판을 선택해주세요.' });
+    }
+    if (!isAdminViewer(req.user) && requestedBoardType === BOARD_TYPES.EVENT) {
+      return res.status(403).json({ message: '이벤트게시판은 관리자만 글을 수정할 수 있습니다.' });
+    }
+    if (!isAdminViewer(req.user) && requestedBoardType === BOARD_TYPES.NEWS) {
       return res.status(403).json({ message: '뉴스게시판은 관리자만 글을 수정할 수 있습니다.' });
     }
-    if (targetBoardType === BOARD_TYPES.PIECE && isPiecePostLocked(post)) {
+    if (currentBoardType === BOARD_TYPES.PIECE && isPiecePostLocked(post)) {
       return res.status(409).json({ message: '진행중이거나 종료된 조각글은 수정할 수 없습니다.' });
     }
-    if (isBusinessUser(req.user) && targetBoardType !== BOARD_TYPES.PROMOTION) {
+    if (!isAdminViewer(req.user) && !isBusinessUser(req.user) && requestedBoardType === BOARD_TYPES.PROMOTION) {
+      return res.status(403).json({ message: '홍보게시판은 광고자 또는 관리자만 이용할 수 있습니다.' });
+    }
+    if (isBusinessUser(req.user) && requestedBoardType !== BOARD_TYPES.PROMOTION) {
       return res.status(403).json({ message: '광고자 계정은 홍보게시판 글만 수정할 수 있습니다.' });
     }
 
@@ -1123,7 +1136,10 @@ async function updatePost(req, res, next) {
     const nextImageUrls = await resolveImageUrls(req.body);
     const nextTitle = req.body.title ?? post.title;
     const nextContent = req.body.content ?? post.content;
-    if (targetBoardType === BOARD_TYPES.PIECE) {
+    if (requestedBoardType === BOARD_TYPES.PIECE) {
+      if (!canUsePieceBoard(req.user)) {
+        return res.status(403).json({ message: getPieceBoardRestrictionMessage('게시글 수정') });
+      }
       const pieceValidationError = validatePiecePostContent(nextContent);
       if (pieceValidationError) return res.status(400).json({ message: pieceValidationError });
     }
@@ -1146,6 +1162,7 @@ async function updatePost(req, res, next) {
       title: nextTitle,
       content: nextContent,
       imageUrls: nextImageUrls,
+      boardType: requestedBoardType,
       isNotice: req.user.role === 'ADMIN' ? Boolean(req.body.isNotice) : Boolean(post.is_notice),
       noticeType: req.user.role === 'ADMIN'
         ? (Boolean(req.body.isNotice) ? (parseNoticeType(req.body.noticeType) || 'NOTICE') : null)
@@ -1155,7 +1172,7 @@ async function updatePost(req, res, next) {
         : Boolean(post.is_pinned),
       noticeTargetBoards: req.user.role === 'ADMIN'
         ? (Boolean(req.body.isNotice)
-          ? parseNoticeTargetBoards(req.body.noticeTargetBoards, post.board_type || post.boardType)
+          ? parseNoticeTargetBoards(req.body.noticeTargetBoards, requestedBoardType)
           : [])
         : parseNoticeTargetBoards(post.notice_target_boards || post.noticeTargetBoards, post.board_type || post.boardType)
     });
