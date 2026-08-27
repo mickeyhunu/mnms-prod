@@ -31,6 +31,7 @@ const BOARD_TYPES = postModel.BOARD_TYPES || {
 const DEFAULT_PAGE = 0;
 const DEFAULT_SIZE = 10;
 const MAX_SIZE = 100;
+const PREMIUM_DAILY_COMMENT_LIMIT = 5;
 const PIECE_MINIMUM_MEMBER_LEVEL = 3;
 const PIECE_MINIMUM_TOTAL_POINTS = 400;
 const BOARD_LABEL_ALIASES = {
@@ -1277,6 +1278,17 @@ async function createComment(req, res, next) {
     if (post.is_hidden) return res.status(403).json({ message: '관리자에 의해 제한된 게시글에는 댓글을 작성할 수 없습니다.' });
     if (!canBusinessUserCommentOnPost(post, req.user)) {
       return res.status(403).json({ message: '광고자 계정은 홍보게시판의 본인 게시글에만 댓글을 작성할 수 있습니다.' });
+    }
+    if (isBusinessUser(req.user)) {
+      const activePlanType = String(await postModel.findActiveBusinessAdPlanForUser(req.user.id) || '').toUpperCase();
+      if (activePlanType !== 'PREMIUM') {
+        return res.status(403).json({ message: '댓글은 활성화된 프리미엄 광고 기간에만 작성할 수 있습니다.' });
+      }
+
+      const dailyCommentCount = await postModel.countUserCommentsForCurrentDbDay(req.user.id);
+      if (dailyCommentCount >= PREMIUM_DAILY_COMMENT_LIMIT) {
+        return res.status(409).json({ message: `댓글은 활성화 기간동안 하루에 ${PREMIUM_DAILY_COMMENT_LIMIT}번까지 작성할 수 있습니다.` });
+      }
     }
 
     const { content, parentId: rawParentId, isSecret } = req.body;
