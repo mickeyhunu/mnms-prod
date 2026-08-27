@@ -631,8 +631,22 @@ function alertPreBusinessEditRestrictionIfNeeded(content, contentType) {
 
 function isAdvertiserCommentRestrictedForPost(post = currentPostDetail) {
     if (!post) return false;
-    return isBusinessUser(Auth.getUser())
-        && !(String(post.boardType || '').toUpperCase() === 'PROMOTION' && isCurrentUserPostAuthor(post));
+    const currentUser = Auth.getUser();
+    if (!isBusinessUser(currentUser)) return false;
+
+    const isPromotionPost = String(post.boardType || '').toUpperCase() === 'PROMOTION';
+    if (isPromotionPost) {
+        return !isCurrentUserPostAuthor(post);
+    }
+
+    const activePlanType = String(currentUser.businessAdPlan || currentUser.adPlan || '').toUpperCase();
+    return activePlanType !== 'PREMIUM';
+}
+
+function getAdvertiserCommentRestrictionMessage(post = currentPostDetail) {
+    return String(post?.boardType || '').toUpperCase() === 'PROMOTION'
+        ? '광고자 계정은 다른 광고자의 홍보게시글에 댓글을 작성할 수 없습니다.'
+        : '일반회원 게시글의 댓글은 활성화된 프리미엄 광고 기간에만 작성할 수 있습니다.';
 }
 
 function ensurePromotionCommentRestrictionNotice() {
@@ -644,7 +658,6 @@ function ensurePromotionCommentRestrictionNotice() {
         notice = document.createElement('p');
         notice.id = 'promotion-comment-restriction-notice';
         notice.className = 'comment-restriction-notice hidden';
-        notice.textContent = '광고자 계정은 홍보게시판의 본인 게시글에만 댓글을 작성할 수 있습니다.';
         commentForm.parentNode?.insertBefore(notice, commentForm);
     }
 
@@ -662,6 +675,7 @@ function updateCommentFormAvailability(post) {
     }
 
     if (notice) {
+        notice.textContent = getAdvertiserCommentRestrictionMessage(post);
         notice.classList.toggle('hidden', isHiddenPost || !isRestricted);
     }
 }
@@ -1777,7 +1791,7 @@ async function handleReplySubmit(e, parentId) {
     
     if (!Auth.requireAuth()) return;
     if (isAdvertiserCommentRestrictedForPost()) {
-        showNotification('광고자 계정은 홍보게시판의 본인 게시글에만 댓글을 작성할 수 있습니다.', 'error');
+        showNotification(getAdvertiserCommentRestrictionMessage(), 'error');
         return;
     }
     
@@ -1869,7 +1883,7 @@ async function handleCreateComment(e) {
     const contentTextarea = document.getElementById('comment-content');
     
     if (isAdvertiserCommentRestrictedForPost()) {
-        showNotification('광고자 계정은 홍보게시판의 본인 게시글에만 댓글을 작성할 수 있습니다.', 'error');
+        showNotification(getAdvertiserCommentRestrictionMessage(), 'error');
         return;
     }
 
