@@ -79,6 +79,7 @@
                 { text: '스탬프 1개로 업체정보 1일 노출', enabled: true },
                 { text: '1일 점프 12개', enabled: true },
                 { text: '활성화 기간동안 1일 1회 홍보게시글 작성 가능', enabled: true },
+                { text: '활성화 기간동안 1일 5회 댓글 작성 가능', enabled: true },
                 { text: '지역 상단 우선 노출 대상', enabled: true },
             ]
         },
