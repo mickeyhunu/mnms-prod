@@ -297,7 +297,10 @@ async function createStampEventRequest({ businessAdId, applicantUserId, requestT
 
 async function listOwnerStampEventRequests(ownerUserId, options = {}) {
   const pool = getPool();
-  const status = normalizeRequestStatus(options.status);
+  const requestedStatus = String(options.status || '').trim().toUpperCase();
+  const status = Object.prototype.hasOwnProperty.call(REQUEST_STATUSES, requestedStatus)
+    ? requestedStatus
+    : '';
   const limit = Math.max(1, Math.min(100, Number(options.limit) || 50));
   const params = [ownerUserId];
   let statusWhere = '';
@@ -323,6 +326,19 @@ async function listOwnerStampEventRequests(ownerUserId, options = {}) {
   );
 
   return rows.map(mapRequestRow);
+}
+
+async function countOwnerPendingStampEventRequests(ownerUserId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT COUNT(*) AS pendingCount
+       FROM stamp_event_requests
+      WHERE owner_user_id = ?
+        AND status = 'PENDING'`,
+    [ownerUserId]
+  );
+
+  return Number(rows[0]?.pendingCount || 0);
 }
 
 async function reviewStampEventRequest({ requestId, ownerUserId, status, rejectionReason = '' }) {
@@ -446,5 +462,6 @@ module.exports = {
   REQUEST_STATUSES,
   createStampEventRequest,
   listOwnerStampEventRequests,
+  countOwnerPendingStampEventRequests,
   reviewStampEventRequest
 };

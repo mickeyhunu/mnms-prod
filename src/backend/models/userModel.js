@@ -412,10 +412,34 @@ async function getUserNotifications(userId, { limit = 50 } = {}) {
          AND UPPER(COALESCE(p.board_type, '')) = 'PIECE'
          AND p.is_deleted = 0
          AND p.is_hidden = 0
+
+       UNION ALL
+
+       SELECT
+         CONCAT('stamp-event-request-', ser.id) AS notificationKey,
+         'stamp_event_request' AS type,
+         ser.id AS sourceId,
+         NULL AS postId,
+         NULL AS postTitle,
+         NULL AS inquiryId,
+         NULL AS parentId,
+         COALESCE(NULLIF(ba.business_name, ''), NULLIF(ba.title, ''), '내 광고') AS content,
+         ser.created_at AS createdAt,
+         COALESCE(NULLIF(applicant.nickname, ''), NULLIF(applicant.login_id, ''), '회원') AS actorNickname,
+         CONCAT(
+           COALESCE(NULLIF(applicant.nickname, ''), NULLIF(applicant.login_id, ''), '회원'),
+           '님이 ',
+           CASE WHEN ser.request_type = 'VISIT_VERIFICATION' THEN '방문인증' ELSE '스탬프사용' END,
+           '을 신청했습니다.'
+         ) AS message
+       FROM stamp_event_requests ser
+       INNER JOIN business_ads ba ON ba.id = ser.business_ad_id
+       LEFT JOIN users applicant ON applicant.id = ser.applicant_user_id
+       WHERE ser.owner_user_id = ?
      ) notifications
      ORDER BY createdAt DESC, sourceId DESC
      LIMIT ?`,
-    [userId, userId, userId, userId, userId, userId, userId, userId, safeLimit]
+    [userId, userId, userId, userId, userId, userId, userId, userId, userId, safeLimit]
   );
 
   return rows.map((row) => ({
