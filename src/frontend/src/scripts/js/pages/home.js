@@ -306,10 +306,7 @@ function renderHomeCommunityArticle(post) {
     const viewCount = Number(post.viewCount || 0).toLocaleString('ko-KR');
     const recommendCount = Number(post.likeCount || post.recommendCount || 0).toLocaleString('ko-KR');
     const previewText = getCommunityPostPreviewText(post);
-    const authorLevel = Number(post.authorLevel ?? post.level ?? post.authorRank ?? post.rank);
-    const authorBadge = Number.isInteger(authorLevel) && authorLevel > 0
-        ? ` <img class="user-level-badge" src="/src/assets/lv-badges/lv${authorLevel}.png" alt="회원 등급 배지" loading="lazy">`
-        : '';
+    const authorBadge = getHomeAuthorGradeBadgeMarkup(post);
     let isViewed = false;
     try {
         const viewedPostIds = JSON.parse(localStorage.getItem('communityViewedPostIds') || '[]');
@@ -335,6 +332,55 @@ function renderHomeCommunityArticle(post) {
         </a>
         <div class="article-side"></div>
     </li>`;
+}
+
+function isHomeBusinessAuthor(post = {}) {
+    const role = String(post.authorRole || post.author_role || post.role || '').toUpperCase();
+    const memberType = String(
+        post.authorMemberType
+        || post.author_member_type
+        || post.memberType
+        || post.member_type
+        || post.accountType
+        || ''
+    ).toUpperCase();
+
+    return role === 'BUSINESS' || memberType === 'BUSINESS' || Boolean(post.authorIsBusiness);
+}
+
+function resolveHomeAdvertiserRankEmoji(post = {}) {
+    const advertiserLevels = [
+        { emoji: '🌱', minDays: 0 },
+        { emoji: '🥉', minDays: 1 },
+        { emoji: '🥈', minDays: 91 },
+        { emoji: '🥇', minDays: 181 },
+        { emoji: '💠', minDays: 361 },
+        { emoji: '💎', minDays: 721 },
+        { emoji: '👑', minDays: 1441 }
+    ];
+    const adDays = Number(post.authorAdvertiserAdDays ?? post.cumulativeAdDays ?? 0);
+    const normalizedAdDays = Number.isFinite(adDays) && adDays > 0 ? Math.floor(adDays) : 0;
+
+    return advertiserLevels.reduce(
+        (currentLevel, level) => (normalizedAdDays >= level.minDays ? level : currentLevel),
+        advertiserLevels[0]
+    ).emoji;
+}
+
+function getHomeAuthorGradeBadgeMarkup(post = {}) {
+    const role = String(post.authorRole || post.author_role || post.role || '').toUpperCase();
+    if (role === 'ADMIN') {
+        return ' <img class="user-level-badge" src="/src/assets/lv-badges/admin.png" alt="관리자 배지" loading="lazy">';
+    }
+
+    if (isHomeBusinessAuthor(post)) {
+        return ` <span class="user-level-badge" aria-label="비즈니스 회원 등급 배지">${resolveHomeAdvertiserRankEmoji(post)}</span>`;
+    }
+
+    const authorLevel = Number(post.authorLevel ?? post.level ?? post.authorRank ?? post.rank);
+    return Number.isInteger(authorLevel) && authorLevel > 0
+        ? ` <img class="user-level-badge" src="/src/assets/lv-badges/lv${Math.min(7, authorLevel)}.png" alt="회원 등급 배지" loading="lazy">`
+        : '';
 }
 
 const HOME_BOARD_LABELS = {
