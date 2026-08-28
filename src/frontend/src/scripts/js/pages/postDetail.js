@@ -1791,7 +1791,7 @@ async function handleReplySubmit(e, parentId) {
     
     if (!Auth.requireAuth()) return;
     if (isAdvertiserCommentRestrictedForPost()) {
-        showNotification(getAdvertiserCommentRestrictionMessage(), 'error');
+        alert(getAdvertiserCommentRestrictionMessage());
         return;
     }
     
@@ -1827,8 +1827,7 @@ async function handleReplySubmit(e, parentId) {
         loadComments();
         
     } catch (error) {
-        console.error('답글 작성 실패:', error);
-        showNotification('답글 작성에 실패했습니다.', 'error');
+        alert(error?.message || '답글 작성에 실패했습니다.');
         Auth.handleAuthError(error);
         
     } finally {
@@ -1883,7 +1882,7 @@ async function handleCreateComment(e) {
     const contentTextarea = document.getElementById('comment-content');
     
     if (isAdvertiserCommentRestrictedForPost()) {
-        showNotification(getAdvertiserCommentRestrictionMessage(), 'error');
+        alert(getAdvertiserCommentRestrictionMessage());
         return;
     }
 
@@ -1922,8 +1921,7 @@ async function handleCreateComment(e) {
         loadComments();
         
     } catch (error) {
-        console.error('댓글 작성 실패:', error);
-        showNotification('댓글 작성에 실패했습니다.', 'error');
+        alert(error?.message || '댓글 작성에 실패했습니다.');
         Auth.handleAuthError(error);
         
     } finally {
