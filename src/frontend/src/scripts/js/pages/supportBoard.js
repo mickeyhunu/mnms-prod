@@ -207,7 +207,11 @@ function inferFaqTopic(item) {
     const rawTopic = String(item.topic || item.subCategory || item.sub_category || item.section || '').trim();
     if (FAQ_TOPICS.includes(rawTopic)) return rawTopic;
 
-    const text = `${item.title || ''} ${item.content || ''}`;
+    const title = String(item.title || '');
+    const titleTopic = title.match(/^\s*\[([^\]]+)\]/)?.[1]?.trim();
+    if (FAQ_TOPICS.includes(titleTopic)) return titleTopic;
+
+    const text = `${title} ${item.content || ''}`;
     if (/채팅|메시지|대화/i.test(text)) return '채팅';
     if (/기업|비즈니스|파트너/i.test(text)) return '기업회원';
     if (/회원|계정|로그인|가입|비밀번호|인증/i.test(text)) return '회원/계정';
