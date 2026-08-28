@@ -1682,7 +1682,7 @@ function normalizeAttendanceSearchTerm(value) {
 
 function createAttendanceListItem(row, titleColumn, index) {
     const name = resolveEntryWorkerName(row, titleColumn, index);
-    const lastAttendanceDate = formatAttendanceDate(getLiveRowRawTimestamp(row));
+    const lastAttendanceDate = formatAttendanceDate(getRowValueByCandidates(row, ['lastAttendanceAt']));
 
     return `
         <li class="attendance-list__item">
