@@ -357,6 +357,19 @@ async function findUserPromotionPostForCurrentDbDay(userId) {
   return rows[0] || null;
 }
 
+async function countUserCommentsForCurrentDbDay(userId) {
+  const pool = getPool();
+  const [rows] = await pool.query(
+    `SELECT COUNT(*) AS commentCount
+       FROM comments
+      WHERE user_id = ?
+        AND created_at >= ${KOREA_CURRENT_DAY_START_UTC_SQL}
+        AND created_at < ${KOREA_NEXT_DAY_START_UTC_SQL}`,
+    [userId]
+  );
+  return Number(rows[0]?.commentCount || 0);
+}
+
 async function countUserNonPromotionCommentsForCurrentDbDay(userId) {
   const pool = getPool();
   const [rows] = await pool.query(
@@ -1009,6 +1022,7 @@ module.exports = {
   findUserAttendancePostForCurrentDbDay,
   findActiveBusinessAdPlanForUser,
   findUserPromotionPostForCurrentDbDay,
+  countUserCommentsForCurrentDbDay,
   countUserNonPromotionCommentsForCurrentDbDay,
   createPost,
   findPostById,
