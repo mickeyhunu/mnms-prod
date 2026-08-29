@@ -1657,12 +1657,12 @@ function showCommentEditForm(commentId) {
     const contentElement = document.getElementById(`comment-content-${commentId}`);
     if (!container || !contentElement) return;
 
-    const currentContent = (contentElement.textContent || '').trim();
+    const currentContent = String(comment?.content ?? contentElement.innerText ?? '');
 
     container.innerHTML = `
         <form class="reply-form" onsubmit="handleCommentEditSubmit(event, ${commentId})">
             <div class="reply-input-container">
-                <textarea id="comment-edit-content-${commentId}" placeholder="댓글을 수정하세요..." required rows="3">${sanitizeHTML(currentContent)}</textarea>
+                <textarea id="comment-edit-content-${commentId}" placeholder="댓글을 수정하세요..." required rows="3"></textarea>
             </div>
             <div class="reply-form-actions">
                 <button type="submit" class="btn btn-sm btn-primary">수정</button>
@@ -1675,6 +1675,7 @@ function showCommentEditForm(commentId) {
 
     const textarea = document.getElementById(`comment-edit-content-${commentId}`);
     if (textarea) {
+        textarea.value = currentContent;
         textarea.focus();
         textarea.setSelectionRange(textarea.value.length, textarea.value.length);
     }
