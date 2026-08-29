@@ -145,7 +145,7 @@ function renderBestPosts(posts, container, emptyElement) {
     }).join('');
 }
 
-async function loadPosts(page = 0) {
+async function loadPosts(page = 0, { scrollToTop = false } = {}) {
     if (isLoading) return;
 
     const loading = document.getElementById('loading');
@@ -189,6 +189,10 @@ async function loadPosts(page = 0) {
         } else {
             postListContainer.innerHTML = '';
             showElement(emptyState);
+        }
+
+        if (scrollToTop) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     } catch (error) {
         showErrorBanner('게시글을 불러오는데 실패했습니다: ' + error.message);
@@ -717,7 +721,9 @@ function updatePagination() {
         link.addEventListener('click', (event) => {
             event.preventDefault();
             const target = Number(link.dataset.page);
-            if (!isLoading) loadPosts(target);
+            if (!isLoading && target !== currentPage) {
+                loadPosts(target, { scrollToTop: true });
+            }
         });
     });
 }
