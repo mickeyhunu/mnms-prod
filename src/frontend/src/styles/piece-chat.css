@@ -2,7 +2,7 @@
 body { margin:0; background:#eef1f4; color:var(--chat-ink); font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif; }
 .piece-chat-page { height:calc(100vh - var(--app-header-offset)); height:calc(100dvh - var(--app-header-offset)); min-height:0; display:grid; place-items:center; overflow:hidden; }
 .piece-chat-shell { width:min(100%, 680px); height:100%; min-height:0; background:var(--chat-bg); display:grid; grid-template-rows:auto minmax(0,1fr) auto; overflow:hidden; box-shadow:0 0 40px #2e425633; }
-.piece-chat-header { z-index:10; padding:8px 14px; background:#fff; display:flex; align-items:center; gap:12px; border-bottom:1px solid #ddd; }
+.piece-chat-header { z-index:10; padding:8px 10px; background:#fff; display:flex; align-items:center; gap:10px; border-bottom:1px solid #ddd; }
 .piece-chat-header h1 { font-size:17px; margin:0 0 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:470px; }.piece-chat-header p{margin:0;color:#777;font-size:12px;white-space:nowrap}.piece-chat-header>div{flex:1;min-width:0}
 .piece-chat-back,.piece-chat-refresh,.piece-chat-icon { border:0;background:transparent;cursor:pointer }.piece-chat-back{font-size:32px}.piece-chat-refresh{font-size:25px;line-height:1}.piece-chat-icon{font-size:21px;transition:transform .25s ease}.piece-chat-icon[aria-expanded="true"]{transform:rotate(90deg)}
 .piece-chat-notice{margin:0 0 10px;padding:9px 14px;border-radius:8px;background:#ffffffaa;text-align:center;font-size:12px;line-height:1.6;white-space:pre-line;color:#52616d}
