@@ -145,7 +145,7 @@ function renderBestPosts(posts, container, emptyElement) {
     }).join('');
 }
 
-async function loadPosts(page = 0) {
+async function loadPosts(page = 0, { scrollToFirstPost = false } = {}) {
     if (isLoading) return;
 
     const loading = document.getElementById('loading');
@@ -186,6 +186,13 @@ async function loadPosts(page = 0) {
             renderPostList(posts, postListContainer);
             updatePagination();
             showElement(pagination);
+
+            if (scrollToFirstPost) {
+                postListContainer.firstElementChild?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
         } else {
             postListContainer.innerHTML = '';
             showElement(emptyState);
@@ -717,7 +724,9 @@ function updatePagination() {
         link.addEventListener('click', (event) => {
             event.preventDefault();
             const target = Number(link.dataset.page);
-            if (!isLoading) loadPosts(target);
+            if (!isLoading && target !== currentPage) {
+                loadPosts(target, { scrollToFirstPost: true });
+            }
         });
     });
 }
