@@ -186,6 +186,13 @@ async function loadPosts(page = 0, { scrollToTop = false } = {}) {
             renderPostList(posts, postListContainer);
             updatePagination();
             showElement(pagination);
+
+            if (scrollToFirstPost) {
+                postListContainer.firstElementChild?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
         } else {
             postListContainer.innerHTML = '';
             showElement(emptyState);
