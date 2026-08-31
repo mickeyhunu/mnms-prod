@@ -11,6 +11,7 @@
     const purchaseButton = document.getElementById('stamp-purchase-submit');
     const purchaseSubmitBar = document.getElementById('stamp-purchase-submit-bar');
     const widgetStatus = document.getElementById('stamp-payment-widget-status');
+    const directPurchaseEnabled = false;
 
     if (!planList || !selectedProduct || !productPrice || !vatPrice || !totalPrice) return;
 
@@ -135,6 +136,10 @@
     });
 
     purchaseButton?.addEventListener('click', async () => {
+        if (!directPurchaseEnabled) {
+            alert('충전은 1대1 문의 바랍니다.');
+            return;
+        }
         if (state.isSubmitting || !state.payment || !state.order) return;
         state.isSubmitting = true;
         renderPaymentSummary();
