@@ -177,7 +177,10 @@ async function listPosts(page = 0, size = 10, options = {}) {
               COALESCE(p.author_nickname_snapshot, u.nickname, '비회원') AS authorNickname,
               COALESCE(p.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
               COALESCE(p.author_member_type_snapshot, u.member_type, 'MEMBER') AS authorMemberType,
-              u.profile_image_url AS authorProfileImageUrl,
+              CASE
+                WHEN p.author_role_snapshot = 'MEMBER' AND p.author_member_type_snapshot = 'MEMBER' THEN NULL
+                ELSE u.profile_image_url
+              END AS authorProfileImageUrl,
               (
                 SELECT ba.plan_type
                   FROM business_ads ba
@@ -447,7 +450,10 @@ async function findPostDetailById(id, options = {}) {
             COALESCE(p.author_nickname_snapshot, u.nickname, '비회원') AS authorNickname,
             COALESCE(p.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
             COALESCE(p.author_member_type_snapshot, u.member_type, 'MEMBER') AS authorMemberType,
-            u.profile_image_url AS authorProfileImageUrl,
+            CASE
+              WHEN p.author_role_snapshot = 'MEMBER' AND p.author_member_type_snapshot = 'MEMBER' THEN NULL
+              ELSE u.profile_image_url
+            END AS authorProfileImageUrl,
             u.profile_introduction AS authorProfileIntroduction,
             p.author_role_snapshot AS authorRoleSnapshot,
             p.author_member_type_snapshot AS authorMemberTypeSnapshot,
@@ -640,7 +646,10 @@ async function listComments(postId) {
             COALESCE(c.author_nickname_snapshot, u.nickname, '비회원') AS authorNickname,
             COALESCE(c.author_role_snapshot, u.role, 'MEMBER') AS authorRole,
             COALESCE(c.author_member_type_snapshot, u.member_type, 'MEMBER') AS authorMemberType,
-            u.profile_image_url AS authorProfileImageUrl,
+            CASE
+              WHEN c.author_role_snapshot = 'MEMBER' AND c.author_member_type_snapshot = 'MEMBER' THEN NULL
+              ELSE u.profile_image_url
+            END AS authorProfileImageUrl,
             c.author_role_snapshot AS authorRoleSnapshot,
             c.author_member_type_snapshot AS authorMemberTypeSnapshot,
             (
