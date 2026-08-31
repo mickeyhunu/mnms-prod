@@ -297,24 +297,27 @@
 
     const render = () => {
         const lockedBusinessPlan = lockedBusinessPlanKey();
-        if (state.category === 'business' && lockedBusinessPlan) {
-            state.plan = lockedBusinessPlan;
-        }
         const currentPlan = plans[state.plan];
         if (!currentPlan) return;
+        const isPreviewingAnotherBusinessPlan = state.category === 'business'
+            && Boolean(lockedBusinessPlan)
+            && state.plan !== lockedBusinessPlan;
 
         tabs.forEach((tab) => {
             const planKey = normalizePlanKey(tab.dataset.plan || 'basic');
             const tabCategory = normalizeCategoryKey(tab.dataset.category || getPlanCategory(planKey));
             const isInSelectedCategory = tabCategory === state.category;
             const isActive = isInSelectedCategory && planKey === state.plan;
-            const isDisabled = tabCategory === 'business' && Boolean(lockedBusinessPlan && planKey !== lockedBusinessPlan);
+            const isRunning = tabCategory === 'business' && planKey === lockedBusinessPlan;
             tab.classList.toggle('hidden', !isInSelectedCategory);
             tab.classList.toggle('is-active', isActive);
-            tab.classList.toggle('is-disabled', isDisabled);
-            tab.disabled = !isInSelectedCategory || isDisabled;
+            tab.classList.remove('is-disabled');
+            tab.classList.toggle('is-running', isRunning);
+            tab.disabled = !isInSelectedCategory;
             tab.setAttribute('aria-selected', String(isActive));
-            tab.setAttribute('aria-disabled', String(!isInSelectedCategory || isDisabled));
+            tab.setAttribute('aria-disabled', String(!isInSelectedCategory));
+            if (isRunning) tab.setAttribute('aria-label', `${plans[planKey].name}, 현재 활성화 중`);
+            else tab.removeAttribute('aria-label');
         });
 
         categoryTabs.forEach((tab) => {
@@ -341,8 +344,8 @@
         const visible = isVisible();
         const businessProfileRegistered = isRegisteredBusinessProfile();
         const meetsActivationRequirements = registered && businessProfileRegistered;
-        const canToggle = Boolean(state.ad?.id) && meetsActivationRequirements && !state.isSubmitting;
-        const canClickActivationButton = state.category !== 'banner' && Boolean(state.ad?.id) && !state.isSubmitting && (!visible || checked);
+        const canToggle = Boolean(state.ad?.id) && meetsActivationRequirements && !state.isSubmitting && !isPreviewingAnotherBusinessPlan;
+        const canClickActivationButton = state.category !== 'banner' && Boolean(state.ad?.id) && !state.isSubmitting && !isPreviewingAnotherBusinessPlan && (!visible || checked);
 
         selectedProduct.textContent = currentPlan.name;
         stampCost.textContent = '스탬프 1개';
@@ -395,7 +398,9 @@
 
         if (activationButton) {
             activationButton.disabled = !canClickActivationButton;
-            activationButton.textContent = getActivationButtonLabel(currentPlan, { visible, checked });
+            activationButton.textContent = isPreviewingAnotherBusinessPlan
+                ? '활성화 중인 광고 종료 후 상품을 변경할 수 있습니다'
+                : getActivationButtonLabel(currentPlan, { visible, checked });
         }
     };
 
@@ -449,8 +454,6 @@
         tab.addEventListener('click', () => {
             if (tab.disabled) return;
             const nextPlan = normalizePlanKey(tab.dataset.plan || 'basic');
-            const lockedBusinessPlan = lockedBusinessPlanKey();
-            if (getPlanCategory(nextPlan) === 'business' && lockedBusinessPlan && nextPlan !== lockedBusinessPlan) return;
             state.plan = nextPlan;
             state.category = getPlanCategory(nextPlan);
             render();

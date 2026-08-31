@@ -2168,6 +2168,19 @@
     background: linear-gradient(180deg, #f2fff5 0%, #fff 100%);
 }
 
+.ad-product-card.is-running::before {
+    content: '활성화 중';
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #16a34a;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+}
+
 .ad-product-card.is-disabled {
     cursor: not-allowed;
     filter: grayscale(0.8);
