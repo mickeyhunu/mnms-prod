@@ -137,7 +137,7 @@
 
     purchaseButton?.addEventListener('click', async () => {
         if (!directPurchaseEnabled) {
-            alert('충전은 1대1 문의 바랍니다.');
+            alert('PG결제사 준비중\n광고 스탬프 충전은 1대1 문의 바랍니다.');
             return;
         }
         if (state.isSubmitting || !state.payment || !state.order) return;
