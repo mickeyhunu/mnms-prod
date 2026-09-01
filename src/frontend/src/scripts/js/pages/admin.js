@@ -11,6 +11,7 @@ let editingUserId = null;
 let editingEntryId = null;
 let editingAdId = null;
 let editingBusinessAdId = null;
+let pendingBusinessAdImageUrl = '';
 let editingPosterId = null;
 let adminPosters = [];
 let currentEntryStoreNo = null;
@@ -215,6 +216,9 @@ async function loadAdminReviewSummary() {
 async function activateAdminTab(tabKey, options = {}) {
     const { updateHistory = true, replaceHistory = true } = options;
     const resolvedTabKey = ADMIN_TABS.includes(tabKey) ? tabKey : 'stats';
+    if (getAdminPageState().activeTab === 'business-ads' && resolvedTabKey !== 'business-ads') {
+        await discardPendingBusinessAdImage();
+    }
     const tabs = document.querySelectorAll('.admin-tab');
     tabs.forEach((tab) => {
         const isActive = tab.dataset.tab === resolvedTabKey;
@@ -2796,6 +2800,7 @@ function fillBusinessAdEditorForm(ad = null) {
 }
 
 function resetBusinessAdEditor() {
+    void discardPendingBusinessAdImage();
     fillBusinessAdEditorForm(null);
     document.getElementById('business-ads-editor')?.classList.add('hidden');
 }
@@ -2806,6 +2811,7 @@ async function openBusinessAdEditor(adId) {
         alert('업체 광고 정보를 찾을 수 없습니다.');
         return;
     }
+    await discardPendingBusinessAdImage();
     document.getElementById('business-ads-editor')?.classList.remove('hidden');
     fillBusinessAdEditorForm(target);
     document.getElementById('business-ads-editor-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2831,12 +2837,51 @@ async function uploadBusinessAdImage() {
         const response = await APIClient.post('/uploads/ads/images', { files: [{ dataUrl, fileName: file.name }] });
         const uploaded = Array.isArray(response.files) ? response.files[0] : null;
         if (!uploaded?.url) throw new Error('업로드 URL을 받지 못했습니다.');
+        const previousPendingUrl = pendingBusinessAdImageUrl;
+        pendingBusinessAdImageUrl = uploaded.url;
         if (imageUrlInput) imageUrlInput.value = uploaded.url;
+        if (previousPendingUrl && previousPendingUrl !== uploaded.url) {
+            try {
+                await deletePendingBusinessAdImage(previousPendingUrl);
+            } catch (cleanupError) {
+                console.error('이전 임시 업체 광고 이미지 삭제 실패:', cleanupError);
+            }
+        }
         setBusinessAdHelpMessage('대표 이미지가 업로드되었습니다.', '#198754');
     } catch (error) {
         setBusinessAdHelpMessage(error.message || '이미지 업로드에 실패했습니다.', '#dc3545');
     } finally {
         if (uploadButton) { uploadButton.disabled = false; uploadButton.textContent = '이미지 업로드'; }
+    }
+}
+
+async function deletePendingBusinessAdImage(imageUrl, { keepalive = false } = {}) {
+    const targetUrl = String(imageUrl || '').trim();
+    if (!targetUrl) return;
+    if (keepalive) {
+        const token = Auth.getToken();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
+        await fetch('/api/admin/business-ads/pending-image', {
+            method: 'DELETE',
+            headers,
+            credentials: 'include',
+            keepalive: true,
+            body: JSON.stringify({ imageUrl: targetUrl })
+        });
+        return;
+    }
+    await APIClient.delete('/admin/business-ads/pending-image', { imageUrl: targetUrl });
+}
+
+async function discardPendingBusinessAdImage({ keepalive = false } = {}) {
+    const targetUrl = pendingBusinessAdImageUrl;
+    if (!targetUrl) return;
+    pendingBusinessAdImageUrl = '';
+    try {
+        await deletePendingBusinessAdImage(targetUrl, { keepalive });
+    } catch (error) {
+        if (!keepalive) console.error('임시 업체 광고 이미지 삭제 실패:', error);
     }
 }
 
@@ -2882,6 +2927,8 @@ async function saveBusinessAdAdmin() {
         if (saveButton) { saveButton.disabled = true; saveButton.textContent = '저장 중...'; }
         if (wasEdit) await APIClient.put(`/admin/business-ads/${editingBusinessAdId}`, payload);
         else await APIClient.post('/admin/business-ads', payload);
+        if (pendingBusinessAdImageUrl === payload.imageUrl) pendingBusinessAdImageUrl = '';
+        else await discardPendingBusinessAdImage();
         resetBusinessAdEditor();
         await loadBusinessAdsAdmin();
         setBusinessAdHelpMessage('업체 광고가 저장되었습니다.', '#198754');
@@ -2891,6 +2938,10 @@ async function saveBusinessAdAdmin() {
         if (saveButton) { saveButton.disabled = false; saveButton.textContent = wasEdit ? '업체 광고 수정 저장' : '업체 광고 등록'; }
     }
 }
+
+window.addEventListener('pagehide', () => {
+    void discardPendingBusinessAdImage({ keepalive: true });
+});
 
 function renderBusinessAdsAdminTable() {
     const tbody = document.getElementById('business-ads-tbody');
