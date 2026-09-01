@@ -1325,6 +1325,17 @@ async function findBusinessAdById(adId) {
   return rows[0] || null;
 }
 
+async function isBusinessAdImageUrlInUse(imageUrl) {
+  const normalizedUrl = String(imageUrl || '').trim();
+  if (!normalizedUrl) return false;
+  const pool = getPool();
+  const [[row]] = await pool.query(
+    'SELECT EXISTS(SELECT 1 FROM business_ads WHERE image_url = ? LIMIT 1) AS isInUse',
+    [normalizedUrl]
+  );
+  return Boolean(row?.isInUse);
+}
+
 async function updateBusinessAd(adId, {
   businessName = '',
   managerName = '',
@@ -2249,6 +2260,7 @@ module.exports = {
   increaseBusinessAdViewCount,
   createBusinessAd,
   findBusinessAdById,
+  isBusinessAdImageUrlInUse,
   updateBusinessAd,
   activateBusinessAdWithStamp,
   activatePieceAdWithStamp,
