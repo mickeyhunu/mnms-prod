@@ -2,7 +2,7 @@
  * 파일 역할: user 관련 API 라우트를 정의하는 라우터 파일.
  */
 const express = require('express');
-const { authMiddleware } = require('../middlewares/authMiddleware');
+const { authMiddleware, optionalAuthMiddleware } = require('../middlewares/authMiddleware');
 const {
   publicProfile,
   myStats,
@@ -39,7 +39,7 @@ const {
 
 const router = express.Router();
 
-router.get('/profiles/:nickname', publicProfile);
+router.get('/profiles/:nickname', optionalAuthMiddleware, publicProfile);
 
 router.get('/me/stats', authMiddleware, myStats);
 router.get('/me/points', authMiddleware, myPointHistories);
