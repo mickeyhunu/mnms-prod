@@ -1473,11 +1473,11 @@ async function loadComments() {
         const comments = Array.isArray(response)
             ? response
             : response.comments || response.content || [];
-        const totalElements = response.totalElements ?? comments.length;
+        const activeCommentCount = comments.filter((comment) => !Boolean(comment.isDeleted)).length;
         
         const commentCount = document.getElementById('comment-count');
         if (commentCount) {
-            commentCount.textContent = totalElements;
+            commentCount.textContent = activeCommentCount;
         }
         
         renderComments(comments);
