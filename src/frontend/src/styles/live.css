@@ -1281,6 +1281,8 @@ body.live-help-open {
     line-height: 1.9;
     white-space: pre-wrap;
     word-break: break-word;
+    filter: blur(6px);
+    user-select: none;
 }
 
 
