@@ -589,8 +589,12 @@ body.live-help-open {
     flex: 1;
 }
 
-.area-filter {
+.area-filter-frame {
     position: relative;
+    min-width: 0;
+}
+
+.area-filter {
     display: flex;
     flex-wrap: nowrap;
     gap: 8px;
@@ -602,8 +606,8 @@ body.live-help-open {
     -webkit-overflow-scrolling: touch;
 }
 
-.area-filter::before,
-.area-filter::after {
+.area-filter-frame::before,
+.area-filter-frame::after {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -624,20 +628,20 @@ body.live-help-open {
     z-index: 1;
 }
 
-.area-filter::before {
+.area-filter-frame::before {
     content: '‹';
     left: 0;
     background: linear-gradient(90deg, rgba(2, 6, 23, 0.92) 0%, rgba(2, 6, 23, 0) 100%);
 }
 
-.area-filter::after {
+.area-filter-frame::after {
     content: '›';
     right: 0;
     background: linear-gradient(270deg, rgba(2, 6, 23, 0.92) 0%, rgba(2, 6, 23, 0) 100%);
 }
 
-.area-filter.has-overflow.can-scroll-left::before,
-.area-filter.has-overflow.can-scroll-right::after {
+.area-filter-frame.has-overflow.can-scroll-left::before,
+.area-filter-frame.has-overflow.can-scroll-right::after {
     opacity: 1;
 }
 

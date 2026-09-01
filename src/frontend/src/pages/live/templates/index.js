@@ -26,11 +26,15 @@ export const liveStickyHeaderTemplate = `
                 <div class="site-subheader__container">
                     <div class="site-subheader__top-row">
                         <div class="site-subheader__filters">
-                            <nav class="area-filter area-filter--cities" id="live-store-filter" aria-label="매장 선택"></nav>
+                            <div class="area-filter-frame">
+                                <nav class="area-filter area-filter--cities" id="live-store-filter" aria-label="매장 선택"></nav>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="area-filter area-filter--districts" id="live-category-filter" aria-label="LIVE 카테고리 선택"></div>
+                    <div class="area-filter-frame">
+                        <div class="area-filter area-filter--districts" id="live-category-filter" aria-label="LIVE 카테고리 선택"></div>
+                    </div>
                 </div>
             </div>
 `;
