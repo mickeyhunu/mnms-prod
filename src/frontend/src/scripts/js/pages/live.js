@@ -226,9 +226,10 @@ function syncScrollableFilterState(element) {
     const canScrollLeft = scrollLeft > 4;
     const canScrollRight = scrollLeft < maxScrollLeft - 4;
 
-    element.classList.toggle('has-overflow', hasOverflow);
-    element.classList.toggle('can-scroll-left', hasOverflow && canScrollLeft);
-    element.classList.toggle('can-scroll-right', hasOverflow && canScrollRight);
+    const stateTarget = element.closest('.area-filter-frame') || element;
+    stateTarget.classList.toggle('has-overflow', hasOverflow);
+    stateTarget.classList.toggle('can-scroll-left', hasOverflow && canScrollLeft);
+    stateTarget.classList.toggle('can-scroll-right', hasOverflow && canScrollRight);
 }
 
 async function initLivePage() {
