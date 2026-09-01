@@ -228,9 +228,16 @@ async function getUserPointHistories(userId, { limit = 20, page = 1 } = {}) {
   };
 }
 
-async function getUserActivityDetails(userId, { limit = 20 } = {}) {
+async function getUserActivityDetails(userId, { limit = 20, authorMemberType = '' } = {}) {
   const pool = getPool();
   const safeLimit = Math.max(1, Math.min(1000, Number(limit) || 20));
+  const normalizedAuthorMemberType = String(authorMemberType || '').trim().toUpperCase();
+  const postAuthorFilter = normalizedAuthorMemberType === 'BUSINESS'
+    ? "AND (p.author_role_snapshot = 'BUSINESS' OR p.author_member_type_snapshot = 'BUSINESS')"
+    : '';
+  const commentAuthorFilter = normalizedAuthorMemberType === 'BUSINESS'
+    ? "AND (c.author_role_snapshot = 'BUSINESS' OR c.author_member_type_snapshot = 'BUSINESS')"
+    : '';
 
   const [posts] = await pool.query(
     `SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt, p.view_count AS viewCount, p.view_count AS view_count,
@@ -239,6 +246,7 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
      FROM posts p
      WHERE p.user_id = ? AND p.is_deleted = 0 AND p.is_hidden = 0
        AND UPPER(COALESCE(p.board_type, '')) <> 'ANON'
+       ${postAuthorFilter}
      ORDER BY p.created_at DESC, p.id DESC
      LIMIT ?`,
     [userId, safeLimit]
@@ -253,6 +261,7 @@ async function getUserActivityDetails(userId, { limit = 20 } = {}) {
      WHERE c.user_id = ? AND c.is_deleted = 0 AND c.is_hidden = 0
        AND p.is_deleted = 0 AND p.is_hidden = 0
        AND UPPER(COALESCE(p.board_type, '')) <> 'ANON'
+       ${commentAuthorFilter}
      ORDER BY c.created_at DESC, c.id DESC
      LIMIT ?`,
     [userId, safeLimit]
@@ -556,13 +565,19 @@ async function findPublicProfileByNickname(nickname) {
             u.profile_introduction AS profileIntroduction,
             u.profile_introduction AS profile_introduction,
             u.created_at AS joinedAt,
-            (SELECT COUNT(*) FROM posts p WHERE p.user_id = u.id AND p.is_deleted = 0 AND p.is_hidden = 0) AS postCount,
+            (SELECT COUNT(*) FROM posts p WHERE p.user_id = u.id AND p.is_deleted = 0 AND p.is_hidden = 0
+                AND ((COALESCE(u.role, 'MEMBER') <> 'BUSINESS' AND COALESCE(u.member_type, 'MEMBER') <> 'BUSINESS')
+                  OR p.author_role_snapshot = 'BUSINESS' OR p.author_member_type_snapshot = 'BUSINESS')) AS postCount,
             (SELECT COUNT(*)
                FROM comments c
                INNER JOIN posts cp ON cp.id = c.post_id
               WHERE c.user_id = u.id AND c.is_deleted = 0 AND c.is_hidden = 0
-                AND cp.is_deleted = 0 AND cp.is_hidden = 0) AS commentCount,
-            (SELECT COUNT(*) FROM posts p2 WHERE p2.user_id = u.id AND p2.board_type = 'REVIEW' AND p2.is_deleted = 0 AND p2.is_hidden = 0) AS reviewCount
+                AND cp.is_deleted = 0 AND cp.is_hidden = 0
+                AND ((COALESCE(u.role, 'MEMBER') <> 'BUSINESS' AND COALESCE(u.member_type, 'MEMBER') <> 'BUSINESS')
+                  OR c.author_role_snapshot = 'BUSINESS' OR c.author_member_type_snapshot = 'BUSINESS')) AS commentCount,
+            (SELECT COUNT(*) FROM posts p2 WHERE p2.user_id = u.id AND p2.board_type = 'REVIEW' AND p2.is_deleted = 0 AND p2.is_hidden = 0
+                AND ((COALESCE(u.role, 'MEMBER') <> 'BUSINESS' AND COALESCE(u.member_type, 'MEMBER') <> 'BUSINESS')
+                  OR p2.author_role_snapshot = 'BUSINESS' OR p2.author_member_type_snapshot = 'BUSINESS')) AS reviewCount
        FROM users u
       WHERE u.nickname = ?
       LIMIT 1`,

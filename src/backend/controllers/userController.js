@@ -606,7 +606,10 @@ async function publicProfile(req, res, next) {
     const advertiserLevel = resolveAdvertiserAdDayLevel(cumulativeAdDays);
 
     const activityLimit = Math.max(1, Math.min(50, Number(req.query.limit) || 50));
-    const { posts, comments, likedPosts, participatedPieces } = await getUserActivityDetails(profile.id, { limit: activityLimit });
+    const { posts, comments, likedPosts, participatedPieces } = await getUserActivityDetails(profile.id, {
+      limit: activityLimit,
+      authorMemberType: isBusinessMember ? 'BUSINESS' : ''
+    });
 
     res.json({
       id: Number(profile.id),
