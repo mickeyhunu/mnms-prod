@@ -228,7 +228,12 @@ async function getUserPointHistories(userId, { limit = 20, page = 1 } = {}) {
   };
 }
 
-async function getUserActivityDetails(userId, { limit = 20, authorMemberType = '' } = {}) {
+async function getUserActivityDetails(userId, {
+  limit = 20,
+  authorMemberType = '',
+  filterLikedPostsByDate = false,
+  likedSince = null
+} = {}) {
   const pool = getPool();
   const safeLimit = Math.max(1, Math.min(1000, Number(limit) || 20));
   const normalizedAuthorMemberType = String(authorMemberType || '').trim().toUpperCase();
@@ -238,6 +243,7 @@ async function getUserActivityDetails(userId, { limit = 20, authorMemberType = '
   const commentAuthorFilter = normalizedAuthorMemberType === 'BUSINESS'
     ? "AND (c.author_role_snapshot = 'BUSINESS' OR c.author_member_type_snapshot = 'BUSINESS')"
     : '';
+  const likedPostTimeFilter = filterLikedPostsByDate ? 'AND pl.created_at >= ?' : '';
 
   const [posts] = await pool.query(
     `SELECT p.id, p.title, p.content, p.board_type AS boardType, p.created_at AS createdAt, p.view_count AS viewCount, p.view_count AS view_count,
@@ -276,9 +282,10 @@ async function getUserActivityDetails(userId, { limit = 20, authorMemberType = '
      INNER JOIN posts p ON p.id = pl.post_id
      WHERE pl.user_id = ? AND p.is_deleted = 0 AND p.is_hidden = 0
        AND UPPER(COALESCE(p.board_type, '')) <> 'ANON'
+       ${likedPostTimeFilter}
      ORDER BY pl.created_at DESC, p.id DESC
      LIMIT ?`,
-    [userId, safeLimit]
+    filterLikedPostsByDate ? [userId, likedSince, safeLimit] : [userId, safeLimit]
   );
 
   const [participatedPieces] = await pool.query(
@@ -557,27 +564,29 @@ async function findByNickname(nickname) {
   return rows[0] || null;
 }
 
-async function findPublicProfileByNickname(nickname) {
+async function findPublicProfileByNickname(nickname, { includeAllActivity = false } = {}) {
   const pool = getPool();
+  const businessActivityCountFilter = includeAllActivity
+    ? ''
+    : `AND ((COALESCE(u.role, 'MEMBER') <> 'BUSINESS' AND COALESCE(u.member_type, 'MEMBER') <> 'BUSINESS')
+      OR __ALIAS__.author_role_snapshot = 'BUSINESS' OR __ALIAS__.author_member_type_snapshot = 'BUSINESS')`;
   const [rows] = await pool.query(
     `SELECT u.id, u.nickname, u.profile_image_url AS profileImageUrl, u.total_points AS totalPoints,
             u.role, u.member_type AS memberType,
             u.profile_introduction AS profileIntroduction,
             u.profile_introduction AS profile_introduction,
             u.created_at AS joinedAt,
+            (SELECT bp.approved_at FROM business_profiles bp WHERE bp.user_id = u.id LIMIT 1) AS businessConvertedAt,
             (SELECT COUNT(*) FROM posts p WHERE p.user_id = u.id AND p.is_deleted = 0 AND p.is_hidden = 0
-                AND ((COALESCE(u.role, 'MEMBER') <> 'BUSINESS' AND COALESCE(u.member_type, 'MEMBER') <> 'BUSINESS')
-                  OR p.author_role_snapshot = 'BUSINESS' OR p.author_member_type_snapshot = 'BUSINESS')) AS postCount,
+                ${businessActivityCountFilter.replaceAll('__ALIAS__', 'p')}) AS postCount,
             (SELECT COUNT(*)
                FROM comments c
                INNER JOIN posts cp ON cp.id = c.post_id
               WHERE c.user_id = u.id AND c.is_deleted = 0 AND c.is_hidden = 0
                 AND cp.is_deleted = 0 AND cp.is_hidden = 0
-                AND ((COALESCE(u.role, 'MEMBER') <> 'BUSINESS' AND COALESCE(u.member_type, 'MEMBER') <> 'BUSINESS')
-                  OR c.author_role_snapshot = 'BUSINESS' OR c.author_member_type_snapshot = 'BUSINESS')) AS commentCount,
+                ${businessActivityCountFilter.replaceAll('__ALIAS__', 'c')}) AS commentCount,
             (SELECT COUNT(*) FROM posts p2 WHERE p2.user_id = u.id AND p2.board_type = 'REVIEW' AND p2.is_deleted = 0 AND p2.is_hidden = 0
-                AND ((COALESCE(u.role, 'MEMBER') <> 'BUSINESS' AND COALESCE(u.member_type, 'MEMBER') <> 'BUSINESS')
-                  OR p2.author_role_snapshot = 'BUSINESS' OR p2.author_member_type_snapshot = 'BUSINESS')) AS reviewCount
+                ${businessActivityCountFilter.replaceAll('__ALIAS__', 'p2')}) AS reviewCount
        FROM users u
       WHERE u.nickname = ?
       LIMIT 1`,
