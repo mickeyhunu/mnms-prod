@@ -10,7 +10,7 @@ const supportModel = require('../models/supportModel');
 const { findByNicknameExceptUser } = require('../models/userModel');
 const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddleware');
 const { LOGIN_STATUS } = require('../utils/loginRestriction');
-const { deleteS3ObjectByUrl, uploadDataUrlToS3 } = require('../utils/fileUpload');
+const { deleteS3ObjectByUrl, extractS3KeyFromUrl, uploadDataUrlToS3 } = require('../utils/fileUpload');
 const { deleteRejectedBusinessInfoImages, deleteUnreferencedBusinessInfoImages } = require('../utils/businessProfileImages');
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validatePassword } = require('../utils/authPolicy');
@@ -883,6 +883,26 @@ router.post('/business-ads', async (req, res, next) => {
     if (errorMessage) return res.status(400).json({ message: errorMessage });
     const insertId = await adminModel.createBusinessAd(payload);
     res.status(201).json({ id: insertId });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/business-ads/pending-image', async (req, res, next) => {
+  try {
+    const imageUrl = String(req.body?.imageUrl || '').trim();
+    if (!imageUrl) return res.status(400).json({ message: '삭제할 이미지 URL이 필요합니다.' });
+    const imageKey = extractS3KeyFromUrl(imageUrl);
+    if (!imageKey?.startsWith('ads/')) {
+      return res.status(400).json({ message: '업체 광고용 S3 이미지 URL만 삭제할 수 있습니다.' });
+    }
+
+    if (await adminModel.isBusinessAdImageUrlInUse(imageUrl)) {
+      return res.status(409).json({ message: '저장된 업체 광고가 사용 중인 이미지는 삭제할 수 없습니다.' });
+    }
+
+    const result = await deleteS3ObjectByUrl(imageUrl);
+    res.json({ success: true, deleted: result.deleted });
   } catch (error) {
     next(error);
   }
