@@ -594,7 +594,8 @@ async function publicProfile(req, res, next) {
     const nickname = String(req.params.nickname || '').trim();
     if (!nickname) return res.status(400).json({ message: '닉네임을 입력해주세요.' });
 
-    const profile = await findPublicProfileByNickname(nickname);
+    const isAdminViewer = String(req.user?.role || '').toUpperCase() === 'ADMIN';
+    const profile = await findPublicProfileByNickname(nickname, { includeAllActivity: isAdminViewer });
     const isAdminProfile = String(profile?.role || '').toUpperCase() === 'ADMIN';
     if (!profile || isAdminProfile) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
 
@@ -606,7 +607,12 @@ async function publicProfile(req, res, next) {
     const advertiserLevel = resolveAdvertiserAdDayLevel(cumulativeAdDays);
 
     const activityLimit = Math.max(1, Math.min(50, Number(req.query.limit) || 50));
-    const { posts, comments, likedPosts, participatedPieces } = await getUserActivityDetails(profile.id, { limit: activityLimit });
+    const { posts, comments, likedPosts, participatedPieces } = await getUserActivityDetails(profile.id, {
+      limit: activityLimit,
+      authorMemberType: isBusinessMember && !isAdminViewer ? 'BUSINESS' : '',
+      filterLikedPostsByDate: isBusinessMember && !isAdminViewer,
+      likedSince: isBusinessMember && !isAdminViewer ? profile.businessConvertedAt : null
+    });
 
     res.json({
       id: Number(profile.id),
