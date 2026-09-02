@@ -325,6 +325,7 @@ function createArticleItem(post) {
     const isAdminViewer = String(currentUser?.role || '').toUpperCase() === 'ADMIN';
     const authorName = sanitizeHTML(post.boardType === 'ANON' && !isAdminViewer ? '익명' : (post.authorNickname || '익명'));
     const isNoticePost = Boolean(post.isNotice);
+    const isDeletedPost = Boolean(post.isDeleted || post.is_deleted);
     const noticeType = String(post.noticeType || 'NOTICE').toUpperCase();
     const boardLabel = sanitizeHTML(
         isNoticePost
@@ -361,14 +362,18 @@ function createArticleItem(post) {
         ? ''
         : `<span class="article-recommend">추천수 : ${Number(post.likeCount || post.recommendCount || 0)}</span>`;
     const pieceStatusMarkup = getPieceStatusBadgeMarkup(post);
+    const deletedPostBadgeMarkup = isDeletedPost
+        ? '<span class="article-deleted-badge">삭제된 글</span>'
+        : '';
 
     return `
-        <li class="article-item ${isViewedPost ? 'article-item-viewed' : 'article-item-unviewed'} ${isNoticePost ? 'article-item-notice' : ''} ${isNoticePost && noticeType === 'IMPORTANT' ? 'article-item-important' : ''}">
+        <li class="article-item ${isViewedPost ? 'article-item-viewed' : 'article-item-unviewed'} ${isNoticePost ? 'article-item-notice' : ''} ${isNoticePost && noticeType === 'IMPORTANT' ? 'article-item-important' : ''} ${isDeletedPost ? 'article-item-deleted' : ''}">
             <a class="article-main" href="${articleHref}" data-post-id="${post.id}">
                 <div class="article-title-row">
                     <span class="article-inline-icon" aria-hidden="true">${inlineIcon}</span>
                     <h3 class="article-title"><span class="${boardLabelClass}">[${boardLabel}]</span> ${sanitizeHTML(post.title || '제목 없음')} ${photoBadge}</h3>
                     ${commentInlineMarkup}
+                    ${deletedPostBadgeMarkup}
                     ${shouldShowNewBadge ? '<span class="article-new-badge">NEW</span>' : ''}
                     ${pieceStatusMarkup}
                 </div>
