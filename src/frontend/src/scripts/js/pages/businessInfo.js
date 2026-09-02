@@ -245,11 +245,11 @@ function hideKakaoMapChrome(container) {
     container.dataset.kakaoMapChromeHidden = 'true';
 }
 
-function renderKakaoMap(container, maps, address) {
+function renderKakaoMap(container, maps, address, displayAddress = address) {
     const geocoder = new maps.services.Geocoder();
     geocoder.addressSearch(address, (result, status) => {
         if (status !== maps.services.Status.OK || !result?.[0]) {
-            container.innerHTML = buildKakaoMapFallbackMarkup(address, '주소 좌표를 찾지 못했습니다. 카카오맵 검색으로 이동합니다.');
+            container.innerHTML = buildKakaoMapFallbackMarkup(displayAddress, '주소 좌표를 찾지 못했습니다. 카카오맵 검색으로 이동합니다.');
             return;
         }
 
@@ -277,14 +277,15 @@ async function initializeBusinessProfileKakaoMaps(root = document) {
     const maps = await loadKakaoMapScript().catch(() => null);
     mapNodes.forEach((container) => {
         const address = String(container.dataset.kakaoMapAddress || '').trim();
+        const displayAddress = String(container.dataset.kakaoMapDisplayAddress || address).trim();
         if (!address) return;
 
         if (!maps) {
-            container.innerHTML = buildKakaoMapFallbackMarkup(address, '카카오맵 앱 키 설정 후 미니맵이 표시됩니다.');
+            container.innerHTML = buildKakaoMapFallbackMarkup(displayAddress, '카카오맵 앱 키 설정 후 미니맵이 표시됩니다.');
             return;
         }
 
-        renderKakaoMap(container, maps, address);
+        renderKakaoMap(container, maps, address, displayAddress);
     });
 }
 
@@ -636,7 +637,7 @@ function buildBusinessProfileMapMarkup(ad) {
         <section class="business-profile-location-section" aria-label="위치정보">
             <h3>위치정보</h3>
             <div class="business-profile-location">
-                <div class="business-profile-mini-map" title="${sanitizeHTML(fullAddress)} 카카오맵 미니맵" data-kakao-map-address="${sanitizeHTML(fullAddress)}">${buildKakaoMapFallbackMarkup(fullAddress, '카카오맵 미니맵을 불러오는 중입니다.')}</div>
+                <div class="business-profile-mini-map" title="${sanitizeHTML(fullAddress)} 카카오맵 미니맵" data-kakao-map-address="${sanitizeHTML(businessAddress)}" data-kakao-map-display-address="${sanitizeHTML(fullAddress)}">${buildKakaoMapFallbackMarkup(fullAddress, '카카오맵 미니맵을 불러오는 중입니다.')}</div>
                 <p class="business-profile-map-address">${sanitizeHTML(fullAddress)}</p>
             </div>
         </section>
