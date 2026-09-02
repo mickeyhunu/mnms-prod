@@ -499,6 +499,36 @@
     border-left-color: #ff6b6b;
 }
 
+.article-item-deleted {
+    background: #fff5f5;
+    border-left: 3px solid #dc2626;
+}
+
+.article-item-deleted .article-title,
+.article-item-deleted .article-preview,
+.article-item-deleted .article-meta,
+.article-item-deleted .article-comment-inline,
+.article-item-deleted .article-inline-icon {
+    color: #8f6b6b;
+}
+
+.article-item-deleted .article-title {
+    text-decoration: line-through;
+    text-decoration-color: #dc2626;
+}
+
+.article-deleted-badge {
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.3;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
 .article-main {
     display: block;
     text-decoration: none;
