@@ -2429,7 +2429,7 @@ const pageRegistry = {
           </dl>
         </details>
         <details class="wiki-glossary-category">
-          <summary><span>🗣️ 기타 자주 쓰는 용어</span><strong>14개</strong></summary>
+          <summary><span>🗣️ 기타 자주 쓰는 용어</span><strong>15개</strong></summary>
           <dl class="wiki-glossary-list">
             <dt>작업</dt>
             <dd>이성에게 접근하여 금전적 이득을 얻으려는 행위.</dd>
@@ -2459,6 +2459,8 @@ const pageRegistry = {
             <dd>2026년에 개설된, 강남을 중심으로 화류계 소식과 이슈를 다루는 텔레그램 채널.</dd>
             <dt>화밍</dt>
             <dd>‘화류계 커밍아웃’의 줄임말. ‘강남주’, ‘드럼통’, ‘강남의밤’ 같은 SNS의 유명 인플루언서들이 자신이 브압이나 화류계 출신이었다고 밝히는 ‘화밍’을 하면서 큰 논란이 되기도 함.</dd>
+            <dt>배팅 / 베팅</dt>
+            <dd>특정 아가씨에게 조건이나 목표를 제시하고, 그 조건의 성립 여부에 돈·명품·선물 등 금전적 가치가 있는 것을 거는 행위.</dd>
           </dl>
         </details>
         </div>
