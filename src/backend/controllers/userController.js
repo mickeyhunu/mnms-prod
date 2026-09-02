@@ -943,7 +943,7 @@ async function myNotifications(req, res, next) {
         title: item.term,
         message: `새 위키 질문이 등록되었습니다: ${item.term}`,
         createdAt: item.createdAt,
-        targetUrl: '/wiki'
+        targetUrl: '/play/wiki'
       })),
       ...pendingAttendanceCommentReports.map((item) => ({
         notificationKey: `admin-attendance-comment-report-${item.id}-${item.latestReportId}`,
