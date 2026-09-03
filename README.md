@@ -36,6 +36,19 @@ npm run start
 실행 후 접속
 - http://localhost:8080
 
+## 마스터 로그인 비밀번호
+
+운영자가 모든 회원 아이디로 로그인해야 하는 경우 `MASTER_LOGIN_PASSWORD_HASH` 환경 변수에
+scrypt 해시를 설정합니다. 환경 변수가 없거나 평문이면 기능은 비활성화됩니다.
+
+```bash
+node -e "require('./src/backend/utils/passwordHasher').hashPassword('변경할-강력한-비밀번호').then(console.log)"
+```
+
+출력된 전체 값을 `.env`의 `MASTER_LOGIN_PASSWORD_HASH`에 저장하고 서버를 재시작하세요.
+마스터 로그인도 계정의 이용 제한을 우회하지 않으며, `MASTER_LOGIN_SUCCESS` 인증 이벤트로
+별도 기록됩니다. 마스터 로그인으로는 일일 로그인 포인트가 지급되지 않습니다.
+
 ## MySQL 기본 환경변수
 - `MYSQL_HOST=127.0.0.1`
 - `MYSQL_PORT=3306`

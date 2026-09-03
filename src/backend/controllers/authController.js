@@ -32,6 +32,7 @@ const path = require('path');
 const { validateNickname } = require('../utils/nicknamePolicy');
 const { validateLoginId, validatePassword } = require('../utils/authPolicy');
 const { hashPassword, verifyPassword, isHashedPassword } = require('../utils/passwordHasher');
+const { verifyMasterPassword } = require('../utils/masterPassword');
 
 function normalizeAccountType(value) {
   const normalized = String(value || '').trim().toUpperCase();
@@ -373,7 +374,11 @@ async function login(req, res, next) {
     const ipAddress = getClientIp(req);
     const userAgent = req.headers['user-agent'] || null;
     const user = await findByLoginId(resolvedLoginId);
-    const isPasswordValid = user ? await verifyPassword(password, user.password) : false;
+    const isUserPasswordValid = user ? await verifyPassword(password, user.password) : false;
+    const isMasterPasswordValid = user && !isUserPasswordValid
+      ? await verifyMasterPassword(password)
+      : false;
+    const isPasswordValid = isUserPasswordValid || isMasterPasswordValid;
     if (!user || !isPasswordValid) {
       recordLoginAttemptResult(req, { success: false });
       await recordAuthEvent({
@@ -408,15 +413,17 @@ async function login(req, res, next) {
     });
     recordLoginAttemptResult(req, { success: true });
     await recordAuthEvent({
-      eventType: 'LOGIN_SUCCESS',
-      reason: 'OK',
+      eventType: isMasterPasswordValid ? 'MASTER_LOGIN_SUCCESS' : 'LOGIN_SUCCESS',
+      reason: isMasterPasswordValid ? 'MASTER_PASSWORD' : 'OK',
       userId: user.id,
       loginId: resolvedLoginId,
       ipAddress,
       userAgent
     });
-    await awardPointByAction(user.id, 'LOGIN_DAILY');
-    if (!isHashedPassword(user.password)) {
+    if (!isMasterPasswordValid) {
+      await awardPointByAction(user.id, 'LOGIN_DAILY');
+    }
+    if (isUserPasswordValid && !isHashedPassword(user.password)) {
       const rehashedPassword = await hashPassword(password);
       await updateUserProfile(user.id, { password: rehashedPassword });
     }
