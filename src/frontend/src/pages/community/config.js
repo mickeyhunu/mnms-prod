@@ -57,12 +57,12 @@ const communityTemplate = `
 
             <section class="best-posts-section" aria-label="베스트 게시글">
                 <div class="best-posts-block">
-                    <h2 class="best-posts-title">🔥 오늘의 베스트</h2>
+                    <h2 class="best-posts-title" id="daily-best-title">🔥 오늘의 베스트</h2>
                     <ul class="best-posts-list" id="daily-best-list"></ul>
                     <p class="best-posts-empty hidden" id="daily-best-empty">조건을 충족한 게시글이 없습니다.</p>
                 </div>
                 <div class="best-posts-block">
-                    <h2 class="best-posts-title">📅 주간 베스트</h2>
+                    <h2 class="best-posts-title" id="weekly-best-title">📅 주간 베스트</h2>
                     <ul class="best-posts-list" id="weekly-best-list"></ul>
                     <p class="best-posts-empty hidden" id="weekly-best-empty">조건을 충족한 게시글이 없습니다.</p>
                 </div>
