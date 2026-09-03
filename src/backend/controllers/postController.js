@@ -733,7 +733,8 @@ async function searchPostsBySignal(req, res, next) {
 
 async function listBestPosts(req, res, next) {
   try {
-    const result = await postModel.listBestPosts();
+    const boardType = parseBoardType(req.query.boardType || 'ALL');
+    const result = await postModel.listBestPosts(boardType);
     const normalizeRows = (rows = []) => rows.map((item) => sanitizePostForViewer(item, req.user));
 
     res.json({

@@ -35,9 +35,9 @@ const PostAPI = {
         }
     },
 
-    async getBestPosts() {
+    async getBestPosts(boardType = 'ALL') {
         try {
-            return await APIClient.get('/api/posts/best');
+            return await APIClient.get('/api/posts/best', { boardType });
         } catch (error) {
             throw error;
         }
