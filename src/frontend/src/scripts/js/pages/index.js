@@ -30,6 +30,18 @@ const COMMUNITY_BOARD_SLUGS = {
     NEWS: 'news',
     PROMOTION: 'promotion'
 };
+const BEST_POST_BOARD_TYPES = new Set([
+    'FREE', 'ANON', 'REVIEW', 'STORY', 'PIECE', 'ATTENDANCE', 'QUESTION'
+]);
+const COMMUNITY_BOARD_NAMES = {
+    FREE: '자유게시판',
+    ANON: '익명게시판',
+    REVIEW: '후기게시판',
+    STORY: '썰게시판',
+    PIECE: '조각게시판',
+    ATTENDANCE: '출석게시판',
+    QUESTION: '질문게시판'
+};
 
 function getBoardTypeFromPath(pathname = window.location.pathname) {
     const normalizedPath = String(pathname || '').replace(/\/+$/, '');
@@ -86,7 +98,12 @@ function updateBestPostsVisibility() {
     const bestPostsSection = document.querySelector('.best-posts-section');
     if (!bestPostsSection) return;
 
-    if (currentBoardType === 'ALL') {
+    if (currentBoardType === 'ALL' || BEST_POST_BOARD_TYPES.has(currentBoardType)) {
+        const boardName = COMMUNITY_BOARD_NAMES[currentBoardType];
+        const dailyTitle = document.getElementById('daily-best-title');
+        const weeklyTitle = document.getElementById('weekly-best-title');
+        if (dailyTitle) dailyTitle.textContent = `🔥 ${boardName ? `${boardName} ` : ''}오늘의 베스트`;
+        if (weeklyTitle) weeklyTitle.textContent = `📅 ${boardName ? `${boardName} ` : ''}주간 베스트`;
         showElement(bestPostsSection);
         return;
     }
@@ -101,9 +118,10 @@ async function loadBestPosts() {
     const weeklyEmpty = document.getElementById('weekly-best-empty');
 
     if (!dailyList || !weeklyList || !dailyEmpty || !weeklyEmpty) return;
+    if (currentBoardType !== 'ALL' && !BEST_POST_BOARD_TYPES.has(currentBoardType)) return;
 
     try {
-        const response = await PostAPI.getBestPosts();
+        const response = await PostAPI.getBestPosts(currentBoardType);
         const dailyPosts = Array.isArray(response?.daily) ? response.daily : [];
         const weeklyPosts = Array.isArray(response?.weekly) ? response.weekly : [];
 
