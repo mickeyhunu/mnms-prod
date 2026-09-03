@@ -68,7 +68,13 @@ async function listAdmin() {
        LEFT JOIN attendance_comment_reports r ON r.comment_id = c.id
       GROUP BY c.id, c.store_no, c.worker_name, c.content, c.created_at, c.is_deleted,
                c.deleted_at, c.is_hidden, u.id, u.login_id, u.nickname
-      ORDER BY (COUNT(r.id) > 0) DESC, COALESCE(MAX(r.created_at), c.created_at) DESC`
+      ORDER BY (SUM(r.resolved_at IS NULL AND r.id IS NOT NULL) > 0) DESC,
+               CASE
+                 WHEN SUM(r.resolved_at IS NULL AND r.id IS NOT NULL) > 0
+                   THEN MAX(CASE WHEN r.resolved_at IS NULL THEN r.created_at END)
+                 ELSE c.created_at
+               END DESC,
+               c.id DESC`
   );
   return rows.map((row) => ({
     ...row,
