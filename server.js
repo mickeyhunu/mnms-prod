@@ -278,13 +278,19 @@ async function createBusinessAdSeo(req) {
     const ad = await adminModel.findPublicBusinessAdBySlug(slug);
     if (!ad) return null;
 
-    const titleText = stripHtml(ad.title || ad.businessName || '업체정보 상세');
+    const cleanBusinessTitlePart = (value) => stripHtml(value || '').replace(/^\s*[•●·-]+\s*/u, '').trim();
+    const titleText = cleanBusinessTitlePart(ad.title || ad.businessName || '업체정보 상세');
+    const titlePrefix = [ad.region, ad.businessName]
+      .map(cleanBusinessTitlePart)
+      .filter(Boolean)
+      .join(' ');
+    const linkedTitleText = titlePrefix ? `[${titlePrefix}] ${titleText}` : titleText;
     const locationText = [ad.region, ad.district, ad.category].map((item) => stripHtml(item)).filter(Boolean).join(' ');
     const description = truncateText(ad.description, 150) || `${locationText ? `${locationText} ` : ''}${titleText} 업체정보를 확인하세요.`;
     const canonicalUrl = absoluteUrl(`/business-info/${encodeURIComponent(createSeoSlugWithId(titleText, ad.id, 'business'))}`);
 
     return {
-      title: `${titleText} | 미드나잇 맨즈`,
+      title: `${linkedTitleText} | 미드나잇 맨즈`,
       description,
       keywords: ['업체정보', titleText, ad.region, ad.district, ad.category, '미드나잇 맨즈', HIDDEN_SEARCH_KEYWORD].filter(Boolean),
       canonicalUrl,
