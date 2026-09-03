@@ -2157,7 +2157,7 @@ const pageRegistry = {
             <div class="card-enter" style="animation-delay: 80ms;">
               <a class="play-tool-card" href="/play/rbti">
                 <div class="play-tool-card__content">
-                  <span class="play-tool-card__icon">🧪</span>
+                  <span class="play-tool-card__icon">🧠</span>
                   <div class="play-tool-card__text">
                     <p class="play-tool-card__title">RBTI</p>
                     <p class="play-tool-card__description">유흥 MBTI</p>
