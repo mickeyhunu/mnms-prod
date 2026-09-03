@@ -37,6 +37,15 @@ const BOARD_TYPES = {
 };
 
 const BOARD_TYPE_SET = new Set(Object.values(BOARD_TYPES));
+const MEMBER_WRITABLE_BOARD_TYPES = [
+  BOARD_TYPES.FREE,
+  BOARD_TYPES.ANON,
+  BOARD_TYPES.REVIEW,
+  BOARD_TYPES.STORY,
+  BOARD_TYPES.PIECE,
+  BOARD_TYPES.ATTENDANCE,
+  BOARD_TYPES.QUESTION
+];
 
 function normalizeBoardType(boardType) {
   const normalized = String(boardType || '').toUpperCase();
@@ -945,8 +954,20 @@ async function markCommentsDeletedByPostId(postId) {
   await pool.query('UPDATE comments SET is_deleted = 1, point_awarded = 0 WHERE post_id = ?', [postId]);
 }
 
-async function listBestPosts() {
+async function listBestPosts(boardType = 'ALL') {
   const pool = getPool();
+  const normalizedBoardType = normalizeBoardFilter(boardType);
+  const isMemberWritableBoard = MEMBER_WRITABLE_BOARD_TYPES.includes(normalizedBoardType);
+  const boardFilter = normalizedBoardType === 'ALL'
+    ? ` AND p.board_type IN (${MEMBER_WRITABLE_BOARD_TYPES.map(() => '?').join(', ')})`
+    : ' AND p.board_type = ?';
+  const boardParams = normalizedBoardType === 'ALL'
+    ? MEMBER_WRITABLE_BOARD_TYPES
+    : (isMemberWritableBoard ? [normalizedBoardType] : []);
+
+  if (!boardParams.length) {
+    return { daily: [], weekly: [] };
+  }
 
   const selectQuery = `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
             p.is_notice AS isNotice, p.notice_type AS noticeType, p.is_pinned AS isPinned, p.piece_closed_at AS pieceClosedAt,
@@ -988,14 +1009,15 @@ async function listBestPosts() {
        LEFT JOIN post_likes pl ON pl.post_id = p2.id
        GROUP BY p2.id
      ) stats ON stats.id = p.id
-     WHERE p.is_deleted = 0 AND p.is_notice = 0`;
+     WHERE p.is_deleted = 0 AND p.is_notice = 0${boardFilter}`;
 
   const [todayRows] = await pool.query(
     `${selectQuery}
      AND p.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
      AND COALESCE(stats.likeCount, 0) >= 3
      ORDER BY score DESC, p.created_at DESC
-     LIMIT 5`
+     LIMIT 5`,
+    boardParams
   );
 
   const [weeklyRows] = await pool.query(
@@ -1003,7 +1025,8 @@ async function listBestPosts() {
      AND p.created_at >= DATE_SUB(NOW(), INTERVAL 168 HOUR)
      AND COALESCE(stats.likeCount, 0) >= 5
      ORDER BY score DESC, p.created_at DESC
-     LIMIT 3`
+     LIMIT 3`,
+    boardParams
   );
 
   return {
