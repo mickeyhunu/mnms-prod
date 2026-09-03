@@ -7,6 +7,7 @@ const TABLE_NAME_PATTERN = /^[A-Za-z0-9_]+$/;
 const STORE_NO_CANDIDATES = ['storeNo', 'store_no', 'shopNo', 'shop_no', 'branchNo', 'branch_no'];
 const STORE_NAME_CANDIDATES = ['storeName', 'store_name', 'name', 'shopName', 'shop_name', 'branchName', 'branch_name'];
 const STORE_ADDRESS_CANDIDATES = ['storeAddress', 'store_address', 'address', 'addr', 'location', 'locationAddress', 'roadAddress', 'jibunAddress'];
+const STORE_EMOJI_CANDIDATES = ['storeEmoji', 'store_emoji'];
 const STORE_FILTER_CANDIDATES = ['storeName', 'store_name', 'name', 'shopName', 'shop_name', 'branchName', 'branch_name', 'store', 'storeNm'];
 const ORDER_CANDIDATES = ['lastAttendanceAt', 'updatedAt', 'updated_at', 'createdAt', 'created_at', 'regDate', 'reg_date', 'entryDate', 'entry_date', 'date'];
 const DISPLAY_FIELD_CANDIDATES = ['title', 'subject', 'name', 'nickName', 'nickname', 'roomName', 'choiceName', 'entryName', 'message'];
@@ -98,13 +99,15 @@ async function listStores() {
   const storeNoColumn = findColumn(columns, STORE_NO_CANDIDATES);
   const storeNameColumn = findColumn(columns, STORE_NAME_CANDIDATES);
   const storeAddressColumn = findColumn(columns, STORE_ADDRESS_CANDIDATES);
+  const storeEmojiColumn = findColumn(columns, STORE_EMOJI_CANDIDATES);
 
   if (!storeNameColumn) {
     throw new Error('INFO_STORE에서 매장명 컬럼을 찾을 수 없습니다.');
   }
 
   const selectStoreNo = storeNoColumn ? `\`${storeNoColumn}\` AS storeNo,` : 'NULL AS storeNo,';
-  const selectStoreAddress = storeAddressColumn ? `\`${storeAddressColumn}\` AS storeAddress` : "'' AS storeAddress";
+  const selectStoreAddress = storeAddressColumn ? `\`${storeAddressColumn}\` AS storeAddress,` : "'' AS storeAddress,";
+  const selectStoreEmoji = storeEmojiColumn ? `\`${storeEmojiColumn}\` AS storeEmoji` : "'' AS storeEmoji";
   const orderByClause = storeNoColumn
     ? `ORDER BY \`${storeNoColumn}\` ASC, \`${storeNameColumn}\` ASC`
     : `ORDER BY \`${storeNameColumn}\` ASC`;
@@ -113,6 +116,7 @@ async function listStores() {
     `SELECT DISTINCT ${selectStoreNo}
             \`${storeNameColumn}\` AS storeName,
             ${selectStoreAddress}
+            ${selectStoreEmoji}
        FROM \`${tableName}\`
       WHERE \`${storeNameColumn}\` IS NOT NULL
         AND TRIM(\`${storeNameColumn}\`) <> ''
@@ -123,7 +127,8 @@ async function listStores() {
     .map((row) => ({
       storeNo: Number.isFinite(Number(row.storeNo)) ? Number(row.storeNo) : null,
       storeName: String(row.storeName || '').trim(),
-      storeAddress: String(row.storeAddress || '').trim()
+      storeAddress: String(row.storeAddress || '').trim(),
+      storeEmoji: String(row.storeEmoji || '').trim()
     }))
     .filter((row) => row.storeName)
     .sort((a, b) => {
