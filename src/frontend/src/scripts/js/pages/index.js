@@ -17,6 +17,7 @@ const searchState = {
     keyword: ''
 };
 let currentBoardType = 'ALL';
+let bestPostsRequestId = 0;
 const COMMUNITY_BOARD_SLUGS = {
     ALL: '',
     FREE: 'free',
@@ -29,6 +30,18 @@ const COMMUNITY_BOARD_SLUGS = {
     EVENT: 'event',
     NEWS: 'news',
     PROMOTION: 'promotion'
+};
+const BEST_POST_BOARD_TYPES = new Set([
+    'FREE', 'ANON', 'REVIEW', 'STORY', 'PIECE', 'ATTENDANCE', 'QUESTION'
+]);
+const COMMUNITY_BOARD_NAMES = {
+    FREE: '자유게시판',
+    ANON: '익명게시판',
+    REVIEW: '후기게시판',
+    STORY: '썰게시판',
+    PIECE: '조각게시판',
+    ATTENDANCE: '출석게시판',
+    QUESTION: '질문게시판'
 };
 
 function getBoardTypeFromPath(pathname = window.location.pathname) {
@@ -86,7 +99,12 @@ function updateBestPostsVisibility() {
     const bestPostsSection = document.querySelector('.best-posts-section');
     if (!bestPostsSection) return;
 
-    if (currentBoardType === 'ALL') {
+    if (currentBoardType === 'ALL' || BEST_POST_BOARD_TYPES.has(currentBoardType)) {
+        const boardName = COMMUNITY_BOARD_NAMES[currentBoardType];
+        const dailyTitle = document.getElementById('daily-best-title');
+        const weeklyTitle = document.getElementById('weekly-best-title');
+        if (dailyTitle) dailyTitle.textContent = `🔥 ${boardName ? `${boardName} ` : ''}오늘의 베스트`;
+        if (weeklyTitle) weeklyTitle.textContent = `📅 ${boardName ? `${boardName} ` : ''}주간 베스트`;
         showElement(bestPostsSection);
         return;
     }
@@ -95,21 +113,26 @@ function updateBestPostsVisibility() {
 }
 
 async function loadBestPosts() {
+    const requestId = ++bestPostsRequestId;
+    const requestedBoardType = currentBoardType;
     const dailyList = document.getElementById('daily-best-list');
     const weeklyList = document.getElementById('weekly-best-list');
     const dailyEmpty = document.getElementById('daily-best-empty');
     const weeklyEmpty = document.getElementById('weekly-best-empty');
 
     if (!dailyList || !weeklyList || !dailyEmpty || !weeklyEmpty) return;
+    if (requestedBoardType !== 'ALL' && !BEST_POST_BOARD_TYPES.has(requestedBoardType)) return;
 
     try {
-        const response = await PostAPI.getBestPosts();
+        const response = await PostAPI.getBestPosts(requestedBoardType);
+        if (requestId !== bestPostsRequestId || requestedBoardType !== currentBoardType) return;
         const dailyPosts = Array.isArray(response?.daily) ? response.daily : [];
         const weeklyPosts = Array.isArray(response?.weekly) ? response.weekly : [];
 
         renderBestPosts(dailyPosts, dailyList, dailyEmpty);
         renderBestPosts(weeklyPosts, weeklyList, weeklyEmpty);
     } catch (error) {
+        if (requestId !== bestPostsRequestId || requestedBoardType !== currentBoardType) return;
         dailyList.innerHTML = '';
         weeklyList.innerHTML = '';
         dailyEmpty.textContent = '베스트 게시글을 불러오지 못했습니다.';
@@ -778,6 +801,7 @@ function initBoardTabs() {
             closeTabsPanel();
             setupCommunityActions();
             updateBestPostsVisibility();
+            loadBestPosts();
             loadPosts(0);
         });
     });
@@ -787,6 +811,7 @@ function initBoardTabs() {
         syncActiveBoardTab(tabs);
         setupCommunityActions();
         updateBestPostsVisibility();
+        loadBestPosts();
         loadPosts(0);
     });
 }
