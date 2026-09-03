@@ -17,6 +17,7 @@ const searchState = {
     keyword: ''
 };
 let currentBoardType = 'ALL';
+let bestPostsRequestId = 0;
 const COMMUNITY_BOARD_SLUGS = {
     ALL: '',
     FREE: 'free',
@@ -112,22 +113,26 @@ function updateBestPostsVisibility() {
 }
 
 async function loadBestPosts() {
+    const requestId = ++bestPostsRequestId;
+    const requestedBoardType = currentBoardType;
     const dailyList = document.getElementById('daily-best-list');
     const weeklyList = document.getElementById('weekly-best-list');
     const dailyEmpty = document.getElementById('daily-best-empty');
     const weeklyEmpty = document.getElementById('weekly-best-empty');
 
     if (!dailyList || !weeklyList || !dailyEmpty || !weeklyEmpty) return;
-    if (currentBoardType !== 'ALL' && !BEST_POST_BOARD_TYPES.has(currentBoardType)) return;
+    if (requestedBoardType !== 'ALL' && !BEST_POST_BOARD_TYPES.has(requestedBoardType)) return;
 
     try {
-        const response = await PostAPI.getBestPosts(currentBoardType);
+        const response = await PostAPI.getBestPosts(requestedBoardType);
+        if (requestId !== bestPostsRequestId || requestedBoardType !== currentBoardType) return;
         const dailyPosts = Array.isArray(response?.daily) ? response.daily : [];
         const weeklyPosts = Array.isArray(response?.weekly) ? response.weekly : [];
 
         renderBestPosts(dailyPosts, dailyList, dailyEmpty);
         renderBestPosts(weeklyPosts, weeklyList, weeklyEmpty);
     } catch (error) {
+        if (requestId !== bestPostsRequestId || requestedBoardType !== currentBoardType) return;
         dailyList.innerHTML = '';
         weeklyList.innerHTML = '';
         dailyEmpty.textContent = '베스트 게시글을 불러오지 못했습니다.';
@@ -796,6 +801,7 @@ function initBoardTabs() {
             closeTabsPanel();
             setupCommunityActions();
             updateBestPostsVisibility();
+            loadBestPosts();
             loadPosts(0);
         });
     });
@@ -805,6 +811,7 @@ function initBoardTabs() {
         syncActiveBoardTab(tabs);
         setupCommunityActions();
         updateBestPostsVisibility();
+        loadBestPosts();
         loadPosts(0);
     });
 }
