@@ -1255,7 +1255,7 @@ async function listComments(req, res, next) {
     const postId = parseId(req.params.postId);
     if (!postId) return res.status(400).json({ message: '유효하지 않은 게시글 ID입니다.' });
 
-    const post = await postModel.findPostById(postId);
+    const post = await postModel.findPostById(postId, { includeDeleted: isAdminViewer(req.user) });
     if (!post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
     if (!ensurePostAccessible(post, req.user, res)) return;
 
