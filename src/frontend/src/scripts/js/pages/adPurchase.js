@@ -63,6 +63,7 @@
                 { text: '스탬프 1개로 업체정보 2일 노출', enabled: true },
                 { text: '1일 점프 9개', enabled: true },
                 { text: '베이직보다 높은 광고 등급으로 표시', enabled: true },
+                { text: '텔레그램 채널 자동 연동 홍보', enabled: true },
             ]
         },
         premium: {
@@ -81,6 +82,7 @@
                 { text: '활성화 기간동안 1일 1회 홍보게시글 작성 가능', enabled: true },
                 { text: '활성화 기간동안 일반회원 게시글에 1일 5회 댓글 작성 가능', enabled: true },
                 { text: '지역 상단 우선 노출 대상', enabled: true },
+                { text: '텔레그램 채널 자동 연동 홍보', enabled: true },
             ]
         },
         piece: {
