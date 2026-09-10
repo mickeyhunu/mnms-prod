@@ -882,6 +882,8 @@ async function myNotifications(req, res, next) {
         ...item,
         targetUrl: item.type === 'stamp_event_request'
           ? '/stamp-event-management'
+          : item.type === 'piece_chat_message'
+            ? `/piece-chat/${item.postId}`
           : item.postTitle ? `/post-detail/${encodeURIComponent(createSeoSlugWithId(item.postTitle, item.postId, 'post'))}` : '/'
       })),
       ...notices.map((notice) => ({

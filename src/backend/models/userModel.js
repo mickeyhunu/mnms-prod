@@ -408,6 +408,43 @@ async function getUserNotifications(userId, { limit = 50 } = {}) {
        UNION ALL
 
        SELECT
+         CONCAT('piece-chat-message-', pcm.id) AS notificationKey,
+         'piece_chat_message' AS type,
+         pcm.id AS sourceId,
+         pcm.post_id AS postId,
+         p.title AS postTitle,
+         NULL AS inquiryId,
+         NULL AS parentId,
+         pcm.content AS content,
+         pcm.created_at AS createdAt,
+         COALESCE(NULLIF(sender.nickname, ''), '회원') AS actorNickname,
+         CONCAT('"', p.title, '" 조각 채팅방에 새 메시지가 도착했습니다.') AS message
+       FROM piece_chat_messages pcm
+       INNER JOIN posts p ON p.id = pcm.post_id
+       LEFT JOIN users sender ON sender.id = pcm.user_id
+       LEFT JOIN piece_chat_reads pcr ON pcr.post_id = pcm.post_id AND pcr.user_id = ?
+       WHERE pcm.user_id <> ?
+         AND pcm.message_type = 'CHAT'
+         AND pcm.is_hidden = 0
+         AND pcm.id > COALESCE(pcr.last_read_message_id, 0)
+         AND UPPER(COALESCE(p.board_type, '')) = 'PIECE'
+         AND p.is_deleted = 0
+         AND p.is_hidden = 0
+         AND (
+           p.user_id = ?
+           OR EXISTS (
+             SELECT 1
+             FROM piece_participants viewer_participation
+             WHERE viewer_participation.post_id = pcm.post_id
+               AND viewer_participation.user_id = ?
+               AND viewer_participation.removed_at IS NULL
+               AND pcm.created_at >= viewer_participation.created_at
+           )
+         )
+
+       UNION ALL
+
+       SELECT
          CONCAT('piece-created-for-ad-', p.id, '-', ba.id) AS notificationKey,
          'piece_created_for_ad' AS type,
          p.id AS sourceId,
@@ -455,7 +492,7 @@ async function getUserNotifications(userId, { limit = 50 } = {}) {
      ) notifications
      ORDER BY createdAt DESC, sourceId DESC
      LIMIT ?`,
-    [userId, userId, userId, userId, userId, userId, userId, userId, userId, safeLimit]
+    [userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, safeLimit]
   );
 
   return rows.map((row) => ({
