@@ -118,6 +118,9 @@ export const userEditPanelTemplate = `
                                 <label>제한 만료일
                                     <input type="text" id="admin-user-login-restricted-until" name="loginRestrictedUntil" readonly>
                                 </label>
+                                <label class="admin-user-withdrawal-reason-field hidden">탈퇴 사유
+                                    <textarea id="admin-user-withdrawal-reason" name="withdrawalReason" rows="3" readonly></textarea>
+                                </label>
                                 <label>가입일
                                     <input type="text" id="admin-user-created-at" name="createdAt" readonly>
                                 </label>

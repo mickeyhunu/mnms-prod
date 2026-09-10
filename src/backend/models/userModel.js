@@ -866,9 +866,10 @@ async function withdrawUserById(userId, { reason = '' } = {}) {
            last_identity_verified_at = NULL,
            account_status = 'SUSPENDED',
            login_restricted_until = NULL,
-           is_login_restriction_permanent = 1
+           is_login_restriction_permanent = 1,
+           withdrawal_reason = ?
        WHERE id = ?`,
-      [withdrawnNickname, withdrawnLoginId, withdrawnPasswordHash, userId]
+      [withdrawnNickname, withdrawnLoginId, withdrawnPasswordHash, reason, userId]
     );
 
     await connection.query(
