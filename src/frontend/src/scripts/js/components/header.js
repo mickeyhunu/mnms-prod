@@ -232,6 +232,7 @@ const HeaderNotificationCenter = {
     getTypeLabel(type) {
         if (type === 'post_comment') return '내 글 댓글';
         if (type === 'comment_reply') return '내 댓글 대댓글';
+        if (type === 'piece_chat_message') return '조각 채팅';
         if (type === 'piece_created_for_ad') return '내 광고 조각';
         if (type === 'stamp_event_request') return '스탬프 이벤트';
         if (type === 'admin_notice') return '관리자 알림';
