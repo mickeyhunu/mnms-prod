@@ -1793,6 +1793,10 @@ async function withdrawMyAccount(req, res, next) {
       return res.status(400).json({ message: '탈퇴 사유를 입력해주세요.' });
     }
 
+    if (reason.length > 500) {
+      return res.status(400).json({ message: '탈퇴 사유는 500자 이하로 입력해주세요.' });
+    }
+
     if (!identityVerificationId) {
       return res.status(400).json({ message: '본인인증 확인 정보가 필요합니다.' });
     }
