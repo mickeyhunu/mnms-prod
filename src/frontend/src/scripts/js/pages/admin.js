@@ -2167,6 +2167,11 @@ function fillUserEditForm(user) {
     document.getElementById('admin-user-login-restricted-until').value = user.isLoginRestrictionPermanent
         ? '영구 제한'
         : (user.loginRestrictedUntil ? formatDate(user.loginRestrictedUntil) : '');
+    const withdrawalReasonField = document.querySelector('.admin-user-withdrawal-reason-field');
+    const withdrawalReasonEl = document.getElementById('admin-user-withdrawal-reason');
+    const withdrawalReason = String(user.withdrawalReason || '').trim();
+    if (withdrawalReasonEl) withdrawalReasonEl.value = withdrawalReason;
+    withdrawalReasonField?.classList.toggle('hidden', !withdrawalReason);
     document.getElementById('admin-user-created-at').value = formatDate(user.createdAt || user.created_at);
     document.getElementById('admin-user-password').value = '';
     document.getElementById('admin-user-password-confirm').value = '';
