@@ -280,6 +280,7 @@ async function initDatabase() {
       account_status ENUM('ACTIVE','SUSPENDED') NOT NULL DEFAULT 'ACTIVE',
       login_restricted_until DATETIME NULL,
       is_login_restriction_permanent TINYINT(1) NOT NULL DEFAULT 0,
+      withdrawal_reason VARCHAR(500) NULL,
       total_points BIGINT NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
@@ -380,6 +381,7 @@ async function initDatabase() {
     { name: 'account_status', query: "ALTER TABLE users ADD COLUMN account_status ENUM('ACTIVE','SUSPENDED') NOT NULL DEFAULT 'ACTIVE' AFTER member_type" },
     { name: 'login_restricted_until', query: "ALTER TABLE users ADD COLUMN login_restricted_until DATETIME NULL AFTER account_status" },
     { name: 'is_login_restriction_permanent', query: "ALTER TABLE users ADD COLUMN is_login_restriction_permanent TINYINT(1) NOT NULL DEFAULT 0 AFTER login_restricted_until" },
+    { name: 'withdrawal_reason', query: "ALTER TABLE users ADD COLUMN withdrawal_reason VARCHAR(500) NULL AFTER is_login_restriction_permanent" },
     { name: 'identity_ci_hash', query: "ALTER TABLE users ADD COLUMN identity_ci_hash CHAR(64) NULL AFTER phone" },
     { name: 'identity_di_hash', query: "ALTER TABLE users ADD COLUMN identity_di_hash CHAR(64) NULL AFTER identity_ci_hash" },
     { name: 'phone_hash', query: "ALTER TABLE users ADD COLUMN phone_hash CHAR(64) NULL AFTER identity_di_hash" },

@@ -716,6 +716,7 @@ async function getUserDetail(userId) {
   const businessProfile = await getBusinessProfileByUserId(userId);
   return {
     ...pickUserRow(user),
+    withdrawalReason: user.withdrawal_reason || '',
     businessProfile: businessProfile ? {
       registrationStatus: businessProfile.registrationStatus || 'UNREGISTERED',
       approvalStatus: businessProfile.approvalStatus || 'PENDING',
