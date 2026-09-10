@@ -66,8 +66,29 @@ function renderMessages(scrollToMessageId = null, preserveScroll = false) {
     else if (target) target.scrollIntoView({ block: 'start' });
     else root.scrollTop = root.scrollHeight;
 }
-function appendMessages() {
-    renderMessages();
+function hideNewMessageButton() {
+    document.getElementById('piece-chat-new-message-button')?.classList.add('hidden');
+}
+function showNewMessageButton(message) {
+    const button = document.getElementById('piece-chat-new-message-button');
+    if (!button) return;
+    const member = pieceChatRoom.members.find((item) => Number(item.userId) === Number(message.userId)) || message;
+    const name = String(member.nickname || message.nickname || '새 메시지').trim();
+    const imageUrl = String(member.profileImageUrl || message.profileImageUrl || '').trim() || PIECE_CHAT_DEFAULT_PROFILE_IMAGE_URL;
+    document.getElementById('piece-chat-new-message-name').textContent = name;
+    const image = document.getElementById('piece-chat-new-message-avatar');
+    image.src = imageUrl;
+    image.onerror = () => { image.onerror = null; image.src = PIECE_CHAT_DEFAULT_PROFILE_IMAGE_URL; };
+    button.classList.remove('hidden');
+}
+function scrollToLatestMessage({ behavior = 'smooth' } = {}) {
+    const root = document.getElementById('chat-messages');
+    root.scrollTo({ top: root.scrollHeight, behavior });
+    hideNewMessageButton();
+}
+function isMessageListNearBottom() {
+    const root = document.getElementById('chat-messages');
+    return root.scrollHeight - root.scrollTop - root.clientHeight <= 24;
 }
 function renderMembers() {
     const visibleMembers = pieceChatRoom.members.filter((member) => member.roomRole !== 'ADMIN');
@@ -135,7 +156,14 @@ function addNewMessages(messages) {
     const freshMessages = messages.filter((message) => !knownIds.has(Number(message.id)));
     if (!freshMessages.length) return;
     pieceChatRoom.messages.push(...freshMessages);
-    appendMessages(freshMessages);
+    const latestIncomingMessage = [...freshMessages].reverse().find((message) => Number(message.userId) !== Number(pieceChatRoom.currentUserId));
+    if (latestIncomingMessage) {
+        renderMessages(null, true);
+        showNewMessageButton(latestIncomingMessage);
+    } else {
+        renderMessages();
+        hideNewMessageButton();
+    }
     if (!document.hidden) markLatestMessagesRead().catch((error) => console.warn('메시지 읽음 처리를 저장하지 못했습니다.', error));
 }
 function updateMessageVisibility(states) {
@@ -272,6 +300,11 @@ function initPieceChatPage() {
             renderMessages(null, true);
         } catch (error) { button.disabled = false; alert(error.message || '메시지 제한 처리 중 오류가 발생했습니다.'); }
     };
+    const messagesRoot = document.getElementById('chat-messages');
+    document.getElementById('piece-chat-new-message-button').onclick = () => scrollToLatestMessage();
+    messagesRoot.addEventListener('scroll', () => {
+        if (isMessageListNearBottom()) hideNewMessageButton();
+    }, { passive: true });
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
     chatForm.onsubmit = async (event) => { event.preventDefault(); const content = chatInput.value.trim(); if (!content || pieceChatRoom?.lifecycle?.isEnded) return; try { const message = await PieceChatAPI.send(pieceChatId, content); addNewMessages([message]); chatInput.value = ''; } catch (error) { if (error.status === 409) { await loadPieceChat(); } alert(error.message || '메시지를 전송하지 못했습니다.'); } };
