@@ -4,6 +4,11 @@ const template = `<main class="piece-chat-page">
   <section class="piece-chat-shell">
     <header class="piece-chat-header"><button id="chat-back" class="piece-chat-back" aria-label="뒤로가기">‹</button><div class="piece-chat-heading"><h1 id="chat-title">조각 채팅방</h1><p id="chat-member-count">구성원을 불러오는 중</p></div><button id="chat-refresh" class="piece-chat-refresh" type="button" aria-label="채팅 새로고침">↻</button><button id="chat-members" class="piece-chat-icon" type="button" aria-label="구성원 보기" aria-controls="chat-drawer" aria-expanded="false">☰</button></header>
     <div id="chat-messages" class="piece-chat-messages"><div id="chat-message-list" aria-live="polite"></div></div>
+    <button type="button" class="piece-chat-new-message-button hidden" id="piece-chat-new-message-button" aria-label="새 메시지 확인 후 채팅 맨 아래로 이동" title="맨 아래로 이동">
+      <span class="piece-chat-new-message-button__avatar-wrap"><img src="/src/assets/image/img_profile.png" alt="" class="piece-chat-new-message-button__avatar" id="piece-chat-new-message-avatar"><span class="piece-chat-new-message-button__name" id="piece-chat-new-message-name"></span></span>
+      <span class="piece-chat-new-message-button__message">새 메시지가 도착했습니다</span>
+      <span class="piece-chat-new-message-button__icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="m6 9 6 6 6-6"></path></svg></span>
+    </button>
     <form id="chat-form" class="piece-chat-compose"><p id="chat-ended-notice" class="piece-chat-ended-notice hidden">종료된 조각에서는 더 이상 채팅할 수 없습니다.</p><textarea id="chat-input" rows="1" maxlength="1000" placeholder="메시지를 입력하세요"></textarea><button>전송</button></form>
   </section>
   <div id="chat-drawer" class="piece-chat-drawer" aria-hidden="true"><button class="piece-chat-drawer-backdrop" data-close-drawer aria-label="닫기" tabindex="-1"></button><aside><header><h2></h2><button data-close-drawer aria-label="구성원 보기 닫기" tabindex="-1">×</button></header><h3>참여자</h3><div id="chat-member-list"></div><button type="button" class="btn piece-join-btn btn-secondary hidden" id="chat-cancel-participation" data-piece-action="cancel">참여 취소</button></aside></div>
