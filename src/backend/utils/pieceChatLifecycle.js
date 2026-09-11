@@ -72,4 +72,14 @@ function lifecycleMessages(lifecycle) {
   return messages;
 }
 
-module.exports = { resolvePieceChatLifecycle, lifecycleMessages };
+function sortPieceChatMessages(messages) {
+  return [...messages].sort((left, right) => {
+    const leftTime = new Date(left?.createdAt).getTime();
+    const rightTime = new Date(right?.createdAt).getTime();
+    if (Number.isNaN(leftTime)) return Number.isNaN(rightTime) ? 0 : 1;
+    if (Number.isNaN(rightTime)) return -1;
+    return leftTime - rightTime;
+  });
+}
+
+module.exports = { resolvePieceChatLifecycle, lifecycleMessages, sortPieceChatMessages };
