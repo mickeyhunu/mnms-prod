@@ -47,6 +47,15 @@ function chatDateLabel(value) {
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
 }
+function sortMessagesChronologically(messages) {
+    return [...messages].sort((left, right) => {
+        const leftTime = new Date(left?.createdAt).getTime();
+        const rightTime = new Date(right?.createdAt).getTime();
+        if (Number.isNaN(leftTime)) return Number.isNaN(rightTime) ? 0 : 1;
+        if (Number.isNaN(rightTime)) return -1;
+        return leftTime - rightTime;
+    });
+}
 function messagesMarkup(messages) {
     let previousDate = '';
     return messages.map((message) => {
@@ -140,6 +149,7 @@ function renderChatAvailability() {
 async function loadPieceChat() {
     try {
         pieceChatRoom = await PieceChatAPI.getRoom(pieceChatId);
+        pieceChatRoom.messages = sortMessagesChronologically(pieceChatRoom.messages || []);
         const lastReadMessageId = viewerLastReadMessageId();
         const firstUnread = (pieceChatRoom.messages || []).find((message) => Number(message.id) > lastReadMessageId && Number(message.userId) !== Number(pieceChatRoom.currentUserId));
         renderRoom();
@@ -155,7 +165,7 @@ function addNewMessages(messages) {
     const knownIds = new Set((pieceChatRoom.messages || []).map((message) => Number(message.id)));
     const freshMessages = messages.filter((message) => !knownIds.has(Number(message.id)));
     if (!freshMessages.length) return;
-    pieceChatRoom.messages.push(...freshMessages);
+    pieceChatRoom.messages = sortMessagesChronologically([...pieceChatRoom.messages, ...freshMessages]);
     const latestIncomingMessage = [...freshMessages].reverse().find((message) => Number(message.userId) !== Number(pieceChatRoom.currentUserId));
     if (latestIncomingMessage) {
         renderMessages(null, true);
