@@ -29,6 +29,7 @@ const supportModel = require('../models/supportModel');
 const adminModel = require('../models/adminModel');
 const wikiQuestionModel = require('../models/wikiQuestionModel');
 const attendanceCommentModel = require('../models/attendanceCommentModel');
+const adminMessageModel = require('../models/adminMessageModel');
 const { deleteS3ObjectsByUrls, parseDataUrl, uploadDataUrlToS3 } = require('../utils/fileUpload');
 const {
   collectBusinessInfoImageUrls,
@@ -867,8 +868,9 @@ async function myNotifications(req, res, next) {
   try {
     const limit = Math.max(1, Math.min(100, Number(req.query.limit) || 50));
     const isAdmin = String(req.user?.role || '').toUpperCase() === 'ADMIN';
-    const [commentNotifications, notices, answeredInquiries, pendingInquiries, pendingBusinessApplications, pendingWikiQuestions, pendingAttendanceCommentReports] = await Promise.all([
+    const [commentNotifications, directMessages, notices, answeredInquiries, pendingInquiries, pendingBusinessApplications, pendingWikiQuestions, pendingAttendanceCommentReports] = await Promise.all([
       getUserNotifications(req.user.id, { limit }),
+      adminMessageModel.listForRecipient(req.user.id, { limit }),
       supportModel.listArticles(supportModel.SUPPORT_CATEGORIES.NOTICE, false),
       supportModel.listAnsweredInquiriesByUser(req.user.id, { limit }),
       isAdmin ? supportModel.listRecentPendingInquiries({ limit }) : Promise.resolve([]),
@@ -878,6 +880,19 @@ async function myNotifications(req, res, next) {
     ]);
 
     const normalizedNotifications = [
+      ...directMessages.map((item) => ({
+        notificationKey: `admin-message-${item.id}`,
+        type: 'admin_message',
+        sourceId: Number(item.id),
+        title: item.title,
+        content: item.content,
+        actorNickname: item.senderNickname,
+        message: `관리자 쪽지: ${item.title}`,
+        createdAt: item.createdAt,
+        isDirectMessage: true,
+        readAt: item.readAt,
+        targetUrl: ''
+      })),
       ...commentNotifications.map((item) => ({
         ...item,
         targetUrl: item.type === 'stamp_event_request'
@@ -978,7 +993,12 @@ async function myNotifications(req, res, next) {
         targetUrl: `/my-inquiries/${item.id}`
       }))
     ]
-      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+      .sort((a, b) => {
+        const aUnreadMessage = a.isDirectMessage && !a.readAt ? 1 : 0;
+        const bUnreadMessage = b.isDirectMessage && !b.readAt ? 1 : 0;
+        return bUnreadMessage - aUnreadMessage
+          || new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      })
       .slice(0, limit);
 
     const readMap = await getUserNotificationReadMap(
@@ -987,8 +1007,8 @@ async function myNotifications(req, res, next) {
     );
     const content = normalizedNotifications.map((item) => ({
       ...item,
-      isRead: Boolean(readMap[item.notificationKey]),
-      readAt: readMap[item.notificationKey] || null
+      isRead: item.isDirectMessage ? Boolean(item.readAt) : Boolean(readMap[item.notificationKey]),
+      readAt: item.isDirectMessage ? (item.readAt || null) : (readMap[item.notificationKey] || null)
     }));
     const unreadCount = content.filter((item) => !item.isRead).length;
 
@@ -1004,7 +1024,8 @@ async function myNotifications(req, res, next) {
 
 async function markMyNotificationsRead(req, res, next) {
   try {
-    const notificationKeys = Array.isArray(req.body.notificationKeys) ? req.body.notificationKeys : [];
+    const notificationKeys = (Array.isArray(req.body.notificationKeys) ? req.body.notificationKeys : [])
+      .filter((key) => !String(key).startsWith('admin-message-'));
     const markedCount = await markNotificationsAsRead(req.user.id, notificationKeys);
     res.json({
       success: true,
@@ -1013,6 +1034,16 @@ async function markMyNotificationsRead(req, res, next) {
   } catch (error) {
     next(error);
   }
+}
+
+async function readMyAdminMessage(req, res, next) {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 쪽지 ID입니다.' });
+    const message = await adminMessageModel.markRead(id, req.user.id);
+    if (!message) return res.status(404).json({ message: '쪽지를 찾을 수 없습니다.' });
+    res.json({ success: true, message });
+  } catch (error) { next(error); }
 }
 
 async function markMyNotificationsReadAll(req, res, next) {
@@ -1832,6 +1863,7 @@ module.exports = {
   myNotifications,
   markMyNotificationsRead,
   markMyNotificationsReadAll,
+  readMyAdminMessage,
   myReadPosts,
   markMyPostsRead,
   updateMyProfile,
