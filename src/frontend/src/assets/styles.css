@@ -7,3 +7,44 @@
 @import '../styles/community-board.css';
 @import '../styles/home-dark.css';
 @import '../styles/responsive.css';
+
+.telegram-chat-button {
+    position: fixed;
+    left: max(20px, env(safe-area-inset-left));
+    bottom: max(20px, env(safe-area-inset-bottom));
+    z-index: 1000;
+    display: block;
+    width: 80px;
+    line-height: 0;
+    transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.telegram-chat-button:hover {
+    filter: brightness(0.94);
+    transform: translateY(-2px);
+}
+
+.telegram-chat-button:focus-visible {
+    outline: 3px solid rgba(34, 158, 217, 0.35);
+    outline-offset: 3px;
+}
+
+.telegram-chat-button__image {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+@media (max-width: 640px) {
+    .telegram-chat-button {
+        left: max(14px, env(safe-area-inset-left));
+        bottom: max(14px, env(safe-area-inset-bottom));
+        width: 64px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .telegram-chat-button {
+        transition: none;
+    }
+}

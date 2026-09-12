@@ -4,5 +4,19 @@
 export default {
   template: `
     <router-view />
+    <a
+      class="telegram-chat-button"
+      href="https://t.me/mnmens_official"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="텔레그램으로 문의하기 (@mnmens_official)"
+      title="텔레그램 문의"
+    >
+      <img
+        class="telegram-chat-button__image"
+        src="/src/assets/image/telegram-chat-button.webp"
+        alt=""
+      />
+    </a>
   `
 };
