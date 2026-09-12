@@ -33,8 +33,8 @@ export const GLOBAL_HEADER_TEMPLATE = `<header class="header">
             </div>
             <div class="header-notification-list" id="header-notification-list"></div>
             <div class="header-notification-inbox-actions" aria-label="알림함 선택">
-              <button type="button" class="header-notification-view-all" data-notification-action="view-all">전체 알림함</button>
-              <button type="button" class="header-notification-view-all" data-notification-action="view-messages">전체 쪽지함</button>
+              <button type="button" class="header-notification-view-all" data-notification-action="view-all" aria-pressed="false">전체 알림함</button>
+              <button type="button" class="header-notification-view-all" data-notification-action="view-messages" aria-pressed="false">전체 쪽지함</button>
             </div>
           </section>
         </div>
