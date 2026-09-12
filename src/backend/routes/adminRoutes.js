@@ -465,6 +465,30 @@ router.get('/messages', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+router.put('/messages/:id', async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    const title = String(req.body?.title || '').trim();
+    const content = String(req.body?.content || '').trim();
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 쪽지 ID입니다.' });
+    if (!title || title.length > 120) return res.status(400).json({ message: '제목은 1~120자로 입력해주세요.' });
+    if (!content || content.length > 5000) return res.status(400).json({ message: '내용은 1~5,000자로 입력해주세요.' });
+    const message = await adminMessageModel.update(id, { title, content });
+    if (!message) return res.status(404).json({ message: '수정할 쪽지를 찾을 수 없습니다.' });
+    res.json({ success: true, message });
+  } catch (error) { next(error); }
+});
+
+router.delete('/messages/:id', async (req, res, next) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 쪽지 ID입니다.' });
+    const removed = await adminMessageModel.remove(id);
+    if (!removed) return res.status(404).json({ message: '삭제할 쪽지를 찾을 수 없습니다.' });
+    res.json({ success: true });
+  } catch (error) { next(error); }
+});
+
 router.post('/users/:id/stamps/adjust', async (req, res, next) => {
   try {
     if (!isMasterAdminUser(req.user)) {
