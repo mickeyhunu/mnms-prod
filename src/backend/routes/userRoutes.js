@@ -16,6 +16,7 @@ const {
   myNotifications,
   markMyNotificationsRead,
   markMyNotificationsReadAll,
+  readMyAdminMessage,
   myReadPosts,
   markMyPostsRead,
   updateMyProfile,
@@ -55,6 +56,7 @@ router.get('/me/live-access', authMiddleware, myLiveAccessStatus);
 router.get('/me/notifications', authMiddleware, myNotifications);
 router.post('/me/notifications/read', authMiddleware, markMyNotificationsRead);
 router.post('/me/notifications/read-all', authMiddleware, markMyNotificationsReadAll);
+router.post('/me/admin-messages/:id/read', authMiddleware, readMyAdminMessage);
 router.get('/me/posts/read', authMiddleware, myReadPosts);
 router.post('/me/posts/read', authMiddleware, markMyPostsRead);
 router.put('/me', authMiddleware, updateMyProfile);

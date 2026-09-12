@@ -24,7 +24,20 @@ const businessDocumentModalBody = `
                 </div>
 `;
 
+const userMessageModalBody = `
+                <p id="user-message-target" class="text-muted"></p>
+                <div class="form-group"><label class="form-label" for="user-message-title">제목</label><input id="user-message-title" class="form-control" maxlength="120" placeholder="쪽지 제목"></div>
+                <div class="form-group"><label class="form-label" for="user-message-content">내용</label><textarea id="user-message-content" class="form-control" rows="8" maxlength="5000" placeholder="회원에게 전달할 내용을 입력해주세요."></textarea></div>
+                <p id="user-message-result" class="help-text" role="status"></p>
+`;
+
 export const adminModalTemplates = [
+  createModalTemplate({
+    id: 'user-message-modal',
+    titleHtml: '<h3>회원에게 쪽지 보내기</h3>',
+    body: userMessageModalBody,
+    actions: '<button class="btn btn-secondary" id="user-message-cancel-btn">취소</button><button class="btn btn-primary" id="user-message-send-btn">쪽지 보내기</button>'
+  }),
   createModalTemplate({
     id: 'support-modal',
     titleHtml: '<h3 id="support-modal-title">공지/FAQ 작성</h3>',
