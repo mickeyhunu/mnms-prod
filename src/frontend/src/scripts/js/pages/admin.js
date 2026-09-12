@@ -336,6 +336,7 @@ function bindCommonEvents() {
     document.getElementById('user-edit-save-btn')?.addEventListener('click', saveUserDetail);
     document.getElementById('user-message-cancel-btn')?.addEventListener('click', closeUserMessageModal);
     document.getElementById('user-message-send-btn')?.addEventListener('click', sendUserMessage);
+    document.getElementById('admin-sent-messages-close-btn')?.addEventListener('click', closeSentMessagesModal);
     document.getElementById('admin-user-point-adjustment-btn')?.addEventListener('click', adjustUserPoints);
     document.getElementById('admin-user-stamp-adjustment-btn')?.addEventListener('click', adjustUserStamps);
     bindUserEditForm();
@@ -743,6 +744,14 @@ function renderStatsDashboard() {
 }
 
 async function handleGlobalAdminClick(event) {
+    const sentMessagesPageButton = event.target.closest('[data-sent-messages-page]');
+    if (sentMessagesPageButton && !sentMessagesPageButton.disabled) {
+        event.preventDefault();
+        const nextPage = Number.parseInt(sentMessagesPageButton.dataset.sentMessagesPage || '', 10);
+        if (Number.isInteger(nextPage) && nextPage > 0) await loadSentMessages(nextPage);
+        return;
+    }
+
     const pageButton = event.target.closest('[data-admin-page]');
     if (pageButton) {
         event.preventDefault();
@@ -1495,7 +1504,6 @@ function renderUsersTable() {
                 <td>${memberTypeLabel}</td>
                 <td>
                     <div class="admin-user-actions">
-                        <button type="button" class="btn btn-sm btn-primary" data-admin-action="message-user" data-target-id="${user.id}" data-target-nickname="${sanitizeHTML(user.nickname || loginId || `회원 #${user.id}`)}">쪽지 보내기</button>
                         <a class="btn btn-sm btn-secondary" href="/admin?tab=${activeUserTab}&editUserId=${user.id}" data-admin-action="edit-user" data-target-id="${user.id}">정보 수정</a>
                     </div>
                 </td>
@@ -2195,6 +2203,11 @@ async function openUserEditModal(userId, options = {}) {
 
         editingUserId = userId;
         document.getElementById('user-edit-modal-title').textContent = `회원 정보 수정 #${userId}`;
+        const messageButton = document.getElementById('user-edit-message-btn');
+        if (messageButton) {
+            messageButton.dataset.targetId = String(userId);
+            messageButton.dataset.targetNickname = user.nickname || user.loginId || `회원 #${userId}`;
+        }
         fillUserEditForm(user);
         renderAdminUserActivity(response.activity || {});
         showAdminModal('user-edit-modal');
@@ -3078,6 +3091,11 @@ async function handleAdminTableActionClick(event) {
     const entryId = actionElement.dataset.entryId;
     const entryName = actionElement.dataset.entryName || '';
 
+    if (action === 'sent-messages') {
+        await openSentMessagesModal();
+        return;
+    }
+
     if (action === 'message-user' && Number.isInteger(targetId)) {
         openUserMessageModal(targetId, actionElement.dataset.targetNickname || `회원 #${targetId}`);
         return;
@@ -3173,6 +3191,67 @@ function openUserMessageModal(userId, nickname) {
 function closeUserMessageModal() {
     messageTargetUser = null;
     hideAdminModal('user-message-modal');
+}
+
+function renderSentMessages(messages = []) {
+    const list = document.getElementById('admin-sent-messages-list');
+    if (!list) return;
+    if (!messages.length) {
+        list.innerHTML = '<p class="admin-sent-messages-empty">보낸 쪽지가 없습니다.</p>';
+        return;
+    }
+
+    list.innerHTML = messages.map((message) => `
+        <article class="admin-sent-message-card">
+            <div class="admin-sent-message-meta">
+                <strong>받는 회원: ${sanitizeHTML(message.recipientNickname || `회원 #${message.recipientUserId}`)}</strong>
+                <span>${sanitizeHTML(formatDate(message.createdAt))}</span>
+            </div>
+            <h4>${sanitizeHTML(message.title || '')}</h4>
+            <p class="admin-sent-message-content">${sanitizeHTML(message.content || '')}</p>
+            <div class="admin-sent-message-status">
+                <span>보낸 관리자: ${sanitizeHTML(message.senderNickname || '운영팀')}</span>
+                <span>${message.readAt ? `읽음 · ${sanitizeHTML(formatDate(message.readAt))}` : '읽지 않음'}</span>
+            </div>
+        </article>
+    `).join('');
+}
+
+function renderSentMessagesPagination({ page = 1, totalPages = 0, total = 0 } = {}) {
+    const pagination = document.getElementById('admin-sent-messages-pagination');
+    if (!pagination) return;
+    if (!total) {
+        pagination.innerHTML = '';
+        return;
+    }
+    pagination.innerHTML = `
+        <button type="button" class="btn btn-sm btn-outline" data-sent-messages-page="${page - 1}" ${page <= 1 ? 'disabled' : ''}>이전</button>
+        <span>${page} / ${Math.max(totalPages, 1)} 페이지 · 총 ${Number(total).toLocaleString()}건</span>
+        <button type="button" class="btn btn-sm btn-outline" data-sent-messages-page="${page + 1}" ${page >= totalPages ? 'disabled' : ''}>다음</button>
+    `;
+}
+
+async function loadSentMessages(page = 1) {
+    const list = document.getElementById('admin-sent-messages-list');
+    const pagination = document.getElementById('admin-sent-messages-pagination');
+    if (list) list.innerHTML = '<p class="text-muted">보낸 쪽지를 불러오는 중...</p>';
+    if (pagination) pagination.innerHTML = '';
+    try {
+        const response = await APIClient.get('/admin/messages', { page, limit: 20 });
+        renderSentMessages(response.rows || []);
+        renderSentMessagesPagination(response);
+    } catch (error) {
+        if (list) list.innerHTML = `<p class="admin-sent-messages-error">${sanitizeHTML(error.message || '보낸 쪽지를 불러오지 못했습니다.')}</p>`;
+    }
+}
+
+async function openSentMessagesModal() {
+    showAdminModal('admin-sent-messages-modal');
+    await loadSentMessages(1);
+}
+
+function closeSentMessagesModal() {
+    hideAdminModal('admin-sent-messages-modal');
 }
 
 async function sendUserMessage() {

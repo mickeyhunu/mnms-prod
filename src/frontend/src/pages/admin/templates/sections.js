@@ -9,7 +9,11 @@ export const userEditPanelTemplate = `
                                 <h3 id="user-edit-modal-title">회원 정보 수정</h3>
                                 <p class="admin-user-detail-description">선택한 회원의 정보를 확인하고 수정할 수 있습니다.</p>
                             </div>
-                            <button class="btn btn-outline btn-sm" id="user-edit-cancel-btn" type="button">닫기</button>
+                            <div class="admin-user-detail-header-actions">
+                                <button type="button" class="btn btn-sm btn-primary" id="user-edit-message-btn" data-admin-action="message-user">쪽지 보내기</button>
+                                <button type="button" class="btn btn-sm btn-secondary" id="admin-sent-messages-btn" data-admin-action="sent-messages">보낸 쪽지</button>
+                                <button class="btn btn-outline btn-sm" id="user-edit-cancel-btn" type="button">닫기</button>
+                            </div>
                         </div>
                         <form id="user-edit-form" class="admin-user-detail-form">
                             <div class="profile-form-grid admin-user-form-grid">
