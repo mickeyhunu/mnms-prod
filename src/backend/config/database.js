@@ -1444,6 +1444,21 @@ async function initDatabase() {
   `);
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS admin_user_messages (
+      id BIGINT PRIMARY KEY AUTO_INCREMENT,
+      recipient_user_id BIGINT NOT NULL,
+      sender_admin_id BIGINT NULL,
+      title VARCHAR(120) NOT NULL,
+      content TEXT NOT NULL,
+      read_at TIMESTAMP NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_admin_user_messages_recipient (recipient_user_id, read_at, created_at),
+      FOREIGN KEY (recipient_user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (sender_admin_id) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS attendance_comments (
       id BIGINT PRIMARY KEY AUTO_INCREMENT,
       store_no BIGINT NOT NULL,

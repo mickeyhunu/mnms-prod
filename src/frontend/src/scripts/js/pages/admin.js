@@ -26,6 +26,7 @@ let isGlobalAdminClickBound = false;
 let isDeleteModalActionBound = false;
 let isBusinessDocumentModalActionBound = false;
 let lastAdminReviewSummary = null;
+let messageTargetUser = null;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
@@ -333,6 +334,8 @@ function bindCommonEvents() {
     document.getElementById('user-edit-cancel-btn')?.addEventListener('click', closeUserEditModal);
     document.getElementById('user-edit-cancel-btn-secondary')?.addEventListener('click', closeUserEditModal);
     document.getElementById('user-edit-save-btn')?.addEventListener('click', saveUserDetail);
+    document.getElementById('user-message-cancel-btn')?.addEventListener('click', closeUserMessageModal);
+    document.getElementById('user-message-send-btn')?.addEventListener('click', sendUserMessage);
     document.getElementById('admin-user-point-adjustment-btn')?.addEventListener('click', adjustUserPoints);
     document.getElementById('admin-user-stamp-adjustment-btn')?.addEventListener('click', adjustUserStamps);
     bindUserEditForm();
@@ -1492,6 +1495,7 @@ function renderUsersTable() {
                 <td>${memberTypeLabel}</td>
                 <td>
                     <div class="admin-user-actions">
+                        <button type="button" class="btn btn-sm btn-primary" data-admin-action="message-user" data-target-id="${user.id}" data-target-nickname="${sanitizeHTML(user.nickname || loginId || `회원 #${user.id}`)}">쪽지 보내기</button>
                         <a class="btn btn-sm btn-secondary" href="/admin?tab=${activeUserTab}&editUserId=${user.id}" data-admin-action="edit-user" data-target-id="${user.id}">정보 수정</a>
                     </div>
                 </td>
@@ -3074,6 +3078,11 @@ async function handleAdminTableActionClick(event) {
     const entryId = actionElement.dataset.entryId;
     const entryName = actionElement.dataset.entryName || '';
 
+    if (action === 'message-user' && Number.isInteger(targetId)) {
+        openUserMessageModal(targetId, actionElement.dataset.targetNickname || `회원 #${targetId}`);
+        return;
+    }
+
     if (action === 'delete' && targetType === 'entry' && entryId) {
         openAdminActionModal({
             action,
@@ -3148,6 +3157,43 @@ async function handleAdminTableActionClick(event) {
 
     if (['delete', 'toggle-hide', 'edit-ad', 'edit-business-ad', 'edit-support', 'edit-user', 'answer-inquiry', 'review-business-application', 'preview-business-document', 'revoke-admin'].includes(action) && !entryId && !Number.isInteger(targetId)) {
         alert('대상 정보를 확인할 수 없어 요청을 처리하지 못했습니다. 목록을 새로고침 후 다시 시도해주세요.');
+    }
+}
+
+function openUserMessageModal(userId, nickname) {
+    messageTargetUser = { id: userId, nickname };
+    document.getElementById('user-message-target').textContent = `${nickname} 회원에게 보내는 쪽지`;
+    document.getElementById('user-message-title').value = '';
+    document.getElementById('user-message-content').value = '';
+    document.getElementById('user-message-result').textContent = '';
+    showAdminModal('user-message-modal');
+    document.getElementById('user-message-title')?.focus();
+}
+
+function closeUserMessageModal() {
+    messageTargetUser = null;
+    hideAdminModal('user-message-modal');
+}
+
+async function sendUserMessage() {
+    if (!messageTargetUser) return;
+    const title = document.getElementById('user-message-title')?.value.trim() || '';
+    const content = document.getElementById('user-message-content')?.value.trim() || '';
+    const result = document.getElementById('user-message-result');
+    const button = document.getElementById('user-message-send-btn');
+    if (!title || !content) {
+        result.textContent = '제목과 내용을 모두 입력해주세요.';
+        return;
+    }
+    button.disabled = true;
+    try {
+        await APIClient.post(`/admin/users/${messageTargetUser.id}/messages`, { title, content });
+        alert('쪽지를 보냈습니다.');
+        closeUserMessageModal();
+    } catch (error) {
+        result.textContent = error.message || '쪽지를 보내지 못했습니다.';
+    } finally {
+        button.disabled = false;
     }
 }
 

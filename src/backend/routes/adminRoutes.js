@@ -18,6 +18,7 @@ const { hashPassword } = require('../utils/passwordHasher');
 const posterModel = require('../models/posterModel');
 const { STAMP_TYPES, getUserStampBalance, adjustUserStampsByAdmin } = require('../models/stampModel');
 const attendanceCommentModel = require('../models/attendanceCommentModel');
+const adminMessageModel = require('../models/adminMessageModel');
 
 const router = express.Router();
 
@@ -424,6 +425,21 @@ router.get('/users/:id', async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+});
+
+router.post('/users/:id/messages', async (req, res, next) => {
+  try {
+    const recipientUserId = Number.parseInt(req.params.id, 10);
+    const title = String(req.body?.title || '').trim();
+    const content = String(req.body?.content || '').trim();
+    if (!Number.isInteger(recipientUserId) || recipientUserId <= 0) return res.status(400).json({ message: '유효하지 않은 회원 ID입니다.' });
+    if (!title || title.length > 120) return res.status(400).json({ message: '제목은 1~120자로 입력해주세요.' });
+    if (!content || content.length > 5000) return res.status(400).json({ message: '내용은 1~5,000자로 입력해주세요.' });
+    const target = await adminModel.findUserById(recipientUserId);
+    if (!target || !isManagedUserAccount(target)) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
+    const message = await adminMessageModel.create({ recipientUserId, senderAdminId: req.user.id, title, content });
+    res.status(201).json({ success: true, message });
+  } catch (error) { next(error); }
 });
 
 router.post('/users/:id/stamps/adjust', async (req, res, next) => {
