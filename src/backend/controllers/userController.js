@@ -1046,6 +1046,26 @@ async function readMyAdminMessage(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function myAdminMessages(req, res, next) {
+  try {
+    const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+    const limit = Math.max(1, Math.min(50, Number.parseInt(req.query.limit, 10) || 20));
+    const result = await adminMessageModel.listPageForRecipient(req.user.id, { page, limit });
+    res.json({
+      content: result.rows,
+      pagination: {
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+        totalPages: result.totalPages,
+        hasMore: result.page < result.totalPages
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function markMyNotificationsReadAll(req, res, next) {
   try {
     const limit = Math.max(1, Math.min(100, Number(req.body.limit) || 100));
@@ -1861,6 +1881,7 @@ module.exports = {
   myActivity,
   myLiveAccessStatus,
   myNotifications,
+  myAdminMessages,
   markMyNotificationsRead,
   markMyNotificationsReadAll,
   readMyAdminMessage,

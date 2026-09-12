@@ -4,7 +4,8 @@
 const HeaderNotificationCenter = {
     refreshTimer: null,
     outsideClickHandler: null,
-    showAllNotifications: false,
+    viewMode: 'unread',
+    currentMessages: [],
 
     async init() {
         const user = Auth.getUser();
@@ -16,7 +17,7 @@ const HeaderNotificationCenter = {
             return;
         }
 
-        this.showAllNotifications = false;
+        this.viewMode = 'unread';
         this.bindEvents();
         await this.refresh();
         this.startAutoRefresh();
@@ -60,6 +61,7 @@ const HeaderNotificationCenter = {
                 const willOpen = panel.classList.contains('hidden');
                 this.setOpenState(willOpen);
                 if (willOpen) {
+                    this.viewMode = 'unread';
                     if (typeof HeaderUserMenu !== 'undefined' && typeof HeaderUserMenu.setOpenState === 'function') {
                         HeaderUserMenu.setOpenState(false);
                     }
@@ -72,8 +74,8 @@ const HeaderNotificationCenter = {
             readAllButton.dataset.boundNotificationReadAll = 'true';
             readAllButton.addEventListener('click', (event) => {
                 event.stopPropagation();
-                if (this.showAllNotifications) {
-                    this.showAllNotifications = false;
+                if (this.viewMode !== 'unread') {
+                    this.viewMode = 'unread';
                     this.renderCurrentState();
                     return;
                 }
@@ -86,13 +88,6 @@ const HeaderNotificationCenter = {
             list.dataset.boundNotificationList = 'true';
             list.addEventListener('click', async (event) => {
                 event.stopPropagation();
-                const viewAllButton = event.target.closest('[data-notification-action="view-all"]');
-                if (viewAllButton) {
-                    this.showAllNotifications = true;
-                    this.renderCurrentState();
-                    return;
-                }
-
                 const item = event.target.closest('[data-notification-key]');
                 if (!item) return;
                 const notificationKey = item.dataset.notificationKey;
@@ -104,6 +99,21 @@ const HeaderNotificationCenter = {
                 const targetUrl = item.dataset.notificationUrl;
                 if (targetUrl) {
                     window.location.href = targetUrl;
+                }
+            });
+        }
+
+        const inboxActions = document.querySelector('.header-notification-inbox-actions');
+        if (inboxActions && inboxActions.dataset.boundInboxActions !== 'true') {
+            inboxActions.dataset.boundInboxActions = 'true';
+            inboxActions.addEventListener('click', async (event) => {
+                event.stopPropagation();
+                const action = event.target.closest('[data-notification-action]')?.dataset.notificationAction;
+                if (action === 'view-all') {
+                    this.viewMode = 'notifications';
+                    this.renderCurrentState();
+                } else if (action === 'view-messages') {
+                    await this.showMessageInbox();
                 }
             });
         }
@@ -157,6 +167,11 @@ const HeaderNotificationCenter = {
         if (!messageId) return;
         try {
             const response = await APIClient.post(`/users/me/admin-messages/${messageId}/read`, {});
+            this.currentMessages = this.currentMessages.map((item) => (
+                Number(item.sourceId) === Number(messageId)
+                    ? { ...item, isRead: true, readAt: response.message?.readAt || new Date().toISOString() }
+                    : item
+            ));
             this.showAdminMessageModal(response.message);
             await this.refresh();
         } catch (error) {
@@ -211,29 +226,71 @@ const HeaderNotificationCenter = {
         }
     },
 
+    async showMessageInbox() {
+        this.viewMode = 'messages';
+        this.renderLoadingState('쪽지를 불러오는 중입니다.');
+        try {
+            const messages = [];
+            let page = 1;
+            let hasMore = true;
+            while (hasMore) {
+                const response = await APIClient.get('/users/me/admin-messages', { page, limit: 50 });
+                messages.push(...(Array.isArray(response.content) ? response.content : []));
+                hasMore = Boolean(response.pagination?.hasMore);
+                page += 1;
+            }
+            this.currentMessages = messages.map((item) => ({
+                notificationKey: `admin-message-${item.id}`,
+                type: 'admin_message',
+                sourceId: item.id,
+                title: item.title,
+                content: item.content,
+                actorNickname: item.senderNickname,
+                message: item.title,
+                createdAt: item.createdAt,
+                readAt: item.readAt,
+                isRead: Boolean(item.readAt)
+            }));
+            this.renderCurrentState();
+        } catch (error) {
+            console.error('Failed to fetch messages:', error);
+            this.renderErrorState('쪽지를 불러오지 못했습니다.');
+        }
+    },
+
+    renderLoadingState(message) {
+        const list = document.getElementById('header-notification-list');
+        if (list) list.innerHTML = `<div class="header-notification-empty">${this.escapeHtml(message)}</div>`;
+    },
+
     renderCurrentState() {
         const list = document.getElementById('header-notification-list');
         const dot = document.getElementById('header-notification-dot');
         const readAllButton = document.getElementById('header-notification-read-all');
         if (!list || !dot || !readAllButton) return;
 
-        const allNotifications = this.currentNotifications || [];
+        const allNotifications = (this.currentNotifications || []).filter((item) => item.type !== 'admin_message');
         const unreadNotifications = allNotifications.filter((item) => !item.isRead);
-        const hasUnread = unreadNotifications.length > 0;
+        const unreadMessages = (this.currentNotifications || []).filter((item) => item.type === 'admin_message' && !item.isRead);
+        const hasUnread = unreadNotifications.length > 0 || unreadMessages.length > 0;
 
         dot.classList.toggle('hidden', !hasUnread);
-        readAllButton.textContent = this.showAllNotifications ? '새 알림' : '모두 확인';
-        readAllButton.classList.toggle('hidden', !this.showAllNotifications && !hasUnread);
+        readAllButton.textContent = this.viewMode === 'unread' ? '모두 확인' : '새 알림';
+        readAllButton.classList.toggle('hidden', this.viewMode === 'messages' || (this.viewMode === 'unread' && !unreadNotifications.length));
 
-        const notifications = this.showAllNotifications ? allNotifications : unreadNotifications;
+        const notifications = this.viewMode === 'messages'
+            ? this.currentMessages
+            : this.viewMode === 'notifications' ? allNotifications : unreadNotifications;
+        document.querySelectorAll('.header-notification-view-all').forEach((button) => {
+            const active = (this.viewMode === 'notifications' && button.dataset.notificationAction === 'view-all')
+                || (this.viewMode === 'messages' && button.dataset.notificationAction === 'view-messages');
+            button.classList.toggle('is-active', active);
+        });
 
         if (!notifications.length) {
-            list.innerHTML = `
-                <div class="header-notification-empty">
-                    <div>새로운 알림이 없습니다.</div>
-                    <button type="button" class="header-notification-view-all" data-notification-action="view-all">전체 알림함</button>
-                </div>
-            `;
+            const message = this.viewMode === 'messages' ? '받은 쪽지가 없습니다.'
+                : this.viewMode === 'notifications' ? '알림 내역이 없습니다.' : '새로운 알림이 없습니다.';
+            list.innerHTML = `<div class="header-notification-empty"><div>${message}</div></div>`;
             return;
         }
 
@@ -252,10 +309,10 @@ const HeaderNotificationCenter = {
         }).join('');
     },
 
-    renderErrorState() {
+    renderErrorState(message = '알림을 불러오지 못했습니다.') {
         const list = document.getElementById('header-notification-list');
         if (!list) return;
-        list.innerHTML = '<div class="header-notification-empty">알림을 불러오지 못했습니다.</div>';
+        list.innerHTML = `<div class="header-notification-empty">${this.escapeHtml(message)}</div>`;
         const dot = document.getElementById('header-notification-dot');
         if (dot) {
             dot.classList.add('hidden');

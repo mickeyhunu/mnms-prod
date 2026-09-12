@@ -25,6 +25,32 @@ async function listForRecipient(recipientUserId, { limit = 50 } = {}) {
   return rows;
 }
 
+async function listPageForRecipient(recipientUserId, { page = 1, limit = 20 } = {}) {
+  const safeLimit = Math.max(1, Math.min(50, Number(limit) || 20));
+  const safePage = Math.max(1, Number(page) || 1);
+  const offset = (safePage - 1) * safeLimit;
+  const [countResult, rowsResult] = await Promise.all([
+    getPool().query(
+      'SELECT COUNT(*) AS total FROM admin_user_messages WHERE recipient_user_id = ?',
+      [recipientUserId]
+    ),
+    getPool().query(
+      `SELECT m.id, m.title, m.content, m.read_at AS readAt, m.created_at AS createdAt,
+              COALESCE(NULLIF(a.nickname, ''), '운영팀') AS senderNickname
+         FROM admin_user_messages m
+         LEFT JOIN users a ON a.id = m.sender_admin_id
+        WHERE m.recipient_user_id = ?
+        ORDER BY m.created_at DESC, m.id DESC
+        LIMIT ? OFFSET ?`,
+      [recipientUserId, safeLimit, offset]
+    )
+  ]);
+  const countRow = countResult[0][0];
+  const rows = rowsResult[0];
+  const total = Number(countRow?.total || 0);
+  return { rows, page: safePage, limit: safeLimit, total, totalPages: Math.ceil(total / safeLimit) };
+}
+
 async function findForRecipient(id, recipientUserId) {
   const [rows] = await getPool().query(
     `SELECT m.id, m.title, m.content, m.read_at AS readAt, m.created_at AS createdAt,
@@ -46,4 +72,4 @@ async function markRead(id, recipientUserId) {
   return findForRecipient(id, recipientUserId);
 }
 
-module.exports = { create, listForRecipient, findForRecipient, markRead };
+module.exports = { create, listForRecipient, listPageForRecipient, findForRecipient, markRead };
