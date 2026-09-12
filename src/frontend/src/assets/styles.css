@@ -10,8 +10,8 @@
 
 .telegram-chat-button {
     position: fixed;
-    left: max(20px, env(safe-area-inset-left));
-    bottom: max(20px, env(safe-area-inset-bottom));
+    right: max(20px, env(safe-area-inset-left));
+    bottom: max(70px, env(safe-area-inset-bottom));
     z-index: 1000;
     display: block;
     width: 80px;
@@ -37,8 +37,8 @@
 
 @media (max-width: 640px) {
     .telegram-chat-button {
-        left: max(14px, env(safe-area-inset-left));
-        bottom: max(14px, env(safe-area-inset-bottom));
+        right: max(14px, env(safe-area-inset-left));
+        bottom: max(84px, env(safe-area-inset-bottom));
         width: 64px;
     }
 }
