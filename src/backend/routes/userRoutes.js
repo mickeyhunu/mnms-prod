@@ -14,6 +14,7 @@ const {
   myActivity,
   myLiveAccessStatus,
   myNotifications,
+  myAdminMessages,
   markMyNotificationsRead,
   markMyNotificationsReadAll,
   readMyAdminMessage,
@@ -54,6 +55,7 @@ router.post('/me/business-ads/:id/stamp-event-requests', authMiddleware, createM
 router.get('/me/activity', authMiddleware, myActivity);
 router.get('/me/live-access', authMiddleware, myLiveAccessStatus);
 router.get('/me/notifications', authMiddleware, myNotifications);
+router.get('/me/admin-messages', authMiddleware, myAdminMessages);
 router.post('/me/notifications/read', authMiddleware, markMyNotificationsRead);
 router.post('/me/notifications/read-all', authMiddleware, markMyNotificationsReadAll);
 router.post('/me/admin-messages/:id/read', authMiddleware, readMyAdminMessage);
