@@ -1,8 +1,8 @@
 /**
  * 파일 역할: 전체 화면 레이아웃과 라우팅 렌더링 흐름을 조합하는 최상위 앱 컴포넌트 파일.
  */
-const TELEGRAM_CHAT_HIDDEN_PATHS = ['/play/live'];
-const TELEGRAM_CHAT_HIDDEN_PATH_PREFIXES = ['/my-page', '/admin'];
+const TELEGRAM_CHAT_HIDDEN_PATHS = ['/play/live', '/board/terms', '/customer-service'];
+const TELEGRAM_CHAT_HIDDEN_PATH_PREFIXES = ['/my-page', '/admin', '/support', '/my-inquiries'];
 
 export default {
   computed: {
