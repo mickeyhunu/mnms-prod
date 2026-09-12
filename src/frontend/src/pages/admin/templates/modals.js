@@ -31,12 +31,27 @@ const userMessageModalBody = `
                 <p id="user-message-result" class="help-text" role="status"></p>
 `;
 
+const sentMessagesModalBody = `
+                <p class="text-muted">관리자가 회원에게 보낸 전체 쪽지 내역입니다.</p>
+                <div class="admin-sent-messages-list" id="admin-sent-messages-list">
+                    <p class="text-muted">보낸 쪽지를 불러오는 중...</p>
+                </div>
+                <div class="admin-sent-messages-pagination" id="admin-sent-messages-pagination"></div>
+`;
+
 export const adminModalTemplates = [
   createModalTemplate({
     id: 'user-message-modal',
     titleHtml: '<h3>회원에게 쪽지 보내기</h3>',
     body: userMessageModalBody,
     actions: '<button class="btn btn-secondary" id="user-message-cancel-btn">취소</button><button class="btn btn-primary" id="user-message-send-btn">쪽지 보내기</button>'
+  }),
+  createModalTemplate({
+    id: 'admin-sent-messages-modal',
+    titleHtml: '<h3>보낸 쪽지</h3>',
+    body: sentMessagesModalBody,
+    actions: '<button class="btn btn-secondary" id="admin-sent-messages-close-btn">닫기</button>',
+    panelClass: 'modal-content admin-sent-messages-modal-content'
   }),
   createModalTemplate({
     id: 'support-modal',

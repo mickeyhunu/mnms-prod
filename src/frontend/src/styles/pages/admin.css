@@ -562,6 +562,72 @@ body[data-page="admin"] {
     margin-bottom: 20px;
 }
 
+.admin-user-detail-header-actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-sent-messages-modal-content {
+    width: min(760px, calc(100vw - 32px));
+}
+
+.admin-sent-messages-list {
+    display: grid;
+    gap: 12px;
+    max-height: min(60vh, 620px);
+    overflow-y: auto;
+}
+
+.admin-sent-message-card {
+    padding: 16px;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    background: #f8f9fa;
+}
+
+.admin-sent-message-card h4 {
+    margin: 10px 0 8px;
+}
+
+.admin-sent-message-meta,
+.admin-sent-message-status,
+.admin-sent-messages-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-sent-message-meta,
+.admin-sent-message-status {
+    color: #6c757d;
+    font-size: 13px;
+}
+
+.admin-sent-message-content {
+    margin: 0 0 12px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.admin-sent-messages-pagination {
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.admin-sent-messages-empty,
+.admin-sent-messages-error {
+    margin: 0;
+    padding: 24px;
+    text-align: center;
+}
+
+.admin-sent-messages-error {
+    color: #dc3545;
+}
+
 .admin-user-detail-eyebrow {
     margin: 0 0 8px;
     font-size: 12px;
@@ -782,6 +848,10 @@ body[data-page="admin"] {
 
     .admin-user-detail-header {
         flex-direction: column;
+    }
+
+    .admin-user-detail-header-actions {
+        width: 100%;
     }
 
     .admin-user-form-grid {
