@@ -51,12 +51,20 @@ async function listPageForRecipient(recipientUserId, { page = 1, limit = 20 } = 
   return { rows, page: safePage, limit: safeLimit, total, totalPages: Math.ceil(total / safeLimit) };
 }
 
-async function listSentPage({ page = 1, limit = 20 } = {}) {
+async function listSentPage({ page = 1, limit = 20, recipientUserId } = {}) {
   const safeLimit = Math.max(1, Math.min(50, Number(limit) || 20));
   const safePage = Math.max(1, Number(page) || 1);
   const offset = (safePage - 1) * safeLimit;
+  const safeRecipientUserId = Number.parseInt(recipientUserId, 10);
+  const whereClause = Number.isInteger(safeRecipientUserId) && safeRecipientUserId > 0
+    ? 'WHERE m.recipient_user_id = ?'
+    : '';
+  const filterParams = whereClause ? [safeRecipientUserId] : [];
   const [countResult, rowsResult] = await Promise.all([
-    getPool().query('SELECT COUNT(*) AS total FROM admin_user_messages'),
+    getPool().query(
+      `SELECT COUNT(*) AS total FROM admin_user_messages m ${whereClause}`,
+      filterParams
+    ),
     getPool().query(
       `SELECT m.id, m.title, m.content, m.read_at AS readAt, m.created_at AS createdAt,
               m.recipient_user_id AS recipientUserId,
@@ -65,9 +73,10 @@ async function listSentPage({ page = 1, limit = 20 } = {}) {
          FROM admin_user_messages m
          LEFT JOIN users r ON r.id = m.recipient_user_id
          LEFT JOIN users a ON a.id = m.sender_admin_id
+        ${whereClause}
         ORDER BY m.created_at DESC, m.id DESC
         LIMIT ? OFFSET ?`,
-      [safeLimit, offset]
+      [...filterParams, safeLimit, offset]
     )
   ]);
   const total = Number(countResult[0][0]?.total || 0);

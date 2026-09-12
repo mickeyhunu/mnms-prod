@@ -444,9 +444,16 @@ router.post('/users/:id/messages', async (req, res, next) => {
 
 router.get('/messages', async (req, res, next) => {
   try {
+    const recipientUserId = Number.parseInt(req.query.recipientUserId, 10);
+    if (!Number.isInteger(recipientUserId) || recipientUserId <= 0) {
+      return res.status(400).json({ message: '유효하지 않은 회원 ID입니다.' });
+    }
+    const target = await adminModel.findUserById(recipientUserId);
+    if (!target || !isManagedUserAccount(target)) return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
     const result = await adminMessageModel.listSentPage({
       page: req.query.page,
-      limit: req.query.limit
+      limit: req.query.limit,
+      recipientUserId
     });
     res.json(result);
   } catch (error) { next(error); }

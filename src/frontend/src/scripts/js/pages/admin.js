@@ -27,6 +27,7 @@ let isDeleteModalActionBound = false;
 let isBusinessDocumentModalActionBound = false;
 let lastAdminReviewSummary = null;
 let messageTargetUser = null;
+let sentMessagesTargetUser = null;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
@@ -2208,6 +2209,11 @@ async function openUserEditModal(userId, options = {}) {
             messageButton.dataset.targetId = String(userId);
             messageButton.dataset.targetNickname = user.nickname || user.loginId || `회원 #${userId}`;
         }
+        const sentMessagesButton = document.getElementById('admin-sent-messages-btn');
+        if (sentMessagesButton) {
+            sentMessagesButton.dataset.targetId = String(userId);
+            sentMessagesButton.dataset.targetNickname = user.nickname || user.loginId || `회원 #${userId}`;
+        }
         fillUserEditForm(user);
         renderAdminUserActivity(response.activity || {});
         showAdminModal('user-edit-modal');
@@ -3092,7 +3098,9 @@ async function handleAdminTableActionClick(event) {
     const entryName = actionElement.dataset.entryName || '';
 
     if (action === 'sent-messages') {
-        await openSentMessagesModal();
+        if (Number.isInteger(targetId)) {
+            await openSentMessagesModal(targetId, actionElement.dataset.targetNickname || `회원 #${targetId}`);
+        }
         return;
     }
 
@@ -3236,8 +3244,13 @@ async function loadSentMessages(page = 1) {
     const pagination = document.getElementById('admin-sent-messages-pagination');
     if (list) list.innerHTML = '<p class="text-muted">보낸 쪽지를 불러오는 중...</p>';
     if (pagination) pagination.innerHTML = '';
+    if (!sentMessagesTargetUser) return;
     try {
-        const response = await APIClient.get('/admin/messages', { page, limit: 20 });
+        const response = await APIClient.get('/admin/messages', {
+            page,
+            limit: 20,
+            recipientUserId: sentMessagesTargetUser.id
+        });
         renderSentMessages(response.rows || []);
         renderSentMessagesPagination(response);
     } catch (error) {
@@ -3245,12 +3258,16 @@ async function loadSentMessages(page = 1) {
     }
 }
 
-async function openSentMessagesModal() {
+async function openSentMessagesModal(userId, nickname) {
+    sentMessagesTargetUser = { id: userId, nickname };
+    const target = document.getElementById('admin-sent-messages-target');
+    if (target) target.textContent = `${nickname} 회원에게 보낸 쪽지 내역입니다.`;
     showAdminModal('admin-sent-messages-modal');
     await loadSentMessages(1);
 }
 
 function closeSentMessagesModal() {
+    sentMessagesTargetUser = null;
     hideAdminModal('admin-sent-messages-modal');
 }
 

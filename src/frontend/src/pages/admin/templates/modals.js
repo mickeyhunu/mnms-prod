@@ -32,7 +32,7 @@ const userMessageModalBody = `
 `;
 
 const sentMessagesModalBody = `
-                <p class="text-muted">관리자가 회원에게 보낸 전체 쪽지 내역입니다.</p>
+                <p class="text-muted" id="admin-sent-messages-target">선택한 회원에게 보낸 쪽지 내역입니다.</p>
                 <div class="admin-sent-messages-list" id="admin-sent-messages-list">
                     <p class="text-muted">보낸 쪽지를 불러오는 중...</p>
                 </div>
