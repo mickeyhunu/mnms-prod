@@ -39,6 +39,13 @@ const sentMessagesModalBody = `
                 <div class="admin-sent-messages-pagination" id="admin-sent-messages-pagination"></div>
 `;
 
+const editSentMessageModalBody = `
+                <p class="text-muted" id="admin-sent-message-edit-target"></p>
+                <div class="form-group"><label class="form-label" for="admin-sent-message-edit-title">제목</label><input id="admin-sent-message-edit-title" class="form-control" maxlength="120"></div>
+                <div class="form-group"><label class="form-label" for="admin-sent-message-edit-content">내용</label><textarea id="admin-sent-message-edit-content" class="form-control" rows="8" maxlength="5000"></textarea></div>
+                <p id="admin-sent-message-edit-result" class="help-text" role="status"></p>
+`;
+
 export const adminModalTemplates = [
   createModalTemplate({
     id: 'user-message-modal',
@@ -52,6 +59,12 @@ export const adminModalTemplates = [
     body: sentMessagesModalBody,
     actions: '<button class="btn btn-secondary" id="admin-sent-messages-close-btn">닫기</button>',
     panelClass: 'modal-content admin-sent-messages-modal-content'
+  }),
+  createModalTemplate({
+    id: 'admin-sent-message-edit-modal',
+    titleHtml: '<h3>보낸 쪽지 수정</h3>',
+    body: editSentMessageModalBody,
+    actions: '<button class="btn btn-secondary" id="admin-sent-message-edit-cancel-btn">취소</button><button class="btn btn-primary" id="admin-sent-message-edit-save-btn">저장</button>'
   }),
   createModalTemplate({
     id: 'support-modal',
