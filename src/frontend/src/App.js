@@ -5,6 +5,7 @@ export default {
   template: `
     <router-view />
     <a
+      v-if="!$route.meta.hideTelegramChatButton"
       class="telegram-chat-button"
       href="https://t.me/mnmens_official"
       target="_blank"
