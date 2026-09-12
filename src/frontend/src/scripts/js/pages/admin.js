@@ -28,6 +28,8 @@ let isBusinessDocumentModalActionBound = false;
 let lastAdminReviewSummary = null;
 let messageTargetUser = null;
 let sentMessagesTargetUser = null;
+let editingSentMessage = null;
+let sentMessagesCurrentPage = 1;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
@@ -338,6 +340,8 @@ function bindCommonEvents() {
     document.getElementById('user-message-cancel-btn')?.addEventListener('click', closeUserMessageModal);
     document.getElementById('user-message-send-btn')?.addEventListener('click', sendUserMessage);
     document.getElementById('admin-sent-messages-close-btn')?.addEventListener('click', closeSentMessagesModal);
+    document.getElementById('admin-sent-message-edit-cancel-btn')?.addEventListener('click', closeSentMessageEditModal);
+    document.getElementById('admin-sent-message-edit-save-btn')?.addEventListener('click', saveSentMessageEdit);
     document.getElementById('admin-user-point-adjustment-btn')?.addEventListener('click', adjustUserPoints);
     document.getElementById('admin-user-stamp-adjustment-btn')?.addEventListener('click', adjustUserStamps);
     bindUserEditForm();
@@ -745,6 +749,24 @@ function renderStatsDashboard() {
 }
 
 async function handleGlobalAdminClick(event) {
+    const editSentMessageButton = event.target.closest('[data-edit-sent-message]');
+    if (editSentMessageButton) {
+        event.preventDefault();
+        openSentMessageEditModal({
+            id: Number.parseInt(editSentMessageButton.dataset.editSentMessage || '', 10),
+            title: editSentMessageButton.dataset.messageTitle || '',
+            content: editSentMessageButton.dataset.messageContent || ''
+        });
+        return;
+    }
+
+    const deleteSentMessageButton = event.target.closest('[data-delete-sent-message]');
+    if (deleteSentMessageButton) {
+        event.preventDefault();
+        await deleteSentMessage(Number.parseInt(deleteSentMessageButton.dataset.deleteSentMessage || '', 10));
+        return;
+    }
+
     const sentMessagesPageButton = event.target.closest('[data-sent-messages-page]');
     if (sentMessagesPageButton && !sentMessagesPageButton.disabled) {
         event.preventDefault();
@@ -3221,6 +3243,10 @@ function renderSentMessages(messages = []) {
                 <span>보낸 관리자: ${sanitizeHTML(message.senderNickname || '운영팀')}</span>
                 <span>${message.readAt ? `읽음 · ${sanitizeHTML(formatDate(message.readAt))}` : '읽지 않음'}</span>
             </div>
+            <div class="admin-sent-message-actions">
+                <button type="button" class="btn btn-sm btn-outline" data-edit-sent-message="${Number(message.id)}" data-message-title="${sanitizeHTML(message.title || '')}" data-message-content="${sanitizeHTML(message.content || '')}">수정</button>
+                <button type="button" class="btn btn-sm btn-danger" data-delete-sent-message="${Number(message.id)}">삭제</button>
+            </div>
         </article>
     `).join('');
 }
@@ -3245,6 +3271,7 @@ async function loadSentMessages(page = 1) {
     if (list) list.innerHTML = '<p class="text-muted">보낸 쪽지를 불러오는 중...</p>';
     if (pagination) pagination.innerHTML = '';
     if (!sentMessagesTargetUser) return;
+    sentMessagesCurrentPage = page;
     try {
         const response = await APIClient.get('/admin/messages', {
             page,
@@ -3266,8 +3293,58 @@ async function openSentMessagesModal(userId, nickname) {
     await loadSentMessages(1);
 }
 
+function openSentMessageEditModal(message) {
+    if (!Number.isInteger(message.id) || message.id <= 0) return;
+    editingSentMessage = message;
+    document.getElementById('admin-sent-message-edit-target').textContent = `${sentMessagesTargetUser?.nickname || '회원'} 회원에게 보낸 쪽지`;
+    document.getElementById('admin-sent-message-edit-title').value = message.title;
+    document.getElementById('admin-sent-message-edit-content').value = message.content;
+    document.getElementById('admin-sent-message-edit-result').textContent = '';
+    showAdminModal('admin-sent-message-edit-modal');
+    document.getElementById('admin-sent-message-edit-title')?.focus();
+}
+
+function closeSentMessageEditModal() {
+    editingSentMessage = null;
+    hideAdminModal('admin-sent-message-edit-modal');
+}
+
+async function saveSentMessageEdit() {
+    if (!editingSentMessage) return;
+    const title = document.getElementById('admin-sent-message-edit-title')?.value.trim() || '';
+    const content = document.getElementById('admin-sent-message-edit-content')?.value.trim() || '';
+    const result = document.getElementById('admin-sent-message-edit-result');
+    const button = document.getElementById('admin-sent-message-edit-save-btn');
+    if (!title || !content) {
+        result.textContent = '제목과 내용을 모두 입력해주세요.';
+        return;
+    }
+    button.disabled = true;
+    try {
+        await APIClient.put(`/admin/messages/${editingSentMessage.id}`, { title, content });
+        closeSentMessageEditModal();
+        await loadSentMessages(sentMessagesCurrentPage);
+    } catch (error) {
+        result.textContent = error.message || '쪽지를 수정하지 못했습니다.';
+    } finally {
+        button.disabled = false;
+    }
+}
+
+async function deleteSentMessage(messageId) {
+    if (!Number.isInteger(messageId) || messageId <= 0) return;
+    if (!window.confirm('이 쪽지를 삭제하시겠습니까? 받는 회원의 쪽지함에서도 삭제됩니다.')) return;
+    try {
+        await APIClient.delete(`/admin/messages/${messageId}`);
+        await loadSentMessages(sentMessagesCurrentPage);
+    } catch (error) {
+        alert(error.message || '쪽지를 삭제하지 못했습니다.');
+    }
+}
+
 function closeSentMessagesModal() {
     sentMessagesTargetUser = null;
+    sentMessagesCurrentPage = 1;
     hideAdminModal('admin-sent-messages-modal');
 }
 

@@ -101,6 +101,38 @@ async function findForRecipient(id, recipientUserId) {
   return rows[0] || null;
 }
 
+async function findById(id) {
+  const [rows] = await getPool().query(
+    `SELECT m.id, m.title, m.content, m.read_at AS readAt, m.created_at AS createdAt,
+            m.recipient_user_id AS recipientUserId,
+            COALESCE(NULLIF(r.nickname, ''), NULLIF(r.login_id, ''), CONCAT('회원 #', m.recipient_user_id)) AS recipientNickname,
+            COALESCE(NULLIF(a.nickname, ''), NULLIF(a.login_id, ''), '운영팀') AS senderNickname
+       FROM admin_user_messages m
+       LEFT JOIN users r ON r.id = m.recipient_user_id
+       LEFT JOIN users a ON a.id = m.sender_admin_id
+      WHERE m.id = ?`,
+    [id]
+  );
+  return rows[0] || null;
+}
+
+async function update(id, { title, content }) {
+  const [result] = await getPool().query(
+    'UPDATE admin_user_messages SET title = ?, content = ? WHERE id = ?',
+    [title, content, id]
+  );
+  if (!result.affectedRows) return null;
+  return findById(id);
+}
+
+async function remove(id) {
+  const [result] = await getPool().query(
+    'DELETE FROM admin_user_messages WHERE id = ?',
+    [id]
+  );
+  return result.affectedRows > 0;
+}
+
 async function markRead(id, recipientUserId) {
   await getPool().query(
     `UPDATE admin_user_messages SET read_at = COALESCE(read_at, CURRENT_TIMESTAMP)
@@ -110,4 +142,4 @@ async function markRead(id, recipientUserId) {
   return findForRecipient(id, recipientUserId);
 }
 
-module.exports = { create, listForRecipient, listPageForRecipient, listSentPage, findForRecipient, markRead };
+module.exports = { create, listForRecipient, listPageForRecipient, listSentPage, findForRecipient, findById, update, remove, markRead };
