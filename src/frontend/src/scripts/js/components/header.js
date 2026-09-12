@@ -96,6 +96,10 @@ const HeaderNotificationCenter = {
                 const item = event.target.closest('[data-notification-key]');
                 if (!item) return;
                 const notificationKey = item.dataset.notificationKey;
+                if (item.dataset.notificationType === 'admin_message') {
+                    await this.openAdminMessage(item.dataset.notificationId);
+                    return;
+                }
                 await this.markAsRead(notificationKey);
                 const targetUrl = item.dataset.notificationUrl;
                 if (targetUrl) {
@@ -149,16 +153,45 @@ const HeaderNotificationCenter = {
         }
     },
 
+    async openAdminMessage(messageId) {
+        if (!messageId) return;
+        try {
+            const response = await APIClient.post(`/users/me/admin-messages/${messageId}/read`, {});
+            this.showAdminMessageModal(response.message);
+            await this.refresh();
+        } catch (error) {
+            console.error('Failed to open admin message:', error);
+        }
+    },
+
+    showAdminMessageModal(message) {
+        document.getElementById('admin-message-view-modal')?.remove();
+        const modal = document.createElement('div');
+        modal.id = 'admin-message-view-modal';
+        modal.className = 'admin-message-view-modal';
+        modal.innerHTML = `
+            <div class="admin-message-view-dialog" role="dialog" aria-modal="true" aria-labelledby="admin-message-view-title">
+                <div class="admin-message-view-header"><strong id="admin-message-view-title">${this.escapeHtml(message.title || '관리자 쪽지')}</strong><button type="button" aria-label="쪽지 닫기">&times;</button></div>
+                <div class="admin-message-view-meta">${this.escapeHtml(message.senderNickname || '운영팀')} · ${this.formatDate(message.createdAt)}</div>
+                <div class="admin-message-view-content">${this.escapeHtml(message.content || '')}</div>
+                <div class="admin-message-view-footer"><button type="button" class="btn btn-primary">확인</button></div>
+            </div>`;
+        const close = () => modal.remove();
+        modal.addEventListener('click', (event) => { if (event.target === modal || event.target.closest('.admin-message-view-header button, .admin-message-view-footer button')) close(); });
+        document.body.appendChild(modal);
+        modal.querySelector('.admin-message-view-footer button')?.focus();
+    },
+
     async markAllAsRead() {
         try {
             await APIClient.post('/users/me/notifications/read-all', { limit: 100 });
             if (Array.isArray(this.currentNotifications)) {
                 const readAt = new Date().toISOString();
-                this.currentNotifications = this.currentNotifications.map((item) => ({
-                    ...item,
-                    isRead: true,
-                    readAt
-                }));
+                this.currentNotifications = this.currentNotifications.map((item) => (
+                    item.type === 'admin_message'
+                        ? item
+                        : { ...item, isRead: true, readAt }
+                ));
             }
             this.renderCurrentState();
         } catch (error) {
@@ -207,7 +240,7 @@ const HeaderNotificationCenter = {
         list.innerHTML = notifications.map((item) => {
             const isUnread = !item.isRead;
             return `
-                <button type="button" class="header-notification-item ${isUnread ? 'is-unread' : ''}" data-notification-key="${item.notificationKey}" data-notification-url="${item.targetUrl || ''}">
+                <button type="button" class="header-notification-item ${isUnread ? 'is-unread' : ''}" data-notification-key="${item.notificationKey}" data-notification-url="${item.targetUrl || ''}" data-notification-type="${item.type || ''}" data-notification-id="${item.sourceId || ''}">
                     <div class="header-notification-item-top">
                         <span class="header-notification-item-type">${this.getTypeLabel(item.type)}</span>
                         <span class="header-notification-item-date">${this.formatDate(item.createdAt)}</span>
@@ -236,6 +269,7 @@ const HeaderNotificationCenter = {
         if (type === 'piece_created_for_ad') return '내 광고 조각';
         if (type === 'stamp_event_request') return '스탬프 이벤트';
         if (type === 'admin_notice') return '관리자 알림';
+        if (type === 'admin_message') return '관리자 쪽지';
         if (type === 'admin_attendance_comment_report') return '코멘트 신고';
         if (type === 'inquiry_answer') return '1:1 문의 답변';
         return '알림';
