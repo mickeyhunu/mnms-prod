@@ -753,6 +753,8 @@
     position: absolute;
     top: calc(100% + 10px);
     right: 0;
+    display: flex;
+    flex-direction: column;
     width: min(92vw, 360px);
     max-height: 480px;
     overflow: hidden;
@@ -765,6 +767,7 @@
 
 .header-notification-panel-header {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: space-between;
     padding: 16px 18px;
@@ -782,8 +785,9 @@
 
 .header-notification-list {
     display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
     flex-direction: column;
-    max-height: 410px;
     overflow-y: auto;
 }
 
@@ -871,6 +875,7 @@
 
 .header-notification-inbox-actions {
     display: grid;
+    flex-shrink: 0;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
     padding: 10px 12px;
