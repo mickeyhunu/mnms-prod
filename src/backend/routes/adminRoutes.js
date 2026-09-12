@@ -442,6 +442,16 @@ router.post('/users/:id/messages', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+router.get('/messages', async (req, res, next) => {
+  try {
+    const result = await adminMessageModel.listSentPage({
+      page: req.query.page,
+      limit: req.query.limit
+    });
+    res.json(result);
+  } catch (error) { next(error); }
+});
+
 router.post('/users/:id/stamps/adjust', async (req, res, next) => {
   try {
     if (!isMasterAdminUser(req.user)) {
