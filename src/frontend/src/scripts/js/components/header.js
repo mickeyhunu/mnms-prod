@@ -111,6 +111,7 @@ const HeaderNotificationCenter = {
                 const action = event.target.closest('[data-notification-action]')?.dataset.notificationAction;
                 if (action === 'view-all') {
                     this.viewMode = 'notifications';
+                    this.updateInboxActionState();
                     this.renderCurrentState();
                 } else if (action === 'view-messages') {
                     await this.showMessageInbox();
@@ -228,6 +229,7 @@ const HeaderNotificationCenter = {
 
     async showMessageInbox() {
         this.viewMode = 'messages';
+        this.updateInboxActionState();
         this.renderLoadingState('쪽지를 불러오는 중입니다.');
         try {
             const messages = [];
@@ -263,6 +265,15 @@ const HeaderNotificationCenter = {
         if (list) list.innerHTML = `<div class="header-notification-empty">${this.escapeHtml(message)}</div>`;
     },
 
+    updateInboxActionState() {
+        document.querySelectorAll('.header-notification-inbox-actions [data-notification-action]').forEach((button) => {
+            const active = (this.viewMode === 'notifications' && button.dataset.notificationAction === 'view-all')
+                || (this.viewMode === 'messages' && button.dataset.notificationAction === 'view-messages');
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', String(active));
+        });
+    },
+
     renderCurrentState() {
         const list = document.getElementById('header-notification-list');
         const dot = document.getElementById('header-notification-dot');
@@ -281,11 +292,7 @@ const HeaderNotificationCenter = {
         const notifications = this.viewMode === 'messages'
             ? this.currentMessages
             : this.viewMode === 'notifications' ? allNotifications : unreadNotifications;
-        document.querySelectorAll('.header-notification-view-all').forEach((button) => {
-            const active = (this.viewMode === 'notifications' && button.dataset.notificationAction === 'view-all')
-                || (this.viewMode === 'messages' && button.dataset.notificationAction === 'view-messages');
-            button.classList.toggle('is-active', active);
-        });
+        this.updateInboxActionState();
 
         if (!notifications.length) {
             const message = this.viewMode === 'messages' ? '받은 쪽지가 없습니다.'
