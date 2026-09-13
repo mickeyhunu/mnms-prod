@@ -2402,7 +2402,7 @@ const pageRegistry = {
           </dl>
         </details>
         <details class="wiki-glossary-category">
-          <summary><span>🎭 업소 유형</span><strong>11개</strong></summary>
+          <summary><span>🎭 업소 유형</span><strong>12개</strong></summary>
           <dl class="wiki-glossary-list">
             <dt>룸빵</dt>
             <dd>룸살롱처럼 독립된 방에서 술자리를 갖는 업소나 그 문화를 통칭하는 화류계 은어.</dd>
@@ -2414,6 +2414,8 @@ const pageRegistry = {
             <dd>수위 높은 스킨십이 가능한 업소.</dd>
             <dt>오피</dt>
             <dd>오피스텔 기반 업소.</dd>
+            <dt>힐링</dt>
+            <dd>마사지를 표현하는 용어.</dd>
             <dt>하퍼·하이퍼블릭</dt>
             <dd>일반 퍼블릭 등급의 상위업소.</dd>
             <dt>쩜오</dt>
@@ -2429,7 +2431,7 @@ const pageRegistry = {
           </dl>
         </details>
         <details class="wiki-glossary-category">
-          <summary><span>🗣️ 기타 자주 쓰는 용어</span><strong>15개</strong></summary>
+          <summary><span>🗣️ 기타 자주 쓰는 용어</span><strong>16개</strong></summary>
           <dl class="wiki-glossary-list">
             <dt>작업</dt>
             <dd>이성에게 접근하여 금전적 이득을 얻으려는 행위.</dd>
@@ -2443,6 +2445,8 @@ const pageRegistry = {
             <dd>손님과 종업원 간 신체 접촉.</dd>
             <dt>스펙</dt>
             <dd>키·몸무게 등 신체조건.</dd>
+            <dt>기마이</dt>
+            <dd>돈을 아끼지 않고 시원하게 쓰거나 베푸는 씀씀이를 뜻하는 말.</dd>
             <dt>셋팅</dt>
             <dd>테이블 준비 또는 헤어·메이크업·의상 준비.</dd>
             <dt>사대</dt>
