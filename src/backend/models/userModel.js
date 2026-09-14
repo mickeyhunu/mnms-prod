@@ -2,7 +2,11 @@
  * 파일 역할: userModel 도메인 데이터의 DB 조회/저장 쿼리를 담당하는 모델 파일.
  */
 const { getPool } = require('../config/database');
-const { KOREA_CURRENT_DAY_START_UTC_SQL, KOREA_NEXT_DAY_START_UTC_SQL } = require('../utils/koreaTimeSql');
+const {
+  KOREA_CURRENT_DATE_SQL,
+  KOREA_CURRENT_DAY_START_UTC_SQL,
+  KOREA_NEXT_DAY_START_UTC_SQL
+} = require('../utils/koreaTimeSql');
 const { getLoginRestrictionState, LOGIN_STATUS } = require('../utils/loginRestriction');
 const { hashPassword } = require('../utils/passwordHasher');
 const { resolvePieceChatLifecycle } = require('../utils/pieceChatLifecycle');
@@ -866,7 +870,11 @@ async function withdrawUserById(userId, { reason = '' } = {}) {
   try {
     await connection.beginTransaction();
     const [rows] = await connection.query(
-      'SELECT id, identity_ci_hash, identity_di_hash, phone_hash FROM users WHERE id = ? LIMIT 1',
+      `SELECT id, nickname, identity_ci_hash, identity_di_hash, phone_hash,
+              DATE_FORMAT(${KOREA_CURRENT_DATE_SQL}, '%Y-%m-%d') AS withdrawal_date
+       FROM users
+       WHERE id = ?
+       LIMIT 1`,
       [userId]
     );
     const user = rows[0];
@@ -881,7 +889,7 @@ async function withdrawUserById(userId, { reason = '' } = {}) {
       [user.identity_ci_hash || null, user.identity_di_hash || null, user.phone_hash || null, reason || null, restrictedUntil]
     );
 
-    const withdrawnNickname = `탈퇴회원${userId}`;
+    const withdrawnNickname = `${user.nickname} (탈퇴 ${user.withdrawal_date})`;
     const withdrawnLoginId = `withdrawn${userId}${Date.now()}`;
     const withdrawnPasswordHash = await hashPassword(`withdrawn:${userId}:${Date.now()}`);
     await connection.query(
