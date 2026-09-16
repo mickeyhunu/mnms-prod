@@ -323,7 +323,13 @@ function resolveBusinessAuthorBadgeImage(post = {}) {
         : '/src/assets/ad-plan-badges/none-badge.png';
 }
 
+const ANONYMOUS_BOARD_BADGE_IMAGE = '/src/assets/lv-badges/anonymous.png';
+
 function getAuthorGradeBadgeMarkup(post = {}) {
+    if (String(post?.boardType || '').toUpperCase() === 'ANON') {
+        return ` <img class="user-level-badge" src="${ANONYMOUS_BOARD_BADGE_IMAGE}" alt="익명 회원 배지" loading="lazy">`;
+    }
+
     const normalizedRole = String(post?.authorRole || post?.author_role || post?.role || '').toUpperCase();
     if (normalizedRole === 'ADMIN') {
         return ' <img class="user-level-badge" src="/src/assets/lv-badges/admin.png" alt="관리자 배지" loading="lazy">';
