@@ -545,7 +545,13 @@ function resolveBusinessBadgeImage(author = {}) {
         : '/src/assets/ad-plan-badges/none-badge.png';
 }
 
-function resolveAuthorBadgeMarkup(author = {}) {
+const ANONYMOUS_BOARD_BADGE_IMAGE = '/src/assets/lv-badges/anonymous.png';
+
+function resolveAuthorBadgeMarkup(author = {}, { isAnonymousBoardAuthor = false } = {}) {
+    if (isAnonymousBoardAuthor) {
+        return `<img class="comment-level-badge" src="${ANONYMOUS_BOARD_BADGE_IMAGE}" alt="익명 회원 배지" loading="lazy">`;
+    }
+
     const normalizedRole = String(author?.authorRole || author?.role || '').toUpperCase();
     if (normalizedRole === 'ADMIN') {
         return '<img class="comment-level-badge" src="/src/assets/lv-badges/admin.png" alt="관리자 배지" loading="lazy">';
@@ -1074,7 +1080,9 @@ function renderPostDetail(post) {
     currentPostBoardType = boardType;
     const isCurrentAuthor = post.isAuthor || isCurrentUserPostAuthor(post);
     const isHiddenPost = Boolean(post.isHidden);
-    const authorBadgeMarkup = resolveAuthorBadgeMarkup(post);
+    const authorBadgeMarkup = resolveAuthorBadgeMarkup(post, {
+        isAnonymousBoardAuthor: boardType === 'ANON'
+    });
     const currentUser = Auth.getUser();
     const isAdminViewer = String(currentUser?.role || '').toUpperCase() === 'ADMIN';
     const showRestrictionBadge = isHiddenPost && isAdminViewer;
@@ -1558,6 +1566,8 @@ function createCommentItem(comment, depth = 0) {
     const commentBadgeMarkup = resolveAuthorBadgeMarkup({
         ...comment,
         authorLevel: commentAuthorLevel
+    }, {
+        isAnonymousBoardAuthor: currentPostBoardType === 'ANON'
     });
     const canReplyByServer = comment.canReply !== false;
     const canReply = Auth.isAuthenticated()
