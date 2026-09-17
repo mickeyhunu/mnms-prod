@@ -3,8 +3,8 @@
  */
 export const liveStickyHeaderTemplate = `
 <div class="live-page__sticky-stack">
-                <header class="community-section-header">
-                    <div class="community-header-left">
+                <header class="community-section-header" id="live-section-header">
+                    <div class="community-header-left" data-live-header-default>
                         <button type="button" class="icon-btn icon-btn-square" id="back-btn" aria-label="뒤로가기">
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="m15 18-6-6 6-6"></path>
@@ -12,7 +12,13 @@ export const liveStickyHeaderTemplate = `
                         </button>
                         <span class="community-board-name community-board-name--live"><span class="live-status-dot" aria-hidden="true"></span><span>LIVE</span></span>
                     </div>
-                    <div class="community-actions">
+                    <div class="community-actions" data-live-header-default>
+                        <button type="button" class="icon-btn icon-btn-square" id="live-search-open-btn" aria-label="LIVE 검색" aria-controls="live-header-search" aria-expanded="false">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.3-4.3"></path>
+                            </svg>
+                        </button>
                         <button type="button" class="icon-btn icon-btn-square" id="share-btn" aria-label="공유하기">
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
@@ -21,6 +27,15 @@ export const liveStickyHeaderTemplate = `
                             </svg>
                         </button>
                     </div>
+                    <form class="live-header-search hidden" id="live-header-search" role="search">
+                        <svg class="live-header-search__icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.3-4.3"></path>
+                        </svg>
+                        <label class="sr-only" for="live-search-input">LIVE 키워드 검색</label>
+                        <input type="search" id="live-search-input" placeholder="키워드를 입력하세요" autocomplete="off">
+                        <button type="button" class="live-header-search__close" id="live-search-close-btn" aria-label="검색 닫기">취소</button>
+                    </form>
                 </header>
 
                 <div class="site-subheader__container">

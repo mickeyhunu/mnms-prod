@@ -168,6 +168,7 @@ const liveState = {
     entriesRequestId: 0,
     filtersRequestId: 0,
     hasBoundEvents: false,
+    searchTerm: '',
     hasCachedEntries: false,
     rawRows: [],
     rows: [],
@@ -373,8 +374,78 @@ function handleLiveHelpClick(event) {
 }
 
 function handleLiveHelpKeydown(event) {
+    if (event.key === 'Escape' && !document.getElementById('live-header-search')?.classList.contains('hidden')) {
+        closeLiveSearch();
+        return;
+    }
+
     if (event.key === 'Escape' && !document.getElementById('live-help-modal')?.classList.contains('hidden')) {
         closeLiveHelp();
+    }
+}
+
+function openLiveSearch() {
+    const searchForm = document.getElementById('live-header-search');
+    if (!searchForm) return;
+
+    document.querySelectorAll('#live-section-header [data-live-header-default]').forEach((element) => {
+        element.classList.add('hidden');
+    });
+    searchForm.classList.remove('hidden');
+    document.getElementById('live-search-open-btn')?.setAttribute('aria-expanded', 'true');
+    document.getElementById('live-search-input')?.focus();
+}
+
+function closeLiveSearch() {
+    const searchForm = document.getElementById('live-header-search');
+    const searchInput = document.getElementById('live-search-input');
+    if (!searchForm) return;
+
+    searchForm.classList.add('hidden');
+    document.querySelectorAll('#live-section-header [data-live-header-default]').forEach((element) => {
+        element.classList.remove('hidden');
+    });
+    document.getElementById('live-search-open-btn')?.setAttribute('aria-expanded', 'false');
+    if (searchInput) searchInput.value = '';
+    liveState.searchTerm = '';
+    renderSearchFilteredLiveEntries();
+    document.getElementById('live-search-open-btn')?.focus();
+}
+
+function normalizeLiveSearchTerm(value) {
+    return String(value || '').normalize('NFKC').trim().toLocaleLowerCase('ko-KR');
+}
+
+function isLiveRowSearchMatch(row, searchTerm) {
+    if (!searchTerm) return true;
+
+    const searchableText = Object.values(row && typeof row === 'object' ? row : {})
+        .filter((value) => value !== null && value !== undefined)
+        .map((value) => typeof value === 'object' ? stableSerializeValue(value) : String(value))
+        .join(' ');
+    return normalizeLiveSearchTerm(searchableText).includes(searchTerm);
+}
+
+function renderSearchFilteredLiveEntries() {
+    const searchTerm = liveState.searchTerm;
+    const filteredRows = searchTerm
+        ? liveState.rows.filter((row) => isLiveRowSearchMatch(row, searchTerm))
+        : liveState.rows;
+    const emptyElement = document.getElementById('live-empty');
+
+    renderLiveEntries(filteredRows, liveState.titleColumn);
+
+    if (searchTerm && liveState.selectedCategoryKey === 'attendance') {
+        renderAttendanceSearchResults(searchTerm, filteredRows);
+    }
+
+    if (emptyElement) {
+        emptyElement.textContent = searchTerm
+            ? `'${searchTerm}' 검색 결과가 없습니다.`
+            : '선택한 조건에 해당하는 데이터가 없습니다.';
+        if (searchTerm && !filteredRows.length && liveState.selectedCategoryKey !== 'attendance') {
+            showElement(emptyElement);
+        }
     }
 }
 
@@ -388,6 +459,10 @@ function bindLiveEvents() {
     const scrollBottomButton = document.getElementById('live-scroll-bottom-button');
     const scrollMessageButton = document.getElementById('live-scroll-message-button');
     const shareButton = document.getElementById('share-btn');
+    const searchOpenButton = document.getElementById('live-search-open-btn');
+    const searchCloseButton = document.getElementById('live-search-close-btn');
+    const searchForm = document.getElementById('live-header-search');
+    const searchInput = document.getElementById('live-search-input');
     const helpButton = document.getElementById('live-help-button');
 
     initializeScrollableFilter(storeFilter);
@@ -402,6 +477,13 @@ function bindLiveEvents() {
         window.location.href = '/play';
     });
     shareButton?.addEventListener('click', handleSharePost);
+    searchOpenButton?.addEventListener('click', openLiveSearch);
+    searchCloseButton?.addEventListener('click', closeLiveSearch);
+    searchForm?.addEventListener('submit', (event) => event.preventDefault());
+    searchInput?.addEventListener('input', (event) => {
+        liveState.searchTerm = normalizeLiveSearchTerm(event.target.value);
+        renderSearchFilteredLiveEntries();
+    });
     helpButton?.addEventListener('click', openLiveHelp);
     document.getElementById('live-help-modal')?.addEventListener('click', handleLiveHelpClick);
     document.addEventListener('keydown', handleLiveHelpKeydown);
@@ -728,15 +810,18 @@ function applyLiveEntriesResponse() {
     renderLiveSummary({
         totalCount: liveState.totalCount
     });
-    renderLiveEntries(liveState.rows, liveState.titleColumn);
+    renderSearchFilteredLiveEntries();
     syncLiveLatestCardNotificationState();
     updateLiveScrollBottomButton();
 
-    const hasRows = Array.isArray(liveState.rows) && liveState.rows.length > 0;
+    const visibleRows = liveState.searchTerm
+        ? liveState.rows.filter((row) => isLiveRowSearchMatch(row, liveState.searchTerm))
+        : liveState.rows;
+    const hasRows = Array.isArray(visibleRows) && visibleRows.length > 0;
     const shouldShowSummaryCard = ['entry', 'attendance'].includes(liveState.selectedCategoryKey);
     const emptyElement = document.getElementById('live-empty');
 
-    if (hasRows || shouldShowSummaryCard) {
+    if (hasRows || (shouldShowSummaryCard && !liveState.searchTerm)) {
         hideElement(emptyElement);
     } else {
         showElement(emptyElement);
@@ -1615,15 +1700,15 @@ function createAttendanceList(rows, titleColumn, totalCount = rows.length) {
     `;
 }
 
-function renderAttendanceSearchResults(searchTerm) {
+function renderAttendanceSearchResults(searchTerm, matchingRowsOverride = null) {
     const resultsElement = document.querySelector('#live-entry-list [data-attendance-results]');
     if (!resultsElement || liveState.selectedCategoryKey !== 'attendance') return;
 
     const normalizedSearchTerm = normalizeAttendanceSearchTerm(searchTerm);
     const canSearch = Boolean(liveState.accessRules?.access?.attendance)
-        && normalizedSearchTerm.length === 2;
+        && (matchingRowsOverride ? normalizedSearchTerm.length > 0 : normalizedSearchTerm.length === 2);
     const matchingRows = canSearch
-        ? sortRowsNewestFirst(liveState.rows.filter((row, index) => normalizeAttendanceSearchTerm(
+        ? sortRowsNewestFirst(matchingRowsOverride || liveState.rows.filter((row, index) => normalizeAttendanceSearchTerm(
             resolveEntryWorkerName(row, liveState.titleColumn, index)
         ).includes(normalizedSearchTerm)))
         : [];
