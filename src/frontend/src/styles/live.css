@@ -105,8 +105,13 @@ body[data-page="live"] .header {
 }
 
 .live-header-search__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex: 0 0 auto;
-    padding: 8px 0 8px 8px;
+    width: 32px;
+    height: 32px;
+    padding: 4px;
     border: 0;
     background: transparent;
     color: #fff;
@@ -114,6 +119,56 @@ body[data-page="live"] .header {
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
+}
+
+.live-header-search__close svg,
+.live-header-search__navigation-button svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.live-header-search__navigation {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.live-header-search__navigation-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 4px;
+    border: 0;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+}
+
+.live-header-search__navigation-button:disabled {
+    cursor: default;
+    opacity: 0.35;
+}
+
+.live-search-highlight {
+    border-radius: 2px;
+    background: #fde047;
+    color: #18181b;
+}
+
+.live-search-highlight.is-current {
+    background: #fb923c;
+    outline: 2px solid #fff;
+    outline-offset: 1px;
 }
 
 .live-help-button {

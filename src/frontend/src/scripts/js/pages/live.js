@@ -169,6 +169,7 @@ const liveState = {
     filtersRequestId: 0,
     hasBoundEvents: false,
     searchTerm: '',
+    searchMatchIndex: -1,
     hasCachedEntries: false,
     rawRows: [],
     rows: [],
@@ -416,37 +417,90 @@ function normalizeLiveSearchTerm(value) {
     return String(value || '').normalize('NFKC').trim().toLocaleLowerCase('ko-KR');
 }
 
-function isLiveRowSearchMatch(row, searchTerm) {
-    if (!searchTerm) return true;
+function updateLiveSearchNavigation() {
+    const highlights = Array.from(document.querySelectorAll('#live-entry-list .live-search-highlight'));
+    const hasMatches = highlights.length > 0;
+    const previousButton = document.getElementById('live-search-previous-btn');
+    const nextButton = document.getElementById('live-search-next-btn');
 
-    const searchableText = Object.values(row && typeof row === 'object' ? row : {})
-        .filter((value) => value !== null && value !== undefined)
-        .map((value) => typeof value === 'object' ? stableSerializeValue(value) : String(value))
-        .join(' ');
-    return normalizeLiveSearchTerm(searchableText).includes(searchTerm);
+    [previousButton, nextButton].forEach((button) => {
+        if (button) button.disabled = !hasMatches;
+    });
+
+    if (!hasMatches) {
+        liveState.searchMatchIndex = -1;
+        return;
+    }
+
+    liveState.searchMatchIndex = Math.min(Math.max(liveState.searchMatchIndex, 0), highlights.length - 1);
+    highlights.forEach((highlight, index) => {
+        const isCurrent = index === liveState.searchMatchIndex;
+        highlight.classList.toggle('is-current', isCurrent);
+        if (isCurrent) {
+            highlight.setAttribute('aria-current', 'true');
+        } else {
+            highlight.removeAttribute('aria-current');
+        }
+    });
+}
+
+function highlightLiveSearchMatches(searchTerm) {
+    const listElement = document.getElementById('live-entry-list');
+    if (!listElement || !searchTerm) {
+        updateLiveSearchNavigation();
+        return;
+    }
+
+    const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const matcher = new RegExp(escapedTerm, 'giu');
+    const textNodes = [];
+    const walker = document.createTreeWalker(listElement, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+            const parent = node.parentElement;
+            if (!node.nodeValue.trim() || parent?.closest('script, style, textarea, input, mark')) {
+                return NodeFilter.FILTER_REJECT;
+            }
+            matcher.lastIndex = 0;
+            return matcher.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+        }
+    });
+
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+    textNodes.forEach((textNode) => {
+        const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
+        matcher.lastIndex = 0;
+        for (const match of textNode.nodeValue.matchAll(matcher)) {
+            fragment.append(textNode.nodeValue.slice(lastIndex, match.index));
+            const highlight = document.createElement('mark');
+            highlight.className = 'live-search-highlight';
+            highlight.textContent = match[0];
+            fragment.append(highlight);
+            lastIndex = match.index + match[0].length;
+        }
+        fragment.append(textNode.nodeValue.slice(lastIndex));
+        textNode.replaceWith(fragment);
+    });
+
+    updateLiveSearchNavigation();
+}
+
+function moveLiveSearchResult(direction) {
+    const highlights = Array.from(document.querySelectorAll('#live-entry-list .live-search-highlight'));
+    if (!highlights.length) return;
+
+    liveState.searchMatchIndex = (liveState.searchMatchIndex + direction + highlights.length) % highlights.length;
+    updateLiveSearchNavigation();
+    highlights[liveState.searchMatchIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function renderSearchFilteredLiveEntries() {
-    const searchTerm = liveState.searchTerm;
-    const filteredRows = searchTerm
-        ? liveState.rows.filter((row) => isLiveRowSearchMatch(row, searchTerm))
-        : liveState.rows;
+    renderLiveEntries(liveState.rows, liveState.titleColumn);
+    highlightLiveSearchMatches(liveState.searchTerm);
+
     const emptyElement = document.getElementById('live-empty');
-
-    renderLiveEntries(filteredRows, liveState.titleColumn);
-
-    if (searchTerm && liveState.selectedCategoryKey === 'attendance') {
-        renderAttendanceSearchResults(searchTerm, filteredRows);
-    }
-
-    if (emptyElement) {
-        emptyElement.textContent = searchTerm
-            ? `'${searchTerm}' 검색 결과가 없습니다.`
-            : '선택한 조건에 해당하는 데이터가 없습니다.';
-        if (searchTerm && !filteredRows.length && liveState.selectedCategoryKey !== 'attendance') {
-            showElement(emptyElement);
-        }
-    }
+    if (emptyElement) emptyElement.textContent = '선택한 조건에 해당하는 데이터가 없습니다.';
 }
 
 function bindLiveEvents() {
@@ -463,6 +517,8 @@ function bindLiveEvents() {
     const searchCloseButton = document.getElementById('live-search-close-btn');
     const searchForm = document.getElementById('live-header-search');
     const searchInput = document.getElementById('live-search-input');
+    const searchPreviousButton = document.getElementById('live-search-previous-btn');
+    const searchNextButton = document.getElementById('live-search-next-btn');
     const helpButton = document.getElementById('live-help-button');
 
     initializeScrollableFilter(storeFilter);
@@ -479,9 +535,12 @@ function bindLiveEvents() {
     shareButton?.addEventListener('click', handleSharePost);
     searchOpenButton?.addEventListener('click', openLiveSearch);
     searchCloseButton?.addEventListener('click', closeLiveSearch);
+    searchPreviousButton?.addEventListener('click', () => moveLiveSearchResult(-1));
+    searchNextButton?.addEventListener('click', () => moveLiveSearchResult(1));
     searchForm?.addEventListener('submit', (event) => event.preventDefault());
     searchInput?.addEventListener('input', (event) => {
         liveState.searchTerm = normalizeLiveSearchTerm(event.target.value);
+        liveState.searchMatchIndex = 0;
         renderSearchFilteredLiveEntries();
     });
     helpButton?.addEventListener('click', openLiveHelp);
