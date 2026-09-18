@@ -172,6 +172,7 @@ const liveState = {
     searchMatchIndex: -1,
     searchRequestId: 0,
     searchTimerId: null,
+    searchLoadingRequestId: null,
     hasCachedEntries: false,
     rawRows: [],
     rows: [],
@@ -415,6 +416,7 @@ function closeLiveSearch() {
         window.clearTimeout(liveState.searchTimerId);
         liveState.searchTimerId = null;
     }
+    setLiveSearchLoading(false);
     liveState.searchTerm = '';
     renderSearchFilteredLiveEntries();
     document.getElementById('live-search-open-btn')?.focus();
@@ -436,6 +438,28 @@ function isLiveRowSearchMatch(row, searchTerm) {
 
 function getLiveSearchHighlights() {
     return Array.from(document.querySelectorAll('#live-entry-list .live-search-highlight')).reverse();
+}
+
+function setLiveSearchLoading(isLoading, searchRequestId = null) {
+    const loadingElement = document.getElementById('live-search-loading');
+    if (isLoading) {
+        liveState.searchLoadingRequestId = searchRequestId;
+        loadingElement?.classList.remove('hidden');
+        return;
+    }
+
+    if (searchRequestId !== null && liveState.searchLoadingRequestId !== searchRequestId) return;
+    liveState.searchLoadingRequestId = null;
+    loadingElement?.classList.add('hidden');
+}
+
+function focusCurrentLiveSearchResult({ behavior = 'smooth' } = {}) {
+    const currentHighlight = getLiveSearchHighlights()[liveState.searchMatchIndex];
+    if (!currentHighlight) return;
+
+    currentHighlight.tabIndex = -1;
+    currentHighlight.focus({ preventScroll: true });
+    currentHighlight.scrollIntoView({ behavior, block: 'center' });
 }
 
 function updateLiveSearchNavigation() {
@@ -513,7 +537,64 @@ function moveLiveSearchResult(direction) {
 
     liveState.searchMatchIndex = (liveState.searchMatchIndex + direction + highlights.length) % highlights.length;
     updateLiveSearchNavigation();
-    highlights[liveState.searchMatchIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    focusCurrentLiveSearchResult();
+}
+
+async function searchOlderLiveEntries(searchRequestId) {
+    if (!liveState.searchTerm || !shouldUseHistoryPagination()) return;
+
+    let previousOffset = -1;
+    setLiveSearchLoading(true, searchRequestId);
+    try {
+        while (
+            searchRequestId === liveState.searchRequestId
+            && liveState.searchTerm
+            && !getLiveSearchHighlights().length
+            && liveState.hasMoreHistory
+            && liveState.nextOffset !== previousOffset
+        ) {
+            previousOffset = liveState.nextOffset;
+            liveState.isLoadingOlder = true;
+            await loadLiveEntries({ appendOlder: true });
+        }
+    } catch (error) {
+        console.error('LIVE search history load error:', error);
+        return;
+    } finally {
+        setLiveSearchLoading(false, searchRequestId);
+    }
+
+    if (searchRequestId !== liveState.searchRequestId || !getLiveSearchHighlights().length) return;
+
+    liveState.searchMatchIndex = 0;
+    updateLiveSearchNavigation();
+    focusCurrentLiveSearchResult();
+}
+
+function scheduleOlderLiveSearch() {
+    liveState.searchRequestId += 1;
+    const searchRequestId = liveState.searchRequestId;
+    setLiveSearchLoading(false);
+
+    if (liveState.searchTimerId) {
+        window.clearTimeout(liveState.searchTimerId);
+    }
+    if (!liveState.searchTerm) {
+        liveState.searchTimerId = null;
+        return;
+    }
+
+    liveState.searchTimerId = window.setTimeout(() => {
+        liveState.searchTimerId = null;
+        if (getLiveSearchHighlights().length) {
+            liveState.searchMatchIndex = 0;
+            updateLiveSearchNavigation();
+            focusCurrentLiveSearchResult();
+            return;
+        }
+        if (!liveState.hasMoreHistory) return;
+        searchOlderLiveEntries(searchRequestId);
+    }, 250);
 }
 
 async function searchOlderLiveEntries(searchRequestId) {
@@ -1628,6 +1709,7 @@ function resetLiveEntriesState() {
         window.clearTimeout(liveState.searchTimerId);
         liveState.searchTimerId = null;
     }
+    setLiveSearchLoading(false);
     liveState.searchMatchIndex = 0;
     liveState.rawRows = [];
     liveState.rows = [];
