@@ -139,6 +139,42 @@ body[data-page="live"] .header {
     gap: 8px;
 }
 
+.live-header-search__loading {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+}
+
+.live-header-search__loading.hidden {
+    display: none;
+}
+
+.live-header-search__loading-spinner {
+    width: 15px;
+    height: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: live-search-spin 0.7s linear infinite;
+}
+
+@keyframes live-search-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .live-header-search__loading-spinner {
+        animation: none;
+        border-color: rgba(255, 255, 255, 0.45);
+        border-top-color: #fff;
+    }
+}
+
 .live-header-search__navigation-button {
     display: inline-flex;
     align-items: center;
