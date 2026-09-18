@@ -170,6 +170,8 @@ const liveState = {
     hasBoundEvents: false,
     searchTerm: '',
     searchMatchIndex: -1,
+    searchRequestId: 0,
+    searchTimerId: null,
     hasCachedEntries: false,
     rawRows: [],
     rows: [],
@@ -408,6 +410,11 @@ function closeLiveSearch() {
     });
     document.getElementById('live-search-open-btn')?.setAttribute('aria-expanded', 'false');
     if (searchInput) searchInput.value = '';
+    liveState.searchRequestId += 1;
+    if (liveState.searchTimerId) {
+        window.clearTimeout(liveState.searchTimerId);
+        liveState.searchTimerId = null;
+    }
     liveState.searchTerm = '';
     renderSearchFilteredLiveEntries();
     document.getElementById('live-search-open-btn')?.focus();
@@ -417,8 +424,22 @@ function normalizeLiveSearchTerm(value) {
     return String(value || '').normalize('NFKC').trim().toLocaleLowerCase('ko-KR');
 }
 
+function isLiveRowSearchMatch(row, searchTerm) {
+    if (!searchTerm) return true;
+
+    const searchableText = Object.values(row && typeof row === 'object' ? row : {})
+        .filter((value) => value !== null && value !== undefined)
+        .map((value) => typeof value === 'object' ? stableSerializeValue(value) : String(value))
+        .join(' ');
+    return normalizeLiveSearchTerm(searchableText).includes(searchTerm);
+}
+
+function getLiveSearchHighlights() {
+    return Array.from(document.querySelectorAll('#live-entry-list .live-search-highlight')).reverse();
+}
+
 function updateLiveSearchNavigation() {
-    const highlights = Array.from(document.querySelectorAll('#live-entry-list .live-search-highlight'));
+    const highlights = getLiveSearchHighlights();
     const hasMatches = highlights.length > 0;
     const previousButton = document.getElementById('live-search-previous-btn');
     const nextButton = document.getElementById('live-search-next-btn');
@@ -487,12 +508,59 @@ function highlightLiveSearchMatches(searchTerm) {
 }
 
 function moveLiveSearchResult(direction) {
-    const highlights = Array.from(document.querySelectorAll('#live-entry-list .live-search-highlight'));
+    const highlights = getLiveSearchHighlights();
     if (!highlights.length) return;
 
     liveState.searchMatchIndex = (liveState.searchMatchIndex + direction + highlights.length) % highlights.length;
     updateLiveSearchNavigation();
     highlights[liveState.searchMatchIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function searchOlderLiveEntries(searchRequestId) {
+    if (!liveState.searchTerm || !shouldUseHistoryPagination()) return;
+
+    let previousOffset = -1;
+    while (
+        searchRequestId === liveState.searchRequestId
+        && liveState.searchTerm
+        && !getLiveSearchHighlights().length
+        && liveState.hasMoreHistory
+        && liveState.nextOffset !== previousOffset
+    ) {
+        previousOffset = liveState.nextOffset;
+        liveState.isLoadingOlder = true;
+
+        try {
+            await loadLiveEntries({ appendOlder: true });
+        } catch (error) {
+            console.error('LIVE search history load error:', error);
+            return;
+        }
+    }
+
+    if (searchRequestId !== liveState.searchRequestId || !getLiveSearchHighlights().length) return;
+
+    liveState.searchMatchIndex = 0;
+    updateLiveSearchNavigation();
+    getLiveSearchHighlights()[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function scheduleOlderLiveSearch() {
+    liveState.searchRequestId += 1;
+    const searchRequestId = liveState.searchRequestId;
+
+    if (liveState.searchTimerId) {
+        window.clearTimeout(liveState.searchTimerId);
+    }
+    if (!liveState.searchTerm || getLiveSearchHighlights().length || !liveState.hasMoreHistory) {
+        liveState.searchTimerId = null;
+        return;
+    }
+
+    liveState.searchTimerId = window.setTimeout(() => {
+        liveState.searchTimerId = null;
+        searchOlderLiveEntries(searchRequestId);
+    }, 250);
 }
 
 function renderSearchFilteredLiveEntries() {
@@ -535,13 +603,14 @@ function bindLiveEvents() {
     shareButton?.addEventListener('click', handleSharePost);
     searchOpenButton?.addEventListener('click', openLiveSearch);
     searchCloseButton?.addEventListener('click', closeLiveSearch);
-    searchPreviousButton?.addEventListener('click', () => moveLiveSearchResult(-1));
-    searchNextButton?.addEventListener('click', () => moveLiveSearchResult(1));
+    searchPreviousButton?.addEventListener('click', () => moveLiveSearchResult(1));
+    searchNextButton?.addEventListener('click', () => moveLiveSearchResult(-1));
     searchForm?.addEventListener('submit', (event) => event.preventDefault());
     searchInput?.addEventListener('input', (event) => {
         liveState.searchTerm = normalizeLiveSearchTerm(event.target.value);
         liveState.searchMatchIndex = 0;
         renderSearchFilteredLiveEntries();
+        scheduleOlderLiveSearch();
     });
     helpButton?.addEventListener('click', openLiveHelp);
     document.getElementById('live-help-modal')?.addEventListener('click', handleLiveHelpClick);
@@ -835,6 +904,9 @@ async function loadLiveEntries({ showLoading = false, appendOlder = false, syncT
         updateLiveEntriesState(response, { appendOlder });
         liveState.hasCachedEntries = true;
         applyLiveEntriesResponse();
+        if (!appendOlder && liveState.searchTerm) {
+            scheduleOlderLiveSearch();
+        }
 
         if (appendOlder) {
             restoreLiveScrollAnchor(scrollAnchor);
@@ -1551,6 +1623,12 @@ function updateLiveEntriesState(response = {}, { appendOlder = false } = {}) {
 }
 
 function resetLiveEntriesState() {
+    liveState.searchRequestId += 1;
+    if (liveState.searchTimerId) {
+        window.clearTimeout(liveState.searchTimerId);
+        liveState.searchTimerId = null;
+    }
+    liveState.searchMatchIndex = 0;
     liveState.rawRows = [];
     liveState.rows = [];
     liveState.totalCount = 0;
