@@ -33,7 +33,7 @@ export const liveStickyHeaderTemplate = `
                             <path d="m21 21-4.3-4.3"></path>
                         </svg>
                         <label class="sr-only" for="live-search-input">LIVE 키워드 검색</label>
-                        <input type="search" id="live-search-input" placeholder="키워드를 입력하세요" autocomplete="off">
+                        <input type="search" id="live-search-input" placeholder="텍스트를 입력하세요" autocomplete="off">
                         <button type="button" class="live-header-search__close" id="live-search-close-btn" aria-label="검색 닫기">취소</button>
                     </form>
                 </header>
