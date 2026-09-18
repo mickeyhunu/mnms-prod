@@ -34,7 +34,17 @@ export const liveStickyHeaderTemplate = `
                         </svg>
                         <label class="sr-only" for="live-search-input">LIVE 키워드 검색</label>
                         <input type="search" id="live-search-input" placeholder="텍스트를 입력하세요" autocomplete="off">
-                        <button type="button" class="live-header-search__close" id="live-search-close-btn" aria-label="검색 닫기">취소</button>
+                        <div class="live-header-search__navigation" role="group" aria-label="검색 결과 이동">
+                            <button type="button" class="live-header-search__navigation-button" id="live-search-previous-btn" aria-label="이전 검색 결과" disabled>
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"></path></svg>
+                            </button>
+                            <button type="button" class="live-header-search__navigation-button" id="live-search-next-btn" aria-label="다음 검색 결과" disabled>
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                            </button>
+                        </div>
+                        <button type="button" class="live-header-search__close" id="live-search-close-btn" aria-label="검색 닫기">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12"></path><path d="m6 6 12 12"></path></svg>
+                        </button>
                     </form>
                 </header>
 
