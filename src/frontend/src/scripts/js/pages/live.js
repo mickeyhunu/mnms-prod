@@ -597,6 +597,53 @@ function scheduleOlderLiveSearch() {
     }, 250);
 }
 
+async function searchOlderLiveEntries(searchRequestId) {
+    if (!liveState.searchTerm || !shouldUseHistoryPagination()) return;
+
+    let previousOffset = -1;
+    while (
+        searchRequestId === liveState.searchRequestId
+        && liveState.searchTerm
+        && !getLiveSearchHighlights().length
+        && liveState.hasMoreHistory
+        && liveState.nextOffset !== previousOffset
+    ) {
+        previousOffset = liveState.nextOffset;
+        liveState.isLoadingOlder = true;
+
+        try {
+            await loadLiveEntries({ appendOlder: true });
+        } catch (error) {
+            console.error('LIVE search history load error:', error);
+            return;
+        }
+    }
+
+    if (searchRequestId !== liveState.searchRequestId || !getLiveSearchHighlights().length) return;
+
+    liveState.searchMatchIndex = 0;
+    updateLiveSearchNavigation();
+    getLiveSearchHighlights()[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function scheduleOlderLiveSearch() {
+    liveState.searchRequestId += 1;
+    const searchRequestId = liveState.searchRequestId;
+
+    if (liveState.searchTimerId) {
+        window.clearTimeout(liveState.searchTimerId);
+    }
+    if (!liveState.searchTerm || getLiveSearchHighlights().length || !liveState.hasMoreHistory) {
+        liveState.searchTimerId = null;
+        return;
+    }
+
+    liveState.searchTimerId = window.setTimeout(() => {
+        liveState.searchTimerId = null;
+        searchOlderLiveEntries(searchRequestId);
+    }, 250);
+}
+
 function renderSearchFilteredLiveEntries() {
     renderLiveEntries(liveState.rows, liveState.titleColumn);
     highlightLiveSearchMatches(liveState.searchTerm);
