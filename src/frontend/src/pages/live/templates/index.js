@@ -35,7 +35,6 @@ export const liveStickyHeaderTemplate = `
                         <label class="sr-only" for="live-search-input">LIVE 키워드 검색</label>
                         <input type="search" id="live-search-input" placeholder="텍스트를 입력하세요" autocomplete="off">
                         <div class="live-header-search__navigation" role="group" aria-label="검색 결과 이동">
-                            <span class="live-header-search__status hidden" id="live-search-status" role="status" aria-live="polite"></span>
                             <span class="live-header-search__loading hidden" id="live-search-loading" aria-hidden="true">
                                 <span class="live-header-search__loading-spinner" aria-hidden="true"></span>
                             </span>
