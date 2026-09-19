@@ -139,6 +139,20 @@ body[data-page="live"] .header {
     gap: 8px;
 }
 
+.live-header-search__status {
+    max-width: 92px;
+    overflow: hidden;
+    color: #d1d5db;
+    font-size: 12px;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.live-header-search__status.hidden {
+    display: none;
+}
+
 .live-header-search__loading {
     display: inline-flex;
     align-items: center;
