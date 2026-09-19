@@ -130,6 +130,7 @@ const LIVE_ENTRY_PAGE_SIZE = 200;
 const LIVE_REFRESH_INTERVAL_MS = 30000;
 const LIVE_HISTORY_TOP_THRESHOLD_PX = 160;
 const LIVE_BOTTOM_BUTTON_THRESHOLD_PX = 220;
+const LIVE_SEARCH_HISTORY_TIMEOUT_MS = 7000;
 const LIVE_AVATAR_IMAGE_BASE_PATH = '/src/assets/live-avatars';
 const LIVE_KAKAO_SHARE_TITLE = '미드나잇 맨즈 커뮤니티';
 const LIVE_KAKAO_SHARE_IMAGE_URL = 'https://nightmens.com/src/assets/live-avatars/brand-logo3.png';
@@ -468,16 +469,16 @@ function updateLiveSearchNavigation() {
     const previousButton = document.getElementById('live-search-previous-btn');
     const nextButton = document.getElementById('live-search-next-btn');
 
-    [previousButton, nextButton].forEach((button) => {
-        if (button) button.disabled = !hasMatches;
-    });
-
     if (!hasMatches) {
         liveState.searchMatchIndex = -1;
+        if (previousButton) previousButton.disabled = true;
+        if (nextButton) nextButton.disabled = true;
         return;
     }
 
     liveState.searchMatchIndex = Math.min(Math.max(liveState.searchMatchIndex, 0), highlights.length - 1);
+    if (previousButton) previousButton.disabled = liveState.searchMatchIndex >= highlights.length - 1;
+    if (nextButton) nextButton.disabled = liveState.searchMatchIndex <= 0;
     highlights.forEach((highlight, index) => {
         const isCurrent = index === liveState.searchMatchIndex;
         highlight.classList.toggle('is-current', isCurrent);
@@ -535,7 +536,10 @@ function moveLiveSearchResult(direction) {
     const highlights = getLiveSearchHighlights();
     if (!highlights.length) return;
 
-    liveState.searchMatchIndex = (liveState.searchMatchIndex + direction + highlights.length) % highlights.length;
+    liveState.searchMatchIndex = Math.min(
+        highlights.length - 1,
+        Math.max(0, liveState.searchMatchIndex + direction)
+    );
     updateLiveSearchNavigation();
     focusCurrentLiveSearchResult();
 }
@@ -544,6 +548,7 @@ async function searchOlderLiveEntries(searchRequestId) {
     if (!liveState.searchTerm || !shouldUseHistoryPagination()) return;
 
     let previousOffset = -1;
+    const searchDeadline = Date.now() + LIVE_SEARCH_HISTORY_TIMEOUT_MS;
     setLiveSearchLoading(true, searchRequestId);
     try {
         while (
@@ -552,10 +557,24 @@ async function searchOlderLiveEntries(searchRequestId) {
             && !getLiveSearchHighlights().length
             && liveState.hasMoreHistory
             && liveState.nextOffset !== previousOffset
+            && Date.now() < searchDeadline
         ) {
             previousOffset = liveState.nextOffset;
             liveState.isLoadingOlder = true;
-            await loadLiveEntries({ appendOlder: true });
+            const remainingTime = searchDeadline - Date.now();
+            let timeoutId = null;
+            let didTimeOut;
+            try {
+                didTimeOut = await Promise.race([
+                    loadLiveEntries({ appendOlder: true }).then(() => false),
+                    new Promise((resolve) => {
+                        timeoutId = window.setTimeout(() => resolve(true), remainingTime);
+                    })
+                ]);
+            } finally {
+                if (timeoutId) window.clearTimeout(timeoutId);
+            }
+            if (didTimeOut) break;
         }
     } catch (error) {
         console.error('LIVE search history load error:', error);
@@ -597,59 +616,16 @@ function scheduleOlderLiveSearch() {
     }, 250);
 }
 
-async function searchOlderLiveEntries(searchRequestId) {
-    if (!liveState.searchTerm || !shouldUseHistoryPagination()) return;
-
-    let previousOffset = -1;
-    while (
-        searchRequestId === liveState.searchRequestId
-        && liveState.searchTerm
-        && !getLiveSearchHighlights().length
-        && liveState.hasMoreHistory
-        && liveState.nextOffset !== previousOffset
-    ) {
-        previousOffset = liveState.nextOffset;
-        liveState.isLoadingOlder = true;
-
-        try {
-            await loadLiveEntries({ appendOlder: true });
-        } catch (error) {
-            console.error('LIVE search history load error:', error);
-            return;
-        }
-    }
-
-    if (searchRequestId !== liveState.searchRequestId || !getLiveSearchHighlights().length) return;
-
-    liveState.searchMatchIndex = 0;
-    updateLiveSearchNavigation();
-    getLiveSearchHighlights()[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
-function scheduleOlderLiveSearch() {
-    liveState.searchRequestId += 1;
-    const searchRequestId = liveState.searchRequestId;
-
-    if (liveState.searchTimerId) {
-        window.clearTimeout(liveState.searchTimerId);
-    }
-    if (!liveState.searchTerm || getLiveSearchHighlights().length || !liveState.hasMoreHistory) {
-        liveState.searchTimerId = null;
-        return;
-    }
-
-    liveState.searchTimerId = window.setTimeout(() => {
-        liveState.searchTimerId = null;
-        searchOlderLiveEntries(searchRequestId);
-    }, 250);
-}
-
 function renderSearchFilteredLiveEntries() {
     renderLiveEntries(liveState.rows, liveState.titleColumn);
     highlightLiveSearchMatches(liveState.searchTerm);
 
     const emptyElement = document.getElementById('live-empty');
-    if (emptyElement) emptyElement.textContent = '선택한 조건에 해당하는 데이터가 없습니다.';
+    if (emptyElement) {
+        emptyElement.textContent = liveState.searchTerm
+            ? '검색 결과가 없습니다.'
+            : '선택한 조건에 해당하는 데이터가 없습니다.';
+    }
 }
 
 function bindLiveEvents() {
