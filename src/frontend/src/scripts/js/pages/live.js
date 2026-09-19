@@ -401,6 +401,28 @@ function openLiveSearch() {
     document.getElementById('live-search-input')?.focus();
 }
 
+function syncLiveSearchClearButton() {
+    const clearButton = document.getElementById('live-search-clear-btn');
+    clearButton?.classList.toggle('hidden', !liveState.searchTerm);
+}
+
+function clearLiveSearchTerm({ focus = true } = {}) {
+    const searchInput = document.getElementById('live-search-input');
+    if (searchInput) searchInput.value = '';
+    liveState.searchRequestId += 1;
+    if (liveState.searchTimerId) {
+        window.clearTimeout(liveState.searchTimerId);
+        liveState.searchTimerId = null;
+    }
+    liveState.searchTerm = '';
+    liveState.searchMatchIndex = -1;
+    setLiveSearchLoading(false);
+    setLiveSearchStatus('');
+    syncLiveSearchClearButton();
+    renderSearchFilteredLiveEntries();
+    if (focus) searchInput?.focus();
+}
+
 function closeLiveSearch() {
     const searchForm = document.getElementById('live-header-search');
     const searchInput = document.getElementById('live-search-input');
@@ -411,16 +433,7 @@ function closeLiveSearch() {
         element.classList.remove('hidden');
     });
     document.getElementById('live-search-open-btn')?.setAttribute('aria-expanded', 'false');
-    if (searchInput) searchInput.value = '';
-    liveState.searchRequestId += 1;
-    if (liveState.searchTimerId) {
-        window.clearTimeout(liveState.searchTimerId);
-        liveState.searchTimerId = null;
-    }
-    setLiveSearchLoading(false);
-    setLiveSearchStatus('');
-    liveState.searchTerm = '';
-    renderSearchFilteredLiveEntries();
+    clearLiveSearchTerm({ focus: false });
     document.getElementById('live-search-open-btn')?.focus();
 }
 
@@ -438,8 +451,11 @@ function isLiveRowSearchMatch(row, searchTerm) {
     return normalizeLiveSearchTerm(searchableText).includes(searchTerm);
 }
 
-function getLiveSearchHighlights() {
-    return Array.from(document.querySelectorAll('#live-entry-list .live-search-highlight')).reverse();
+function getLiveSearchResultCards() {
+    if (!liveState.searchTerm) return [];
+    return Array.from(document.querySelectorAll('#live-entry-list .live-chat-card'))
+        .filter((card) => card.querySelector('.live-search-highlight'))
+        .reverse();
 }
 
 function setLiveSearchLoading(isLoading, searchRequestId = null) {
@@ -465,17 +481,17 @@ function setLiveSearchStatus(message = '') {
 }
 
 function focusCurrentLiveSearchResult({ behavior = 'smooth' } = {}) {
-    const currentHighlight = getLiveSearchHighlights()[liveState.searchMatchIndex];
-    if (!currentHighlight) return;
+    const currentCard = getLiveSearchResultCards()[liveState.searchMatchIndex];
+    if (!currentCard) return;
 
-    currentHighlight.tabIndex = -1;
-    currentHighlight.focus({ preventScroll: true });
-    currentHighlight.scrollIntoView({ behavior, block: 'center' });
+    currentCard.tabIndex = -1;
+    currentCard.focus({ preventScroll: true });
+    currentCard.scrollIntoView({ behavior, block: 'center' });
 }
 
 function updateLiveSearchNavigation() {
-    const highlights = getLiveSearchHighlights();
-    const hasMatches = highlights.length > 0;
+    const resultCards = getLiveSearchResultCards();
+    const hasMatches = resultCards.length > 0;
     const previousButton = document.getElementById('live-search-previous-btn');
     const nextButton = document.getElementById('live-search-next-btn');
 
@@ -486,18 +502,21 @@ function updateLiveSearchNavigation() {
         return;
     }
 
-    liveState.searchMatchIndex = Math.min(Math.max(liveState.searchMatchIndex, 0), highlights.length - 1);
-    if (previousButton) previousButton.disabled = liveState.searchMatchIndex >= highlights.length - 1;
+    liveState.searchMatchIndex = Math.min(Math.max(liveState.searchMatchIndex, 0), resultCards.length - 1);
+    if (previousButton) previousButton.disabled = liveState.searchMatchIndex >= resultCards.length - 1;
     if (nextButton) nextButton.disabled = liveState.searchMatchIndex <= 0;
-    highlights.forEach((highlight, index) => {
+    resultCards.forEach((card, index) => {
         const isCurrent = index === liveState.searchMatchIndex;
-        highlight.classList.toggle('is-current', isCurrent);
+        card.classList.toggle('is-search-current', isCurrent);
         if (isCurrent) {
-            highlight.setAttribute('aria-current', 'true');
+            card.setAttribute('aria-current', 'true');
         } else {
-            highlight.removeAttribute('aria-current');
+            card.removeAttribute('aria-current');
         }
     });
+    if (liveState.searchTerm && liveState.searchLoadingRequestId === null) {
+        setLiveSearchStatus(`${liveState.searchMatchIndex + 1} / ${resultCards.length}`);
+    }
 }
 
 function highlightLiveSearchMatches(searchTerm) {
@@ -543,11 +562,11 @@ function highlightLiveSearchMatches(searchTerm) {
 }
 
 function moveLiveSearchResult(direction) {
-    const highlights = getLiveSearchHighlights();
-    if (!highlights.length) return;
+    const resultCards = getLiveSearchResultCards();
+    if (!resultCards.length) return;
 
     liveState.searchMatchIndex = Math.min(
-        highlights.length - 1,
+        resultCards.length - 1,
         Math.max(0, liveState.searchMatchIndex + direction)
     );
     updateLiveSearchNavigation();
@@ -559,7 +578,7 @@ async function searchOlderLiveEntries(searchRequestId) {
 
     let previousOffset = -1;
     const searchDeadline = Date.now() + LIVE_SEARCH_HISTORY_TIMEOUT_MS;
-    let foundMatch = Boolean(getLiveSearchHighlights().length);
+    let foundMatch = Boolean(getLiveSearchResultCards().length);
     setLiveSearchLoading(true, searchRequestId);
     try {
         while (
@@ -586,7 +605,7 @@ async function searchOlderLiveEntries(searchRequestId) {
             }
             if (didTimeOut) break;
 
-            if (!foundMatch && getLiveSearchHighlights().length) {
+            if (!foundMatch && getLiveSearchResultCards().length) {
                 foundMatch = true;
                 liveState.searchMatchIndex = 0;
                 updateLiveSearchNavigation();
@@ -605,7 +624,7 @@ async function searchOlderLiveEntries(searchRequestId) {
 
     if (searchRequestId !== liveState.searchRequestId) return;
 
-    if (!getLiveSearchHighlights().length) {
+    if (!getLiveSearchResultCards().length) {
         setLiveSearchStatus('찾지 못했습니다.');
         return;
     }
@@ -613,7 +632,6 @@ async function searchOlderLiveEntries(searchRequestId) {
     liveState.searchMatchIndex = 0;
     updateLiveSearchNavigation();
     focusCurrentLiveSearchResult();
-    setLiveSearchStatus('검색 완료');
 }
 
 function scheduleOlderLiveSearch() {
@@ -632,13 +650,13 @@ function scheduleOlderLiveSearch() {
 
     liveState.searchTimerId = window.setTimeout(() => {
         liveState.searchTimerId = null;
-        if (getLiveSearchHighlights().length) {
+        if (getLiveSearchResultCards().length) {
             liveState.searchMatchIndex = 0;
             updateLiveSearchNavigation();
             focusCurrentLiveSearchResult();
         }
         if (!liveState.hasMoreHistory) {
-            if (!getLiveSearchHighlights().length) setLiveSearchStatus('찾지 못했습니다.');
+            if (!getLiveSearchResultCards().length) setLiveSearchStatus('찾지 못했습니다.');
             return;
         }
         searchOlderLiveEntries(searchRequestId);
@@ -669,6 +687,7 @@ function bindLiveEvents() {
     const shareButton = document.getElementById('share-btn');
     const searchOpenButton = document.getElementById('live-search-open-btn');
     const searchCloseButton = document.getElementById('live-search-close-btn');
+    const searchClearButton = document.getElementById('live-search-clear-btn');
     const searchForm = document.getElementById('live-header-search');
     const searchInput = document.getElementById('live-search-input');
     const searchPreviousButton = document.getElementById('live-search-previous-btn');
@@ -689,14 +708,24 @@ function bindLiveEvents() {
     shareButton?.addEventListener('click', handleSharePost);
     searchOpenButton?.addEventListener('click', openLiveSearch);
     searchCloseButton?.addEventListener('click', closeLiveSearch);
+    searchClearButton?.addEventListener('click', () => clearLiveSearchTerm());
     searchPreviousButton?.addEventListener('click', () => moveLiveSearchResult(1));
     searchNextButton?.addEventListener('click', () => moveLiveSearchResult(-1));
-    searchForm?.addEventListener('submit', (event) => event.preventDefault());
+    searchForm?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        moveLiveSearchResult(event.shiftKey ? 1 : -1);
+    });
     searchInput?.addEventListener('input', (event) => {
         liveState.searchTerm = normalizeLiveSearchTerm(event.target.value);
         liveState.searchMatchIndex = 0;
+        syncLiveSearchClearButton();
         renderSearchFilteredLiveEntries();
         scheduleOlderLiveSearch();
+    });
+    searchInput?.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        moveLiveSearchResult(event.shiftKey ? 1 : -1);
     });
     helpButton?.addEventListener('click', openLiveHelp);
     document.getElementById('live-help-modal')?.addEventListener('click', handleLiveHelpClick);
