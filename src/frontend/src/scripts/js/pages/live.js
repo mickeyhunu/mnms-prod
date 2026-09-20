@@ -651,8 +651,13 @@ async function searchRecentLiveEntries(searchRequestId, { append = false } = {})
         if (hasMatches) {
             liveState.searchMatchIndex = 0;
             updateLiveSearchNavigation();
-            focusCurrentLiveSearchResult();
-        } else if (append) {
+        }
+
+        // Searching is passive: only the previous/next buttons are allowed to
+        // move the viewport. In particular, the last (300th) checked row used
+        // to call scrollIntoView here and unexpectedly pull users away from
+        // the bottom of the timeline.
+        if (append) {
             restoreLiveScrollAnchor(scrollAnchor);
         } else {
             restoreLiveSearchViewport(preservedScrollY, searchRequestId);
@@ -690,7 +695,6 @@ function scheduleRecentLiveSearch() {
         if (getLiveSearchHighlights().length) {
             liveState.searchMatchIndex = 0;
             updateLiveSearchNavigation();
-            focusCurrentLiveSearchResult();
         }
         searchRecentLiveEntries(searchRequestId);
     }, 250);
