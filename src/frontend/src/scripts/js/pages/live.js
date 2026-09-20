@@ -126,6 +126,8 @@ const LIVE_HELP_GUIDES = {
 
 const LIVE_FILTERS_CACHE_KEY = 'liveFiltersCache:v1';
 const LIVE_HISTORY_PAGE_SIZE = 30;
+const LIVE_SEARCH_REQUEST_SIZE = 50;
+const LIVE_SEARCH_BATCH_SIZE = 300;
 const LIVE_ENTRY_PAGE_SIZE = 200;
 const LIVE_REFRESH_INTERVAL_MS = 30000;
 const LIVE_HISTORY_TOP_THRESHOLD_PX = 160;
@@ -173,6 +175,8 @@ const liveState = {
     searchRequestId: 0,
     searchTimerId: null,
     searchLoadingRequestId: null,
+    searchNextOffset: 0,
+    searchHasMore: false,
     hasCachedEntries: false,
     rawRows: [],
     rows: [],
@@ -418,6 +422,9 @@ function closeLiveSearch() {
     }
     setLiveSearchLoading(false);
     liveState.searchTerm = '';
+    liveState.searchNextOffset = 0;
+    liveState.searchHasMore = false;
+    syncLiveSearchMoreButton();
     renderSearchFilteredLiveEntries();
     document.getElementById('live-search-open-btn')?.focus();
 }
@@ -541,27 +548,73 @@ function moveLiveSearchResult(direction) {
     focusCurrentLiveSearchResult();
 }
 
-async function searchOlderLiveEntries(searchRequestId) {
+function syncLiveSearchMoreButton({ isLoading = false } = {}) {
+    const button = document.getElementById('live-search-more-button');
+    if (!button) return;
+
+    const shouldShow = Boolean(
+        liveState.searchTerm
+        && shouldUseHistoryPagination()
+        && liveState.searchHasMore
+    );
+    button.classList.toggle('hidden', !shouldShow);
+    button.disabled = isLoading;
+    button.textContent = isLoading ? '이전 데이터 검색 중...' : '이전 데이터 추가검색';
+}
+
+async function searchRecentLiveEntries(searchRequestId, { append = false } = {}) {
     if (!liveState.searchTerm || !shouldUseHistoryPagination()) return;
 
-    let previousOffset = -1;
+    const entriesRequestId = ++liveState.entriesRequestId;
+    const preservedScrollY = window.scrollY;
+    let nextOffset = append ? liveState.searchNextOffset : 0;
+    let searchedCount = 0;
+    let latestResponse = null;
+    const batchRows = [];
+
     setLiveSearchLoading(true, searchRequestId);
+    syncLiveSearchMoreButton({ isLoading: true });
     try {
-        while (
-            searchRequestId === liveState.searchRequestId
-            && liveState.searchTerm
-            && liveState.hasMoreHistory
-            && liveState.nextOffset !== previousOffset
-        ) {
-            previousOffset = liveState.nextOffset;
-            liveState.isLoadingOlder = true;
-            await loadLiveEntries({ appendOlder: true });
+        while (searchedCount < LIVE_SEARCH_BATCH_SIZE) {
+            const response = await APIClient.get('/live/entries', buildLiveEntriesQuery({
+                limit: LIVE_SEARCH_REQUEST_SIZE,
+                offset: nextOffset
+            }));
+            if (
+                entriesRequestId !== liveState.entriesRequestId
+                || searchRequestId !== liveState.searchRequestId
+                || !liveState.searchTerm
+            ) return;
+
+            latestResponse = response;
+            const responseRows = Array.isArray(response?.rows) ? response.rows : [];
+            batchRows.push(...responseRows);
+            searchedCount += responseRows.length;
+            nextOffset = Number(response?.nextOffset ?? (nextOffset + responseRows.length));
+
+            if (!responseRows.length || !response?.hasMore) break;
         }
+
+        if (!latestResponse) return;
+        updateLiveEntriesState({ ...latestResponse, rows: batchRows }, {
+            appendOlder: append,
+            replaceRows: !append
+        });
+        liveState.searchNextOffset = nextOffset;
+        liveState.searchHasMore = Boolean(latestResponse.hasMore);
+        liveState.hasCachedEntries = true;
+        applyLiveEntriesResponse();
+        window.requestAnimationFrame(() => {
+            window.scrollTo({ top: preservedScrollY, behavior: 'auto' });
+        });
     } catch (error) {
-        console.error('LIVE search history load error:', error);
+        console.error('LIVE recent entries search error:', error);
         return;
     } finally {
         setLiveSearchLoading(false, searchRequestId);
+        if (searchRequestId === liveState.searchRequestId) {
+            syncLiveSearchMoreButton();
+        }
     }
 
     if (searchRequestId !== liveState.searchRequestId) return;
@@ -572,10 +625,13 @@ async function searchOlderLiveEntries(searchRequestId) {
     updateLiveSearchNavigation();
 }
 
-function scheduleOlderLiveSearch() {
+function scheduleRecentLiveSearch() {
     liveState.searchRequestId += 1;
     const searchRequestId = liveState.searchRequestId;
     setLiveSearchLoading(false);
+    liveState.searchNextOffset = 0;
+    liveState.searchHasMore = false;
+    syncLiveSearchMoreButton();
 
     if (liveState.searchTimerId) {
         window.clearTimeout(liveState.searchTimerId);
@@ -591,8 +647,7 @@ function scheduleOlderLiveSearch() {
             liveState.searchMatchIndex = 0;
             updateLiveSearchNavigation();
         }
-        if (!liveState.hasMoreHistory) return;
-        searchOlderLiveEntries(searchRequestId);
+        searchRecentLiveEntries(searchRequestId);
     }, 250);
 }
 
@@ -624,6 +679,7 @@ function bindLiveEvents() {
     const searchInput = document.getElementById('live-search-input');
     const searchPreviousButton = document.getElementById('live-search-previous-btn');
     const searchNextButton = document.getElementById('live-search-next-btn');
+    const searchMoreButton = document.getElementById('live-search-more-button');
     const helpButton = document.getElementById('live-help-button');
 
     initializeScrollableFilter(storeFilter);
@@ -642,12 +698,17 @@ function bindLiveEvents() {
     searchCloseButton?.addEventListener('click', closeLiveSearch);
     searchPreviousButton?.addEventListener('click', () => moveLiveSearchResult(1));
     searchNextButton?.addEventListener('click', () => moveLiveSearchResult(-1));
+    searchMoreButton?.addEventListener('click', () => {
+        if (!liveState.searchTerm || !liveState.searchHasMore) return;
+        const searchRequestId = ++liveState.searchRequestId;
+        searchRecentLiveEntries(searchRequestId, { append: true });
+    });
     searchForm?.addEventListener('submit', (event) => event.preventDefault());
     searchInput?.addEventListener('input', (event) => {
         liveState.searchTerm = normalizeLiveSearchTerm(event.target.value);
         liveState.searchMatchIndex = 0;
         renderSearchFilteredLiveEntries();
-        scheduleOlderLiveSearch();
+        scheduleRecentLiveSearch();
     });
     helpButton?.addEventListener('click', openLiveHelp);
     document.getElementById('live-help-modal')?.addEventListener('click', handleLiveHelpClick);
@@ -864,7 +925,7 @@ function startLiveAutoRefresh() {
 }
 
 function shouldAutoRefreshLiveData() {
-    return liveState.selectedCategoryKey !== 'attendance';
+    return liveState.selectedCategoryKey !== 'attendance' && !liveState.searchTerm;
 }
 
 async function refreshLiveData({ showLoading = false, syncToLatest = false } = {}) {
@@ -914,13 +975,14 @@ async function loadLiveFilters() {
     renderCategoryButtons(liveState.categories);
 }
 
-async function loadLiveEntries({ showLoading = false, appendOlder = false, syncToLatest = false } = {}) {
+async function loadLiveEntries({ showLoading = false, appendOlder = false, syncToLatest = false, preserveScroll = false, replaceRows = false } = {}) {
     const loadingElement = document.getElementById('live-loading');
     const errorElement = document.getElementById('live-error');
     const emptyElement = document.getElementById('live-empty');
     const listElement = document.getElementById('live-entry-list');
     const requestId = ++liveState.entriesRequestId;
     const scrollAnchor = appendOlder ? createLiveScrollAnchor() : null;
+    const preservedScrollY = preserveScroll ? window.scrollY : null;
 
     hideElement(errorElement);
 
@@ -938,15 +1000,15 @@ async function loadLiveEntries({ showLoading = false, appendOlder = false, syncT
             return;
         }
 
-        updateLiveEntriesState(response, { appendOlder });
+        updateLiveEntriesState(response, { appendOlder, replaceRows });
         liveState.hasCachedEntries = true;
         applyLiveEntriesResponse();
-        if (!appendOlder && liveState.searchTerm) {
-            scheduleOlderLiveSearch();
-        }
-
         if (appendOlder) {
             restoreLiveScrollAnchor(scrollAnchor);
+        } else if (preservedScrollY !== null) {
+            window.requestAnimationFrame(() => {
+                window.scrollTo({ top: preservedScrollY, behavior: 'auto' });
+            });
         } else if (syncToLatest && shouldSyncLatestCardViewport()) {
             const isInitialViewportSync = !liveState.hasAlignedInitialViewport;
             scrollLiveToLatest({
@@ -1616,7 +1678,7 @@ function syncAttendanceCommentsViewport() {
     section.style.setProperty('--attendance-comments-height', `${Math.max(180, availableHeight)}px`);
 }
 
-function buildLiveEntriesQuery({ appendOlder = false } = {}) {
+function buildLiveEntriesQuery({ appendOlder = false, limit = null, offset = null } = {}) {
     if (liveState.selectedCategoryKey === 'attendance') {
         return {
             category: liveState.selectedCategoryKey,
@@ -1627,17 +1689,17 @@ function buildLiveEntriesQuery({ appendOlder = false } = {}) {
     const query = {
         category: liveState.selectedCategoryKey,
         storeNo: liveState.selectedStoreNo,
-        limit: liveState.selectedCategoryKey === 'entry' ? LIVE_ENTRY_PAGE_SIZE : LIVE_HISTORY_PAGE_SIZE,
-        offset: appendOlder && shouldUseHistoryPagination() ? liveState.nextOffset : 0
+        limit: limit ?? (liveState.selectedCategoryKey === 'entry' ? LIVE_ENTRY_PAGE_SIZE : LIVE_HISTORY_PAGE_SIZE),
+        offset: offset ?? (appendOlder && shouldUseHistoryPagination() ? liveState.nextOffset : 0)
     };
 
     return query;
 }
 
-function updateLiveEntriesState(response = {}, { appendOlder = false } = {}) {
+function updateLiveEntriesState(response = {}, { appendOlder = false, replaceRows = false } = {}) {
     const responseRows = Array.isArray(response?.rows) ? response.rows : [];
     const mergedRows = shouldUseHistoryPagination()
-        ? mergeLiveHistoryRows(liveState.rawRows, responseRows)
+        ? mergeLiveHistoryRows(replaceRows ? [] : liveState.rawRows, responseRows)
         : responseRows;
 
     liveState.rawRows = mergedRows;
@@ -1667,6 +1729,9 @@ function resetLiveEntriesState() {
     }
     setLiveSearchLoading(false);
     liveState.searchMatchIndex = 0;
+    liveState.searchNextOffset = 0;
+    liveState.searchHasMore = false;
+    syncLiveSearchMoreButton();
     liveState.rawRows = [];
     liveState.rows = [];
     liveState.totalCount = 0;
@@ -2075,6 +2140,7 @@ function formatLiveDateDividerLabel(rawTimestamp) {
 
 async function maybeLoadOlderLiveHistory() {
     if (!shouldUseHistoryPagination()) return;
+    if (liveState.searchTerm) return;
     if (!liveState.hasMoreHistory || liveState.isLoadingOlder) return;
     if (window.scrollY > LIVE_HISTORY_TOP_THRESHOLD_PX) return;
 
