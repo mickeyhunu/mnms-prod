@@ -572,6 +572,7 @@ async function searchRecentLiveEntries(searchRequestId, { append = false } = {})
 
     const entriesRequestId = ++liveState.entriesRequestId;
     const scrollAnchor = append ? createLiveScrollAnchor() : null;
+    const preservedScrollY = append ? null : window.scrollY;
     let nextOffset = append ? liveState.searchNextOffset : 0;
     let searchedCount = 0;
     let latestResponse = null;
@@ -611,7 +612,19 @@ async function searchRecentLiveEntries(searchRequestId, { append = false } = {})
         liveState.searchHasMore = Boolean(latestResponse.hasMore);
         liveState.hasCachedEntries = true;
         applyLiveEntriesResponse();
-        if (append) restoreLiveScrollAnchor(scrollAnchor);
+        const hasMatches = getLiveSearchHighlights().length > 0;
+        if (hasMatches) {
+            liveState.searchMatchIndex = 0;
+            updateLiveSearchNavigation();
+            focusCurrentLiveSearchResult();
+        } else if (append) {
+            restoreLiveScrollAnchor(scrollAnchor);
+        } else {
+            window.requestAnimationFrame(() => {
+                if (searchRequestId !== liveState.searchRequestId || getLiveSearchHighlights().length) return;
+                window.scrollTo({ top: preservedScrollY, behavior: 'auto' });
+            });
+        }
     } catch (error) {
         console.error('LIVE recent entries search error:', error);
         return;
@@ -621,13 +634,6 @@ async function searchRecentLiveEntries(searchRequestId, { append = false } = {})
             syncLiveSearchMoreButton();
         }
     }
-
-    if (searchRequestId !== liveState.searchRequestId) return;
-
-    if (!getLiveSearchHighlights().length) return;
-
-    liveState.searchMatchIndex = 0;
-    updateLiveSearchNavigation();
 }
 
 function scheduleRecentLiveSearch() {
@@ -652,6 +658,7 @@ function scheduleRecentLiveSearch() {
         if (getLiveSearchHighlights().length) {
             liveState.searchMatchIndex = 0;
             updateLiveSearchNavigation();
+            focusCurrentLiveSearchResult();
         }
         searchRecentLiveEntries(searchRequestId);
     }, 250);
