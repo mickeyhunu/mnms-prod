@@ -427,6 +427,7 @@ function closeLiveSearch() {
     liveState.searchHasMore = false;
     syncLiveSearchMoreButton();
     renderSearchFilteredLiveEntries();
+    releaseLiveSearchLayout();
     document.getElementById('live-search-open-btn')?.focus();
 }
 
@@ -446,6 +447,19 @@ function isLiveRowSearchMatch(row, searchTerm) {
 
 function getLiveSearchHighlights() {
     return Array.from(document.querySelectorAll('#live-entry-list .live-search-highlight')).reverse();
+}
+
+function preserveLiveSearchLayout() {
+    const listElement = document.getElementById('live-entry-list');
+    if (!listElement || listElement.style.minHeight) return;
+
+    // Filtering replaces the whole timeline. Keep its previous footprint so the
+    // browser cannot clamp the viewport to the top before a result is focused.
+    listElement.style.minHeight = `${listElement.offsetHeight}px`;
+}
+
+function releaseLiveSearchLayout() {
+    document.getElementById('live-entry-list')?.style.removeProperty('min-height');
 }
 
 function setLiveSearchLoading(isLoading, searchRequestId = null) {
@@ -572,7 +586,6 @@ async function searchRecentLiveEntries(searchRequestId, { append = false } = {})
 
     const entriesRequestId = ++liveState.entriesRequestId;
     const scrollAnchor = append ? createLiveScrollAnchor() : null;
-    const preservedScrollY = append ? null : window.scrollY;
     let nextOffset = append ? liveState.searchNextOffset : 0;
     let searchedCount = 0;
     let latestResponse = null;
@@ -619,11 +632,6 @@ async function searchRecentLiveEntries(searchRequestId, { append = false } = {})
             focusCurrentLiveSearchResult();
         } else if (append) {
             restoreLiveScrollAnchor(scrollAnchor);
-        } else {
-            window.requestAnimationFrame(() => {
-                if (searchRequestId !== liveState.searchRequestId || getLiveSearchHighlights().length) return;
-                window.scrollTo({ top: preservedScrollY, behavior: 'auto' });
-            });
         }
     } catch (error) {
         console.error('LIVE recent entries search error:', error);
@@ -718,9 +726,12 @@ function bindLiveEvents() {
     });
     searchForm?.addEventListener('submit', (event) => event.preventDefault());
     searchInput?.addEventListener('input', (event) => {
-        liveState.searchTerm = normalizeLiveSearchTerm(event.target.value);
+        const nextSearchTerm = normalizeLiveSearchTerm(event.target.value);
+        if (nextSearchTerm && !liveState.searchTerm) preserveLiveSearchLayout();
+        liveState.searchTerm = nextSearchTerm;
         liveState.searchMatchIndex = 0;
         renderSearchFilteredLiveEntries();
+        if (!liveState.searchTerm) releaseLiveSearchLayout();
         scheduleRecentLiveSearch();
     });
     helpButton?.addEventListener('click', openLiveHelp);
