@@ -500,6 +500,22 @@ function focusCurrentLiveSearchResult({ behavior = 'smooth' } = {}) {
     currentHighlight.scrollIntoView({ behavior, block: 'center' });
 }
 
+function focusCurrentLiveSearchResultAfterLayout(searchRequestId, preservedScrollY = null) {
+    if (Number.isFinite(preservedScrollY)) {
+        window.scrollTo({ top: preservedScrollY, behavior: 'auto' });
+    }
+
+    // Replacing the timeline can update the document height over more than one
+    // layout pass. Wait until that work is complete so the browser cannot clamp
+    // an early scroll and leave the selected match outside the viewport.
+    window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+            if (searchRequestId !== liveState.searchRequestId) return;
+            focusCurrentLiveSearchResult({ behavior: 'auto' });
+        });
+    });
+}
+
 function updateLiveSearchNavigation() {
     const highlights = getLiveSearchHighlights();
     const hasMatches = highlights.length > 0;
@@ -651,15 +667,14 @@ async function searchRecentLiveEntries(searchRequestId, { append = false } = {})
         if (hasMatches) {
             liveState.searchMatchIndex = 0;
             updateLiveSearchNavigation();
+            if (!append) {
+                focusCurrentLiveSearchResultAfterLayout(searchRequestId, preservedScrollY);
+            }
         }
 
-        // Searching is passive: only the previous/next buttons are allowed to
-        // move the viewport. In particular, the last (300th) checked row used
-        // to call scrollIntoView here and unexpectedly pull users away from
-        // the bottom of the timeline.
         if (append) {
             restoreLiveScrollAnchor(scrollAnchor);
-        } else {
+        } else if (!hasMatches) {
             restoreLiveSearchViewport(preservedScrollY, searchRequestId);
         }
     } catch (error) {
@@ -695,6 +710,9 @@ function scheduleRecentLiveSearch() {
         if (getLiveSearchHighlights().length) {
             liveState.searchMatchIndex = 0;
             updateLiveSearchNavigation();
+            if (!shouldUseHistoryPagination()) {
+                focusCurrentLiveSearchResultAfterLayout(searchRequestId);
+            }
         }
         searchRecentLiveEntries(searchRequestId);
     }, 250);
