@@ -939,6 +939,10 @@ body.live-help-open {
     gap: 18px;
 }
 
+.live-entry-list--searching {
+    overflow-anchor: none;
+}
+
 .live-entry-list--attendance {
     display: block;
 }
