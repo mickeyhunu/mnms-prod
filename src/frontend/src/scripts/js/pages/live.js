@@ -459,10 +459,28 @@ function preserveLiveSearchLayout() {
     // Filtering replaces the whole timeline. Keep its previous footprint so the
     // browser cannot clamp the viewport to the top before a result is focused.
     listElement.style.minHeight = `${listElement.offsetHeight}px`;
+    listElement.classList.add('live-entry-list--searching');
 }
 
 function releaseLiveSearchLayout() {
-    document.getElementById('live-entry-list')?.style.removeProperty('min-height');
+    const listElement = document.getElementById('live-entry-list');
+    listElement?.style.removeProperty('min-height');
+    listElement?.classList.remove('live-entry-list--searching');
+}
+
+function restoreLiveSearchViewport(scrollY, searchRequestId = null) {
+    const restore = () => {
+        if (searchRequestId !== null && searchRequestId !== liveState.searchRequestId) return;
+        window.scrollTo({ top: scrollY, behavior: 'auto' });
+    };
+
+    // DOM replacement can trigger scroll anchoring again during the following
+    // layout pass. Restore now and once more after the new rows have settled.
+    restore();
+    window.requestAnimationFrame(() => {
+        restore();
+        window.requestAnimationFrame(restore);
+    });
 }
 
 function setLiveSearchLoading(isLoading, searchRequestId = null) {
@@ -620,6 +638,7 @@ async function searchRecentLiveEntries(searchRequestId, { append = false } = {})
         }
 
         if (!latestResponse) return;
+        const preservedScrollY = window.scrollY;
         updateLiveEntriesState({ ...latestResponse, rows: batchRows }, {
             appendOlder: append,
             replaceRows: !append
@@ -635,6 +654,8 @@ async function searchRecentLiveEntries(searchRequestId, { append = false } = {})
             focusCurrentLiveSearchResult();
         } else if (append) {
             restoreLiveScrollAnchor(scrollAnchor);
+        } else {
+            restoreLiveSearchViewport(preservedScrollY, searchRequestId);
         }
     } catch (error) {
         console.error('LIVE recent entries search error:', error);
@@ -735,7 +756,7 @@ function bindLiveEvents() {
         liveState.searchTerm = nextSearchTerm;
         liveState.searchMatchIndex = 0;
         renderSearchFilteredLiveEntries();
-        window.scrollTo({ top: preservedScrollY, behavior: 'auto' });
+        restoreLiveSearchViewport(preservedScrollY);
         if (!liveState.searchTerm) releaseLiveSearchLayout();
         scheduleRecentLiveSearch();
     });
