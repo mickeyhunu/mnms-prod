@@ -500,6 +500,23 @@ function focusCurrentLiveSearchResult({ behavior = 'smooth' } = {}) {
     currentHighlight.scrollIntoView({ behavior, block: 'center' });
 }
 
+function revealCurrentLiveSearchResultAfterLayout(searchRequestId, preservedScrollY = null) {
+    if (Number.isFinite(preservedScrollY)) {
+        restoreLiveSearchViewport(preservedScrollY, searchRequestId);
+    }
+
+    // The result list is replaced while older data is searched. Wait for that
+    // replacement and scroll anchoring to settle before revealing the match;
+    // otherwise scrollIntoView can run against the old layout and land at the
+    // top of the page instead of at the highlighted keyword.
+    window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+            if (searchRequestId !== liveState.searchRequestId) return;
+            focusCurrentLiveSearchResult({ behavior: 'auto' });
+        });
+    });
+}
+
 function updateLiveSearchNavigation() {
     const highlights = getLiveSearchHighlights();
     const hasMatches = highlights.length > 0;
@@ -655,10 +672,10 @@ async function searchRecentLiveEntries(searchRequestId, { append = false } = {})
 
         if (append) {
             restoreLiveScrollAnchor(scrollAnchor);
+        } else if (hasMatches) {
+            revealCurrentLiveSearchResultAfterLayout(searchRequestId, preservedScrollY);
         } else {
-            // Searching is passive. Updating the result list must never move
-            // the viewport; users can explicitly navigate matches with the
-            // previous/next controls when they want to change position.
+            // A search without a match must leave the viewport untouched.
             restoreLiveSearchViewport(preservedScrollY, searchRequestId);
         }
     } catch (error) {
@@ -694,6 +711,9 @@ function scheduleRecentLiveSearch() {
         if (getLiveSearchHighlights().length) {
             liveState.searchMatchIndex = 0;
             updateLiveSearchNavigation();
+            if (!shouldUseHistoryPagination()) {
+                revealCurrentLiveSearchResultAfterLayout(searchRequestId);
+            }
         }
         searchRecentLiveEntries(searchRequestId);
     }, 250);
