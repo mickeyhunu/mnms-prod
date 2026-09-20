@@ -177,6 +177,7 @@ const liveState = {
     searchLoadingRequestId: null,
     searchNextOffset: 0,
     searchHasMore: false,
+    searchCheckedCount: 0,
     hasCachedEntries: false,
     rawRows: [],
     rows: [],
@@ -448,16 +449,13 @@ function getLiveSearchHighlights() {
 }
 
 function setLiveSearchLoading(isLoading, searchRequestId = null) {
-    const loadingElement = document.getElementById('live-search-loading');
     if (isLoading) {
         liveState.searchLoadingRequestId = searchRequestId;
-        loadingElement?.classList.remove('hidden');
         return;
     }
 
     if (searchRequestId !== null && liveState.searchLoadingRequestId !== searchRequestId) return;
     liveState.searchLoadingRequestId = null;
-    loadingElement?.classList.add('hidden');
 }
 
 function focusCurrentLiveSearchResult({ behavior = 'smooth' } = {}) {
@@ -555,18 +553,25 @@ function syncLiveSearchMoreButton({ isLoading = false } = {}) {
     const shouldShow = Boolean(
         liveState.searchTerm
         && shouldUseHistoryPagination()
-        && liveState.searchHasMore
+        && (isLoading || liveState.searchCheckedCount > 0)
     );
     button.classList.toggle('hidden', !shouldShow);
-    button.disabled = isLoading;
-    button.textContent = isLoading ? '이전 데이터 검색 중...' : '이전 데이터 추가검색';
+    button.classList.toggle('is-loading', isLoading);
+    button.disabled = isLoading || !liveState.searchHasMore;
+
+    const checkedLabel = `${liveState.searchCheckedCount.toLocaleString('ko-KR')}건 확인함`;
+    const actionLabel = isLoading
+        ? '이전 데이터 검색 중'
+        : (liveState.searchHasMore ? '이전 데이터 추가검색' : '이전 데이터 모두 확인');
+    const textElement = button.querySelector('.live-header-search__loading-text');
+    if (textElement) textElement.textContent = `${actionLabel} · ${checkedLabel}`;
 }
 
 async function searchRecentLiveEntries(searchRequestId, { append = false } = {}) {
     if (!liveState.searchTerm || !shouldUseHistoryPagination()) return;
 
     const entriesRequestId = ++liveState.entriesRequestId;
-    const preservedScrollY = window.scrollY;
+    const scrollAnchor = append ? createLiveScrollAnchor() : null;
     let nextOffset = append ? liveState.searchNextOffset : 0;
     let searchedCount = 0;
     let latestResponse = null;
@@ -591,6 +596,8 @@ async function searchRecentLiveEntries(searchRequestId, { append = false } = {})
             batchRows.push(...responseRows);
             searchedCount += responseRows.length;
             nextOffset = Number(response?.nextOffset ?? (nextOffset + responseRows.length));
+            liveState.searchCheckedCount = nextOffset;
+            syncLiveSearchMoreButton({ isLoading: true });
 
             if (!responseRows.length || !response?.hasMore) break;
         }
@@ -604,9 +611,7 @@ async function searchRecentLiveEntries(searchRequestId, { append = false } = {})
         liveState.searchHasMore = Boolean(latestResponse.hasMore);
         liveState.hasCachedEntries = true;
         applyLiveEntriesResponse();
-        window.requestAnimationFrame(() => {
-            window.scrollTo({ top: preservedScrollY, behavior: 'auto' });
-        });
+        if (append) restoreLiveScrollAnchor(scrollAnchor);
     } catch (error) {
         console.error('LIVE recent entries search error:', error);
         return;
@@ -631,6 +636,7 @@ function scheduleRecentLiveSearch() {
     setLiveSearchLoading(false);
     liveState.searchNextOffset = 0;
     liveState.searchHasMore = false;
+    liveState.searchCheckedCount = 0;
     syncLiveSearchMoreButton();
 
     if (liveState.searchTimerId) {
@@ -1731,6 +1737,7 @@ function resetLiveEntriesState() {
     liveState.searchMatchIndex = 0;
     liveState.searchNextOffset = 0;
     liveState.searchHasMore = false;
+    liveState.searchCheckedCount = 0;
     syncLiveSearchMoreButton();
     liveState.rawRows = [];
     liveState.rows = [];

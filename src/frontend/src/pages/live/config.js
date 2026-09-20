@@ -22,7 +22,6 @@ const liveTemplate = `
 
             <div class="live-content">
                 <section class="live-entry-list" id="live-entry-list" aria-label="LIVE 데이터 목록"></section>
-                <button type="button" class="live-search-more-button hidden" id="live-search-more-button">이전 데이터 추가검색</button>
             </div>
             <div class="live-ads-wrap">
                 <section class="live-ads hidden" id="live-ads-container" aria-label="LIVE 하단 광고 배너"></section>
