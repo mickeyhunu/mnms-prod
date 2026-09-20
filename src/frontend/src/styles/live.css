@@ -104,6 +104,13 @@ body[data-page="live"] .header {
     border-bottom-color: #fff;
 }
 
+.live-header-search input::-webkit-search-cancel-button,
+.live-header-search input::-webkit-search-decoration {
+    display: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
 .live-header-search__close {
     display: inline-flex;
     align-items: center;
