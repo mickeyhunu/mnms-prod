@@ -500,14 +500,15 @@ function focusCurrentLiveSearchResult({ behavior = 'smooth' } = {}) {
     currentHighlight.scrollIntoView({ behavior, block: 'center' });
 }
 
-function focusCurrentLiveSearchResultAfterLayout(searchRequestId, preservedScrollY = null) {
+function revealCurrentLiveSearchResultAfterLayout(searchRequestId, preservedScrollY = null) {
     if (Number.isFinite(preservedScrollY)) {
-        window.scrollTo({ top: preservedScrollY, behavior: 'auto' });
+        restoreLiveSearchViewport(preservedScrollY, searchRequestId);
     }
 
-    // Replacing the timeline can update the document height over more than one
-    // layout pass. Wait until that work is complete so the browser cannot clamp
-    // an early scroll and leave the selected match outside the viewport.
+    // The result list is replaced while older data is searched. Wait for that
+    // replacement and scroll anchoring to settle before revealing the match;
+    // otherwise scrollIntoView can run against the old layout and land at the
+    // top of the page instead of at the highlighted keyword.
     window.requestAnimationFrame(() => {
         window.requestAnimationFrame(() => {
             if (searchRequestId !== liveState.searchRequestId) return;
@@ -667,14 +668,14 @@ async function searchRecentLiveEntries(searchRequestId, { append = false } = {})
         if (hasMatches) {
             liveState.searchMatchIndex = 0;
             updateLiveSearchNavigation();
-            if (!append) {
-                focusCurrentLiveSearchResultAfterLayout(searchRequestId, preservedScrollY);
-            }
         }
 
         if (append) {
             restoreLiveScrollAnchor(scrollAnchor);
-        } else if (!hasMatches) {
+        } else if (hasMatches) {
+            revealCurrentLiveSearchResultAfterLayout(searchRequestId, preservedScrollY);
+        } else {
+            // A search without a match must leave the viewport untouched.
             restoreLiveSearchViewport(preservedScrollY, searchRequestId);
         }
     } catch (error) {
@@ -711,7 +712,7 @@ function scheduleRecentLiveSearch() {
             liveState.searchMatchIndex = 0;
             updateLiveSearchNavigation();
             if (!shouldUseHistoryPagination()) {
-                focusCurrentLiveSearchResultAfterLayout(searchRequestId);
+                revealCurrentLiveSearchResultAfterLayout(searchRequestId);
             }
         }
         searchRecentLiveEntries(searchRequestId);
