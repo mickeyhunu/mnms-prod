@@ -64,7 +64,7 @@ body[data-page="live"] .header {
     display: flex;
     align-items: center;
     width: 100%;
-    gap: 10px;
+    gap: 5px;
 }
 
 .live-header-search.hidden {
@@ -143,7 +143,7 @@ body[data-page="live"] .header {
     display: flex;
     flex: 0 0 auto;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
 }
 
 .live-header-search__loading {
@@ -152,7 +152,7 @@ body[data-page="live"] .header {
     justify-content: center;
     gap: 4px;
     min-height: 28px;
-    padding: 3px 7px;
+    padding: 3px 5px;
     border: 0;
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.1);
