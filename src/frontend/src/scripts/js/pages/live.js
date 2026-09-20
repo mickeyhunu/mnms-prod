@@ -500,22 +500,6 @@ function focusCurrentLiveSearchResult({ behavior = 'smooth' } = {}) {
     currentHighlight.scrollIntoView({ behavior, block: 'center' });
 }
 
-function focusCurrentLiveSearchResultAfterLayout(searchRequestId, preservedScrollY = null) {
-    if (Number.isFinite(preservedScrollY)) {
-        window.scrollTo({ top: preservedScrollY, behavior: 'auto' });
-    }
-
-    // Replacing the timeline can update the document height over more than one
-    // layout pass. Wait until that work is complete so the browser cannot clamp
-    // an early scroll and leave the selected match outside the viewport.
-    window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-            if (searchRequestId !== liveState.searchRequestId) return;
-            focusCurrentLiveSearchResult({ behavior: 'auto' });
-        });
-    });
-}
-
 function updateLiveSearchNavigation() {
     const highlights = getLiveSearchHighlights();
     const hasMatches = highlights.length > 0;
@@ -667,14 +651,14 @@ async function searchRecentLiveEntries(searchRequestId, { append = false } = {})
         if (hasMatches) {
             liveState.searchMatchIndex = 0;
             updateLiveSearchNavigation();
-            if (!append) {
-                focusCurrentLiveSearchResultAfterLayout(searchRequestId, preservedScrollY);
-            }
         }
 
         if (append) {
             restoreLiveScrollAnchor(scrollAnchor);
-        } else if (!hasMatches) {
+        } else {
+            // Searching is passive. Updating the result list must never move
+            // the viewport; users can explicitly navigate matches with the
+            // previous/next controls when they want to change position.
             restoreLiveSearchViewport(preservedScrollY, searchRequestId);
         }
     } catch (error) {
@@ -710,9 +694,6 @@ function scheduleRecentLiveSearch() {
         if (getLiveSearchHighlights().length) {
             liveState.searchMatchIndex = 0;
             updateLiveSearchNavigation();
-            if (!shouldUseHistoryPagination()) {
-                focusCurrentLiveSearchResultAfterLayout(searchRequestId);
-            }
         }
         searchRecentLiveEntries(searchRequestId);
     }, 250);
