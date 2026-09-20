@@ -917,6 +917,35 @@ body.live-help-open {
     display: block;
 }
 
+.live-search-more-button {
+    display: block;
+    min-width: 190px;
+    margin: 24px auto 8px;
+    padding: 11px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    background: #24262a;
+    color: #f8fafc;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.live-search-more-button:hover:not(:disabled) {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: #303338;
+}
+
+.live-search-more-button:disabled {
+    cursor: wait;
+    opacity: 0.55;
+}
+
+.live-search-more-button.hidden {
+    display: none;
+}
+
 .attendance-list {
     width: 100%;
     overflow: visible;
