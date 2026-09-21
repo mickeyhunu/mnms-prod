@@ -40,6 +40,7 @@ const app = express();
 const PORT = Number(process.env.PORT || 8080);
 const FRONTEND_DIR = path.join(__dirname, 'src/frontend');
 const INDEX_HTML_PATH = path.join(FRONTEND_DIR, 'index.html');
+////////////////////////////////////////////////////////////
 const BAD_GATEWAY_HTML = `<html>
 <head><title>502 Bad Gateway</title></head>
 <body>
@@ -48,6 +49,7 @@ const BAD_GATEWAY_HTML = `<html>
 </body>
 </html>`;
 const ALLOW_ACCESS_COOKIE = 'mnms_allow_access';
+////////////////////////////////////////////////////////////
 const SITE_ORIGIN = String(process.env.SITE_ORIGIN || process.env.PUBLIC_SITE_URL || 'https://nightmens.com').replace(/\/$/, '');
 const KAKAO_JAVASCRIPT_KEY = String(process.env.PUBLIC_KAKAO_JAVASCRIPT_KEY || process.env.KAKAO_JAVASCRIPT_KEY || '').trim();
 const IS_LOCAL_ENV = process.env.MNMS_ENV_LOCAL_LOADED === 'true';
@@ -60,6 +62,7 @@ const trustProxyValue = parseTrustProxyValue(process.env.TRUST_PROXY || '1');
 
 app.set('trust proxy', trustProxyValue);
 
+////////////////////////////////////////////////////////////
 app.use((req, res, next) => {
   const hasAccess = parseCookies(req.headers.cookie)[ALLOW_ACCESS_COOKIE] === '1';
 
@@ -78,6 +81,7 @@ app.use((req, res, next) => {
 
   return res.status(502).type('html').send(BAD_GATEWAY_HTML);
 });
+////////////////////////////////////////////////////////////
 
 function parseTrustProxyValue(value) {
   const normalized = String(value || '').trim().toLowerCase();
