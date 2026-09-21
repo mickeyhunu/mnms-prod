@@ -2402,7 +2402,7 @@ const pageRegistry = {
           </dl>
         </details>
         <details class="wiki-glossary-category">
-          <summary><span>🎭 업소 유형</span><strong>12개</strong></summary>
+          <summary><span>🎭 업소 유형</span><strong>13개</strong></summary>
           <dl class="wiki-glossary-list">
             <dt>룸빵</dt>
             <dd>룸살롱처럼 독립된 방에서 술자리를 갖는 업소나 그 문화를 통칭하는 화류계 은어.</dd>
@@ -2416,6 +2416,8 @@ const pageRegistry = {
             <dd>오피스텔 기반 업소.</dd>
             <dt>힐링</dt>
             <dd>마사지를 표현하는 용어.</dd>
+            <dt>브압</dt>
+            <dd>‘VIP’의 줄임말로, VIP를 대상으로 하는 서비스를 뜻합니다. 쉽게 말해 가격대가 높은 마사지입니다.</dd>
             <dt>하퍼·하이퍼블릭</dt>
             <dd>일반 퍼블릭 등급의 상위업소.</dd>
             <dt>쩜오</dt>
