@@ -672,6 +672,9 @@ async function searchRecentLiveEntries(searchRequestId, { append = false } = {})
 
         if (append) {
             restoreLiveScrollAnchor(scrollAnchor);
+            if (hasMatches) {
+                revealCurrentLiveSearchResultAfterLayout(searchRequestId);
+            }
         } else if (hasMatches) {
             revealCurrentLiveSearchResultAfterLayout(searchRequestId, preservedScrollY);
         } else {
