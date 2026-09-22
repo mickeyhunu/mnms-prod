@@ -53,7 +53,14 @@ const routes = [
   { path: '/business-management', component: PageView, meta: { pageKey: 'business-management', title: '사업자정보 관리', description: '사업자등록증, 영업허가증, 사업자 상세정보를 관리하세요.', noindex: true } },
   { path: '/play', component: PageView, meta: { pageKey: 'play', title: 'PLAY', description: 'LIVE와 RBTI를 한 번에 이동할 수 있는 PLAY 메뉴입니다.' } },
   { path: '/play/ranking', component: PageView, meta: { pageKey: 'ranking', title: '월간 랭킹', description: '현재 달 일반회원 활동 랭킹을 확인하세요.' } },
-  { path: '/play/live', component: PageView, meta: { pageKey: 'live', title: '실시간 출근부 웨이팅 초톡', description: '실시간 업소 출근부 웨이팅 초이스, 엔트리 현황, 오늘의 추천 정보를 빠르게 확인하세요.', keywords: ['실시간 업소', '라이브 정보', '오늘의 추천 업소', '엔트리 현황', '지역 업소', HIDDEN_SEARCH_KEYWORD], hideTelegramChatButton: true } },
+  { path: '/play/live', component: PageView, 
+    // TODO: LIVE 카테고리 재오픈 시 beforeEnter 속성을 삭제하세요.
+    beforeEnter: () => {
+      window.alert('live 카테고리는 이용이 불가능합니다.');
+      return '/play';
+    },
+    meta: { pageKey: 'live', title: '실시간 출근부 웨이팅 초톡', description: '실시간 업소 출근부 웨이팅 초이스, 엔트리 현황, 오늘의 추천 정보를 빠르게 확인하세요.', keywords: ['실시간 업소', '라이브 정보', '오늘의 추천 업소', '엔트리 현황', '지역 업소', HIDDEN_SEARCH_KEYWORD], hideTelegramChatButton: true } 
+  },
   { path: '/play/rbti', component: PageView, meta: { pageKey: 'rbti', title: 'RBTI 룸MBTI 룸비티아이 테스트', description: '룸MBTI, RBTI, 룸비티아이로 알아보는 화류 유형 검사와 룸빵 유형 검사입니다.', keywords: ['룸mbti', 'rbti', '룸비티아이', '화류 유형 검사', '룸빵 유형 검사', '유흥 MBTI', '성향 테스트'] } },
   { path: '/play/alcohol', component: PageView, meta: { pageKey: 'alcohol', title: '음주 측정기', description: '간단한 음주 상태 자가 점검을 위한 음주측정 페이지입니다.' } },
   { path: '/play/wiki', component: PageView, meta: { pageKey: 'wiki', title: '룸빵위키 | 화류계 유흥업소 용어사전', description: '룸빵위키에서 화류계 유흥업소 용어와 은어를 카테고리별로 검색하고 쉽게 확인하세요.', keywords: ['룸빵위키', '화류계 용어', '화류업계 용어', '화류 용어사전', '유흥 용어', '룸빵 용어', '미드나잇 맨즈'] } },
