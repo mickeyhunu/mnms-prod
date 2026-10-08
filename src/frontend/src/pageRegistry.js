@@ -810,7 +810,7 @@ const pageRegistry = {
                         <span class="ad-activation-switch-text">ON</span>
                         <span class="sr-only" id="ad-purchase-activation-toggle-label">자동연장 OFF</span>
                     </label>
-                    <p class="ad-management-safe-note"><span aria-hidden="true">🔒</span><b id="ad-activation-note-title">업체광고 자동연장</b><br><span id="ad-activation-note-description">자동연장 ON 시 업체광고가 계속 노출되도록 기간 종료마다 스탬프 1개가 자동 소모됩니다.</span><br><span id="ad-activation-note-description">자동연장 ON 상태에서 보유 스탬프가 0개이면 자동연장이 OFF되고 현재 활성화된 광고 기간 종료 후 노출이 중지됩니다.</span></p>
+                    <p class="ad-management-safe-note"><span aria-hidden="true">🔒</span><b id="ad-activation-note-title">업체광고 자동연장</b><br><span id="ad-activation-note-description">자동연장 ON 시 업체광고가 계속 노출되도록 기간 종료마다 스탬프 5개가 자동 소모됩니다.</span><br><span id="ad-activation-balance-note">자동연장 ON 상태에서 보유 스탬프가 5개 미만이면 자동연장이 OFF되고 현재 활성화된 광고 기간 종료 후 노출이 중지됩니다.</span></p>
                 </section>
 
                 <section class="ad-management-panel" aria-labelledby="ad-management-product-title">
@@ -827,21 +827,21 @@ const pageRegistry = {
                             <strong>지역 목록 일반 노출</strong>
                             <span class="ad-product-divider"></span>
                             <span class="ad-product-radio" aria-hidden="true"></span>
-                            <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 3일</b></span>
+                            <span class="ad-product-cost"><small>필요 스탬프</small><b>5개 / 15일</b></span>
                         </button>
                         <button type="button" class="ad-product-card" data-plan="plus" data-category="business" role="tab" aria-selected="false">
                             <img src="/src/assets/ad-plan-badges/plus-badge.png" alt="PLUS" class="ad-product-badge">
                             <strong>지역 상단 우선 노출</strong>
                             <span class="ad-product-divider"></span>
                             <span class="ad-product-radio" aria-hidden="true"></span>
-                            <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 2일</b></span>
+                            <span class="ad-product-cost"><small>필요 스탬프</small><b>5개 / 10일</b></span>
                         </button>
                         <button type="button" class="ad-product-card" data-plan="premium" data-category="business" role="tab" aria-selected="false">
                             <img src="/src/assets/ad-plan-badges/premium-badge.png" alt="PREMIUM" class="ad-product-badge">
                             <strong>지역 상단 최우선 노출</strong>
                             <span class="ad-product-divider"></span>
                             <span class="ad-product-radio" aria-hidden="true"></span>
-                            <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 1일</b></span>
+                            <span class="ad-product-cost"><small>필요 스탬프</small><b>5개 / 5일</b></span>
                         </button>
                         <button type="button" class="ad-product-card" data-plan="piece" data-category="piece" role="tab" aria-selected="false">
                             <img src="/src/assets/ad-plan-badges/piece-badge.png" alt="PIECE" class="ad-product-badge">
@@ -871,7 +871,7 @@ const pageRegistry = {
                             <div><dt>보유 스탬프</dt><dd id="ad-summary-stamp-balance">확인 중...</dd></div>
                             <dl>
                                 <div><dt>선택한 상품</dt><dd id="ad-selected-product">프리미엄 광고</dd></div>
-                                <div><dt>차감 스탬프</dt><dd id="ad-product-price">스탬프 1개</dd></div>
+                                <div><dt>차감 스탬프</dt><dd id="ad-product-price">스탬프 5개</dd></div>
                                 <div><dt>노출 기간</dt><dd id="ad-vat-price">1일</dd></div>
                                 <div><dt>예상 노출 기간</dt><dd id="ad-estimated-run-days">-</dd></div>
                                 <div><dt>최대 자동연장 기간</dt><dd id="ad-estimated-run-until">-</dd></div>

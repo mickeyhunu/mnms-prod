@@ -15,6 +15,7 @@
     const activationTitle = document.getElementById('ad-management-activation-title');
     const activationNoteTitle = document.getElementById('ad-activation-note-title');
     const activationNoteDescription = document.getElementById('ad-activation-note-description');
+    const activationBalanceNote = document.getElementById('ad-activation-balance-note');
     const activationButton = document.getElementById('ad-purchase-submit');
     const statusTitle = document.getElementById('ad-management-status-title');
     const statusBadge = document.getElementById('ad-management-status-badge');
@@ -37,30 +38,30 @@
             code: 'BASIC',
             name: '베이직 광고',
             headline: '지역 목록 일반 노출',
-            durationDays: 3,
+            durationDays: 15,
             durationUnit: 'day',
-            durationLabel: '3일',
-            stampCount: 1,
+            durationLabel: '15일',
+            stampCount: 5,
             badgeImage: '/src/assets/ad-plan-badges/basic-badge.png',
             badgeAlt: 'BASIC',
             features: [
-                { text: '스탬프 1개로 업체정보 3일 노출', enabled: true },
+                { text: '스탬프 5개로 업체정보 15일 노출', enabled: true },
                 { text: '1일 점프 6개', enabled: true },
-                { text: '수동 활성화 시 스탬프 1개 소모', enabled: true },
+                { text: '수동 활성화 시 스탬프 5개 소모', enabled: true },
             ]
         },
         plus: {
             code: 'PLUS',
             name: '플러스 광고',
             headline: '지역 상단 우선 노출',
-            durationDays: 2,
+            durationDays: 10,
             durationUnit: 'day',
-            durationLabel: '2일',
-            stampCount: 1,
+            durationLabel: '10일',
+            stampCount: 5,
             badgeImage: '/src/assets/ad-plan-badges/plus-badge.png',
             badgeAlt: 'PLUS',
             features: [
-                { text: '스탬프 1개로 업체정보 2일 노출', enabled: true },
+                { text: '스탬프 5개로 업체정보 10일 노출', enabled: true },
                 { text: '1일 점프 9개', enabled: true },
                 { text: '베이직보다 높은 광고 등급으로 표시', enabled: true },
                 { text: '텔레그램 채널 자동 연동 홍보', enabled: true },
@@ -70,14 +71,14 @@
             code: 'PREMIUM',
             name: '프리미엄 광고',
             headline: '지역 상단 최우선 노출',
-            durationDays: 1,
+            durationDays: 5,
             durationUnit: 'day',
-            durationLabel: '1일',
-            stampCount: 1,
+            durationLabel: '5일',
+            stampCount: 5,
             badgeImage: '/src/assets/ad-plan-badges/premium-badge.png',
             badgeAlt: 'PREMIUM',
             features: [
-                { text: '스탬프 1개로 업체정보 1일 노출', enabled: true },
+                { text: '스탬프 5개로 업체정보 5일 노출', enabled: true },
                 { text: '1일 점프 12개', enabled: true },
                 { text: '활성화 기간동안 1일 1회 홍보게시글 작성 가능', enabled: true },
                 { text: '활성화 기간동안 일반회원 게시글에 1일 5회 댓글 작성 가능', enabled: true },
@@ -141,7 +142,7 @@
         tabs.forEach((tab) => {
             const plan = plans[normalizePlanKey(tab.dataset.plan || 'basic')];
             const costLabel = tab.querySelector('.ad-product-cost b');
-            if (plan && costLabel) costLabel.textContent = `1개 / ${plan.durationLabel || `${plan.durationDays}${getPlanDurationUnitLabel(plan)}`}`;
+            if (plan && costLabel) costLabel.textContent = `${getPlanStampCount(plan)}개 / ${plan.durationLabel || `${plan.durationDays}${getPlanDurationUnitLabel(plan)}`}`;
         });
     };
 
@@ -150,11 +151,12 @@
         Object.values(plans).forEach((plan) => {
             const planConfig = config[plan.code];
             if (!planConfig) return;
+            if (Number.isInteger(planConfig.stampCount) && planConfig.stampCount > 0) plan.stampCount = planConfig.stampCount;
             const duration = Number(planConfig.duration || planConfig.durationDays || 0);
             if (Number.isFinite(duration) && duration > 0) plan.durationDays = duration;
             plan.durationUnit = planConfig.durationUnit === 'minute' ? 'minute' : 'day';
             plan.durationLabel = planConfig.durationLabel || `${plan.durationDays}${getPlanDurationUnitLabel(plan)}`;
-            if (plan.features?.[0]) plan.features[0].text = plan.code === 'PIECE' ? `스탬프 1개로 조각 제휴업체에 업체정보 ${plan.durationLabel} 노출` : `스탬프 1개로 업체정보 ${plan.durationLabel} 노출`;
+            if (plan.features?.[0]) plan.features[0].text = plan.code === 'PIECE' ? `스탬프 1개로 조각 제휴업체에 업체정보 ${plan.durationLabel} 노출` : `스탬프 ${getPlanStampCount(plan)}개로 업체정보 ${plan.durationLabel} 노출`;
         });
         updatePlanCostLabels();
     };
@@ -197,7 +199,7 @@
         return {
             title: `${productName} 자동연장 활성화`,
             noteTitle: `${productName} 자동연장`,
-            noteDescription: `자동연장 ON 시 ${productName}가 계속 노출되도록 기간 종료마다 스탬프 1개가 자동 소모됩니다.`,
+            noteDescription: `자동연장 ON 시 ${productName}가 계속 노출되도록 기간 종료마다 스탬프 ${getPlanStampCount(plans[state.plan])}개가 자동 소모됩니다.`,
             toggleLabelPrefix: `${productName} 자동연장`
         };
     };
@@ -335,7 +337,7 @@
 
         if (priceOptions) {
             priceOptions.innerHTML = `<button type="button" class="ad-price-option is-selected" data-days="${currentPlan.durationDays}">
-                <div><strong>스탬프 1개 / ${currentPlan.durationLabel || `${currentPlan.durationDays}일`}</strong></div>
+                <div><strong>스탬프 ${getPlanStampCount(currentPlan)}개 / ${currentPlan.durationLabel || `${currentPlan.durationDays}일`}</strong></div>
                 <span class="ad-price-check is-selected" aria-hidden="true">●</span>
             </button>`;
         }
@@ -350,20 +352,22 @@
         const canClickActivationButton = state.category !== 'banner' && Boolean(state.ad?.id) && !state.isSubmitting && !isPreviewingAnotherBusinessPlan && (!visible || checked);
 
         selectedProduct.textContent = currentPlan.name;
-        stampCost.textContent = '스탬프 1개';
+        stampCost.textContent = `스탬프 ${getPlanStampCount(currentPlan)}개`;
         durationText.textContent = currentPlan.durationLabel || `${currentPlan.durationDays}일`;
         const totalStamps = Number(state.totalStamps || 0);
-        const remainingStamps = Math.max(totalStamps - 1, 0);
+        const stampCount = getPlanStampCount(currentPlan);
+        const activationCount = Math.floor(totalStamps / stampCount);
+        const remainingStamps = Math.max(totalStamps - stampCount, 0);
         const exposureDuration = Number(currentPlan.durationDays || 0);
-        const estimatedDuration = totalStamps * exposureDuration;
+        const estimatedDuration = activationCount * exposureDuration;
         if (stampBalanceSummary) stampBalanceSummary.textContent = `${totalStamps.toLocaleString('ko-KR')}개`;
         const remainingStampsText = `${remainingStamps.toLocaleString('ko-KR')}개`;
         const estimatedContinuousRunText = `${estimatedDuration.toLocaleString('ko-KR')}${getPlanDurationUnitLabel(currentPlan)}`;
         const durationMs = getPlanDurationMs(currentPlan);
-        const continuousDurationMs = totalStamps * durationMs;
+        const continuousDurationMs = activationCount * durationMs;
         const estimatedRunText = formatProjectedUntilWithDuration(durationMs, currentPlan.durationLabel || `${exposureDuration}${getPlanDurationUnitLabel(currentPlan)}`);
-        const estimatedUntilText = totalStamps ? formatProjectedUntilWithDuration(continuousDurationMs, estimatedContinuousRunText) : '-';
-        const estimatedUntilNoteText = totalStamps ? formatProjectedUntilNote(continuousDurationMs) : '';
+        const estimatedUntilText = activationCount ? formatProjectedUntilWithDuration(continuousDurationMs, estimatedContinuousRunText) : '-';
+        const estimatedUntilNoteText = activationCount ? formatProjectedUntilNote(continuousDurationMs) : '';
         if (stampAfterUse) stampAfterUse.textContent = remainingStampsText;
         if (estimatedRunDays) estimatedRunDays.textContent = estimatedRunText;
         if (estimatedRunUntil) estimatedRunUntil.textContent = estimatedUntilText;
@@ -386,6 +390,7 @@
         if (activationTitle) activationTitle.textContent = activationScopeText.title;
         if (activationNoteTitle) activationNoteTitle.textContent = activationScopeText.noteTitle;
         if (activationNoteDescription) activationNoteDescription.textContent = activationScopeText.noteDescription;
+        if (activationBalanceNote) activationBalanceNote.textContent = `자동연장 ON 상태에서 보유 스탬프가 ${stampCount}개 미만이면 기간 만료 시 자동연장이 OFF되고 광고 노출이 중지됩니다.`;
         if (activationPanel) {
             activationPanel.classList.toggle('hidden', !visible || state.category === 'banner');
         }
