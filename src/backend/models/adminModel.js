@@ -16,17 +16,12 @@ const isLocalEnvLoaded = process.env.MNMS_ENV_LOCAL_LOADED === 'true'
   || fs.existsSync(path.resolve(__dirname, '..', '.env.local'));
 const BUSINESS_AD_PLAN_DURATION_UNIT_SQL = isLocalEnvLoaded ? 'MINUTE' : 'DAY';
 const BUSINESS_AD_PLAN_DURATION_UNIT_LABEL = isLocalEnvLoaded ? '분' : '일';
-const BUSINESS_AD_PLAN_DURATIONS = isLocalEnvLoaded
-  ? {
-      BASIC: 3,
-      PLUS: 2,
-      PREMIUM: 1
-    }
-  : {
-      BASIC: 3,
-      PLUS: 2,
-      PREMIUM: 1
-    };
+const BUSINESS_AD_PLAN_STAMP_COST = 5;
+const BUSINESS_AD_PLAN_DURATIONS = {
+  BASIC: 15,
+  PLUS: 10,
+  PREMIUM: 5
+};
 const BUSINESS_AD_PIECE_PLAN_TYPE = 'PIECE';
 const BUSINESS_AD_PIECE_DURATION = 2;
 const BUSINESS_AD_PIECE_DURATION_UNIT_SQL = isLocalEnvLoaded ? 'MINUTE' : 'DAY';
@@ -69,6 +64,7 @@ function getBusinessAdPlanDurationUnit() {
 function getBusinessAdPlanDurationConfig() {
   return Object.keys(BUSINESS_AD_PLAN_DURATIONS).reduce((acc, planType) => {
     acc[planType] = {
+      stampCount: BUSINESS_AD_PLAN_STAMP_COST,
       duration: getBusinessAdPlanDurationDays(planType),
       durationUnit: getBusinessAdPlanDurationUnit(),
       durationLabel: getBusinessAdPlanDurationLabel(planType)
@@ -291,7 +287,7 @@ async function renewExpiredBusinessAdsWithStamp() {
         [ad.ownerUserId]
       );
       const balance = Number(balanceRows[0]?.totalStamps || 0);
-      if (balance < 1) {
+      if (balance < BUSINESS_AD_PLAN_STAMP_COST) {
         await connection.query('UPDATE business_ads SET is_active = 0, piece_is_active = 0 WHERE id = ?', [ad.id]);
         await connection.commit();
         continue;
@@ -301,8 +297,8 @@ async function renewExpiredBusinessAdsWithStamp() {
       const durationDays = getBusinessAdPlanDurationDays(planType);
       await connection.query(
         `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
-         VALUES (?, 'BUSINESS', ?, -1, ?, ?)`,
-        [ad.ownerUserId, `BUSINESS_AD_${planType}`, `${planType} 광고 ${getBusinessAdPlanDurationLabel(planType)} 자동연장`, `BUSINESS_AD-AUTO-${ad.id}-${Date.now()}`]
+        VALUES (?, 'BUSINESS', ?, ?, ?, ?)`,
+        [ad.ownerUserId, `BUSINESS_AD_${planType}`, -BUSINESS_AD_PLAN_STAMP_COST, `${planType} 광고 ${getBusinessAdPlanDurationLabel(planType)} 자동연장`, `BUSINESS_AD-AUTO-${ad.id}-${Date.now()}`]
       );
       await connection.query(
         `UPDATE business_ads
@@ -1464,7 +1460,7 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
       [ownerUserId]
     );
     const balance = Number(balanceRows[0]?.totalStamps || 0);
-    if (balance < 1) {
+    if (balance < BUSINESS_AD_PLAN_STAMP_COST) {
       const error = new Error('광고 활성화에 필요한 비즈니스 스탬프가 부족합니다.');
       error.status = 400;
       throw error;
@@ -1472,8 +1468,8 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
 
     await connection.query(
       `INSERT INTO stamp_histories (user_id, stamp_type, action_type, amount, reason, source_label)
-       VALUES (?, 'BUSINESS', ?, -1, ?, ?)`,
-      [ownerUserId, actionType, `${planType} 광고 ${getBusinessAdPlanDurationLabel(planType)} 활성화`, `BUSINESS_AD-${adId}`]
+       VALUES (?, 'BUSINESS', ?, ?, ?, ?)`,
+      [ownerUserId, actionType, -BUSINESS_AD_PLAN_STAMP_COST, `${planType} 광고 ${getBusinessAdPlanDurationLabel(planType)} 활성화`, `BUSINESS_AD-${adId}`]
     );
     await connection.query(
       `UPDATE business_ads
@@ -1487,7 +1483,7 @@ async function activateBusinessAdWithStamp({ adId, ownerUserId, planType: reques
     const [[updatedAd]] = await connection.query('SELECT activated_at AS activatedAt, activated_until AS activatedUntil FROM business_ads WHERE id = ?', [adId]);
     await connection.commit();
     return {
-      consumedStampCount: 1,
+      consumedStampCount: BUSINESS_AD_PLAN_STAMP_COST,
       planType,
       durationDays,
       durationLabel: getBusinessAdPlanDurationLabel(planType),
