@@ -90,16 +90,16 @@
             code: 'PIECE',
             name: '조각제휴 광고',
             headline: '조각제휴 업체정보 노출',
-            durationDays: 2,
+            durationDays: 10,
             durationUnit: 'day',
-            durationLabel: '2일',
-            stampCount: 1,
+            durationLabel: '10일',
+            stampCount: 5,
             badgeImage: '/src/assets/ad-plan-badges/piece-badge.png',
             badgeAlt: 'PIECE',
             features: [
-                { text: '스탬프 1개로 조각 제휴업체에 업체정보 2일 노출', enabled: true },
+                { text: '스탬프 5개로 조각 제휴업체에 업체정보 10일 노출', enabled: true },
                 { text: '조각제휴 자동연장을 광고별로 별도 관리', enabled: true },
-                { text: '기간 만료 시 스탬프 1개로 자동연장 가능', enabled: true },
+                { text: '기간 만료 시 스탬프 5개로 자동연장 가능', enabled: true },
             ]
         },
         banner: {
@@ -156,7 +156,7 @@
             if (Number.isFinite(duration) && duration > 0) plan.durationDays = duration;
             plan.durationUnit = planConfig.durationUnit === 'minute' ? 'minute' : 'day';
             plan.durationLabel = planConfig.durationLabel || `${plan.durationDays}${getPlanDurationUnitLabel(plan)}`;
-            if (plan.features?.[0]) plan.features[0].text = plan.code === 'PIECE' ? `스탬프 1개로 조각 제휴업체에 업체정보 ${plan.durationLabel} 노출` : `스탬프 ${getPlanStampCount(plan)}개로 업체정보 ${plan.durationLabel} 노출`;
+            if (plan.features?.[0]) plan.features[0].text = plan.code === 'PIECE' ? `스탬프 ${getPlanStampCount(plan)}개로 조각 제휴업체에 업체정보 ${plan.durationLabel} 노출` : `스탬프 ${getPlanStampCount(plan)}개로 업체정보 ${plan.durationLabel} 노출`;
         });
         updatePlanCostLabels();
     };
