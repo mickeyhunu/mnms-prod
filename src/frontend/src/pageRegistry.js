@@ -848,7 +848,7 @@ const pageRegistry = {
                             <strong>조각제휴 업체정보 노출</strong>
                             <span class="ad-product-divider"></span>
                             <span class="ad-product-radio" aria-hidden="true"></span>
-                            <span class="ad-product-cost"><small>필요 스탬프</small><b>1개 / 2일</b></span>
+                            <span class="ad-product-cost"><small>필요 스탬프</small><b>5개 / 10일</b></span>
                         </button>
                     </div>
                     <div class="ad-activation-benefits">
