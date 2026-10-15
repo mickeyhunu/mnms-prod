@@ -739,7 +739,8 @@ async function listBestPosts(req, res, next) {
 
     res.json({
       daily: normalizeRows(result.daily),
-      weekly: normalizeRows(result.weekly)
+      weekly: normalizeRows(result.weekly),
+      monthly: normalizeRows(result.monthly)
     });
   } catch (error) {
     next(error);

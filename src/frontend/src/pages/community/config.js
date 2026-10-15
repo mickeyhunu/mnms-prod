@@ -66,6 +66,11 @@ const communityTemplate = `
                     <ul class="best-posts-list" id="weekly-best-list"></ul>
                     <p class="best-posts-empty hidden" id="weekly-best-empty">조건을 충족한 게시글이 없습니다.</p>
                 </div>
+                <div class="best-posts-block">
+                    <h2 class="best-posts-title" id="monthly-best-title">🏆 월간 베스트</h2>
+                    <ul class="best-posts-list" id="monthly-best-list"></ul>
+                    <p class="best-posts-empty hidden" id="monthly-best-empty">조건을 충족한 게시글이 없습니다.</p>
+                </div>
             </section>
 
 <ul class="article-list" id="post-list"></ul>
