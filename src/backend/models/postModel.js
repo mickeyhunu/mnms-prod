@@ -966,7 +966,7 @@ async function listBestPosts(boardType = 'ALL') {
     : (isMemberWritableBoard ? [normalizedBoardType] : []);
 
   if (!boardParams.length) {
-    return { daily: [], weekly: [] };
+    return { daily: [], weekly: [], monthly: [] };
   }
 
   const selectQuery = `SELECT p.id, p.title, p.content, p.user_id AS userId, p.board_type AS boardType,
@@ -1029,9 +1029,19 @@ async function listBestPosts(boardType = 'ALL') {
     boardParams
   );
 
+  const [monthlyRows] = await pool.query(
+    `${selectQuery}
+     AND p.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
+     AND COALESCE(stats.likeCount, 0) >= 5
+     ORDER BY score DESC, p.created_at DESC
+     LIMIT 1`,
+    boardParams
+  );
+
   return {
     daily: todayRows.map((row) => normalizePostImages(row)),
-    weekly: weeklyRows.map((row) => normalizePostImages(row))
+    weekly: weeklyRows.map((row) => normalizePostImages(row)),
+    monthly: monthlyRows.map((row) => normalizePostImages(row))
   };
 }
 

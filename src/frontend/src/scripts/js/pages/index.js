@@ -103,8 +103,10 @@ function updateBestPostsVisibility() {
         const boardName = COMMUNITY_BOARD_NAMES[currentBoardType];
         const dailyTitle = document.getElementById('daily-best-title');
         const weeklyTitle = document.getElementById('weekly-best-title');
+        const monthlyTitle = document.getElementById('monthly-best-title');
         if (dailyTitle) dailyTitle.textContent = `🔥 ${boardName ? `${boardName} ` : ''}오늘의 베스트`;
         if (weeklyTitle) weeklyTitle.textContent = `📅 ${boardName ? `${boardName} ` : ''}주간 베스트`;
+        if (monthlyTitle) monthlyTitle.textContent = `🏆 ${boardName ? `${boardName} ` : ''}월간 베스트`;
         showElement(bestPostsSection);
         return;
     }
@@ -119,8 +121,10 @@ async function loadBestPosts() {
     const weeklyList = document.getElementById('weekly-best-list');
     const dailyEmpty = document.getElementById('daily-best-empty');
     const weeklyEmpty = document.getElementById('weekly-best-empty');
+    const monthlyList = document.getElementById('monthly-best-list');
+    const monthlyEmpty = document.getElementById('monthly-best-empty');
 
-    if (!dailyList || !weeklyList || !dailyEmpty || !weeklyEmpty) return;
+    if (!dailyList || !weeklyList || !dailyEmpty || !weeklyEmpty || !monthlyList || !monthlyEmpty) return;
     if (requestedBoardType !== 'ALL' && !BEST_POST_BOARD_TYPES.has(requestedBoardType)) return;
 
     try {
@@ -128,17 +132,22 @@ async function loadBestPosts() {
         if (requestId !== bestPostsRequestId || requestedBoardType !== currentBoardType) return;
         const dailyPosts = Array.isArray(response?.daily) ? response.daily : [];
         const weeklyPosts = Array.isArray(response?.weekly) ? response.weekly : [];
+        const monthlyPosts = Array.isArray(response?.monthly) ? response.monthly : [];
 
         renderBestPosts(dailyPosts, dailyList, dailyEmpty);
         renderBestPosts(weeklyPosts, weeklyList, weeklyEmpty);
+        renderBestPosts(monthlyPosts, monthlyList, monthlyEmpty);
     } catch (error) {
         if (requestId !== bestPostsRequestId || requestedBoardType !== currentBoardType) return;
         dailyList.innerHTML = '';
         weeklyList.innerHTML = '';
+        monthlyList.innerHTML = '';
         dailyEmpty.textContent = '베스트 게시글을 불러오지 못했습니다.';
         weeklyEmpty.textContent = '베스트 게시글을 불러오지 못했습니다.';
+        monthlyEmpty.textContent = '베스트 게시글을 불러오지 못했습니다.';
         showElement(dailyEmpty);
         showElement(weeklyEmpty);
+        showElement(monthlyEmpty);
     }
 }
 
