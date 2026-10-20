@@ -63,24 +63,24 @@ const trustProxyValue = parseTrustProxyValue(process.env.TRUST_PROXY || '1');
 app.set('trust proxy', trustProxyValue);
 
 ////////////////////////////////////////////////////////////
-app.use((req, res, next) => {
-  const hasAccess = parseCookies(req.headers.cookie)[ALLOW_ACCESS_COOKIE] === '1';
+// app.use((req, res, next) => {
+//   const hasAccess = parseCookies(req.headers.cookie)[ALLOW_ACCESS_COOKIE] === '1';
 
-  if (req.path === '/allow') {
-    res.cookie(ALLOW_ACCESS_COOKIE, '1', {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: req.secure,
-      maxAge: ONE_YEAR_IN_SECONDS * 1000,
-      path: '/'
-    });
-    return res.redirect(302, '/');
-  }
+//   if (req.path === '/allow') {
+//     res.cookie(ALLOW_ACCESS_COOKIE, '1', {
+//       httpOnly: true,
+//       sameSite: 'lax',
+//       secure: req.secure,
+//       maxAge: ONE_YEAR_IN_SECONDS * 1000,
+//       path: '/'
+//     });
+//     return res.redirect(302, '/');
+//   }
 
-  if (hasAccess) return next();
+//   if (hasAccess) return next();
 
-  return res.status(502).type('html').send(BAD_GATEWAY_HTML);
-});
+//   return res.status(502).type('html').send(BAD_GATEWAY_HTML);
+// });
 ////////////////////////////////////////////////////////////
 
 function parseTrustProxyValue(value) {

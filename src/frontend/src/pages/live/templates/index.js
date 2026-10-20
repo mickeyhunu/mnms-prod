@@ -52,18 +52,46 @@ export const liveStickyHeaderTemplate = `
                     </form>
                 </header>
 
-                <div class="site-subheader__container">
-                    <div class="site-subheader__top-row">
-                        <div class="site-subheader__filters">
-                            <div class="area-filter-frame">
-                                <nav class="area-filter area-filter--cities" id="live-store-filter" aria-label="매장 선택"></nav>
-                            </div>
+                <div class="site-subheader__container live-filter-panel" id="live-filter-panel">
+                    <button
+                        type="button"
+                        class="live-help-button"
+                        id="live-help-button"
+                        aria-label="LIVE 이용 안내 열기"
+                        aria-haspopup="dialog"
+                        aria-controls="live-help-dialog"
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>
+                    </button>
+
+                    <div class="live-filter-summary-row">
+                        <button
+                            type="button"
+                            class="live-filter-summary"
+                            id="live-filter-summary"
+                            aria-expanded="false"
+                            aria-controls="live-filter-selectors"
+                        >
+                            <span class="live-filter-summary__path" id="live-filter-summary-path"></span>
+                            <svg class="live-filter-summary__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+                        </button>
+                    </div>
+
+                    <div class="live-filter-selectors" id="live-filter-selectors">
+                        <div class="live-filter-panel__top-row">
+                            <div class="live-location-tabs" id="live-location-filter" role="group" aria-label="지역 선택"></div>
+                        </div>
+
+                        <div class="area-filter-frame live-industry-tabs-frame">
+                            <nav class="area-filter live-industry-tabs" id="live-industry-filter" aria-label="업종 선택"></nav>
+                        </div>
+
+                        <div class="area-filter-frame">
+                            <nav class="area-filter live-store-chips" id="live-store-filter" aria-label="매장 선택"></nav>
                         </div>
                     </div>
 
-                    <div class="area-filter-frame">
-                        <div class="area-filter area-filter--districts" id="live-category-filter" aria-label="LIVE 카테고리 선택"></div>
-                    </div>
+                    <div class="live-category-tabs" id="live-category-filter" role="group" aria-label="LIVE 카테고리 선택"></div>
                 </div>
             </div>
 `;
@@ -109,18 +137,7 @@ export const liveScrollBottomButtonTemplate = `
 `;
 
 export const liveHelpTemplate = `
-<button
-                type="button"
-                class="live-help-button"
-                id="live-help-button"
-                aria-label="LIVE 이용 안내 열기"
-                aria-haspopup="dialog"
-                aria-controls="live-help-dialog"
-            >
-                <span aria-hidden="true">?</span>
-            </button>
-
-            <div class="live-help-modal hidden" id="live-help-modal" aria-hidden="true">
+<div class="live-help-modal hidden" id="live-help-modal" aria-hidden="true">
                 <div class="live-help-modal__backdrop" data-live-help-close></div>
                 <section
                     class="live-help-dialog"

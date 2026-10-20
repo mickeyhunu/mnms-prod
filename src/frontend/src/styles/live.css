@@ -234,34 +234,34 @@ body[data-page="live"] .header {
 }
 
 .live-help-button {
-    position: fixed;
-    top: 165px;
-    right: max(14px, calc(((100vw - 920px) / 2) + 18px));
-    z-index: 95;
+    flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 44px;
     padding: 0;
-    border: 2px solid rgba(255, 255, 255, 0.82);
+    border: 0;
     border-radius: 50%;
-    background: rgba(16, 16, 16, 0.88);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.48);
-    color: #fff;
-    font-size: 25px;
-    font-weight: 700;
-    line-height: 1;
+    background: #1f1f1f;
+    color: #9e9e9e;
     cursor: pointer;
-    transform: translateY(-50%);
-    backdrop-filter: blur(10px);
-    transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.live-help-button svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .live-help-button:hover {
-    border-color: #fff;
-    background: #292929;
-    transform: translateY(-50%) scale(1.06);
+    background: #2b2b2b;
+    color: #f5f5f5;
 }
 
 .live-help-button:focus-visible,
@@ -868,6 +868,304 @@ body.live-help-open {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+}
+
+/* LIVE 필터 패널: '지역 · 업종 · 매장' 요약 버튼 + 카테고리 탭 한 줄.
+   요약 버튼을 누르면 지역 세그먼트 → 업종 탭 → 매장 칩이 목록 위로 펼쳐진다. */
+.live-filter-panel {
+    --live-filter-accent: #f5f5f5;
+    --live-filter-on-accent: #0a0a0a;
+    --live-filter-surface: #141414;
+    --live-filter-raised: #1f1f1f;
+    --live-filter-line: #262626;
+    --live-filter-text: #f5f5f5;
+    --live-filter-muted: #9e9e9e;
+    --live-filter-dim: #7a7a7a;
+    --live-filter-cue-bg: 20, 20, 20;
+    /* 기존 LIVE 필터 버튼 질감: 어두운 그라데이션 알약 + 선택 시 은색 그라데이션 */
+    --live-pill-bg: linear-gradient(180deg, rgba(52, 52, 52, 0.9) 0%, rgba(30, 30, 30, 0.92) 100%);
+    --live-pill-bg-hover: linear-gradient(180deg, rgba(68, 68, 68, 0.95) 0%, rgba(40, 40, 40, 0.95) 100%);
+    --live-pill-border: rgba(115, 115, 115, 0.38);
+    --live-pill-border-hover: rgba(163, 163, 163, 0.72);
+    --live-pill-text: #e5e7eb;
+    --live-pill-active-bg: linear-gradient(180deg, #f1f5f9 0%, #a3a3a3 100%);
+    --live-pill-active-border: rgba(255, 255, 255, 0.22);
+    --live-pill-active-text: #111111;
+    --live-pill-active-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+    position: relative;
+    gap: 0;
+    padding: 4px 0 0;
+    border: 0;
+    border-bottom: 1px solid var(--live-filter-line);
+    background: #0a0a0a;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+
+.live-filter-panel button {
+    font-family: inherit;
+}
+
+.live-filter-panel button:focus-visible {
+    outline: 2px solid var(--live-filter-accent);
+    outline-offset: 2px;
+}
+
+.live-filter-panel > .live-help-button {
+    position: absolute;
+    top: 4px;
+    right: 12px;
+    z-index: 2;
+    background: transparent;
+}
+
+.live-filter-summary-row {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 64px 0 16px;
+}
+
+.live-filter-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    max-width: 100%;
+    min-height: 40px;
+    padding: 0 14px 0 16px;
+    border: 1px solid var(--live-pill-border);
+    border-radius: 999px;
+    background: var(--live-pill-bg);
+    color: var(--live-filter-muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.live-filter-summary:hover,
+.live-filter-panel.is-dropdown-open .live-filter-summary {
+    border-color: var(--live-pill-border-hover);
+    background: var(--live-pill-bg-hover);
+}
+
+.live-filter-summary__path {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.live-filter-summary__path strong {
+    color: var(--live-filter-text);
+    font-weight: 700;
+}
+
+.live-filter-summary__chevron {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: var(--live-filter-muted);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.18s ease;
+}
+
+.live-filter-panel.is-dropdown-open .live-filter-summary__chevron {
+    transform: rotate(180deg);
+}
+
+/* 펼침 영역: 목록을 밀어내지 않도록 패널 아래에 겹쳐 띄운다.
+   1줄: 지역 / 2줄: 업종 탭 / 3줄: 매장 칩 */
+.live-filter-selectors {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    padding: 10px 0 12px;
+    border-bottom: 1px solid var(--live-filter-line);
+    background: var(--live-filter-surface);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5);
+}
+
+.live-filter-panel.is-dropdown-open .live-filter-selectors {
+    display: flex;
+}
+
+.live-filter-panel__top-row {
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+}
+
+.live-location-tabs {
+    flex: 0 0 auto;
+    display: inline-flex;
+    gap: 6px;
+}
+
+.live-location-tabs:empty {
+    display: none;
+}
+
+.live-location-tabs__button {
+    min-height: 32px;
+    padding: 0 14px;
+    border: 1px solid var(--live-pill-border);
+    border-radius: 999px;
+    background: var(--live-pill-bg);
+    color: var(--live-pill-text);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.live-location-tabs__button:hover {
+    border-color: var(--live-pill-border-hover);
+    background: var(--live-pill-bg-hover);
+    color: #ffffff;
+}
+
+.live-location-tabs__button.is-active {
+    border-color: var(--live-pill-active-border);
+    background: var(--live-pill-active-bg);
+    color: var(--live-pill-active-text);
+    font-weight: 700;
+    box-shadow: var(--live-pill-active-shadow);
+}
+
+.live-industry-tabs-frame {
+    border-bottom: 1px solid var(--live-filter-line);
+}
+
+.live-industry-tabs.area-filter {
+    gap: 20px;
+    padding: 0 16px;
+}
+
+.live-industry-tabs__button {
+    flex: 0 0 auto;
+    min-height: 36px;
+    margin-bottom: -1px;
+    padding: 0 2px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--live-filter-dim);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.live-industry-tabs__button:hover {
+    color: var(--live-filter-text);
+}
+
+.live-industry-tabs__button.is-active {
+    border-bottom-color: var(--live-filter-accent);
+    color: var(--live-filter-text);
+}
+
+.live-store-chips.area-filter {
+    gap: 6px;
+    padding: 0 16px;
+}
+
+.live-store-chip {
+    flex: 0 0 auto;
+    min-height: 34px;
+    padding: 0 14px;
+    border: 1px solid var(--live-pill-border);
+    border-radius: 999px;
+    background: var(--live-pill-bg);
+    color: var(--live-pill-text);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.live-store-chip:hover {
+    border-color: var(--live-pill-border-hover);
+    background: var(--live-pill-bg-hover);
+    color: #ffffff;
+}
+
+.live-store-chip.is-active {
+    border-color: var(--live-pill-active-border);
+    background: var(--live-pill-active-bg);
+    color: var(--live-pill-active-text);
+    font-weight: 700;
+    box-shadow: var(--live-pill-active-shadow);
+}
+
+.live-store-filter__empty {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    color: var(--live-filter-muted);
+    font-size: 13px;
+}
+
+/* 카테고리: 밑줄 탭 한 줄 */
+.live-category-tabs {
+    display: flex;
+    gap: 20px;
+    padding: 0 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.live-category-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.live-category-tabs__button {
+    flex: 0 0 auto;
+    min-height: 44px;
+    margin-bottom: -1px;
+    padding: 0 2px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--live-filter-muted);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.live-category-tabs__button:hover {
+    color: var(--live-filter-text);
+}
+
+.live-category-tabs__button.is-active {
+    border-bottom-color: var(--live-filter-accent);
+    color: var(--live-filter-text);
+    font-weight: 700;
+}
+
+/* 가로 스크롤 화살표 배경을 패널 색에 맞춘다 */
+.live-filter-panel .area-filter-frame::before {
+    background: linear-gradient(90deg, rgba(var(--live-filter-cue-bg), 0.95) 0%, rgba(var(--live-filter-cue-bg), 0) 100%);
+}
+
+.live-filter-panel .area-filter-frame::after {
+    background: linear-gradient(270deg, rgba(var(--live-filter-cue-bg), 0.95) 0%, rgba(var(--live-filter-cue-bg), 0) 100%);
 }
 
 @media (max-width: 640px) {
@@ -1556,7 +1854,7 @@ body.live-help-open {
 .live-feedback {
     padding: 14px 16px;
     border: 1px solid rgba(148, 163, 184, 0.16);
-    color: #cbd5e1;
+    color: #a1a1a1;
 }
 
 .live-feedback--error {

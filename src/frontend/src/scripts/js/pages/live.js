@@ -165,6 +165,9 @@ const liveState = {
     stores: [],
     categories: [],
     selectedStoreNo: null,
+    selectedLocation: null,
+    selectedIndustryCode: null,
+    isFilterDropdownOpen: false,
     selectedCategoryKey: 'choice',
     refreshTimerId: null,
     entriesRequestId: 0,
@@ -738,6 +741,8 @@ function bindLiveEvents() {
     if (liveState.hasBoundEvents) return;
 
     const backBtn = document.getElementById('back-btn');
+    const locationFilter = document.getElementById('live-location-filter');
+    const industryFilter = document.getElementById('live-industry-filter');
     const storeFilter = document.getElementById('live-store-filter');
     const categoryFilter = document.getElementById('live-category-filter');
     const listElement = document.getElementById('live-entry-list');
@@ -753,8 +758,9 @@ function bindLiveEvents() {
     const searchMoreButton = document.getElementById('live-search-more-button');
     const helpButton = document.getElementById('live-help-button');
 
+    initializeScrollableFilter(industryFilter);
     initializeScrollableFilter(storeFilter);
-    initializeScrollableFilter(categoryFilter);
+    bindLiveFilterDropdown();
 
     backBtn?.addEventListener('click', () => {
         if (window.history.length > 1) {
@@ -790,18 +796,44 @@ function bindLiveEvents() {
     document.getElementById('live-help-modal')?.addEventListener('click', handleLiveHelpClick);
     document.addEventListener('keydown', handleLiveHelpKeydown);
 
+    locationFilter?.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-location-option]');
+        if (!button) return;
+
+        const nextLocation = button.dataset.locationOption ?? '';
+        if (liveState.selectedLocation === nextLocation) return;
+
+        liveState.selectedLocation = nextLocation;
+        const industryCodes = getLiveIndustryCodes(nextLocation);
+        if (!industryCodes.includes(liveState.selectedIndustryCode)) {
+            liveState.selectedIndustryCode = industryCodes[0] ?? null;
+        }
+        await selectLiveStore(getVisibleLiveStores()[0]?.storeNo ?? null);
+    });
+
+    industryFilter?.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-industry-option]');
+        if (!button) return;
+
+        const nextIndustryCode = button.dataset.industryOption ?? '';
+        if (liveState.selectedIndustryCode === nextIndustryCode) return;
+
+        liveState.selectedIndustryCode = nextIndustryCode;
+        await selectLiveStore(getVisibleLiveStores()[0]?.storeNo ?? null);
+    });
+
     storeFilter?.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-store-option]');
         if (!button) return;
 
         const nextStoreNo = Number.parseInt(button.dataset.storeOption || '', 10);
-        if (!Number.isInteger(nextStoreNo) || liveState.selectedStoreNo === nextStoreNo) return;
+        if (!Number.isInteger(nextStoreNo) || liveState.selectedStoreNo === nextStoreNo) {
+            closeLiveFilterDropdown();
+            return;
+        }
 
-        liveState.selectedStoreNo = nextStoreNo;
-        renderStoreButtons();
-        resetLiveEntriesState();
-        await loadLiveAds();
-        await loadLiveEntries({ showLoading: true, syncToLatest: true });
+        closeLiveFilterDropdown();
+        await selectLiveStore(nextStoreNo);
     });
 
     categoryFilter?.addEventListener('click', async (event) => {
@@ -1452,7 +1484,9 @@ function normalizeStores(stores) {
             storeNo: Number.parseInt(store?.storeNo, 10),
             storeName: String(store?.storeName || '').trim(),
             storeAddress: String(store?.storeAddress || '').trim(),
-            storeEmoji: String(store?.storeEmoji || '').trim()
+            storeEmoji: String(store?.storeEmoji || '').trim(),
+            location: String(store?.location || '').trim(),
+            industryCode: String(store?.industryCode || '').trim()
         }))
         .filter((store) => Number.isInteger(store.storeNo) && store.storeName)
         .sort((a, b) => a.storeNo - b.storeNo);
@@ -1466,33 +1500,201 @@ function getSelectedStoreName() {
     return getSelectedStore()?.storeName || '전체';
 }
 
+// 업종 버튼 노출 순서. 목록에 없는 업종은 매장 번호 순으로 뒤에 붙는다.
+const LIVE_INDUSTRY_ORDER = ['하이퍼블릭', '가라오케', '쩜오'];
+const LIVE_STORE_GROUP_FALLBACK_LABEL = '기타';
+
+function getLiveLocations() {
+    return [...new Set(liveState.stores.map((store) => store.location))];
+}
+
+function getLiveIndustryCodes(location = liveState.selectedLocation) {
+    const industryCodes = [...new Set(
+        liveState.stores
+            .filter((store) => store.location === location)
+            .map((store) => store.industryCode)
+    )];
+    const getOrder = (code) => {
+        const index = LIVE_INDUSTRY_ORDER.indexOf(code);
+        return index === -1 ? LIVE_INDUSTRY_ORDER.length : index;
+    };
+
+    return industryCodes
+        .map((code, index) => ({ code, index }))
+        .sort((a, b) => (getOrder(a.code) - getOrder(b.code)) || (a.index - b.index))
+        .map(({ code }) => code);
+}
+
+function getVisibleLiveStores() {
+    return liveState.stores.filter((store) => (
+        store.location === liveState.selectedLocation
+        && store.industryCode === liveState.selectedIndustryCode
+    ));
+}
+
+function formatLiveStoreGroupLabel(value) {
+    return String(value || '').trim() || LIVE_STORE_GROUP_FALLBACK_LABEL;
+}
+
+async function selectLiveStore(storeNo) {
+    liveState.selectedStoreNo = Number.isInteger(storeNo) ? storeNo : null;
+    renderStoreButtons();
+
+    const storeFilter = document.getElementById('live-store-filter');
+    if (storeFilter) {
+        storeFilter.scrollLeft = 0;
+        syncScrollableFilterState(storeFilter);
+    }
+
+    resetLiveEntriesState();
+    await loadLiveAds();
+    await loadLiveEntries({ showLoading: true, syncToLatest: true });
+}
+
+function renderLocationButtons() {
+    const locationFilter = document.getElementById('live-location-filter');
+    if (!locationFilter) return;
+
+    locationFilter.innerHTML = getLiveLocations().map((location) => {
+        const isActive = liveState.selectedLocation === location;
+        return `
+            <button
+                type="button"
+                class="live-location-tabs__button ${isActive ? 'is-active' : ''}"
+                data-location-option="${sanitizeHTML(location).replace(/"/g, '&quot;')}"
+                aria-pressed="${isActive}"
+            >${sanitizeHTML(formatLiveStoreGroupLabel(location))}</button>
+        `;
+    }).join('');
+}
+
+function renderIndustryButtons() {
+    const industryFilter = document.getElementById('live-industry-filter');
+    if (!industryFilter) return;
+
+    industryFilter.innerHTML = getLiveIndustryCodes().map((industryCode) => {
+        const isActive = liveState.selectedIndustryCode === industryCode;
+        return `
+            <button
+                type="button"
+                class="live-industry-tabs__button ${isActive ? 'is-active' : ''}"
+                data-industry-option="${sanitizeHTML(industryCode).replace(/"/g, '&quot;')}"
+                aria-pressed="${isActive}"
+            >${sanitizeHTML(formatLiveStoreGroupLabel(industryCode))}</button>
+        `;
+    }).join('');
+    syncScrollableFilterState(industryFilter);
+}
+
 function renderStoreButtons() {
+    renderLocationButtons();
+    renderIndustryButtons();
+
     const storeFilter = document.getElementById('live-store-filter');
     if (!storeFilter) return;
 
-    storeFilter.innerHTML = liveState.stores.map((store) => `
-        <button
-            type="button"
-            class="area-filter__button ${liveState.selectedStoreNo === store.storeNo ? 'is-active' : ''}"
-            data-store-option="${store.storeNo}"
-        >
-            ${sanitizeHTML(store.storeName)}
-        </button>
-    `).join('');
+    const visibleStores = getVisibleLiveStores();
+    storeFilter.innerHTML = visibleStores.length
+        ? visibleStores.map((store) => `
+            <button
+                type="button"
+                class="live-store-chip ${liveState.selectedStoreNo === store.storeNo ? 'is-active' : ''}"
+                data-store-option="${store.storeNo}"
+                aria-pressed="${liveState.selectedStoreNo === store.storeNo}"
+            >
+                ${sanitizeHTML(store.storeName)}
+            </button>
+        `).join('')
+        : '<span class="live-store-filter__empty">등록된 매장이 없습니다.</span>';
     syncScrollableFilterState(storeFilter);
+    renderLiveFilterSummary();
     updateLiveScrollMessageStoreName();
+}
+
+function renderLiveFilterSummary() {
+    const summaryPath = document.getElementById('live-filter-summary-path');
+    if (!summaryPath) return;
+
+    const selectedStore = getSelectedStore();
+    const groupLabels = [liveState.selectedLocation, liveState.selectedIndustryCode]
+        .filter((value) => value !== null && value !== undefined)
+        .map((value) => sanitizeHTML(formatLiveStoreGroupLabel(value)));
+    const storeLabel = selectedStore ? `<strong>${sanitizeHTML(selectedStore.storeName)}</strong>` : '';
+
+    summaryPath.innerHTML = [...groupLabels, storeLabel].filter(Boolean).join(' · ') || '매장 선택';
+}
+
+// 상단 필터는 '지역 · 업종 · 매장' 요약 버튼 하나로 보여주고, 누르면 선택 영역이 아래로 펼쳐진다.
+// 펼친 영역은 매장을 고르거나, 요약 버튼을 다시 누르거나, 영역 바깥(카테고리 탭 포함)을 누를 때 닫힌다.
+function bindLiveFilterDropdown() {
+    const selectors = document.getElementById('live-filter-selectors');
+    const summaryButton = document.getElementById('live-filter-summary');
+    if (!selectors || !summaryButton) return;
+
+    summaryButton.addEventListener('click', () => {
+        if (liveState.isFilterDropdownOpen) {
+            closeLiveFilterDropdown();
+            return;
+        }
+        openLiveFilterDropdown();
+    });
+
+    // 지역/업종 버튼은 클릭 처리 중 다시 그려져 DOM에서 빠지므로 contains() 대신
+    // 클릭 시점의 이벤트 경로로 펼침 영역 안쪽 클릭인지 판단한다.
+    document.addEventListener('click', (event) => {
+        if (!liveState.isFilterDropdownOpen) return;
+        const path = event.composedPath();
+        if (path.includes(selectors) || path.includes(summaryButton)) return;
+        closeLiveFilterDropdown();
+    });
+}
+
+function openLiveFilterDropdown() {
+    const panel = document.getElementById('live-filter-panel');
+    if (!panel) return;
+
+    liveState.isFilterDropdownOpen = true;
+    panel.classList.add('is-dropdown-open');
+    document.getElementById('live-filter-summary')?.setAttribute('aria-expanded', 'true');
+    syncScrollableFilterState(document.getElementById('live-industry-filter'));
+    syncScrollableFilterState(document.getElementById('live-store-filter'));
+}
+
+function closeLiveFilterDropdown() {
+    if (!liveState.isFilterDropdownOpen) return;
+
+    liveState.isFilterDropdownOpen = false;
+    document.getElementById('live-filter-panel')?.classList.remove('is-dropdown-open');
+    document.getElementById('live-filter-summary')?.setAttribute('aria-expanded', 'false');
 }
 
 function syncSelectedStoreNo() {
     if (!Array.isArray(liveState.stores) || !liveState.stores.length) {
         liveState.selectedStoreNo = null;
+        liveState.selectedLocation = null;
+        liveState.selectedIndustryCode = null;
         return;
     }
 
-    const hasSelectedStore = liveState.stores.some((store) => store.storeNo === liveState.selectedStoreNo);
-    if (!hasSelectedStore) {
-        liveState.selectedStoreNo = liveState.stores[0].storeNo;
+    // 선택된 매장이 유효하면 지역/업종은 그 매장을 따라간다.
+    const selectedStore = getSelectedStore();
+    if (selectedStore) {
+        liveState.selectedLocation = selectedStore.location;
+        liveState.selectedIndustryCode = selectedStore.industryCode;
+        return;
     }
+
+    const locations = getLiveLocations();
+    if (!locations.includes(liveState.selectedLocation)) {
+        liveState.selectedLocation = locations[0];
+    }
+
+    const industryCodes = getLiveIndustryCodes();
+    if (!industryCodes.includes(liveState.selectedIndustryCode)) {
+        liveState.selectedIndustryCode = industryCodes[0];
+    }
+
+    liveState.selectedStoreNo = getVisibleLiveStores()[0]?.storeNo ?? null;
 }
 
 function renderStoreNameList() {
@@ -1530,9 +1732,9 @@ function renderCategoryButtons(categories) {
     categoryFilter.innerHTML = normalizedCategories.map((category) => {
         const hasAccess = Boolean(liveState.accessRules?.access?.[category.key] ?? true);
         const deniedReason = getLiveCategoryDeniedReason(category.key);
-        return `<button type="button" class="area-filter__button area-filter__button--district ${liveState.selectedCategoryKey === category.key ? 'is-active' : ''}" data-category-option="${category.key}" data-locked="${hasAccess ? 'false' : 'true'}" aria-disabled="${hasAccess ? 'false' : 'true'}" ${!hasAccess && deniedReason ? `data-denied-reason="${sanitizeHTML(deniedReason)}"` : ''}>${sanitizeHTML(category.label)}</button>`;
+        const isActive = liveState.selectedCategoryKey === category.key;
+        return `<button type="button" class="live-category-tabs__button ${isActive ? 'is-active' : ''}" data-category-option="${category.key}" data-locked="${hasAccess ? 'false' : 'true'}" aria-disabled="${hasAccess ? 'false' : 'true'}" aria-pressed="${isActive}" ${!hasAccess && deniedReason ? `data-denied-reason="${sanitizeHTML(deniedReason)}"` : ''}>${sanitizeHTML(category.label)}</button>`;
     }).join('');
-    syncScrollableFilterState(categoryFilter);
 }
 
 function getLiveCategoryDeniedReason(categoryKey) {
