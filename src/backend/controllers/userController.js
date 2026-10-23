@@ -1888,7 +1888,13 @@ async function resolveBannerAdStore(placement, storeNo) {
 
 async function listBannerAdStores() {
   return (await liveModel.listStores())
-    .map((store) => ({ storeNo: Number.parseInt(store.storeNo, 10), storeName: String(store.storeName || '').trim() }))
+    .map((store) => ({
+      storeNo: Number.parseInt(store.storeNo, 10),
+      storeName: String(store.storeName || '').trim(),
+      storeEmoji: String(store.storeEmoji || '').trim(),
+      location: String(store.location || '').trim(),
+      industryCode: String(store.industryCode || '').trim()
+    }))
     .filter((store) => Number.isInteger(store.storeNo) && store.storeNo > 0 && store.storeName)
     .sort((a, b) => a.storeNo - b.storeNo);
 }
@@ -1942,6 +1948,10 @@ async function getMyBannerAds(req, res, next) {
           .filter((bid) => bid.targetMonth === currentMonth && bid.status === 'WON')
           .map((bid) => bid.placement))],
         stores,
+        // 다음 달 LIVE 입찰이 있는 매장 (매장 선택 목록의 '입찰중/낙찰' 표시용)
+        myLiveBidStores: recentBids
+          .filter((bid) => bid.placement === 'LIVE' && bid.targetMonth === overview.upcoming.targetMonth)
+          .map((bid) => ({ storeNo: bid.storeNo, status: bid.status, bidStamps: bid.bidStamps })),
         totalStamps,
         canBid: isBusinessProfileRegisteredForAdActivation(businessProfile)
       }

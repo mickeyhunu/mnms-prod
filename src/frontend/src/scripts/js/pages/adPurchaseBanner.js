@@ -7,7 +7,11 @@
     const pageRoot = document.querySelector('.ad-management-container');
     const placementTabs = Array.from(document.querySelectorAll('#ad-banner-placement-tabs .ad-product-card'));
     const storeRow = document.getElementById('ad-banner-store-row');
-    const storeSelect = document.getElementById('ad-banner-store-select');
+    const storeLocationSelect = document.getElementById('ad-banner-store-location');
+    const storeIndustrySelect = document.getElementById('ad-banner-store-industry');
+    const storeSearchInput = document.getElementById('ad-banner-store-search');
+    const storeList = document.getElementById('ad-banner-store-list');
+    const storeSelectedText = document.getElementById('ad-banner-store-selected');
     const stampBalance = document.getElementById('ad-banner-stamp-balance');
     const auctionInfo = document.getElementById('ad-banner-auction-info');
     const bidBody = document.getElementById('ad-banner-bid-body');
@@ -32,7 +36,7 @@
     const DEFAULT_PLACEMENTS = {
         HOME: { code: 'HOME', label: '홈 상단', slotCount: 20, minBidStamps: 10 },
         COMMUNITY: { code: 'COMMUNITY', label: '커뮤니티 상단', slotCount: 20, minBidStamps: 15 },
-        LIVE: { code: 'LIVE', label: 'LIVE 하단', slotCount: 10, minBidStamps: 30 }
+        LIVE: { code: 'LIVE', label: 'LIVE 하단', slotCount: 10, minBidStamps: 20 }
     };
     const PLACEMENT_EXPOSURE_TEXT = {
         HOME: '홈 화면 최상단 슬라이드 배너에 노출 (5초마다 자동 전환)',
@@ -48,8 +52,13 @@
         isLoading: false,
         isSubmitting: false,
         placementConfigs: { ...DEFAULT_PLACEMENTS },
-        exposedPlacements: []
+        exposedPlacements: [],
+        // LIVE 매장 선택기 필터 (목록만 다시 그리고 서버 재조회는 매장을 고를 때만 한다)
+        storeFilter: { location: '', industryCode: '', keyword: '' }
     };
+    // LIVE 페이지와 같은 업종 노출 순서. 목록에 없는 업종은 뒤에 붙는다.
+    const LIVE_INDUSTRY_ORDER = ['하이퍼블릭', '가라오케', '쩜오'];
+    const STORE_GROUP_FALLBACK_LABEL = '기타';
 
     const formatKoreaDateTime = (value, options = {}) => {
         if (!value) return '-';
@@ -190,6 +199,78 @@
         if (submitCount) submitCount.textContent = bidStamps.toLocaleString('ko-KR');
     };
 
+    const formatStoreGroupLabel = (value) => String(value || '').trim() || STORE_GROUP_FALLBACK_LABEL;
+    const toOptionValue = (value) => sanitizeHTML(value).replace(/"/g, '&quot;');
+
+    const getStoreIndustryCodes = (stores, location) => {
+        const codes = [...new Set(stores.filter((store) => !location || store.location === location).map((store) => store.industryCode))];
+        const getOrder = (code) => {
+            const index = LIVE_INDUSTRY_ORDER.indexOf(code);
+            return index === -1 ? LIVE_INDUSTRY_ORDER.length : index;
+        };
+        return codes
+            .map((code, index) => ({ code, index }))
+            .sort((a, b) => (getOrder(a.code) - getOrder(b.code)) || (a.index - b.index))
+            .map(({ code }) => code);
+    };
+
+    // LIVE 매장 선택기: 지역·업종 선택과 이름 검색으로 목록을 좁히고 카드를 눌러 매장을 고른다.
+    const renderStorePicker = () => {
+        const stores = state.data?.stores || [];
+        const filter = state.storeFilter;
+        const locations = [...new Set(stores.map((store) => store.location))];
+        if (filter.location && !locations.includes(filter.location)) filter.location = '';
+        const industryCodes = getStoreIndustryCodes(stores, filter.location);
+        if (filter.industryCode && !industryCodes.includes(filter.industryCode)) filter.industryCode = '';
+
+        if (storeLocationSelect) {
+            storeLocationSelect.innerHTML = ['<option value="">전체</option>', ...locations.map((location) => (
+                `<option value="${toOptionValue(location)}" ${location === filter.location ? 'selected' : ''}>${sanitizeHTML(formatStoreGroupLabel(location))}</option>`
+            ))].join('');
+        }
+        if (storeIndustrySelect) {
+            storeIndustrySelect.innerHTML = ['<option value="">전체</option>', ...industryCodes.map((code) => (
+                `<option value="${toOptionValue(code)}" ${code === filter.industryCode ? 'selected' : ''}>${sanitizeHTML(formatStoreGroupLabel(code))}</option>`
+            ))].join('');
+        }
+
+        const selectedStore = stores.find((store) => store.storeNo === state.storeNo);
+        if (storeSelectedText) storeSelectedText.textContent = `선택한 매장: ${selectedStore ? selectedStore.storeName : '-'}`;
+        if (!storeList) return;
+
+        const keyword = filter.keyword.trim().toLowerCase();
+        const visibleStores = stores.filter((store) => (
+            (!filter.location || store.location === filter.location)
+            && (!filter.industryCode || store.industryCode === filter.industryCode)
+            && (!keyword || store.storeName.toLowerCase().includes(keyword))
+        ));
+        if (!stores.length) {
+            storeList.innerHTML = '<li class="banner-ad-store-empty">등록된 매장이 없습니다.</li>';
+            return;
+        }
+        if (!visibleStores.length) {
+            storeList.innerHTML = '<li class="banner-ad-store-empty">조건에 맞는 매장이 없습니다.</li>';
+            return;
+        }
+        const bidByStoreNo = new Map((state.data?.myLiveBidStores || []).map((bid) => [bid.storeNo, bid]));
+        storeList.innerHTML = visibleStores.map((store) => {
+            const isSelected = store.storeNo === state.storeNo;
+            const myBid = bidByStoreNo.get(store.storeNo);
+            const bidLabel = myBid ? ({ BIDDING: '입찰중', WON: '낙찰', LOST: '미낙찰' }[myBid.status] || '') : '';
+            return `
+                <li class="banner-ad-store-option ${isSelected ? 'is-selected' : ''}" data-store-no="${store.storeNo}" role="option" aria-selected="${isSelected}" tabindex="0">
+                    <span class="banner-ad-store-emoji" aria-hidden="true">${sanitizeHTML(store.storeEmoji || '🏠')}</span>
+                    <span class="banner-ad-store-main">
+                        <strong>${sanitizeHTML(store.storeName)}</strong>
+                        <small>${sanitizeHTML(formatStoreGroupLabel(store.location))} · ${sanitizeHTML(formatStoreGroupLabel(store.industryCode))}</small>
+                    </span>
+                    ${bidLabel ? `<span class="banner-ad-store-bid ${myBid.status === 'WON' ? 'is-won' : ''}">${bidLabel} ${myBid.bidStamps}개</span>` : ''}
+                    <span class="banner-ad-store-check" aria-hidden="true"></span>
+                </li>
+            `;
+        }).join('');
+    };
+
     const renderPlacementCards = () => {
         placementTabs.forEach((tab) => {
             const code = tab.dataset.bannerPlacement;
@@ -229,12 +310,7 @@
             return;
         }
 
-        if (state.placement === 'LIVE') {
-            storeSelect.innerHTML = data.stores.length
-                ? data.stores.map((store) => `<option value="${store.storeNo}" ${store.storeNo === data.storeNo ? 'selected' : ''}>${sanitizeHTML(store.storeName)}</option>`).join('')
-                : '<option value="">등록된 매장이 없습니다</option>';
-            storeSelect.disabled = !data.stores.length;
-        }
+        if (state.placement === 'LIVE') renderStorePicker();
 
         const isBidding = data.upcoming.status === 'BIDDING';
 
@@ -321,6 +397,14 @@
         await load();
     });
 
+    storeList?.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        const option = event.target instanceof Element ? event.target.closest('[data-store-no]') : null;
+        if (!option) return;
+        event.preventDefault();
+        option.click();
+    });
+
     placementTabs.forEach((tab) => {
         tab.addEventListener('click', () => {
             if (state.placement === tab.dataset.bannerPlacement) return;
@@ -334,8 +418,30 @@
         });
     });
 
-    storeSelect?.addEventListener('change', () => {
-        state.storeNo = Number.parseInt(storeSelect.value, 10) || null;
+    storeLocationSelect?.addEventListener('change', () => {
+        state.storeFilter.location = storeLocationSelect.value;
+        state.storeFilter.industryCode = '';
+        renderStorePicker();
+    });
+
+    storeIndustrySelect?.addEventListener('change', () => {
+        state.storeFilter.industryCode = storeIndustrySelect.value;
+        renderStorePicker();
+    });
+
+    storeSearchInput?.addEventListener('input', () => {
+        state.storeFilter.keyword = storeSearchInput.value;
+        renderStorePicker();
+    });
+
+    storeList?.addEventListener('click', (event) => {
+        const option = event.target instanceof Element ? event.target.closest('[data-store-no]') : null;
+        if (!option || state.isSubmitting) return;
+        const storeNo = Number.parseInt(option.dataset.storeNo, 10);
+        if (!Number.isInteger(storeNo) || storeNo === state.storeNo) return;
+        state.storeNo = storeNo;
+        renderStorePicker();
+        bidBody.innerHTML = '<div class="loading">로딩 중...</div>';
         reload();
     });
 
