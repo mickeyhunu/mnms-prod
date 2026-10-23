@@ -33,6 +33,7 @@ const postModel = require('./src/backend/models/postModel');
 const liveModel = require('./src/backend/models/liveModel');
 const { startLiveHistoryScheduler } = require('./src/backend/utils/liveHistoryScheduler');
 const { startBusinessAdRenewalScheduler, startBusinessAdJumpScheduleScheduler } = adminModel;
+const { startBannerAuctionSettleScheduler } = require('./src/backend/models/bannerAuctionModel');
 const { createSeoSlugWithId } = require('./src/backend/utils/seoSlug');
 const { ensureS3BucketExists, isS3UploadEnabled, s3BucketName } = require('./src/backend/config/s3');
 
@@ -196,6 +197,7 @@ const NOINDEX_PATHS = new Set([
   '/stamp-event-management',
   '/business-apply',
   '/ad-profile-management',
+  '/banner-ad-management',
   '/business-management',
   '/customer-service',
   '/my-inquiries',
@@ -762,6 +764,9 @@ Promise.resolve()
       }),
       Promise.resolve(startBusinessAdJumpScheduleScheduler()).catch((error) => {
         console.error('Business ad jump schedule scheduler start failed:', error.message);
+      }),
+      Promise.resolve().then(() => startBannerAuctionSettleScheduler()).catch((error) => {
+        console.error('Banner auction settle scheduler start failed:', error.message);
       })
     ])
       .then(() => {

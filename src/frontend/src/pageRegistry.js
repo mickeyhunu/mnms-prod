@@ -210,11 +210,11 @@ const pageRegistry = {
                     <a href="/my-page" class="community-back-link icon-btn icon-btn-square" aria-label="마이페이지로 이동">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
                     </a>
-                    <span class="community-board-name">광고프로필 관리</span>
+                    <span class="community-board-name">업체광고프로필 관리</span>
                 </div>
             </header>
 
-            <section class="ad-profile-page" aria-label="광고프로필 관리 폼">
+            <section class="ad-profile-page" aria-label="업체광고프로필 관리 폼">
                 <div class="ad-profile-notice">
                     <p>미드나잇맨즈에서 성매매와 관련된 광고를 할 경우,</p>
                     <p>서비스 이용이 제한되며 법적 처벌을 받을 수 있어요.</p>
@@ -226,7 +226,7 @@ const pageRegistry = {
 
                     <div class="ad-profile-image-upload">
                         <div class="ad-profile-image-upload-control">
-                            <button id="ad-profile-image-upload-btn" class="ad-profile-image-preview-wrap active-bg h-70px w-70px rounded-14px border-1px border-line-gray-50" type="button" aria-label="대표이미지 업로드" aria-describedby="ad-profile-image-help">
+                            <button id="ad-profile-image-upload-btn" class="ad-profile-image-preview-wrap ad-image-dropzone h-70px w-70px" type="button" aria-label="대표이미지 업로드" aria-describedby="ad-profile-image-help">
                                 <img id="ad-profile-image-preview" class="ad-profile-image-preview hidden" src="/assets/image/ad-profile-default.webp" alt="대표이미지 미리보기">
                                 <svg class="ad-profile-image-add-icon stroke-font-gray" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-width="1.5" d="M9.754.75v18M18.75 9.753h-18"></path>
@@ -245,9 +245,20 @@ const pageRegistry = {
                             <input id="ad-profile-image-input" class="hidden" type="file" accept="image/*">
                         </div>
                     </div>
-                    <input id="ad-profile-name" type="text" maxlength="24" placeholder="업소명을 입력해주세요." required>
-                    <input id="ad-profile-manager" type="text" maxlength="24" placeholder="담당자명을 입력해주세요." required>
-                    <input id="ad-profile-manager-contact" type="text" maxlength="13" placeholder="담당자 연락처를 입력해주세요." required>
+                    <div class="ad-profile-grid ad-profile-grid--single">
+                        <label>
+                            <span>업소명</span>
+                            <input id="ad-profile-name" type="text" maxlength="24" placeholder="업소명을 입력해주세요." required>
+                        </label>
+                        <label>
+                            <span>담당자명</span>
+                            <input id="ad-profile-manager" type="text" maxlength="24" placeholder="담당자명을 입력해주세요." required>
+                        </label>
+                        <label>
+                            <span>담당자 연락처</span>
+                            <input id="ad-profile-manager-contact" type="text" maxlength="13" placeholder="담당자 연락처를 입력해주세요." required>
+                        </label>
+                    </div>
 
                     <div class="ad-profile-grid ad-profile-grid--region">
                         <label>
@@ -813,7 +824,7 @@ const pageRegistry = {
                     <p class="ad-management-safe-note"><span aria-hidden="true">🔒</span><b id="ad-activation-note-title">업체광고 자동연장</b><br><span id="ad-activation-note-description">자동연장 ON 시 업체광고가 계속 노출되도록 기간 종료마다 스탬프 5개가 자동 소모됩니다.</span><br><span id="ad-activation-balance-note">자동연장 ON 상태에서 보유 스탬프가 5개 미만이면 자동연장이 OFF되고 현재 활성화된 광고 기간 종료 후 노출이 중지됩니다.</span></p>
                 </section>
 
-                <section class="ad-management-panel" aria-labelledby="ad-management-product-title">
+                <section class="ad-management-panel" id="ad-product-section" aria-labelledby="ad-management-product-title">
                     <div id="ad-business-product-panel" role="tabpanel" aria-labelledby="ad-business-tab">
                     <div class="ad-management-section-title-row">
                         <div>
@@ -864,7 +875,64 @@ const pageRegistry = {
                     </div>
                 </section>
 
-                <section class="ad-management-panel" aria-labelledby="ad-management-stamp-title">
+                <div class="hidden" id="ad-banner-bid-section">
+                <section class="ad-management-panel banner-ad-panel" aria-labelledby="ad-banner-product-title">
+                    <div class="ad-management-section-title-row">
+                        <div>
+                            <h2 id="ad-banner-product-title">상품 선택</h2>
+                            <p>배너가 노출될 위치를 선택하세요. 매월 1일부터 말일까지 한 달간 노출됩니다.</p>
+                        </div>
+                    </div>
+                    <div class="ad-product-grid" role="tablist" aria-label="배너 위치 선택" id="ad-banner-placement-tabs">
+                        <button type="button" class="ad-product-card is-active" data-banner-placement="HOME" role="tab" aria-selected="true">
+                            <img src="/src/assets/ad-plan-badges/home-banner-badge.png" alt="HOME" class="ad-product-badge">
+                            <strong>홈 상단</strong>
+                            <span class="ad-product-divider"></span>
+                            <span class="ad-product-radio" aria-hidden="true"></span>
+                            <span class="ad-product-cost"><small>최소 입찰</small><b data-banner-min-bid>10스탬프 / 1개월</b></span>
+                        </button>
+                        <button type="button" class="ad-product-card" data-banner-placement="COMMUNITY" role="tab" aria-selected="false">
+                            <img src="/src/assets/ad-plan-badges/community-banner-badge.png" alt="COMMUNITY" class="ad-product-badge">
+                            <strong>커뮤니티 상단</strong>
+                            <span class="ad-product-divider"></span>
+                            <span class="ad-product-radio" aria-hidden="true"></span>
+                            <span class="ad-product-cost"><small>최소 입찰</small><b data-banner-min-bid>15스탬프 / 1개월</b></span>
+                        </button>
+                        <button type="button" class="ad-product-card" data-banner-placement="LIVE" role="tab" aria-selected="false">
+                            <img src="/src/assets/ad-plan-badges/live-banner-badge.png" alt="LIVE" class="ad-product-badge">
+                            <strong>LIVE 하단</strong>
+                            <span class="ad-product-divider"></span>
+                            <span class="ad-product-radio" aria-hidden="true"></span>
+                            <span class="ad-product-cost"><small>최소 입찰</small><b data-banner-min-bid>30스탬프 / 1개월</b></span>
+                        </button>
+                    </div>
+                    <div class="banner-ad-store-row hidden" id="ad-banner-store-row">
+                        <label class="form-label" for="ad-banner-store-select">LIVE 매장 선택</label>
+                        <select id="ad-banner-store-select" class="form-control"></select>
+                    </div>
+                    <div class="ad-activation-benefits">
+                        <span aria-hidden="true">📣</span>
+                        <div>
+                            <b id="ad-banner-benefit-title">홈 상단 배너광고를 낙찰받으면</b>
+                            <ul id="ad-banner-features"></ul>
+                        </div>
+                    </div>
+                    <div class="banner-ad-bid-body" id="ad-banner-bid-body"><div class="loading">로딩 중...</div></div>
+                </section>
+
+                <section class="ad-management-panel banner-ad-auction-panel" aria-labelledby="ad-banner-auction-title">
+                    <h2 id="ad-banner-auction-title">경매 입찰 정보</h2>
+                    <div class="ad-stamp-info-grid">
+                        <article class="ad-stamp-info-card ad-stamp-summary-card">
+                            <div><dt>보유 스탬프</dt><dd id="ad-banner-stamp-balance">확인 중...</dd></div>
+                            <dl id="ad-banner-auction-info"></dl>
+                        </article>
+                    </div>
+                    <p class="ad-management-safe-note"><span aria-hidden="true">📌</span><b>배너광고 경매 안내</b><br>매월 1일~말일 노출되며, 노출 전달 말일 전날 23:59에 입찰이 마감되고 말일에 노출순서가 확정됩니다.<br>노출순서는 입찰 스탬프가 높은 순이며, 같으면 먼저 입찰한 업체가 앞입니다.<br>입찰 스탬프는 입찰 즉시 차감되고 입찰 취소·미낙찰 시 전액 환불됩니다. 입찰가는 올리기만 할 수 있습니다.<br>배너 이미지와 이동 링크는 배너광고 관리에서 위치별로 설정합니다.</p>
+                </section>
+                </div>
+
+                <section class="ad-management-panel" id="ad-stamp-section" aria-labelledby="ad-management-stamp-title">
                     <h2 id="ad-management-stamp-title">스탬프 정보</h2>
                     <div class="ad-stamp-info-grid">
                         <article class="ad-stamp-info-card ad-stamp-summary-card">
@@ -887,7 +955,7 @@ const pageRegistry = {
 
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
-    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js", "scripts/js/pages/adPurchase.js"]
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js", "scripts/js/pages/adPurchaseBanner.js", "scripts/js/pages/adPurchase.js"]
   },
   'jump-management': {
     template: `<header class="header">
@@ -979,6 +1047,66 @@ const pageRegistry = {
     <script src="scripts/js/components/footerNav.js"></script>`,
     styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
     scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js", "scripts/js/pages/jumpManagement.js"]
+  },
+  'banner-ad-management': {
+    template: `<header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo"><h1>미드나잇 맨즈</h1></a>
+            <nav class="nav" id="navigation">
+                <div class="nav-guest" id="nav-guest">
+                    <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+                    <a href="register.html" class="btn btn-outline btn-sm">회원가입</a>
+                </div>
+                <div class="nav-user hidden" id="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <header class="community-section-header">
+                <div class="community-header-left">
+                    <a href="/my-page" class="community-back-link icon-btn icon-btn-square" aria-label="마이페이지로 이동">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
+                    <span class="community-board-name">배너광고 관리</span>
+                </div>
+            </header>
+
+            <section class="ad-profile-page banner-ad-page" aria-label="배너광고 관리 폼">
+                <div class="ad-profile-notice">
+                    <p>미드나잇맨즈에서 성매매와 관련된 광고를 할 경우,</p>
+                    <p>서비스 이용이 제한되며 법적 처벌을 받을 수 있어요.</p>
+                    <a href="/support/notice/provision">자세히 보기</a>
+                </div>
+
+                <div class="banner-ad-tabs-wrap">
+                    <div class="ad-category-tabs banner-ad-placement-tabs" role="tablist" aria-label="배너 위치 선택" id="banner-ad-placement-tabs">
+                        <button type="button" class="ad-category-tab is-active" data-placement-tab="HOME" role="tab" aria-selected="true" aria-controls="banner-ad-creative-HOME">홈 상단</button>
+                        <button type="button" class="ad-category-tab" data-placement-tab="COMMUNITY" role="tab" aria-selected="false" aria-controls="banner-ad-creative-COMMUNITY">커뮤니티 상단</button>
+                        <button type="button" class="ad-category-tab" data-placement-tab="LIVE" role="tab" aria-selected="false" aria-controls="banner-ad-creative-LIVE">LIVE 하단</button>
+                    </div>
+                </div>
+                <div id="banner-ad-creative-list"><div class="ad-profile-section"><div class="loading">로딩 중...</div></div></div>
+
+                <div class="ad-profile-submit-wrap">
+                    <button id="banner-ad-save-btn" class="btn btn-primary" type="button">배너 설정 저장</button>
+                </div>
+                <div class="ad-profile-notice ad-profile-notice--bottom">
+                    <p>위치별로 설정한 이미지와 링크가 해당 위치에 낙찰된 배너에 적용되며, 노출 중인 배너에도 바로 반영돼요.</p>
+                    <p>미드나잇맨즈 광고관리 규정에 위배되는 배너는 별도 안내 없이 노출이 중지될 수 있어요.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="scripts/js/components/footerNav.js"></script>`,
+    styles: ["styles/common.css", "styles/layout.css", "styles/components.css", "styles/section-header.css", "styles/pages.css"],
+    scripts: ["scripts/js/utils/constants.js", "scripts/js/utils/helpers.js", "scripts/js/utils/auth.js", "scripts/js/api/apiClient.js", "scripts/js/api/authAPI.js", "scripts/js/components/header.js", "scripts/js/components/footerNav.js", "scripts/js/pages/bannerAdManagement.js"]
   },
   'ad-order-history': {
     template: `<header class="header">
@@ -1849,9 +1977,10 @@ const pageRegistry = {
                         </a>
                         <a class="mypage-link-item" href="/jump-management"><span>점프 관리</span></a>
                         <a class="mypage-link-item" href="/ad-profile-management">
-                            <span>광고프로필 관리</span>
+                            <span>업체광고프로필 관리</span>
                             <span id="mypage-ad-profile-status" class="mypage-status-badge mypage-status-badge--unregistered">미등록</span>
                         </a>
+                        <a class="mypage-link-item" href="/banner-ad-management"><span>배너광고 관리</span></a>
                         <a class="mypage-link-item" href="/business-management">
                             <span>사업자정보 관리</span>
                             <span class="mypage-business-info-status-wrap">

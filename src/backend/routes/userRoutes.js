@@ -36,7 +36,12 @@ const {
   verifyMyBusinessRegistration,
   createMyStampEventRequest,
   myStampEventRequests,
-  reviewMyStampEventRequest
+  reviewMyStampEventRequest,
+  getMyBannerAds,
+  placeMyBannerAdBid,
+  cancelMyBannerAdBid,
+  getMyBannerAdCreatives,
+  saveMyBannerAdCreative
 } = require('../controllers/userController');
 
 const router = express.Router();
@@ -72,6 +77,11 @@ router.get('/me/business-ads/:id/jump-schedules', authMiddleware, getMyBusinessA
 router.put('/me/business-ads/:id/jump-schedules', authMiddleware, updateMyBusinessAdJumpSchedules);
 router.post('/me/business-ads/:id/jump', authMiddleware, jumpMyBusinessAd);
 router.delete('/me/business-ads/:id', authMiddleware, deleteMyBusinessAd);
+router.get('/me/banner-ads', authMiddleware, getMyBannerAds);
+router.put('/me/banner-ads/bid', authMiddleware, placeMyBannerAdBid);
+router.delete('/me/banner-ads/bid', authMiddleware, cancelMyBannerAdBid);
+router.get('/me/banner-ads/creatives', authMiddleware, getMyBannerAdCreatives);
+router.put('/me/banner-ads/creatives/:placement', authMiddleware, saveMyBannerAdCreative);
 router.get('/me/business-profile', authMiddleware, getMyBusinessProfile);
 router.post('/me/business-profile/verify-registration', authMiddleware, verifyMyBusinessRegistration);
 router.put('/me/business-profile', authMiddleware, saveMyBusinessProfile);
