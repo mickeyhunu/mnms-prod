@@ -903,12 +903,26 @@ const pageRegistry = {
                             <strong>LIVE 하단</strong>
                             <span class="ad-product-divider"></span>
                             <span class="ad-product-radio" aria-hidden="true"></span>
-                            <span class="ad-product-cost"><small>최소 입찰</small><b data-banner-min-bid>30스탬프 / 1개월</b></span>
+                            <span class="ad-product-cost"><small>최소 입찰</small><b data-banner-min-bid>20스탬프 / 1개월</b></span>
                         </button>
                     </div>
-                    <div class="banner-ad-store-row hidden" id="ad-banner-store-row">
-                        <label class="form-label" for="ad-banner-store-select">LIVE 매장 선택</label>
-                        <select id="ad-banner-store-select" class="form-control"></select>
+                    <div class="banner-ad-store-picker hidden" id="ad-banner-store-row">
+                        <div class="banner-ad-store-picker-head">
+                            <b>LIVE 매장 선택</b>
+                            <span id="ad-banner-store-selected">선택한 매장: -</span>
+                        </div>
+                        <div class="banner-ad-store-filters">
+                            <label>
+                                <span>지역</span>
+                                <select id="ad-banner-store-location"><option value="">전체</option></select>
+                            </label>
+                            <label>
+                                <span>업종</span>
+                                <select id="ad-banner-store-industry"><option value="">전체</option></select>
+                            </label>
+                        </div>
+                        <input type="search" id="ad-banner-store-search" class="banner-ad-store-search" placeholder="매장 이름을 검색해주세요." aria-label="매장 이름 검색" autocomplete="off">
+                        <ul class="banner-ad-store-list" id="ad-banner-store-list" role="listbox" aria-label="LIVE 매장 목록"></ul>
                     </div>
                     <div class="ad-activation-benefits">
                         <span aria-hidden="true">📣</span>

@@ -20,7 +20,7 @@ const BANNER_AUCTION_SETTLE_INTERVAL_MS = Number(process.env.BANNER_AUCTION_SETT
 const BANNER_AUCTION_PLACEMENTS = {
   HOME: { code: 'HOME', label: '홈 상단', slotCount: 20, minBidStamps: 10, requiresStore: false },
   COMMUNITY: { code: 'COMMUNITY', label: '커뮤니티 상단', slotCount: 20, minBidStamps: 15, requiresStore: false },
-  LIVE: { code: 'LIVE', label: 'LIVE 하단', slotCount: 10, minBidStamps: 30, requiresStore: true }
+  LIVE: { code: 'LIVE', label: 'LIVE 하단', slotCount: 10, minBidStamps: 20, requiresStore: true }
 };
 
 const BID_ORDER_SQL = 'b.bid_stamps DESC, b.bid_updated_at ASC, b.id ASC';
