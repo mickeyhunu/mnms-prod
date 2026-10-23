@@ -3,6 +3,7 @@
  */
 const liveModel = require('../models/liveModel');
 const adminModel = require('../models/adminModel');
+const bannerAuctionModel = require('../models/bannerAuctionModel');
 
 const LIVE_DB_CONNECTION_ERROR_CODES = new Set([
   'ECONNREFUSED',
@@ -155,7 +156,11 @@ async function getLiveAds(req, res, next) {
       return res.status(400).json({ message: '유효한 매장 번호가 필요합니다.' });
     }
 
-    const ads = await adminModel.listLiveAdsByStore(storeNo);
+    const [auctionAds, adminAds] = await Promise.all([
+      bannerAuctionModel.listExposedBannerAds('LIVE', storeNo),
+      adminModel.listLiveAdsByStore(storeNo)
+    ]);
+    const ads = [...auctionAds, ...adminAds];
     return res.json({
       storeNo,
       content: ads,
@@ -173,7 +178,11 @@ async function getTopAds(req, res, next) {
       return res.status(400).json({ message: '유효한 상단 광고 위치값이 필요합니다.' });
     }
 
-    const ads = await adminModel.listTopAdsByPlacement(placement);
+    const [auctionAds, adminAds] = await Promise.all([
+      bannerAuctionModel.listExposedBannerAds(placement),
+      adminModel.listTopAdsByPlacement(placement)
+    ]);
+    const ads = [...auctionAds, ...adminAds];
     return res.json({
       placement,
       content: ads,

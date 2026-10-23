@@ -1229,10 +1229,12 @@ function renderLiveAds(ads = []) {
     const bannerItems = ads.map((ad, index) => {
         const imageUrl = sanitizeHTML(ad.imageUrl || '');
         const title = sanitizeHTML(ad.title || 'LIVE 광고');
-        const linkUrl = sanitizeHTML(normalizeExternalUrl(ad.linkUrl));
+        const normalizedLinkUrl = normalizeExternalUrl(ad.linkUrl);
+        const linkUrl = sanitizeHTML(normalizedLinkUrl);
+        const linkTargetAttrs = isInternalPath(normalizedLinkUrl) ? '' : ' target="_blank" rel="noopener noreferrer"';
         const fetchPriority = index === 0 ? 'high' : 'low';
         return `
-            <a class="live-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer" draggable="false" role="group" aria-roledescription="slide" aria-label="${index + 1} / ${ads.length}: ${title}">
+            <a class="live-ad-banner" href="${linkUrl}"${linkTargetAttrs} draggable="false" role="group" aria-roledescription="slide" aria-label="${index + 1} / ${ads.length}: ${title}">
                 <img class="live-ad-banner__image" src="${imageUrl}" alt="${title}" loading="${index === 0 ? 'eager' : 'lazy'}" fetchpriority="${fetchPriority}" decoding="async" draggable="false">
             </a>
         `;
@@ -1473,9 +1475,14 @@ function isValidExternalUrl(url) {
     }
 }
 
+function isInternalPath(url) {
+    const target = String(url || '').trim();
+    return target.startsWith('/') && !target.startsWith('//');
+}
+
 function normalizeExternalUrl(url) {
     const target = String(url || '').trim();
-    return isValidExternalUrl(target) ? target : '#';
+    return isValidExternalUrl(target) || isInternalPath(target) ? target : '#';
 }
 
 function normalizeStores(stores) {

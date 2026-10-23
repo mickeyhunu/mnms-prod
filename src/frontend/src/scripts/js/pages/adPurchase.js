@@ -1,8 +1,9 @@
 /**
  * 파일 역할: ad-purchase 페이지에서 비즈니스 스탬프로 업체 광고 ON/OFF 활성화를 처리하는 스크립트 파일.
+ * 배너광고 탭의 입찰 화면은 adPurchaseBanner.js(window.AdPurchaseBanner)가 담당한다.
  */
 (() => {
-    const tabs = Array.from(document.querySelectorAll('.ad-product-card, .ad-plan-tab'));
+    const tabs = Array.from(document.querySelectorAll('.ad-product-card:not([data-banner-placement]), .ad-plan-tab'));
     const categoryTabs = Array.from(document.querySelectorAll('.ad-category-tab'));
     const featureList = document.getElementById('ad-plan-features');
     const priceOptions = document.getElementById('ad-price-options');
@@ -28,6 +29,10 @@
     const estimatedRunUntil = document.getElementById('ad-estimated-run-until');
     const activationStampBalance = document.getElementById('ad-activation-stamp-balance');
     const activationBenefitTitle = document.getElementById('ad-activation-benefit-title');
+    const productSection = document.getElementById('ad-product-section');
+    const stampSection = document.getElementById('ad-stamp-section');
+    const bannerBidSection = document.getElementById('ad-banner-bid-section');
+    const pageRoot = document.querySelector('.ad-management-container');
 
     if (!tabs.length || !featureList || !selectedProduct || !stampCost || !durationText) {
         return;
@@ -123,8 +128,9 @@
 
     const normalizeCategoryKey = (value) => ['business', 'piece', 'banner'].includes(value) ? value : 'business';
 
+    const initialCategory = new URLSearchParams(window.location.search).get('category');
     const state = {
-        category: 'business',
+        category: normalizeCategoryKey(initialCategory),
         plan: 'premium',
         ad: null,
         businessProfile: null,
@@ -331,6 +337,17 @@
             tab.setAttribute('aria-selected', String(isActiveCategory));
         });
 
+        const isBannerCategory = state.category === 'banner';
+        productSection?.classList.toggle('hidden', isBannerCategory);
+        stampSection?.classList.toggle('hidden', isBannerCategory);
+        bannerBidSection?.classList.toggle('hidden', !isBannerCategory);
+        if (isBannerCategory) {
+            // 배너광고 탭은 상태 카드와 입찰 섹션을 AdPurchaseBanner가 그린다.
+            activationPanel?.classList.add('hidden');
+            window.AdPurchaseBanner?.show();
+            return;
+        }
+
         featureList.innerHTML = currentPlan.features
             .map((item) => `<li class="${item.enabled ? 'is-enabled' : 'is-disabled'}">${item.text}</li>`)
             .join('');
@@ -473,6 +490,10 @@
             selectCategory(nextCategory);
             render();
         });
+    });
+
+    pageRoot?.addEventListener('ad-purchase:stamps-changed', (event) => {
+        state.totalStamps = Number(event.detail?.totalStamps ?? state.totalStamps);
     });
 
     activationToggle?.addEventListener('change', (event) => {

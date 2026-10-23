@@ -27,6 +27,8 @@ const { getTossPaymentConfig, confirmTossPayment } = require('../utils/tossPayme
 const { createStampEventRequest, listOwnerStampEventRequests, countOwnerPendingStampEventRequests, reviewStampEventRequest } = require('../models/stampEventRequestModel');
 const supportModel = require('../models/supportModel');
 const adminModel = require('../models/adminModel');
+const bannerAuctionModel = require('../models/bannerAuctionModel');
+const liveModel = require('../models/liveModel');
 const wikiQuestionModel = require('../models/wikiQuestionModel');
 const attendanceCommentModel = require('../models/attendanceCommentModel');
 const adminMessageModel = require('../models/adminMessageModel');
@@ -1870,6 +1872,165 @@ async function withdrawMyAccount(req, res, next) {
   }
 }
 
+const BANNER_AD_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+
+async function resolveBannerAdStore(placement, storeNo) {
+  const config = bannerAuctionModel.getPlacementConfig(placement);
+  if (!config?.requiresStore) return { storeNo: null, storeName: '' };
+  const store = await liveModel.getStoreByNo(storeNo);
+  if (!store) {
+    const error = new Error('매장을 찾을 수 없습니다.');
+    error.status = 404;
+    throw error;
+  }
+  return { storeNo: store.storeNo, storeName: store.storeName };
+}
+
+async function listBannerAdStores() {
+  return (await liveModel.listStores())
+    .map((store) => ({ storeNo: Number.parseInt(store.storeNo, 10), storeName: String(store.storeName || '').trim() }))
+    .filter((store) => Number.isInteger(store.storeNo) && store.storeNo > 0 && store.storeName)
+    .sort((a, b) => a.storeNo - b.storeNo);
+}
+
+async function resolveBannerAdImageUpload(imageUrl, uploadedUrls) {
+  const normalized = String(imageUrl || '').trim();
+  if (!isDataUrlImage(normalized)) return normalized;
+  const uploaded = await uploadDataUrlToS3({
+    dataUrl: normalized,
+    fileName: `banner-ad.${getImageExtensionFromDataUrl(normalized)}`,
+    folder: 'banner-ads',
+    allowedMimeTypes: BUSINESS_AD_IMAGE_MIME_TYPES,
+    maxBytes: BANNER_AD_IMAGE_MAX_BYTES
+  });
+  uploadedUrls.push(uploaded.url);
+  return uploaded.url;
+}
+
+function sendBannerAdError(error, res, next) {
+  if (error?.status && error.status < 500) return res.status(error.status).json({ message: error.message });
+  return next(error);
+}
+
+// 광고 활성화 > 배너광고 탭: 위치별 입찰 현황
+async function getMyBannerAds(req, res, next) {
+  try {
+    const placement = String(req.query.placement || 'HOME').trim().toUpperCase();
+    const config = bannerAuctionModel.getPlacementConfig(placement);
+    if (!config) return res.status(400).json({ message: '유효한 배너 위치를 선택해주세요.' });
+
+    const stores = config.requiresStore ? await listBannerAdStores() : [];
+    const requestedStoreNo = Number.parseInt(req.query.storeNo, 10);
+    const storeNo = config.requiresStore
+      ? (stores.some((store) => store.storeNo === requestedStoreNo) ? requestedStoreNo : (stores[0]?.storeNo ?? null))
+      : null;
+
+    const [overview, totalStamps, businessProfile, recentBids] = await Promise.all([
+      bannerAuctionModel.getPlacementOverview({ ownerUserId: req.user.id, placement, storeNo }),
+      getUserStampBalance(req.user.id, STAMP_TYPES.BUSINESS),
+      getBusinessProfileByUserId(req.user.id),
+      bannerAuctionModel.listMyRecentBids(req.user.id)
+    ]);
+    const currentMonth = bannerAuctionModel.getCurrentMonthKey();
+
+    return res.json({
+      content: {
+        ...overview,
+        placements: Object.values(bannerAuctionModel.BANNER_AUCTION_PLACEMENTS),
+        // 이번 달 낙찰되어 노출 중인 위치 (상품 카드 '활성화 중' 표시용, LIVE는 매장 무관)
+        exposedPlacements: [...new Set(recentBids
+          .filter((bid) => bid.targetMonth === currentMonth && bid.status === 'WON')
+          .map((bid) => bid.placement))],
+        stores,
+        totalStamps,
+        canBid: isBusinessProfileRegisteredForAdActivation(businessProfile)
+      }
+    });
+  } catch (error) {
+    return sendBannerAdError(error, res, next);
+  }
+}
+
+async function placeMyBannerAdBid(req, res, next) {
+  try {
+    const businessProfile = await getBusinessProfileByUserId(req.user.id);
+    if (!isBusinessProfileRegisteredForAdActivation(businessProfile)) {
+      return res.status(400).json({ message: '사업자정보 승인과 업체광고프로필 등록이 완료되어야 배너광고에 입찰할 수 있습니다.' });
+    }
+    const placement = String(req.body?.placement || '').trim().toUpperCase();
+    const store = await resolveBannerAdStore(placement, req.body?.storeNo);
+    const result = await bannerAuctionModel.placeBid({
+      ownerUserId: req.user.id,
+      placement,
+      storeNo: store.storeNo,
+      storeName: store.storeName,
+      bidStamps: Number(req.body?.bidStamps)
+    });
+    const totalStamps = await getUserStampBalance(req.user.id, STAMP_TYPES.BUSINESS);
+    return res.json({ success: true, message: `스탬프 ${result.chargedStamps}개로 입찰이 완료되었습니다.`, totalStamps });
+  } catch (error) {
+    return sendBannerAdError(error, res, next);
+  }
+}
+
+async function cancelMyBannerAdBid(req, res, next) {
+  try {
+    const placement = String(req.body?.placement || req.query.placement || '').trim().toUpperCase();
+    const store = await resolveBannerAdStore(placement, req.body?.storeNo ?? req.query.storeNo);
+    const result = await bannerAuctionModel.cancelBid({
+      ownerUserId: req.user.id,
+      placement,
+      storeNo: store.storeNo,
+      storeName: store.storeName
+    });
+    const totalStamps = await getUserStampBalance(req.user.id, STAMP_TYPES.BUSINESS);
+    return res.json({ success: true, message: `입찰이 취소되어 스탬프 ${result.refundedStamps}개가 환불되었습니다.`, totalStamps });
+  } catch (error) {
+    return sendBannerAdError(error, res, next);
+  }
+}
+
+// 배너광고 관리: 위치별 소재 설정
+async function getMyBannerAdCreatives(req, res, next) {
+  try {
+    const creatives = await bannerAuctionModel.listCreatives(req.user.id);
+    return res.json({
+      content: {
+        placements: Object.values(bannerAuctionModel.BANNER_AUCTION_PLACEMENTS),
+        creatives
+      }
+    });
+  } catch (error) {
+    return sendBannerAdError(error, res, next);
+  }
+}
+
+async function saveMyBannerAdCreative(req, res, next) {
+  const uploadedUrls = [];
+  try {
+    const placement = String(req.params.placement || '').trim().toUpperCase();
+    // 새 이미지(data URL)만 S3에 업로드하고, 그 외 값은 무시해 기존에 저장된 이미지를 유지한다.
+    const rawImageUrl = String(req.body?.imageUrl || '').trim();
+    const imageUrl = isDataUrlImage(rawImageUrl) ? await resolveBannerAdImageUpload(rawImageUrl, uploadedUrls) : '';
+    const result = await bannerAuctionModel.saveCreative({
+      ownerUserId: req.user.id,
+      placement,
+      title: req.body?.title,
+      imageUrl,
+      removeImage: req.body?.removeImage === true,
+      linkUrl: req.body?.linkUrl
+    });
+    if (result.previousImageUrl && result.previousImageUrl !== result.imageUrl
+      && await bannerAuctionModel.countCreativesUsingImage(result.previousImageUrl) === 0) {
+      await deleteS3ObjectsByUrls([result.previousImageUrl]).catch(() => {});
+    }
+    return res.json({ success: true, message: '배너 설정이 저장되었습니다.' });
+  } catch (error) {
+    await deleteS3ObjectsByUrls(uploadedUrls).catch(() => {});
+    return sendBannerAdError(error, res, next);
+  }
+}
+
 module.exports = {
   publicProfile,
   myStats,
@@ -1903,5 +2064,10 @@ module.exports = {
   createMyStampEventRequest,
   myStampEventRequests,
   reviewMyStampEventRequest,
+  getMyBannerAds,
+  placeMyBannerAdBid,
+  cancelMyBannerAdBid,
+  getMyBannerAdCreatives,
+  saveMyBannerAdCreative,
   withdrawMyAccount
 };

@@ -36,9 +36,11 @@ function renderTopAds(container, ads = []) {
     const bannerItems = ads.map((ad, index) => {
         const imageUrl = sanitizeHTML(ad.imageUrl || '');
         const title = sanitizeHTML(ad.title || '상단 광고');
-        const linkUrl = sanitizeHTML(normalizeTopAdExternalUrl(ad.linkUrl));
+        const normalizedLinkUrl = normalizeTopAdExternalUrl(ad.linkUrl);
+        const linkUrl = sanitizeHTML(normalizedLinkUrl);
+        const linkTargetAttrs = isTopAdInternalPath(normalizedLinkUrl) ? '' : ' target="_blank" rel="noopener noreferrer"';
         return `
-            <a class="top-ad-banner" href="${linkUrl}" target="_blank" rel="noopener noreferrer" draggable="false" role="group" aria-roledescription="slide" aria-label="${index + 1} / ${ads.length}: ${title}">
+            <a class="top-ad-banner" href="${linkUrl}"${linkTargetAttrs} draggable="false" role="group" aria-roledescription="slide" aria-label="${index + 1} / ${ads.length}: ${title}">
                 <img class="top-ad-banner__image" src="${imageUrl}" alt="${title}" loading="${index === 0 ? 'eager' : 'lazy'}" draggable="false">
             </a>
         `;
@@ -238,9 +240,14 @@ function isValidTopAdExternalUrl(url) {
     }
 }
 
+function isTopAdInternalPath(url) {
+    const target = String(url || '').trim();
+    return target.startsWith('/') && !target.startsWith('//');
+}
+
 function normalizeTopAdExternalUrl(url) {
     const target = String(url || '').trim();
-    return isValidTopAdExternalUrl(target) ? target : '#';
+    return isValidTopAdExternalUrl(target) || isTopAdInternalPath(target) ? target : '#';
 }
 
 window.initTopAds = initTopAds;
