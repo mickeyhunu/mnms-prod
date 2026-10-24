@@ -169,6 +169,9 @@ const liveState = {
     selectedIndustryCode: null,
     isFilterDropdownOpen: false,
     selectedCategoryKey: 'choice',
+    // 선택한 매장의 카테고리별 데이터 수. null 이면(미조회·조회 실패) 모든 카테고리를 보여준다.
+    categoryCounts: null,
+    categoryCountsRequestId: 0,
     refreshTimerId: null,
     entriesRequestId: 0,
     filtersRequestId: 0,
@@ -1040,7 +1043,45 @@ async function refreshLiveData({ showLoading = false, syncToLatest = false } = {
     await loadLiveAccessRules();
     await loadLiveFilters();
     await ensureLiveAdsLoadedForSelectedStore();
+    const previousCategoryKey = liveState.selectedCategoryKey;
+    await loadLiveCategoryAvailability();
+    // 보고 있던 카테고리의 데이터가 사라져 다른 탭으로 옮겨졌다면 목록을 새로 불러온다.
+    if (liveState.selectedCategoryKey !== previousCategoryKey) {
+        resetLiveEntriesState();
+        await loadLiveEntries({ showLoading: true, syncToLatest: true });
+        return;
+    }
     await loadLiveEntries({ showLoading, syncToLatest });
+}
+
+function getAvailableLiveCategoryKeys() {
+    const keys = Object.keys(LIVE_CATEGORIES);
+    const counts = liveState.categoryCounts;
+    if (!counts) return keys;
+    // 매장에 데이터가 하나도 없으면 빈 배열 → 카테고리 탭을 모두 숨긴다.
+    return keys.filter((key) => Number(counts[key] || 0) > 0);
+}
+
+// 선택한 매장에 데이터가 없는 카테고리(초이스톡·초중·룸/웨이팅·엔트리·출근자 정보)는 탭에서 숨긴다.
+async function loadLiveCategoryAvailability() {
+    const requestId = ++liveState.categoryCountsRequestId;
+    const storeNo = Number.parseInt(liveState.selectedStoreNo, 10);
+    let counts = null;
+    if (Number.isInteger(storeNo) && storeNo > 0) {
+        try {
+            const response = await APIClient.get('/live/categories', { storeNo });
+            counts = response?.counts || null;
+        } catch (error) {
+            counts = null;
+        }
+    }
+    if (requestId !== liveState.categoryCountsRequestId) return;
+    liveState.categoryCounts = counts;
+    const availableKeys = getAvailableLiveCategoryKeys();
+    if (availableKeys.length && !availableKeys.includes(liveState.selectedCategoryKey)) {
+        liveState.selectedCategoryKey = availableKeys[0];
+    }
+    renderCategoryButtons(liveState.categories);
 }
 
 function hydrateLiveFiltersCache() {
@@ -1555,6 +1596,7 @@ async function selectLiveStore(storeNo) {
 
     resetLiveEntriesState();
     await loadLiveAds();
+    await loadLiveCategoryAvailability();
     await loadLiveEntries({ showLoading: true, syncToLatest: true });
 }
 
@@ -1722,7 +1764,9 @@ function renderCategoryButtons(categories) {
     const categoryFilter = document.getElementById('live-category-filter');
     if (!categoryFilter) return;
 
-    const normalizedCategories = Object.values(LIVE_CATEGORIES).map((baseCategory) => {
+    const availableCategoryKeys = getAvailableLiveCategoryKeys();
+    categoryFilter.classList.toggle('hidden', !availableCategoryKeys.length);
+    const normalizedCategories = Object.values(LIVE_CATEGORIES).filter((baseCategory) => availableCategoryKeys.includes(baseCategory.key)).map((baseCategory) => {
         const matched = Array.isArray(categories)
             ? categories.find((item) => item?.key === baseCategory.key)
             : null;

@@ -250,8 +250,8 @@ body[data-page="live"] .header {
 }
 
 .live-help-button svg {
-    width: 20px;
-    height: 20px;
+    width: 30px;
+    height: 30px;
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
@@ -922,7 +922,7 @@ body.live-help-open {
     display: flex;
     align-items: center;
     min-height: 44px;
-    padding: 0 64px 0 16px;
+    padding: 10px 64px 10px 16px;
 }
 
 .live-filter-summary {
@@ -931,7 +931,7 @@ body.live-help-open {
     gap: 8px;
     min-width: 0;
     max-width: 100%;
-    min-height: 40px;
+    min-height: 35px;
     padding: 0 14px 0 16px;
     border: 1px solid var(--live-pill-border);
     border-radius: 999px;
@@ -978,18 +978,14 @@ body.live-help-open {
 
 /* 펼침 영역: 목록을 밀어내지 않도록 패널 아래에 겹쳐 띄운다.
    1줄: 지역 / 2줄: 업종 탭 / 3줄: 매장 칩 */
+/* 펼친 선택 영역은 문서 흐름 안에 두어, 펼치면 카테고리 탭과 LIVE 콘텐츠가 그만큼 아래로 내려간다. */
 .live-filter-selectors {
     display: none;
     flex-direction: column;
     gap: 8px;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    padding: 10px 0 12px;
+    padding: 10px 0 10px;
+    border-top: 1px solid var(--live-filter-line);
     border-bottom: 1px solid var(--live-filter-line);
-    background: var(--live-filter-surface);
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5);
 }
 
 .live-filter-panel.is-dropdown-open .live-filter-selectors {
