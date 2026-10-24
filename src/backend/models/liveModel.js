@@ -522,6 +522,19 @@ async function getLiveFilters() {
   return { stores, categories };
 }
 
+// 선택한 매장의 카테고리별 데이터 수 (LIVE 탭에서 데이터가 없는 카테고리를 숨기는 데 사용)
+async function countCategoriesForStore(storeNo) {
+  const selectedStore = await getStoreByNo(storeNo);
+  if (!selectedStore) return null;
+  const entries = await Promise.all(
+    Object.values(LIVE_CATEGORY_MAP).map(async (category) => [
+      category.key,
+      await countRows(category.tableName, { storeNo: selectedStore.storeNo, storeName: selectedStore.storeName })
+    ])
+  );
+  return Object.fromEntries(entries);
+}
+
 async function deleteLiveHistoryRow(categoryKey, rowId) {
   const pool = await getChatbotPool();
   const category = getCategoryConfig(categoryKey);
@@ -546,6 +559,7 @@ module.exports = {
   STORE_NO_CANDIDATES,
   WAIT_INFO_CANDIDATES,
   countRows,
+  countCategoriesForStore,
   findColumn,
   getCategoryConfig,
   getLiveFilters,

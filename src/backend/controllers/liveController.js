@@ -75,6 +75,18 @@ async function getLiveFilters(req, res, next) {
   }
 }
 
+async function getLiveCategoryCounts(req, res, next) {
+  try {
+    const storeNo = parsePositiveInt(req.query.storeNo);
+    if (!storeNo) return res.status(400).json({ message: '유효한 매장 번호가 필요합니다.' });
+    const counts = await liveModel.countCategoriesForStore(storeNo);
+    if (!counts) return res.status(404).json({ message: '매장을 찾을 수 없습니다.' });
+    return res.json({ storeNo, counts });
+  } catch (error) {
+    return handleLiveError(error, next, res);
+  }
+}
+
 async function getLiveEntries(req, res, next) {
   try {
     const categoryKey = normalizeLiveCategory(req.query.category || req.query.infoType || req.query.type);
@@ -297,6 +309,7 @@ module.exports = {
   getLiveEntries,
   getLiveSignal,
   getLiveAds,
+  getLiveCategoryCounts,
   getTopAds,
   getBusinessAdAreas,
   getPieceBusinessAdAreas,
