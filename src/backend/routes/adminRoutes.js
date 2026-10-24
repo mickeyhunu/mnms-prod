@@ -19,6 +19,7 @@ const posterModel = require('../models/posterModel');
 const { STAMP_TYPES, getUserStampBalance, adjustUserStampsByAdmin } = require('../models/stampModel');
 const attendanceCommentModel = require('../models/attendanceCommentModel');
 const adminMessageModel = require('../models/adminMessageModel');
+const bannerAuctionModel = require('../models/bannerAuctionModel');
 
 const router = express.Router();
 
@@ -794,91 +795,83 @@ router.patch('/users/:id/member-type', async (req, res, next) => {
   }
 });
 
-router.get('/ads', async (req, res, next) => {
+// ---- 배너광고 경매 (회원 입찰) 관리 ----
+function sendBannerAuctionError(error, res, next) {
+  if (error?.status && error.status < 500) return res.status(error.status).json({ message: error.message });
+  return next(error);
+}
+
+router.get('/banner-auction', async (req, res, next) => {
   try {
-    const rows = await adminModel.listAds();
-    res.json({ content: rows, totalElements: rows.length });
+    const [months, result, stores] = await Promise.all([
+      bannerAuctionModel.adminListAuctionMonths(),
+      bannerAuctionModel.adminListBids({
+        month: req.query.month,
+        placement: String(req.query.placement || '').toUpperCase(),
+        storeNo: req.query.storeNo,
+        status: req.query.status
+      }),
+      liveModel.listStores().catch(() => [])
+    ]);
+    const storeNameByNo = new Map(stores.map((store) => [Number(store.storeNo), String(store.storeName || '').trim()]));
+    res.json({
+      content: {
+        ...result,
+        months,
+        placements: Object.values(bannerAuctionModel.BANNER_AUCTION_PLACEMENTS),
+        stores: stores
+          .map((store) => ({ storeNo: Number(store.storeNo), storeName: String(store.storeName || '').trim() }))
+          .filter((store) => store.storeNo > 0 && store.storeName),
+        items: result.items.map((item) => ({
+          ...item,
+          storeName: item.storeNo ? (storeNameByNo.get(item.storeNo) || `${item.storeNo}번 매장`) : ''
+        }))
+      }
+    });
   } catch (error) {
-    next(error);
+    sendBannerAuctionError(error, res, next);
   }
 });
 
-router.post('/ads', async (req, res, next) => {
+router.patch('/banner-auction/bids/:id/visibility', async (req, res, next) => {
   try {
-    const title = String(req.body?.title || '').trim();
-    const imageUrl = String(req.body?.imageUrl || '').trim();
-    const linkUrl = String(req.body?.linkUrl || '').trim();
-    const adType = String(req.body?.adType || 'LIVE').trim().toUpperCase();
-    const storeNoRaw = req.body?.storeNo;
-    const storeNo = storeNoRaw == null || storeNoRaw === '' ? null : Number.parseInt(storeNoRaw, 10);
-    const displayOrder = Number(req.body?.displayOrder) || 0;
-    const isActive = Boolean(req.body?.isActive);
-
-    if (!['LIVE', 'TOP'].includes(adType)) {
-      return res.status(400).json({ message: '유효하지 않은 광고 유형입니다.' });
-    }
-
-    if (adType === 'LIVE' && (!Number.isInteger(storeNo) || storeNo <= 0)) {
-      return res.status(400).json({ message: 'LIVE 광고는 매장 번호(storeNo)가 필요합니다.' });
-    }
-
-    if (Number.isInteger(storeNo) && storeNo > 0) {
-      const store = await adminModel.getStoreByNo(storeNo);
-      if (!store) return res.status(404).json({ message: '매장을 찾을 수 없습니다.' });
-    }
-
-    if (!title || !imageUrl || !linkUrl) {
-      return res.status(400).json({ message: '제목, 이미지 URL, 링크 URL은 필수입니다.' });
-    }
-
-    const insertId = await adminModel.createAd({ title, imageUrl, linkUrl, adType, storeNo, displayOrder, isActive });
-    res.status(201).json({ id: insertId });
+    const bidId = Number.parseInt(req.params.id, 10);
+    if (!(bidId > 0)) return res.status(400).json({ message: '유효하지 않은 입찰 ID입니다.' });
+    const hidden = req.body?.hidden === true;
+    const reason = String(req.body?.reason || '').trim();
+    if (hidden && !reason) return res.status(400).json({ message: '노출 중지 사유를 입력해주세요.' });
+    const bid = await bannerAuctionModel.adminSetBidHidden({ bidId, hidden, reason });
+    const target = bannerAuctionModel.describeBidForMessage(bid);
+    await adminMessageModel.create({
+      recipientUserId: bid.ownerUserId,
+      senderAdminId: req.user.id,
+      title: hidden ? '배너광고 노출이 중지되었습니다' : '배너광고 노출이 재개되었습니다',
+      content: hidden
+        ? `${target}가 관리자에 의해 노출 중지되었습니다.\n사유: ${reason}\n배너광고 관리에서 이미지·링크를 수정한 뒤 고객센터로 문의해주세요.`
+        : `${target}의 노출이 다시 시작되었습니다.`
+    }).catch(() => {});
+    res.json({ success: true, message: hidden ? '노출을 중지하고 회원에게 알렸습니다.' : '노출을 재개하고 회원에게 알렸습니다.' });
   } catch (error) {
-    next(error);
+    sendBannerAuctionError(error, res, next);
   }
 });
 
-router.put('/ads/:id', async (req, res, next) => {
+router.post('/banner-auction/bids/:id/cancel', async (req, res, next) => {
   try {
-    const id = Number.parseInt(req.params.id, 10);
-    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 광고 ID입니다.' });
-
-    const target = await adminModel.findAdById(id);
-    if (!target) return res.status(404).json({ message: '광고를 찾을 수 없습니다.' });
-
-    const title = String(req.body?.title || '').trim();
-    const imageUrl = String(req.body?.imageUrl || '').trim();
-    const linkUrl = String(req.body?.linkUrl || '').trim();
-    const adType = String(req.body?.adType || 'LIVE').trim().toUpperCase();
-    const storeNoRaw = req.body?.storeNo;
-    const storeNo = storeNoRaw == null || storeNoRaw === '' ? null : Number.parseInt(storeNoRaw, 10);
-    const displayOrder = Number(req.body?.displayOrder) || 0;
-    const isActive = Boolean(req.body?.isActive);
-
-    if (!['LIVE', 'TOP'].includes(adType)) {
-      return res.status(400).json({ message: '유효하지 않은 광고 유형입니다.' });
-    }
-
-    if (adType === 'LIVE' && (!Number.isInteger(storeNo) || storeNo <= 0)) {
-      return res.status(400).json({ message: 'LIVE 광고는 매장 번호(storeNo)가 필요합니다.' });
-    }
-
-    if (Number.isInteger(storeNo) && storeNo > 0) {
-      const store = await adminModel.getStoreByNo(storeNo);
-      if (!store) return res.status(404).json({ message: '매장을 찾을 수 없습니다.' });
-    }
-
-    if (!title || !imageUrl || !linkUrl) {
-      return res.status(400).json({ message: '제목, 이미지 URL, 링크 URL은 필수입니다.' });
-    }
-
-    await adminModel.updateAd(id, { title, imageUrl, linkUrl, adType, storeNo, displayOrder, isActive });
-    if (target.imageUrl && target.imageUrl !== imageUrl) {
-      await deleteS3ObjectByUrl(target.imageUrl);
-    }
-    res.json({ success: true });
+    const bidId = Number.parseInt(req.params.id, 10);
+    if (!(bidId > 0)) return res.status(400).json({ message: '유효하지 않은 입찰 ID입니다.' });
+    const reason = String(req.body?.reason || '').trim();
+    if (!reason) return res.status(400).json({ message: '입찰 취소 사유를 입력해주세요.' });
+    const bid = await bannerAuctionModel.adminCancelBid({ bidId, reason });
+    await adminMessageModel.create({
+      recipientUserId: bid.ownerUserId,
+      senderAdminId: req.user.id,
+      title: '배너광고 입찰이 취소되었습니다',
+      content: `${bannerAuctionModel.describeBidForMessage(bid)} 입찰이 관리자에 의해 취소되어 스탬프 ${bid.refundedStamps}개가 환불되었습니다.\n사유: ${reason}`
+    }).catch(() => {});
+    res.json({ success: true, message: `입찰을 취소하고 스탬프 ${bid.refundedStamps}개를 환불했습니다.` });
   } catch (error) {
-    next(error);
+    sendBannerAuctionError(error, res, next);
   }
 });
 
@@ -996,24 +989,6 @@ router.delete('/business-ads/:id', async (req, res, next) => {
     if (!target) return res.status(404).json({ message: '업체 광고를 찾을 수 없습니다.' });
     await adminModel.deleteBusinessAd(id);
     if (target.imageUrl) await deleteS3ObjectByUrl(target.imageUrl);
-    res.json({ success: true });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.delete('/ads/:id', async (req, res, next) => {
-  try {
-    const id = Number.parseInt(req.params.id, 10);
-    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: '유효하지 않은 광고 ID입니다.' });
-
-    const target = await adminModel.findAdById(id);
-    if (!target) return res.status(404).json({ message: '광고를 찾을 수 없습니다.' });
-
-    await adminModel.deleteAd(id);
-    if (target.imageUrl) {
-      await deleteS3ObjectByUrl(target.imageUrl);
-    }
     res.json({ success: true });
   } catch (error) {
     next(error);

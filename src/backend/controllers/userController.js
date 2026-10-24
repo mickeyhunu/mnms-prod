@@ -1945,7 +1945,7 @@ async function getMyBannerAds(req, res, next) {
         placements: Object.values(bannerAuctionModel.BANNER_AUCTION_PLACEMENTS),
         // 이번 달 낙찰되어 노출 중인 위치 (상품 카드 '활성화 중' 표시용, LIVE는 매장 무관)
         exposedPlacements: [...new Set(recentBids
-          .filter((bid) => bid.targetMonth === currentMonth && bid.status === 'WON')
+          .filter((bid) => bid.targetMonth === currentMonth && bid.status === 'WON' && !bid.isHidden)
           .map((bid) => bid.placement))],
         stores,
         // 다음 달 LIVE 입찰이 있는 매장 (매장 선택 목록의 '입찰중/낙찰' 표시용)

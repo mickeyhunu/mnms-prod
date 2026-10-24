@@ -156,11 +156,7 @@ async function getLiveAds(req, res, next) {
       return res.status(400).json({ message: '유효한 매장 번호가 필요합니다.' });
     }
 
-    const [auctionAds, adminAds] = await Promise.all([
-      bannerAuctionModel.listExposedBannerAds('LIVE', storeNo),
-      adminModel.listLiveAdsByStore(storeNo)
-    ]);
-    const ads = [...auctionAds, ...adminAds];
+    const ads = await bannerAuctionModel.listExposedBannerAds('LIVE', storeNo);
     return res.json({
       storeNo,
       content: ads,
@@ -178,11 +174,7 @@ async function getTopAds(req, res, next) {
       return res.status(400).json({ message: '유효한 상단 광고 위치값이 필요합니다.' });
     }
 
-    const [auctionAds, adminAds] = await Promise.all([
-      bannerAuctionModel.listExposedBannerAds(placement),
-      adminModel.listTopAdsByPlacement(placement)
-    ]);
-    const ads = [...auctionAds, ...adminAds];
+    const ads = await bannerAuctionModel.listExposedBannerAds(placement);
     return res.json({
       placement,
       content: ads,

@@ -9,19 +9,13 @@ let currentInquiryStatus = '';
 let inquiryAnswerTarget = null;
 let editingUserId = null;
 let editingEntryId = null;
-let editingAdId = null;
 let editingBusinessAdId = null;
 let pendingBusinessAdImageUrl = '';
 let editingPosterId = null;
 let adminPosters = [];
 let currentEntryStoreNo = null;
 let entryStores = [];
-let adStores = [];
 let isMasterAdmin = false;
-const TOP_AD_PLACEMENT_OPTIONS = [
-    { value: '1', label: '홈 상단' },
-    { value: '2', label: '커뮤니티 상단' }
-];
 let isGlobalAdminClickBound = false;
 let isDeleteModalActionBound = false;
 let isBusinessDocumentModalActionBound = false;
@@ -33,7 +27,7 @@ let sentMessagesCurrentPage = 1;
 
 const PHONE_PATTERN = /^01\d-\d{3,4}-\d{4}$/;
 const ACCOUNT_STATUS = { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED' };
-const ADMIN_TABS = ['stats', 'posts', 'comments', 'attendance-comments', 'users', 'business-users', 'admins', 'entries', 'posters', 'banner-ads', 'business-ads', 'support', 'business-applications', 'inquiries'];
+const ADMIN_TABS = ['stats', 'posts', 'comments', 'attendance-comments', 'users', 'business-users', 'admins', 'entries', 'posters', 'business-ads', 'banner-ads', 'support', 'business-applications', 'inquiries'];
 const ADMIN_SIDEBAR_COLLAPSED_STORAGE_KEY = 'adminSidebarCollapsed';
 
 const ADMIN_PAGE_SIZE = 20;
@@ -60,7 +54,7 @@ const ADMIN_LIST_STATE = {
     'business-applications': { items: [], query: '', page: 1 },
     admins: { items: [], query: '', page: 1 },
     entries: { items: [], query: '', page: 1 },
-    ads: { items: [], query: '', page: 1 },
+    'banner-auction': { items: [], query: '', page: 1 },
     'business-ads': { items: [], query: '', page: 1 },
     support: { items: [], query: '', page: 1 },
     inquiries: { items: [], query: '', page: 1 }
@@ -73,7 +67,7 @@ const ADMIN_SEARCH_PLACEHOLDERS = {
     'business-applications': '기업회원 신청/변경 검색',
     admins: '관리자 검색',
     entries: '엔트리 검색',
-    ads: '광고 검색',
+    'banner-auction': '업체명/아이디/매장 검색',
     'business-ads': '업체광고 검색',
     support: '공지/FAQ 검색',
     inquiries: '1:1 문의 검색'
@@ -255,7 +249,7 @@ async function activateAdminTab(tabKey, options = {}) {
     else if (resolvedTabKey === 'admins') await loadAdmins();
     else if (resolvedTabKey === 'entries') await loadEntries();
     else if (resolvedTabKey === 'posters') await loadPosters();
-    else if (resolvedTabKey === 'banner-ads') await loadAds();
+    else if (resolvedTabKey === 'banner-ads') await loadBannerAdsAdmin();
     else if (resolvedTabKey === 'business-ads') await loadBusinessAdsAdmin();
     else if (resolvedTabKey === 'support') await loadSupportArticles();
     else if (resolvedTabKey === 'inquiries') await loadInquiries();
@@ -326,7 +320,6 @@ function bindCommonEvents() {
     document.getElementById('admins-retry-btn')?.addEventListener('click', loadAdmins);
     document.getElementById('entries-retry-btn')?.addEventListener('click', loadEntries);
     document.getElementById('entries-retry-btn-secondary')?.addEventListener('click', loadEntries);
-    document.getElementById('ads-retry-btn')?.addEventListener('click', loadAds);
     document.getElementById('posters-retry-btn')?.addEventListener('click', loadPosters);
     document.getElementById('business-ads-retry-btn')?.addEventListener('click', loadBusinessAdsAdmin);
     document.getElementById('support-retry-btn')?.addEventListener('click', loadSupportArticles);
@@ -354,10 +347,6 @@ function bindCommonEvents() {
     document.getElementById('support-cancel-btn')?.addEventListener('click', closeSupportModal);
     document.getElementById('support-save-btn')?.addEventListener('click', saveSupportArticle);
 
-    document.getElementById('ads-save-btn')?.addEventListener('click', saveAd);
-    document.getElementById('ads-cancel-btn')?.addEventListener('click', resetAdEditor);
-    document.getElementById('ads-image-upload-btn')?.addEventListener('click', uploadAdImage);
-    document.getElementById('ads-form-ad-type')?.addEventListener('change', handleAdTypeChange);
     document.getElementById('posters-save-btn')?.addEventListener('click', savePoster);
     document.getElementById('posters-cancel-btn')?.addEventListener('click', resetPosterEditor);
     document.getElementById('business-ads-save-btn')?.addEventListener('click', saveBusinessAdAdmin);
@@ -378,7 +367,6 @@ function bindCommonEvents() {
     });
     document.getElementById('inquiry-answer-cancel-btn')?.addEventListener('click', closeInquiryAnswerModal);
     document.getElementById('inquiry-answer-save-btn')?.addEventListener('click', saveInquiryAnswer);
-    resetAdEditor();
     resetBusinessAdEditor();
 
     if (!isGlobalAdminClickBound) {
@@ -520,7 +508,7 @@ function getAdminFilteredItems(prefix) {
         'business-applications': ['userId', 'loginId', 'nickname', 'companyName', 'businessRegistrationNumber', 'managerName', 'contactPhone', 'userPhone', 'approvalStatus', 'registrationStatus', 'applicationType', (item) => toBusinessApplicationTypeText(item.applicationType), (item) => item.businessInfo?.businessAddress, (item) => item.businessInfo?.businessType],
         admins: ['id', 'loginId', 'nickname', 'role'],
         entries: ['workerName', 'entryId'],
-        ads: ['id', 'title', 'adType', 'storeNo', 'linkUrl', 'imageUrl', 'displayOrder'],
+        'banner-auction': ['id', 'ownerUserId', 'businessName', 'loginId', 'nickname', 'storeName', (item) => BANNER_AUCTION_PLACEMENT_LABELS[item.placement], (item) => BANNER_AUCTION_STATUS_LABELS[item.status]],
         'business-ads': ['id', 'ownerUserId', 'ownerLoginId', 'ownerNickname', 'ownerCompanyName', 'businessName', 'title', 'region', 'district', 'category', 'planType', 'registrationStatus'],
         support: ['id', 'title', 'category', 'sourceType'],
         inquiries: ['id', 'title', 'userNickname', 'userLoginId', 'userId', 'type', 'status', (item) => item.target?.postTitle, (item) => item.target?.content, 'targetId', 'targetType']
@@ -538,9 +526,7 @@ function getAdminFilteredItems(prefix) {
         });
     }
 
-    if (prefix !== 'ads') return queryMatchedItems;
-
-    return queryMatchedItems.filter((item) => String(item?.adType || '').toUpperCase() !== 'BUSINESS');
+    return queryMatchedItems;
 }
 
 function getAdminPagination(prefix) {
@@ -600,7 +586,7 @@ function renderAdminList(prefix) {
     else if (prefix === 'users') renderUsersTable();
     else if (prefix === 'business-applications') renderBusinessApplicationsTable();
     else if (prefix === 'entries') renderEntriesTable();
-    else if (prefix === 'ads') renderAdsTable();
+    else if (prefix === 'banner-auction') renderBannerAuctionAdmin();
     else if (prefix === 'business-ads') renderBusinessAdsAdminTable();
     else if (prefix === 'support') renderSupportTable();
     else if (prefix === 'inquiries') renderInquiriesTable();
@@ -1658,38 +1644,6 @@ function bindEntryRowActionButtons(container) {
     });
 }
 
-function renderAdsTable() {
-    const tbody = document.getElementById('ads-tbody');
-    if (!tbody) return;
-
-    const { filteredItems, pageItems, page, totalPages } = getAdminPagination('ads');
-    updateAdminTotal('ads', filteredItems.length);
-
-    if (!pageItems.length) {
-        tbody.innerHTML = `<tr><td colspan="10">${filteredItems.length ? '현재 페이지에 표시할 광고가 없습니다.' : '등록된 광고가 없습니다.'}</td></tr>`;
-    } else {
-        tbody.innerHTML = pageItems.map((ad) => `
-            <tr>
-                <td>${ad.id}</td>
-                <td>${sanitizeHTML(ad.adType || 'LIVE')}</td>
-                <td>${Number.isInteger(Number(ad.storeNo)) ? Number(ad.storeNo) : '-'}</td>
-                <td>${sanitizeHTML(ad.title || '')}</td>
-                <td><a href="${sanitizeHTML(normalizeExternalUrl(ad.linkUrl))}" target="_blank" rel="noopener noreferrer">링크 열기</a></td>
-                <td>${Number(ad.displayOrder || 0)}</td>
-                <td>${ad.isActive ? '노출' : '숨김'}</td>
-                <td>${formatDate(ad.createdAt || ad.created_at)}</td>
-                <td>${formatDate(ad.updatedAt || ad.updated_at)}</td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-secondary" data-admin-action="edit-ad" data-target-id="${ad.id}">수정</button>
-                    <button type="button" class="btn btn-sm btn-danger" data-admin-action="delete" data-target-type="ad" data-target-id="${ad.id}">삭제</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    renderAdminPagination('ads', totalPages, page);
-}
-
 function renderSupportTable() {
     const tbody = document.getElementById('support-tbody');
     if (!tbody) return;
@@ -2536,16 +2490,185 @@ async function adjustUserPoints() {
     }
 }
 
-async function loadAds() {
-    toggleLoading('ads', true);
+// ---- 배너광고관리 (회원 배너 경매) ----
+// 목록·검색·페이지 나누기는 다른 관리 화면과 같은 ADMIN_LIST_STATE['banner-auction'] 흐름을 쓰고,
+// 월/위치/매장/상태 필터는 서버 조회 조건으로 보낸다.
+const BANNER_AUCTION_ADMIN_STATE = {
+    month: '',
+    placement: '',
+    storeNo: '',
+    status: '',
+    data: null,
+    filtersBound: false
+};
+const BANNER_AUCTION_PLACEMENT_LABELS = { HOME: '홈 상단', COMMUNITY: '커뮤니티 상단', LIVE: 'LIVE 하단' };
+const BANNER_AUCTION_STATUS_LABELS = { BIDDING: '입찰중', WON: '낙찰', LOST: '미낙찰', CANCELED: '취소' };
+const BANNER_AUCTION_PHASE_LABELS = { NOT_OPEN: '입찰 전', BIDDING: '입찰 진행중', CLOSED: '마감 · 순서 확정', EXPOSING: '노출중', ENDED: '종료' };
+
+function formatBannerAuctionMonth(monthKey) {
+    const [year, month] = String(monthKey || '').split('-');
+    return year && month ? `${year}년 ${Number(month)}월` : '-';
+}
+
+function formatBannerAuctionDateTime(value, { minusMinute = false } = {}) {
+    if (!value) return '-';
+    const date = new Date(new Date(value).getTime() - (minusMinute ? 60 * 1000 : 0));
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function bindBannerAuctionAdminEvents() {
+    if (BANNER_AUCTION_ADMIN_STATE.filtersBound) return;
+    BANNER_AUCTION_ADMIN_STATE.filtersBound = true;
+    const bindFilter = (id, key, { resetStore = false } = {}) => {
+        document.getElementById(id)?.addEventListener('change', (event) => {
+            BANNER_AUCTION_ADMIN_STATE[key] = event.target.value;
+            if (resetStore) BANNER_AUCTION_ADMIN_STATE.storeNo = '';
+            ADMIN_LIST_STATE['banner-auction'].page = 1;
+            loadBannerAuctionAdmin();
+        });
+    };
+    bindFilter('banner-auction-month', 'month');
+    bindFilter('banner-auction-placement', 'placement', { resetStore: true });
+    bindFilter('banner-auction-store', 'storeNo');
+    bindFilter('banner-auction-status', 'status');
+    document.getElementById('banner-auction-retry-btn')?.addEventListener('click', loadBannerAuctionAdmin);
+    document.getElementById('banner-auction-tbody')?.addEventListener('click', handleBannerAuctionAction);
+}
+
+async function loadBannerAdsAdmin() {
+    bindBannerAuctionAdminEvents();
+    await loadBannerAuctionAdmin();
+}
+
+async function loadBannerAuctionAdmin() {
+    toggleLoading('banner-auction', true);
     try {
-        await ensureAdStoresLoaded();
-        const response = await APIClient.get('/admin/ads');
-        ADMIN_LIST_STATE.ads.items = response.content || [];
-        renderAdsTable();
-        showContent('ads');
+        const { month, placement, storeNo, status } = BANNER_AUCTION_ADMIN_STATE;
+        const query = {};
+        if (month) query.month = month;
+        if (placement) query.placement = placement;
+        if (placement === 'LIVE' && storeNo) query.storeNo = storeNo;
+        if (status) query.status = status;
+        const response = await APIClient.get('/admin/banner-auction', query);
+        const data = response.content || null;
+        BANNER_AUCTION_ADMIN_STATE.data = data;
+        BANNER_AUCTION_ADMIN_STATE.month = data?.targetMonth || month;
+        ADMIN_LIST_STATE['banner-auction'].items = data?.items || [];
+        renderBannerAuctionFilters(data);
+        renderBannerAuctionAdmin();
+        showContent('banner-auction');
     } catch (error) {
-        showError('ads', error.message || '광고 목록을 불러오지 못했습니다.');
+        showError('banner-auction', error.message || '배너광고 목록을 불러오지 못했습니다.');
+    }
+}
+
+function renderBannerAuctionFilters(data) {
+    if (!data) return;
+    const state = BANNER_AUCTION_ADMIN_STATE;
+    const monthSelect = document.getElementById('banner-auction-month');
+    if (monthSelect) {
+        monthSelect.innerHTML = (data.months || []).map((month) => (
+            `<option value="${sanitizeHTML(month)}" ${month === data.targetMonth ? 'selected' : ''}>${formatBannerAuctionMonth(month)}</option>`
+        )).join('');
+    }
+    const placementSelect = document.getElementById('banner-auction-placement');
+    if (placementSelect) placementSelect.value = state.placement;
+    const statusSelect = document.getElementById('banner-auction-status');
+    if (statusSelect) statusSelect.value = state.status;
+    const storeSelect = document.getElementById('banner-auction-store');
+    if (storeSelect) {
+        storeSelect.classList.toggle('hidden', state.placement !== 'LIVE');
+        if (state.placement === 'LIVE') {
+            storeSelect.innerHTML = ['<option value="">전체 매장</option>', ...(data.stores || []).map((store) => (
+                `<option value="${store.storeNo}" ${String(store.storeNo) === String(state.storeNo) ? 'selected' : ''}>${sanitizeHTML(store.storeName)}</option>`
+            ))].join('');
+        }
+    }
+    const phase = document.getElementById('banner-auction-phase');
+    if (phase) {
+        const closeText = ['NOT_OPEN', 'BIDDING'].includes(data.phase) ? ` · 마감 ${formatBannerAuctionDateTime(data.schedule?.bidCloseAt, { minusMinute: true })}` : '';
+        phase.textContent = `· ${formatBannerAuctionMonth(data.targetMonth)} ${BANNER_AUCTION_PHASE_LABELS[data.phase] || data.phase}${closeText}`;
+    }
+}
+
+function renderBannerAuctionAdmin() {
+    const tbody = document.getElementById('banner-auction-tbody');
+    if (!tbody) return;
+    const { filteredItems, pageItems, page, totalPages } = getAdminPagination('banner-auction');
+    updateAdminTotal('banner-auction', filteredItems.length);
+    if (!pageItems.length) {
+        tbody.innerHTML = `<tr><td colspan="10">${filteredItems.length ? '현재 페이지에 표시할 배너광고가 없습니다.' : '조건에 맞는 배너광고 입찰이 없습니다.'}</td></tr>`;
+        renderAdminPagination('banner-auction', totalPages, page);
+        return;
+    }
+    const slotByPlacement = Object.fromEntries((BANNER_AUCTION_ADMIN_STATE.data?.placements || []).map((placement) => [placement.code, placement.slotCount]));
+    tbody.innerHTML = pageItems.map((item) => {
+        const rankText = item.rank
+            ? `${item.rank}위${item.status === 'BIDDING' ? ` <small class="${item.withinSlots ? 'banner-auction-in' : 'banner-auction-out'}">${item.withinSlots ? '노출권' : `노출권 밖 (${slotByPlacement[item.placement]}슬롯)`}</small>` : ''}`
+            : '-';
+        const canHide = ['BIDDING', 'WON'].includes(item.status);
+        const exposureText = !canHide
+            ? '-'
+            : (item.isHidden ? `노출 중지${item.hiddenReason ? `<br><small class="text-muted">${sanitizeHTML(item.hiddenReason)}</small>` : ''}` : '노출');
+        const actions = [
+            canHide ? `<button type="button" class="btn btn-sm btn-secondary" data-banner-auction-action="${item.isHidden ? 'show' : 'hide'}" data-bid-id="${item.id}">${item.isHidden ? '노출 재개' : '노출 중지'}</button>` : '',
+            item.status === 'BIDDING' ? `<button type="button" class="btn btn-sm btn-danger" data-banner-auction-action="cancel" data-bid-id="${item.id}">입찰 취소</button>` : ''
+        ].filter(Boolean).join(' ');
+        return `
+            <tr class="${item.isHidden ? 'banner-auction-row--hidden' : ''}">
+                <td>${item.id}</td>
+                <td>#${item.ownerUserId} ${sanitizeHTML(item.nickname || item.loginId || '')}</td>
+                <td>${sanitizeHTML(item.businessName || '')}</td>
+                <td>${BANNER_AUCTION_PLACEMENT_LABELS[item.placement] || sanitizeHTML(item.placement)}${item.storeName ? ` · ${sanitizeHTML(item.storeName)}` : ''}</td>
+                <td>${rankText}</td>
+                <td>${item.bidStamps.toLocaleString('ko-KR')}개<br><small class="text-muted">${formatBannerAuctionDateTime(item.bidUpdatedAt)}</small></td>
+                <td>${BANNER_AUCTION_STATUS_LABELS[item.status] || sanitizeHTML(item.status)}</td>
+                <td>${exposureText}</td>
+                <td>${item.imageUrl
+                    ? `<a href="${sanitizeHTML(item.linkUrl || item.imageUrl)}" target="_blank" rel="noopener noreferrer" title="${sanitizeHTML(item.linkUrl || '')}"><img class="banner-auction-thumb" src="${sanitizeHTML(item.imageUrl)}" alt="${sanitizeHTML(item.creativeTitle || '배너')}"></a>`
+                    : '<span class="text-muted">이미지 없음</span>'}</td>
+                <td>${actions || '-'}</td>
+            </tr>
+        `;
+    }).join('');
+    renderAdminPagination('banner-auction', totalPages, page);
+}
+
+async function handleBannerAuctionAction(event) {
+    const button = event.target instanceof Element ? event.target.closest('[data-banner-auction-action]') : null;
+    if (!button) return;
+    const bidId = Number(button.dataset.bidId);
+    const action = button.dataset.bannerAuctionAction;
+    const item = (ADMIN_LIST_STATE['banner-auction'].items || []).find((row) => row.id === bidId);
+    if (!item) return;
+    const label = `${item.businessName} · ${BANNER_AUCTION_PLACEMENT_LABELS[item.placement] || item.placement}${item.storeName ? `(${item.storeName})` : ''}`;
+
+    try {
+        button.disabled = true;
+        let response;
+        if (action === 'hide') {
+            const reason = window.prompt(`[${label}] 배너를 노출 중지합니다.\n회원에게 전달할 사유를 입력해주세요.`);
+            if (reason == null) return;
+            if (!reason.trim()) { alert('사유를 입력해주세요.'); return; }
+            response = await APIClient.patch(`/admin/banner-auction/bids/${bidId}/visibility`, { hidden: true, reason: reason.trim() });
+        } else if (action === 'show') {
+            if (!window.confirm(`[${label}] 배너 노출을 재개할까요?`)) return;
+            response = await APIClient.patch(`/admin/banner-auction/bids/${bidId}/visibility`, { hidden: false });
+        } else if (action === 'cancel') {
+            const reason = window.prompt(`[${label}] 입찰을 취소하고 스탬프 ${item.bidStamps}개를 환불합니다.\n회원에게 전달할 사유를 입력해주세요.`);
+            if (reason == null) return;
+            if (!reason.trim()) { alert('사유를 입력해주세요.'); return; }
+            response = await APIClient.post(`/admin/banner-auction/bids/${bidId}/cancel`, { reason: reason.trim() });
+        } else {
+            return;
+        }
+        alert(response?.message || '처리되었습니다.');
+        await loadBannerAuctionAdmin();
+    } catch (error) {
+        alert(error.message || '처리에 실패했습니다.');
+    } finally {
+        button.disabled = false;
     }
 }
 
@@ -2617,178 +2740,6 @@ async function deletePoster(id) {
     try { await APIClient.delete(`/admin/posters/${id}`); if (editingPosterId === id) resetPosterEditor(); await loadPosters(); } catch (error) { alert(error.message || '삭제에 실패했습니다.'); }
 }
 
-async function ensureAdStoresLoaded() {
-    if (adStores.length) return;
-    const response = await APIClient.get('/admin/entries/stores');
-    adStores = Array.isArray(response.content) ? response.content : [];
-    renderAdStoreOptions();
-}
-
-function renderAdStoreOptions() {
-    const select = document.getElementById('ads-form-store-no');
-    const adType = String(document.getElementById('ads-form-ad-type')?.value || 'LIVE').trim().toUpperCase();
-    const storeLabel = document.querySelector('label[for="ads-form-store-no"]');
-    if (!select) return;
-
-    if (adType === 'TOP') {
-        if (storeLabel) storeLabel.textContent = '노출 위치(스크롤 선택)';
-        select.innerHTML = ['<option value="">전체/미지정</option>', ...TOP_AD_PLACEMENT_OPTIONS.map((placement) => (
-            `<option value="${placement.value}">${placement.label}</option>`
-        ))].join('');
-        return;
-    }
-
-    if (storeLabel) storeLabel.textContent = '매장 선택(storeNo, 스크롤 선택)';
-    select.innerHTML = ['<option value="">전체/미지정</option>', ...adStores.map((store) => (
-        `<option value="${store.storeNo}">#${store.storeNo} ${sanitizeHTML(store.storeName || '')}</option>`
-    ))].join('');
-}
-
-function handleAdTypeChange() {
-    const select = document.getElementById('ads-form-store-no');
-    if (!select) return;
-    select.value = '';
-    renderAdStoreOptions();
-}
-
-function setAdHelpMessage(message, color = '#6c757d') {
-    const help = document.getElementById('ads-form-help');
-    if (!help) return;
-    help.textContent = message;
-    help.style.color = color;
-}
-
-function fillAdEditorForm(ad = null) {
-    const isEdit = Boolean(ad && Number.isInteger(Number(ad.id)));
-    editingAdId = isEdit ? Number(ad.id) : null;
-
-    document.getElementById('ads-editor-title').textContent = isEdit ? `광고 수정 #${ad.id}` : '새 광고 등록';
-    document.getElementById('ads-save-btn').textContent = isEdit ? '광고 수정 저장' : '광고 등록';
-    document.getElementById('ads-cancel-btn')?.classList.toggle('hidden', !isEdit);
-    document.getElementById('ads-form-title').value = ad?.title || '';
-    document.getElementById('ads-form-link-url').value = ad?.linkUrl || '';
-    document.getElementById('ads-form-ad-type').value = ad?.adType || 'LIVE';
-    renderAdStoreOptions();
-    document.getElementById('ads-form-store-no').value = ad?.storeNo ? String(ad.storeNo) : '';
-    document.getElementById('ads-form-image-url').value = ad?.imageUrl || '';
-    document.getElementById('ads-form-display-order').value = Number(ad?.displayOrder || 0);
-    document.getElementById('ads-form-is-active').value = String(Boolean(ad?.isActive));
-    document.getElementById('ads-form-image-file').value = '';
-    document.getElementById('ads-form-image-help').textContent = ad?.imageUrl ? '현재 이미지를 사용 중입니다. 새 파일 업로드 시 교체됩니다.' : '이미지를 선택하고 업로드 버튼을 누르세요.';
-    setAdHelpMessage('');
-}
-
-function resetAdEditor() {
-    fillAdEditorForm(null);
-}
-
-async function openAdEditor(adId) {
-    const target = (ADMIN_LIST_STATE.ads.items || []).find((item) => Number(item.id) === Number(adId));
-    if (!target) {
-        alert('광고 정보를 찾을 수 없습니다.');
-        return;
-    }
-    fillAdEditorForm(target);
-    document.getElementById('ads-editor-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-async function uploadAdImage() {
-    const fileInput = document.getElementById('ads-form-image-file');
-    const help = document.getElementById('ads-form-image-help');
-    const imageUrlInput = document.getElementById('ads-form-image-url');
-    const uploadButton = document.getElementById('ads-image-upload-btn');
-    const file = fileInput?.files?.[0];
-
-    if (!file) {
-        setAdHelpMessage('먼저 업로드할 이미지를 선택해주세요.', '#dc3545');
-        return;
-    }
-
-    if (!String(file.type || '').startsWith('image/')) {
-        setAdHelpMessage('이미지 파일만 업로드할 수 있습니다.', '#dc3545');
-        return;
-    }
-
-    const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error('이미지 파일을 읽지 못했습니다.'));
-        reader.readAsDataURL(file);
-    });
-
-    try {
-        if (uploadButton) {
-            uploadButton.disabled = true;
-            uploadButton.textContent = '업로드 중...';
-        }
-        const response = await APIClient.post('/uploads/ads/images', {
-            files: [{ dataUrl, fileName: file.name }]
-        });
-        const uploaded = Array.isArray(response.files) ? response.files[0] : null;
-        if (!uploaded?.url) throw new Error('업로드 URL을 받지 못했습니다.');
-
-        if (imageUrlInput) imageUrlInput.value = uploaded.url;
-        if (help) help.textContent = '이미지 업로드가 완료되었습니다.';
-        setAdHelpMessage('광고 이미지가 S3에 업로드되었습니다.', '#198754');
-    } catch (error) {
-        setAdHelpMessage(error.message || '광고 이미지 업로드에 실패했습니다.', '#dc3545');
-    } finally {
-        if (uploadButton) {
-            uploadButton.disabled = false;
-            uploadButton.textContent = '이미지 업로드';
-        }
-    }
-}
-
-async function saveAd() {
-    const saveButton = document.getElementById('ads-save-btn');
-    const wasEdit = Boolean(editingAdId);
-    const payload = {
-        title: document.getElementById('ads-form-title')?.value?.trim() || '',
-        imageUrl: document.getElementById('ads-form-image-url')?.value?.trim() || '',
-        linkUrl: document.getElementById('ads-form-link-url')?.value?.trim() || '',
-        adType: String(document.getElementById('ads-form-ad-type')?.value || 'LIVE').trim().toUpperCase(),
-        storeNo: (() => {
-            const raw = document.getElementById('ads-form-store-no')?.value || '';
-            return raw ? Number.parseInt(raw, 10) : null;
-        })(),
-        displayOrder: Number(document.getElementById('ads-form-display-order')?.value || 0) || 0,
-        isActive: String(document.getElementById('ads-form-is-active')?.value || 'true') === 'true'
-    };
-
-    if (!payload.title || !payload.imageUrl || !payload.linkUrl) {
-        setAdHelpMessage('제목, 이미지 URL, 링크 URL은 필수입니다.', '#dc3545');
-        return;
-    }
-    if (!isValidExternalUrl(payload.linkUrl)) {
-        setAdHelpMessage('광고 링크 URL은 http:// 또는 https:// 형식이어야 합니다.', '#dc3545');
-        return;
-    }
-    if (payload.adType === 'LIVE' && (!Number.isInteger(payload.storeNo) || payload.storeNo <= 0)) {
-        setAdHelpMessage('LIVE 광고는 매장을 선택해야 합니다.', '#dc3545');
-        return;
-    }
-
-    try {
-        if (saveButton) {
-            saveButton.disabled = true;
-            saveButton.textContent = '저장 중...';
-        }
-        if (wasEdit) await APIClient.put(`/admin/ads/${editingAdId}`, payload);
-        else await APIClient.post('/admin/ads', payload);
-        resetAdEditor();
-        await loadAds();
-        setAdHelpMessage('광고가 저장되었습니다.', '#198754');
-    } catch (error) {
-        setAdHelpMessage(error.message || '광고 저장에 실패했습니다.', '#dc3545');
-    } finally {
-        if (saveButton) {
-            saveButton.disabled = false;
-            saveButton.textContent = wasEdit ? '광고 수정 저장' : '광고 등록';
-        }
-    }
-}
-
 function isValidExternalUrl(url) {
     try {
         const parsed = new URL(url);
@@ -2796,11 +2747,6 @@ function isValidExternalUrl(url) {
     } catch (error) {
         return false;
     }
-}
-
-function normalizeExternalUrl(url) {
-    const target = String(url || '').trim();
-    return isValidExternalUrl(target) ? target : '#';
 }
 
 
@@ -3153,11 +3099,6 @@ async function handleAdminTableActionClick(event) {
 
     if (action === 'edit-entry' && entryId) {
         startEntryEdit({ entryId, workerName: entryName });
-        return;
-    }
-
-    if (action === 'edit-ad' && Number.isInteger(targetId)) {
-        await openAdEditor(targetId);
         return;
     }
 
@@ -3612,10 +3553,6 @@ function openAdminActionModal(target) {
     } else if (target.type === 'user') {
         if (title) title.textContent = '회원 삭제';
         if (message) message.textContent = '이 회원을 삭제하시겠습니까?';
-    } else if (target.type === 'ad') {
-        if (title) title.textContent = '광고 삭제';
-        if (message) message.textContent = '이 광고를 삭제하시겠습니까?';
-        if (helpText) helpText.textContent = '삭제된 내용은 복구할 수 없습니다.';
     } else if (target.type === 'entry') {
         if (title) title.textContent = '엔트리 삭제';
         if (message) message.textContent = `"${target.entryName || '선택한 엔트리'}" 항목을 삭제하시겠습니까?`;
@@ -3682,10 +3619,6 @@ async function confirmDelete() {
             await APIClient.delete(`/admin/attendance-comments/${adminActionTarget.id}`);
             closeDeleteModal();
             await loadAttendanceCommentsAdmin();
-        } else if (adminActionTarget.type === 'ad') {
-            await APIClient.delete(`/admin/ads/${adminActionTarget.id}`);
-            closeDeleteModal();
-            await loadAds();
         } else if (adminActionTarget.type === 'business-ad') {
             await APIClient.delete(`/admin/business-ads/${adminActionTarget.id}`);
             closeDeleteModal();
