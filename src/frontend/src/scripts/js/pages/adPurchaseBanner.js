@@ -91,7 +91,8 @@
             statusBadge.alt = banner && badge ? badge.alt : '미광고';
         }
         if (statusTitle) {
-            statusTitle.textContent = banner
+            if (banner?.isHidden) statusTitle.textContent = `${label} 배너가 관리자에 의해 노출 중지되었습니다${banner.hiddenReason ? ` (사유: ${banner.hiddenReason})` : ''}`;
+            else statusTitle.textContent = banner
                 ? `${label} 배너가 노출 중입니다 (${banner.finalRank}위)`
                 : `이번 달 노출 중인 ${label} 배너가 없습니다`;
         }

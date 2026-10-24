@@ -41,20 +41,38 @@ export const adminTemplate = `
                         </div>
                     </div>
                     <nav class="admin-tabs" id="admin-tabs" aria-label="관리자 메뉴 목록">
-                        <button class="admin-tab active" data-tab="stats" title="통계 대시보드"><span class="admin-tab__label">통계 대시보드</span></button>
-                        <button class="admin-tab" data-tab="users" title="일반 회원관리"><span class="admin-tab__label">일반 회원관리</span></button>
-                        <button class="admin-tab" data-tab="business-users" title="기업 회원관리"><span class="admin-tab__label">기업 회원관리</span></button>
-                        <button class="admin-tab" data-tab="admins" title="관리자 관리"><span class="admin-tab__label">관리자 관리</span></button>
-                        <button class="admin-tab" data-tab="posts" title="게시글 관리"><span class="admin-tab__label">게시글 관리</span></button>
-                        <button class="admin-tab" data-tab="comments" title="댓글 관리"><span class="admin-tab__label">댓글 관리</span></button>
-                        <button class="admin-tab" data-tab="posters" title="홈 포스터 관리"><span class="admin-tab__label">홈 포스터 관리</span></button>
-                        <button class="admin-tab" data-tab="banner-ads" title="배너광고관리"><span class="admin-tab__label">배너광고관리</span></button>
-                        <button class="admin-tab" data-tab="business-ads" title="업체광고관리"><span class="admin-tab__label">업체광고관리</span></button>
-                        <button class="admin-tab" data-tab="entries" title="엔트리 관리"><span class="admin-tab__label">엔트리 관리</span></button>
-                        <button class="admin-tab" data-tab="attendance-comments" title="출근자 코멘트"><span class="admin-tab__label">출근자 코멘트</span><span class="admin-tab__badge hidden" id="attendance-comments-tab-badge">0</span></button>
-                        <button class="admin-tab" data-tab="support" title="공지/FAQ 관리"><span class="admin-tab__label">공지/FAQ 관리</span></button>
-                        <button class="admin-tab" data-tab="business-applications" title="기업회원 신청/변경 검토"><span class="admin-tab__label">기업회원 신청/변경 검토</span><span class="admin-tab__badge hidden" id="business-applications-tab-badge">0</span></button>
-                        <button class="admin-tab" data-tab="inquiries" title="1:1 문의 관리"><span class="admin-tab__label">1:1 문의 관리</span><span class="admin-tab__badge hidden" id="inquiries-tab-badge">0</span></button>
+                        <div class="admin-tab-group" role="group" aria-labelledby="admin-tab-group-dashboard-title">
+                            <p class="admin-tab-group__title" id="admin-tab-group-dashboard-title">대시보드</p>
+                            <button class="admin-tab active" data-tab="stats" title="통계 대시보드"><span class="admin-tab__label">통계 대시보드</span></button>
+                        </div>
+                        <div class="admin-tab-group" role="group" aria-labelledby="admin-tab-group-members-title">
+                            <p class="admin-tab-group__title" id="admin-tab-group-members-title">회원 관리</p>
+                            <button class="admin-tab" data-tab="users" title="일반 회원관리"><span class="admin-tab__label">일반 회원관리</span></button>
+                            <button class="admin-tab" data-tab="business-users" title="기업 회원관리"><span class="admin-tab__label">기업 회원관리</span></button>
+                            <button class="admin-tab" data-tab="business-applications" title="기업회원 신청/변경 검토"><span class="admin-tab__label">기업회원 신청/변경 검토</span><span class="admin-tab__badge hidden" id="business-applications-tab-badge">0</span></button>
+                            <button class="admin-tab" data-tab="admins" title="관리자 관리"><span class="admin-tab__label">관리자 관리</span></button>
+                        </div>
+                        <div class="admin-tab-group" role="group" aria-labelledby="admin-tab-group-contents-title">
+                            <p class="admin-tab-group__title" id="admin-tab-group-contents-title">콘텐츠 관리</p>
+                            <button class="admin-tab" data-tab="posts" title="게시글 관리"><span class="admin-tab__label">게시글 관리</span></button>
+                            <button class="admin-tab" data-tab="comments" title="댓글 관리"><span class="admin-tab__label">댓글 관리</span></button>
+                            <button class="admin-tab" data-tab="support" title="공지/FAQ 관리"><span class="admin-tab__label">공지/FAQ 관리</span></button>
+                            <button class="admin-tab" data-tab="posters" title="홈 포스터 관리"><span class="admin-tab__label">홈 포스터 관리</span></button>
+                        </div>
+                        <div class="admin-tab-group" role="group" aria-labelledby="admin-tab-group-ads-title">
+                            <p class="admin-tab-group__title" id="admin-tab-group-ads-title">광고 관리</p>
+                            <button class="admin-tab" data-tab="business-ads" title="업체광고관리"><span class="admin-tab__label">업체광고관리</span></button>
+                            <button class="admin-tab" data-tab="banner-ads" title="배너광고관리"><span class="admin-tab__label">배너광고관리</span></button>
+                        </div>
+                        <div class="admin-tab-group" role="group" aria-labelledby="admin-tab-group-live-title">
+                            <p class="admin-tab-group__title" id="admin-tab-group-live-title">LIVE 관리</p>
+                            <button class="admin-tab" data-tab="entries" title="엔트리 관리"><span class="admin-tab__label">엔트리 관리</span></button>
+                            <button class="admin-tab" data-tab="attendance-comments" title="출근자 코멘트"><span class="admin-tab__label">출근자 코멘트</span><span class="admin-tab__badge hidden" id="attendance-comments-tab-badge">0</span></button>
+                        </div>
+                        <div class="admin-tab-group" role="group" aria-labelledby="admin-tab-group-support-title">
+                            <p class="admin-tab-group__title" id="admin-tab-group-support-title">고객 지원</p>
+                            <button class="admin-tab" data-tab="inquiries" title="1:1 문의 관리"><span class="admin-tab__label">1:1 문의 관리</span><span class="admin-tab__badge hidden" id="inquiries-tab-badge">0</span></button>
+                        </div>
                     </nav>
                 </aside>
 
@@ -247,73 +265,6 @@ export const adminTemplate = `
                     <div class="admin-table-container hidden" id="posters-content"><table class="admin-table"><thead><tr><th>순서</th><th>미리보기</th><th>이름</th><th>노출 상태</th><th>수정일</th><th>관리</th></tr></thead><tbody id="posters-tbody"></tbody></table></div>
                 </div>
 
-                <div id="banner-ads-section" class="tab-pane hidden">
-                    <section class="admin-entry-editor">
-                        <div>
-                            <p class="admin-user-detail-eyebrow">광고 등록/수정</p>
-                            <h3 id="ads-editor-title">새 광고 등록</h3>
-                            <p class="admin-user-detail-description">이미지를 첨부하면 S3에 저장되며, LIVE 광고는 매장 선택이 필요합니다.</p>
-                        </div>
-                        <div class="admin-user-form-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px;">
-                            <div class="form-group">
-                                <label class="form-label" for="ads-form-title">광고 제목</label>
-                                <input type="text" id="ads-form-title" class="form-control" maxlength="255" placeholder="광고 제목을 입력하세요">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="ads-form-link-url">광고 링크 URL</label>
-                                <input type="url" id="ads-form-link-url" class="form-control" placeholder="https://">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="ads-form-ad-type">광고 유형(스크롤 선택)</label>
-                                <select id="ads-form-ad-type" class="form-control" size="3">
-                                    <option value="LIVE">LIVE 광고</option>
-                                    <option value="TOP">상단 광고</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="ads-form-store-no">매장 선택(storeNo, 스크롤 선택)</label>
-                                <select id="ads-form-store-no" class="form-control" size="6"></select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="ads-form-image-file">광고 배너 이미지 첨부</label>
-                                <input type="file" id="ads-form-image-file" class="form-control" accept="image/*">
-                                <p class="help-text text-muted" id="ads-form-image-help">이미지를 선택하고 업로드 버튼을 누르세요.</p>
-                                <button class="btn btn-outline btn-sm" id="ads-image-upload-btn" type="button">이미지 업로드</button>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="ads-form-image-url">업로드된 이미지 URL</label>
-                                <input type="text" id="ads-form-image-url" class="form-control" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="ads-form-display-order">노출 순서</label>
-                                <input type="number" id="ads-form-display-order" class="form-control" value="0">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="ads-form-is-active">노출 여부</label>
-                                <select id="ads-form-is-active" class="form-control">
-                                    <option value="true">노출</option>
-                                    <option value="false">숨김</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="admin-entry-editor__actions" style="margin-top:12px;">
-                            <button class="btn btn-secondary hidden" id="ads-cancel-btn" type="button">수정 취소</button>
-                            <button class="btn btn-primary" id="ads-save-btn" type="button">광고 등록</button>
-                        </div>
-                        <p id="ads-form-help" class="help-text admin-user-save-result" role="status"></p>
-                    </section>
-                    <div class="loading" id="ads-loading"><div class="spinner"></div><p>광고를 불러오는 중...</p></div>
-                    <div class="error-banner hidden" id="ads-error"><p id="ads-error-message"></p><button class="btn btn-sm btn-primary" id="ads-retry-btn">다시 시도</button></div>
-                    <div class="admin-list-toolbar">
-                        <p class="admin-list-toolbar__meta">총 <strong id="ads-total">0</strong>건</p>
-                        <input type="search" id="ads-search-input" class="form-control admin-list-toolbar__search" placeholder="광고 검색" aria-label="광고 검색">
-                    </div>
-                    <div class="admin-table-container hidden" id="ads-content">
-                        <table class="admin-table"><thead><tr><th>ID</th><th>유형</th><th>매장번호</th><th>제목</th><th>링크</th><th>순서</th><th>노출</th><th>생성일</th><th>수정일</th><th>관리</th></tr></thead><tbody id="ads-tbody"></tbody></table>
-                    </div>
-                    <div class="admin-pagination hidden" id="ads-pagination"></div>
-                </div>
-
                 <div id="business-ads-section" class="tab-pane hidden">
                     <section class="admin-entry-editor hidden" id="business-ads-editor">
                         <div>
@@ -354,6 +305,34 @@ export const adminTemplate = `
                     <div class="admin-list-toolbar"><p class="admin-list-toolbar__meta">총 <strong id="business-ads-total">0</strong>건</p><input type="search" id="business-ads-search-input" class="form-control admin-list-toolbar__search" placeholder="업체명/제목/소유자 검색" aria-label="업체광고 검색"></div>
                     <div class="admin-table-container hidden" id="business-ads-content"><table class="admin-table"><thead><tr><th>ID</th><th>소유자</th><th>업체명</th><th>제목</th><th>지역</th><th>등급</th><th>상태</th><th>노출</th><th>조회</th><th>관리</th></tr></thead><tbody id="business-ads-tbody"></tbody></table></div>
                     <div class="admin-pagination hidden" id="business-ads-pagination"></div>
+                </div>
+
+                <div id="banner-ads-section" class="tab-pane hidden">
+                    <div class="loading" id="banner-auction-loading"><div class="spinner"></div><p>배너광고를 불러오는 중...</p></div>
+                    <div class="error-banner hidden" id="banner-auction-error"><p id="banner-auction-error-message"></p><button class="btn btn-sm btn-primary" id="banner-auction-retry-btn">다시 시도</button></div>
+                    <div class="admin-list-toolbar banner-auction-toolbar">
+                        <p class="admin-list-toolbar__meta">총 <strong id="banner-auction-total">0</strong>건 <span class="banner-auction-phase" id="banner-auction-phase"></span></p>
+                        <div class="banner-auction-filters">
+                            <select id="banner-auction-month" class="form-control" aria-label="대상 월"></select>
+                            <select id="banner-auction-placement" class="form-control" aria-label="위치">
+                                <option value="">전체 위치</option>
+                                <option value="HOME">홈 상단</option>
+                                <option value="COMMUNITY">커뮤니티 상단</option>
+                                <option value="LIVE">LIVE 하단</option>
+                            </select>
+                            <select id="banner-auction-store" class="form-control hidden" aria-label="매장"><option value="">전체 매장</option></select>
+                            <select id="banner-auction-status" class="form-control" aria-label="상태">
+                                <option value="">전체 상태</option>
+                                <option value="BIDDING">입찰중</option>
+                                <option value="WON">낙찰</option>
+                                <option value="LOST">미낙찰</option>
+                                <option value="CANCELED">취소</option>
+                            </select>
+                        </div>
+                        <input type="search" id="banner-auction-search-input" class="form-control admin-list-toolbar__search" placeholder="업체명/아이디/매장 검색" aria-label="배너광고 검색">
+                    </div>
+                    <div class="admin-table-container hidden" id="banner-auction-content"><table class="admin-table"><thead><tr><th>ID</th><th>소유자</th><th>업체명</th><th>위치</th><th>순위</th><th>입찰 스탬프</th><th>상태</th><th>노출</th><th>배너</th><th>관리</th></tr></thead><tbody id="banner-auction-tbody"></tbody></table></div>
+                    <div class="admin-pagination hidden" id="banner-auction-pagination"></div>
                 </div>
 
                 <div id="support-section" class="tab-pane hidden">

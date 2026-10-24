@@ -1274,6 +1274,8 @@ async function initDatabase() {
       bid_updated_at DATETIME(3) NOT NULL,
       status ENUM('BIDDING','WON','LOST','CANCELED') NOT NULL DEFAULT 'BIDDING',
       final_rank INT NULL,
+      is_hidden TINYINT(1) NOT NULL DEFAULT 0,
+      hidden_reason VARCHAR(255) NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       UNIQUE KEY uk_banner_ad_bids_owner_slot_month (owner_user_id, placement, store_no, target_month),
@@ -1281,6 +1283,10 @@ async function initDatabase() {
       CONSTRAINT fk_banner_ad_bids_owner FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  // 관리자 노출 중지 (부적절한 배너를 순위는 유지한 채 숨김)
+  await ensureColumn(pool, 'banner_ad_bids', 'is_hidden', 'ALTER TABLE banner_ad_bids ADD COLUMN is_hidden TINYINT(1) NOT NULL DEFAULT 0 AFTER final_rank');
+  await ensureColumn(pool, 'banner_ad_bids', 'hidden_reason', 'ALTER TABLE banner_ad_bids ADD COLUMN hidden_reason VARCHAR(255) NULL AFTER is_hidden');
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS banner_ad_creatives (

@@ -121,6 +121,8 @@ function mapBid(row) {
     bidUpdatedAt: row.bidUpdatedAt,
     status: row.status,
     finalRank: row.finalRank == null ? null : Number(row.finalRank),
+    isHidden: Boolean(Number(row.isHidden || 0)),
+    hiddenReason: row.hiddenReason || '',
     createdAt: row.createdAt
   };
 }
@@ -459,6 +461,7 @@ async function listExposedBannerAds(placement, storeNo = 0) {
        FROM banner_ad_bids b
        JOIN banner_ad_creatives c ON c.owner_user_id = b.owner_user_id AND c.placement = b.placement
       WHERE b.placement = ? AND b.store_no = ? AND b.target_month = ? AND b.status = 'WON'
+        AND b.is_hidden = 0
         AND c.image_url <> ''
       ORDER BY b.final_rank ASC`,
     [config.code, normalizedStoreNo, getCurrentMonthKey()]
@@ -510,7 +513,8 @@ async function getPlacementOverview({ ownerUserId, placement, storeNo }) {
   const creative = mapCreative(await findCreative(pool, ownerUserId, config.code), config);
   const [myRows] = await pool.query(
     `SELECT id, placement, store_no AS storeNo, target_month AS targetMonth, bid_stamps AS bidStamps,
-            bid_updated_at AS bidUpdatedAt, status, final_rank AS finalRank, created_at AS createdAt
+            bid_updated_at AS bidUpdatedAt, status, final_rank AS finalRank,
+            is_hidden AS isHidden, hidden_reason AS hiddenReason, created_at AS createdAt
        FROM banner_ad_bids
       WHERE owner_user_id = ? AND placement = ? AND store_no = ? AND target_month IN (?, ?)`,
     [ownerUserId, config.code, normalizedStoreNo, currentMonth, upcoming.targetMonth]
@@ -547,7 +551,8 @@ async function listMyRecentBids(ownerUserId) {
   const currentMonth = getCurrentMonthKey();
   const [rows] = await getPool().query(
     `SELECT id, placement, store_no AS storeNo, target_month AS targetMonth, bid_stamps AS bidStamps,
-            bid_updated_at AS bidUpdatedAt, status, final_rank AS finalRank, created_at AS createdAt
+            bid_updated_at AS bidUpdatedAt, status, final_rank AS finalRank,
+            is_hidden AS isHidden, hidden_reason AS hiddenReason, created_at AS createdAt
        FROM banner_ad_bids
       WHERE owner_user_id = ? AND target_month IN (?, ?) AND status <> 'CANCELED'
       ORDER BY target_month ASC, FIELD(placement, 'HOME', 'COMMUNITY', 'LIVE'), store_no ASC`,
@@ -556,7 +561,174 @@ async function listMyRecentBids(ownerUserId) {
   return rows.map(mapBid);
 }
 
+// ---- 관리자 ----
+
+// 해당 월 경매의 진행 단계: 입찰 전 / 입찰중 / 마감(순서 확정) / 노출중 / 종료
+function getAuctionPhase(targetMonth) {
+  const currentMonth = getCurrentMonthKey();
+  const upcoming = getUpcomingAuction();
+  if (targetMonth < currentMonth) return 'ENDED';
+  if (targetMonth === currentMonth) return 'EXPOSING';
+  if (targetMonth === upcoming.targetMonth) return upcoming.status;
+  return 'NOT_OPEN';
+}
+
+async function adminListAuctionMonths() {
+  const currentMonth = getCurrentMonthKey();
+  const [rows] = await getPool().query('SELECT DISTINCT target_month AS targetMonth FROM banner_ad_bids');
+  const months = new Set([shiftMonthKey(currentMonth, 1), currentMonth, shiftMonthKey(currentMonth, -1), ...rows.map((row) => row.targetMonth)]);
+  return [...months].sort().reverse();
+}
+
+/**
+ * 관리자용 입찰 목록. 입찰중인 건은 현재 순서(입찰 스탬프 → 입찰 확정 시각)로 '현재 순위'를 계산해 준다.
+ * placement 를 비우면 전체 위치, LIVE 에서 storeNo 를 비우면 전체 매장.
+ */
+async function adminListBids({ month, placement = '', storeNo = null, status = '' } = {}) {
+  await ensureSettled();
+  const targetMonth = /^\d{4}-\d{2}$/.test(String(month || '')) ? month : shiftMonthKey(getCurrentMonthKey(), 1);
+  const config = placement ? getPlacementConfig(placement) : null;
+  const where = ['b.target_month = ?'];
+  const params = [targetMonth];
+  if (config) {
+    where.push('b.placement = ?');
+    params.push(config.code);
+    const normalizedStoreNo = Number.parseInt(storeNo, 10);
+    if (config.requiresStore && normalizedStoreNo > 0) {
+      where.push('b.store_no = ?');
+      params.push(normalizedStoreNo);
+    }
+  }
+  if (['BIDDING', 'WON', 'LOST', 'CANCELED'].includes(String(status).toUpperCase())) {
+    where.push('b.status = ?');
+    params.push(String(status).toUpperCase());
+  }
+
+  const [rows] = await getPool().query(
+    `SELECT b.id, b.owner_user_id AS ownerUserId, u.login_id AS loginId, u.nickname,
+            COALESCE(NULLIF(ba.business_name, ''), NULLIF(ba.title, ''), u.nickname) AS businessName,
+            b.placement, b.store_no AS storeNo, b.target_month AS targetMonth,
+            b.bid_stamps AS bidStamps, b.bid_updated_at AS bidUpdatedAt, b.created_at AS createdAt,
+            b.status, b.final_rank AS finalRank, b.is_hidden AS isHidden, b.hidden_reason AS hiddenReason,
+            c.title AS creativeTitle, c.image_url AS imageUrl, c.link_url AS linkUrl
+       FROM banner_ad_bids b
+       JOIN users u ON u.id = b.owner_user_id
+       LEFT JOIN business_ads ba ON ba.id = b.business_ad_id
+       LEFT JOIN banner_ad_creatives c ON c.owner_user_id = b.owner_user_id AND c.placement = b.placement
+      WHERE ${where.join(' AND ')}
+      ORDER BY FIELD(b.placement, 'HOME', 'COMMUNITY', 'LIVE'), b.store_no ASC,
+               FIELD(b.status, 'WON', 'BIDDING', 'LOST', 'CANCELED'),
+               b.final_rank IS NULL, b.final_rank ASC, b.bid_stamps DESC, b.bid_updated_at ASC, b.id ASC`,
+    params
+  );
+
+  const biddingRankByGroup = new Map();
+  const items = rows.map((row) => {
+    const groupKey = `${row.placement}:${row.storeNo}`;
+    let rank = row.finalRank == null ? null : Number(row.finalRank);
+    if (row.status === 'BIDDING') {
+      rank = (biddingRankByGroup.get(groupKey) || 0) + 1;
+      biddingRankByGroup.set(groupKey, rank);
+    }
+    const slotCount = getPlacementConfig(row.placement)?.slotCount || 0;
+    return {
+      id: Number(row.id),
+      ownerUserId: Number(row.ownerUserId),
+      loginId: row.loginId,
+      nickname: row.nickname,
+      businessName: row.businessName,
+      placement: row.placement,
+      storeNo: Number(row.storeNo || 0) || null,
+      bidStamps: Number(row.bidStamps || 0),
+      bidUpdatedAt: row.bidUpdatedAt,
+      createdAt: row.createdAt,
+      status: row.status,
+      rank,
+      withinSlots: rank != null && rank <= slotCount && ['BIDDING', 'WON'].includes(row.status),
+      isHidden: Boolean(Number(row.isHidden || 0)),
+      hiddenReason: row.hiddenReason || '',
+      creativeTitle: row.creativeTitle || '',
+      imageUrl: row.imageUrl || '',
+      linkUrl: row.linkUrl || ''
+    };
+  });
+
+  const schedule = getAuctionSchedule(targetMonth);
+  return {
+    targetMonth,
+    phase: getAuctionPhase(targetMonth),
+    schedule,
+    items,
+    summary: {
+      bidderCount: items.filter((item) => item.status !== 'CANCELED').length,
+      wonCount: items.filter((item) => item.status === 'WON').length,
+      hiddenCount: items.filter((item) => item.isHidden).length,
+      totalBidStamps: items.filter((item) => ['BIDDING', 'WON'].includes(item.status)).reduce((sum, item) => sum + item.bidStamps, 0)
+    }
+  };
+}
+
+async function findBidForAdmin(executor, bidId, { lock = false } = {}) {
+  const [rows] = await executor.query(
+    `SELECT id, owner_user_id AS ownerUserId, placement, store_no AS storeNo, target_month AS targetMonth,
+            bid_stamps AS bidStamps, status, is_hidden AS isHidden
+       FROM banner_ad_bids WHERE id = ?${lock ? ' FOR UPDATE' : ''}`,
+    [bidId]
+  );
+  return rows[0] || null;
+}
+
+// 노출 중지/재개. 순위와 스탬프는 그대로 두고 공개 배너 목록에서만 빠진다.
+async function adminSetBidHidden({ bidId, hidden, reason = '' }) {
+  const pool = getPool();
+  const bid = await findBidForAdmin(pool, bidId);
+  if (!bid) throw createHttpError('입찰을 찾을 수 없습니다.', 404);
+  if (bid.status === 'CANCELED' || bid.status === 'LOST') throw createHttpError('취소되었거나 미낙찰된 입찰은 노출 상태를 바꿀 수 없습니다.', 409);
+  const normalizedReason = String(reason || '').trim().slice(0, 255);
+  await pool.query('UPDATE banner_ad_bids SET is_hidden = ?, hidden_reason = ? WHERE id = ?', [hidden ? 1 : 0, hidden ? normalizedReason || null : null, bid.id]);
+  return { ...bid, isHidden: hidden, hiddenReason: normalizedReason };
+}
+
+// 입찰중인 건을 관리자가 취소하고 입찰 스탬프를 전액 환불한다.
+async function adminCancelBid({ bidId, reason = '' }) {
+  const pool = getPool();
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const bid = await findBidForAdmin(connection, bidId, { lock: true });
+    if (!bid) throw createHttpError('입찰을 찾을 수 없습니다.', 404);
+    if (bid.status !== 'BIDDING') throw createHttpError('입찰중인 건만 취소할 수 있습니다. (마감 후에는 노출 중지를 사용하세요)', 409);
+    const config = getPlacementConfig(bid.placement);
+    const normalizedReason = String(reason || '').trim().slice(0, 100);
+    await connection.query("UPDATE banner_ad_bids SET status = 'CANCELED' WHERE id = ?", [bid.id]);
+    await insertStampHistory(connection, {
+      userId: bid.ownerUserId,
+      actionType: 'BANNER_AD_REFUND',
+      amount: Number(bid.bidStamps),
+      reason: `${describeTarget(config, bid.targetMonth)} 관리자 입찰 취소 환불${normalizedReason ? ` (${normalizedReason})` : ''}`,
+      sourceLabel: `BANNER_AD_REFUND-ADMIN-${bid.id}`
+    });
+    await connection.commit();
+    return { ...bid, refundedStamps: Number(bid.bidStamps) };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+function describeBidForMessage(bid) {
+  const config = getPlacementConfig(bid.placement);
+  return config ? describeTarget(config, bid.targetMonth) : '배너광고';
+}
+
 module.exports = {
+  adminListAuctionMonths,
+  adminListBids,
+  adminSetBidHidden,
+  adminCancelBid,
+  describeBidForMessage,
   BANNER_AUCTION_PLACEMENTS,
   countCreativesUsingImage,
   listCreatives,

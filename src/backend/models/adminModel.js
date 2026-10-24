@@ -936,98 +936,6 @@ async function adjustUserPointsByAdmin(userId, { amount, reason, actionType }) {
   }
 }
 
-async function listAds() {
-  const pool = getPool();
-  const [rows] = await pool.query(
-    `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl,
-            ad_type AS adType, store_no AS storeNo, display_order AS displayOrder,
-            is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt
-     FROM banner_ads
-     ORDER BY store_no IS NULL ASC, store_no ASC, display_order ASC, id DESC`
-  );
-  return rows;
-}
-
-async function createAd({ title, imageUrl, linkUrl, adType = 'LIVE', storeNo = null, displayOrder = 0, isActive = true }) {
-  const pool = getPool();
-  const [result] = await pool.query(
-    `INSERT INTO banner_ads (title, image_url, link_url, ad_type, store_no, display_order, is_active)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [title, imageUrl, linkUrl, adType, storeNo, displayOrder, isActive ? 1 : 0]
-  );
-  return result.insertId;
-}
-
-async function findAdById(adId) {
-  const pool = getPool();
-  const [rows] = await pool.query(
-    `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl, ad_type AS adType, store_no AS storeNo
-       FROM banner_ads
-      WHERE id = ?`,
-    [adId]
-  );
-  return rows[0] || null;
-}
-
-async function updateAd(adId, { title, imageUrl, linkUrl, adType = 'LIVE', storeNo = null, displayOrder = 0, isActive = true }) {
-  const pool = getPool();
-  await pool.query(
-    `UPDATE banner_ads
-     SET title = ?, image_url = ?, link_url = ?, ad_type = ?, store_no = ?, display_order = ?, is_active = ?
-     WHERE id = ?`,
-    [title, imageUrl, linkUrl, adType, storeNo, displayOrder, isActive ? 1 : 0, adId]
-  );
-}
-
-async function listLiveAdsByStore(storeNo) {
-  const pool = getPool();
-  const normalizedStoreNo = Number.parseInt(storeNo, 10);
-  if (!Number.isInteger(normalizedStoreNo) || normalizedStoreNo <= 0) return [];
-
-  const [rows] = await pool.query(
-    `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl,
-            ad_type AS adType, store_no AS storeNo, display_order AS displayOrder
-       FROM banner_ads
-      WHERE is_active = 1
-        AND ad_type = 'LIVE'
-        AND store_no = ?
-      ORDER BY display_order ASC, id DESC`,
-    [normalizedStoreNo]
-  );
-
-  return rows;
-}
-
-async function listTopAdsByPlacement(placement = 'HOME') {
-  const pool = getPool();
-  const normalizedPlacement = String(placement || 'HOME').trim().toUpperCase();
-  const placementStoreNoMap = {
-    HOME: 1,
-    COMMUNITY: 2
-  };
-  const placementStoreNo = placementStoreNoMap[normalizedPlacement];
-
-  if (!placementStoreNo) return [];
-
-  const [rows] = await pool.query(
-    `SELECT id, title, image_url AS imageUrl, link_url AS linkUrl,
-            ad_type AS adType, store_no AS storeNo, display_order AS displayOrder
-       FROM banner_ads
-      WHERE is_active = 1
-        AND ad_type = 'TOP'
-        AND store_no = ?
-      ORDER BY display_order ASC, id DESC`,
-    [placementStoreNo]
-  );
-
-  return rows;
-}
-
-async function deleteAd(adId) {
-  const pool = getPool();
-  await pool.query('DELETE FROM banner_ads WHERE id = ?', [adId]);
-}
-
 async function listBusinessAdsByOwner(ownerUserId) {
   await renewExpiredBusinessAdsWithStamp();
   await resetBusinessAdDailyJumps();
@@ -2220,14 +2128,7 @@ module.exports = {
   listBusinessProfileRejectionHistories,
   updateUserByAdmin,
   adjustUserPointsByAdmin,
-  listAds,
-  listLiveAdsByStore,
-  listTopAdsByPlacement,
-  createAd,
-  findAdById,
   getStoreByNo,
-  updateAd,
-  deleteAd,
   BUSINESS_AD_PLAN_DURATIONS,
   BUSINESS_AD_RENEWAL_INTERVAL_MS,
   BUSINESS_AD_JUMP_SCHEDULE_INTERVAL_MS,
