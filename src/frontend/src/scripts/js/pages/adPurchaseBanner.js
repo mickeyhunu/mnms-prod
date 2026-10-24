@@ -166,13 +166,11 @@
         const { myBid, placement } = data;
         const resultText = myBid?.status === 'WON'
             ? `<p class="banner-ad-result banner-ad-result--won">낙찰되었습니다. 노출 순서 <b>${myBid.finalRank}위</b> / ${placement.slotCount}슬롯</p>`
-            : (myBid?.status === 'LOST' ? `<p class="banner-ad-result banner-ad-result--lost">미낙찰되어 입찰 스탬프 ${myBid.bidStamps}개가 환불되었습니다.</p>` : '');
-        const list = data.confirmedOrder.length
-            ? `<ol class="banner-ad-order">${data.confirmedOrder.map((item) => `
-                <li class="${item.isMine ? 'is-mine' : ''}"><span>${item.rank}</span>${sanitizeHTML(item.businessName)}${item.isMine ? ' <b>(내 배너)</b>' : ''}</li>`).join('')}</ol>`
-            : '<p class="banner-ad-empty">확정된 배너가 없습니다.</p>';
+            : (myBid?.status === 'LOST'
+                ? `<p class="banner-ad-result banner-ad-result--lost">미낙찰되어 입찰 스탬프 ${myBid.bidStamps}개가 환불되었습니다.</p>`
+                : '<p class="banner-ad-result">이번 달 입찰이 마감되었습니다. 다음 달 1일부터 다시 입찰할 수 있습니다.</p>');
         const creativeHint = myBid?.status === 'WON' ? renderCreativeStatus(data.creative) : '';
-        return `${resultText}${creativeHint}<h3 class="banner-ad-subtitle">확정 노출순서</h3>${list}`;
+        return `${resultText}${creativeHint}`;
     };
 
     // 입찰 입력값에 맞춰 '차감 스탬프'·'사용후 잔여 스탬프'와 버튼 문구를 갱신한다. (입찰 기간이 아니면 '-')

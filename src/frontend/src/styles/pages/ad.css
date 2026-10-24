@@ -2735,11 +2735,6 @@
 .banner-ad-result--won { background: #ecfdf5; color: #047857; }
 .banner-ad-result--lost { background: #fef2f2; color: #b91c1c; }
 .banner-ad-empty { margin: 0; color: #64748b; font-size: 14px; }
-.banner-ad-subtitle { margin: 18px 0 10px; color: #0f172a; font-size: 17px; }
-.banner-ad-order { display: grid; gap: 6px; margin: 0 0 16px; padding: 0; list-style: none; }
-.banner-ad-order li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; }
-.banner-ad-order li span { display: inline-flex; width: 28px; height: 28px; flex: 0 0 28px; align-items: center; justify-content: center; border-radius: 8px; background: #eef2ff; color: #4338ca; font-weight: 800; }
-.banner-ad-order li.is-mine { border-color: #86efac; background: #f0fdf4; }
 /* 경매 입찰 정보 패널: 업체광고 자동연장 안내처럼 하단 안내(ad-management-safe-note)를 패널 아래 끝에 붙인다 */
 .banner-ad-auction-panel { padding-bottom: 0; overflow: hidden; }
 .banner-ad-auction-panel .ad-management-safe-note { margin-top: 24px; }
@@ -2816,3 +2811,4 @@
     .banner-ad-panel { padding: 18px 16px; }
     .banner-ad-panel .ad-management-section-title-row { flex-direction: column; gap: 8px; }
 }
+

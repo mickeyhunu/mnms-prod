@@ -4,7 +4,7 @@
  * 일정(한국시간 기준)
  * - 노출: 매월 1일 00:00 ~ 말일 24:00
  * - 입찰: 노출 전월 1일 00:00 ~ 노출 전월 말일 00:00 (노출 1일 전 마감)
- * - 마감 후 말일 하루 동안 확정된 노출순서를 공개
+ * - 마감 후 노출순서를 확정하고, 회원에게는 내 순위(낙찰/미낙찰)만 보여준다
  *
  * 소재(제목/이미지/링크)는 입찰과 별개로 회원·위치별 설정(banner_ad_creatives)에 저장되고, 노출 시 조인한다.
  *
@@ -475,7 +475,7 @@ async function listExposedBannerAds(placement, storeNo = 0) {
 
 /**
  * 광고 활성화 > 배너광고 탭용 위치별 입찰 현황.
- * 입찰 중에는 다른 업체 정보 없이 커트라인/내 예상순위만, 마감 후에는 확정 노출순서를 공개한다.
+ * 다른 업체 정보는 보여주지 않고 커트라인과 내 예상(마감 후에는 확정) 순위만 준다.
  */
 async function getPlacementOverview({ ownerUserId, placement, storeNo }) {
   const config = getPlacementConfig(placement);
@@ -503,7 +503,7 @@ async function getPlacementOverview({ ownerUserId, placement, storeNo }) {
     }
   };
   if (normalizedStoreNo == null) {
-    return { ...base, creative: null, myBid: null, myCurrentBanner: null, bidderCount: 0, cutoffBidStamps: null, expectedRank: null, confirmedOrder: [] };
+    return { ...base, creative: null, myBid: null, myCurrentBanner: null, bidderCount: 0, cutoffBidStamps: null, expectedRank: null };
   }
 
   const pool = getPool();
@@ -520,10 +520,8 @@ async function getPlacementOverview({ ownerUserId, placement, storeNo }) {
 
   const statusFilter = upcoming.status === 'BIDDING' ? "b.status = 'BIDDING'" : "b.status = 'WON'";
   const [rankRows] = await pool.query(
-    `SELECT b.id, b.owner_user_id AS ownerUserId, b.bid_stamps AS bidStamps, b.final_rank AS finalRank,
-            COALESCE(NULLIF(ba.business_name, ''), ba.title, '') AS businessName
+    `SELECT b.id, b.owner_user_id AS ownerUserId, b.bid_stamps AS bidStamps, b.final_rank AS finalRank
        FROM banner_ad_bids b
-       LEFT JOIN business_ads ba ON ba.id = b.business_ad_id
       WHERE b.placement = ? AND b.store_no = ? AND b.target_month = ? AND ${statusFilter}
       ORDER BY ${upcoming.status === 'BIDDING' ? BID_ORDER_SQL : 'b.final_rank ASC'}`,
     [config.code, normalizedStoreNo, upcoming.targetMonth]
@@ -539,14 +537,7 @@ async function getPlacementOverview({ ownerUserId, placement, storeNo }) {
     myCurrentBanner,
     bidderCount: rankRows.length,
     cutoffBidStamps: cutoffRow ? Number(cutoffRow.bidStamps) : null,
-    expectedRank: myIndex >= 0 ? myIndex + 1 : null,
-    confirmedOrder: upcoming.status === 'CLOSED'
-      ? rankRows.map((row) => ({
-          rank: Number(row.finalRank),
-          businessName: row.businessName || '업체',
-          isMine: Number(row.ownerUserId) === Number(ownerUserId)
-        }))
-      : []
+    expectedRank: myIndex >= 0 ? myIndex + 1 : null
   };
 }
 
