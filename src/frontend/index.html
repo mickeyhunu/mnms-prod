@@ -26,7 +26,10 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
   <link rel="stylesheet" href="/src/assets/styles.css" />
+  <script>document.documentElement.classList.add('js-enabled');</script>
   <style>
+    /* JS가 동작하는 브라우저에서는 Vue 마운트 전까지 크롤러용 본문을 숨깁니다. */
+    .js-enabled .seo-fallback { visibility: hidden; }
     .seo-fallback { max-width: 720px; margin: 0 auto; padding: 24px 16px; color: #8a8a8a; font-size: 14px; line-height: 1.7; word-break: keep-all; }
     .seo-fallback h1 { font-size: 20px; margin: 12px 0; }
     .seo-fallback a { color: inherit; }
