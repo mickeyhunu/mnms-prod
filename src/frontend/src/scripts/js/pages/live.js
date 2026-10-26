@@ -2730,6 +2730,8 @@ function createEntrySummaryLiveCard(rows, titleColumn) {
         .filter(Boolean);
     const totalWorkers = entryNames.length;
     const rankedEntries = buildEntryRankings(sortedRows, titleColumn);
+    // 모든 멤버 점수가 0이면 인기 멤버 섹션을 숨긴다
+    const hasRankingScore = rankedEntries.some((entry) => Number(entry.score) > 0);
     const latestTimestamp = findLatestEntryTimestamp(sortedRows);
     const storeName = resolveChoiceStoreName(sortedRows[0] || rows[0] || {}) || getSelectedStoreName();
     const title = storeName ? `${storeName} 엔트리` : '엔트리';
@@ -2763,6 +2765,7 @@ function createEntrySummaryLiveCard(rows, titleColumn) {
                 </div>
             </section>
 
+            ${hasRankingScore ? `
             <section class="entry-live-card__section entry-live-card__section--ranking">
                 <div class="entry-live-card__section-header">
                     <h3 class="entry-live-card__section-title">오늘의 인기 멤버 TOP 5</h3>
@@ -2786,6 +2789,7 @@ function createEntrySummaryLiveCard(rows, titleColumn) {
                     <p class="entry-live-card__empty">표시할 인기 멤버가 없습니다.</p>
                 `}
             </section>
+            ` : ''}
         </div>`;
 
     return createLiveChatCard({
