@@ -12,6 +12,7 @@
 ## Public pages
 - Home: https://nightmens.com/
 - Community: https://nightmens.com/community
+- Community boards: https://nightmens.com/community/free, /community/anon, /community/review, /community/story, /community/piece, /community/attendance, /community/question, /community/event, /community/promotion
 - Gangnam and nationwide nightlife business information: https://nightmens.com/business-info
 - PLAY: https://nightmens.com/play
 - LIVE: https://nightmens.com/play/live
