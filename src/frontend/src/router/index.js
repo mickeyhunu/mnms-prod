@@ -21,6 +21,19 @@ const DEFAULT_KEYWORDS = [
   HIDDEN_SEARCH_KEYWORD
 ];
 
+// server.js의 COMMUNITY_BOARD_SEO와 같은 내용을 유지하세요.
+const COMMUNITY_BOARD_META = {
+  free: { name: '자유게시판', description: '남성 유흥 커뮤니티 자유게시판에서 밤문화 일상과 업소 이야기를 자유롭게 나눠보세요.' },
+  anon: { name: '익명게시판', description: '익명게시판에서 부담 없이 업소 정보와 유흥 고민을 공유해보세요.' },
+  review: { name: '후기게시판', description: '실제 방문 회원이 작성한 업소 리얼 후기와 가격 정보를 확인하세요.' },
+  story: { name: '썰게시판', description: '화류계와 밤문화에서 겪은 재미있는 썰을 읽고 공유해보세요.' },
+  piece: { name: '조각게시판', description: '함께 방문할 조각 모집 글을 확인하고 참여해보세요.' },
+  attendance: { name: '출석게시판', description: '매일 출석 체크로 미드나잇 맨즈 커뮤니티 활동 포인트를 모아보세요.' },
+  question: { name: '질문게시판', description: '업소 이용, 지역, 가격 등 궁금한 점을 질문하고 회원 답변을 받아보세요.' },
+  event: { name: '이벤트게시판', description: '미드나잇 맨즈와 제휴 업소의 진행 중인 이벤트 소식을 확인하세요.' },
+  promotion: { name: '홍보게시판', description: '제휴 업소 홍보 글과 최신 프로모션 정보를 확인하세요.' }
+};
+
 const routes = [
   { path: '/', component: PageView, meta: { pageKey: 'index', title: '남성 유흥 커뮤니티 홈', description: '최저가 업소 추천, 실시간 인기 후기, 지역별 업소 정보를 한 번에 확인하세요.', keywords: ['남성 유흥 커뮤니티', '최저가 업소 추천', '업소 후기', '업소 정보', '실시간 인기글', HIDDEN_SEARCH_KEYWORD] } },
   { path: '/login', component: PageView, meta: { pageKey: 'login', title: '로그인', description: '미드나잇 맨즈 계정으로 로그인하고 커뮤니티 서비스를 이용하세요.', noindex: true } },
@@ -133,12 +146,25 @@ function buildAbsoluteUrl(path, query = {}) {
   return url.toString();
 }
 
+let isInitialNavigation = true;
+
 router.afterEach((to) => {
-  const title = typeof to.meta?.title === 'string' && to.meta.title.trim().length > 0
-    ? to.meta.title.trim()
+  // 첫 진입 시에는 서버가 렌더링한 상세 메타/구조화 데이터를 그대로 유지합니다.
+  const serverStructuredData = document.head.querySelector('script[data-seo-jsonld="server"]');
+  if (isInitialNavigation) {
+    isInitialNavigation = false;
+    if (serverStructuredData) return;
+  }
+  serverStructuredData?.remove();
+
+  const boardMeta = to.path.startsWith('/community/') ? COMMUNITY_BOARD_META[String(to.params?.board || '')] : null;
+  const routeTitle = boardMeta ? `${boardMeta.name} | 남성 유흥 커뮤니티` : to.meta?.title;
+  const routeDescription = boardMeta ? boardMeta.description : to.meta?.description;
+  const title = typeof routeTitle === 'string' && routeTitle.trim().length > 0
+    ? routeTitle.trim()
     : DEFAULT_TITLE;
-  const description = typeof to.meta?.description === 'string' && to.meta.description.trim().length > 0
-    ? to.meta.description.trim()
+  const description = typeof routeDescription === 'string' && routeDescription.trim().length > 0
+    ? routeDescription.trim()
     : DEFAULT_DESCRIPTION;
   const canonicalUrl = buildAbsoluteUrl(to.path);
   const shareImageUrl = buildAbsoluteUrl(DEFAULT_SHARE_IMAGE_PATH);

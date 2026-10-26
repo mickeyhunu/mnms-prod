@@ -178,6 +178,44 @@ const SEO_PAGE_CONFIG = {
   }
 };
 
+// 클라이언트 라우터의 /community/:board 패턴과 동일한 게시판 목록입니다.
+const COMMUNITY_BOARD_SEO = {
+  free: { name: '자유게시판', description: '남성 유흥 커뮤니티 자유게시판에서 밤문화 일상과 업소 이야기를 자유롭게 나눠보세요.', keywords: ['자유게시판', '유흥 커뮤니티', '밤문화'] },
+  anon: { name: '익명게시판', description: '익명게시판에서 부담 없이 업소 정보와 유흥 고민을 공유해보세요.', keywords: ['익명게시판', '익명 커뮤니티', '유흥 고민'] },
+  review: { name: '후기게시판', description: '실제 방문 회원이 작성한 업소 리얼 후기와 가격 정보를 확인하세요.', keywords: ['업소 후기', '리얼 후기', '방문 후기', '업소 가격'] },
+  story: { name: '썰게시판', description: '화류계와 밤문화에서 겪은 재미있는 썰을 읽고 공유해보세요.', keywords: ['유흥 썰', '화류계 썰', '밤문화 썰'] },
+  piece: { name: '조각게시판', description: '함께 방문할 조각 모집 글을 확인하고 참여해보세요.', keywords: ['조각 모집', '유흥 조각', '조각게시판'] },
+  attendance: { name: '출석게시판', description: '매일 출석 체크로 미드나잇 맨즈 커뮤니티 활동 포인트를 모아보세요.', keywords: ['출석게시판', '출석 체크', '커뮤니티 포인트'] },
+  question: { name: '질문게시판', description: '업소 이용, 지역, 가격 등 궁금한 점을 질문하고 회원 답변을 받아보세요.', keywords: ['질문게시판', '업소 질문', '유흥 질문'] },
+  event: { name: '이벤트게시판', description: '미드나잇 맨즈와 제휴 업소의 진행 중인 이벤트 소식을 확인하세요.', keywords: ['업소 이벤트', '유흥 이벤트', '할인 이벤트'] },
+  promotion: { name: '홍보게시판', description: '제휴 업소 홍보 글과 최신 프로모션 정보를 확인하세요.', keywords: ['업소 홍보', '유흥 프로모션', '업소 할인'] }
+};
+
+Object.entries(COMMUNITY_BOARD_SEO).forEach(([slug, board]) => {
+  SEO_PAGE_CONFIG[`/community/${slug}`] = {
+    title: `${board.name} | 남성 유흥 커뮤니티 | 미드나잇 맨즈`,
+    description: board.description,
+    keywords: [...board.keywords, '남성 유흥 커뮤니티', '미드나잇 맨즈', HIDDEN_SEARCH_KEYWORD],
+    breadcrumbs: [
+      { name: '커뮤니티', path: '/community' },
+      { name: board.name, path: `/community/${slug}` }
+    ]
+  };
+});
+
+const NOINDEX_PATH_PREFIXES = ['/admin/', '/my-page/', '/my-inquiries/', '/piece-chat/', '/@'];
+
+// 서버가 SPA로 응답하는 경로 목록입니다. 여기에 없는 경로는 404 상태로 응답합니다.
+const SPA_DYNAMIC_PATH_PATTERNS = [
+  /^\/post-detail\/[^/]+$/,
+  /^\/business-info\/[^/]+$/,
+  /^\/piece-chat\/[^/]+$/,
+  /^\/my-inquiries\/[^/]+$/,
+  /^\/admin\/inquiries\/[^/]+\/answer$/,
+  /^\/@[^/]+$/
+];
+const SPA_EXTRA_PATHS = new Set(['/bamcheat']);
+
 const NOINDEX_PATHS = new Set([
   '/login',
   '/register',
@@ -252,9 +290,7 @@ function absoluteUrl(pathOrUrl = '/') {
 function createDefaultSeo(pathname) {
   const basePath = pathname === '/live' ? '/play/live' : pathname;
   const routeConfig = SEO_PAGE_CONFIG[basePath] || {};
-  const noindex = NOINDEX_PATHS.has(basePath)
-    || basePath.startsWith('/admin/')
-    || basePath.startsWith('/my-inquiries/');
+  const noindex = isNoindexPath(basePath);
   const canonicalPath = basePath;
   const title = routeConfig.title || '미드나잇 맨즈';
   const description = routeConfig.description || '남성 유흥 커뮤니티 미드나잇 맨즈에서 최저가 업소 추천, 리얼 후기, 지역별 업소 정보를 빠르게 확인하세요.';
@@ -267,34 +303,86 @@ function createDefaultSeo(pathname) {
     canonicalUrl: absoluteUrl(canonicalPath),
     robots: noindex ? 'noindex, nofollow' : 'index, follow',
     ogType: 'website',
-    imageUrl: DEFAULT_SHARE_IMAGE_URL
+    imageUrl: DEFAULT_SHARE_IMAGE_URL,
+    breadcrumbs: routeConfig.breadcrumbs || (basePath !== '/' && routeConfig.title
+      ? [{ name: routeConfig.title.split(' | ')[0], path: basePath }]
+      : [])
   };
+}
+
+function isNoindexPath(pathname) {
+  return NOINDEX_PATHS.has(pathname)
+    || NOINDEX_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+function isKnownSpaPath(pathname) {
+  return Object.prototype.hasOwnProperty.call(SEO_PAGE_CONFIG, pathname)
+    || NOINDEX_PATHS.has(pathname)
+    || SPA_EXTRA_PATHS.has(pathname)
+    || SPA_DYNAMIC_PATH_PATTERNS.some((pattern) => pattern.test(pathname));
+}
+
+function createNotFoundSeo() {
+  return {
+    title: '404 Not Found | 미드나잇 맨즈',
+    description: '요청하신 페이지를 찾을 수 없습니다.',
+    keywords: [],
+    canonicalUrl: absoluteUrl('/404'),
+    robots: 'noindex, nofollow',
+    ogType: 'website',
+    imageUrl: DEFAULT_SHARE_IMAGE_URL,
+    breadcrumbs: [],
+    notFound: true
+  };
+}
+
+function getLastPathSegment(pathname = '') {
+  const segment = String(pathname).split('/').filter(Boolean).pop() || '';
+  try {
+    return decodeURIComponent(segment).trim();
+  } catch (error) {
+    return segment.trim();
+  }
 }
 
 async function createPostSeo(req) {
   if (!isDatabaseReady) return null;
 
   try {
-    const slug = String(req.path.split('/').filter(Boolean).pop() || '').trim();
+    const slug = getLastPathSegment(req.path);
     const post = await postModel.findPostDetailBySlug(slug);
-    if (!post || Number(post.isHidden || post.is_hidden || 0) === 1) return null;
+    if (!post || Number(post.isHidden || post.is_hidden || 0) === 1) return createNotFoundSeo();
 
     const titleText = stripHtml(post.title || '게시글 상세');
     const description = truncateText(post.content, 150) || '미드나잇 맨즈 커뮤니티 게시글 상세 내용을 확인하세요.';
     const imageUrl = parsePostImageUrls(post).find(Boolean);
-    const canonicalUrl = absoluteUrl(`/post-detail/${encodeURIComponent(createSeoSlugWithId(titleText, post.id, 'post'))}`);
+    const canonicalSlug = createSeoSlugWithId(titleText, post.id, 'post');
+    const canonicalPath = `/post-detail/${encodeURIComponent(canonicalSlug)}`;
+    const boardSlug = String(post.boardType || '').toLowerCase();
+    const board = COMMUNITY_BOARD_SEO[boardSlug];
+    const isAnonymousBoard = boardSlug === 'anon';
 
     return {
-      title: `${titleText} | 미드나잇 맨즈`,
+      title: `${titleText} | ${board ? `${board.name} | ` : ''}미드나잇 맨즈`,
       description,
-      keywords: ['업소 리뷰', '방문 후기', '업소 가격 정보', '추천 업소', '커뮤니티 후기'],
-      canonicalUrl,
+      keywords: [board?.name, '업소 리뷰', '방문 후기', '업소 가격 정보', '추천 업소', '커뮤니티 후기'].filter(Boolean),
+      canonicalUrl: absoluteUrl(canonicalPath),
+      canonicalSlug,
       robots: 'index, follow',
       ogType: 'article',
-      imageUrl: imageUrl || DEFAULT_SHARE_IMAGE_URL,
+      imageUrl: imageUrl ? absoluteUrl(imageUrl) : DEFAULT_SHARE_IMAGE_URL,
       publishedTime: post.createdAt,
-      modifiedTime: post.updatedAt,
-      structuredDataType: 'Article'
+      modifiedTime: post.updatedAt || post.createdAt,
+      structuredDataType: 'Article',
+      authorName: isAnonymousBoard ? '' : stripHtml(post.authorNickname || ''),
+      section: board?.name || '',
+      headline: titleText,
+      bodyText: truncateText(post.content, 2000),
+      breadcrumbs: [
+        { name: '커뮤니티', path: '/community' },
+        ...(board ? [{ name: board.name, path: `/community/${boardSlug}` }] : []),
+        { name: titleText, path: canonicalPath }
+      ]
     };
   } catch (error) {
     console.error('post SEO metadata failed:', error.message);
@@ -307,24 +395,38 @@ async function createBusinessAdSeo(req) {
   if (!isDatabaseReady) return null;
 
   try {
-    const slug = String(req.path.split('/').filter(Boolean).pop() || '').trim();
+    const slug = getLastPathSegment(req.path);
     const ad = await adminModel.findPublicBusinessAdBySlug(slug);
-    if (!ad) return null;
+    if (!ad) return createNotFoundSeo();
 
     const titleText = stripHtml(ad.title || ad.businessName || '업체정보 상세');
     const locationText = [ad.region, ad.district, ad.category].map((item) => stripHtml(item)).filter(Boolean).join(' ');
     const description = truncateText(ad.description, 150) || `${locationText ? `${locationText} ` : ''}${titleText} 업체정보를 확인하세요.`;
-    const canonicalUrl = absoluteUrl(`/business-info/${encodeURIComponent(createSeoSlugWithId(titleText, ad.id, 'business'))}`);
+    // 업체 상세 조회는 제목 기반 slug를 사용하므로 리다이렉트 대상도 같은 기준으로 맞춥니다.
+    const canonicalSlug = createSeoSlugWithId(ad.title || ad.businessName, ad.id, 'business');
+    const canonicalPath = `/business-info/${encodeURIComponent(canonicalSlug)}`;
 
     return {
-      title: `${titleText} | 미드나잇 맨즈`,
+      title: `${titleText}${locationText ? ` | ${locationText}` : ''} | 미드나잇 맨즈`,
       description,
       keywords: ['업체정보', titleText, ad.region, ad.district, ad.category, '미드나잇 맨즈', HIDDEN_SEARCH_KEYWORD].filter(Boolean),
-      canonicalUrl,
+      canonicalUrl: absoluteUrl(canonicalPath),
+      canonicalSlug,
       robots: 'index, follow',
       ogType: 'website',
-      imageUrl: ad.imageUrl || DEFAULT_SHARE_IMAGE_URL,
-      structuredDataType: 'LocalBusiness'
+      imageUrl: ad.imageUrl ? absoluteUrl(ad.imageUrl) : DEFAULT_SHARE_IMAGE_URL,
+      modifiedTime: ad.updatedAt || ad.activatedAt || ad.createdAt,
+      structuredDataType: 'LocalBusiness',
+      businessName: stripHtml(ad.businessName || titleText),
+      addressRegion: stripHtml(ad.region || ''),
+      addressLocality: stripHtml(ad.district || ''),
+      section: stripHtml(ad.category || ''),
+      headline: titleText,
+      bodyText: truncateText(ad.description, 2000),
+      breadcrumbs: [
+        { name: '업체정보', path: '/business-info' },
+        { name: titleText, path: canonicalPath }
+      ]
     };
   } catch (error) {
     console.error('business ad SEO metadata failed:', error.message);
@@ -332,26 +434,159 @@ async function createBusinessAdSeo(req) {
   }
 }
 
-function renderSeoHtml(indexHtml, seo) {
-  const structuredData = {
-    '@context': 'https://schema.org',
-    '@type': seo.structuredDataType || (seo.ogType === 'article' ? 'Article' : 'WebPage'),
-    name: seo.title,
-    headline: seo.title,
-    description: seo.description,
-    keywords: seo.keywords,
-    url: seo.canonicalUrl,
-    image: seo.imageUrl,
-    inLanguage: 'ko-KR',
-    isPartOf: {
-      '@type': 'WebSite',
-      name: "Midnight Men's",
-      url: SITE_ORIGIN
-    }
-  };
+const SITE_PUBLIC_LINKS = [
+  { name: '홈', path: '/' },
+  { name: '커뮤니티', path: '/community' },
+  ...Object.entries(COMMUNITY_BOARD_SEO).map(([slug, board]) => ({ name: board.name, path: `/community/${slug}` })),
+  { name: '업체정보', path: '/business-info' },
+  { name: '실시간 출근부', path: '/play/live' },
+  { name: 'RBTI', path: '/play/rbti' },
+  { name: '룸빵위키', path: '/play/wiki' },
+  { name: '월간 랭킹', path: '/play/ranking' },
+  { name: '공지 및 고객지원', path: '/support' },
+  { name: 'FAQ', path: '/support/faq' },
+  { name: '약관 및 정책', path: '/board/terms' }
+];
 
-  if (seo.publishedTime) structuredData.datePublished = seo.publishedTime;
-  if (seo.modifiedTime) structuredData.dateModified = seo.modifiedTime;
+function toIsoDate(value) {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+}
+
+function buildStructuredData(seo) {
+  const websiteId = `${SITE_ORIGIN}/#website`;
+  const organizationId = `${SITE_ORIGIN}/#organization`;
+  const pageId = `${seo.canonicalUrl}#webpage`;
+  const breadcrumbs = [{ name: '홈', path: '/' }, ...(seo.breadcrumbs || [])];
+  const graph = [
+    {
+      '@type': 'WebSite',
+      '@id': websiteId,
+      name: "Midnight Men's",
+      alternateName: '미드나잇 맨즈',
+      url: `${SITE_ORIGIN}/`,
+      inLanguage: 'ko-KR',
+      publisher: { '@id': organizationId }
+    },
+    {
+      '@type': 'Organization',
+      '@id': organizationId,
+      name: "Midnight Men's",
+      alternateName: '미드나잇 맨즈',
+      url: `${SITE_ORIGIN}/`,
+      logo: { '@type': 'ImageObject', url: DEFAULT_SHARE_IMAGE_URL }
+    },
+    {
+      '@type': 'WebPage',
+      '@id': pageId,
+      name: seo.title,
+      description: seo.description,
+      url: seo.canonicalUrl,
+      inLanguage: 'ko-KR',
+      isPartOf: { '@id': websiteId },
+      primaryImageOfPage: { '@type': 'ImageObject', url: seo.imageUrl },
+      ...(breadcrumbs.length > 1 ? { breadcrumb: { '@id': `${seo.canonicalUrl}#breadcrumb` } } : {}),
+      ...(toIsoDate(seo.publishedTime) ? { datePublished: toIsoDate(seo.publishedTime) } : {}),
+      ...(toIsoDate(seo.modifiedTime) ? { dateModified: toIsoDate(seo.modifiedTime) } : {})
+    }
+  ];
+
+  if (breadcrumbs.length > 1) {
+    graph.push({
+      '@type': 'BreadcrumbList',
+      '@id': `${seo.canonicalUrl}#breadcrumb`,
+      itemListElement: breadcrumbs.map((crumb, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: crumb.name,
+        item: absoluteUrl(crumb.path)
+      }))
+    });
+  }
+
+  if (seo.structuredDataType === 'Article') {
+    graph.push({
+      '@type': 'Article',
+      '@id': `${seo.canonicalUrl}#article`,
+      headline: String(seo.headline || seo.title).slice(0, 110),
+      description: seo.description,
+      image: [seo.imageUrl],
+      keywords: seo.keywords,
+      articleSection: seo.section || undefined,
+      datePublished: toIsoDate(seo.publishedTime),
+      dateModified: toIsoDate(seo.modifiedTime),
+      author: seo.authorName
+        ? { '@type': 'Person', name: seo.authorName }
+        : { '@id': organizationId },
+      publisher: { '@id': organizationId },
+      mainEntityOfPage: { '@id': pageId },
+      inLanguage: 'ko-KR'
+    });
+  }
+
+  if (seo.structuredDataType === 'LocalBusiness') {
+    const hasAddress = Boolean(seo.addressRegion || seo.addressLocality);
+    graph.push({
+      '@type': 'LocalBusiness',
+      '@id': `${seo.canonicalUrl}#business`,
+      name: seo.businessName || seo.headline,
+      description: seo.description,
+      image: seo.imageUrl,
+      url: seo.canonicalUrl,
+      ...(hasAddress ? {
+        address: {
+          '@type': 'PostalAddress',
+          addressCountry: 'KR',
+          ...(seo.addressRegion ? { addressRegion: seo.addressRegion } : {}),
+          ...(seo.addressLocality ? { addressLocality: seo.addressLocality } : {})
+        }
+      } : {}),
+      mainEntityOfPage: { '@id': pageId }
+    });
+  }
+
+  return { '@context': 'https://schema.org', '@graph': graph };
+}
+
+// Vue가 #app에 마운트되면 교체되는 초기 HTML입니다. JS를 실행하지 않는 검색 로봇도 본문과 내부 링크를 읽을 수 있습니다.
+function renderSeoFallbackBody(seo) {
+  const crumbs = [{ name: '홈', path: '/' }, ...(seo.breadcrumbs || [])];
+  const breadcrumbHtml = crumbs.length > 1
+    ? `<nav aria-label="breadcrumb"><ol>${crumbs.map((crumb) => `<li><a href="${escapeHtml(crumb.path)}">${escapeHtml(crumb.name)}</a></li>`).join('')}</ol></nav>`
+    : '';
+  const dateValue = seo.publishedTime || seo.modifiedTime;
+  const metaLine = [
+    seo.section,
+    [seo.addressRegion, seo.addressLocality].filter(Boolean).join(' '),
+    dateValue ? formatSitemapDate(dateValue) : ''
+  ].filter(Boolean).map(escapeHtml).join(' · ');
+  const bodyText = seo.bodyText || seo.description;
+  const navHtml = `<nav aria-label="사이트 메뉴"><ul>${SITE_PUBLIC_LINKS.map((link) => `<li><a href="${escapeHtml(link.path)}">${escapeHtml(link.name)}</a></li>`).join('')}</ul></nav>`;
+
+  return [
+    '<div class="seo-fallback">',
+    `<header><a href="/">미드나잇 맨즈</a></header>`,
+    breadcrumbHtml,
+    '<main>',
+    `<h1>${escapeHtml(seo.headline || String(seo.title).split(' | ')[0])}</h1>`,
+    metaLine ? `<p>${metaLine}</p>` : '',
+    `<p>${escapeHtml(bodyText)}</p>`,
+    '</main>',
+    navHtml,
+    '</div>'
+  ].filter(Boolean).join('');
+}
+
+function renderSeoHtml(indexHtml, seo) {
+  const structuredData = buildStructuredData(seo);
+  const articleTags = seo.ogType === 'article'
+    ? [
+      toIsoDate(seo.publishedTime) ? `<meta property="article:published_time" content="${escapeHtml(toIsoDate(seo.publishedTime))}" />` : '',
+      toIsoDate(seo.modifiedTime) ? `<meta property="article:modified_time" content="${escapeHtml(toIsoDate(seo.modifiedTime))}" />` : '',
+      seo.section ? `<meta property="article:section" content="${escapeHtml(seo.section)}" />` : ''
+    ].filter(Boolean)
+    : [];
 
   const seoTags = [
     `<title>${escapeHtml(seo.title)}</title>`,
@@ -367,6 +602,8 @@ function renderSeoHtml(indexHtml, seo) {
     `<meta property="og:url" content="${escapeHtml(seo.canonicalUrl)}" />`,
     `<meta property="og:image" content="${escapeHtml(seo.imageUrl)}" />`,
     `<meta property="og:image:secure_url" content="${escapeHtml(seo.imageUrl)}" />`,
+    `<meta property="og:image:alt" content="${escapeHtml(seo.headline || seo.title)}" />`,
+    ...articleTags,
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${escapeHtml(seo.title)}" />`,
     `<meta name="twitter:description" content="${escapeHtml(seo.description)}" />`,
@@ -380,7 +617,8 @@ function renderSeoHtml(indexHtml, seo) {
     .replace(/\s*<meta\s+(?:name|property)="(?:description|keywords|robots|og:[^"]+|twitter:[^"]+)"[^>]*>\s*/gi, '\n')
     .replace(/\s*<link\s+rel="canonical"[^>]*>\s*/gi, '\n')
     .replace(/\s*<script\s+type="application\/ld\+json"\s+data-seo-jsonld="server">[\s\S]*?<\/script>\s*/gi, '\n')
-    .replace('</head>', `  ${seoTags}\n</head>`);
+    .replace('</head>', `  ${seoTags}\n</head>`)
+    .replace('<div id="app"></div>', `<div id="app">${renderSeoFallbackBody(seo)}</div>`);
 }
 
 
@@ -512,6 +750,7 @@ function createSitemapUrl({ loc, changefreq, priority, lastmod }) {
 function inferSitemapMetadata(pathname) {
   if (pathname === '/') return { changefreq: 'daily', priority: '1.0' };
   if (pathname === '/community' || pathname === '/play/live') return { changefreq: 'hourly', priority: '0.9' };
+  if (pathname.startsWith('/community/')) return { changefreq: 'hourly', priority: '0.8' };
   if (pathname === '/business-info') return { changefreq: 'daily', priority: '0.8' };
   if (pathname === '/play' || pathname === '/play/wiki') return { changefreq: 'weekly', priority: '0.7' };
   if (pathname === '/support') return { changefreq: 'weekly', priority: '0.6' };
@@ -535,7 +774,7 @@ async function buildSitemapXml() {
   let dynamicUrls = [];
   if (isDatabaseReady) {
     const [posts, businessAds] = await Promise.all([
-      postModel.listSeoSitemapPosts?.(300).catch((error) => {
+      postModel.listSeoSitemapPosts?.(1000).catch((error) => {
         console.error('post sitemap generation failed:', error.message);
         return [];
       }) || [],
@@ -571,14 +810,29 @@ async function buildSitemapXml() {
 
 
 async function sendSeoIndex(req, res, statusCode = 200) {
-  const indexHtml = await fs.promises.readFile(INDEX_HTML_PATH, 'utf8');
-  const defaultSeo = createDefaultSeo(req.path);
+  if (!isKnownSpaPath(req.path)) {
+    const indexHtml = await fs.promises.readFile(INDEX_HTML_PATH, 'utf8');
+    res.status(404).type('html').send(renderSeoHtml(indexHtml, createNotFoundSeo()));
+    return;
+  }
+
   const dynamicSeo = req.path.startsWith('/post-detail/')
     ? await createPostSeo(req)
     : req.path.startsWith('/business-info/')
       ? await createBusinessAdSeo(req)
       : null;
-  res.status(statusCode).type('html').send(renderSeoHtml(indexHtml, dynamicSeo || defaultSeo));
+
+  // 제목이 바뀌었거나 id만 있는 주소로 들어오면 대표 주소로 영구 이동시켜 중복 색인을 막습니다.
+  if (dynamicSeo?.canonicalSlug && getLastPathSegment(req.path) !== dynamicSeo.canonicalSlug) {
+    const queryIndex = req.originalUrl.indexOf('?');
+    const query = queryIndex >= 0 ? req.originalUrl.slice(queryIndex) : '';
+    res.redirect(301, `${new URL(dynamicSeo.canonicalUrl).pathname}${query}`);
+    return;
+  }
+
+  const indexHtml = await fs.promises.readFile(INDEX_HTML_PATH, 'utf8');
+  const seo = dynamicSeo || createDefaultSeo(req.path);
+  res.status(seo.notFound ? 404 : statusCode).type('html').send(renderSeoHtml(indexHtml, seo));
 }
 
 function parseCookies(cookieHeader = '') {
@@ -635,6 +889,18 @@ app.use((req, res, next) => {
   next();
 });
 
+
+app.use((req, res, next) => {
+  if (!['GET', 'HEAD'].includes(req.method) || req.path === '/' || !req.path.endsWith('/') || req.path.startsWith('/api/')) {
+    next();
+    return;
+  }
+
+  const queryIndex = req.originalUrl.indexOf('?');
+  const query = queryIndex >= 0 ? req.originalUrl.slice(queryIndex) : '';
+  const normalizedPath = req.path.replace(/\/+$/, '') || '/';
+  res.redirect(301, `${normalizedPath}${query}`);
+});
 
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').set('Cache-Control', `public, max-age=${ONE_DAY_IN_SECONDS}`);
