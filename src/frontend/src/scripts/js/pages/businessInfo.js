@@ -47,6 +47,13 @@ const BUSINESS_OCR_STATUS = {
 };
 let kakaoPostcodeLoader = null;
 let kakaoMapLoader = null;
+const BUSINESS_MAP_DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
+const BUSINESS_MAP_DEFAULT_LEVEL = 8;
+const BUSINESS_MAP_CLUSTER_MIN_LEVEL = 5;
+const BUSINESS_MAP_STATUS_DURATION = 2500;
+let businessMapStatusTimer = null;
+const businessMapGeocodeCache = new Map();
+const businessMapState = { isOpen: false, map: null, markers: [], clusterer: null, selectedMarker: null, myLocationOverlay: null, renderId: 0 };
 let businessOcrLoader = null;
 let businessOcrRequestId = 0;
 let currentBusinessProfileAd = null;
@@ -218,8 +225,9 @@ function loadKakaoMapScript() {
         script.addEventListener('error', () => reject(new Error('카카오맵 서비스를 불러오지 못했습니다.')), { once: true });
 
         if (!existingScript) {
-            const params = new URLSearchParams({ appkey: appKey, libraries: 'services', autoload: 'false' });
-            script.src = `${KAKAO_MAP_SDK_URL}?${params.toString()}`;
+            // libraries의 쉼표가 %2C로 인코딩되면 카카오 SDK가 라이브러리를 인식하지 못해 load가 끝나지 않는다.
+            const params = new URLSearchParams({ appkey: appKey, autoload: 'false' });
+            script.src = `${KAKAO_MAP_SDK_URL}?${params.toString()}&libraries=services,clusterer`;
             script.async = true;
             script.dataset.kakaoMapSdk = 'true';
             document.head.appendChild(script);
@@ -286,6 +294,352 @@ async function initializeBusinessProfileKakaoMaps(root = document) {
         }
 
         renderKakaoMap(container, maps, address, displayAddress);
+    });
+}
+
+// 안내 문구는 페이드인 후 잠시 보였다가 페이드아웃된다. persist면 다음 문구가 올 때까지 유지한다.
+function setBusinessMapStatus(message = '', { persist = false } = {}) {
+    const status = document.getElementById('business-map-status');
+    if (!status) return;
+
+    window.clearTimeout(businessMapStatusTimer);
+    if (!message) {
+        status.classList.remove('is-visible');
+        return;
+    }
+
+    status.textContent = message;
+    status.title = message;
+    status.classList.add('is-visible');
+    if (!persist) {
+        businessMapStatusTimer = window.setTimeout(() => status.classList.remove('is-visible'), BUSINESS_MAP_STATUS_DURATION);
+    }
+}
+
+// 목록에 보이는 업체는 위치정보 노출 설정과 관계없이 주소가 있으면 모두 지도에 표시한다.
+function getBusinessMapAds(ads) {
+    return (Array.isArray(ads) ? ads : []).filter((ad) => String(ad?.businessAddress || '').trim());
+}
+
+function geocodeBusinessMapAddress(maps, address) {
+    if (businessMapGeocodeCache.has(address)) return businessMapGeocodeCache.get(address);
+
+    const geocoder = new maps.services.Geocoder();
+    const request = new Promise((resolve) => {
+        geocoder.addressSearch(address, (result, status) => {
+            if (status !== maps.services.Status.OK || !result?.[0]) {
+                resolve(null);
+                return;
+            }
+            resolve({ lat: Number(result[0].y), lng: Number(result[0].x) });
+        });
+    });
+    businessMapGeocodeCache.set(address, request);
+    return request;
+}
+
+function closeBusinessMapOverlay() {
+    businessMapState.selectedMarker?.classList.remove('is-selected');
+    businessMapState.selectedMarker = null;
+    // 내용은 그대로 두고 클래스만 빼서 아래로 내려가며 사라지게 한다.
+    const sheet = document.getElementById('business-map-sheet');
+    if (sheet) {
+        sheet.classList.remove('is-open');
+        sheet.inert = true;
+    }
+}
+
+function clearBusinessMapMarkers() {
+    closeBusinessMapOverlay();
+    businessMapState.clusterer?.clear();
+    businessMapState.markers.forEach((marker) => marker.setMap(null));
+    businessMapState.markers = [];
+}
+
+function buildBusinessMapClusterStyle(size) {
+    return {
+        width: `${size}px`,
+        height: `${size}px`,
+        lineHeight: `${size - 4}px`,
+        borderRadius: '50%',
+        border: '2px solid #fff',
+        background: '#171a1f',
+        color: '#facc15',
+        textAlign: 'center',
+        fontSize: '13px',
+        fontWeight: '700',
+        boxShadow: '0 2px 8px rgba(17, 24, 39, 0.35)'
+    };
+}
+
+// 가까운 업체 핀은 숫자 원으로 묶고, 원을 누르면 확대되며 다시 풀린다.
+function createBusinessMapClusterer(maps) {
+    if (!maps.MarkerClusterer) return null;
+
+    return new maps.MarkerClusterer({
+        map: businessMapState.map,
+        averageCenter: true,
+        minLevel: BUSINESS_MAP_CLUSTER_MIN_LEVEL,
+        gridSize: 60,
+        minClusterSize: 2,
+        disableClickZoom: false,
+        calculator: [10, 30],
+        styles: [40, 48, 56].map(buildBusinessMapClusterStyle)
+    });
+}
+
+function resizeBusinessMap() {
+    businessMapState.map?.relayout();
+}
+
+function getBusinessMapAdName(ad) {
+    return String(ad?.businessName || ad?.companyName || ad?.title || '업체').trim() || '업체';
+}
+
+function buildBusinessMapMarkerElement(ads, onClick) {
+    const element = document.createElement('div');
+    element.className = 'business-map-marker';
+    const firstName = getBusinessMapAdName(ads[0]);
+    const labelText = ads.length > 1 ? `${firstName} 외 ${ads.length - 1}곳` : firstName;
+    element.innerHTML = `
+        <span class="business-map-marker__label">${sanitizeHTML(labelText)}</span>
+        <svg class="business-map-marker__pin" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>
+    `;
+    element.addEventListener('click', (event) => {
+        event.stopPropagation();
+        onClick();
+    });
+    return element;
+}
+
+function buildBusinessMapSheetItemMarkup(ad) {
+    const areaLabel = [ad.region, ad.district].map((value) => normalizeAreaLabel(value)).filter(Boolean).join(' ');
+    const metaLabel = [ad.category, areaLabel].filter(Boolean).join(' · ');
+    const address = [ad.businessAddress, ad.businessAddressDetail].map((value) => String(value || '').trim()).filter(Boolean).join(' ');
+    const hours = ad.openHour && ad.closeHour ? `${ad.openHour} ~ ${ad.closeHour}` : '';
+    const imageUrl = String(ad.imageUrl || '').trim() || BUSINESS_DIRECTORY_DEFAULT_IMAGE_URL;
+    const telHref = getBusinessProfileTelHref(ad.managerContact);
+
+    return `
+        <li class="business-map-sheet__item">
+            <div class="business-map-sheet__body">
+                <img class="business-map-sheet__thumb" src="${sanitizeHTML(imageUrl)}" alt="" loading="lazy">
+                <div class="business-map-sheet__info">
+                    <p class="business-map-sheet__name">${sanitizeHTML(getBusinessMapAdName(ad))}${metaLabel ? ` <span>${sanitizeHTML(metaLabel)}</span>` : ''}</p>
+                    <p class="business-map-sheet__title">${sanitizeHTML(ad.title || '')}</p>
+                    ${address ? `<p class="business-map-sheet__meta">${sanitizeHTML(address)}</p>` : ''}
+                    ${hours ? `<p class="business-map-sheet__meta">영업시간 ${sanitizeHTML(hours)}</p>` : ''}
+                </div>
+            </div>
+            <div class="business-map-sheet__actions">
+                ${telHref ? `<button type="button" class="business-map-sheet__button" data-business-map-call="${sanitizeHTML(telHref)}">전화</button>` : ''}
+                <button type="button" class="business-map-sheet__button business-map-sheet__button--primary" data-business-ad-id="${sanitizeHTML(ad.id || '')}" data-business-ad-url="${sanitizeHTML(createBusinessInfoDetailPath(ad))}">상세보기</button>
+            </div>
+        </li>
+    `;
+}
+
+function openBusinessMapOverlay(ads, position, markerElement) {
+    const sheet = document.getElementById('business-map-sheet');
+    if (!sheet) return;
+
+    businessMapState.selectedMarker?.classList.remove('is-selected');
+    markerElement.classList.add('is-selected');
+    businessMapState.selectedMarker = markerElement;
+
+    sheet.innerHTML = `
+        <button type="button" class="business-map-sheet__close" data-business-map-sheet-close aria-label="업체 정보 닫기">×</button>
+        <ul class="business-map-sheet__list">${ads.map(buildBusinessMapSheetItemMarkup).join('')}</ul>
+    `;
+    sheet.inert = false;
+    sheet.classList.add('is-open');
+    businessMapState.map.panTo(position);
+}
+
+function getBusinessMapGeolocationErrorMessage(error) {
+    if (error?.code === 1) return '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.';
+    if (error?.code === 3) return '현재 위치를 확인하는 데 시간이 너무 오래 걸립니다. 다시 시도해주세요.';
+    return '현재 위치를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.';
+}
+
+function moveBusinessMapToMyLocation() {
+    const button = document.getElementById('business-map-locate');
+    if (!navigator.geolocation) {
+        alert('이 브라우저에서는 현재 위치 기능을 지원하지 않습니다.');
+        return;
+    }
+    if (!businessMapState.map || !window.kakao?.maps) return;
+
+    button?.classList.add('is-loading');
+    navigator.geolocation.getCurrentPosition((result) => {
+        button?.classList.remove('is-loading');
+        const maps = window.kakao.maps;
+        const position = new maps.LatLng(result.coords.latitude, result.coords.longitude);
+
+        if (!businessMapState.myLocationOverlay) {
+            const dot = document.createElement('div');
+            dot.className = 'business-map-my-location';
+            businessMapState.myLocationOverlay = new maps.CustomOverlay({
+                position,
+                content: dot,
+                xAnchor: 0.5,
+                yAnchor: 0.5,
+                zIndex: 1
+            });
+        }
+        businessMapState.myLocationOverlay.setPosition(position);
+        businessMapState.myLocationOverlay.setMap(businessMapState.map);
+        businessMapState.map.setLevel(5);
+        businessMapState.map.panTo(position);
+    }, (error) => {
+        button?.classList.remove('is-loading');
+        alert(getBusinessMapGeolocationErrorMessage(error));
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+}
+
+function bindBusinessMapSheetEvents() {
+    document.getElementById('business-map-locate')?.addEventListener('click', moveBusinessMapToMyLocation);
+
+    const sheet = document.getElementById('business-map-sheet');
+    sheet?.addEventListener('click', (event) => {
+        if (event.target.closest('[data-business-map-sheet-close]')) {
+            closeBusinessMapOverlay();
+            return;
+        }
+
+        const callButton = event.target.closest('[data-business-map-call]');
+        if (callButton) {
+            // 전화번호는 상세페이지와 동일하게 로그인 회원에게만 연결한다.
+            if (!requireBusinessInfoListClickAuth()) return;
+            window.location.href = callButton.dataset.businessMapCall;
+            return;
+        }
+
+        navigateToBusinessInfoDetail(event.target.closest('[data-business-ad-id]'));
+    });
+}
+
+async function renderBusinessDirectoryMap() {
+    const canvas = document.getElementById('business-map-canvas');
+    if (!canvas || !businessMapState.isOpen) return;
+
+    const renderId = ++businessMapState.renderId;
+    const maps = await loadKakaoMapScript().catch(() => null);
+    if (renderId !== businessMapState.renderId) return;
+
+    if (!maps) {
+        setBusinessMapStatus('지도를 불러오지 못했습니다. 다시 시도해주세요.');
+        return;
+    }
+
+    if (!businessMapState.map) {
+        businessMapState.map = new maps.Map(canvas, {
+            center: new maps.LatLng(BUSINESS_MAP_DEFAULT_CENTER.lat, BUSINESS_MAP_DEFAULT_CENTER.lng),
+            level: BUSINESS_MAP_DEFAULT_LEVEL
+        });
+        maps.event.addListener(businessMapState.map, 'click', closeBusinessMapOverlay);
+        hideKakaoMapChrome(canvas);
+        businessMapState.clusterer = createBusinessMapClusterer(maps);
+    }
+    resizeBusinessMap();
+
+    const mapAds = getBusinessMapAds(businessDirectoryAds);
+    setBusinessMapStatus(mapAds.length ? '업체 위치를 불러오는 중입니다.' : '', { persist: true });
+
+    const points = await Promise.all(mapAds.map(async (ad) => ({
+        ad,
+        coords: await geocodeBusinessMapAddress(maps, String(ad.businessAddress).trim())
+    })));
+    if (renderId !== businessMapState.renderId) return;
+
+    clearBusinessMapMarkers();
+
+    // 같은 주소(좌표)의 업체는 마커 하나로 묶어 하단 카드에서 함께 보여준다.
+    const groups = new Map();
+    points.forEach(({ ad, coords }) => {
+        if (!coords) return;
+        const key = `${coords.lat},${coords.lng}`;
+        if (!groups.has(key)) groups.set(key, { coords, ads: [] });
+        groups.get(key).ads.push(ad);
+    });
+
+    if (!groups.size) {
+        setBusinessMapStatus('지도에 표시할 업체가 없습니다.');
+        return;
+    }
+
+    const bounds = new maps.LatLngBounds();
+    groups.forEach(({ coords, ads }) => {
+        const position = new maps.LatLng(coords.lat, coords.lng);
+        const markerElement = buildBusinessMapMarkerElement(ads, () => openBusinessMapOverlay(ads, position, markerElement));
+        const marker = new maps.CustomOverlay({
+            map: businessMapState.clusterer ? null : businessMapState.map,
+            position,
+            content: markerElement,
+            xAnchor: 0.5,
+            yAnchor: 1,
+            zIndex: 2,
+            clickable: true
+        });
+        businessMapState.markers.push(marker);
+        bounds.extend(position);
+    });
+    businessMapState.clusterer?.addMarkers(businessMapState.markers);
+
+    if (groups.size === 1) {
+        businessMapState.map.setLevel(4);
+        businessMapState.map.setCenter(bounds.getSouthWest());
+    } else {
+        businessMapState.map.setBounds(bounds, 60, 40, 40, 40);
+    }
+
+    setBusinessMapStatus('');
+}
+
+function bindBusinessMapToggle() {
+    const toggle = document.getElementById('business-map-toggle');
+    const panel = document.getElementById('business-map-panel');
+    const label = document.getElementById('business-map-toggle-label');
+    if (!toggle || !panel) return;
+
+    const card = panel.closest('.business-directory-card');
+    const canvas = document.getElementById('business-map-canvas');
+
+    // 지도 시작 위치부터 하단 메뉴 바로 위까지 남은 화면을 모두 채운다.
+    const syncMapHeight = () => {
+        if (!canvas) return;
+        const bottomNav = document.querySelector('.bottom-nav-footer:not(.hidden)');
+        const bottomNavHeight = bottomNav ? bottomNav.getBoundingClientRect().height : 0;
+        const panelTop = panel.getBoundingClientRect().top + window.scrollY;
+        const height = Math.max(320, Math.floor(window.innerHeight - panelTop - bottomNavHeight));
+        canvas.style.height = `${height}px`;
+        resizeBusinessMap();
+    };
+
+    window.addEventListener('resize', () => {
+        if (businessMapState.isOpen) syncMapHeight();
+    });
+
+    toggle.addEventListener('click', () => {
+        businessMapState.isOpen = !businessMapState.isOpen;
+        panel.classList.toggle('hidden', !businessMapState.isOpen);
+        // 지도 보기 중에는 필터는 유지하고 업체 목록 영역만 지도로 바꾼다.
+        card?.classList.toggle('is-map-view', businessMapState.isOpen);
+        if (businessMapState.isOpen) {
+            window.scrollTo(0, 0);
+            syncMapHeight();
+        }
+        toggle.classList.toggle('is-active', businessMapState.isOpen);
+        toggle.setAttribute('aria-expanded', String(businessMapState.isOpen));
+        toggle.setAttribute('aria-label', businessMapState.isOpen ? '업체 목록으로 보기' : '지도로 보기');
+        if (label) label.textContent = businessMapState.isOpen ? '목록' : '지도';
+
+        if (businessMapState.isOpen) {
+            renderBusinessDirectoryMap();
+        } else {
+            businessMapState.renderId += 1;
+            closeBusinessMapOverlay();
+        }
     });
 }
 
@@ -1141,6 +1495,8 @@ async function loadBusinessAds() {
     } catch (error) {
         renderBusinessAds([]);
     }
+
+    renderBusinessDirectoryMap();
 }
 
 function openFilterPanel(target) {
@@ -1937,6 +2293,8 @@ async function initBusinessInfoPage() {
         return;
     }
 
+    bindBusinessMapToggle();
+    bindBusinessMapSheetEvents();
     await bindBusinessFilterEvents();
     await loadBusinessAds();
 }

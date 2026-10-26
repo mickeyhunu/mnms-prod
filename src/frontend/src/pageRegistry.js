@@ -60,6 +60,13 @@ const pageRegistry = {
                 <div class="community-header-left">
                     <span class="community-board-name">업체정보</span>
                 </div>
+                <div class="community-actions">
+                    <button type="button" class="business-map-toggle" id="business-map-toggle" aria-controls="business-map-panel" aria-expanded="false" aria-label="지도로 보기">
+                        <svg class="business-map-toggle__icon business-map-toggle__icon--map" width="19" height="19" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        <svg class="business-map-toggle__icon business-map-toggle__icon--list" width="19" height="19" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h.01"></path><path d="M3 12h.01"></path><path d="M3 19h.01"></path><path d="M8 5h13"></path><path d="M8 12h13"></path><path d="M8 19h13"></path></svg>
+                        <span id="business-map-toggle-label">지도</span>
+                    </button>
+                </div>
             </header>
 
             <section class="business-directory-card">
@@ -80,7 +87,7 @@ const pageRegistry = {
                                 </svg>
                             </div>
                             <div class="business-filter-search">
-                                <input type="search" id="business-keyword-filter" placeholder="제목/작성자 검색">
+                                <input type="search" id="business-keyword-filter" placeholder="업체 검색">
                             </div>
                         
                         </div>
@@ -103,6 +110,14 @@ const pageRegistry = {
                 </div>
                 <ul class="business-directory-list" id="business-directory-list"></ul>
                 <p class="text-muted hidden" id="business-directory-empty" style="padding: 15px">등록된 업체정보가 없습니다.</p>
+                <div class="business-map-panel hidden" id="business-map-panel" aria-label="광고중인 업체 위치 지도">
+                    <div class="business-map-canvas" id="business-map-canvas"></div>
+                    <p class="business-map-status" id="business-map-status" aria-live="polite"></p>
+                    <button type="button" class="business-map-locate" id="business-map-locate" aria-label="내 현재 위치로 이동" title="내 위치">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg>
+                    </button>
+                    <div class="business-map-sheet" id="business-map-sheet" role="dialog" aria-label="선택한 업체 정보" inert></div>
+                </div>
             </section>
 
         </div>
