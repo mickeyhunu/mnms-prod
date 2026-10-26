@@ -1011,8 +1011,31 @@ async function listPublicBusinessAds({ region = '', district = '', category = ''
   }
 
   if (keyword) {
-    whereConditions.push('(ba.title LIKE ? OR COALESCE(u.nickname, \'\') LIKE ?)');
-    whereParams.push(`%${keyword}%`, `%${keyword}%`);
+    // 제목/작성자뿐 아니라 업체명, 지역, 담당자, 연락처로도 검색한다.
+    const keywordColumns = [
+      'ba.title',
+      'u.nickname',
+      'ba.business_name',
+      'bp.company_name',
+      'ba.region',
+      'ba.district',
+      'ba.category',
+      'ba.manager_name',
+      'bp.manager_name',
+      'ba.manager_contact',
+      "JSON_UNQUOTE(JSON_EXTRACT(COALESCE(bp.last_approved_business_info, bp.business_info), '$.businessAddress'))"
+    ];
+    const keywordConditions = keywordColumns.map((column) => `COALESCE(${column}, '') LIKE ?`);
+    whereParams.push(...keywordColumns.map(() => `%${keyword}%`));
+
+    // 연락처는 하이픈/공백 없이 숫자만 입력해도 찾을 수 있게 한다.
+    const keywordDigits = keyword.replace(/\D/g, '');
+    if (keywordDigits.length >= 3) {
+      keywordConditions.push("REPLACE(REPLACE(COALESCE(ba.manager_contact, ''), '-', ''), ' ', '') LIKE ?");
+      whereParams.push(`%${keywordDigits}%`);
+    }
+
+    whereConditions.push(`(${keywordConditions.join(' OR ')})`);
   }
 
   const [rows] = await pool.query(

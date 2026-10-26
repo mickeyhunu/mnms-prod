@@ -723,3 +723,329 @@ body.business-profile-modal-open {
         animation: none;
     }
 }
+
+.business-map-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 30px;
+    padding: 0 10px;
+    border: 1px solid #5d6472;
+    border-radius: 999px;
+    background: #242933;
+    color: #f8fafc;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.business-map-toggle__icon--list,
+.business-map-toggle.is-active .business-map-toggle__icon--map {
+    display: none;
+}
+
+.business-map-toggle.is-active .business-map-toggle__icon--list {
+    display: inline-block;
+}
+
+.business-map-toggle svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.business-directory-card.is-map-view .business-directory-list,
+.business-directory-card.is-map-view #business-directory-empty {
+    display: none;
+}
+
+.business-directory-card.is-map-view {
+    padding-bottom: 0;
+}
+
+/* 카드 좌우 여백을 상쇄해 지도를 가로로 꽉 채운다. 높이는 JS에서 남은 화면에 맞춘다. */
+/* 미드나잇 맨즈 톤: 상단 헤더의 미드나잇 블랙 + LIVE에서 쓰는 옐로 포인트. */
+.business-map-panel {
+    --business-map-ink: #171a1f;
+    --business-map-accent: #facc15;
+    position: relative;
+    margin: 0 calc(-3% / 0.94);
+    background: #f3f4f6;
+    overflow: hidden;
+}
+
+.business-map-canvas {
+    width: 100%;
+    min-height: 320px;
+}
+
+/* 지도 가운데 위쪽에 한 줄로 떠오르는 안내 문구. 우측 내 위치 버튼과 겹치지 않도록 좌우 여백을 둔다. */
+.business-map-status {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    z-index: 2;
+    max-width: calc(100% - 128px);
+    margin: 0;
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: rgba(17, 24, 39, 0.82);
+    color: #fff;
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -6px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s linear 0.3s;
+    pointer-events: none;
+}
+
+.business-map-status.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s;
+}
+
+/* 카카오 CustomOverlay(xAnchor 0.5, yAnchor 1) 기준으로 핀 끝이 좌표에 오도록 라벨과 핀을 위로 쌓는다. */
+.business-map-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+}
+
+.business-map-marker__pin {
+    width: 30px;
+    height: 30px;
+    fill: var(--business-map-ink);
+    stroke: #fff;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 2px 3px rgba(17, 24, 39, 0.3));
+}
+
+.business-map-marker__label {
+    display: inline-block;
+    max-width: 160px;
+    padding: 3px 9px;
+    border: 1px solid var(--business-map-ink);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--business-map-ink);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 2px 6px rgba(17, 24, 39, 0.18);
+}
+
+.business-map-marker.is-selected .business-map-marker__pin {
+    width: 36px;
+    height: 36px;
+    fill: var(--business-map-accent);
+    stroke: var(--business-map-ink);
+}
+
+.business-map-marker.is-selected .business-map-marker__label {
+    border-color: var(--business-map-ink);
+    background: var(--business-map-ink);
+    color: var(--business-map-accent);
+}
+
+/* 선택한 업체 정보를 지도 하단 카드로 띄운다. */
+.business-map-sheet {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    z-index: 3;
+    padding: 18px 14px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 -4px 18px rgba(17, 24, 39, 0.16);
+    visibility: hidden;
+    transform: translateY(calc(100% + 16px));
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 0.3s;
+}
+
+/* 아래에서 위로 올라오고, 닫힐 때는 아래로 내려가며 사라진다. */
+.business-map-sheet.is-open {
+    visibility: visible;
+    transform: translateY(0);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s;
+}
+
+.business-map-sheet::before {
+    content: '';
+    position: absolute;
+    top: 7px;
+    left: 50%;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: #d1d5db;
+    transform: translateX(-50%);
+}
+
+.business-map-sheet__close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    border: 0;
+    background: transparent;
+    color: #6b7280;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.business-map-sheet__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.business-map-sheet__item + .business-map-sheet__item {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f3f5;
+}
+
+.business-map-sheet__body {
+    display: flex;
+    gap: 10px;
+}
+
+.business-map-sheet__thumb {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: #f3f4f6;
+    object-fit: cover;
+}
+
+.business-map-sheet__info {
+    min-width: 0;
+    padding-right: 18px;
+}
+
+.business-map-sheet__info p {
+    margin: 0;
+}
+
+.business-map-sheet__name {
+    color: #111827;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.business-map-sheet__name span {
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.business-map-sheet__title {
+    margin-top: 2px !important;
+    color: #374151;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.business-map-sheet__meta {
+    margin-top: 2px !important;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.business-map-sheet__actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.business-map-sheet__button {
+    flex: 1;
+    min-height: 36px;
+    border: 1px solid var(--business-map-ink);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--business-map-ink);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.business-map-sheet__button--primary {
+    border-color: var(--business-map-ink);
+    background: var(--business-map-ink);
+    color: var(--business-map-accent);
+}
+
+/* 지도 보기 중에는 화면 우측 하단 텔레그램 문의 버튼이 지도를 가리지 않도록 숨긴다. */
+body:has(.business-directory-card.is-map-view) .telegram-chat-button {
+    display: none;
+}
+
+.business-map-locate {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #d1d5db;
+    border-radius: 50%;
+    background: #fff;
+    color: #111827;
+    box-shadow: 0 2px 6px rgba(17, 24, 39, 0.18);
+    cursor: pointer;
+}
+
+.business-map-locate svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+.business-map-locate.is-loading {
+    color: #2563eb;
+    animation: business-map-locate-pulse 1s ease-in-out infinite;
+}
+
+@keyframes business-map-locate-pulse {
+    50% { opacity: 0.5; }
+}
+
+.business-map-my-location {
+    width: 16px;
+    height: 16px;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    background: #2563eb;
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.22);
+}
