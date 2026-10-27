@@ -508,8 +508,50 @@ async function listSeoRssLiveItems(limit = 20) {
     .slice(0, safeLimit);
 }
 
+const STORE_ACTIVITY_DAYS = 2;
+const STORE_ACTIVITY_CATEGORY_KEYS = ['choice', 'chojoong', 'waiting', 'entry'];
+
+// 최근 STORE_ACTIVITY_DAYS일 안에 LIVE 데이터(초톡/초중/룸·웨이팅/엔트리)가 있었던 매장 번호·이름을 모은다.
+async function collectRecentlyActiveStoreKeys() {
+  const pool = await getChatbotPool();
+  const storeNos = new Set();
+  const storeNames = new Set();
+
+  await Promise.all(STORE_ACTIVITY_CATEGORY_KEYS.map(async (categoryKey) => {
+    const safeTableName = ensureTableName(LIVE_CATEGORY_MAP[categoryKey].tableName);
+    const columns = await getTableColumns(safeTableName);
+    const orderColumn = findColumn(columns, ORDER_CANDIDATES);
+    const storeNoColumn = findColumn(columns, STORE_NO_CANDIDATES);
+    const storeNameColumn = findColumn(columns, STORE_FILTER_CANDIDATES);
+    if (!orderColumn || (!storeNoColumn && !storeNameColumn)) return;
+
+    const storeColumn = storeNoColumn || storeNameColumn;
+    const [rows] = await pool.query(
+      `SELECT DISTINCT \`${storeColumn}\` AS storeKey
+         FROM \`${safeTableName}\`
+        WHERE \`${orderColumn}\` >= NOW() - INTERVAL ? DAY`,
+      [STORE_ACTIVITY_DAYS]
+    );
+
+    rows.forEach((row) => {
+      if (storeNoColumn) {
+        const storeNo = Number(row.storeKey);
+        if (Number.isInteger(storeNo)) storeNos.add(storeNo);
+      } else {
+        const storeName = normalizeNullableString(row.storeKey);
+        if (storeName) storeNames.add(storeName);
+      }
+    });
+  }));
+
+  return { storeNos, storeNames };
+}
+
 async function getLiveFilters() {
-  const stores = await listStores();
+  const [allStores, activeStoreKeys] = await Promise.all([listStores(), collectRecentlyActiveStoreKeys()]);
+  const stores = allStores.filter((store) => (
+    activeStoreKeys.storeNos.has(store.storeNo) || activeStoreKeys.storeNames.has(store.storeName)
+  ));
   const categories = await Promise.all(
     Object.values(LIVE_CATEGORY_MAP).map(async (category) => ({
       key: category.key,
