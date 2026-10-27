@@ -161,6 +161,12 @@ function removeLivePageSharedChrome() {
     document.body.classList.remove('has-bottom-nav');
 }
 
+const LIVE_PREFETCH_FRESH_MS = LIVE_REFRESH_INTERVAL_MS;
+const LIVE_PREFETCH_CONCURRENCY = 3;
+// key: counts:{storeNo} | ads:{storeNo} | entries:{storeNo}:{categoryKey} → { data, fetchedAt }
+const livePrefetchCache = new Map();
+const livePrefetchPending = new Map();
+
 const liveState = {
     stores: [],
     categories: [],
@@ -268,6 +274,7 @@ async function initLivePage() {
     try {
         resetLiveEntriesState();
         await refreshLiveData({ showLoading: true, syncToLatest: true });
+        scheduleLiveIdleTask(prefetchLiveStores);
     } catch (error) {
         if (!liveState.hasCachedEntries) {
             showLiveError(error.message || 'LIVE 데이터를 불러오지 못했습니다.');
@@ -831,11 +838,9 @@ function bindLiveEvents() {
 
         const nextStoreNo = Number.parseInt(button.dataset.storeOption || '', 10);
         if (!Number.isInteger(nextStoreNo) || liveState.selectedStoreNo === nextStoreNo) {
-            closeLiveFilterDropdown();
             return;
         }
 
-        closeLiveFilterDropdown();
         await selectLiveStore(nextStoreNo);
     });
 
@@ -851,7 +856,7 @@ function bindLiveEvents() {
         }
         renderCategoryButtons(liveState.categories);
         resetLiveEntriesState();
-        await loadLiveEntries({ showLoading: true, syncToLatest: true });
+        await loadLiveEntries({ showLoading: true, syncToLatest: true, useCache: true });
     });
 
     listElement?.addEventListener('click', async (event) => {
@@ -1044,7 +1049,7 @@ async function refreshLiveData({ showLoading = false, syncToLatest = false } = {
     await loadLiveFilters();
     await ensureLiveAdsLoadedForSelectedStore();
     const previousCategoryKey = liveState.selectedCategoryKey;
-    await loadLiveCategoryAvailability();
+    await loadLiveCategoryAvailability({ force: true });
     // 보고 있던 카테고리의 데이터가 사라져 다른 탭으로 옮겨졌다면 목록을 새로 불러온다.
     if (liveState.selectedCategoryKey !== previousCategoryKey) {
         resetLiveEntriesState();
@@ -1054,34 +1059,177 @@ async function refreshLiveData({ showLoading = false, syncToLatest = false } = {
     await loadLiveEntries({ showLoading, syncToLatest });
 }
 
-function getAvailableLiveCategoryKeys() {
+function getAvailableLiveCategoryKeys(counts = liveState.categoryCounts) {
     const keys = Object.keys(LIVE_CATEGORIES);
-    const counts = liveState.categoryCounts;
     if (!counts) return keys;
     // 매장에 데이터가 하나도 없으면 빈 배열 → 카테고리 탭을 모두 숨긴다.
     return keys.filter((key) => Number(counts[key] || 0) > 0);
 }
 
+// 매장의 카테고리 수를 기준으로 실제로 보여줄 카테고리를 고른다.
+function resolveLiveCategoryKeyForCounts(counts) {
+    const availableKeys = getAvailableLiveCategoryKeys(counts);
+    if (!availableKeys.length || availableKeys.includes(liveState.selectedCategoryKey)) {
+        return liveState.selectedCategoryKey;
+    }
+    return availableKeys[0];
+}
+
+// 카테고리 수를 반영하고, 선택 카테고리가 바뀌었는지 돌려준다.
+function applyLiveCategoryCounts(counts) {
+    const previousCategoryKey = liveState.selectedCategoryKey;
+    liveState.categoryCounts = counts;
+    liveState.selectedCategoryKey = resolveLiveCategoryKeyForCounts(counts);
+    renderCategoryButtons(liveState.categories);
+    return liveState.selectedCategoryKey !== previousCategoryKey;
+}
+
 // 선택한 매장에 데이터가 없는 카테고리(초이스톡·초중·룸/웨이팅·엔트리·출근자 정보)는 탭에서 숨긴다.
-async function loadLiveCategoryAvailability() {
+// 미리 받아둔 값이 있으면 바로 반영하고, 오래된 값이면 백그라운드에서 갱신한다.
+async function loadLiveCategoryAvailability({ force = false } = {}) {
     const requestId = ++liveState.categoryCountsRequestId;
     const storeNo = Number.parseInt(liveState.selectedStoreNo, 10);
+    if (!Number.isInteger(storeNo) || storeNo <= 0) {
+        applyLiveCategoryCounts(null);
+        return;
+    }
+
+    const cached = force ? null : readLivePrefetch(`counts:${storeNo}`);
+    if (cached) {
+        applyLiveCategoryCounts(cached.data);
+        if (isLivePrefetchFresh(cached)) return;
+
+        fetchLiveStoreCategoryCounts(storeNo)
+            .then((counts) => {
+                if (requestId !== liveState.categoryCountsRequestId) return;
+                if (!applyLiveCategoryCounts(counts)) return;
+                resetLiveEntriesState();
+                loadLiveEntries({ showLoading: true, syncToLatest: true, useCache: true }).catch(() => {});
+            })
+            .catch(() => {});
+        return;
+    }
+
     let counts = null;
-    if (Number.isInteger(storeNo) && storeNo > 0) {
-        try {
-            const response = await APIClient.get('/live/categories', { storeNo });
-            counts = response?.counts || null;
-        } catch (error) {
-            counts = null;
-        }
+    try {
+        counts = await fetchLiveStoreCategoryCounts(storeNo);
+    } catch (error) {
+        counts = null;
     }
     if (requestId !== liveState.categoryCountsRequestId) return;
-    liveState.categoryCounts = counts;
-    const availableKeys = getAvailableLiveCategoryKeys();
-    if (availableKeys.length && !availableKeys.includes(liveState.selectedCategoryKey)) {
-        liveState.selectedCategoryKey = availableKeys[0];
+    applyLiveCategoryCounts(counts);
+}
+
+// 매장/카테고리 클릭 시 지연 없이 보여주기 위해 매장별 데이터를 메모리에 미리 받아둔다.
+function readLivePrefetch(key) {
+    return livePrefetchCache.get(key) || null;
+}
+
+function isLivePrefetchFresh(entry) {
+    return Boolean(entry && Date.now() - entry.fetchedAt < LIVE_PREFETCH_FRESH_MS);
+}
+
+function fetchLivePrefetch(key, loader) {
+    const pending = livePrefetchPending.get(key);
+    if (pending) return pending;
+
+    const promise = loader()
+        .then((data) => {
+            livePrefetchCache.set(key, { data, fetchedAt: Date.now() });
+            return data;
+        })
+        .finally(() => {
+            livePrefetchPending.delete(key);
+        });
+    livePrefetchPending.set(key, promise);
+    return promise;
+}
+
+function fetchLiveStoreCategoryCounts(storeNo) {
+    return fetchLivePrefetch(`counts:${storeNo}`, () => (
+        APIClient.get('/live/categories', { storeNo }).then((response) => response?.counts || null)
+    ));
+}
+
+function fetchLiveStoreAds(storeNo) {
+    return fetchLivePrefetch(`ads:${storeNo}`, () => (
+        APIClient.get('/live/ads', { storeNo }).then((response) => (Array.isArray(response?.content) ? response.content : []))
+    ));
+}
+
+function fetchLiveStoreEntries(storeNo, categoryKey) {
+    return fetchLivePrefetch(`entries:${storeNo}:${categoryKey}`, () => (
+        APIClient.get('/live/entries', buildLiveEntriesQuery({ storeNo, categoryKey }))
+    ));
+}
+
+async function getLiveStoreCategoryCountsForPrefetch(storeNo) {
+    const cached = readLivePrefetch(`counts:${storeNo}`);
+    if (isLivePrefetchFresh(cached)) return cached.data;
+    return fetchLiveStoreCategoryCounts(storeNo);
+}
+
+async function runLivePrefetchTasks(items, worker) {
+    const queue = [...items];
+    const runners = Array.from({ length: Math.min(LIVE_PREFETCH_CONCURRENCY, queue.length) }, async () => {
+        while (queue.length) {
+            const item = queue.shift();
+            try {
+                await worker(item);
+            } catch (error) {
+                // 미리 불러오기 실패는 무시한다. 클릭 시 다시 요청된다.
+            }
+        }
+    });
+    await Promise.all(runners);
+}
+
+// 다른 매장을 눌렀을 때 바로 보일 카테고리 수·광고·목록을 받아둔다.
+async function prefetchLiveStore(storeNo) {
+    if (!isLivePrefetchFresh(readLivePrefetch(`ads:${storeNo}`))) {
+        fetchLiveStoreAds(storeNo).catch(() => {});
     }
-    renderCategoryButtons(liveState.categories);
+    const counts = await getLiveStoreCategoryCountsForPrefetch(storeNo);
+    const categoryKey = resolveLiveCategoryKeyForCounts(counts);
+    if (categoryKey && !isLivePrefetchFresh(readLivePrefetch(`entries:${storeNo}:${categoryKey}`))) {
+        await fetchLiveStoreEntries(storeNo, categoryKey);
+    }
+}
+
+// 선택한 매장의 다른 카테고리 탭 목록을 받아둔다.
+async function prefetchLiveStoreCategories(storeNo) {
+    if (!Number.isInteger(storeNo) || storeNo <= 0) return;
+    const counts = await getLiveStoreCategoryCountsForPrefetch(storeNo);
+    const categoryKeys = getAvailableLiveCategoryKeys(counts)
+        .filter((key) => !isLivePrefetchFresh(readLivePrefetch(`entries:${storeNo}:${key}`)));
+    await runLivePrefetchTasks(categoryKeys, (key) => fetchLiveStoreEntries(storeNo, key));
+}
+
+async function prefetchLiveStores() {
+    const currentStoreNo = liveState.selectedStoreNo;
+    await prefetchLiveStoreCategories(currentStoreNo).catch(() => {});
+
+    // 지금 보이는 매장 칩을 먼저, 나머지 매장은 그 뒤에 받아둔다.
+    const visibleStoreNos = new Set(getVisibleLiveStores().map((store) => store.storeNo));
+    const otherStoreNos = liveState.stores
+        .map((store) => store.storeNo)
+        .filter((storeNo) => storeNo !== currentStoreNo);
+    const orderedStoreNos = [
+        ...otherStoreNos.filter((storeNo) => visibleStoreNos.has(storeNo)),
+        ...otherStoreNos.filter((storeNo) => !visibleStoreNos.has(storeNo))
+    ];
+    await runLivePrefetchTasks(orderedStoreNos, prefetchLiveStore);
+}
+
+function scheduleLiveIdleTask(task) {
+    const run = () => {
+        Promise.resolve().then(task).catch(() => {});
+    };
+    if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(run, { timeout: 2000 });
+    } else {
+        window.setTimeout(run, 300);
+    }
 }
 
 function hydrateLiveFiltersCache() {
@@ -1124,16 +1272,38 @@ async function loadLiveFilters() {
     renderCategoryButtons(liveState.categories);
 }
 
-async function loadLiveEntries({ showLoading = false, appendOlder = false, syncToLatest = false, preserveScroll = false, replaceRows = false } = {}) {
+async function loadLiveEntries({ showLoading = false, appendOlder = false, syncToLatest = false, preserveScroll = false, replaceRows = false, useCache = false } = {}) {
     const loadingElement = document.getElementById('live-loading');
     const errorElement = document.getElementById('live-error');
     const emptyElement = document.getElementById('live-empty');
     const listElement = document.getElementById('live-entry-list');
     const requestId = ++liveState.entriesRequestId;
     const scrollAnchor = appendOlder ? createLiveScrollAnchor() : null;
-    const preservedScrollY = preserveScroll ? window.scrollY : null;
+    const storeNo = liveState.selectedStoreNo;
+    const categoryKey = liveState.selectedCategoryKey;
 
     hideElement(errorElement);
+
+    // 미리 받아둔 목록이 있으면 로딩 없이 바로 그리고, 오래된 데이터면 조용히 갱신한다.
+    const cached = useCache && !appendOlder ? readLivePrefetch(`entries:${storeNo}:${categoryKey}`) : null;
+    if (cached) {
+        updateLiveEntriesState(cached.data, { replaceRows: true });
+        liveState.hasCachedEntries = true;
+        applyLiveEntriesResponse();
+        hideElement(loadingElement);
+        if (syncToLatest && shouldSyncLatestCardViewport()) {
+            scrollLiveToLatest({ behavior: 'auto' });
+            liveState.hasAlignedInitialViewport = true;
+        }
+        if (isLivePrefetchFresh(cached)) return;
+
+        showLoading = false;
+        syncToLatest = false;
+        preserveScroll = true;
+        replaceRows = true;
+    }
+
+    const preservedScrollY = preserveScroll ? window.scrollY : null;
 
     if (showLoading) {
         hideElement(emptyElement);
@@ -1143,7 +1313,9 @@ async function loadLiveEntries({ showLoading = false, appendOlder = false, syncT
     }
 
     try {
-        const response = await APIClient.get('/live/entries', buildLiveEntriesQuery({ appendOlder }));
+        const response = appendOlder
+            ? await APIClient.get('/live/entries', buildLiveEntriesQuery({ appendOlder }))
+            : await fetchLiveStoreEntries(storeNo, categoryKey);
 
         if (requestId !== liveState.entriesRequestId) {
             return;
@@ -1237,13 +1409,24 @@ async function loadLiveAds() {
         return;
     }
 
+    const cached = readLivePrefetch(`ads:${storeNo}`);
+    if (cached) {
+        liveState.ads = cached.data;
+        liveState.adsLoadedStoreNo = storeNo;
+        renderLiveAds(liveState.ads);
+        if (isLivePrefetchFresh(cached)) return;
+    }
+
     try {
-        const response = await APIClient.get('/live/ads', { storeNo });
+        const ads = await fetchLiveStoreAds(storeNo);
         if (requestId !== liveState.adsRequestId) return;
-        liveState.ads = Array.isArray(response?.content) ? response.content : [];
+        // 미리 그린 광고와 같으면 캐러셀을 다시 그리지 않는다.
+        if (cached && JSON.stringify(cached.data) === JSON.stringify(ads)) return;
+        liveState.ads = ads;
         liveState.adsLoadedStoreNo = storeNo;
         renderLiveAds(liveState.ads);
     } catch (error) {
+        if (cached) return;
         if (requestId !== liveState.adsRequestId) return;
         liveState.ads = [];
         renderLiveAds([]);
@@ -1595,9 +1778,11 @@ async function selectLiveStore(storeNo) {
     }
 
     resetLiveEntriesState();
-    await loadLiveAds();
+    // 광고는 목록 표시를 막지 않도록 기다리지 않는다.
+    loadLiveAds();
     await loadLiveCategoryAvailability();
-    await loadLiveEntries({ showLoading: true, syncToLatest: true });
+    await loadLiveEntries({ showLoading: true, syncToLatest: true, useCache: true });
+    scheduleLiveIdleTask(() => prefetchLiveStoreCategories(liveState.selectedStoreNo));
 }
 
 function renderLocationButtons() {
@@ -1674,7 +1859,7 @@ function renderLiveFilterSummary() {
 }
 
 // 상단 필터는 '지역 · 업종 · 매장' 요약 버튼 하나로 보여주고, 누르면 선택 영역이 아래로 펼쳐진다.
-// 펼친 영역은 매장을 고르거나, 요약 버튼을 다시 누르거나, 영역 바깥(카테고리 탭 포함)을 누를 때 닫힌다.
+// 펼친 영역은 요약 버튼을 다시 누르거나, 영역 바깥(카테고리 탭 포함)을 누를 때 닫힌다. 매장을 골라도 닫히지 않는다.
 function bindLiveFilterDropdown() {
     const selectors = document.getElementById('live-filter-selectors');
     const summaryButton = document.getElementById('live-filter-summary');
@@ -2007,18 +2192,24 @@ function syncAttendanceCommentsViewport() {
     section.style.setProperty('--attendance-comments-height', `${Math.max(180, availableHeight)}px`);
 }
 
-function buildLiveEntriesQuery({ appendOlder = false, limit = null, offset = null } = {}) {
-    if (liveState.selectedCategoryKey === 'attendance') {
+function buildLiveEntriesQuery({
+    appendOlder = false,
+    limit = null,
+    offset = null,
+    storeNo = liveState.selectedStoreNo,
+    categoryKey = liveState.selectedCategoryKey
+} = {}) {
+    if (categoryKey === 'attendance') {
         return {
-            category: liveState.selectedCategoryKey,
-            storeNo: liveState.selectedStoreNo
+            category: categoryKey,
+            storeNo
         };
     }
 
     const query = {
-        category: liveState.selectedCategoryKey,
-        storeNo: liveState.selectedStoreNo,
-        limit: limit ?? (liveState.selectedCategoryKey === 'entry' ? LIVE_ENTRY_PAGE_SIZE : LIVE_HISTORY_PAGE_SIZE),
+        category: categoryKey,
+        storeNo,
+        limit: limit ?? (categoryKey === 'entry' ? LIVE_ENTRY_PAGE_SIZE : LIVE_HISTORY_PAGE_SIZE),
         offset: offset ?? (appendOlder && shouldUseHistoryPagination() ? liveState.nextOffset : 0)
     };
 
