@@ -198,16 +198,11 @@ function resolveRegisterConflictError(error) {
 
 async function register(req, res, next) {
   try {
-    const { loginId, password, nickname, genderDigit } = req.body;
+    const { loginId, password, nickname } = req.body;
     const ipAddress = getClientIp(req);
     const accountType = normalizeAccountType(req.body.accountType || req.body.memberType);
     const resolvedLoginId = String(loginId || '').trim();
-    const name = String(req.body.name || '').trim() || null;
     const identityVerificationId = String(req.body.identityVerificationId || '').trim();
-    const identityCi = String(req.body.identityCi || req.body.ci || '').trim();
-    const identityDi = String(req.body.identityDi || req.body.di || '').trim();
-    const phone = String(req.body.phone || '').trim();
-    const birthDateIso = normalizeBirthDateToIso(req.body.birthDate || '');
     const termsConsent = Boolean(req.body.termsConsent);
     const privacyConsent = Boolean(req.body.privacyConsent);
     const marketingConsent = Boolean(req.body.marketingConsent);
@@ -247,6 +242,29 @@ async function register(req, res, next) {
       console.warn('[AuthController.register] 본인인증 ID 누락');
       return res.status(400).json({ message: '본인인증 확인 정보가 누락되었습니다. 인증 후 다시 시도해주세요.' });
     }
+
+    // 본인인증 값은 위변조할 수 있는 요청 본문 대신 서버가 KCP에서 받아 보관한 결과만 사용한다.
+    const verifiedIdentity = await fetchIdentityVerificationPayload(identityVerificationId, { cacheOnly: true });
+    if (verifiedIdentity.pending || verifiedIdentity.error || verifiedIdentity.payload?.success === false) {
+      console.warn('[AuthController.register] 서버에 보관된 본인인증 결과 없음', {
+        pending: Boolean(verifiedIdentity.pending),
+        hasError: Boolean(verifiedIdentity.error),
+        verificationFailed: verifiedIdentity.payload?.success === false
+      });
+      return res.status(400).json({ message: '본인인증 정보가 없거나 만료되었습니다. 다시 본인인증을 진행해주세요.' });
+    }
+
+    const {
+      name: verifiedName,
+      birthDate: verifiedBirthDate,
+      phone,
+      genderDigit,
+      ci: identityCi,
+      di: identityDi
+    } = normalizeIdentityVerificationPayload(verifiedIdentity.payload);
+    const name = verifiedName || null;
+    const birthDateIso = normalizeBirthDateToIso(verifiedBirthDate);
+
     if (!identityDi && !identityCi) {
       console.warn('[AuthController.register] 본인인증 고유값(DI/CI) 누락');
       return res.status(400).json({ message: '본인인증 고유값(DI/CI)이 없어 가입을 진행할 수 없습니다.' });
@@ -517,6 +535,13 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function serializeJsonForInlineScript(payload) {
+  return JSON.stringify(payload)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026');
 }
 
 function buildHiddenInput(name, value) {
@@ -1149,7 +1174,7 @@ async function handleKcpCallback(req, res) {
 <body>
   <script>
     (function () {
-      var payload = ${JSON.stringify(payload)};
+      var payload = ${serializeJsonForInlineScript(payload)};
       if (window.opener && !window.opener.closed) {
         window.opener.postMessage({
           type: 'KCP_IDENTITY_VERIFICATION_RESULT',

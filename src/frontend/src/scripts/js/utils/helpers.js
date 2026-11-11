@@ -237,10 +237,14 @@ function toggleElement(element, show) {
 
 function sanitizeHTML(str) {
    if (!str) return '';
-   
-   const temp = document.createElement('div');
-   temp.textContent = str;
-   return temp.innerHTML;
+
+   // HTML 속성값에도 쓰이므로 따옴표까지 반드시 이스케이프한다.
+   return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
 }
 
 

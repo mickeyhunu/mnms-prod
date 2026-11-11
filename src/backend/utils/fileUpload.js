@@ -54,10 +54,23 @@ function sanitizeFileName(fileName, defaultBaseName = 'upload') {
   return ext ? `${baseName}.${ext}` : baseName;
 }
 
+function isAllowedExistingFileUrl(url, allowedPrefixes) {
+  if (!allowedPrefixes.some((prefix) => url.startsWith(prefix))) return false;
+  // HTML 속성을 벗어날 수 있는 문자가 포함된 URL은 저장하지 않는다.
+  if (/[\s"'<>`\\]/.test(url)) return false;
+
+  try {
+    const { protocol } = new URL(url);
+    return protocol === 'http:' || protocol === 'https:';
+  } catch (_error) {
+    return false;
+  }
+}
+
 function normalizeExistingFileUrls(values = [], { maxCount, allowedPrefixes = ['http://', 'https://'] } = {}) {
   return values
     .map((url) => String(url || '').trim())
-    .filter((url) => allowedPrefixes.some((prefix) => url.startsWith(prefix)))
+    .filter((url) => isAllowedExistingFileUrl(url, allowedPrefixes))
     .slice(0, maxCount);
 }
 

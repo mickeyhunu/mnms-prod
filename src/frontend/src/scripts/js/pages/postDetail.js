@@ -1624,7 +1624,7 @@ function createCommentItem(comment, depth = 0) {
                 <div class="comment-content ${isAdminComment ? 'admin-comment-content' : ''} ${isHiddenComment ? 'admin-restricted-content' : ''}" id="comment-content-${comment.id}">${renderLinkedText(comment.content)}</div>
                 <div class="comment-footer">
                     <span class="comment-date">${formatDateTime(comment.createdAt)}</span>
-                    ${canReply ? `<button class="comment-reply-link" onclick="showReplyForm(${comment.id}, '${sanitizeHTML(comment.authorNickname)}')">답글쓰기</button>` : ''}
+                    ${canReply ? `<button class="comment-reply-link" data-reply-author="${sanitizeHTML(comment.authorNickname)}" onclick="showReplyForm(${Number(comment.id)}, this.dataset.replyAuthor)">답글쓰기</button>` : ''}
                 </div>
             </div>
         </div>
